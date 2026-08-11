@@ -71,8 +71,9 @@
 
   <section class="hero">
     <div class="hero-bg" aria-hidden="true">
-      <img src="assets/marketing/hero-marketing.png" alt="" />
-      <div class="hero-overlay"></div>
+      <div class="hero-mesh"></div>
+      <div class="hero-glow hero-glow-a"></div>
+      <div class="hero-glow hero-glow-b"></div>
     </div>
     <div class="container hero-inner">
       <div class="hero-copy">
@@ -92,14 +93,20 @@
         </div>
         <p class="meta-line">Extension ID: <code data-extension-id>lorapok-labs.cursor-curse-monitor-by-lorapok</code></p>
       </div>
-      <aside class="hero-panel glass">
-        <div class="panel-head">Live preview</div>
-        <div class="stat-row"><span>Included usage</span><strong>87%</strong></div>
-        <div class="meter"><div class="meter-fill" style="width:87%"></div></div>
-        <div class="stat-row"><span>Billing reset</span><strong>4 days</strong></div>
-        <div class="stat-row"><span>On-demand</span><strong class="warn">Off</strong></div>
-        <div class="stat-row"><span>Fallback model</span><strong class="ok">composer-2.5 · fast: false</strong></div>
-        <p class="panel-note">Demo UI — real metrics appear only in your logged-in Cursor session.</p>
+      <aside class="hero-visual">
+        <button type="button" class="hero-shot-btn lightbox-trigger" data-src="assets/marketing/showcase-dashboard.png" data-caption="Live usage dashboard in Cursor IDE">
+          <img src="assets/marketing/showcase-dashboard.png" alt="Cursor Curse Monitor dashboard preview" class="hero-shot" />
+          <span class="zoom-hint">Click to enlarge</span>
+        </button>
+        <div class="hero-panel glass">
+          <div class="panel-head">Live preview</div>
+          <div class="stat-row"><span>Included usage</span><strong>87%</strong></div>
+          <div class="meter"><div class="meter-fill" style="width:87%"></div></div>
+          <div class="stat-row"><span>Billing reset</span><strong>4 days</strong></div>
+          <div class="stat-row"><span>On-demand</span><strong class="warn">Off</strong></div>
+          <div class="stat-row"><span>Fallback model</span><strong class="ok">composer-2.5 · fast: false</strong></div>
+          <p class="panel-note">Demo UI — real metrics appear only in your logged-in Cursor session.</p>
+        </div>
       </aside>
     </div>
   </section>
@@ -112,28 +119,40 @@
       </div>
       <div class="feature-grid">
         <article class="feature-card">
-          <img src="assets/marketing/showcase-dashboard.png" alt="Live dashboard panel in Cursor IDE" loading="lazy" />
+          <button type="button" class="feature-img-btn lightbox-trigger" data-src="assets/marketing/showcase-dashboard.png" data-caption="Live dashboard panel in Cursor IDE">
+            <img src="assets/marketing/showcase-dashboard.png" alt="Live dashboard panel in Cursor IDE" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
           <div class="feature-body">
             <h3>Live dashboard</h3>
             <p>Sidebar panel and status bar with auto-refresh from the Cursor API — no manual checking.</p>
           </div>
         </article>
         <article class="feature-card">
-          <img src="assets/marketing/showcase-budget.png" alt="Budget cap and spend tracking" loading="lazy" />
+          <button type="button" class="feature-img-btn lightbox-trigger" data-src="assets/marketing/showcase-budget.png" data-caption="Budget cap and spend tracking">
+            <img src="assets/marketing/showcase-budget.png" alt="Budget cap and spend tracking" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
           <div class="feature-body">
             <h3>Budget cap</h3>
             <p>Set a personal USD limit, track on-demand spend, and get warned before you overshoot.</p>
           </div>
         </article>
         <article class="feature-card">
-          <img src="assets/marketing/showcase-fallback.png" alt="Automatic Composer 2.5 fallback" loading="lazy" />
+          <button type="button" class="feature-img-btn lightbox-trigger" data-src="assets/marketing/showcase-fallback.png" data-caption="Automatic Composer 2.5 fallback">
+            <img src="assets/marketing/showcase-fallback.png" alt="Automatic Composer 2.5 fallback" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
           <div class="feature-body">
             <h3>Free fallback</h3>
             <p>At 100% included usage, auto-switch to Composer 2.5 (Fast off) — the free slow pool.</p>
           </div>
         </article>
         <article class="feature-card">
-          <img src="assets/marketing/showcase-privacy.png" alt="Privacy-first local-only design" loading="lazy" />
+          <button type="button" class="feature-img-btn lightbox-trigger" data-src="assets/marketing/showcase-privacy.png" data-caption="Privacy-first local-only design">
+            <img src="assets/marketing/showcase-privacy.png" alt="Privacy-first local-only design" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
           <div class="feature-body">
             <h3>Privacy-first</h3>
             <p>Your auth token never leaves your machine. No telemetry, no shared team dashboard.</p>
@@ -147,17 +166,65 @@
         <div class="section-head">
           <p class="eyebrow">Product gallery</p>
           <h2>Built for Cursor power users</h2>
-          <p class="section-lead">Marketing visuals for the extension — share them when you recommend Cursor Curse Monitor to your team.</p>
+          <p class="section-lead">Marketing visuals for the extension — click any image to view full size.</p>
         </div>
         <div class="gallery-masonry">
-          <figure class="gallery-item wide"><img src="assets/marketing/hero-marketing.png" alt="Cursor Curse Monitor hero" loading="lazy" /><figcaption>Hero launch visual</figcaption></figure>
-          <figure class="gallery-item"><img src="assets/marketing/showcase-dashboard.png" alt="Dashboard" loading="lazy" /><figcaption>Usage dashboard</figcaption></figure>
-          <figure class="gallery-item"><img src="assets/marketing/showcase-fallback.png" alt="Fallback" loading="lazy" /><figcaption>Model fallback</figcaption></figure>
-          <figure class="gallery-item"><img src="assets/marketing/showcase-budget.png" alt="Budget" loading="lazy" /><figcaption>Budget tracking</figcaption></figure>
-          <figure class="gallery-item"><img src="assets/marketing/showcase-privacy.png" alt="Privacy" loading="lazy" /><figcaption>Local privacy</figcaption></figure>
-          <figure class="gallery-item"><img src="assets/marketing/showcase-install.png" alt="Install steps" loading="lazy" /><figcaption>Install guide</figcaption></figure>
-          <figure class="gallery-item wide"><img src="assets/marketing/showcase-oss.png" alt="Open source" loading="lazy" /><figcaption>Open source · MIT</figcaption></figure>
-          <figure class="gallery-item"><img src="assets/marketing/og-social-card.png" alt="Social card" loading="lazy" /><figcaption>Social share card</figcaption></figure>
+          <figure class="gallery-item wide">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/hero-marketing.png" data-caption="Hero launch visual">
+              <img src="assets/marketing/hero-marketing.png" alt="Cursor Curse Monitor hero" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Hero launch visual</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/showcase-dashboard.png" data-caption="Usage dashboard">
+              <img src="assets/marketing/showcase-dashboard.png" alt="Dashboard" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Usage dashboard</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/showcase-fallback.png" data-caption="Model fallback">
+              <img src="assets/marketing/showcase-fallback.png" alt="Fallback" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Model fallback</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/showcase-budget.png" data-caption="Budget tracking">
+              <img src="assets/marketing/showcase-budget.png" alt="Budget" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Budget tracking</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/showcase-privacy.png" data-caption="Local privacy">
+              <img src="assets/marketing/showcase-privacy.png" alt="Privacy" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Local privacy</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/showcase-install.png" data-caption="Install guide">
+              <img src="assets/marketing/showcase-install.png" alt="Install steps" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Install guide</figcaption>
+          </figure>
+          <figure class="gallery-item wide">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/showcase-oss.png" data-caption="Open source · MIT">
+              <img src="assets/marketing/showcase-oss.png" alt="Open source" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Open source · MIT</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <button type="button" class="gallery-btn lightbox-trigger" data-src="assets/marketing/og-social-card.png" data-caption="Social share card">
+              <img src="assets/marketing/og-social-card.png" alt="Social card" loading="lazy" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Social share card</figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -183,7 +250,10 @@
           <a class="btn secondary block" data-href-vsix href="#" download>Download VSIX</a>
         </article>
         <article class="install-card visual">
-          <img src="assets/marketing/showcase-install.png" alt="Install guide illustration" loading="lazy" />
+          <button type="button" class="install-img-btn lightbox-trigger" data-src="assets/marketing/showcase-install.png" data-caption="Install guide — 3 simple steps">
+            <img src="assets/marketing/showcase-install.png" alt="Install guide illustration" loading="lazy" />
+            <span class="zoom-hint">Click to enlarge</span>
+          </button>
         </article>
       </div>
     </section>
@@ -233,13 +303,19 @@
           </ul>
           <a class="btn ghost" href="privacy.html">Read privacy policy</a>
         </div>
-        <img class="privacy-visual" src="assets/marketing/showcase-privacy.png" alt="" loading="lazy" />
+        <button type="button" class="privacy-visual-btn lightbox-trigger" data-src="assets/marketing/showcase-privacy.png" data-caption="Privacy-first — data stays local">
+          <img class="privacy-visual" src="assets/marketing/showcase-privacy.png" alt="Privacy illustration" loading="lazy" />
+          <span class="zoom-hint">Click to enlarge</span>
+        </button>
       </div>
     </section>
 
     <section class="section container author-section">
       <div class="author-card">
-        <img src="assets/marketing/showcase-oss.png" alt="" class="author-visual" loading="lazy" />
+        <button type="button" class="author-visual-btn lightbox-trigger" data-src="assets/marketing/showcase-oss.png" data-caption="Open source · MIT · Lorapok Labs">
+          <img src="assets/marketing/showcase-oss.png" alt="Open source community" class="author-visual" loading="lazy" />
+          <span class="zoom-hint">Click to enlarge</span>
+        </button>
         <div>
           <p class="eyebrow">Author</p>
           <h2>Mohammad Maizied Hasan Majumder</h2>
@@ -256,6 +332,19 @@
       <p><a href="sitemap.xml">Sitemap</a> · <a data-href-repo href="#">Source</a> · <a href="privacy.html">Privacy</a></p>
     </div>
   </footer>
+
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <div class="lightbox-backdrop" data-lightbox-close></div>
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&times;</button>
+    <button type="button" class="lightbox-nav lightbox-prev" aria-label="Previous image">&#8249;</button>
+    <button type="button" class="lightbox-nav lightbox-next" aria-label="Next image">&#8250;</button>
+    <figure class="lightbox-stage">
+      <img id="lightbox-img" src="" alt="" />
+      <figcaption id="lightbox-caption"></figcaption>
+      <p class="lightbox-counter" id="lightbox-counter"></p>
+    </figure>
+  </div>
+
   <script src="site.js" defer></script>
 </body>
 </html>
