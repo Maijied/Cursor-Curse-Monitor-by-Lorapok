@@ -20,7 +20,7 @@ In **Settings → Secrets and variables → Actions**, add:
 ### 2. Open VSX namespace
 
 ```bash
-npx ovsx create-namespace Maijied -p <OVSX_PAT>
+npx ovsx create-namespace lorapok-labs -p <OVSX_PAT>
 ```
 
 ### 3. GitHub environment (optional)
@@ -62,12 +62,12 @@ cursor --install-extension cursor-curse-monitor-by-lorapok-0.1.0.vsix
 
 After Open VSX publish, wait a few hours for Cursor to sync, then search:
 
-`Maijied.cursor-curse-monitor-by-lorapok`
+`lorapok-labs.cursor-curse-monitor-by-lorapok`
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| Deploy fails on Open VSX | Check `OVSX_PAT` secret and namespace `Maijied` |
+| Deploy fails on Open VSX | Check `OVSX_PAT` secret and namespace `lorapok-labs` (Lorapok Labs) |
 | Extension not in Cursor search | Lower `engines.vscode` if too high; reload window |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |

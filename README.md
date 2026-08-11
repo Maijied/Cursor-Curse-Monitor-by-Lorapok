@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci.yml?branch=main&label=CI" alt="CI" /></a>
-  <a href="https://open-vsx.org/extension/Maijied/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/badge/Open%20VSX-Maijied%2Fcursor--curse--monitor--by--lorapok-blue" alt="Open VSX" /></a>
+  <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/badge/Open%20VSX-Lorapok%20Labs-blue" alt="Open VSX" /></a>
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
   <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
 </p>
@@ -53,7 +53,7 @@ Open the **Cursor Curse Monitor** panel in the activity bar after install to see
 ### From Open VSX (Cursor Marketplace)
 
 1. Open **Extensions** in Cursor
-2. Search `Cursor Curse Monitor by Lorapok` or `Maijied.cursor-curse-monitor-by-lorapok`
+2. Search `Cursor Curse Monitor by Lorapok` or `lorapok-labs.cursor-curse-monitor-by-lorapok`
 3. Click **Install**
 
 ### From VSIX (local)
@@ -135,6 +135,7 @@ Requires GitHub secret `OVSX_PAT`.
 |-------|--------|
 | **Name** | Mohammad Maizied Hasan Majumder |
 | **Alias** | Maijied |
+| **Publisher** | Lorapok Labs (`lorapok-labs`) |
 | **Role** | Founder and Principal Engineer @ [Lorapok Labs](https://lorapok.tech) · Senior Software Engineer @ [Shohoz Ltd](https://shohoz.com) |
 | **Location** | Dhaka, Bangladesh |
 | **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) |
