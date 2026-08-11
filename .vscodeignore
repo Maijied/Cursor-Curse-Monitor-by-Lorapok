@@ -5,7 +5,14 @@ src/**
 tsconfig.json
 **/*.map
 **/*.ts
+.github/**
+website/**
+scripts/**
+DEPLOYMENT.md
+AUTHORS.md
+CONTRIBUTING.md
+*.vsix
 node_modules/**
-!node_modules/sql.js/**
-!node_modules/sql.js/dist/**
+!node_modules/sql.js/package.json
+!node_modules/sql.js/dist/sql-wasm.js
 media/sql-wasm.js

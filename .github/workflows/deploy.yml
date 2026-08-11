@@ -2,12 +2,12 @@ name: Deploy
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (e.g. 0.1.0) — used for manual deploy only"
+        description: "Release version (manual deploy only)"
         required: false
         default: ""
       publish_ovsx:
@@ -15,9 +15,9 @@ on:
         type: boolean
         default: true
       create_release:
-        description: "Create GitHub Release with VSIX asset"
+        description: "Create GitHub Release with VSIX"
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: deploy-${{ github.workflow }}-${{ github.ref }}
@@ -48,6 +48,9 @@ jobs:
       - name: Package VSIX
         run: npm run package
 
+      - name: Show VSIX size
+        run: ls -lh *.vsix
+
       - name: Resolve version
         id: version
         run: |
@@ -59,14 +62,25 @@ jobs:
             echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Ensure Open VSX namespace (Lorapok Labs)
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "OVSX_PAT not set — skip namespace creation"
+            exit 0
+          fi
+          npx ovsx create-namespace lorapok-labs -p "$OVSX_PAT" || \
+            echo "Namespace lorapok-labs already exists — continuing"
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
       - name: Publish to Open VSX
         if: >-
-          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
+          (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
           || (github.event_name == 'workflow_dispatch' && inputs.publish_ovsx)
         run: |
           if [ -z "$OVSX_PAT" ]; then
-            echo "::warning::OVSX_PAT not set — skipping Open VSX publish"
-            exit 0
+            echo "::error::OVSX_PAT secret is not set. Add it in repo Settings → Secrets."
+            exit 1
           fi
           npx ovsx publish -p "$OVSX_PAT"
         env:
@@ -74,7 +88,7 @@ jobs:
 
       - name: Create GitHub Release
         if: >-
-          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
           || (github.event_name == 'workflow_dispatch' && inputs.create_release)
         uses: softprops/action-gh-release@v2
         with:

@@ -4,6 +4,20 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.3] - 2026-08-11
+
+### Fixed
+
+- Slim VSIX package (exclude website, CI files, full sql.js tree)
+- Deploy workflow auto-creates Open VSX namespace `lorapok-labs`
+- Deploy publishes to Open VSX on every `main` push and version tags
+
+## [0.1.2] - 2026-08-11
+
+### Changed
+
+- Publisher changed to Lorapok Labs (`lorapok-labs`)
+
 ## [0.1.1] - 2026-08-11
 
 ### Added
