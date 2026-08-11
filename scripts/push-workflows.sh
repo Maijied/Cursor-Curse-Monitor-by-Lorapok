@@ -16,5 +16,5 @@ git push origin main
 echo
 echo "Done. Next steps:"
 echo "  1. Add secret OVSX_PAT in GitHub repo Settings → Secrets"
-echo "  2. git tag v0.1.0 && git push origin v0.1.0"
+echo "  2. ./scripts/release.sh          # tags current package.json version and deploys"
 echo "  3. See DEPLOYMENT.md"

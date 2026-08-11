@@ -4,13 +4,21 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.4] - 2026-08-11
+
+### Fixed
+
+- Deploy workflow runs only on version tags (avoids duplicate Open VSX publish on `main`)
+- Treat "already published" Open VSX errors as success when re-running deploy
+- Global deploy concurrency lock to prevent tag/main race conditions
+
 ## [0.1.3] - 2026-08-11
 
 ### Fixed
 
 - Slim VSIX package (exclude website, CI files, full sql.js tree)
 - Deploy workflow auto-creates Open VSX namespace `lorapok-labs`
-- Deploy publishes to Open VSX on every `main` push and version tags
+- Deploy publishes to Open VSX on version tags
 
 ## [0.1.2] - 2026-08-11
 

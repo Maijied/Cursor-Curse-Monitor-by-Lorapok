@@ -69,5 +69,6 @@ After Open VSX publish, wait a few hours for Cursor to sync, then search:
 | Issue | Fix |
 |-------|-----|
 | Deploy fails on Open VSX | Check `OVSX_PAT` secret and namespace `lorapok-labs` (Lorapok Labs) |
-| Extension not in Cursor search | Lower `engines.vscode` if too high; reload window |
+| "Already published but isn't active" | Log into [open-vsx.org](https://open-vsx.org), open extension settings, delete the inactive version, bump version, and re-tag |
+| Extension not in Cursor search | Lower `engines.vscode` if too high; reload window; wait for Open VSX sync |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |
