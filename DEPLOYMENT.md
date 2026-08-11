@@ -32,14 +32,18 @@ Create environment **`production`** in repo settings if you want approval gates 
 ### Recommended: tag release
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+./scripts/release.sh patch   # bump patch, tag, push — CI does the rest
+# or
+./scripts/release.sh minor
+./scripts/release.sh         # tag current package.json version
 ```
 
 This runs **Deploy** workflow automatically:
 1. Builds VSIX
 2. Publishes to Open VSX
 3. Creates GitHub Release with VSIX attached
+
+The **website** rebuilds on push and auto-fills install commands from GitHub + Open VSX APIs (`npm run site:data`).
 
 ### Manual deploy
 

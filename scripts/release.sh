@@ -4,8 +4,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="${1:-}"
-if [[ -z "$VERSION" ]]; then
+BUMP="${1:-}"
+VERSION=""
+
+if [[ "$BUMP" =~ ^(patch|minor|major)$ ]]; then
+  echo "==> Bumping $BUMP version"
+  npm version "$BUMP" --no-git-tag-version
+  VERSION="$(node -p "require('./package.json').version")"
+  git add package.json package-lock.json
+  git commit -m "Release v$VERSION"
+elif [[ -n "$BUMP" ]]; then
+  VERSION="${BUMP#v}"
+else
   VERSION="$(node -p "require('./package.json').version")"
 fi
 
@@ -23,7 +33,17 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 echo "==> Releasing $TAG"
+node scripts/generate-site-data.mjs
+git add website/site-data.json 2>/dev/null || true
+if git diff --cached --quiet; then
+  :
+else
+  git commit -m "chore: refresh site-data for $TAG"
+fi
+
 git tag "$TAG"
 git push origin main
 git push origin "$TAG"
-echo "==> Pushed $TAG — Deploy workflow will publish to Open VSX and create a GitHub Release"
+echo "==> Pushed $TAG"
+echo "    Deploy workflow → Open VSX + GitHub Release"
+echo "    Pages workflow  → website with live install commands"

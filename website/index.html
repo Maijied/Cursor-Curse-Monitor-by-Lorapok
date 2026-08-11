@@ -12,12 +12,15 @@
   <meta property="og:title" content="Cursor Curse Monitor by Lorapok" />
   <meta property="og:description" content="Live Cursor usage dashboard. Your data stays on your machine — only your logged-in account is visible." />
   <meta property="og:url" content="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/" />
-  <meta property="og:image" content="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/icon.png" />
+  <meta property="og:image" content="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/marketing/og-social-card.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Cursor Curse Monitor by Lorapok" />
   <meta name="twitter:description" content="Monitor Cursor usage limits and auto-fallback to free Composer 2.5." />
   <link rel="icon" href="assets/icon.png" type="image/png" />
   <link rel="manifest" href="site.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script type="application/ld+json">
   {
@@ -26,6 +29,7 @@
     "name": "Cursor Curse Monitor by Lorapok",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Windows, macOS, Linux",
+    "softwareVersion": "0.1.4",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "author": {
       "@type": "Person",
@@ -41,71 +45,211 @@
   </script>
 </head>
 <body>
-  <header class="hero">
-    <nav class="nav">
+  <header class="site-header">
+    <nav class="nav container">
       <a class="brand" href="./">
-        <img src="assets/icon.png" alt="Cursor Curse Monitor logo" width="40" height="40" />
+        <img src="assets/icon.png" alt="" width="36" height="36" />
         <span>Cursor Curse Monitor</span>
       </a>
       <div class="nav-links">
         <a href="#features">Features</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#install">Install</a>
+        <a href="#release">Release</a>
         <a href="#privacy">Privacy</a>
         <a href="privacy.html">Policy</a>
-        <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a>
+        <a data-href-repo href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a>
       </div>
     </nav>
-    <div class="hero-grid">
-      <div>
-        <p class="eyebrow">A Lorapok Labs product</p>
-        <h1>Know your Cursor limits before they know you.</h1>
-        <p class="lead">Live usage dashboard for Cursor IDE — included quota, billing cycle, on-demand spend, and automatic free fallback to <strong>Composer 2.5 (Fast off)</strong> when limits are crossed.</p>
-        <div class="cta-row">
-          <a class="btn primary" href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">Install from Open VSX</a>
-          <a class="btn ghost" href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#installation">Install from VSIX</a>
-        </div>
-        <p class="note">Publisher: <strong>Lorapok Labs</strong> · Extension ID: <code>lorapok-labs.cursor-curse-monitor-by-lorapok</code></p>
-      </div>
-      <div class="panel mock">
-        <div class="mock-row"><span>Included usage</span><strong id="mock-pct">—</strong></div>
-        <div class="bar"><div class="bar-fill" id="mock-bar"></div></div>
-        <div class="mock-row"><span>Billing reset</span><strong>—</strong></div>
-        <div class="mock-row"><span>Fallback</span><strong class="ok">composer-2.5 · fast: false</strong></div>
-        <p class="mock-foot">Demo UI — real data appears only in your logged-in Cursor session.</p>
-      </div>
-    </div>
   </header>
 
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <img src="assets/marketing/hero-marketing.png" alt="" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <div class="badges">
+          <span class="badge">Lorapok Labs</span>
+          <span class="badge accent" id="ovsx-status">Open VSX · loading…</span>
+          <span class="badge muted">v<span data-version>—</span></span>
+        </div>
+        <h1>Know your Cursor limits <em>before</em> they know you.</h1>
+        <p class="lead">Live usage dashboard for Cursor IDE — included quota, billing cycle, on-demand spend, and automatic free fallback to <strong>Composer 2.5 (Fast off)</strong> when limits are crossed.</p>
+        <div class="cta-row">
+          <a class="btn primary" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
+            Install from Open VSX
+            <small>v<span data-ovsx-version>—</span></small>
+          </a>
+          <a class="btn secondary" data-href-release href="#">Download VSIX v<span data-version>—</span></a>
+        </div>
+        <p class="meta-line">Extension ID: <code data-extension-id>lorapok-labs.cursor-curse-monitor-by-lorapok</code></p>
+      </div>
+      <aside class="hero-panel glass">
+        <div class="panel-head">Live preview</div>
+        <div class="stat-row"><span>Included usage</span><strong>87%</strong></div>
+        <div class="meter"><div class="meter-fill" style="width:87%"></div></div>
+        <div class="stat-row"><span>Billing reset</span><strong>4 days</strong></div>
+        <div class="stat-row"><span>On-demand</span><strong class="warn">Off</strong></div>
+        <div class="stat-row"><span>Fallback model</span><strong class="ok">composer-2.5 · fast: false</strong></div>
+        <p class="panel-note">Demo UI — real metrics appear only in your logged-in Cursor session.</p>
+      </aside>
+    </div>
+  </section>
+
   <main>
-    <section id="features" class="section">
-      <h2>Features</h2>
-      <div class="cards">
-        <article><h3>Live dashboard</h3><p>Sidebar panel + status bar with auto-refresh from Cursor API.</p></article>
-        <article><h3>Budget cap</h3><p>Set a personal USD limit and track on-demand spend.</p></article>
-        <article><h3>Limit alerts</h3><p>Warning at 80% (configurable) before you hit the wall.</p></article>
-        <article><h3>Free fallback</h3><p>Auto-switch to Composer 2.5 (Fast off) at 100% usage.</p></article>
+    <section id="features" class="section container">
+      <div class="section-head">
+        <p class="eyebrow">Why developers install it</p>
+        <h2>Everything you need to stay inside your quota</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <img src="assets/marketing/showcase-dashboard.png" alt="Live dashboard panel in Cursor IDE" loading="lazy" />
+          <div class="feature-body">
+            <h3>Live dashboard</h3>
+            <p>Sidebar panel and status bar with auto-refresh from the Cursor API — no manual checking.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <img src="assets/marketing/showcase-budget.png" alt="Budget cap and spend tracking" loading="lazy" />
+          <div class="feature-body">
+            <h3>Budget cap</h3>
+            <p>Set a personal USD limit, track on-demand spend, and get warned before you overshoot.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <img src="assets/marketing/showcase-fallback.png" alt="Automatic Composer 2.5 fallback" loading="lazy" />
+          <div class="feature-body">
+            <h3>Free fallback</h3>
+            <p>At 100% included usage, auto-switch to Composer 2.5 (Fast off) — the free slow pool.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <img src="assets/marketing/showcase-privacy.png" alt="Privacy-first local-only design" loading="lazy" />
+          <div class="feature-body">
+            <h3>Privacy-first</h3>
+            <p>Your auth token never leaves your machine. No telemetry, no shared team dashboard.</p>
+          </div>
+        </article>
       </div>
     </section>
 
-    <section id="privacy" class="section highlight">
-      <h2>Your data stays yours</h2>
-      <ul class="privacy-list">
-        <li><strong>Only your login</strong> — usage is read from <em>your</em> Cursor auth token on <em>your</em> machine.</li>
-        <li><strong>No shared dashboard</strong> — teammates cannot see your usage through this extension.</li>
-        <li><strong>Team context</strong> — if you are on a team plan, you see limits returned for your account session (same as Cursor shows you), not other members' usage.</li>
-        <li><strong>No telemetry</strong> — no analytics, no third-party tracking, no cloud storage of usage data.</li>
-      </ul>
-      <a class="btn ghost" href="privacy.html">Read privacy policy</a>
+    <section id="gallery" class="section gallery-section">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Product gallery</p>
+          <h2>Built for Cursor power users</h2>
+          <p class="section-lead">Marketing visuals for the extension — share them when you recommend Cursor Curse Monitor to your team.</p>
+        </div>
+        <div class="gallery-masonry">
+          <figure class="gallery-item wide"><img src="assets/marketing/hero-marketing.png" alt="Cursor Curse Monitor hero" loading="lazy" /><figcaption>Hero launch visual</figcaption></figure>
+          <figure class="gallery-item"><img src="assets/marketing/showcase-dashboard.png" alt="Dashboard" loading="lazy" /><figcaption>Usage dashboard</figcaption></figure>
+          <figure class="gallery-item"><img src="assets/marketing/showcase-fallback.png" alt="Fallback" loading="lazy" /><figcaption>Model fallback</figcaption></figure>
+          <figure class="gallery-item"><img src="assets/marketing/showcase-budget.png" alt="Budget" loading="lazy" /><figcaption>Budget tracking</figcaption></figure>
+          <figure class="gallery-item"><img src="assets/marketing/showcase-privacy.png" alt="Privacy" loading="lazy" /><figcaption>Local privacy</figcaption></figure>
+          <figure class="gallery-item"><img src="assets/marketing/showcase-install.png" alt="Install steps" loading="lazy" /><figcaption>Install guide</figcaption></figure>
+          <figure class="gallery-item wide"><img src="assets/marketing/showcase-oss.png" alt="Open source" loading="lazy" /><figcaption>Open source · MIT</figcaption></figure>
+          <figure class="gallery-item"><img src="assets/marketing/og-social-card.png" alt="Social card" loading="lazy" /><figcaption>Social share card</figcaption></figure>
+        </div>
+      </div>
     </section>
 
-    <section class="section">
-      <h2>Author</h2>
-      <p><strong>Mohammad Maizied Hasan Majumder</strong> (Maijied) — Founder & Principal Engineer at <a href="https://lorapok.tech">Lorapok Labs</a> · Senior Software Engineer at <a href="https://shohoz.com">Shohoz Ltd</a></p>
+    <section id="install" class="section container">
+      <div class="section-head">
+        <p class="eyebrow">Get started in minutes</p>
+        <h2>Install <span data-version>—</span></h2>
+        <p class="section-lead">Commands below update automatically from CI — always pointed at the latest release.</p>
+      </div>
+      <div class="install-grid">
+        <article class="install-card recommended">
+          <span class="install-label">Recommended</span>
+          <h3>Open VSX in Cursor</h3>
+          <p>Search Extensions for:</p>
+          <pre class="code-block"><code id="cmd-ovsx-search">lorapok-labs.cursor-curse-monitor-by-lorapok</code></pre>
+          <a class="btn primary block" data-href-ovsx href="#" target="_blank" rel="noopener">Open on Open VSX</a>
+        </article>
+        <article class="install-card">
+          <h3>GitHub Release VSIX</h3>
+          <p>Download <code data-vsix-name>—</code> from the latest release, then run:</p>
+          <pre class="code-block"><code id="cmd-vsix">cursor --install-extension …</code></pre>
+          <a class="btn secondary block" data-href-vsix href="#" download>Download VSIX</a>
+        </article>
+        <article class="install-card visual">
+          <img src="assets/marketing/showcase-install.png" alt="Install guide illustration" loading="lazy" />
+        </article>
+      </div>
+    </section>
+
+    <section id="release" class="section release-section">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">For maintainers</p>
+          <h2>Release via CI/CD</h2>
+          <p class="section-lead">Tag a version → GitHub Actions builds, publishes to Open VSX, and creates a release with the VSIX attached.</p>
+        </div>
+        <div class="release-flow">
+          <div class="flow-step"><span>1</span><p>Bump version in <code>package.json</code> (or use script below)</p></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span>2</span><p>Commit &amp; push to <code>main</code></p></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span>3</span><p>Run release script — tags &amp; deploys</p></div>
+        </div>
+        <div class="release-commands">
+          <div class="cmd-card">
+            <span class="cmd-label">Patch release</span>
+            <pre class="code-block"><code id="cmd-release-patch">./scripts/release.sh patch</code></pre>
+          </div>
+          <div class="cmd-card">
+            <span class="cmd-label">Minor release</span>
+            <pre class="code-block"><code id="cmd-release-minor">./scripts/release.sh minor</code></pre>
+          </div>
+          <div class="cmd-card">
+            <span class="cmd-label">Current tag</span>
+            <pre class="code-block"><code>git tag <span data-github-tag>v—</span> && git push origin <span data-github-tag>v—</span></code></pre>
+          </div>
+        </div>
+        <p class="sync-note">Site data last synced: <time data-generated>—</time></p>
+      </div>
+    </section>
+
+    <section id="privacy" class="section privacy-section">
+      <div class="container privacy-inner">
+        <div>
+          <p class="eyebrow">Trust</p>
+          <h2>Your data stays yours</h2>
+          <ul class="check-list">
+            <li><strong>Only your login</strong> — usage is read from your Cursor auth token on your machine.</li>
+            <li><strong>No shared dashboard</strong> — teammates cannot see your usage through this extension.</li>
+            <li><strong>Team context</strong> — you see limits for your account session, not other members.</li>
+            <li><strong>No telemetry</strong> — no analytics, no third-party tracking, no cloud storage.</li>
+          </ul>
+          <a class="btn ghost" href="privacy.html">Read privacy policy</a>
+        </div>
+        <img class="privacy-visual" src="assets/marketing/showcase-privacy.png" alt="" loading="lazy" />
+      </div>
+    </section>
+
+    <section class="section container author-section">
+      <div class="author-card">
+        <img src="assets/marketing/showcase-oss.png" alt="" class="author-visual" loading="lazy" />
+        <div>
+          <p class="eyebrow">Author</p>
+          <h2>Mohammad Maizied Hasan Majumder</h2>
+          <p>Founder &amp; Principal Engineer at <a href="https://lorapok.tech">Lorapok Labs</a> · Senior Software Engineer at <a href="https://shohoz.com">Shohoz Ltd</a></p>
+          <p class="oss-note">MIT licensed open source — contributions welcome on <a data-href-repo href="#">GitHub</a>.</p>
+        </div>
+      </div>
     </section>
   </main>
 
-  <footer>
-    <p>MIT © Lorapok Labs · Not affiliated with Cursor / Anysphere</p>
-    <p><a href="sitemap.xml">Sitemap</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok">Source</a></p>
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>MIT © Lorapok Labs · Not affiliated with Cursor / Anysphere</p>
+      <p><a href="sitemap.xml">Sitemap</a> · <a data-href-repo href="#">Source</a> · <a href="privacy.html">Privacy</a></p>
+    </div>
   </footer>
+  <script src="site.js" defer></script>
 </body>
 </html>

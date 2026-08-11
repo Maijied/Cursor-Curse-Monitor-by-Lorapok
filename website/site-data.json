@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-08-11T13:34:25.886Z",
+  "displayName": "Cursor Curse Monitor by Lorapok",
+  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "version": "0.1.4",
+  "packageVersion": "0.1.4",
+  "publisher": "lorapok-labs",
+  "extensionId": "lorapok-labs.cursor-curse-monitor-by-lorapok",
+  "extensionName": "cursor-curse-monitor-by-lorapok",
+  "homepage": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
+  "repository": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok",
+  "author": {
+    "name": "Mohammad Maizied Hasan Majumder",
+    "email": "mdshuvo40@gmail.com",
+    "url": "https://lorapok.tech"
+  },
+  "ovsx": {
+    "version": "0.1.4",
+    "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
+    "downloadable": true,
+    "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok"
+  },
+  "github": {
+    "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
+    "releaseTag": "v0.1.4",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.1.4",
+    "vsixName": "cursor-curse-monitor-by-lorapok-0.1.4.vsix",
+    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.1.4/cursor-curse-monitor-by-lorapok-0.1.4.vsix",
+    "publishedAt": "2026-08-11T13:22:07Z"
+  },
+  "install": {
+    "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",
+    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.1.4.vsix",
+    "releasePatch": "./scripts/release.sh patch",
+    "releaseMinor": "./scripts/release.sh minor",
+    "releaseTag": "./scripts/release.sh 0.1.4"
+  }
+}

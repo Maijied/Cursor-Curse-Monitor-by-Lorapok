@@ -117,7 +117,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
-    "publish:ovsx": "ovsx publish"
+    "publish:ovsx": "ovsx publish",
+    "site:data": "node scripts/generate-site-data.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
