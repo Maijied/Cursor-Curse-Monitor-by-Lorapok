@@ -5,6 +5,8 @@ import {
   readCursorAccessToken,
 } from "./cursorAuth";
 import {
+  buildBudgetMetrics,
+  buildFeatureList,
   DashboardSnapshot,
   fetchStripeProfile,
   fetchUsageSummary,
@@ -75,6 +77,8 @@ export class UsageMonitorService implements vscode.Disposable {
       limitExceeded: false,
       customBudgetLimit,
       onDemandSpendUsd: 0,
+      budget: null,
+      features: [],
     };
 
     try {
@@ -91,6 +95,14 @@ export class UsageMonitorService implements vscode.Disposable {
       snapshot.onDemandSpendUsd =
         (snapshot.usage.individualUsage.onDemand.used ?? 0) / 100;
       snapshot.limitExceeded = isLimitExceeded(snapshot.usage);
+      snapshot.budget = buildBudgetMetrics(
+        snapshot.usage,
+        customBudgetLimit,
+        snapshot.onDemandSpendUsd,
+        warnAtPercent,
+        snapshot.limitExceeded
+      );
+      snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
 
       const percent = snapshot.usage.individualUsage.plan.totalPercentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {

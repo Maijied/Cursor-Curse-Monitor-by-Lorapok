@@ -4,6 +4,19 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-08-11
+
+### Added
+
+- Cybernetic Soldier Fly Larva mascot logo (neon-green / charcoal armor)
+- Redesigned Usage Dashboard with header, gauge budget tracker, and API feature chips
+- Detailed budget tracker: cap, amount left, threshold warning, on-demand spend
+- VS Code Marketplace publish in Deploy CI (`VSCE_PAT`)
+
+### Fixed
+
+- Activity bar gray square icon — now uses `media/activity-bar.svg` (VS Code requires SVG)
+
 ## [0.1.4] - 2026-08-11
 
 ### Fixed

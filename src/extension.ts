@@ -33,7 +33,9 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar.text = formatStatusBarText(snapshot);
     statusBar.tooltip = snapshot.error
       ? snapshot.error
-      : `Cursor usage: ${snapshot.usage?.individualUsage.plan.totalPercentUsed ?? 0}%`;
+      : snapshot.budget?.hasUsdBudget
+        ? `Usage: ${Math.round(snapshot.budget.percentUsed)}% · ${snapshot.budget.spentUsd.toFixed(2)} / ${snapshot.budget.capUsd.toFixed(2)} USD`
+        : `Cursor usage: ${snapshot.usage?.individualUsage.plan.totalPercentUsed ?? 0}%`;
     statusBar.show();
   };
 
@@ -44,7 +46,7 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar,
     vscode.window.registerWebviewViewProvider(
       DashboardViewProvider.viewType,
-      new DashboardViewProvider(monitor)
+      new DashboardViewProvider(monitor, context.extensionUri)
     ),
     vscode.commands.registerCommand("cursorCurseMonitor.openDashboard", async () => {
       await vscode.commands.executeCommand(

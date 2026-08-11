@@ -2,7 +2,7 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "lorapok-labs",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -63,7 +63,7 @@
         {
           "id": "cursor-curse-monitor-lorapok",
           "title": "Cursor Curse Monitor",
-          "icon": "media/icon.png"
+          "icon": "media/activity-bar.svg"
         }
       ]
     },
@@ -118,6 +118,7 @@
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
     "publish:ovsx": "ovsx publish",
+    "publish:vscode": "vsce publish",
     "site:data": "node scripts/generate-site-data.mjs"
   },
   "devDependencies": {
