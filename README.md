@@ -112,6 +112,10 @@ npm run watch   # optional, during development
 
 Press **F5** in Cursor/VS Code to launch the Extension Development Host.
 
+## Privacy
+
+**Only your logged-in Cursor account** can see usage in this extension. Team members' individual usage is not shown. See the [privacy policy](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html).
+
 ## Publishing
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for full CI/CD setup.

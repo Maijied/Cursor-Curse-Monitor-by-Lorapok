@@ -2,7 +2,7 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "Maijied",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -15,7 +15,7 @@
     "type": "git",
     "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git"
   },
-  "homepage": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#readme",
+  "homepage": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
   "bugs": {
     "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
   },

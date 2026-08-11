@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Cursor Curse Monitor by Lorapok</title>
+  <meta name="description" content="Privacy policy for Cursor Curse Monitor. Usage data is visible only to the logged-in Cursor user on their own machine." />
+  <link rel="canonical" href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero compact">
+    <nav class="nav">
+      <a class="brand" href="./"><img src="assets/icon.png" alt="" width="32" height="32" /><span>Cursor Curse Monitor</span></a>
+      <a href="./">Home</a>
+    </nav>
+    <h1>Privacy Policy</h1>
+    <p class="lead">Last updated: August 11, 2026</p>
+  </header>
+  <main class="section prose">
+    <h2>Summary</h2>
+    <p>Cursor Curse Monitor reads <strong>your</strong> Cursor session only. We do not operate a cloud service that stores or aggregates usage data.</p>
+
+    <h2>What data is accessed</h2>
+    <ul>
+      <li>Your Cursor auth token from local <code>state.vscdb</code> (on your computer only)</li>
+      <li>Usage summary and profile from <code>api2.cursor.sh</code> using that token</li>
+      <li>Your extension settings (poll interval, budget cap) stored in VS Code/Cursor settings</li>
+    </ul>
+
+    <h2>Who can see your usage</h2>
+    <ul>
+      <li><strong>You only</strong> — the dashboard shows data for the Cursor account currently signed in on this machine.</li>
+      <li><strong>Not your team admin via this app</strong> — this extension does not expose other members' usage.</li>
+      <li><strong>Team limits</strong> — if your plan is team-based, you may see team limit <em>context</em> returned by Cursor's API for your session, not a full team usage breakdown.</li>
+    </ul>
+
+    <h2>What we do not do</h2>
+    <ul>
+      <li>No usage data sent to Lorapok Labs servers</li>
+      <li>No analytics or advertising trackers</li>
+      <li>No sale of personal data</li>
+    </ul>
+
+    <h2>Model fallback</h2>
+    <p>When enabled, the extension may write Composer 2.5 (Fast off) into your local Cursor model config when limits are exceeded. This happens locally in <code>state.vscdb</code>.</p>
+
+    <h2>Contact</h2>
+    <p>Mohammad Maizied Hasan Majumder — <a href="mailto:mdshuvo40@gmail.com">mdshuvo40@gmail.com</a></p>
+  </main>
+  <footer><p><a href="./">Back to home</a></p></footer>
+</body>
+</html>

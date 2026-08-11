@@ -170,6 +170,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     </div>
 
     <div class="card">
+      <div class="row"><span class="label">Privacy</span><span class="value">Your login only</span></div>
+      <div class="row" style="margin-top:8px"><span class="label">Team members</span><span class="value">Not visible here</span></div>
+    </div>
+
+    <div class="card">
       <label class="label" for="budgetInput">Custom budget cap (USD, optional)</label>
       <input id="budgetInput" type="number" min="0" step="1" placeholder="0 = use included plan only" />
       <div class="actions">

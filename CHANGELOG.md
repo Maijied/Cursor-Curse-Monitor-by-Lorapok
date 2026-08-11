@@ -4,6 +4,13 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-08-11
+
+### Added
+
+- GitHub Pages website with SEO, sitemap, and privacy policy
+- Privacy messaging: only logged-in user's usage is visible
+
 ## [0.1.0] - 2026-08-11
 
 ### Added
