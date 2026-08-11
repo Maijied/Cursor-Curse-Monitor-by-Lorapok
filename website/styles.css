@@ -73,7 +73,8 @@ a:hover { color: #7cb8ff; }
   border: 1px solid rgba(77, 159, 255, 0.22);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 24px rgba(77, 159, 255, 0.12);
 }
-.brand-logo img {
+.brand-logo img,
+.brand-logo svg {
   width: 48px;
   height: 48px;
   border-radius: 12px;

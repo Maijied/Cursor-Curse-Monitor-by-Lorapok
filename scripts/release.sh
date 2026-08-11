@@ -32,6 +32,10 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
+echo "==> Validating assets"
+npm run validate:assets
+npm run sync:icons
+
 echo "==> Releasing $TAG"
 node scripts/generate-site-data.mjs
 git add website/site-data.json 2>/dev/null || true

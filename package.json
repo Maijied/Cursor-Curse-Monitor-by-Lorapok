@@ -2,7 +2,7 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "lorapok-labs",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -117,6 +117,9 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
+    "validate:assets": "node scripts/validate-assets.mjs",
+    "sync:icons": "node scripts/sync-icons.mjs",
+    "prepackage": "npm run validate:assets && npm run sync:icons",
     "publish:ovsx": "ovsx publish",
     "publish:vscode": "vsce publish",
     "site:data": "node scripts/generate-site-data.mjs"

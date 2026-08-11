@@ -4,6 +4,14 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-08-11
+
+### Added
+
+- Transparent animated `logo.svg` with watching eyes (usage-reactive colors)
+- `icon.svg` and improved `activity-bar.svg`
+- `npm run validate:assets` and `npm run sync:icons` — checked before package/release
+
 ## [0.2.0] - 2026-08-11
 
 ### Added

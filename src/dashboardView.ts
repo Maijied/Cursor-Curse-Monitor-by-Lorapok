@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { DashboardSnapshot } from "./cursorApi";
 import { UsageMonitorService } from "./usageMonitor";
@@ -15,10 +17,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void {
-    const logoUri = webviewView.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "media", "logo.png")
-    );
-
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [
@@ -26,8 +24,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       ],
     };
 
+    const logoSvg = fs.readFileSync(
+      path.join(this.extensionUri.fsPath, "media", "logo.svg"),
+      "utf8"
+    );
+
     webviewView.webview.html = this.getHtml(
-      logoUri,
+      logoSvg,
       webviewView.webview.cspSource
     );
 
@@ -55,7 +58,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private getHtml(logoUri: vscode.Uri, cspSource: string): string {
+  private getHtml(logoSvg: string, cspSource: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,15 +102,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
     .logo-wrap {
       flex-shrink: 0;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
       overflow: hidden;
-      background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(57,255,20,.12));
+      background: linear-gradient(135deg, rgba(124,92,255,.15), rgba(57,255,20,.08));
       border: 1px solid rgba(124,92,255,.35);
-      box-shadow: 0 0 20px rgba(124,92,255,.15);
+      box-shadow: 0 0 20px rgba(57,255,20,.12);
+      --eye-color: #39ff14;
     }
-    .logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-wrap svg { width: 100%; height: 100%; display: block; }
     .header-text { flex: 1; min-width: 0; }
     .header-text h1 {
       margin: 0;
@@ -363,8 +367,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
   <header class="header">
-    <div class="logo-wrap">
-      <img src="${logoUri}" alt="Cursor Curse Monitor mascot" />
+    <div class="logo-wrap" id="mascotLogo">
+      ${logoSvg}
     </div>
     <div class="header-text">
       <h1>Usage Dashboard</h1>
@@ -611,6 +615,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       document.getElementById('footerMsg').textContent = b.thresholdReached
         ? 'Usage is at ' + Math.round(pct) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.'
         : "You're in control. We'll notify you before you reach your cap.";
+
+      var mascot = document.getElementById('mascotLogo');
+      if (mascot) {
+        var eyeColor = '#39ff14';
+        if (snapshot.limitExceeded) eyeColor = '#7ee787';
+        else if (pct >= 100) eyeColor = '#ff6b6b';
+        else if (pct >= b.thresholdPercent) eyeColor = '#f5b942';
+        else if (pct >= 50) eyeColor = '#5b9dff';
+        mascot.style.setProperty('--eye-color', eyeColor);
+      }
     }
 
     window.addEventListener('message', function(event) {

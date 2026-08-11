@@ -32,6 +32,9 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Validate icon & logo assets
+        run: npm run validate:assets
+
       - name: Package VSIX
         run: npm run package
 
