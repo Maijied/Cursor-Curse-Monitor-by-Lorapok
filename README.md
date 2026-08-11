@@ -114,16 +114,16 @@ Press **F5** in Cursor/VS Code to launch the Extension Development Host.
 
 ## Publishing
 
-This project uses GitHub Actions to publish to [Open VSX](https://open-vsx.org) on release.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full CI/CD setup.
 
-**Required secret:** `OVSX_PAT` — create at [open-vsx.org](https://open-vsx.org) → Access Tokens
+**Quick release:**
 
 ```bash
-# Manual publish
-npx ovsx create-namespace Maijied -p <TOKEN>   # first time only
-npm run package
-npx ovsx publish -p <TOKEN>
+git tag v0.1.0
+git push origin v0.1.0
 ```
+
+Requires GitHub secret `OVSX_PAT`.
 
 ## Author
 
