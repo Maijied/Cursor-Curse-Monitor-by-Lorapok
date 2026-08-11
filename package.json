@@ -1,0 +1,132 @@
+{
+  "name": "cursor-curse-monitor-by-lorapok",
+  "displayName": "Cursor Curse Monitor by Lorapok",
+  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "version": "0.1.0",
+  "publisher": "Maijied",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "author": {
+    "name": "Mohammad Maizied Hasan Majumder",
+    "email": "mdshuvo40@gmail.com",
+    "url": "https://lorapok.tech"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git"
+  },
+  "homepage": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#readme",
+  "bugs": {
+    "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "cursor",
+    "lorapok",
+    "usage",
+    "billing",
+    "budget",
+    "monitor",
+    "composer",
+    "curse"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cursorCurseMonitor.openDashboard",
+        "title": "Cursor Curse Monitor: Open Dashboard",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.refresh",
+        "title": "Cursor Curse Monitor: Refresh Now",
+        "category": "Cursor Curse Monitor",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cursorCurseMonitor.applyFallbackModel",
+        "title": "Cursor Curse Monitor: Apply Free Fallback Model",
+        "category": "Cursor Curse Monitor"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cursor-curse-monitor-lorapok",
+          "title": "Cursor Curse Monitor",
+          "icon": "media/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "cursor-curse-monitor-lorapok": [
+        {
+          "type": "webview",
+          "id": "cursorCurseMonitor.dashboard",
+          "name": "Dashboard"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Cursor Curse Monitor by Lorapok",
+      "properties": {
+        "cursorCurseMonitor.pollIntervalSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 15,
+          "maximum": 3600,
+          "description": "How often to refresh usage data from the Cursor API."
+        },
+        "cursorCurseMonitor.customBudgetLimit": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Optional personal budget cap in USD (0 = use plan included limit only)."
+        },
+        "cursorCurseMonitor.autoApplyFallbackModel": {
+          "type": "boolean",
+          "default": true,
+          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model."
+        },
+        "cursorCurseMonitor.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show usage percentage in the status bar."
+        },
+        "cursorCurseMonitor.warnAtPercent": {
+          "type": "number",
+          "default": 80,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Show a warning notification when usage reaches this percentage."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish:ovsx": "ovsx publish"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.93.0",
+    "@vscode/vsce": "^3.2.1",
+    "ovsx": "^0.10.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "sql.js": "^1.12.0"
+  }
+}
