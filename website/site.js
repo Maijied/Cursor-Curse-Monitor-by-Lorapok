@@ -1,5 +1,6 @@
 /**
  * Loads site-data.json and powers dynamic install UI + photo lightbox.
+ * Supports both Open VSX and VS Code Marketplace data.
  */
 (async function () {
   const $ = (sel) => document.querySelector(sel);
@@ -22,19 +23,28 @@
       $$(sel).forEach((el) => { el.href = href; });
     };
 
+    // Core version data
     setText("[data-version]", data.version);
     setText("[data-package-version]", data.packageVersion);
-    setText("[data-extension-id]", data.extensionId);
-    setText("[data-ovsx-version]", data.ovsx.version ?? "—");
+    setText("[data-extension-id]", data.ovsxExtensionId ?? data.extensionId);
     setText("[data-github-tag]", data.github.releaseTag);
     setText("[data-vsix-name]", data.github.vsixName);
     setText("[data-generated]", new Date(data.generatedAt).toLocaleString());
 
-    setHref("[data-href-ovsx]", data.ovsx.url);
+    // Open VSX data
+    setText("[data-ovsx-version]", data.ovsx?.version ?? "—");
+    setHref("[data-href-ovsx]", data.ovsx?.url ?? "#");
+
+    // VS Code Marketplace data
+    setText("[data-vscode-version]", data.vscode?.version ?? "—");
+    setHref("[data-href-vscode]", data.vscode?.url ?? "#");
+
+    // GitHub links
     setHref("[data-href-release]", data.github.releaseUrl);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
 
+    // Install commands
     const cmd = (id, text) => {
       const el = document.getElementById(id);
       if (el) el.textContent = text;
@@ -43,15 +53,43 @@
     cmd("cmd-release-patch", data.install.releasePatch);
     cmd("cmd-release-minor", data.install.releaseMinor);
     cmd("cmd-ovsx-search", data.install.ovsxSearch);
+    cmd("cmd-vscode-search", data.install.vsceSearch ?? data.install.ovsxSearch);
 
+    // Open VSX badge
     const ovsxBadge = $("#ovsx-status");
-    if (ovsxBadge && data.ovsx.version) {
+    if (ovsxBadge && data.ovsx?.version) {
       ovsxBadge.textContent = data.ovsx.downloadable
         ? `Open VSX v${data.ovsx.version} · live`
         : `Open VSX v${data.ovsx.version} · syncing`;
       ovsxBadge.classList.add(data.ovsx.downloadable ? "live" : "pending");
+    } else if (ovsxBadge) {
+      ovsxBadge.textContent = "Open VSX · not published";
+      ovsxBadge.classList.add("pending");
     }
 
+    // VS Code Marketplace badge
+    const vscodeBadge = $("#vscode-status");
+    if (vscodeBadge && data.vscode?.version) {
+      vscodeBadge.textContent = data.vscode.published
+        ? `VS Code v${data.vscode.version} · live`
+        : `VS Code v${data.vscode.version} · syncing`;
+      vscodeBadge.classList.add(data.vscode.published ? "live" : "pending");
+    } else if (vscodeBadge) {
+      vscodeBadge.textContent = "VS Code · coming soon";
+      vscodeBadge.classList.add("pending");
+    }
+
+    // Live status in marketplace links section
+    const ovsxLive = $("#ovsx-live-status");
+    if (ovsxLive) {
+      ovsxLive.textContent = data.ovsx?.downloadable ? "✅ Live" : "⏳ Not yet published";
+    }
+    const vscodeLive = $("#vscode-live-status");
+    if (vscodeLive) {
+      vscodeLive.textContent = data.vscode?.published ? "✅ Live" : "⏳ Coming soon";
+    }
+
+    // OG image
     const metaOg = document.querySelector('meta[property="og:image"]');
     if (metaOg) {
       metaOg.setAttribute("content", new URL("assets/marketing/og-social-card.png", window.location.href).href);

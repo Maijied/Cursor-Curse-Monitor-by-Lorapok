@@ -9,20 +9,20 @@
   </p>
 
   <p>
-    <a href="https://lorapok.tech">Lorapok Labs</a> · Built for Cursor IDE
+    <a href="https://lorapok.tech">Lorapok Labs</a> · Built for Cursor IDE & VS Code
   </p>
 
   <p>
-    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci.yml?branch=main&label=CI" alt="CI" /></a>
-    <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/badge/Open%20VSX-Lorapok%20Labs-blue" alt="Open VSX" /></a>
+    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci-cd.yml?branch=main&label=CI%2FCD" alt="CI/CD" /></a>
+    <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/open-vsx/v/lorapok-labs/cursor-curse-monitor-by-lorapok?label=Open%20VSX" alt="Open VSX" /></a>
+    <a href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/visual-studio-marketplace/v/LorapokLabs.cursor-curse-monitor-by-lorapok?label=VS%20Code%20Marketplace" alt="VS Code Marketplace" /></a>
     <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
     <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
   </p>
 
   <p>
-    <img src="https://img.shields.io/badge/downloads-Coming%20Soon-orange" alt="Downloads" />
-    <img src="https://img.shields.io/badge/views-Coming%20Soon-blue" alt="Views" />
-    <img src="https://img.shields.io/badge/version-0.2.1-brightgreen" alt="Version" />
+    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
+    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases"><img src="https://img.shields.io/github/downloads/Maijied/Cursor-Curse-Monitor-by-Lorapok/total?label=Downloads" alt="Downloads" /></a>
   </p>
 
 </div>
@@ -46,6 +46,7 @@
 | **Limit alerts** | Warning at 80% (configurable) |
 | **Free fallback** | Auto-switches to Composer 2.5 (Fast off) at 100% |
 | **Team aware** | Shows team vs individual limit type |
+| **DB safety** | Atomic writes, backup/restore, integrity checks |
 
 ## Screenshots
 
@@ -58,13 +59,23 @@ Open the **Cursor Curse Monitor** panel in the activity bar after install to see
 
 ## Installation
 
-### From Open VSX (Cursor Marketplace)
+### From Open VSX (Cursor Marketplace) — Recommended for Cursor
 
 1. Open **Extensions** in Cursor
 2. Search `Cursor Curse Monitor by Lorapok` or `lorapok-labs.cursor-curse-monitor-by-lorapok`
 3. Click **Install**
 
-### From VSIX (local)
+**Direct link:** [Open VSX Registry](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok)
+
+### From VS Code Marketplace — Recommended for VS Code
+
+1. Open **Extensions** in VS Code
+2. Search `Cursor Curse Monitor by Lorapok` or `LorapokLabs.cursor-curse-monitor-by-lorapok`
+3. Click **Install**
+
+**Direct link:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok)
+
+### From VSIX (manual)
 
 ```bash
 git clone https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git
@@ -72,7 +83,7 @@ cd Cursor-Curse-Monitor-by-Lorapok
 npm install
 npm run compile
 npm run package
-cursor --install-extension cursor-curse-monitor-by-lorapok-0.1.0.vsix
+cursor --install-extension *.vsix
 ```
 
 Reload Cursor: `Developer: Reload Window`
@@ -104,11 +115,59 @@ Reload Cursor: `Developer: Reload Window`
 
 > **Note:** Uses undocumented Cursor internal APIs. Behavior may change if Cursor updates their endpoints.
 
+### Database Safety
+
+The extension takes multiple precautions when writing to the Cursor state database:
+
+- **Pre-write integrity check** — validates SQLite header, file size, and existence
+- **Automatic backup** — creates a timestamped backup before any write
+- **Atomic writes** — writes to a temp file then renames (with cross-filesystem fallback)
+- **Post-write verification** — validates integrity after writing
+- **Automatic restore** — restores from backup on any failure
+- **Retry with backoff** — retries once after restoring the backup
+- **Timeout protection** — operations abort after 15s to prevent hangs
+- **Parameterized queries** — prevents SQL injection
+- **Stale backup cleanup** — removes old backups automatically
+
+## CI/CD
+
+All CI/CD is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-cd.yml)):
+
+| Trigger | What happens |
+|---------|-------------|
+| **PR to `main`** | Build, compile, validate, package — no deploy |
+| **Push to `main`** | Auto-patch bump → deploy to both marketplaces → update website |
+| **Manual dispatch** | Major/minor/patch bump → deploy → update website |
+| **Tag `v*`** | Deploy to both marketplaces → update website |
+
+### Auto-patch (default)
+
+Every push to `main` automatically:
+1. Bumps the patch version (e.g., `0.5.0` → `0.5.1`)
+2. Creates and pushes a git tag
+3. Publishes to Open VSX + VS Code Marketplace
+4. Creates a GitHub Release with VSIX
+5. Updates the project website
+
+### Major/Minor releases
+
+For breaking or feature releases, use GitHub Actions:
+1. Go to **Actions → CI/CD → Run workflow**
+2. Select `major` or `minor`
+3. Optionally set a custom version
+4. Run
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full setup details.
+
 ## Privacy
+
+**Only your logged-in Cursor account** can see usage in this extension. Team members' individual usage is not shown.
 
 - Auth token stays on your machine
 - API calls go only to `api2.cursor.sh`
 - No telemetry, analytics, or third-party tracking
+
+See the [privacy policy](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html).
 
 ## Development
 
@@ -120,22 +179,22 @@ npm run watch   # optional, during development
 
 Press **F5** in Cursor/VS Code to launch the Extension Development Host.
 
-## Privacy
-
-**Only your logged-in Cursor account** can see usage in this extension. Team members' individual usage is not shown. See the [privacy policy](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html).
-
 ## Publishing
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for full CI/CD setup.
 
-**Quick release:**
+Requires GitHub secrets:
+- `OVSX_PAT` — Open VSX access token
+- `VSCE_PAT` — VS Code Marketplace personal access token
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+## Marketplace Links
 
-Requires GitHub secret `OVSX_PAT`.
+| Marketplace | URL |
+|-------------|-----|
+| **Open VSX** (Cursor) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
+| **VS Code Marketplace** | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
+| **GitHub Releases** | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
+| **Project Website** | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
 
 ## Author
 
@@ -143,7 +202,7 @@ Requires GitHub secret `OVSX_PAT`.
 |-------|--------|
 | **Name** | Mohammad Maizied Hasan Majumder |
 | **Alias** | Maijied |
-| **Publisher** | Lorapok Labs (`lorapok-labs`) |
+| **Publisher** | Lorapok Labs (`lorapok-labs` on Open VSX, `LorapokLabs` on VS Code Marketplace) |
 | **Role** | Founder and Principal Engineer @ [Lorapok Labs](https://lorapok.tech) · Senior Software Engineer @ [Shohoz Ltd](https://shohoz.com) |
 | **Location** | Dhaka, Bangladesh |
 | **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) |

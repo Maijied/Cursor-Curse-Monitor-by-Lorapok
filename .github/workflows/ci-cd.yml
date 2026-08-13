@@ -1,0 +1,448 @@
+name: CI/CD
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Single unified workflow for Cursor Curse Monitor by Lorapok Labs.
+#
+# Triggers:
+#   PR to main        → ci (build/validate only)
+#   Push to main      → ci → auto-patch bump → deploy → website
+#   workflow_dispatch  → manual bump (major/minor/patch) → deploy → website
+#   Tag v*            → deploy → website
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: "Custom version (leave empty for auto-bump)"
+        required: false
+        type: string
+      create_release:
+        description: "Create GitHub Release with VSIX"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOBS
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. CI — Build, validate, package (runs on every trigger)
+  # ───────────────────────────────────────────────────────────────────────────
+  ci:
+    name: Build & Validate
+    runs-on: ubuntu-latest
+    # Skip CI on bot commits (auto-patch version bumps) to prevent loops
+    if: >-
+      !(github.event_name == 'push'
+        && !startsWith(github.ref, 'refs/tags/')
+        && contains(github.event.head_commit.message, 'chore: bump version'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Validate icon & logo assets
+        run: npm run validate:assets
+
+      - name: Package VSIX
+        run: npm run package
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cursor-curse-monitor-vsix-${{ github.sha }}
+          path: "*.vsix"
+          retention-days: 14
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. AUTO-PATCH — Automatic patch bump on push to main
+  # ───────────────────────────────────────────────────────────────────────────
+  auto-patch:
+    name: Auto Patch Bump
+    needs: ci
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && !startsWith(github.ref, 'refs/tags/')
+      && !contains(github.event.head_commit.message, 'chore: bump version')
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+      tag: ${{ steps.bump.outputs.tag }}
+      bumped: ${{ steps.bump.outputs.bumped }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          TAG="v$NEW_VERSION"
+
+          npm version --no-git-tag-version "$NEW_VERSION"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $NEW_VERSION"
+          git tag "$TAG"
+          git push origin main
+          git push origin "$TAG"
+
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "bumped=true" >> "$GITHUB_OUTPUT"
+
+          echo "## Auto Patch Bump" >> $GITHUB_STEP_SUMMARY
+          echo "**$CURRENT → $NEW_VERSION** (tag: $TAG)" >> $GITHUB_STEP_SUMMARY
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. MANUAL BUMP — Major / minor / patch via workflow_dispatch
+  # ───────────────────────────────────────────────────────────────────────────
+  manual-bump:
+    name: Manual Version Bump
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+      tag: ${{ steps.bump.outputs.tag }}
+      bumped: ${{ steps.bump.outputs.bumped }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Calculate and apply version bump
+        id: bump
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+
+          if [ -n "${{ inputs.custom_version }}" ]; then
+            NEW_VERSION="${{ inputs.custom_version }}"
+            echo "Using custom version: $NEW_VERSION"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            case "${{ inputs.version_type }}" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
+            esac
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            echo "Auto-bumped ${{ inputs.version_type }}: $CURRENT → $NEW_VERSION"
+          fi
+
+          TAG="v$NEW_VERSION"
+          npm version --no-git-tag-version "$NEW_VERSION"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $NEW_VERSION"
+          git tag "$TAG"
+          git push origin main
+          git push origin "$TAG"
+
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "bumped=true" >> "$GITHUB_OUTPUT"
+
+          echo "## Manual Version Bump" >> $GITHUB_STEP_SUMMARY
+          echo "**$CURRENT → $NEW_VERSION** (${{ inputs.version_type }})" >> $GITHUB_STEP_SUMMARY
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 4. DEPLOY — Publish to Open VSX + VS Code Marketplace + GitHub Release
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy & Publish
+    runs-on: ubuntu-latest
+    needs: [auto-patch, manual-bump]
+    # Run if EITHER bump job succeeded (the other will be skipped)
+    if: >-
+      always() && (
+        needs.auto-patch.outputs.bumped == 'true'
+        || needs.manual-bump.outputs.bumped == 'true'
+        || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      )
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      VSCE_PUBLISHER: "LorapokLabs"
+      OVSX_PUBLISHER: "lorapok-labs"
+    steps:
+      - name: Checkout latest (with tag)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.auto-patch.outputs.tag || needs.manual-bump.outputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile
+        run: npm run compile
+
+      - name: Package VSIX
+        run: npm run package
+
+      - name: Install publishing tools
+        run: |
+          npm install -g @vscode/vsce
+          npm install -g ovsx
+
+      - name: Show VSIX info
+        run: |
+          ls -lh *.vsix
+          echo "---"
+          echo "Version: $(node -p "require('./package.json').version")"
+
+      - name: Resolve version
+        id: version
+        run: |
+          VERSION="${{ needs.auto-patch.outputs.new_version || needs.manual-bump.outputs.new_version }}"
+          if [ -z "$VERSION" ]; then
+            if [[ "${{ github.ref_type }}" == "tag" ]]; then
+              VERSION="${GITHUB_REF#refs/tags/v}"
+            else
+              VERSION="$(node -p "require('./package.json').version")"
+            fi
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying version: $VERSION"
+
+      # ── Open VSX ──────────────────────────────────────────────────────────
+      - name: Ensure Open VSX namespace
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::warning::OVSX_PAT not set — skipping namespace creation"
+            exit 0
+          fi
+          ovsx create-namespace $OVSX_PUBLISHER -p "$OVSX_PAT" || \
+            echo "Namespace $OVSX_PUBLISHER already exists — continuing"
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Publish to Open VSX
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::warning::OVSX_PAT not set — skipping Open VSX publish"
+            exit 0
+          fi
+          set +e
+          OUTPUT=$(ovsx publish -p "$OVSX_PAT" 2>&1)
+          CODE=$?
+          echo "$OUTPUT"
+          if [ $CODE -eq 0 ]; then exit 0; fi
+          if echo "$OUTPUT" | grep -qi "already published"; then
+            echo "::warning::Version already on Open VSX — treating as success"
+            exit 0
+          fi
+          exit $CODE
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      # ── VS Code Marketplace ──────────────────────────────────────────────
+      - name: Publish to VS Code Marketplace
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::warning::VSCE_PAT not set — skipping VS Code Marketplace publish"
+            exit 0
+          fi
+          set +e
+          OUTPUT=$(vsce publish -p "$VSCE_PAT" 2>&1)
+          CODE=$?
+          echo "$OUTPUT"
+          if [ $CODE -eq 0 ]; then exit 0; fi
+          if echo "$OUTPUT" | grep -qiE "already exists|already been published"; then
+            echo "::warning::Version already on VS Code Marketplace — treating as success"
+            exit 0
+          fi
+          exit $CODE
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      # ── GitHub Release ────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        if: >-
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+          || needs.auto-patch.outputs.bumped == 'true'
+          || needs.manual-bump.outputs.bumped == 'true'
+          || (github.event_name == 'workflow_dispatch' && inputs.create_release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.auto-patch.outputs.tag || needs.manual-bump.outputs.tag || github.ref_name }}
+          name: Cursor Curse Monitor v${{ steps.version.outputs.value }}
+          files: "*.vsix"
+          generate_release_notes: true
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-vsix-v${{ steps.version.outputs.value }}
+          path: "*.vsix"
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Deploy summary
+        run: |
+          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.value }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Open VSX:** https://open-vsx.org/extension/$OVSX_PUBLISHER/cursor-curse-monitor-by-lorapok" >> $GITHUB_STEP_SUMMARY
+          echo "**VS Code Marketplace:** https://marketplace.visualstudio.com/items?itemName=$VSCE_PUBLISHER.cursor-curse-monitor-by-lorapok" >> $GITHUB_STEP_SUMMARY
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 5. WEBSITE — Deploy GitHub Pages with fresh marketplace data
+  # ───────────────────────────────────────────────────────────────────────────
+  website:
+    name: Deploy Website
+    needs: deploy
+    if: always() && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout latest
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate dynamic site data
+        run: node scripts/generate-site-data.mjs
+
+      - name: Prepare site
+        run: |
+          mkdir -p _site
+          cp -r website/. _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Website summary
+        run: |
+          echo "## Website Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 6. WEBSITE-ONLY — Deploy website on website file changes (no release)
+  # ───────────────────────────────────────────────────────────────────────────
+  website-only:
+    name: Deploy Website (content only)
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && !startsWith(github.ref, 'refs/tags/')
+      && contains(github.event.head_commit.message, 'chore: bump version')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate dynamic site data
+        run: node scripts/generate-site-data.mjs
+
+      - name: Prepare site
+        run: |
+          mkdir -p _site
+          cp -r website/. _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

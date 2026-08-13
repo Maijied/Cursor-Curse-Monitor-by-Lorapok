@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard</title>
   <meta name="description" content="Cursor Curse Monitor by Lorapok Labs — live usage limits, budget tracking, billing cycle, and free Composer 2.5 fallback. Private to your Cursor login only." />
-  <meta name="keywords" content="Cursor IDE, usage monitor, Lorapok Labs, Composer 2.5, billing, budget, extension, Open VSX" />
+  <meta name="keywords" content="Cursor IDE, usage monitor, Lorapok Labs, Composer 2.5, billing, budget, extension, Open VSX, VS Code Marketplace" />
   <meta name="author" content="Mohammad Maizied Hasan Majumder" />
   <link rel="canonical" href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/" />
   <meta property="og:type" content="website" />
@@ -29,7 +29,6 @@
     "name": "Cursor Curse Monitor by Lorapok",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Windows, macOS, Linux",
-    "softwareVersion": "0.1.4",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "author": {
       "@type": "Person",
@@ -80,6 +79,7 @@
         <div class="badges">
           <span class="badge">Lorapok Labs</span>
           <span class="badge accent" id="ovsx-status">Open VSX · loading…</span>
+          <span class="badge accent" id="vscode-status">VS Code · loading…</span>
           <span class="badge muted">v<span data-version>—</span></span>
         </div>
         <h1>Know your Cursor limits <em>before</em> they know you.</h1>
@@ -88,6 +88,10 @@
           <a class="btn primary" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
             Install from Open VSX
             <small>v<span data-ovsx-version>—</span></small>
+          </a>
+          <a class="btn primary" data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
+            Install from VS Code Marketplace
+            <small>v<span data-vscode-version>—</span></small>
           </a>
           <a class="btn secondary" data-href-release href="#">Download VSIX v<span data-version>—</span></a>
         </div>
@@ -237,11 +241,18 @@
       </div>
       <div class="install-grid">
         <article class="install-card recommended">
-          <span class="install-label">Recommended</span>
-          <h3>Open VSX in Cursor</h3>
+          <span class="install-label">Recommended · Cursor</span>
+          <h3>Open VSX (Cursor Marketplace)</h3>
           <p>Search Extensions for:</p>
           <pre class="code-block"><code id="cmd-ovsx-search">lorapok-labs.cursor-curse-monitor-by-lorapok</code></pre>
           <a class="btn primary block" data-href-ovsx href="#" target="_blank" rel="noopener">Open on Open VSX</a>
+        </article>
+        <article class="install-card recommended">
+          <span class="install-label">Recommended · VS Code</span>
+          <h3>VS Code Marketplace</h3>
+          <p>Search Extensions for:</p>
+          <pre class="code-block"><code id="cmd-vscode-search">LorapokLabs.cursor-curse-monitor-by-lorapok</code></pre>
+          <a class="btn primary block" data-href-vscode href="#" target="_blank" rel="noopener">Open on VS Code Marketplace</a>
         </article>
         <article class="install-card">
           <h3>GitHub Release VSIX</h3>
@@ -263,30 +274,53 @@
         <div class="section-head">
           <p class="eyebrow">For maintainers</p>
           <h2>Release via CI/CD</h2>
-          <p class="section-lead">Tag a version → GitHub Actions builds, publishes to Open VSX, and creates a release with the VSIX attached.</p>
+          <p class="section-lead">Push to <code>main</code> → auto-patch bump → publishes to Open VSX + VS Code Marketplace → creates GitHub Release. Manual major/minor bumps via GitHub Actions workflow dispatch.</p>
         </div>
         <div class="release-flow">
-          <div class="flow-step"><span>1</span><p>Bump version in <code>package.json</code> (or use script below)</p></div>
+          <div class="flow-step"><span>1</span><p>Push to <code>main</code> → auto patch bump</p></div>
           <div class="flow-arrow">→</div>
-          <div class="flow-step"><span>2</span><p>Commit &amp; push to <code>main</code></p></div>
+          <div class="flow-step"><span>2</span><p>CI builds &amp; publishes to both marketplaces</p></div>
           <div class="flow-arrow">→</div>
-          <div class="flow-step"><span>3</span><p>Run release script — tags &amp; deploys</p></div>
+          <div class="flow-step"><span>3</span><p>GitHub Release + website auto-update</p></div>
         </div>
         <div class="release-commands">
           <div class="cmd-card">
-            <span class="cmd-label">Patch release</span>
-            <pre class="code-block"><code id="cmd-release-patch">./scripts/release.sh patch</code></pre>
+            <span class="cmd-label">Auto (every push)</span>
+            <pre class="code-block"><code>git push origin main  # patch bump is automatic</code></pre>
           </div>
           <div class="cmd-card">
-            <span class="cmd-label">Minor release</span>
-            <pre class="code-block"><code id="cmd-release-minor">./scripts/release.sh minor</code></pre>
+            <span class="cmd-label">Manual minor release</span>
+            <pre class="code-block"><code>GitHub → Actions → CI/CD → Run workflow → minor</code></pre>
           </div>
           <div class="cmd-card">
-            <span class="cmd-label">Current tag</span>
-            <pre class="code-block"><code>git tag <span data-github-tag>v—</span> && git push origin <span data-github-tag>v—</span></code></pre>
+            <span class="cmd-label">Manual major release</span>
+            <pre class="code-block"><code>GitHub → Actions → CI/CD → Run workflow → major</code></pre>
           </div>
         </div>
         <p class="sync-note">Site data last synced: <time data-generated>—</time></p>
+      </div>
+    </section>
+
+    <section id="marketplace-links" class="section container">
+      <div class="section-head">
+        <p class="eyebrow">Live marketplace links</p>
+        <h2>Available on both marketplaces</h2>
+      </div>
+      <div class="install-grid">
+        <article class="install-card">
+          <h3>🟢 Open VSX Registry</h3>
+          <p>For <strong>Cursor IDE</strong> and compatible editors</p>
+          <p><strong>Status:</strong> <span id="ovsx-live-status">Checking…</span></p>
+          <p><strong>Version:</strong> <span data-ovsx-version>—</span></p>
+          <a class="btn primary block" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">View on Open VSX →</a>
+        </article>
+        <article class="install-card">
+          <h3>🔵 VS Code Marketplace</h3>
+          <p>For <strong>Visual Studio Code</strong></p>
+          <p><strong>Status:</strong> <span id="vscode-live-status">Checking…</span></p>
+          <p><strong>Version:</strong> <span data-vscode-version>—</span></p>
+          <a class="btn primary block" data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">View on VS Code Marketplace →</a>
+        </article>
       </div>
     </section>
 

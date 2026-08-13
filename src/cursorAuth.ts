@@ -7,6 +7,12 @@ import initSqlJs, { Database } from "sql.js";
 const REACTIVE_KEY =
   "src.vs.platform.reactivestorage.browser.reactiveStorageServiceImpl.persistentStorage.applicationUser";
 
+/** Maximum time (ms) a DB operation is allowed before we consider it hung. */
+const DB_OPERATION_TIMEOUT_MS = 15_000;
+
+/** Stale backups older than this (ms) are cleaned up automatically. */
+const STALE_BACKUP_AGE_MS = 60 * 60 * 1000; // 1 hour
+
 export function getCursorGlobalStoragePath(): string {
   const home = os.homedir();
   switch (process.platform) {
@@ -55,8 +61,7 @@ function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: s
     }
 
     const stats = fs.statSync(dbPath);
-    
-    // Check if file is empty
+
     if (stats.size === 0) {
       return { valid: false, reason: "Database file is empty" };
     }
@@ -86,9 +91,9 @@ function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: s
 
     return { valid: true };
   } catch (error) {
-    return { 
-      valid: false, 
-      reason: error instanceof Error ? error.message : "Unknown validation error" 
+    return {
+      valid: false,
+      reason: error instanceof Error ? error.message : "Unknown validation error"
     };
   }
 }
@@ -98,49 +103,82 @@ function createBackup(dbPath: string): string | null {
     const backupPath = `${dbPath}.backup-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     fs.copyFileSync(dbPath, backupPath);
     return backupPath;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-function restoreBackup(backupPath: string, originalPath: string): boolean {
+function restoreFromBackup(backupPath: string, originalPath: string): boolean {
   try {
     if (fs.existsSync(backupPath)) {
       fs.copyFileSync(backupPath, originalPath);
-      fs.unlinkSync(backupPath);
       return true;
     }
     return false;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
 
-function cleanupBackup(backupPath: string): void {
+function cleanupBackup(backupPath: string | null): void {
+  if (!backupPath) { return; }
   try {
     if (fs.existsSync(backupPath)) {
       fs.unlinkSync(backupPath);
     }
-  } catch (error) {
-    // Silently fail on cleanup
+  } catch {
+    // Silently fail on cleanup — non-critical
+  }
+}
+
+/**
+ * Clean up stale backup files that may have been left by previous crashes.
+ */
+function cleanupStaleBackups(dbPath: string): void {
+  try {
+    const dir = path.dirname(dbPath);
+    const basename = path.basename(dbPath);
+    const entries = fs.readdirSync(dir);
+    const now = Date.now();
+    for (const entry of entries) {
+      if (entry.startsWith(`${basename}.backup-`) || entry.startsWith(`${basename}.tmp-`)) {
+        const fullPath = path.join(dir, entry);
+        try {
+          const stats = fs.statSync(fullPath);
+          if (now - stats.mtimeMs > STALE_BACKUP_AGE_MS) {
+            fs.unlinkSync(fullPath);
+          }
+        } catch {
+          // Ignore individual cleanup failures
+        }
+      }
+    }
+  } catch {
+    // Non-critical — don't fail the operation
   }
 }
 
 function atomicWrite(dbPath: string, buffer: Buffer): { success: boolean; reason?: string } {
+  const tempPath = `${dbPath}.tmp-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   try {
-    const tempPath = `${dbPath}.tmp-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     fs.writeFileSync(tempPath, buffer);
-    
+
     // Verify the temp file was written successfully
     const tempStats = fs.statSync(tempPath);
     if (tempStats.size !== buffer.length) {
-      fs.unlinkSync(tempPath);
+      try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
       return { success: false, reason: "Temp file size mismatch" };
     }
 
     // Atomic replace operation
-    fs.renameSync(tempPath, dbPath);
-    
+    try {
+      fs.renameSync(tempPath, dbPath);
+    } catch {
+      // renameSync can fail across filesystem boundaries — fall back to copy+delete
+      fs.copyFileSync(tempPath, dbPath);
+      try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
+    }
+
     // Verify the final file
     const finalStats = fs.statSync(dbPath);
     if (finalStats.size !== buffer.length) {
@@ -149,11 +187,28 @@ function atomicWrite(dbPath: string, buffer: Buffer): { success: boolean; reason
 
     return { success: true };
   } catch (error) {
-    return { 
-      success: false, 
-      reason: error instanceof Error ? error.message : "Unknown write error" 
+    // Clean up temp file on failure
+    try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
+    return {
+      success: false,
+      reason: error instanceof Error ? error.message : "Unknown write error"
     };
   }
+}
+
+/**
+ * Wraps an async operation with a timeout.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Operation timed out after ${ms}ms: ${label}`));
+    }, ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
 }
 
 export async function readCursorAccessToken(
@@ -167,7 +222,8 @@ export async function readCursorAccessToken(
   const db = await openDatabase(dbPath, wasmPath);
   try {
     const result = db.exec(
-      "SELECT value FROM ItemTable WHERE key = 'cursorAuth/accessToken'"
+      "SELECT value FROM ItemTable WHERE key = ?",
+      ['cursorAuth/accessToken']
     );
     if (!result.length || !result[0].values.length) {
       return null;
@@ -186,6 +242,9 @@ export async function applyComposerFallbackModel(
   if (!fs.existsSync(dbPath)) {
     return { success: false, error: "Database file does not exist" };
   }
+
+  // Clean up any stale backups from previous runs
+  cleanupStaleBackups(dbPath);
 
   // Step 1: Validate database integrity before any operations
   const integrityCheck = validateDatabaseIntegrity(dbPath);
@@ -218,102 +277,129 @@ export async function applyComposerFallbackModel(
     return { success: false, error: "Failed to create database backup" };
   }
 
-  let db: Database | null = null;
-  let retryAttempt = false;
-
-  try {
-    const attemptModification = async (): Promise<{ success: boolean; error?: string }> => {
+  const attemptModification = async (): Promise<{ success: boolean; error?: string }> => {
+    let db: Database | null = null;
+    try {
       db = await openDatabase(dbPath, wasmPath);
+
+      const result = db.exec(
+        "SELECT value FROM ItemTable WHERE key = ?",
+        [REACTIVE_KEY]
+      );
+      if (!result.length || !result[0].values.length) {
+        return { success: false, error: "Reactive storage key not found in database" };
+      }
+
+      const raw = result[0].values[0][0];
+      if (typeof raw !== "string") {
+        return { success: false, error: "Reactive storage value is not a string" };
+      }
+
+      let data: Record<string, unknown>;
       try {
-        const result = db.exec(
-          `SELECT value FROM ItemTable WHERE key = '${REACTIVE_KEY}'`
-        );
-        if (!result.length || !result[0].values.length) {
-          return { success: false, error: "Reactive storage key not found in database" };
-        }
+        data = JSON.parse(raw) as Record<string, unknown>;
+      } catch {
+        return { success: false, error: "Failed to parse reactive storage JSON" };
+      }
 
-        const raw = result[0].values[0][0];
-        if (typeof raw !== "string") {
-          return { success: false, error: "Reactive storage value is not a string" };
-        }
+      const aiSettings = (data.aiSettings ?? {}) as Record<string, unknown>;
+      const modelConfig = (aiSettings.modelConfig ?? {}) as Record<string, unknown>;
 
-        const data = JSON.parse(raw) as Record<string, unknown>;
-        const aiSettings = (data.aiSettings ?? {}) as Record<string, unknown>;
-        const modelConfig = (aiSettings.modelConfig ?? {}) as Record<
-          string,
-          unknown
-        >;
-
-        let changed = false;
-        for (const surface of surfaces) {
-          if (JSON.stringify(modelConfig[surface]) !== JSON.stringify(targetComposer)) {
-            modelConfig[surface] = targetComposer;
-            changed = true;
-          }
-        }
-
-        if (!changed) {
-          return { success: false, error: "Model configuration already set to target values" };
-        }
-
-        aiSettings.modelConfig = modelConfig;
-        data.aiSettings = aiSettings;
-
-        const updated = JSON.stringify(data);
-        db.run("UPDATE ItemTable SET value = ? WHERE key = ?", [updated, REACTIVE_KEY]);
-
-        const exported = db.export();
-        
-        // Step 3: Use atomic write instead of direct write
-        const writeResult = atomicWrite(dbPath, Buffer.from(exported));
-        if (!writeResult.success) {
-          return { success: false, error: `Atomic write failed: ${writeResult.reason}` };
-        }
-
-        // Step 4: Verify integrity after write
-        const postWriteCheck = validateDatabaseIntegrity(dbPath);
-        if (!postWriteCheck.valid) {
-          return { success: false, error: `Post-write integrity check failed: ${postWriteCheck.reason}` };
-        }
-
-        return { success: true };
-      } finally {
-        if (db) {
-          db.close();
-          db = null;
+      let changed = false;
+      for (const surface of surfaces) {
+        if (JSON.stringify(modelConfig[surface]) !== JSON.stringify(targetComposer)) {
+          modelConfig[surface] = targetComposer;
+          changed = true;
         }
       }
-    };
 
-    // Try modification
-    let attemptResult = await attemptModification();
+      if (!changed) {
+        return { success: false, error: "Model configuration already set to target values" };
+      }
 
-    // Step 5: Retry once if failed
-    if (!attemptResult.success && !retryAttempt) {
-      retryAttempt = true;
-      // Restore from backup and retry
-      if (restoreBackup(backupPath, dbPath)) {
-        attemptResult = await attemptModification();
-      } else {
-        return { success: false, error: "Failed to restore backup for retry" };
+      aiSettings.modelConfig = modelConfig;
+      data.aiSettings = aiSettings;
+
+      const updated = JSON.stringify(data);
+      db.run("UPDATE ItemTable SET value = ? WHERE key = ?", [updated, REACTIVE_KEY]);
+
+      const exported = db.export();
+
+      // Close DB before writing to avoid holding references during file I/O
+      db.close();
+      db = null;
+
+      // Step 3: Use atomic write instead of direct write
+      const writeResult = atomicWrite(dbPath, Buffer.from(exported));
+      if (!writeResult.success) {
+        return { success: false, error: `Atomic write failed: ${writeResult.reason}` };
+      }
+
+      // Step 4: Verify integrity after write
+      const postWriteCheck = validateDatabaseIntegrity(dbPath);
+      if (!postWriteCheck.valid) {
+        return { success: false, error: `Post-write integrity check failed: ${postWriteCheck.reason}` };
+      }
+
+      return { success: true };
+    } finally {
+      if (db) {
+        try { db.close(); } catch { /* ignore close errors */ }
       }
     }
+  };
+
+  try {
+    // First attempt with timeout
+    let attemptResult = await withTimeout(
+      attemptModification(),
+      DB_OPERATION_TIMEOUT_MS,
+      "applyComposerFallbackModel"
+    );
 
     if (attemptResult.success) {
       cleanupBackup(backupPath);
       return { success: true };
-    } else {
-      // Restore backup on final failure
-      restoreBackup(backupPath, dbPath);
-      return { success: false, error: attemptResult.error || (retryAttempt ? "Failed to apply fallback model after retry" : "Failed to apply fallback model") };
     }
-  } catch (error) {
-    // Restore backup on any error
-    restoreBackup(backupPath, dbPath);
+
+    // If the config was already set, that's not really a failure — just clean up
+    if (attemptResult.error === "Model configuration already set to target values") {
+      cleanupBackup(backupPath);
+      return attemptResult;
+    }
+
+    // Retry once: restore from backup then try again
+    const restored = restoreFromBackup(backupPath, dbPath);
+    if (!restored) {
+      cleanupBackup(backupPath);
+      return { success: false, error: "Failed to restore backup for retry" };
+    }
+
+    attemptResult = await withTimeout(
+      attemptModification(),
+      DB_OPERATION_TIMEOUT_MS,
+      "applyComposerFallbackModel (retry)"
+    );
+
+    if (attemptResult.success) {
+      cleanupBackup(backupPath);
+      return { success: true };
+    }
+
+    // Final failure — restore backup
+    restoreFromBackup(backupPath, dbPath);
     cleanupBackup(backupPath);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Unknown error during fallback model application" 
+    return {
+      success: false,
+      error: attemptResult.error || "Failed to apply fallback model after retry"
+    };
+  } catch (error) {
+    // Restore backup on any unhandled error
+    restoreFromBackup(backupPath, dbPath);
+    cleanupBackup(backupPath);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error during fallback model application"
     };
   }
 }
@@ -334,7 +420,8 @@ async function readKeyValue(
   const db = await openDatabase(dbPath, wasmPath);
   try {
     const result = db.exec(
-      `SELECT value FROM ItemTable WHERE key = '${key.replace(/'/g, "''")}'`
+      "SELECT value FROM ItemTable WHERE key = ?",
+      [key]
     );
     if (!result.length || !result[0].values.length) {
       return null;

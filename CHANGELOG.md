@@ -4,6 +4,41 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-08-13
+
+### Added
+
+- **Unified CI/CD workflow** — consolidated `ci.yml`, `deploy.yml`, `version-bump.yml`, `pages.yml` into a single `ci-cd.yml`
+- **Auto-patch releases** — every push to `main` automatically bumps patch version, tags, deploys to both marketplaces, and updates the website
+- **Manual major/minor releases** — via GitHub Actions workflow dispatch
+- **VS Code Marketplace support** — extension now publishes to both Open VSX and VS Code Marketplace
+- **Website marketplace links** — live links and status badges for both Open VSX and VS Code Marketplace on the project website
+- **Database safety improvements**:
+  - Parameterized SQL queries (prevents injection)
+  - Operation timeout protection (15s max)
+  - Stale backup auto-cleanup (>1 hour old)
+  - Cross-filesystem atomic write fallback
+  - Explicit JSON parse error handling
+  - Close DB before file I/O to avoid holding references
+
+### Fixed
+
+- Double-delete backup race condition in error handler
+- Backup not cleaned up when model config was already set
+- `readKeyValue` SQL injection vulnerability (string interpolation → parameterized query)
+
+### Removed
+
+- Separate `ci.yml`, `deploy.yml`, `version-bump.yml`, `pages.yml` workflows (merged into `ci-cd.yml`)
+- `azure-pipelines.yml` (stale, unused)
+
+### Changed
+
+- README updated with both marketplace badges, install instructions, CI/CD documentation, and DB safety section
+- DEPLOYMENT.md rewritten for unified workflow
+- Website install section now shows both Open VSX and VS Code Marketplace options
+- Release section updated to reflect auto-patch flow
+
 ## [0.4.1] - 2026-08-13
 
 ### Fixed
@@ -78,4 +113,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Open VSX publish workflow via GitHub Actions
 - Lorapok Labs branding and extension icon
 
+[0.5.0]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.0
+[0.4.1]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.4.1
+[0.2.1]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.2.1
+[0.2.0]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.2.0
+[0.1.4]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.1.4
+[0.1.3]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.1.3
+[0.1.2]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.1.2
+[0.1.1]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.1.0
