@@ -1,0 +1,122 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      custom_version:
+        description: 'Custom version (leave empty for auto-bump)'
+        required: false
+        type: string
+      create_tag:
+        description: 'Create and push git tag'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "value=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: new_version
+        run: |
+          if [ -n "${{ inputs.custom_version }}" ]; then
+            NEW_VERSION="${{ inputs.custom_version }}"
+            echo "Using custom version: $NEW_VERSION"
+          else
+            CURRENT_VERSION="${{ steps.current_version.outputs.value }}"
+            VERSION_TYPE="${{ inputs.version_type }}"
+            
+            # Split version into parts
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+            
+            case "$VERSION_TYPE" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+            
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            echo "Auto-bumped $VERSION_TYPE: $CURRENT_VERSION -> $NEW_VERSION"
+          fi
+          
+          echo "value=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update package.json
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.value }}"
+          npm version --no-git-tag-version "$NEW_VERSION"
+          echo "Updated package.json to version: $NEW_VERSION"
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.new_version.outputs.value }}"
+          echo "Committed version bump"
+
+      - name: Create and push tag
+        if: inputs.create_tag
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.value }}"
+          git tag "v$NEW_VERSION"
+          git push origin main
+          git push origin "v$NEW_VERSION"
+          echo "Created and pushed tag: v$NEW_VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push commit (no tag)
+        if: "!inputs.create_tag"
+        run: |
+          git push origin main
+          echo "Pushed commit without tag"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Previous Version:** ${{ steps.current_version.outputs.value }}" >> $GITHUB_STEP_SUMMARY
+          echo "**New Version:** ${{ steps.new_version.outputs.value }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bump Type:** ${{ inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag Created:** ${{ inputs.create_tag }}" >> $GITHUB_STEP_SUMMARY

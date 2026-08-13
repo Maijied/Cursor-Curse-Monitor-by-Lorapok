@@ -51,6 +51,11 @@ jobs:
       - name: Package VSIX
         run: npm run package
 
+      - name: Install publishing tools
+        run: |
+          npm install -g @vscode/vsce
+          npm install -g ovsx
+
       - name: Show VSIX size
         run: ls -lh *.vsix
 
@@ -71,7 +76,7 @@ jobs:
             echo "OVSX_PAT not set — skip namespace creation"
             exit 0
           fi
-          npx ovsx create-namespace lorapok-labs -p "$OVSX_PAT" || \
+          ovsx create-namespace lorapok-labs -p "$OVSX_PAT" || \
             echo "Namespace lorapok-labs already exists — continuing"
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
@@ -86,7 +91,7 @@ jobs:
             exit 1
           fi
           set +e
-          OUTPUT=$(npx ovsx publish -p "$OVSX_PAT" 2>&1)
+          OUTPUT=$(ovsx publish -p "$OVSX_PAT" 2>&1)
           CODE=$?
           echo "$OUTPUT"
           if [ $CODE -eq 0 ]; then exit 0; fi
@@ -108,7 +113,7 @@ jobs:
             exit 0
           fi
           set +e
-          OUTPUT=$(npx vsce publish -p "$VSCE_PAT" 2>&1)
+          OUTPUT=$(vsce publish -p "$VSCE_PAT" 2>&1)
           CODE=$?
           echo "$OUTPUT"
           if [ $CODE -eq 0 ]; then exit 0; fi
