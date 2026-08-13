@@ -10,7 +10,7 @@ This guide explains how to publish the Cursor Curse Monitor extension to the VS 
 1. Go to [Visual Studio Marketplace Publisher Management](https://marketplace.visualstudio.com/manage/publishers)
 2. Sign in with your Microsoft account
 3. Click "Create Publisher"
-4. Enter publisher name: `lorapok-labs`
+4. Enter publisher name: `LorapokLabs`
 5. Display name: `Lorapok Labs`
 6. Add description and website (https://lorapok.tech)
 7. Save the publisher
@@ -27,7 +27,7 @@ This guide explains how to publish the Cursor Curse Monitor extension to the VS 
 
 #### VS Code Marketplace Token (VSCE_PAT)
 1. Go to [Visual Studio Marketplace Publisher Management](https://marketplace.visualstudio.com/manage/publishers)
-2. Select your publisher: `lorapok-labs`
+2. Select your publisher: `LorapokLabs`
 3. Go to "Personal Access Tokens" tab
 4. Click "Create New Token"
 5. Name: `Cursor Curse Monitor CI/CD`
@@ -110,16 +110,16 @@ npx ovsx publish -p YOUR_OVSX_PAT
 
 After publishing, verify the extension is available:
 
-- **VS Code Marketplace**: https://marketplace.visualstudio.com/items?publisher=lorapok-labs
+- **VS Code Marketplace**: https://marketplace.visualstudio.com/items?publisher=LorapokLabs
 - **Open VSX**: https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok
 
 ## Troubleshooting
 
 ### Publisher Name Already Exists
-If the publisher name `lorapok-labs` is already taken on either marketplace:
-1. Choose a different publisher name
-2. Update `publisher` field in `package.json`
-3. Update the namespace creation step in `.github/workflows/deploy.yml`
+If the publisher name is already taken on either marketplace:
+- **VS Code Marketplace**: Use `LorapokLabs` (already registered)
+- **Open VSX**: Use `lorapok-labs` (already registered)
+- Update the environment variables in `.github/workflows/deploy.yml` if different names are needed
 
 ### Token Not Working
 - Ensure the token has the correct permissions
@@ -145,9 +145,10 @@ The welcome message uses `context.globalState` which persists across sessions, s
 
 ## Current Configuration
 
-- **Publisher**: `lorapok-labs`
+- **VS Code Marketplace Publisher**: `LorapokLabs`
+- **Open VSX Publisher**: `lorapok-labs`
 - **Extension ID**: `cursor-curse-monitor-by-lorapok`
-- **Version**: `0.2.1`
+- **Version**: `0.3.0`
 - **CI/CD**: Automated via GitHub Actions on tag push
 
 ## Next Steps

@@ -20,14 +20,14 @@ In **Settings → Secrets and variables → Actions**, add:
 
 ### 2. VS Code Marketplace publisher
 
-1. Create a publisher at [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) (e.g. `lorapok-labs`)
+1. Create a publisher at [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) with name `LorapokLabs`
 2. Generate an Azure DevOps Personal Access Token with **Marketplace (Manage)** scope
 3. Add it as GitHub secret `VSCE_PAT`
 
 Local publish:
 
 ```bash
-npx vsce login lorapok-labs
+npx vsce login LorapokLabs
 npm run publish:vscode
 ```
 

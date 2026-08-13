@@ -32,6 +32,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      VSCE_PUBLISHER: "LorapokLabs"
+      OVSX_PUBLISHER: "lorapok-labs"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,8 +79,8 @@ jobs:
             echo "OVSX_PAT not set — skip namespace creation"
             exit 0
           fi
-          ovsx create-namespace lorapok-labs -p "$OVSX_PAT" || \
-            echo "Namespace lorapok-labs already exists — continuing"
+          ovsx create-namespace $OVSX_PUBLISHER -p "$OVSX_PAT" || \
+            echo "Namespace $OVSX_PUBLISHER already exists — continuing"
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
@@ -91,7 +94,7 @@ jobs:
             exit 1
           fi
           set +e
-          OUTPUT=$(ovsx publish -p "$OVSX_PAT" 2>&1)
+          OUTPUT=$(ovsx publish -p "$OVSX_PAT" --publisher $OVSX_PUBLISHER 2>&1)
           CODE=$?
           echo "$OUTPUT"
           if [ $CODE -eq 0 ]; then exit 0; fi
