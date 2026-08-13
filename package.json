@@ -2,7 +2,7 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "publisher": "LorapokLabs",
   "license": "MIT",
   "icon": "media/icon.png",
