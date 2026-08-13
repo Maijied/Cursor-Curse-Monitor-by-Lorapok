@@ -94,7 +94,7 @@ jobs:
             exit 1
           fi
           set +e
-          OUTPUT=$(ovsx publish -p "$OVSX_PAT" --publisher $OVSX_PUBLISHER 2>&1)
+          OUTPUT=$(ovsx publish -p "$OVSX_PAT" 2>&1)
           CODE=$?
           echo "$OUTPUT"
           if [ $CODE -eq 0 ]; then exit 0; fi
