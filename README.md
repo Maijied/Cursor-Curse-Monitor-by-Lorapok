@@ -1,23 +1,31 @@
-# Cursor Curse Monitor by Lorapok
+<div align="center">
 
-<p align="center">
   <img src="media/icon.png" alt="Cursor Curse Monitor by Lorapok" width="128" />
-</p>
 
-<p align="center">
-  <strong>Live Cursor usage dashboard for limits, budget, billing cycles, and free-fallback model switching.</strong>
-</p>
+  <h1>Cursor Curse Monitor by Lorapok</h1>
 
-<p align="center">
-  A <a href="https://lorapok.tech">Lorapok Labs</a> product · Built for Cursor IDE
-</p>
+  <p>
+    <strong>Live Cursor usage dashboard for limits, budget, billing cycles, and free-fallback model switching.</strong>
+  </p>
 
-<p align="center">
-  <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci.yml?branch=main&label=CI" alt="CI" /></a>
-  <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/badge/Open%20VSX-Lorapok%20Labs-blue" alt="Open VSX" /></a>
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
-  <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
-</p>
+  <p>
+    <a href="https://lorapok.tech">Lorapok Labs</a> · Built for Cursor IDE
+  </p>
+
+  <p>
+    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci.yml?branch=main&label=CI" alt="CI" /></a>
+    <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/badge/Open%20VSX-Lorapok%20Labs-blue" alt="Open VSX" /></a>
+    <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
+    <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/downloads-Coming%20Soon-orange" alt="Downloads" />
+    <img src="https://img.shields.io/badge/views-Coming%20Soon-blue" alt="Views" />
+    <img src="https://img.shields.io/badge/version-0.2.1-brightgreen" alt="Version" />
+  </p>
+
+</div>
 
 ---
 

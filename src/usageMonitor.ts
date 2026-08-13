@@ -12,6 +12,7 @@ import {
   fetchUsageSummary,
   isLimitExceeded,
 } from "./cursorApi";
+import { NotificationProvider } from "./notificationProvider";
 
 type SnapshotListener = (snapshot: DashboardSnapshot) => void;
 
@@ -107,22 +108,53 @@ export class UsageMonitorService implements vscode.Disposable {
       const percent = snapshot.usage.individualUsage.plan.totalPercentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {
         this.warnedAtThreshold = true;
-        void vscode.window.showWarningMessage(
-          `Cursor usage is at ${percent}%. Consider switching to Composer 2.5 (Fast off) before you hit the limit.`
-        );
+        NotificationProvider.show({
+          title: "Usage Warning",
+          message: `Cursor usage is at ${percent}%. Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
+          type: "warning",
+          duration: 6000,
+          actions: [
+            {
+              label: "Apply Fallback",
+              action: () => {
+                void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
+              },
+            },
+            { label: "Dismiss", action: () => {} },
+          ],
+        });
       }
       if (percent < warnAtPercent) {
         this.warnedAtThreshold = false;
       }
 
       if (snapshot.limitExceeded && autoApplyFallback) {
-        const applied = await applyComposerFallbackModel(this.wasmPath);
-        snapshot.fallbackApplied = applied;
-        if (applied && !this.fallbackAppliedThisCycle) {
+        const result = await applyComposerFallbackModel(this.wasmPath);
+        snapshot.fallbackApplied = result.success;
+        if (result.success && !this.fallbackAppliedThisCycle) {
           this.fallbackAppliedThisCycle = true;
-          void vscode.window.showInformationMessage(
-            "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback."
-          );
+          NotificationProvider.show({
+            title: "Fallback Applied",
+            message: "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback.",
+            type: "success",
+            duration: 5000,
+            actions: [
+              { label: "Open Dashboard", action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard") },
+              { label: "Dismiss", action: () => {} },
+            ],
+          });
+        } else if (!result.success && result.error) {
+          // Show error to user but continue monitoring
+          NotificationProvider.show({
+            title: "Fallback Failed",
+            message: `Failed to apply fallback model: ${result.error}. Extension will continue monitoring usage.`,
+            type: "error",
+            duration: 7000,
+            actions: [
+              { label: "Retry", action: () => void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel") },
+              { label: "Dismiss", action: () => {} },
+            ],
+          });
         }
       } else if (!snapshot.limitExceeded) {
         this.fallbackAppliedThisCycle = false;

@@ -1,23 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Cursor Curse Monitor">
   <defs>
-    <linearGradient id="a" x1="24" y1="20" x2="104" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3d4654"/>
-      <stop offset="100%" stop-color="#1a1f28"/>
+    <linearGradient id="bodyGrad" x1="20" y1="40" x2="108" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2d3748"/>
+      <stop offset="50%" stop-color="#1a202c"/>
+      <stop offset="100%" stop-color="#171923"/>
     </linearGradient>
-    <linearGradient id="n" x1="40" y1="50" x2="88" y2="86" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#39ff14"/>
-      <stop offset="100%" stop-color="#7c5cff"/>
+    <linearGradient id="accentGrad" x1="32" y1="48" x2="96" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
     </linearGradient>
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="70%" stop-color="#00ff88" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
-  <ellipse cx="64" cy="76" rx="32" ry="26" fill="url(#a)" stroke="#4a5568" stroke-width="1"/>
-  <ellipse cx="64" cy="50" rx="26" ry="22" fill="url(#a)" stroke="#4a5568" stroke-width="1"/>
-  <path d="M50 56 Q64 66 78 56" stroke="url(#n)" stroke-width="2.5" stroke-linecap="round"/>
-  <ellipse cx="64" cy="42" rx="24" ry="20" fill="url(#a)" stroke="#5b9dff" stroke-width="0.8"/>
-  <ellipse cx="53" cy="40" rx="8" ry="9" fill="#0a0e14" stroke="#39ff14" stroke-width="0.8"/>
-  <ellipse cx="75" cy="40" rx="8" ry="9" fill="#0a0e14" stroke="#39ff14" stroke-width="0.8"/>
-  <circle cx="53" cy="40" r="4" fill="#39ff14"/>
-  <circle cx="75" cy="40" r="4" fill="#39ff14"/>
-  <circle cx="51" cy="38" r="1" fill="white" opacity="0.9"/>
-  <circle cx="73" cy="38" r="1" fill="white" opacity="0.9"/>
-  <path d="M64 20 L68 28 L65 28 L65 32 L63 32 L63 28 L60 28 Z" fill="#5b9dff" opacity="0.9"/>
+
+  <!-- Background glow circle -->
+  <circle cx="64" cy="64" r="56" fill="url(#accentGrad)" opacity="0.1" filter="url(#strongGlow)"/>
+
+  <!-- Body segments -->
+  <ellipse cx="64" cy="78" rx="34" ry="28" fill="url(#bodyGrad)" stroke="#4a5568" stroke-width="1.5"/>
+  <ellipse cx="64" cy="52" rx="28" ry="24" fill="url(#bodyGrad)" stroke="#4a5568" stroke-width="1.5"/>
+  
+  <!-- Neon accent line -->
+  <path d="M48 58 Q64 68 80 58" stroke="url(#accentGrad)" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- Head -->
+  <ellipse cx="64" cy="44" rx="26" ry="22" fill="url(#bodyGrad)" stroke="#7c3aed" stroke-width="1.5"/>
+
+  <!-- Eye sockets -->
+  <ellipse cx="52" cy="42" rx="10" ry="11" fill="#0d1117" stroke="#00ff88" stroke-width="1.5"/>
+  <ellipse cx="76" cy="42" rx="10" ry="11" fill="#0d1117" stroke="#00ff88" stroke-width="1.5"/>
+
+  <!-- Glowing eyes -->
+  <g filter="url(#glow)">
+    <circle cx="52" cy="42" r="7" fill="url(#eyeGlow)"/>
+    <circle cx="76" cy="42" r="7" fill="url(#eyeGlow)"/>
+    <circle cx="52" cy="42" r="3.5" fill="#00ff88"/>
+    <circle cx="76" cy="42" r="3.5" fill="#00ff88"/>
+    <circle cx="50" cy="40" r="1.5" fill="white" opacity="0.9"/>
+    <circle cx="74" cy="40" r="1.5" fill="white" opacity="0.9"/>
+  </g>
+
+  <!-- Robotic legs -->
+  <path d="M38 88 L32 102" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M44 92 L38 108" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M84 92 L90 108" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M90 88 L96 102" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Usage indicator ring -->
+  <circle cx="64" cy="64" r="52" fill="none" stroke="url(#accentGrad)" stroke-width="2" stroke-opacity="0.3" stroke-dasharray="8 6"/>
 </svg>

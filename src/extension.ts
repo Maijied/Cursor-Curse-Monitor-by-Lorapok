@@ -1,16 +1,37 @@
 import * as vscode from "vscode";
 import { applyComposerFallbackModel } from "./cursorAuth";
-import {
-  DashboardViewProvider,
-  formatStatusBarText,
-} from "./dashboardView";
+import { DashboardViewProvider, formatStatusBarText } from "./dashboardView";
 import { UsageMonitorService } from "./usageMonitor";
+import { NotificationProvider } from "./notificationProvider";
 
 let monitor: UsageMonitorService | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
+  NotificationProvider.setExtensionUri(context.extensionUri);
   monitor = new UsageMonitorService(context);
   monitor.start();
+
+  // Show welcome message on first installation
+  const isFirstInstall = !context.globalState.get<boolean>("hasShownWelcome", false);
+  if (isFirstInstall) {
+    void context.globalState.update("hasShownWelcome", true);
+    setTimeout(() => {
+      NotificationProvider.show({
+        title: "Welcome to Cursor Curse Monitor",
+        message: "Thank you for installing! This extension from Lorapok Labs helps you monitor your Cursor AI usage, manage budgets, and automatically switch to free fallback models when you reach limits. Click below to open your dashboard.",
+        type: "info",
+        duration: 8000,
+        customIcon: "welcome-animation.svg",
+        actions: [
+          {
+            label: "Open Dashboard",
+            action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard"),
+          },
+          { label: "Dismiss", action: () => {} },
+        ],
+      });
+    }, 1500);
+  }
 
   const statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
@@ -55,7 +76,12 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.refresh", async () => {
       await monitor?.refresh();
-      void vscode.window.showInformationMessage("Cursor usage refreshed.");
+      NotificationProvider.show({
+        title: "Refreshed",
+        message: "Cursor usage data has been refreshed.",
+        type: "info",
+        duration: 3000,
+      });
     }),
     vscode.commands.registerCommand(
       "cursorCurseMonitor.applyFallbackModel",
@@ -65,15 +91,21 @@ export function activate(context: vscode.ExtensionContext): void {
           "media",
           "sql-wasm.wasm"
         ).fsPath;
-        const applied = await applyComposerFallbackModel(wasmPath);
-        if (applied) {
-          void vscode.window.showInformationMessage(
-            "Applied Composer 2.5 (Fast off) fallback model."
-          );
+        const result = await applyComposerFallbackModel(wasmPath);
+        if (result.success) {
+          NotificationProvider.show({
+            title: "Fallback Applied",
+            message: "Applied Composer 2.5 (Fast off) fallback model.",
+            type: "success",
+            duration: 4000,
+          });
         } else {
-          void vscode.window.showInformationMessage(
-            "Fallback model already set or Cursor state DB not found."
-          );
+          NotificationProvider.show({
+            title: "Fallback Failed",
+            message: result.error || "Fallback model already set or Cursor state DB not found.",
+            type: "error",
+            duration: 5000,
+          });
         }
         await monitor?.refresh();
       }

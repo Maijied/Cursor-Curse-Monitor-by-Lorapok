@@ -10,9 +10,9 @@
       <stop offset="100%" stop-color="#7c5cff"/>
     </linearGradient>
     <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="var(--eye-color, #39ff14)"/>
-      <stop offset="70%" stop-color="var(--eye-color, #39ff14)" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="var(--eye-color, #39ff14)" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#39ff14"/>
+      <stop offset="70%" stop-color="#39ff14" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#39ff14" stop-opacity="0"/>
     </radialGradient>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="2" result="b"/>
@@ -24,7 +24,7 @@
   <circle class="usage-ring" cx="64" cy="64" r="58" stroke="url(#neonPanel)" stroke-width="2" stroke-opacity="0.35" fill="none" stroke-dasharray="8 6">
     <animateTransform attributeName="transform" type="rotate" from="0 64 64" to="360 64 64" dur="24s" repeatCount="indefinite"/>
   </circle>
-  <circle class="usage-pulse" cx="64" cy="64" r="54" stroke="var(--eye-color, #5b9dff)" stroke-width="1.5" fill="none" opacity="0.5">
+  <circle class="usage-pulse" cx="64" cy="64" r="54" stroke="#5b9dff" stroke-width="1.5" fill="none" opacity="0.5">
     <animate attributeName="r" values="52;56;52" dur="2.5s" repeatCount="indefinite"/>
     <animate attributeName="opacity" values="0.25;0.55;0.25" dur="2.5s" repeatCount="indefinite"/>
   </circle>
@@ -48,10 +48,10 @@
   <g class="eyes" filter="url(#glow)">
     <circle class="eye-glow eye-left" cx="52" cy="42" r="7" fill="url(#eyeGlow)"/>
     <circle class="eye-glow eye-right" cx="76" cy="42" r="7" fill="url(#eyeGlow)"/>
-    <circle class="pupil pupil-left" cx="52" cy="42" r="3.5" fill="var(--eye-color, #39ff14)">
+    <circle class="pupil pupil-left" cx="52" cy="42" r="3.5" fill="#39ff14">
       <animate attributeName="cx" values="50;54;51;53;52" dur="4s" repeatCount="indefinite"/>
     </circle>
-    <circle class="pupil pupil-right" cx="76" cy="42" r="3.5" fill="var(--eye-color, #39ff14)">
+    <circle class="pupil pupil-right" cx="76" cy="42" r="3.5" fill="#39ff14">
       <animate attributeName="cx" values="74;78;75;77;76" dur="4s" repeatCount="indefinite"/>
     </circle>
     <circle class="eye-shine" cx="50" cy="40" r="1.2" fill="white" opacity="0.9">
@@ -62,11 +62,4 @@
     </circle>
   </g>
 
-  <!-- Cursor "watching tokens" indicator -->
-  <g class="cursor-link" opacity="0.85">
-    <path d="M64 18 L70 28 L67 28 L67 34 L61 34 L61 28 L58 28 Z" fill="#5b9dff">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
-    </path>
-    <text x="64" y="14" text-anchor="middle" font-size="7" font-family="ui-monospace, monospace" fill="#7c5cff" opacity="0.8">TOK</text>
-  </g>
 </svg>

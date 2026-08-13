@@ -363,6 +363,35 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
     .budget-edit { display: none; margin-top: 8px; }
     .budget-edit.open { display: block; }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 10px;
+      font-size: 11px;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+    }
+    .footer-left a {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer-left a:hover {
+      text-decoration: underline;
+    }
+    .footer-right {
+      color: var(--muted);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -501,6 +530,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <button class="primary" id="refreshBtn2">Refresh now</button>
     <button class="ghost" id="fallbackBtn">Apply free fallback model</button>
   </div>
+
+  <footer class="footer">
+    <div class="footer-left">
+      <span>A product of</span>
+      <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>
+    </div>
+    <div class="footer-right">
+      v0.2.1
+    </div>
+  </footer>
 
   <script>
     const vscode = acquireVsCodeApi();
