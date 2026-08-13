@@ -1,0 +1,181 @@
+name: Rollback / Grade Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_tag:
+        description: "Target Tag to Restore (e.g. v0.5.1)"
+        required: true
+        type: string
+      publish_market:
+        description: "Publish Market"
+        required: true
+        type: choice
+        options:
+          - Both
+          - VS Code Marketplace
+          - Open VSX
+        default: Both
+      release_channel:
+        description: "Release Channel"
+        required: true
+        type: choice
+        options:
+          - Production
+          - Beta (Pre-release)
+        default: Production
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  rollback:
+    name: Prepare Rollback
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify Tag Exists
+        run: |
+          if ! git rev-parse "${{ inputs.target_tag }}" >/dev/null 2>&1; then
+            echo "Error: Tag ${{ inputs.target_tag }} not found."
+            exit 1
+          fi
+
+      - name: Restore files from target tag
+        run: |
+          # Restore the entire working tree from the target tag (excluding .git)
+          git restore --source=${{ inputs.target_tag }} --worktree --staged .
+
+      - name: Calculate new rollback version
+        id: bump
+        run: |
+          # We need to bump the current main version so it overrides the bad release
+          # But we are restoring package.json from the old tag.
+          # We must bump higher than the current main branch's version.
+          
+          # 1. Get the current main version before we restored over it
+          git show HEAD:package.json > temp_package.json
+          CURRENT_MAIN_VER=$(node -p "require('./temp_package.json').version.split('-')[0]")
+          rm temp_package.json
+          
+          # 2. Put back the original restored package.json to be safe, then forcibly bump it
+          # To ensure we grade up, we can just bump the current main version's patch.
+          echo "Current main version is $CURRENT_MAIN_VER"
+          
+          # Replace the restored package.json version with CURRENT_MAIN_VER
+          node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version='$CURRENT_MAIN_VER'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+          
+          # Now bump the patch version
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          echo "New Rollback Version: $NEW_VERSION"
+          TAG="v$NEW_VERSION"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: rollback to ${{ inputs.target_tag }} (released as v$NEW_VERSION)"
+          git tag "$TAG"
+          git push origin main
+          git push origin "$TAG"
+          
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          echo "## Rollback Version Created" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $NEW_VERSION (Restored from ${{ inputs.target_tag }})" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: Deploy Rollback
+    runs-on: ubuntu-latest
+    needs: [rollback]
+    steps:
+      - name: Checkout Rollback Tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.rollback.outputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies & Compile
+        run: |
+          npm ci
+          npm run compile
+          npm run package
+
+      - name: Install publishing tools
+        run: |
+          npm install -g @vscode/vsce
+          npm install -g ovsx
+
+      - name: Resolve Configuration
+        id: config
+        run: |
+          PRE_RELEASE_FLAG=""
+          if [[ "${{ inputs.release_channel }}" == "Beta (Pre-release)" ]]; then
+            PRE_RELEASE_FLAG="--pre-release"
+          fi
+          echo "pre_release_flag=$PRE_RELEASE_FLAG" >> "$GITHUB_OUTPUT"
+          
+          DO_OVSX="false"
+          DO_VSCE="false"
+          TARGET="${{ inputs.publish_market }}"
+          if [[ "$TARGET" == "Both" ]]; then
+             DO_OVSX="true"; DO_VSCE="true"
+          elif [[ "$TARGET" == "Open VSX" ]]; then
+             DO_OVSX="true"
+          elif [[ "$TARGET" == "VS Code Marketplace" ]]; then
+             DO_VSCE="true"
+          fi
+          echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
+          echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Open VSX
+        if: steps.config.outputs.do_ovsx == 'true'
+        run: |
+          ovsx create-namespace lorapok-labs -p "$OVSX_PAT" || true
+          ovsx publish -p "$OVSX_PAT" ${{ steps.config.outputs.pre_release_flag }}
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Publish to VS Code Marketplace
+        if: steps.config.outputs.do_vsce == 'true'
+        run: |
+          vsce publish -p "$VSCE_PAT" ${{ steps.config.outputs.pre_release_flag }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.rollback.outputs.tag }}
+          name: Cursor Curse Monitor v${{ needs.rollback.outputs.new_version }} (Rollback)
+          files: "*.vsix"
+          generate_release_notes: true
+          prerelease: ${{ steps.config.outputs.pre_release_flag != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

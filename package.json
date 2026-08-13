@@ -113,6 +113,7 @@
     }
   },
   "scripts": {
+    "test": "node tests/test_fallback.js && node tests/test_sql.js",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
@@ -129,6 +130,7 @@
     "@types/vscode": "^1.93.0",
     "@vscode/vsce": "^3.2.1",
     "ovsx": "^0.10.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
   "dependencies": {

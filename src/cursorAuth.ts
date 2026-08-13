@@ -14,6 +14,9 @@ const DB_OPERATION_TIMEOUT_MS = 15_000;
 const STALE_BACKUP_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 export function getCursorGlobalStoragePath(): string {
+  if (process.env.CURSOR_DB_PATH) {
+    return process.env.CURSOR_DB_PATH;
+  }
   const home = os.homedir();
   switch (process.platform) {
     case "darwin":
