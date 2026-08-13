@@ -2,35 +2,38 @@
 
 ## CI/CD Overview
 
-All CI/CD is managed by a **single workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
+All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
 
 | Trigger | Jobs | What it does |
 |---------|------|-------------|
-| **PR to `main`** | `ci` | Compile, validate assets, package VSIX, upload artifact |
-| **Push to `main`** | `ci` → `auto-patch` → `deploy` → `website` | Auto-bump patch, tag, publish to both marketplaces, update website |
-| **Manual dispatch** | `manual-bump` → `deploy` → `website` | Bump major/minor/patch, tag, publish, update website |
-| **Tag `v*` push** | `deploy` → `website` | Publish to both marketplaces, create GitHub Release, update website |
+| **PR to `main`** | `ci` | Compile, validate assets, package VSIX |
+| **Push to `main`** | `ci` → `website` | Builds dynamic per-commit Beta VSIX, saves as artifact, deploys website |
+| **Manual dispatch** | `release-bump` → `deploy` → `website` | Auto-bumps version, commits/tags, conditionally publishes to marketplaces, deploys website |
+| **Tag `v*` push** | `deploy` → `website` | Publishes existing tag to marketplaces, creates GitHub Release, deploys website |
 
-### Auto-Patch (Default)
+### 1. Continuous Integration (Dynamic Per-Commit Builds)
 
 Every push to `main` automatically:
-1. Builds and validates the extension
-2. Bumps the patch version (e.g., `0.5.0` → `0.5.1`)
-3. Commits the version bump and creates a git tag
-4. Publishes to Open VSX and VS Code Marketplace
-5. Creates a GitHub Release with VSIX attached
-6. Deploys the website with fresh marketplace data
+1. Builds and validates the extension.
+2. Dynamically generates a version using the commit hash (e.g., `0.5.2-beta.a1b2c3d`).
+3. Packages the VSIX and saves it as a **workflow artifact**.
+4. Deploys the project website to ensure documentation is always up to date.
 
-> **Note:** Bot commits (from `github-actions[bot]`) are skipped to prevent infinite loops.
+> **Note:** Pushes to `main` do **NOT** automatically publish to the public marketplaces.
 
-### Manual Major/Minor Releases
+### 2. Manual Releases (Marketplace Publishing)
 
-For breaking changes or new features:
+To actually publish a new version (Beta or Production) to the marketplaces:
+
 1. Go to **Actions → CI/CD → Run workflow**
-2. Select `major`, `minor`, or `patch`
-3. Optionally enter a custom version
-4. Check "Create GitHub Release" (default: true)
-5. Click **Run workflow**
+2. Configure the release:
+   - **Publish Market**: `Both`, `VS Code Marketplace`, or `Open VSX`
+   - **Release Channel**: `Production` or `Beta (Pre-release)`
+   - **Version Bump Type**: `patch`, `minor`, `major`, `prepatch`, `preminor`, `prerelease`, or `custom`
+   - **Custom Version**: (Only if you selected `custom` above)
+3. Click **Run workflow**
+
+The workflow will automatically bump `package.json`, commit, tag, and publish to the selected marketplaces with the appropriate flags (e.g., `--pre-release` for Beta).
 
 ---
 
@@ -61,10 +64,6 @@ npx ovsx create-namespace lorapok-labs -p <OVSX_PAT>
 
 Enable GitHub Pages in repo settings:
 - Source: **GitHub Actions**
-
-### 5. GitHub Environment (Optional)
-
-Create environment **`production`** in repo settings if you want approval gates before deploy.
 
 ---
 
@@ -118,7 +117,8 @@ After publish, search in Extensions:
 
 1. Open **Actions → CI/CD** run
 2. Download **cursor-curse-monitor-vsix-*** artifact
-3. Install:
+3. Extract the downloaded ZIP file.
+4. Install:
 
 ```bash
 cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
@@ -136,6 +136,5 @@ cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
 | "Already published" warning | Normal — CI treats this as success. Bump version if you need to re-publish |
 | Extension not in Cursor search | Lower `engines.vscode` if too high; reload window; wait for Open VSX sync |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |
-| Auto-patch creates too many releases | This is by design — every push to `main` creates a release. Use feature branches and PRs to batch changes |
 | Website not updating | Check GitHub Pages is enabled with source: GitHub Actions |
 | DB backup files accumulating | Stale backups (>1 hour old) are cleaned up automatically |
