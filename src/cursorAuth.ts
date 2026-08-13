@@ -222,19 +222,19 @@ export async function applyComposerFallbackModel(
   let retryAttempt = false;
 
   try {
-    const attemptModification = async (): Promise<boolean> => {
+    const attemptModification = async (): Promise<{ success: boolean; error?: string }> => {
       db = await openDatabase(dbPath, wasmPath);
       try {
         const result = db.exec(
           `SELECT value FROM ItemTable WHERE key = '${REACTIVE_KEY}'`
         );
         if (!result.length || !result[0].values.length) {
-          return false;
+          return { success: false, error: "Reactive storage key not found in database" };
         }
 
         const raw = result[0].values[0][0];
         if (typeof raw !== "string") {
-          return false;
+          return { success: false, error: "Reactive storage value is not a string" };
         }
 
         const data = JSON.parse(raw) as Record<string, unknown>;
@@ -253,7 +253,7 @@ export async function applyComposerFallbackModel(
         }
 
         if (!changed) {
-          return false;
+          return { success: false, error: "Model configuration already set to target values" };
         }
 
         aiSettings.modelConfig = modelConfig;
@@ -267,16 +267,16 @@ export async function applyComposerFallbackModel(
         // Step 3: Use atomic write instead of direct write
         const writeResult = atomicWrite(dbPath, Buffer.from(exported));
         if (!writeResult.success) {
-          throw new Error(`Atomic write failed: ${writeResult.reason}`);
+          return { success: false, error: `Atomic write failed: ${writeResult.reason}` };
         }
 
         // Step 4: Verify integrity after write
         const postWriteCheck = validateDatabaseIntegrity(dbPath);
         if (!postWriteCheck.valid) {
-          throw new Error(`Post-write integrity check failed: ${postWriteCheck.reason}`);
+          return { success: false, error: `Post-write integrity check failed: ${postWriteCheck.reason}` };
         }
 
-        return true;
+        return { success: true };
       } finally {
         if (db) {
           db.close();
@@ -286,28 +286,31 @@ export async function applyComposerFallbackModel(
     };
 
     // Try modification
-    let success = await attemptModification();
+    let attemptResult = await attemptModification();
 
     // Step 5: Retry once if failed
-    if (!success && !retryAttempt) {
+    if (!attemptResult.success && !retryAttempt) {
       retryAttempt = true;
       // Restore from backup and retry
       if (restoreBackup(backupPath, dbPath)) {
-        success = await attemptModification();
+        attemptResult = await attemptModification();
+      } else {
+        return { success: false, error: "Failed to restore backup for retry" };
       }
     }
 
-    if (success) {
+    if (attemptResult.success) {
       cleanupBackup(backupPath);
       return { success: true };
     } else {
       // Restore backup on final failure
       restoreBackup(backupPath, dbPath);
-      return { success: false, error: "Failed to apply fallback model after retry" };
+      return { success: false, error: attemptResult.error || (retryAttempt ? "Failed to apply fallback model after retry" : "Failed to apply fallback model") };
     }
   } catch (error) {
     // Restore backup on any error
     restoreBackup(backupPath, dbPath);
+    cleanupBackup(backupPath);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Unknown error during fallback model application" 
