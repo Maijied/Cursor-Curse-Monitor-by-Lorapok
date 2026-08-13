@@ -94,7 +94,8 @@ checkSvg("media/activity-bar.svg", {
 });
 checkSvg("media/logo.svg", {
   viewBox: "0 0 128 128",
-  mustHave: ["<svg"],
+  mustHave: ["<animate", "eye-glow", "pupil"],
+  mustNotHave: ['fill="#fff"', 'width="128" height="128" fill'],
   label: "animated logo (SVG)",
 });
 checkSvg("media/icon.svg", {
