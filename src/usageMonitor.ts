@@ -133,16 +133,19 @@ export class UsageMonitorService implements vscode.Disposable {
         snapshot.fallbackApplied = result.success;
         if (result.success && !this.fallbackAppliedThisCycle) {
           this.fallbackAppliedThisCycle = true;
-          NotificationProvider.show({
-            title: "Fallback Applied",
-            message: "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback.",
-            type: "success",
-            duration: 5000,
-            actions: [
-              { label: "Open Dashboard", action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard") },
-              { label: "Dismiss", action: () => {} },
-            ],
-          });
+          
+          if (!result.alreadySet) {
+            NotificationProvider.show({
+              title: "Fallback Applied",
+              message: "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback.",
+              type: "success",
+              duration: 10000,
+              actions: [
+                { label: "Reload Window (Apply)", action: () => void vscode.commands.executeCommand("workbench.action.reloadWindow") },
+                { label: "Dismiss", action: () => {} },
+              ],
+            });
+          }
         } else if (!result.success && result.error) {
           // Show error to user but continue monitoring
           NotificationProvider.show({

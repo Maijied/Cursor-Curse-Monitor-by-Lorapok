@@ -237,7 +237,7 @@ export async function readCursorAccessToken(
 
 export async function applyComposerFallbackModel(
   wasmPath: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; alreadySet?: boolean }> {
   const dbPath = getCursorGlobalStoragePath();
   if (!fs.existsSync(dbPath)) {
     return { success: false, error: "Database file does not exist" };
@@ -277,7 +277,7 @@ export async function applyComposerFallbackModel(
     return { success: false, error: "Failed to create database backup" };
   }
 
-  const attemptModification = async (): Promise<{ success: boolean; error?: string }> => {
+  const attemptModification = async (): Promise<{ success: boolean; error?: string; alreadySet?: boolean }> => {
     let db: Database | null = null;
     try {
       db = await openDatabase(dbPath, wasmPath);
@@ -314,7 +314,7 @@ export async function applyComposerFallbackModel(
       }
 
       if (!changed) {
-        return { success: false, error: "Model configuration already set to target values" };
+        return { success: true, alreadySet: true };
       }
 
       aiSettings.modelConfig = modelConfig;
@@ -359,12 +359,6 @@ export async function applyComposerFallbackModel(
 
     if (attemptResult.success) {
       cleanupBackup(backupPath);
-      return { success: true };
-    }
-
-    // If the config was already set, that's not really a failure — just clean up
-    if (attemptResult.error === "Model configuration already set to target values") {
-      cleanupBackup(backupPath);
       return attemptResult;
     }
 
@@ -383,7 +377,7 @@ export async function applyComposerFallbackModel(
 
     if (attemptResult.success) {
       cleanupBackup(backupPath);
-      return { success: true };
+      return attemptResult;
     }
 
     // Final failure — restore backup
