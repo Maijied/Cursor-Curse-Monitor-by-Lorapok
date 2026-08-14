@@ -25,7 +25,7 @@ async function apiGet<T>(path: string, authRequired = true): Promise<T> {
 }
 
 export async function fetchTags() {
-  return apiGet<{ tags: string[] }>("/tags");
+  return apiGet<{ tags: string[]; source?: string; warning?: string }>("/tags");
 }
 
 export async function fetchHealth() {

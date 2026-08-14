@@ -63,6 +63,7 @@ export interface SiteData {
     releaseTag: string;
     releaseUrl: string;
     publishedAt: string | null;
+    tags?: string[];
     vsixDownloadCount?: number;
     totalReleaseDownloads?: number;
   };

@@ -11,6 +11,8 @@ All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.y
 | **Manual dispatch** | `release-bump` → `deploy` → `website` | Auto-bumps version, commits/tags, conditionally publishes to marketplaces, deploys website |
 | **Tag `v*` push** | `deploy` → `website` | Publishes existing tag to marketplaces, creates GitHub Release, deploys website |
 
+**Manual QA:** see [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) before tagging a stable release.
+
 ### 1. Continuous Integration (Dynamic Per-Commit Builds)
 
 Every push to `main` automatically:

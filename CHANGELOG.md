@@ -6,22 +6,46 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+## [0.5.6] - 2026-08-14
+
 ### Added
 
-- `scripts/publish-ovsx.mjs` — repacks VSIX with Open VSX publisher `lorapok-labs` before publish (fixes duplicate LorapokLabs listing drift)
-- `scripts/verify-marketplace-sync.mjs` — CI guard for canonical vs duplicate Open VSX version parity
-- `syncStatus` and `ovsxDuplicate` fields in `website/site-data.json` from `generate-site-data.mjs`
-- `cursorCurseMonitor.statusBarUsageSource` (`plan`, `autoApi`, `both`) so the status bar can show included-quota usage, Cursor Auto/API percents, or both. Default is `autoApi`. Hovering the status bar lists Plan, Auto, and API percentages.
+- **Admin Mission Control panel** (`website/admin/`) — Overview, Marketplace, Releases, Activity, Community, Deployments, SEO, Settings, Team Access
+- Firebase auth guard with master admin + Firestore team invites
+- Dev API middleware (`vite-dev-api.mjs`) for local `/api/*`, `site-data.json`, visitor stats
+- Cloudflare Pages functions for tags, deploy, releases, workflows, marketplace sync, analytics, discussions
+- `SyncRadar`, download breakdown, visitor stats, drift alerts on Overview
+- `github.tags` cache in site-data for deployment tag fallback when GitHub API is rate-limited
+- `docs/ADMIN_MANUAL_TEST.md` — manual QA checklist for the admin panel and release flow
 
 ### Fixed
 
-- Open VSX CI publish no longer uses bare `ovsx publish` (which read `LorapokLabs` from the VSIX manifest and updated the wrong namespace)
-- Auth token and cached email reads now use file-backed `node:sqlite` (`SELECT` one row) instead of loading the entire `state.vscdb` into sql.js/WASM, which failed on databases larger than 2 GiB.
+- Admin panel scroll flicker — separated fixed background from scroll layer; removed `backdrop-filter` on glass panels
+- GitHub tags 403 on Deployments — cached fallback from `site-data.json` + optional `GITHUB_TOKEN` in dev/Cloudflare
+- PostCSS `@import` font warning — Google Fonts loaded via `index.html` link instead of CSS `@import`
+- Extension dashboard HTML escape, refresh mutex, budget-aware warnings, version from `package.json`
 
 ### Changed
 
-- CI/CD and deployment workflows use `node scripts/publish-ovsx.mjs` + post-publish marketplace verification
-- `cursorCurseMonitor.autoApplyFallbackModel` now defaults to `false`. The fallback writer still loads the full database through sql.js and is unsafe on large Cursor state files.
+- Admin CI job: test, build, `verify:marketplace`
+
+## [0.5.5] - 2026-08-14
+
+### Added
+
+- `scripts/publish-ovsx.mjs` — repacks VSIX with Open VSX publisher `lorapok-labs` before publish
+- `scripts/verify-marketplace-sync.mjs` — CI guard for canonical vs duplicate Open VSX version parity
+- `syncStatus` and `ovsxDuplicate` fields in `website/site-data.json`
+- `cursorCurseMonitor.statusBarUsageSource` (`plan`, `autoApi`, `both`)
+
+### Fixed
+
+- Open VSX CI publish no longer uses bare `ovsx publish`
+- Auth token reads via file-backed `node:sqlite` for large databases
+
+### Changed
+
+- `cursorCurseMonitor.autoApplyFallbackModel` defaults to `false`
 
 ## [0.5.0] - 2026-08-13
 

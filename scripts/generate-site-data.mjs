@@ -20,9 +20,13 @@ const OVSX_EXT_ID = `${OVSX_NS}.${NAME}`;
 const VSCE_EXT_ID = `${VSCE_NS}.${NAME}`;
 
 async function fetchJson(url, retries = 3) {
+  const headers = { Accept: "application/json" };
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const res = await fetch(url, { headers });
       if (res.status === 429 && attempt < retries - 1) {
         const waitMs = 1000 * (attempt + 1);
         console.warn(`Rate limited (${url}), retry in ${waitMs}ms`);
@@ -83,6 +87,12 @@ function readVisitorStats() {
   } catch {
     return { websiteVisits: 0, packageClicks: {}, totalEngagement: 0, updatedAt: null };
   }
+}
+
+async function githubTags() {
+  const data = await fetchJson(`https://api.github.com/repos/${REPO}/tags?per_page=30`);
+  if (!Array.isArray(data)) return [];
+  return data.map((t) => t.name).filter(Boolean);
 }
 
 async function githubLatestRelease() {
@@ -222,8 +232,9 @@ async function githubDiscussionsAndIssues() {
   };
 }
 
-const [github, githubDownloads, ovsxCanonical, ovsxDuplicate, vscode, community, visitors] = await Promise.all([
+const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vscode, community, visitors] = await Promise.all([
   githubLatestRelease(),
+  githubTags(),
   githubReleaseDownloadTotal(),
   ovsxLatest(OVSX_NS),
   ovsxLatest(OVSX_DUPLICATE_NS),
@@ -235,6 +246,11 @@ const [github, githubDownloads, ovsxCanonical, ovsxDuplicate, vscode, community,
 const version = github?.version ?? pkg.version;
 const vsixName = github?.vsixName ?? `${NAME}-${version}.vsix`;
 const syncStatus = computeSyncStatus(ovsxCanonical?.version, ovsxDuplicate?.version, version);
+const deployTags = githubTagList.length > 0
+  ? githubTagList
+  : github?.tag
+    ? [github.tag]
+    : [`v${pkg.version.replace(/^v/, "")}`];
 
 const ovsx = ovsxCanonical ?? {
   namespace: OVSX_NS,
@@ -319,6 +335,7 @@ const siteData = {
   github: {
     repo: REPO,
     releaseTag: github?.tag ?? `v${version}`,
+    tags: deployTags,
     releaseUrl: github?.url ?? `https://github.com/${REPO}/releases/latest`,
     vsixName,
     vsixUrl: github?.vsixUrl ?? `https://github.com/${REPO}/releases/latest/download/${vsixName}`,

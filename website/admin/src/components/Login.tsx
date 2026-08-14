@@ -59,9 +59,10 @@ export default function Login() {
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none text-[var(--color-text)]";
 
   return (
-    <div className="min-h-screen mesh-bg flex flex-col items-center justify-center py-12 px-4">
-      <div className="pointer-events-none absolute inset-0 animate-mesh opacity-30 bg-[radial-gradient(circle_at_30%_70%,rgba(77,159,255,0.12),transparent_50%)]" aria-hidden="true" />
-      <img src="/assets/welcome-animation.svg" alt="Welcome" className="w-48 h-auto mb-8 relative animate-fade-slide-up" />
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div className="app-shell-bg fixed inset-0" aria-hidden="true" />
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center py-12 px-4">
+      <img src="/assets/welcome-animation.svg" alt="Welcome" className="w-48 h-auto mb-8 animate-fade-slide-up" />
       <div className="glass-panel p-8 w-full max-w-md relative overflow-hidden animate-fade-slide-up stagger-1">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-accent-2)] via-[var(--color-accent)] to-[var(--color-neon)]" />
         <div className="flex items-center justify-center gap-3 mb-6">
@@ -115,6 +116,7 @@ export default function Login() {
             {message}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -1,18 +1,29 @@
 import { useState, useEffect } from "react";
 import { Rocket } from "lucide-react";
 import { fetchTags, triggerDeployment } from "../../lib/api";
+import { useSiteData } from "../../hooks/useSiteData";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 
+function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) {
+  if (!siteData) return [];
+  if (siteData.github.tags?.length) return siteData.github.tags;
+  if (siteData.github.releaseTag) return [siteData.github.releaseTag];
+  return [`v${siteData.packageVersion.replace(/^v/, "")}`];
+}
+
 export default function Deployments() {
+  const { data: siteData } = useSiteData();
   const [tags, setTags] = useState<string[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [channel, setChannel] = useState<"beta" | "production">("beta");
   const [selectedTag, setSelectedTag] = useState("");
+  const [customTag, setCustomTag] = useState("");
   const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace">("Both");
   const [tagsError, setTagsError] = useState<string | null>(null);
+  const [tagsWarning, setTagsWarning] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTags()
@@ -20,25 +31,36 @@ export default function Deployments() {
         const tagNames = data.tags ?? [];
         setTags(tagNames);
         setTagsError(null);
+        setTagsWarning(data.warning ?? (data.source === "cache" ? "Using cached tags from site-data.json" : null));
         if (tagNames.length > 0) setSelectedTag(tagNames[0]);
       })
       .catch((err: Error) => {
-        setTags([]);
-        setTagsError(err.message || "Failed to load tags from API");
+        const fallback = fallbackTagsFromSite(siteData);
+        if (fallback.length > 0) {
+          setTags(fallback);
+          setTagsError(null);
+          setTagsWarning(err.message || "Using fallback tags from site-data.json");
+          setSelectedTag(fallback[0]);
+        } else {
+          setTags([]);
+          setTagsError(err.message || "Failed to load tags from API");
+        }
       });
-  }, []);
+  }, [siteData]);
 
   const handleDeploy = async (e: React.FormEvent) => {
     e.preventDefault();
+    const targetTag = customTag.trim() || selectedTag;
+    if (!targetTag) return;
     setDeploying(true);
     setMessage(null);
     try {
       await triggerDeployment({
-        target_tag: selectedTag,
+        target_tag: targetTag,
         publish_market: market,
         release_channel: channel === "production" ? "Production" : "Beta (Pre-release)",
       });
-      setMessage({ type: "success", text: `Deployment triggered for ${selectedTag} (${market}).` });
+      setMessage({ type: "success", text: `Deployment triggered for ${targetTag} (${market}).` });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Deployment failed" });
     }
@@ -49,6 +71,9 @@ export default function Deployments() {
     if (channel === "production") return !/beta|alpha|rc/i.test(t);
     return /beta|alpha|rc/i.test(t) || t.startsWith("v0.");
   });
+
+  const effectiveTag = customTag.trim() || selectedTag;
+  const canDeploy = Boolean(effectiveTag) && !tagsError;
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -62,19 +87,36 @@ export default function Deployments() {
 
       {tagsError && <ErrorState title="Tags unavailable" message={tagsError} />}
 
+      {tagsWarning && !tagsError && (
+        <div className="glass-panel p-4 mb-4 border-[color-mix(in_srgb,var(--color-warn)_30%,transparent)] text-sm text-[var(--color-warn)]">
+          {tagsWarning}
+        </div>
+      )}
+
       <Card className="mt-6">
         <form onSubmit={handleDeploy} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">Target Tag</label>
               <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass}>
-                {filteredTags.length === 0 && <option value="">No tags available</option>}
+                {filteredTags.length === 0 && <option value="">No tags in list</option>}
                 {filteredTags.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
             </div>
             <div>
+              <label htmlFor="custom-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">Or type tag manually</label>
+              <input
+                id="custom-tag"
+                type="text"
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value)}
+                placeholder="e.g. v0.5.4"
+                className={inputClass}
+              />
+            </div>
+            <div className="sm:col-span-2">
               <label htmlFor="target-market" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">Publish Market</label>
               <select id="target-market" value={market} onChange={(e) => setMarket(e.target.value as typeof market)} className={inputClass}>
                 <option value="Open VSX">Open VSX</option>
@@ -112,7 +154,7 @@ export default function Deployments() {
 
           <button
             type="submit"
-            disabled={deploying || filteredTags.length === 0 || !!tagsError}
+            disabled={deploying || !canDeploy}
             className="w-full flex items-center justify-center gap-3 bg-[var(--color-accent)] text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-[0_8px_24px_rgba(124,92,255,0.25)]"
           >
             <Rocket size={20} aria-hidden="true" />

@@ -27,10 +27,11 @@ export default function AppShell() {
   return (
     <div className="flex h-screen w-full overflow-hidden text-[var(--color-text)]">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto mesh-bg relative">
-        <div className="pointer-events-none absolute inset-0 animate-mesh opacity-40 bg-[radial-gradient(circle_at_70%_20%,rgba(124,92,255,0.15),transparent_50%)]" aria-hidden="true" />
-        <div className="relative p-6 md:p-8 max-w-6xl mx-auto">
-          <Routes>
+      <div className="flex-1 relative min-w-0 min-h-0">
+        <div className="app-shell-bg" aria-hidden="true" />
+        <main className="app-scroll-pane">
+          <div className="p-6 md:p-8 max-w-6xl mx-auto">
+            <Routes>
             <Route index element={<Overview />} />
             <Route path="marketplace" element={<MarketplaceHealth />} />
             <Route path="releases" element={<Releases />} />
@@ -42,8 +43,9 @@ export default function AppShell() {
             <Route path="settings" element={<Settings />} />
             <Route path="team" element={<Team />} />
           </Routes>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

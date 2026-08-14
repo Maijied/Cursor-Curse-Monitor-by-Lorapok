@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "../../shared/tokens.css";
 @import "./styles/animations.css";
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @theme {
   --color-bg-base: var(--color-bg-base);
@@ -21,11 +20,43 @@ body {
   background-color: var(--color-bg-base);
   color: var(--color-text);
   font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+/* Fixed panel background — stays out of the scroll layer to prevent repaint flicker */
+.app-shell-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(124, 92, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(77, 159, 255, 0.08), transparent 50%),
+    var(--color-bg-base);
+}
+
+.app-shell-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background: radial-gradient(circle at 70% 20%, rgba(124, 92, 255, 0.15), transparent 50%);
+  animation: mesh-drift 12s ease-in-out infinite;
+}
+
+.app-scroll-pane {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }
 
 .glass-panel {
-  background: color-mix(in srgb, var(--color-bg-surface) 70%, transparent);
-  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);

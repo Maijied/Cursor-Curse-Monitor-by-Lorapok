@@ -6,6 +6,67 @@ const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
 const visitorStatsPath = resolve(repoRoot, "website/visitor-stats.json");
 const GITHUB_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
+const siteDataPath = resolve(repoRoot, "website/site-data.json");
+
+function loadGithubToken() {
+  if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
+  const envPath = resolve(rootDir, ".env");
+  if (!existsSync(envPath)) return null;
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const m = trimmed.match(/^GITHUB_TOKEN=(.*)$/);
+    if (m) return m[1].trim().replace(/^["']|["']$/g, "");
+  }
+  return null;
+}
+
+function githubHeaders() {
+  const token = loadGithubToken();
+  return {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "cursor-usage-monitor-dev",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+}
+
+function readCachedTags() {
+  try {
+    const data = JSON.parse(readFileSync(siteDataPath, "utf8"));
+    if (Array.isArray(data.github?.tags) && data.github.tags.length > 0) {
+      return data.github.tags;
+    }
+    if (data.github?.releaseTag) return [data.github.releaseTag];
+    if (data.packageVersion) return [`v${String(data.packageVersion).replace(/^v/, "")}`];
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+async function fetchGitHubTags() {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=30`, {
+    headers: githubHeaders(),
+  });
+  if (res.ok) {
+    const data = await res.json();
+    return {
+      tags: Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [],
+      source: "github",
+    };
+  }
+  const cached = readCachedTags();
+  if (cached.length > 0) {
+    const msg = res.status === 403
+      ? "GitHub API rate limit — using cached tags from site-data.json. Add GITHUB_TOKEN to website/admin/.env"
+      : `GitHub tags ${res.status} — using cached tags from site-data.json`;
+    return { tags: cached, source: "cache", warning: msg };
+  }
+  if (res.status === 403) {
+    throw new Error("GitHub API rate limit exceeded. Add GITHUB_TOKEN to website/admin/.env and restart npm run dev.");
+  }
+  throw new Error(`GitHub tags ${res.status}`);
+}
 
 const DEFAULT_STATS = {
   websiteVisits: 0,
@@ -54,18 +115,9 @@ function incrementStats(channel) {
   return stats;
 }
 
-async function fetchGitHubTags() {
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=30`, {
-    headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "cursor-usage-monitor-dev" },
-  });
-  if (!res.ok) throw new Error(`GitHub tags ${res.status}`);
-  const data = await res.json();
-  return Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [];
-}
-
 async function fetchDiscussions() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/discussions?per_page=10`, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" },
+    headers: githubHeaders(),
   });
   const enabled = res.ok;
   let discussions = [];
@@ -84,7 +136,7 @@ async function fetchDiscussions() {
 
   const issuesRes = await fetch(
     `https://api.github.com/repos/${GITHUB_REPO}/issues?state=all&per_page=20&sort=updated`,
-    { headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" } }
+    { headers: githubHeaders() }
   );
   const topics = [];
   if (issuesRes.ok) {
@@ -109,7 +161,7 @@ async function fetchDiscussions() {
 
 async function fetchGitHubReleases() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=20`, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" },
+    headers: githubHeaders(),
   });
   if (!res.ok) throw new Error(`GitHub releases ${res.status}`);
   const data = await res.json();
@@ -129,7 +181,7 @@ async function fetchGitHubReleases() {
 async function fetchWorkflowRuns() {
   const res = await fetch(
     `https://api.github.com/repos/${GITHUB_REPO}/actions/runs?per_page=20&exclude_pull_requests=true`,
-    { headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" } }
+    { headers: githubHeaders() }
   );
   if (!res.ok) throw new Error(`GitHub runs ${res.status}`);
   const data = await res.json();
@@ -206,9 +258,9 @@ export function createDevApiMiddleware() {
 
     if (url === "/api/tags" && req.method === "GET") {
       fetchGitHubTags()
-        .then((tags) => {
+        .then((result) => {
           res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ tags }));
+          res.end(JSON.stringify(result));
         })
         .catch((err) => {
           res.statusCode = 502;
@@ -233,7 +285,7 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/health" && req.method === "GET") {
-      fetch("https://api.github.com/zen", { headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" } })
+      fetch("https://api.github.com/zen", { headers: githubHeaders() })
         .then((gh) => {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({
