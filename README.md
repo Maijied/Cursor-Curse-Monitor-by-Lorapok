@@ -94,7 +94,7 @@ Reload Cursor: `Developer: Reload Window`
 |---------|---------|-------------|
 | `cursorCurseMonitor.pollIntervalSeconds` | `60` | API refresh interval |
 | `cursorCurseMonitor.customBudgetLimit` | `0` | Personal USD budget cap |
-| `cursorCurseMonitor.autoApplyFallbackModel` | `true` | Auto-switch to Composer 2.5 (Fast off) at 100% |
+| `cursorCurseMonitor.autoApplyFallbackModel` | `false` | Auto-switch to Composer 2.5 (Fast off) at 100%. Rewrites `state.vscdb`; unsafe on large databases. |
 | `cursorCurseMonitor.showStatusBar` | `true` | Show usage in status bar |
 | `cursorCurseMonitor.warnAtPercent` | `80` | Warning notification threshold |
 

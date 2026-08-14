@@ -94,8 +94,8 @@
         },
         "cursorCurseMonitor.autoApplyFallbackModel": {
           "type": "boolean",
-          "default": true,
-          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model."
+          "default": false,
+          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model. Off by default: this rewrites Cursor's state.vscdb and is unsafe on large databases."
         },
         "cursorCurseMonitor.showStatusBar": {
           "type": "boolean",
@@ -113,7 +113,7 @@
     }
   },
   "scripts": {
-    "test": "node tests/test_fallback.js && node tests/test_sql.js",
+    "test": "node tests/test_fallback.js && node tests/test_sql.js && node tests/test_auth_read.js",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",

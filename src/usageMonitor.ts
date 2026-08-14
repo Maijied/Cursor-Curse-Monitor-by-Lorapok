@@ -66,7 +66,7 @@ export class UsageMonitorService implements vscode.Disposable {
   async refresh(): Promise<DashboardSnapshot> {
     const config = vscode.workspace.getConfiguration("cursorCurseMonitor");
     const customBudgetLimit = config.get<number>("customBudgetLimit", 0);
-    const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", true);
+    const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", false);
     const warnAtPercent = config.get<number>("warnAtPercent", 80);
 
     const snapshot: DashboardSnapshot = {
