@@ -104,8 +104,8 @@ function repackForOvsx(sourceVsix) {
       throw new Error(`Failed to set Open VSX publisher to ${OVSX_PUBLISHER}`);
     }
 
-    // Recreate VSIX from extension/ contents (same layout vsce uses)
-    run("zip", ["-qr", outVsix, "extension"], { cwd: extractDir });
+    // Recreate VSIX preserving [Content_Types].xml and extension.vsixmanifest
+    run("zip", ["-qr", outVsix, ".", "-x", "*.DS_Store"], { cwd: extractDir });
 
     return {
       outVsix,
