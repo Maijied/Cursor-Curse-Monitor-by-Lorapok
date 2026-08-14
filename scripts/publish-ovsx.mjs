@@ -103,7 +103,7 @@ async function fetchCanonicalLatest() {
   return data?.version?.replace(/^v/, "") ?? null;
 }
 
-async function waitForCanonicalVersion(target, attempts = 18, delayMs = 10000) {
+async function waitForCanonicalVersion(target, attempts = 36, delayMs = 10000) {
   for (let i = 0; i < attempts; i++) {
     const latest = await fetchCanonicalLatest();
     if (latest === target) return true;
@@ -181,6 +181,15 @@ async function main() {
     const after = await fetchCanonicalLatest();
     if (after === target) {
       console.log(`Published ${target} to Open VSX namespace ${OVSX_PUBLISHER}`);
+      return;
+    }
+
+    if (/Published/i.test(output)) {
+      console.warn(
+        `::warning::ovsx CLI reported success but ${OVSX_PUBLISHER} API still shows ` +
+          `${after ?? "missing"} (expected ${target}). Open VSX indexing may be delayed; ` +
+          `verify-marketplace-sync will re-check.`
+      );
       return;
     }
 

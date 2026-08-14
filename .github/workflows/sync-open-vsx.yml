@@ -50,7 +50,7 @@ jobs:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
       - name: Verify marketplace sync
-        run: node scripts/verify-marketplace-sync.mjs --strict
+        run: node scripts/verify-marketplace-sync.mjs --strict --retry=12
 
       - name: Summary
         run: |

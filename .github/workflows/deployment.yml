@@ -33,6 +33,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  workflows: write
 
 jobs:
   rollback:
@@ -51,7 +52,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Verify Tag Exists
         run: |
@@ -64,8 +65,8 @@ jobs:
 
       - name: Restore files from target tag
         run: |
-          # Restore the entire working tree from the target tag (excluding .git)
-          git restore --source=${{ inputs.target_tag }} --worktree --staged .
+          git restore --source=${{ inputs.target_tag }} --worktree --staged -- . ':!.github'
+          git restore --source=HEAD --worktree --staged -- .github/
 
       - name: Calculate new rollback version
         id: bump
@@ -120,7 +121,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies & Compile
@@ -169,7 +170,7 @@ jobs:
 
       - name: Verify marketplace sync
         if: steps.config.outputs.do_ovsx == 'true'
-        run: node scripts/verify-marketplace-sync.mjs --strict
+        run: node scripts/verify-marketplace-sync.mjs --strict --retry=12
 
       - name: Publish to VS Code Marketplace
         if: steps.config.outputs.do_vsce == 'true'
