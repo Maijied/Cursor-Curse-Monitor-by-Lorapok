@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Fallback Mode">
+  <defs>
+    <linearGradient id="fallbackGrad" x1="24" y1="24" x2="104" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#39ff14"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="40" y1="40" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#f5b942"/>
+    </linearGradient>
+    <filter id="fallbackGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="48" fill="#1a1f28" stroke="#2a3040" stroke-width="2"/>
+  
+  <!-- Original path (faded) -->
+  <path d="M32 80 Q48 40 64 40 Q80 40 96 80" fill="none" stroke="#2a3040" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 4"/>
+  
+  <!-- Fallback arrow -->
+  <path d="M32 64 Q48 24 64 24 Q80 24 96 64" fill="none" stroke="url(#arrowGrad)" stroke-width="4" stroke-linecap="round" filter="url(#fallbackGlow)">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="2s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Arrow head -->
+  <path d="M88 28 L96 64 L88 64" fill="none" stroke="url(#arrowGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Free badge -->
+  <rect x="44" y="84" width="40" height="20" rx="4" fill="url(#fallbackGrad)" filter="url(#fallbackGlow)"/>
+  <text x="64" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d1117" font-family="ui-sans-serif, system-ui">FREE</text>
+  
+  <!-- Sparkle effects -->
+  <circle cx="28" cy="32" r="3" fill="#39ff14" opacity="0.8">
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="32" r="3" fill="#39ff14" opacity="0.8">
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle cx="64" cy="16" r="2" fill="#f5b942" opacity="0.8">
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Budget Cap">
+  <defs>
+    <linearGradient id="coinGrad" x1="32" y1="32" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffd700"/>
+      <stop offset="50%" stop-color="#ff8c00"/>
+      <stop offset="100%" stop-color="#ff6347"/>
+    </linearGradient>
+    <linearGradient id="coinInner" x1="40" y1="40" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a1f28"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <filter id="coinGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main coin -->
+  <circle cx="64" cy="64" r="40" fill="url(#coinGrad)" filter="url(#coinGlow)"/>
+  <circle cx="64" cy="64" r="34" fill="url(#coinInner)" stroke="#2a3040" stroke-width="2"/>
+  
+  <!-- Dollar sign -->
+  <text x="64" y="75" text-anchor="middle" font-size="32" font-weight="bold" fill="#ffd700" font-family="ui-sans-serif, system-ui">$</text>
+  
+  <!-- Cap indicator -->
+  <path d="M24 64 Q24 24 64 24 Q104 24 104 64" fill="none" stroke="#39ff14" stroke-width="3" stroke-linecap="round" filter="url(#coinGlow)"/>
+  <circle cx="104" cy="24" r="6" fill="#39ff14" filter="url(#coinGlow)">
+    <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Progress indicator -->
+  <rect x="32" y="100" width="64" height="8" rx="4" fill="#2a3040"/>
+  <rect x="32" y="100" width="48" height="8" rx="4" fill="url(#coinGrad)" filter="url(#coinGlow)">
+    <animate attributeName="width" values="48;52;48" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  
+  <!-- Percentage -->
+  <text x="64" y="118" text-anchor="middle" font-size="10" fill="#8b96ad" font-family="ui-sans-serif, system-ui">75% BUDGET</text>
+</svg>

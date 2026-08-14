@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Info Notification">
+  <defs>
+    <linearGradient id="infoGrad" x1="20" y1="20" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5b9dff"/>
+      <stop offset="50%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#00ff88"/>
+    </linearGradient>
+    <linearGradient id="infoBody" x1="32" y1="40" x2="96" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a1f28"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <radialGradient id="infoGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5b9dff"/>
+      <stop offset="70%" stop-color="#5b9dff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#5b9dff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="infoFilter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background glow circle -->
+  <circle cx="64" cy="64" r="56" fill="url(#infoGrad)" opacity="0.1" filter="url(#infoFilter)">
+    <animate attributeName="opacity" values="0.1;0.2;0.1" dur="2.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Robot body -->
+  <ellipse cx="64" cy="78" rx="28" ry="22" fill="url(#infoBody)" stroke="#5b9dff" stroke-width="2"/>
+  <ellipse cx="64" cy="52" rx="24" ry="20" fill="url(#infoBody)" stroke="#5b9dff" stroke-width="2"/>
+  
+  <!-- Head -->
+  <ellipse cx="64" cy="44" rx="22" ry="18" fill="url(#infoBody)" stroke="#5b9dff" stroke-width="2"/>
+  
+  <!-- Curious eyes -->
+  <ellipse cx="54" cy="42" rx="6" ry="4" fill="#0d1117" stroke="#5b9dff" stroke-width="1.5"/>
+  <ellipse cx="74" cy="42" rx="6" ry="4" fill="#0d1117" stroke="#5b9dff" stroke-width="1.5"/>
+  
+  <!-- Glowing pupils -->
+  <circle cx="54" cy="42" r="2.5" fill="#5b9dff" filter="url(#infoFilter)">
+    <animate attributeName="r" values="2.5;3;2.5" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="74" cy="42" r="2.5" fill="#5b9dff" filter="url(#infoFilter)">
+    <animate attributeName="r" values="2.5;3;2.5" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  
+  <!-- Slight smile -->
+  <path d="M56 50 Q64 53 72 50" fill="none" stroke="#5b9dff" stroke-width="2" stroke-linecap="round" filter="url(#infoFilter)">
+    <animate attributeName="stroke-width" values="2;2.5;2" dur="2.5s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Info circle -->
+  <circle cx="64" cy="64" r="20" fill="none" stroke="url(#infoGrad)" stroke-width="3" filter="url(#infoFilter)">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="1.2s" fill="freeze"/>
+  </circle>
+  
+  <!-- Info dot -->
+  <circle cx="64" cy="54" r="4" fill="#5b9dff" filter="url(#infoFilter)">
+    <animate attributeName="r" values="4;5;4" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Info line -->
+  <path d="M64 62 L64 76" fill="none" stroke="#5b9dff" stroke-width="3" stroke-linecap="round" filter="url(#infoFilter)">
+    <animate attributeName="stroke-width" values="3;4;3" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Data flow particles -->
+  <circle cx="32" cy="64" r="2" fill="#7c5cff" opacity="0.8">
+    <animate attributeName="cx" values="32;96;32" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="96" cy="64" r="2" fill="#00ff88" opacity="0.8">
+    <animate attributeName="cx" values="96;32;96" dur="4s" repeatCount="indefinite" begin="2s"/>
+  </circle>
+</svg>

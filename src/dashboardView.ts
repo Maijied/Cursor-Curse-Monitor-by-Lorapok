@@ -28,9 +28,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       path.join(this.extensionUri.fsPath, "media", "logo.svg"),
       "utf8"
     );
+    const usageMeterSvg = fs.readFileSync(
+      path.join(this.extensionUri.fsPath, "media", "usage-meter.svg"),
+      "utf8"
+    );
 
     webviewView.webview.html = this.getHtml(
       logoSvg,
+      usageMeterSvg,
       webviewView.webview.cspSource
     );
 
@@ -58,7 +63,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private getHtml(logoSvg: string, cspSource: string): string {
+  private getHtml(logoSvg: string, usageMeterSvg: string, cspSource: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,10 +73,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   <title>Usage Dashboard</title>
   <style>
     :root {
-      --bg: #0f1117;
-      --panel: #171a22;
-      --panel-2: #1c2030;
-      --border: #2a3040;
+      --bg: #06080d;
+      --panel: rgba(17, 24, 39, 0.6);
+      --panel-2: rgba(22, 31, 46, 0.8);
+      --border: rgba(148, 163, 184, 0.15);
       --text: #eef2fb;
       --muted: #8b96ad;
       --accent: #7c5cff;
@@ -412,7 +417,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   <div id="errorBox" class="card error" style="display:none"></div>
 
   <section class="card" id="usageCard">
-    <p class="section-label">Usage <span id="statusPill" class="pill ok">OK</span></p>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <p class="section-label" style="margin:0;">
+        <span style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;">${usageMeterSvg}</span>
+        Usage 
+      </p>
+      <span id="statusPill" class="pill ok">OK</span>
+    </div>
     <div class="usage-big" id="usageBig">—%</div>
     <div class="usage-sub" id="usageSub">of included quota</div>
     <div class="bar">

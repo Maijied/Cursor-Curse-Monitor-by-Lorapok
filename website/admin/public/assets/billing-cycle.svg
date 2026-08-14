@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Billing Cycle">
+  <defs>
+    <linearGradient id="cycleGrad" x1="24" y1="24" x2="104" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#5b9dff"/>
+    </linearGradient>
+    <linearGradient id="calGrad" x1="32" y1="32" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a1f28"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Calendar background -->
+  <rect x="28" y="24" rx="8" width="72" height="80" fill="url(#calGrad)" stroke="#2a3040" stroke-width="2"/>
+  
+  <!-- Calendar header -->
+  <rect x="28" y="24" rx="8" width="72" height="24" fill="url(#cycleGrad)" opacity="0.3"/>
+  <rect x="28" y="36" width="72" height="12" fill="url(#cycleGrad)" opacity="0.3"/>
+  
+  <!-- Calendar rings -->
+  <circle cx="40" cy="32" r="4" fill="#2a3040"/>
+  <circle cx="88" cy="32" r="4" fill="#2a3040"/>
+  
+  <!-- Days grid -->
+  <g fill="#8b96ad" font-size="8" font-family="ui-monospace, monospace" text-anchor="middle">
+    <text x="40" y="56">M</text>
+    <text x="56" y="56">T</text>
+    <text x="72" y="56">W</text>
+    <text x="88" y="56">T</text>
+    
+    <text x="40" y="70">1</text>
+    <text x="56" y="70">2</text>
+    <text x="72" y="70">3</text>
+    <text x="88" y="70">4</text>
+    
+    <text x="40" y="84">5</text>
+    <text x="56" y="84">6</text>
+    <text x="72" y="84" fill="#39ff14" font-weight="bold">7</text>
+    <text x="88" y="84">8</text>
+    
+    <text x="40" y="98">9</text>
+    <text x="56" y="98">10</text>
+    <text x="72" y="98">11</text>
+    <text x="88" y="98">12</text>
+  </g>
+  
+  <!-- Current day indicator -->
+  <circle cx="72" cy="84" r="8" fill="none" stroke="#39ff14" stroke-width="1.5" filter="url(#softGlow)">
+    <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Reset arrow -->
+  <path d="M108 64 Q116 64 116 56 Q116 48 108 48" fill="none" stroke="#7c5cff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M112 52 L116 48 L112 44" fill="none" stroke="#7c5cff" stroke-width="2" stroke-linecap="round"/>
+</svg>
