@@ -4,10 +4,10 @@ const DEFAULT_PROJECT_ID = "cursor-curse-by-lorapok";
 const DEFAULT_MASTER = "mdshuvo40@gmail.com";
 export const GITHUB_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...extraHeaders },
   });
 }
 

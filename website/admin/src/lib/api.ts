@@ -13,8 +13,15 @@ export async function fetchTags() {
   const res = await fetch(`${API_BASE}/api/tags`, {
     headers: await authHeaders(),
   });
-  if (!res.ok) throw new Error("Failed to fetch tags");
-  return res.json();
+  const text = await res.text();
+  let data: { tags?: string[]; error?: string };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("Tags API returned invalid JSON — is the dev server proxy running?");
+  }
+  if (!res.ok) throw new Error(data.error || "Failed to fetch tags");
+  return data;
 }
 
 export type DeployRequest = {

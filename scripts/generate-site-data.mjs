@@ -3,7 +3,7 @@
  * Generates website/site-data.json from package.json + live GitHub/Open VSX/VS Code Marketplace APIs.
  * Run locally or in GitHub Pages CI so install commands stay up to date.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -68,6 +68,23 @@ function computeSyncStatus(canonicalVersion, duplicateVersion, targetVersion) {
   return "synced";
 }
 
+function readVisitorStats() {
+  const path = join(root, "website", "visitor-stats.json");
+  if (!existsSync(path)) {
+    return {
+      websiteVisits: 0,
+      packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0 },
+      totalEngagement: 0,
+      updatedAt: null,
+    };
+  }
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return { websiteVisits: 0, packageClicks: {}, totalEngagement: 0, updatedAt: null };
+  }
+}
+
 async function githubLatestRelease() {
   const data = await fetchJson(`https://api.github.com/repos/${REPO}/releases/latest`);
   if (!data?.tag_name) return null;
@@ -79,8 +96,18 @@ async function githubLatestRelease() {
     url: data.html_url,
     vsixName: vsix?.name ?? `${NAME}-${tag}.vsix`,
     vsixUrl: vsix?.browser_download_url ?? null,
+    vsixDownloadCount: vsix?.download_count ?? 0,
     publishedAt: data.published_at,
   };
+}
+
+async function githubReleaseDownloadTotal() {
+  const releases = await fetchJson(`https://api.github.com/repos/${REPO}/releases?per_page=100`);
+  if (!Array.isArray(releases)) return 0;
+  return releases.reduce((sum, rel) => {
+    const assets = rel.assets ?? [];
+    return sum + assets.reduce((a, asset) => a + (asset.download_count ?? 0), 0);
+  }, 0);
 }
 
 async function ovsxLatest(namespace) {
@@ -91,6 +118,7 @@ async function ovsxLatest(namespace) {
     version: data.version,
     url: `https://open-vsx.org/extension/${namespace}/${NAME}`,
     downloadable: data.downloadable !== false,
+    downloadCount: data.downloadCount ?? 0,
     installQuery: `${namespace}.${NAME}`,
   };
 }
@@ -125,10 +153,12 @@ async function vsceLatest() {
     for (const s of ext.statistics ?? []) {
       stats[s.statisticName] = s.value;
     }
+    const downloadCount = Math.round(stats.downloadCount ?? stats.install ?? 0);
     return {
       version,
       url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_NS}.${NAME}`,
-      installCount: stats.install ?? 0,
+      downloadCount,
+      installCount: downloadCount,
       installQuery: VSCE_EXT_ID,
       published: true,
     };
@@ -137,11 +167,69 @@ async function vsceLatest() {
   }
 }
 
-const [github, ovsxCanonical, ovsxDuplicate, vscode] = await Promise.all([
+async function githubDiscussionsAndIssues() {
+  const discussionsRes = await fetch(
+    `https://api.github.com/repos/${REPO}/discussions?per_page=10`,
+    { headers: { Accept: "application/vnd.github+json" } }
+  );
+  let discussions = [];
+  let discussionsEnabled = discussionsRes.ok;
+  if (discussionsRes.ok) {
+    const data = await discussionsRes.json();
+    discussions = Array.isArray(data)
+      ? data.map((d) => ({
+          title: d.title,
+          url: d.html_url,
+          category: d.category?.name ?? "General",
+          createdAt: d.created_at,
+          comments: d.comments ?? 0,
+          answered: Boolean(d.answer_chosen_at),
+        }))
+      : [];
+  }
+
+  const issues = await fetchJson(
+    `https://api.github.com/repos/${REPO}/issues?state=all&per_page=30&sort=updated`
+  );
+  const topicMap = new Map();
+  if (Array.isArray(issues)) {
+    for (const issue of issues) {
+      if (issue.pull_request) continue;
+      const labels = (issue.labels ?? []).map((l) => (typeof l === "string" ? l : l.name)).filter(Boolean);
+      const topic = labels[0] ?? "General";
+      if (!topicMap.has(topic)) {
+        topicMap.set(topic, { topic, count: 0, items: [] });
+      }
+      const entry = topicMap.get(topic);
+      entry.count += 1;
+      if (entry.items.length < 5) {
+        entry.items.push({
+          title: issue.title,
+          url: issue.html_url,
+          state: issue.state,
+          comments: issue.comments ?? 0,
+          updatedAt: issue.updated_at,
+        });
+      }
+    }
+  }
+
+  return {
+    enabled: discussionsEnabled,
+    discussions,
+    topics: [...topicMap.values()].sort((a, b) => b.count - a.count),
+    settingsUrl: `https://github.com/${REPO}/settings#features`,
+  };
+}
+
+const [github, githubDownloads, ovsxCanonical, ovsxDuplicate, vscode, community, visitors] = await Promise.all([
   githubLatestRelease(),
+  githubReleaseDownloadTotal(),
   ovsxLatest(OVSX_NS),
   ovsxLatest(OVSX_DUPLICATE_NS),
   vsceLatest(),
+  githubDiscussionsAndIssues(),
+  Promise.resolve(readVisitorStats()),
 ]);
 
 const version = github?.version ?? pkg.version;
@@ -153,8 +241,22 @@ const ovsx = ovsxCanonical ?? {
   version: null,
   url: `https://open-vsx.org/extension/${OVSX_NS}/${NAME}`,
   downloadable: false,
+  downloadCount: 0,
   installQuery: OVSX_EXT_ID,
 };
+
+const downloadBreakdown = {
+  openVsxCanonical: ovsxCanonical?.downloadCount ?? 0,
+  openVsxDuplicate: ovsxDuplicate?.downloadCount ?? 0,
+  vscodeMarketplace: vscode?.downloadCount ?? 0,
+  githubVsix: githubDownloads,
+  latestReleaseVsix: github?.vsixDownloadCount ?? 0,
+};
+
+const totalDownloads =
+  downloadBreakdown.openVsxCanonical +
+  downloadBreakdown.vscodeMarketplace +
+  downloadBreakdown.githubVsix;
 
 const siteData = {
   generatedAt: new Date().toISOString(),
@@ -171,6 +273,27 @@ const siteData = {
   homepage: pkg.homepage,
   repository: `https://github.com/${REPO}`,
   author: pkg.author,
+  downloads: {
+    total: totalDownloads,
+    breakdown: downloadBreakdown,
+    note: "Total excludes duplicate Open VSX namespace to avoid double-counting.",
+  },
+  visitors: {
+    ...visitors,
+    totalEngagement:
+      (visitors.websiteVisits ?? 0) +
+      Object.values(visitors.packageClicks ?? {}).reduce((s, n) => s + (n ?? 0), 0),
+  },
+  community: {
+    discussionsEnabled: community.enabled,
+    discussions: community.discussions,
+    topics: community.topics,
+    settingsUrl: community.settingsUrl,
+    repoIssuesUrl: `https://github.com/${REPO}/issues`,
+  },
+  analytics: {
+    beaconPath: "/api/analytics/visit",
+  },
   ovsx: {
     ...ovsx,
     namespace: OVSX_NS,
@@ -181,12 +304,14 @@ const siteData = {
     version: null,
     url: `https://open-vsx.org/extension/${OVSX_DUPLICATE_NS}/${NAME}`,
     downloadable: false,
+    downloadCount: 0,
     installQuery: `${OVSX_DUPLICATE_NS}.${NAME}`,
     deprecated: true,
   },
   vscode: vscode ?? {
     version: null,
     url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_NS}.${NAME}`,
+    downloadCount: 0,
     installCount: 0,
     installQuery: VSCE_EXT_ID,
     published: false,
@@ -197,6 +322,8 @@ const siteData = {
     releaseUrl: github?.url ?? `https://github.com/${REPO}/releases/latest`,
     vsixName,
     vsixUrl: github?.vsixUrl ?? `https://github.com/${REPO}/releases/latest/download/${vsixName}`,
+    vsixDownloadCount: github?.vsixDownloadCount ?? 0,
+    totalReleaseDownloads: githubDownloads,
     publishedAt: github?.publishedAt ?? null,
   },
   install: {
@@ -214,6 +341,8 @@ writeFileSync(out, JSON.stringify(siteData, null, 2) + "\n");
 console.log(`Wrote ${out}`);
 console.log(`  Version:          ${version}`);
 console.log(`  Sync status:      ${syncStatus}`);
+console.log(`  Total downloads:  ${totalDownloads.toLocaleString()}`);
+console.log(`  Website visits:   ${visitors.websiteVisits ?? 0}`);
 console.log(`  Open VSX:         ${ovsxCanonical?.version ?? "n/a"} (${OVSX_NS})`);
 console.log(`  Open VSX dup:     ${ovsxDuplicate?.version ?? "n/a"} (${OVSX_DUPLICATE_NS})`);
 console.log(`  VS Code:          ${vscode?.version ?? "n/a"}`);

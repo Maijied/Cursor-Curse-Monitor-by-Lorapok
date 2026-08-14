@@ -1,8 +1,8 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { auth, db } from "./firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, type User } from "firebase/auth";
 
 export const MASTER_ADMIN = "mdshuvo40@gmail.com";
 
@@ -46,8 +46,8 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen mesh-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)]" />
       </div>
     );
   }
@@ -58,15 +58,20 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (!isAuthorized) {
     return (
-      <div className="text-center p-12 bg-slate-800 rounded-xl border border-red-900 mt-12">
-        <h2 className="text-2xl font-bold text-red-500 mb-4">Access Denied</h2>
-        <p className="text-slate-300 mb-6">Your email address ({user.email}) is not authorized to access this dashboard.</p>
-        <button 
-          onClick={() => auth.signOut()}
-          className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
-        >
-          Sign Out
-        </button>
+      <div className="min-h-screen mesh-bg flex items-center justify-center p-8">
+        <div className="glass-panel text-center p-12 max-w-lg border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)]">
+          <h2 className="text-2xl font-bold text-[var(--color-danger)] mb-4">Access Denied</h2>
+          <p className="text-[var(--color-muted)] mb-6">
+            Your email address ({user.email}) is not authorized to access this dashboard.
+          </p>
+          <button
+            type="button"
+            onClick={() => auth.signOut()}
+            className="px-6 py-2 bg-[var(--color-bg-base)] hover:bg-white/5 rounded-xl text-[var(--color-text)] transition-colors border border-[var(--color-border)]"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
     );
   }

@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-14T09:09:15.445Z",
+  "generatedAt": "2026-08-14T09:41:42.533Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.4",
   "packageVersion": "0.5.4",
-  "syncStatus": "synced",
+  "syncStatus": "ahead",
   "ovsxPublisher": "lorapok-labs",
   "vscePublisher": "LorapokLabs",
   "extensionName": "cursor-curse-monitor-by-lorapok",
@@ -17,11 +17,45 @@
     "email": "mdshuvo40@gmail.com",
     "url": "https://lorapok.tech"
   },
+  "downloads": {
+    "total": 869,
+    "breakdown": {
+      "openVsxCanonical": 866,
+      "openVsxDuplicate": 622,
+      "vscodeMarketplace": 0,
+      "githubVsix": 3,
+      "latestReleaseVsix": 1
+    },
+    "note": "Total excludes duplicate Open VSX namespace to avoid double-counting."
+  },
+  "visitors": {
+    "websiteVisits": 0,
+    "packageClicks": {
+      "ovsx": 0,
+      "vscode": 0,
+      "github": 0,
+      "vsix": 0,
+      "openvsxDuplicate": 0
+    },
+    "totalEngagement": 0,
+    "updatedAt": null
+  },
+  "community": {
+    "discussionsEnabled": false,
+    "discussions": [],
+    "topics": [],
+    "settingsUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/settings#features",
+    "repoIssuesUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
+  },
+  "analytics": {
+    "beaconPath": "/api/analytics/visit"
+  },
   "ovsx": {
     "namespace": "lorapok-labs",
-    "version": "0.5.4",
+    "version": "0.5.5",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
+    "downloadCount": 866,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -30,11 +64,13 @@
     "version": "0.5.4",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
+    "downloadCount": 622,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
     "version": "0.5.4",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
+    "downloadCount": 0,
     "installCount": 0,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok",
     "published": true
@@ -45,6 +81,8 @@
     "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.4",
     "vsixName": "cursor-curse-monitor-by-lorapok-0.5.4.vsix",
     "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.4/cursor-curse-monitor-by-lorapok-0.5.4.vsix",
+    "vsixDownloadCount": 1,
+    "totalReleaseDownloads": 3,
     "publishedAt": "2026-08-13T13:53:50Z"
   },
   "install": {
