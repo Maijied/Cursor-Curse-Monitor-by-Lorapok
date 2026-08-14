@@ -22,6 +22,11 @@ export default defineConfig({
           res.setHeader('Content-Type', 'application/json')
           res.end(readFileSync(file, 'utf8'))
         })
+        server.middlewares.use('/seo.json', (_req, res) => {
+          const file = resolve(rootDir, '../seo.json')
+          res.setHeader('Content-Type', 'application/json')
+          res.end(readFileSync(file, 'utf8'))
+        })
       },
     },
   ],

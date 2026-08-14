@@ -75,6 +75,9 @@ describe('Dashboard Component', () => {
   it('renders sidebar navigation items', () => {
     renderDashboard();
     expect(screen.getByText('Overview')).toBeInTheDocument();
+    expect(screen.getByText('Marketplace')).toBeInTheDocument();
+    expect(screen.getByText('Releases')).toBeInTheDocument();
+    expect(screen.getByText('Activity')).toBeInTheDocument();
     expect(screen.getByText('Community')).toBeInTheDocument();
     expect(screen.getByText('Deployments')).toBeInTheDocument();
     expect(screen.getByText('Team Access')).toBeInTheDocument();

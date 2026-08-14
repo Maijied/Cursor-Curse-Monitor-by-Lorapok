@@ -8,6 +8,7 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DriftAlert from "../ui/DriftAlert";
 import DownloadBreakdownPanel from "../ui/DownloadBreakdown";
+import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
@@ -93,16 +94,20 @@ export default function Overview() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {downloads && (
-          <DownloadBreakdownPanel
-            total={downloads.total}
-            breakdown={downloads.breakdown}
-            note={downloads.note}
-          />
+          <div className="lg:col-span-2">
+            <DownloadBreakdownPanel
+              total={downloads.total}
+              breakdown={downloads.breakdown}
+              note={downloads.note}
+            />
+          </div>
         )}
-        <VisitorStatsPanel stats={visitors} live={visitorsLive} />
+        <SyncRadar data={data} />
       </div>
+
+      <VisitorStatsPanel stats={visitors} live={visitorsLive} />
 
       <Card>
         <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>

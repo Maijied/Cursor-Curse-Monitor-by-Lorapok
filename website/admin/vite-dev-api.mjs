@@ -107,6 +107,76 @@ async function fetchDiscussions() {
   return { enabled, discussions, topics, settingsUrl: `https://github.com/${GITHUB_REPO}/settings#features` };
 }
 
+async function fetchGitHubReleases() {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=20`, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" },
+  });
+  if (!res.ok) throw new Error(`GitHub releases ${res.status}`);
+  const data = await res.json();
+  return Array.isArray(data)
+    ? data.map((r) => ({
+        tag: r.tag_name,
+        name: r.name,
+        url: r.html_url,
+        publishedAt: r.published_at,
+        prerelease: r.prerelease,
+        draft: r.draft,
+        vsix: (r.assets ?? []).find((a) => a.name?.endsWith(".vsix")) ?? null,
+      }))
+    : [];
+}
+
+async function fetchWorkflowRuns() {
+  const res = await fetch(
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/runs?per_page=20&exclude_pull_requests=true`,
+    { headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" } }
+  );
+  if (!res.ok) throw new Error(`GitHub runs ${res.status}`);
+  const data = await res.json();
+  return {
+    runs: (data.workflow_runs ?? []).map((run) => ({
+      id: run.id,
+      name: run.name,
+      workflow: run.path?.replace(/^\.github\/workflows\//, "") ?? run.name,
+      status: run.status,
+      conclusion: run.conclusion,
+      url: run.html_url,
+      branch: run.head_branch,
+      event: run.event,
+      createdAt: run.created_at,
+      updatedAt: run.updated_at,
+    })),
+    total: data.total_count ?? 0,
+  };
+}
+
+async function fetchMarketplaceSync() {
+  const pkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8"));
+  const name = pkg.name;
+  const target = pkg.version.replace(/^v/, "");
+  const fetchJson = async (url) => {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    return res.ok ? res.json() : null;
+  };
+  const [ovsxCanonical, ovsxDuplicate, githubRelease] = await Promise.all([
+    fetchJson(`https://open-vsx.org/api/lorapok-labs/${name}`),
+    fetchJson(`https://open-vsx.org/api/LorapokLabs/${name}`),
+    fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`),
+  ]);
+  const channels = [
+    { id: "github", label: "GitHub Release", version: githubRelease?.tag_name?.replace(/^v/, "") ?? null, synced: githubRelease?.tag_name?.replace(/^v/, "") === target },
+    { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", version: ovsxCanonical?.version ?? null, downloadCount: ovsxCanonical?.downloadCount ?? 0, synced: ovsxCanonical?.version === target },
+    { id: "ovsx-duplicate", label: "Open VSX duplicate", version: ovsxDuplicate?.version ?? null, downloadCount: ovsxDuplicate?.downloadCount ?? 0, synced: false, warn: true },
+    { id: "package", label: "package.json", version: target, synced: true },
+  ];
+  return {
+    packageVersion: target,
+    syncStatus: channels.filter((c) => !c.warn).every((c) => c.synced) ? "synced" : "drift",
+    channels,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
 export function createDevApiMiddleware() {
   return (req, res, next) => {
     const url = req.url?.split("?")[0] ?? "";
@@ -150,6 +220,61 @@ export function createDevApiMiddleware() {
 
     if (url === "/api/discussions" && req.method === "GET") {
       fetchDiscussions()
+        .then((data) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(data));
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/health" && req.method === "GET") {
+      fetch("https://api.github.com/zen", { headers: { Accept: "application/vnd.github+json", "User-Agent": "cursor-usage-monitor-dev" } })
+        .then((gh) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({
+            ok: gh.ok,
+            checks: { github: gh.ok, timestamp: new Date().toISOString() },
+            firebaseProject: "cursor-curse-by-lorapok",
+          }));
+        });
+      return;
+    }
+
+    if (url === "/api/releases" && req.method === "GET") {
+      fetchGitHubReleases()
+        .then((releases) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ releases }));
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/workflows/runs" && req.method === "GET") {
+      fetchWorkflowRuns()
+        .then((data) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(data));
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/marketplace/sync" && req.method === "GET") {
+      fetchMarketplaceSync()
         .then((data) => {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify(data));

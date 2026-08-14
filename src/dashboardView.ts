@@ -9,7 +9,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly monitor: UsageMonitorService,
-    private readonly extensionUri: vscode.Uri
+    private readonly extensionUri: vscode.Uri,
+    private readonly extensionVersion: string
   ) {}
 
   resolveWebviewView(
@@ -36,7 +37,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = this.getHtml(
       logoSvg,
       usageMeterSvg,
-      webviewView.webview.cspSource
+      webviewView.webview.cspSource,
+      this.extensionVersion
     );
 
     const push = (snapshot: DashboardSnapshot) => {
@@ -51,6 +53,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await this.monitor.refresh();
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
+        if (!Number.isFinite(message.value) || message.value < 0) {
+          return;
+        }
         await vscode.workspace
           .getConfiguration("cursorCurseMonitor")
           .update("customBudgetLimit", message.value, vscode.ConfigurationTarget.Global);
@@ -63,7 +68,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private getHtml(logoSvg: string, usageMeterSvg: string, cspSource: string): string {
+  private getHtml(logoSvg: string, usageMeterSvg: string, cspSource: string, extensionVersion: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -548,7 +553,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>
     </div>
     <div class="footer-right">
-      v0.2.1
+      v${extensionVersion}
     </div>
   </footer>
 
@@ -565,6 +570,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const offset = CIRC - (Math.min(100, pct) / 100) * CIRC;
       arc.style.strokeDashoffset = String(offset);
       document.getElementById('gaugePct').textContent = Math.round(pct) + '%';
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     function render(snapshot) {
@@ -659,7 +672,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
       const chips = document.getElementById('featureChips');
       chips.innerHTML = (snapshot.features || []).map(function(f) {
-        return '<span class="feature-chip">' + f + '</span>';
+        return '<span class="feature-chip">' + escHtml(f) + '</span>';
       }).join('');
 
       document.getElementById('footerMsg').textContent = b.thresholdReached
@@ -692,6 +705,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
     document.getElementById('saveBudgetBtn').addEventListener('click', function() {
       var value = Number(document.getElementById('budgetInput').value || 0);
+      if (!Number.isFinite(value) || value < 0) return;
       vscode.postMessage({ type: 'setBudget', value: value });
       document.getElementById('budgetEdit').classList.remove('open');
     });

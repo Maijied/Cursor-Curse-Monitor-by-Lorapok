@@ -1,6 +1,6 @@
 import { auth } from "./firebase";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8787";
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 async function authHeaders() {
   const user = auth.currentUser;
@@ -9,19 +9,43 @@ async function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function fetchTags() {
-  const res = await fetch(`${API_BASE}/api/tags`, {
-    headers: await authHeaders(),
-  });
+async function apiGet<T>(path: string, authRequired = true): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (authRequired) Object.assign(headers, await authHeaders());
+  const res = await fetch(`${API_BASE}${path}`, { headers });
   const text = await res.text();
-  let data: { tags?: string[]; error?: string };
+  let data: T & { error?: string };
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error("Tags API returned invalid JSON — is the dev server proxy running?");
+    throw new Error(`API ${path} returned invalid JSON — is the dev server running?`);
   }
-  if (!res.ok) throw new Error(data.error || "Failed to fetch tags");
+  if (!res.ok) throw new Error((data as { error?: string }).error || `API ${path} failed`);
   return data;
+}
+
+export async function fetchTags() {
+  return apiGet<{ tags: string[] }>("/tags");
+}
+
+export async function fetchHealth() {
+  return apiGet<{ ok: boolean; checks: { github: boolean; timestamp: string }; firebaseProject?: string }>("/health", false);
+}
+
+export async function fetchReleases() {
+  return apiGet<{ releases: Release[] }>("/releases");
+}
+
+export async function fetchWorkflowRuns() {
+  return apiGet<{ runs: WorkflowRun[]; total: number }>("/workflows/runs");
+}
+
+export async function fetchMarketplaceSync() {
+  return apiGet<MarketplaceSync>("/marketplace/sync");
+}
+
+export async function fetchDiscussionsApi() {
+  return apiGet<DiscussionResponse>("/discussions");
 }
 
 export type DeployRequest = {
@@ -30,8 +54,53 @@ export type DeployRequest = {
   release_channel: "Production" | "Beta (Pre-release)";
 };
 
+export type Release = {
+  tag: string;
+  name: string;
+  url: string;
+  publishedAt: string;
+  prerelease: boolean;
+  draft: boolean;
+  vsix: { name: string; browser_download_url: string; download_count: number } | null;
+};
+
+export type WorkflowRun = {
+  id: number;
+  name: string;
+  workflow: string;
+  status: string;
+  conclusion: string | null;
+  url: string;
+  branch: string;
+  event: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MarketplaceSync = {
+  packageVersion: string;
+  syncStatus: string;
+  channels: Array<{
+    id: string;
+    label: string;
+    version: string | null;
+    downloadCount?: number;
+    synced: boolean;
+    warn?: boolean;
+  }>;
+  checkedAt: string;
+};
+
+export type DiscussionResponse = {
+  enabled: boolean;
+  discussions: Array<{ title: string; url: string; category: string; createdAt: string; comments: number }>;
+  topics: Array<{ topic: string; count: number; items: Array<{ title: string; url: string; state?: string }> }>;
+  settingsUrl: string;
+  repoIssuesUrl: string;
+};
+
 export async function triggerDeployment(payload: DeployRequest) {
-  const res = await fetch(`${API_BASE}/api/deploy`, {
+  const res = await fetch(`${API_BASE}/deploy`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -46,21 +115,4 @@ export async function triggerDeployment(payload: DeployRequest) {
   }
 
   return res.json();
-}
-
-/** @deprecated Use triggerDeployment with DeployRequest */
-export async function triggerDeploymentLegacy(
-  tag: string,
-  _branch: string,
-  channel: string,
-  market: string
-) {
-  const publish_market =
-    market === "both"
-      ? "Both"
-      : market === "open-vsx"
-        ? "Open VSX"
-        : "VS Code Marketplace";
-  const release_channel = channel === "production" ? "Production" : "Beta (Pre-release)";
-  return triggerDeployment({ target_tag: tag, publish_market, release_channel });
 }

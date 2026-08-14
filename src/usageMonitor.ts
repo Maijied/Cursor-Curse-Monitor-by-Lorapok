@@ -19,6 +19,7 @@ type SnapshotListener = (snapshot: DashboardSnapshot) => void;
 export class UsageMonitorService implements vscode.Disposable {
   private timer: NodeJS.Timeout | undefined;
   private lastSnapshot: DashboardSnapshot | undefined;
+  private refreshInFlight: Promise<DashboardSnapshot> | null = null;
   private warnedAtThreshold = false;
   private fallbackAppliedThisCycle = false;
   private readonly listeners = new Set<SnapshotListener>();
@@ -64,6 +65,18 @@ export class UsageMonitorService implements vscode.Disposable {
   }
 
   async refresh(): Promise<DashboardSnapshot> {
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
+    }
+    this.refreshInFlight = this.doRefresh();
+    try {
+      return await this.refreshInFlight;
+    } finally {
+      this.refreshInFlight = null;
+    }
+  }
+
+  private async doRefresh(): Promise<DashboardSnapshot> {
     const config = vscode.workspace.getConfiguration("cursorCurseMonitor");
     const customBudgetLimit = config.get<number>("customBudgetLimit", 0);
     const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", false);
@@ -105,12 +118,17 @@ export class UsageMonitorService implements vscode.Disposable {
       );
       snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
 
-      const percent = snapshot.usage.individualUsage.plan.totalPercentUsed;
+      const percent = snapshot.budget?.hasUsdBudget
+        ? snapshot.budget.budgetPercentUsed ?? snapshot.budget.percentUsed
+        : snapshot.usage.individualUsage.plan.totalPercentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {
         this.warnedAtThreshold = true;
+        const budgetMsg = snapshot.budget?.hasUsdBudget
+          ? `Budget usage is at ${Math.round(percent)}% ($${snapshot.budget?.spentUsd?.toFixed(2) ?? "0"} / $${snapshot.budget?.capUsd?.toFixed(2) ?? "0"}).`
+          : `Cursor usage is at ${Math.round(percent)}%.`;
         NotificationProvider.show({
           title: "Usage Warning",
-          message: `Cursor usage is at ${percent}%. Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
+          message: `${budgetMsg} Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
           type: "warning",
           duration: 6000,
           actions: [
