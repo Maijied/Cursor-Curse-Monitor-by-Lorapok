@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "site:data": "node ../../scripts/generate-site-data.mjs",
+    "verify:marketplace": "node ../../scripts/verify-marketplace-sync.mjs --strict"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
