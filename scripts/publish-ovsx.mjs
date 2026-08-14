@@ -2,9 +2,9 @@
 /**
  * Publish to Open VSX under the canonical lorapok-labs namespace.
  *
- * package.json uses publisher "LorapokLabs" for VS Code Marketplace. Open VSX
- * reads Publisher from extension.vsixmanifest (and package.json). Both must be
- * patched before publish or the extension lands on the wrong namespace.
+ * package.json uses publisher "LorapokLabs" for VS Code Marketplace. We temporarily
+ * patch publisher and re-run `vsce package` so Open VSX receives a valid VSIX
+ * (manual zip repack is rejected for harmful extra fields).
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -20,7 +20,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const pkgPath = join(root, "package.json");
+const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
 const OVSX_PUBLISHER = "lorapok-labs";
 const VSCE_PUBLISHER = "LorapokLabs";
 const EXT_NAME = pkg.name;
@@ -36,9 +37,8 @@ function parseArgs(argv) {
       console.log(`Usage: node scripts/publish-ovsx.mjs [options]
 
 Options:
-  --vsix <path>     VSIX to publish (default: newest *.vsix in repo root)
   --pre-release     Pass --pre-release to ovsx publish
-  --dry-run         Repack and validate manifest only; do not publish
+  --dry-run         Package with lorapok-labs publisher and validate only
 `);
       process.exit(0);
     }
@@ -46,32 +46,11 @@ Options:
   return args;
 }
 
-function findDefaultVsix() {
-  const candidates = readdirSync(root)
-    .filter((name) => name.endsWith(".vsix"))
-    .map((name) => ({
-      name,
-      path: join(root, name),
-      mtime: statSync(join(root, name)).mtimeMs,
-    }));
-
-  if (candidates.length === 0) {
-    throw new Error("No *.vsix found in repo root. Run npm run package first.");
-  }
-
-  const expected = `${pkg.name}-${pkg.version}.vsix`;
-  const exact = candidates.find((c) => c.name === expected);
-  if (exact) return exact.path;
-
-  candidates.sort((a, b) => b.name.localeCompare(a.name, undefined, { numeric: true }));
-  return candidates[0].path;
-}
-
 function run(cmd, args, opts = {}) {
   const result = spawnSync(cmd, args, {
     stdio: opts.inherit ? "inherit" : "pipe",
     encoding: "utf8",
-    cwd: opts.cwd,
+    cwd: opts.cwd ?? root,
   });
   if (result.status !== 0) {
     const stderr = result.stderr?.trim() ?? "";
@@ -80,48 +59,38 @@ function run(cmd, args, opts = {}) {
       `${cmd} ${args.join(" ")} failed (${result.status})${stderr ? `: ${stderr}` : stdout ? `: ${stdout}` : ""}`
     );
   }
-  return result.stdout ?? "";
+  return `${result.stdout ?? ""}${result.stderr ?? ""}`;
 }
 
-function patchPublisherInVsixManifest(vsixManifestPath) {
-  let xml = readFileSync(vsixManifestPath, "utf8");
-  const before = xml;
-  xml = xml.replace(/Publisher="[^"]+"/, `Publisher="${OVSX_PUBLISHER}"`);
-  if (xml === before) {
-    throw new Error("Could not patch Publisher in extension.vsixmanifest");
-  }
-  writeFileSync(vsixManifestPath, xml);
-}
+function packageForOvsxPublisher(workDir) {
+  const originalPkg = readFileSync(pkgPath, "utf8");
+  const patched = { ...JSON.parse(originalPkg), publisher: OVSX_PUBLISHER };
+  const outVsix = join(workDir, `${EXT_NAME}-${patched.version}-ovsx.vsix`);
 
-function repackForOvsx(sourceVsix) {
-  const workDir = mkdtempSync(join(tmpdir(), "ovsx-repack-"));
-  const extractDir = join(workDir, "extract");
-  const outVsix = join(workDir, "ovsx-canonical.vsix");
-
+  writeFileSync(pkgPath, JSON.stringify(patched, null, 2) + "\n");
   try {
-    run("unzip", ["-q", sourceVsix, "-d", extractDir]);
+    run("npx", ["vsce", "package", "-o", outVsix, "--allow-missing-repository"], { inherit: true });
+  } finally {
+    writeFileSync(pkgPath, originalPkg);
+  }
 
-    const packagePath = join(extractDir, "extension", "package.json");
-    const manifest = JSON.parse(readFileSync(packagePath, "utf8"));
-    const originalPublisher = manifest.publisher;
+  const restored = JSON.parse(readFileSync(pkgPath, "utf8"));
+  if (restored.publisher !== VSCE_PUBLISHER) {
+    throw new Error(`Failed to restore package.json publisher to ${VSCE_PUBLISHER}`);
+  }
 
-    manifest.publisher = OVSX_PUBLISHER;
-    writeFileSync(packagePath, JSON.stringify(manifest, null, 2) + "\n");
+  return { outVsix, version: patched.version };
+}
 
-    patchPublisherInVsixManifest(join(extractDir, "extension.vsixmanifest"));
-
-    run("zip", ["-qr", outVsix, ".", "-x", "*.DS_Store"], { cwd: extractDir });
-
-    return {
-      outVsix,
-      workDir,
-      version: manifest.version,
-      originalPublisher,
-      patchedPublisher: OVSX_PUBLISHER,
-    };
-  } catch (err) {
-    rmSync(workDir, { recursive: true, force: true });
-    throw err;
+function validateVsixPublisher(vsixPath) {
+  const xml = run("unzip", ["-p", vsixPath, "extension.vsixmanifest"]);
+  if (!xml.includes(`Publisher="${OVSX_PUBLISHER}"`)) {
+    throw new Error(`VSIX manifest publisher is not ${OVSX_PUBLISHER}`);
+  }
+  const pkgJson = run("unzip", ["-p", vsixPath, "extension/package.json"]);
+  const inner = JSON.parse(pkgJson);
+  if (inner.publisher !== OVSX_PUBLISHER) {
+    throw new Error(`VSIX package.json publisher is not ${OVSX_PUBLISHER}`);
   }
 }
 
@@ -159,45 +128,29 @@ function publishVsix(vsixPath, preRelease) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const sourceVsix = resolve(args.vsix ?? findDefaultVsix());
+  const workDir = mkdtempSync(join(tmpdir(), "ovsx-package-"));
 
-  console.log(`Source VSIX: ${sourceVsix}`);
   console.log(`Root package publisher (VS Code): ${pkg.publisher}`);
   console.log(`Target Open VSX publisher: ${OVSX_PUBLISHER}`);
-
-  if (pkg.publisher !== VSCE_PUBLISHER) {
-    console.warn(
-      `::warning::package.json publisher is "${pkg.publisher}" (expected "${VSCE_PUBLISHER}" for VS Code Marketplace)`
-    );
-  }
-
-  const repacked = repackForOvsx(sourceVsix);
-  console.log(
-    `Repacked VSIX: publisher ${repacked.originalPublisher} → ${repacked.patchedPublisher}, version ${repacked.version}`
-  );
-
-  if (args.dryRun) {
-    const xml = readFileSync(
-      join(repacked.workDir, "extract", "extension.vsixmanifest"),
-      "utf8"
-    );
-    if (!xml.includes(`Publisher="${OVSX_PUBLISHER}"`)) {
-      throw new Error("Dry run failed: extension.vsixmanifest publisher not patched");
-    }
-    console.log("Dry run OK — package.json and extension.vsixmanifest patched for lorapok-labs.");
-    rmSync(repacked.workDir, { recursive: true, force: true });
-    return;
-  }
+  console.log(`Package version: ${pkg.version}`);
 
   try {
+    const { outVsix, version } = packageForOvsxPublisher(workDir);
+    validateVsixPublisher(outVsix);
+    console.log(`Built Open VSX VSIX: ${outVsix}`);
+
+    if (args.dryRun) {
+      console.log("Dry run OK — vsce package with lorapok-labs publisher.");
+      return;
+    }
+
     const before = await fetchCanonicalVersion();
-    const output = publishVsix(repacked.outVsix, args.preRelease);
+    const output = publishVsix(outVsix, args.preRelease);
     if (output) process.stdout.write(output);
 
-    // Allow registry propagation
-    await new Promise((r) => setTimeout(r, 3000));
+    await new Promise((r) => setTimeout(r, 5000));
     const after = await fetchCanonicalVersion();
-    const target = repacked.version.replace(/^v/, "");
+    const target = version.replace(/^v/, "");
 
     if (after === target) {
       console.log(`Published ${target} to Open VSX namespace ${OVSX_PUBLISHER}`);
@@ -209,18 +162,12 @@ async function main() {
       return;
     }
 
-    if (/already published/i.test(output) && before !== target && after !== target) {
-      throw new Error(
-        `ovsx reported "already published" but canonical ${OVSX_PUBLISHER} is still at ${after ?? "missing"} ` +
-          `(expected ${target}). Version may be blocked by duplicate LorapokLabs listing — contact Open VSX support.`
-      );
-    }
-
     throw new Error(
-      `Publish finished but canonical Open VSX version is ${after ?? "missing"} (expected ${target})`
+      `Publish did not update canonical listing (before=${before ?? "none"}, after=${after ?? "none"}, expected=${target}). ` +
+        `Output: ${output.slice(0, 300)}`
     );
   } finally {
-    rmSync(repacked.workDir, { recursive: true, force: true });
+    rmSync(workDir, { recursive: true, force: true });
   }
 }
 
