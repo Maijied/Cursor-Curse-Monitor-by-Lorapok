@@ -174,14 +174,35 @@ npm run verify:marketplace
 
 ---
 
-## 12. Admin panel production (optional)
+## 12. Admin panel production
 
-Admin is not on GitHub Pages. To deploy:
+**Live URL (after deploy):** `https://admin.lorapok.tech`  
+**Staging:** `https://cursor-monitor-admin.pages.dev`
 
-1. Cloudflare Pages project → build `website/admin` (`npm run build`, output `dist`)
-2. Set env: `GITHUB_TOKEN`, Firebase vars from `website/firebase-public.json`
-3. Custom domain e.g. `admin.lorapok.tech`
-4. Re-run sections 2–8 against production URL
+CI job `admin-deploy` publishes on push to `main` when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets are set.
+
+### Production smoke
+
+| # | Step | Expected |
+|---|------|----------|
+| 12.1 | `curl -s https://admin.lorapok.tech/api/health` | JSON with `firebaseProject`, `githubTokenConfigured` |
+| 12.2 | `curl -s https://admin.lorapok.tech/site-data.json \| jq .version` | Current package version |
+| 12.3 | Open `/login` → sign in | Redirect to `/dashboard` |
+| 12.4 | Deep link `/dashboard/deployments` | SPA loads (not 404) |
+| 12.5 | Team → add admin → sign in as them | Dashboard + API routes work (no 403) |
+| 12.6 | Deployments → trigger beta deploy | GitHub Actions run starts |
+
+### One-time setup checklist
+
+- [ ] Cloudflare Pages project `cursor-monitor-admin`
+- [ ] KV namespace `ADMIN_KV` bound in `wrangler.toml`
+- [ ] Pages env: `GITHUB_TOKEN`, `ADMIN_MASTER_EMAIL`, `FIREBASE_PROJECT_ID`
+- [ ] DNS CNAME `admin.lorapok.tech`
+- [ ] Firebase authorized domain `admin.lorapok.tech`
+- [ ] Firestore rules deployed (`firebase deploy --only firestore:rules`)
+- [ ] GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+
+See [`DEPLOYMENT.md`](../DEPLOYMENT.md) § Admin Panel for details.
 
 ---
 

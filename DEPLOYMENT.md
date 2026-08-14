@@ -7,7 +7,7 @@ All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.y
 | Trigger | Jobs | What it does |
 |---------|------|-------------|
 | **PR to `main`** | `ci` | Compile, validate assets, package VSIX |
-| **Push to `main`** | `ci` → `website` | Builds dynamic per-commit Beta VSIX, saves as artifact, deploys website |
+| **Push to `main`** | `ci` → `admin-ci` → `admin-deploy`* → `website` | Extension CI, admin build/deploy, marketing site |
 | **Manual dispatch** | `release-bump` → `deploy` → `website` | Auto-bumps version, commits/tags, conditionally publishes to marketplaces, deploys website |
 | **Tag `v*` push** | `deploy` → `website` | Publishes existing tag to marketplaces, creates GitHub Release, deploys website |
 
@@ -146,6 +146,55 @@ After publish, search in Extensions:
 ```bash
 cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
 ```
+
+---
+
+## Admin Panel (Mission Control)
+
+**Target URL:** `https://admin.lorapok.tech` (staging: `https://cursor-monitor-admin.pages.dev`)
+
+The admin SPA lives in `website/admin/` and deploys to **Cloudflare Pages** with co-located **Pages Functions** (`website/admin/functions/api/`). It is **not** served from GitHub Pages.
+
+### One-time Cloudflare setup
+
+1. Create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally).
+2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
+3. **Pages → Settings → Environment variables** (Production):
+   - `GITHUB_TOKEN` — PAT with `actions:write` for deploy workflow dispatch
+   - `ADMIN_MASTER_EMAIL` — `mdshuvo40@gmail.com`
+   - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
+   - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
+   - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
+4. **DNS:** CNAME `admin.lorapok.tech` → `<project>.pages.dev`
+5. **Firebase Console → Auth → Authorized domains:** add `admin.lorapok.tech` and your `*.pages.dev` host.
+
+### Firestore rules
+
+```bash
+cd website/admin
+firebase deploy --only firestore:rules --project cursor-curse-by-lorapok
+```
+
+### GitHub secrets (CI auto-deploy)
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Pages deploy from `admin-deploy` job |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
+
+Push to `main` runs `admin-ci` then `admin-deploy` when secrets are configured.
+
+### Local dev
+
+```bash
+cd website/admin
+cp .env.example .env   # add GITHUB_TOKEN optional
+npm run dev            # http://localhost:5173/dashboard
+```
+
+See [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) for the full QA checklist.
+
+**Deprecated:** `website/admin-api/` standalone Worker — do not deploy; use Pages Functions instead.
 
 ---
 

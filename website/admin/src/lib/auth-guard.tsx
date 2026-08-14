@@ -3,8 +3,9 @@ import { Navigate } from "react-router-dom";
 import { auth, db } from "./firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { isMasterAdmin, MASTER_ADMIN } from "./admin-config";
 
-export const MASTER_ADMIN = "mdshuvo40@gmail.com";
+export { MASTER_ADMIN };
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -18,18 +19,14 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u && u.email) {
-        if (u.email === MASTER_ADMIN) {
+      if (u?.email) {
+        if (isMasterAdmin(u.email)) {
           setIsAuthorized(true);
         } else {
           try {
             const q = query(collection(db, "admins"), where("email", "==", u.email));
             const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-              setIsAuthorized(true);
-            } else {
-              setIsAuthorized(false);
-            }
+            setIsAuthorized(!querySnapshot.empty);
           } catch (e) {
             console.error("Error checking admin status:", e);
             setIsAuthorized(false);

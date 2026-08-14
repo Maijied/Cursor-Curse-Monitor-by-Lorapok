@@ -99,6 +99,20 @@ export type DiscussionResponse = {
   repoIssuesUrl: string;
 };
 
+export async function syncAdminAccess(payload: { email: string; action: "add" | "remove" }) {
+  const res = await fetch(`${API_BASE}/admins`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Admin sync failed");
+  return data;
+}
+
 export async function triggerDeployment(payload: DeployRequest) {
   const res = await fetch(`${API_BASE}/deploy`, {
     method: "POST",

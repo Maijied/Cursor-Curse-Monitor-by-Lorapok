@@ -1,0 +1,14 @@
+name = "cursor-monitor-admin"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-08-14"
+
+# Create namespace in Cloudflare dashboard, then replace id values:
+# wrangler kv namespace create ADMIN_KV
+[[kv_namespaces]]
+binding = "ADMIN_KV"
+id = "REPLACE_WITH_PRODUCTION_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[vars]
+FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
+SITE_DATA_URL = "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json"

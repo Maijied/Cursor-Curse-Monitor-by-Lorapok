@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite",
     "dev:polling": "CHOKIDAR_USEPOLLING=1 vite",
+    "prebuild": "node ../../scripts/generate-site-data.mjs && node ../../scripts/generate-seo.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=cursor-monitor-admin",
     "site:data": "node ../../scripts/generate-site-data.mjs",
     "verify:marketplace": "node ../../scripts/verify-marketplace-sync.mjs --strict"
   },

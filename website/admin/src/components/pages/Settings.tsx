@@ -5,7 +5,13 @@ import Badge from "../ui/Badge";
 import { fetchHealth } from "../../lib/api";
 
 export default function Settings() {
-  const [health, setHealth] = useState<Awaited<ReturnType<typeof fetchHealth>> | null>(null);
+  const [health, setHealth] = useState<
+    (Awaited<ReturnType<typeof fetchHealth>> & {
+      githubTokenConfigured?: boolean;
+      adminKvConfigured?: boolean;
+      siteDataUrl?: string;
+    }) | null
+  >(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("admin-theme") as "dark" | "light") || "dark");
 
   useEffect(() => {
@@ -57,6 +63,24 @@ export default function Settings() {
               <dt className="text-[var(--color-muted)]">Last check</dt>
               <dd>{new Date(health.checks.timestamp).toLocaleString()}</dd>
             </div>
+            {health.githubTokenConfigured != null && (
+              <div className="flex justify-between items-center">
+                <dt className="text-[var(--color-muted)]">GitHub token (server)</dt>
+                <dd><Badge variant={health.githubTokenConfigured ? "synced" : "warn"}>{health.githubTokenConfigured ? "Configured" : "Missing"}</Badge></dd>
+              </div>
+            )}
+            {health.adminKvConfigured != null && (
+              <div className="flex justify-between items-center">
+                <dt className="text-[var(--color-muted)]">Admin KV (team sync)</dt>
+                <dd><Badge variant={health.adminKvConfigured ? "synced" : "warn"}>{health.adminKvConfigured ? "Configured" : "Use ADMIN_EMAILS"}</Badge></dd>
+              </div>
+            )}
+            {health.siteDataUrl && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-[var(--color-muted)] shrink-0">Site data URL</dt>
+                <dd className="font-[family-name:var(--font-mono)] text-xs text-right break-all">{health.siteDataUrl}</dd>
+              </div>
+            )}
           </dl>
         ) : (
           <p className="text-sm text-[var(--color-muted)]">Health check unavailable in this environment.</p>

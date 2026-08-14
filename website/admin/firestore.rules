@@ -1,14 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /admins/{doc} {
-      allow read, write: if request.auth != null;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isMaster() {
+      return isSignedIn() && request.auth.token.email == 'mdshuvo40@gmail.com';
+    }
+
+    match /admins/{adminId} {
+      allow read: if isMaster() || (isSignedIn() && resource.data.email == request.auth.token.email);
+      allow create, update, delete: if isMaster();
     }
 
     match /stats/visitors {
       allow read: if true;
-      allow create: if true;
-      allow update: if true;
+      allow create, update: if true;
     }
   }
 }

@@ -128,6 +128,11 @@ jobs:
           cache: npm
           cache-dependency-path: website/admin/package-lock.json
 
+      - name: Generate site artifacts for admin build
+        run: |
+          node scripts/generate-site-data.mjs
+          node scripts/generate-seo.mjs
+
       - name: Install admin dependencies
         working-directory: website/admin
         run: npm ci
@@ -142,6 +147,52 @@ jobs:
 
       - name: Verify marketplace sync
         run: node scripts/verify-marketplace-sync.mjs --strict
+
+      - name: Assert admin static artifacts in dist
+        working-directory: website/admin
+        run: test -f dist/site-data.json && test -f dist/seo.json
+
+  admin-deploy:
+    name: Deploy Admin Panel
+    runs-on: ubuntu-latest
+    needs: admin-ci
+    if: >-
+      github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && !contains(github.event.head_commit.message, 'chore: release')
+    environment:
+      name: admin-production
+      url: https://admin.lorapok.tech
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/admin/package-lock.json
+
+      - name: Generate site artifacts
+        run: |
+          node scripts/generate-site-data.mjs
+          node scripts/generate-seo.mjs
+
+      - name: Install admin dependencies
+        working-directory: website/admin
+        run: npm ci
+
+      - name: Build admin panel
+        working-directory: website/admin
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: website/admin
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main
 
   # ───────────────────────────────────────────────────────────────────────────
   # 2. RELEASE TRIGGER — Manual version bump via workflow_dispatch

@@ -1,7 +1,7 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { getAllowedAdminEmails, getMasterEmail } from "./admins.js";
 
 const DEFAULT_PROJECT_ID = "cursor-curse-by-lorapok";
-const DEFAULT_MASTER = "mdshuvo40@gmail.com";
 export const GITHUB_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
 
 function jsonResponse(body, status = 200, extraHeaders = {}) {
@@ -9,14 +9,6 @@ function jsonResponse(body, status = 200, extraHeaders = {}) {
     status,
     headers: { "Content-Type": "application/json", ...extraHeaders },
   });
-}
-
-function parseAdminEmails(env) {
-  const raw = env.ADMIN_EMAILS ?? env.ADMIN_MASTER_EMAIL ?? DEFAULT_MASTER;
-  return raw
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
 }
 
 export async function verifyAdminRequest(request, env) {
@@ -42,12 +34,12 @@ export async function verifyAdminRequest(request, env) {
       return { error: jsonResponse({ error: "No email found in token" }, 403) };
     }
 
-    const allowed = parseAdminEmails(env);
-    if (!allowed.includes(email)) {
+    const allowed = await getAllowedAdminEmails(env);
+    if (!allowed.has(email)) {
       return { error: jsonResponse({ error: "Forbidden" }, 403) };
     }
 
-    return { email };
+    return { email, isMaster: email === getMasterEmail(env) };
   } catch {
     return { error: jsonResponse({ error: "Authentication failed" }, 401) };
   }

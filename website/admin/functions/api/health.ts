@@ -16,5 +16,10 @@ export async function onRequestGet(context) {
     ok: checks.github,
     checks,
     firebaseProject: env.FIREBASE_PROJECT_ID ?? "cursor-curse-by-lorapok",
+    githubTokenConfigured: Boolean(env.GITHUB_TOKEN),
+    adminKvConfigured: Boolean(env.ADMIN_KV),
+    siteDataUrl:
+      env.SITE_DATA_URL ??
+      "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json",
   });
 }

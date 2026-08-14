@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
-import { collection, addDoc, getDocs } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import { UserPlus, Shield } from "lucide-react";
+import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
+import { UserPlus, Shield, Trash2 } from "lucide-react";
+import { syncAdminAccess } from "../lib/api";
+import { isMasterAdmin, MASTER_ADMIN } from "../lib/admin-config";
 import PageHeader from "./layout/PageHeader";
 import Card from "./ui/Card";
+
+type AdminRecord = { id: string; email: string };
 
 export default function Team() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [admins, setAdmins] = useState<string[]>([]);
+  const [admins, setAdmins] = useState<AdminRecord[]>([]);
+  const isMaster = isMasterAdmin(auth.currentUser?.email);
 
   useEffect(() => {
     fetchAdmins();
@@ -18,28 +23,67 @@ export default function Team() {
   const fetchAdmins = async () => {
     try {
       const snap = await getDocs(collection(db, "admins"));
-      const adminList = snap.docs.map(doc => doc.data().email);
-      setAdmins(adminList);
+      setAdmins(
+        snap.docs.map((d) => ({
+          id: d.id,
+          email: String(d.data().email ?? ""),
+        }))
+      );
     } catch (e) {
       console.error("Failed to fetch admins", e);
     }
-  }
+  };
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMsg("");
     try {
+      const normalized = email.trim().toLowerCase();
       await addDoc(collection(db, "admins"), {
-        email,
+        email: normalized,
         role: "admin",
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-      setMsg("Admin added successfully. They can now log in.");
+      if (isMaster) {
+        try {
+          await syncAdminAccess({ email: normalized, action: "add" });
+        } catch (syncErr) {
+          console.warn("API admin sync failed (Firestore invite still saved):", syncErr);
+          setMsg(
+            `Admin added to Firestore. API sync pending — set ADMIN_EMAILS or ADMIN_KV in Cloudflare if they get 403 on API calls.`
+          );
+          setEmail("");
+          fetchAdmins();
+          setLoading(false);
+          return;
+        }
+      }
+      setMsg("Admin added successfully. They can now log in and use API endpoints.");
       setEmail("");
       fetchAdmins();
-    } catch (err: any) {
-      setMsg("Error: " + err.message);
+    } catch (err: unknown) {
+      setMsg("Error: " + (err instanceof Error ? err.message : "Failed to add admin"));
+    }
+    setLoading(false);
+  };
+
+  const handleRemove = async (record: AdminRecord) => {
+    if (!isMaster) return;
+    if (!window.confirm(`Remove ${record.email} from admin access?`)) return;
+    setLoading(true);
+    setMsg("");
+    try {
+      await deleteDoc(doc(db, "admins", record.id));
+      try {
+        await syncAdminAccess({ email: record.email, action: "remove" });
+      } catch (syncErr) {
+        console.warn("API admin sync failed:", syncErr);
+      }
+      setMsg(`${record.email} removed.`);
+      fetchAdmins();
+    } catch (err: unknown) {
+      setMsg("Error: " + (err instanceof Error ? err.message : "Failed to remove admin"));
     }
     setLoading(false);
   };
@@ -51,7 +95,7 @@ export default function Team() {
     <div className="max-w-3xl animate-fade-slide-up">
       <PageHeader
         title="Team Access"
-        description="Manage who has access to the deployment dashboard."
+        description="Manage who has access to the deployment dashboard and authenticated API routes."
       />
 
       <Card className="mb-6">
@@ -60,7 +104,7 @@ export default function Team() {
           Invite Administrator
         </h3>
         <p className="text-sm text-[var(--color-muted)] mb-6">
-          Add an email to the admin list. They will instantly gain access to the dashboard.
+          Adds the email to Firestore and syncs API access (Cloudflare KV when configured).
         </p>
 
         <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-4">
@@ -93,23 +137,37 @@ export default function Team() {
         <div className="space-y-3">
           <div className="flex items-center gap-4 p-4 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl">
             <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-neon)_20%,transparent)] flex items-center justify-center text-[var(--color-neon)] font-bold border border-[color-mix(in_srgb,var(--color-neon)_30%,transparent)]">
-              M
+              {MASTER_ADMIN[0].toUpperCase()}
             </div>
-            <div>
-              <p className="font-semibold text-[var(--color-text)]">mdshuvo40@gmail.com</p>
+            <div className="flex-1">
+              <p className="font-semibold text-[var(--color-text)]">{MASTER_ADMIN}</p>
               <p className="text-xs text-[var(--color-neon)] font-medium">Master Admin</p>
             </div>
           </div>
 
-          {admins.map((adminEmail, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl">
+          {admins.map((record) => (
+            <div
+              key={record.id}
+              className="flex items-center gap-4 p-4 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl"
+            >
               <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] flex items-center justify-center text-[var(--color-accent)] font-bold border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]">
-                {adminEmail[0].toUpperCase()}
+                {record.email[0]?.toUpperCase() ?? "?"}
               </div>
-              <div>
-                <p className="font-semibold text-[var(--color-text)]">{adminEmail}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[var(--color-text)] truncate">{record.email}</p>
                 <p className="text-xs text-[var(--color-accent-2)] font-medium">Admin</p>
               </div>
+              {isMaster && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(record)}
+                  disabled={loading}
+                  className="p-2 rounded-lg text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors"
+                  aria-label={`Remove ${record.email}`}
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
             </div>
           ))}
         </div>

@@ -1,9 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
+import { fetchSiteData, packageVersionFromSiteData } from "../_shared/site-data.js";
 
 async function fetchJson(url) {
   const res = await fetch(url, { headers: { Accept: "application/json" } });
@@ -16,43 +12,52 @@ export async function onRequestGet(context) {
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
-  let pkg;
+  let siteData;
   try {
-    pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  } catch {
-    return jsonResponse({ error: "package.json unreadable" }, 500);
+    siteData = await fetchSiteData(env);
+  } catch (err) {
+    return jsonResponse({ error: err instanceof Error ? err.message : "site-data unavailable" }, 502);
   }
 
-  const name = pkg.name;
-  const target = pkg.version.replace(/^v/, "");
+  const name = siteData.extensionName ?? "cursor-curse-monitor-by-lorapok";
+  const target = packageVersionFromSiteData(siteData);
 
-  const [ovsxCanonical, ovsxDuplicate, vscodeRelease] = await Promise.all([
+  const [ovsxCanonical, ovsxDuplicate, githubRelease] = await Promise.all([
     fetchJson(`https://open-vsx.org/api/lorapok-labs/${name}`),
     fetchJson(`https://open-vsx.org/api/LorapokLabs/${name}`),
     fetchJson(`https://api.github.com/repos/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest`),
   ]);
 
+  const vscodeVersion = siteData.vscode?.version ?? null;
+
   const channels = [
     {
       id: "github",
       label: "GitHub Release",
-      version: vscodeRelease?.tag_name?.replace(/^v/, "") ?? null,
-      synced: vscodeRelease?.tag_name?.replace(/^v/, "") === target,
+      version: githubRelease?.tag_name?.replace(/^v/, "") ?? siteData.github?.releaseTag?.replace(/^v/, "") ?? null,
+      synced: (githubRelease?.tag_name?.replace(/^v/, "") ?? "") === target,
     },
     {
       id: "ovsx-canonical",
       label: "Open VSX (lorapok-labs)",
-      version: ovsxCanonical?.version ?? null,
-      downloadCount: ovsxCanonical?.downloadCount ?? 0,
-      synced: ovsxCanonical?.version === target,
+      version: ovsxCanonical?.version ?? siteData.openVsx?.version ?? null,
+      downloadCount: ovsxCanonical?.downloadCount ?? siteData.openVsx?.downloadCount ?? 0,
+      synced: (ovsxCanonical?.version ?? siteData.openVsx?.version) === target,
     },
     {
       id: "ovsx-duplicate",
       label: "Open VSX duplicate",
-      version: ovsxDuplicate?.version ?? null,
-      downloadCount: ovsxDuplicate?.downloadCount ?? 0,
+      version: ovsxDuplicate?.version ?? siteData.openVsxDuplicate?.version ?? null,
+      downloadCount: ovsxDuplicate?.downloadCount ?? siteData.openVsxDuplicate?.downloadCount ?? 0,
       synced: false,
       warn: true,
+    },
+    {
+      id: "vscode",
+      label: "VS Code Marketplace",
+      version: vscodeVersion,
+      downloadCount: siteData.vscode?.downloadCount ?? 0,
+      synced: vscodeVersion === target,
     },
     {
       id: "package",

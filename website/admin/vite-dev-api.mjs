@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,6 +7,90 @@ const repoRoot = resolve(rootDir, "../..");
 const visitorStatsPath = resolve(repoRoot, "website/visitor-stats.json");
 const GITHUB_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
 const siteDataPath = resolve(repoRoot, "website/site-data.json");
+const adminDataDir = resolve(rootDir, ".data");
+const adminEmailsPath = resolve(adminDataDir, "admin-emails.json");
+
+function readDevAdminEmails() {
+  try {
+    if (!existsSync(adminEmailsPath)) return [];
+    const parsed = JSON.parse(readFileSync(adminEmailsPath, "utf8"));
+    return Array.isArray(parsed) ? parsed.map((e) => String(e).toLowerCase()) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeDevAdminEmails(emails) {
+  mkdirSync(adminDataDir, { recursive: true });
+  const normalized = [...new Set(emails.map((e) => String(e).toLowerCase()).filter(Boolean))].sort();
+  writeFileSync(adminEmailsPath, JSON.stringify(normalized, null, 2) + "\n");
+  return normalized;
+}
+
+function mapPublishMarket(value) {
+  const map = {
+    both: "Both",
+    "open-vsx": "Open VSX",
+    openvsx: "Open VSX",
+    "vscode-marketplace": "VS Code Marketplace",
+    vscode: "VS Code Marketplace",
+    Both: "Both",
+    "Open VSX": "Open VSX",
+    "VS Code Marketplace": "VS Code Marketplace",
+  };
+  return map[value] ?? null;
+}
+
+function mapReleaseChannel(value) {
+  const map = {
+    beta: "Beta (Pre-release)",
+    production: "Production",
+    "Beta (Pre-release)": "Beta (Pre-release)",
+    Production: "Production",
+  };
+  return map[value] ?? null;
+}
+
+async function triggerDeployment(body) {
+  const targetTag = body.target_tag ?? body.tag;
+  const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
+  const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
+  if (!targetTag) throw new Error("target_tag is required");
+  if (!publishMarket) throw new Error("Invalid publish_market");
+  if (!releaseChannel) throw new Error("Invalid release_channel");
+
+  const githubToken = loadGithubToken();
+  if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
+
+  const githubRes = await fetch(
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/deployment.yml/dispatches`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${githubToken}`,
+        "User-Agent": "cursor-usage-monitor-dev",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({
+        ref: "main",
+        inputs: { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
+      }),
+    }
+  );
+
+  if (!githubRes.ok) {
+    throw new Error(`Failed to trigger deployment workflow (${githubRes.status})`);
+  }
+
+  return {
+    success: true,
+    message: "Deployment triggered successfully",
+    target_tag: targetTag,
+    publish_market: publishMarket,
+    release_channel: releaseChannel,
+  };
+}
 
 function loadGithubToken() {
   if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
@@ -203,9 +287,9 @@ async function fetchWorkflowRuns() {
 }
 
 async function fetchMarketplaceSync() {
-  const pkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8"));
-  const name = pkg.name;
-  const target = pkg.version.replace(/^v/, "");
+  const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+  const name = siteData.extensionName ?? "cursor-curse-monitor-by-lorapok";
+  const target = String(siteData.packageVersion ?? siteData.version ?? "").replace(/^v/, "");
   const fetchJson = async (url) => {
     const res = await fetch(url, { headers: { Accept: "application/json" } });
     return res.ok ? res.json() : null;
@@ -215,10 +299,12 @@ async function fetchMarketplaceSync() {
     fetchJson(`https://open-vsx.org/api/LorapokLabs/${name}`),
     fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`),
   ]);
+  const vscodeVersion = siteData.vscode?.version ?? null;
   const channels = [
     { id: "github", label: "GitHub Release", version: githubRelease?.tag_name?.replace(/^v/, "") ?? null, synced: githubRelease?.tag_name?.replace(/^v/, "") === target },
-    { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", version: ovsxCanonical?.version ?? null, downloadCount: ovsxCanonical?.downloadCount ?? 0, synced: ovsxCanonical?.version === target },
+    { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", version: ovsxCanonical?.version ?? siteData.openVsx?.version ?? null, downloadCount: ovsxCanonical?.downloadCount ?? 0, synced: (ovsxCanonical?.version ?? siteData.openVsx?.version) === target },
     { id: "ovsx-duplicate", label: "Open VSX duplicate", version: ovsxDuplicate?.version ?? null, downloadCount: ovsxDuplicate?.downloadCount ?? 0, synced: false, warn: true },
+    { id: "vscode", label: "VS Code Marketplace", version: vscodeVersion, downloadCount: siteData.vscode?.downloadCount ?? 0, synced: vscodeVersion === target },
     { id: "package", label: "package.json", version: target, synced: true },
   ];
   return {
@@ -292,8 +378,63 @@ export function createDevApiMiddleware() {
             ok: gh.ok,
             checks: { github: gh.ok, timestamp: new Date().toISOString() },
             firebaseProject: "cursor-curse-by-lorapok",
+            githubTokenConfigured: Boolean(loadGithubToken()),
+            adminKvConfigured: true,
+            siteDataUrl: "/site-data.json",
           }));
         });
+      return;
+    }
+
+    if (url === "/api/admins" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ emails: readDevAdminEmails(), source: "local-file" }));
+      return;
+    }
+
+    if (url === "/api/admins" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const email = String(parsed.email ?? "").trim().toLowerCase();
+          const action = parsed.action ?? "add";
+          if (!email) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "email is required" }));
+            return;
+          }
+          let emails = readDevAdminEmails();
+          if (action === "remove") emails = emails.filter((e) => e !== email);
+          else if (!emails.includes(email)) emails.push(email);
+          emails = writeDevAdminEmails(emails);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, emails, action }));
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/deploy" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        triggerDeployment(JSON.parse(body || "{}"))
+          .then((result) => {
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result));
+          })
+          .catch((err) => {
+            res.statusCode = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: err.message }));
+          });
+      });
       return;
     }
 
