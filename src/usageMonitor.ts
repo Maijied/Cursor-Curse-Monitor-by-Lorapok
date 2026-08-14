@@ -23,15 +23,8 @@ export class UsageMonitorService implements vscode.Disposable {
   private warnedAtThreshold = false;
   private fallbackAppliedThisCycle = false;
   private readonly listeners = new Set<SnapshotListener>();
-  private readonly wasmPath: string;
 
-  constructor(private readonly context: vscode.ExtensionContext) {
-    this.wasmPath = vscode.Uri.joinPath(
-      context.extensionUri,
-      "media",
-      "sql-wasm.wasm"
-    ).fsPath;
-  }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   onDidUpdate(listener: SnapshotListener): vscode.Disposable {
     this.listeners.add(listener);
@@ -96,14 +89,14 @@ export class UsageMonitorService implements vscode.Disposable {
     };
 
     try {
-      const token = await readCursorAccessToken(this.wasmPath);
+      const token = await readCursorAccessToken();
       if (!token) {
         throw new Error(
           "Cursor auth token not found. Sign in to Cursor and reload the window."
         );
       }
 
-      snapshot.email = await readCachedAccountEmail(this.wasmPath);
+      snapshot.email = await readCachedAccountEmail();
       snapshot.usage = await fetchUsageSummary(token);
       snapshot.profile = await fetchStripeProfile(token);
       snapshot.onDemandSpendUsd =
@@ -147,7 +140,7 @@ export class UsageMonitorService implements vscode.Disposable {
       }
 
       if (snapshot.limitExceeded && autoApplyFallback) {
-        const result = await applyComposerFallbackModel(this.wasmPath);
+        const result = await applyComposerFallbackModel();
         snapshot.fallbackApplied = result.success;
         if (result.success && !this.fallbackAppliedThisCycle) {
           this.fallbackAppliedThisCycle = true;

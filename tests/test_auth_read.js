@@ -18,7 +18,6 @@ async function run() {
     // ignore missing file
   }
 
-  // Create a mock SQLite database with auth rows
   const db = new DatabaseSync(dbPath);
   db.exec("CREATE TABLE ItemTable (key TEXT, value TEXT);");
   db.prepare("INSERT INTO ItemTable VALUES (?, ?)").run(
@@ -31,17 +30,12 @@ async function run() {
   );
   db.close();
 
-  // Point the env to the mock database
   process.env.CURSOR_DB_PATH = dbPath;
 
-  // Mock the vscode module before requiring cursorAuth
-  // (cursorAuth.ts imports vscode but doesn't use it in the read path)
-  require.extensions[".ts"] = require.extensions[".ts"] || undefined;
   const Module = require("module");
   const originalResolveFilename = Module._resolveFilename;
   Module._resolveFilename = function (request, parent, isMain, options) {
     if (request === "vscode") {
-      // Return a stub — the read functions don't use vscode
       return require.resolve("./mock-vscode.js");
     }
     return originalResolveFilename.call(this, request, parent, isMain, options);
@@ -50,8 +44,8 @@ async function run() {
   require("ts-node").register({ transpileOnly: true });
   const { readCursorAccessToken, readCachedAccountEmail } = require("../src/cursorAuth.ts");
 
-  const token = await readCursorAccessToken("unused.wasm");
-  const email = await readCachedAccountEmail("unused.wasm");
+  const token = await readCursorAccessToken();
+  const email = await readCachedAccountEmail();
 
   assert.strictEqual(token, "test_access_token");
   assert.strictEqual(email, "user@example.com");

@@ -2,7 +2,7 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "publisher": "LorapokLabs",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -95,7 +95,7 @@
         "cursorCurseMonitor.autoApplyFallbackModel": {
           "type": "boolean",
           "default": false,
-          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model. Off by default: this rewrites Cursor's state.vscdb and is unsafe on large databases."
+          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model. Off by default: this updates Cursor's state.vscdb in place via SQLite and should only be used when limits are exceeded."
         },
         "cursorCurseMonitor.showStatusBar": {
           "type": "boolean",
@@ -128,7 +128,7 @@
     }
   },
   "scripts": {
-    "test": "node tests/test_fallback.js && node tests/test_sql.js && node tests/test_auth_read.js",
+    "test": "node tests/test_fallback.js && node tests/test_auth_read.js",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
@@ -150,8 +150,5 @@
     "ovsx": "^0.10.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
-  },
-  "dependencies": {
-    "sql.js": "^1.12.0"
   }
 }

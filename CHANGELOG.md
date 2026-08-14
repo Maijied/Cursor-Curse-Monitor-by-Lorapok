@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+## [0.5.7] - 2026-08-14
+
+### Fixed
+
+- **Critical:** Fallback model writes no longer replace the entire `state.vscdb` file via sql.js export, which left stale WAL/SHM sidecars and corrupted Cursor storage on install/reload
+- Auth reads now fail fast with a recovery hint when `state.vscdb` header is invalid
+- Removed sql.js/WASM dependency from the extension runtime (smaller VSIX, no full-DB rewrite path)
+
 ## [0.5.6] - 2026-08-14
 
 ### Added

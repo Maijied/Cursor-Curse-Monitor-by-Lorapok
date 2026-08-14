@@ -96,12 +96,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(
       "cursorCurseMonitor.applyFallbackModel",
       async () => {
-        const wasmPath = vscode.Uri.joinPath(
-          context.extensionUri,
-          "media",
-          "sql-wasm.wasm"
-        ).fsPath;
-        const result = await applyComposerFallbackModel(wasmPath);
+        const result = await applyComposerFallbackModel();
         if (result.success) {
           NotificationProvider.show({
             title: "Fallback Applied",

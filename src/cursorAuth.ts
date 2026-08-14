@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as crypto from "crypto";
-import initSqlJs, { Database } from "sql.js";
 
 const REACTIVE_KEY =
   "src.vs.platform.reactivestorage.browser.reactiveStorageServiceImpl.persistentStorage.applicationUser";
@@ -12,6 +11,8 @@ const DB_OPERATION_TIMEOUT_MS = 15_000;
 
 /** Stale backups older than this (ms) are cleaned up automatically. */
 const STALE_BACKUP_AGE_MS = 60 * 60 * 1000; // 1 hour
+
+type SqliteModule = typeof import("node:sqlite");
 
 export function getCursorGlobalStoragePath(): string {
   if (process.env.CURSOR_DB_PATH) {
@@ -49,12 +50,15 @@ export function getCursorGlobalStoragePath(): string {
   }
 }
 
-async function openDatabase(dbPath: string, wasmPath: string): Promise<Database> {
-  const SQL = await initSqlJs({
-    locateFile: () => wasmPath,
-  });
-  const fileBuffer = fs.readFileSync(dbPath);
-  return new SQL.Database(fileBuffer);
+function loadSqlite(): SqliteModule {
+  try {
+    return require("node:sqlite") as SqliteModule;
+  } catch {
+    throw new Error(
+      `This Cursor build does not provide node:sqlite. ` +
+      `Extension host Node version: ${process.versions.node}`
+    );
+  }
 }
 
 function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: string } {
@@ -69,23 +73,16 @@ function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: s
       return { valid: false, reason: "Database file is empty" };
     }
 
-    // Check if file is suspiciously large (>100MB may indicate corruption)
-    if (stats.size > 100 * 1024 * 1024) {
-      return { valid: false, reason: "Database file is too large (possible corruption)" };
-    }
-
-    // Check if file is too small to be valid SQLite (<100 bytes)
     if (stats.size < 100) {
       return { valid: false, reason: "Database file is too small to be valid" };
     }
 
-    // Basic SQLite header check (first 16 bytes should be "SQLite format 3\0")
     const buffer = Buffer.alloc(16);
-    const fd = fs.openSync(dbPath, 'r');
+    const fd = fs.openSync(dbPath, "r");
     try {
       fs.readSync(fd, buffer, 0, 16, 0);
-      const header = buffer.toString('utf8', 0, 16);
-      if (header !== 'SQLite format 3\0') {
+      const header = buffer.toString("utf8", 0, 16);
+      if (header !== "SQLite format 3\0") {
         return { valid: false, reason: "Invalid SQLite file header" };
       }
     } finally {
@@ -96,14 +93,14 @@ function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: s
   } catch (error) {
     return {
       valid: false,
-      reason: error instanceof Error ? error.message : "Unknown validation error"
+      reason: error instanceof Error ? error.message : "Unknown validation error",
     };
   }
 }
 
 function createBackup(dbPath: string): string | null {
   try {
-    const backupPath = `${dbPath}.backup-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    const backupPath = `${dbPath}.backup-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
     fs.copyFileSync(dbPath, backupPath);
     return backupPath;
   } catch {
@@ -124,19 +121,18 @@ function restoreFromBackup(backupPath: string, originalPath: string): boolean {
 }
 
 function cleanupBackup(backupPath: string | null): void {
-  if (!backupPath) { return; }
+  if (!backupPath) {
+    return;
+  }
   try {
     if (fs.existsSync(backupPath)) {
       fs.unlinkSync(backupPath);
     }
   } catch {
-    // Silently fail on cleanup — non-critical
+    // Non-critical
   }
 }
 
-/**
- * Clean up stale backup files that may have been left by previous crashes.
- */
 function cleanupStaleBackups(dbPath: string): void {
   try {
     const dir = path.dirname(dbPath);
@@ -157,59 +153,24 @@ function cleanupStaleBackups(dbPath: string): void {
       }
     }
   } catch {
-    // Non-critical — don't fail the operation
+    // Non-critical
   }
 }
 
-function atomicWrite(dbPath: string, buffer: Buffer): { success: boolean; reason?: string } {
-  const tempPath = `${dbPath}.tmp-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-  try {
-    fs.writeFileSync(tempPath, buffer);
-
-    // Verify the temp file was written successfully
-    const tempStats = fs.statSync(tempPath);
-    if (tempStats.size !== buffer.length) {
-      try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
-      return { success: false, reason: "Temp file size mismatch" };
-    }
-
-    // Atomic replace operation
-    try {
-      fs.renameSync(tempPath, dbPath);
-    } catch {
-      // renameSync can fail across filesystem boundaries — fall back to copy+delete
-      fs.copyFileSync(tempPath, dbPath);
-      try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
-    }
-
-    // Verify the final file
-    const finalStats = fs.statSync(dbPath);
-    if (finalStats.size !== buffer.length) {
-      return { success: false, reason: "Final file size mismatch after atomic replace" };
-    }
-
-    return { success: true };
-  } catch (error) {
-    // Clean up temp file on failure
-    try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
-    return {
-      success: false,
-      reason: error instanceof Error ? error.message : "Unknown write error"
-    };
-  }
-}
-
-/**
- * Wraps an async operation with a timeout.
- */
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error(`Operation timed out after ${ms}ms: ${label}`));
     }, ms);
     promise.then(
-      (value) => { clearTimeout(timer); resolve(value); },
-      (err) => { clearTimeout(timer); reject(err); }
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
     );
   });
 }
@@ -221,17 +182,15 @@ function readCursorKeyDirect(key: string): string | null {
     return null;
   }
 
-  let DatabaseSync: typeof import("node:sqlite").DatabaseSync;
-
-  try {
-    ({ DatabaseSync } = require("node:sqlite") as typeof import("node:sqlite"));
-  } catch {
+  const integrityCheck = validateDatabaseIntegrity(dbPath);
+  if (!integrityCheck.valid) {
     throw new Error(
-      `This Cursor build does not provide node:sqlite. ` +
-      `Extension host Node version: ${process.versions.node}`
+      `Cursor storage database looks damaged (${integrityCheck.reason}). ` +
+      "Quit Cursor, remove state.vscdb-wal and state.vscdb-shm, then restart Cursor before using this extension."
     );
   }
 
+  const { DatabaseSync } = loadSqlite();
   const db = new DatabaseSync(dbPath, {
     readOnly: true,
     timeout: 5000,
@@ -248,128 +207,122 @@ function readCursorKeyDirect(key: string): string | null {
   }
 }
 
-export async function readCursorAccessToken(
-  _wasmPath: string
-): Promise<string | null> {
+export async function readCursorAccessToken(): Promise<string | null> {
   return readCursorKeyDirect("cursorAuth/accessToken");
 }
 
-export async function applyComposerFallbackModel(
-  wasmPath: string
-): Promise<{ success: boolean; error?: string; alreadySet?: boolean }> {
+const TARGET_COMPOSER = {
+  modelName: "composer-2.5",
+  maxMode: false,
+  selectedModels: [
+    {
+      modelId: "composer-2.5",
+      parameters: [{ id: "fast", value: "false" }],
+    },
+  ],
+};
+
+const FALLBACK_SURFACES = [
+  "composer",
+  "quick-agent",
+  "plan-execution",
+  "background-composer",
+  "composer-ensemble",
+];
+
+function applyFallbackWithSqlite(
+  dbPath: string
+): { success: boolean; error?: string; alreadySet?: boolean } {
+  const { DatabaseSync } = loadSqlite();
+  const db = new DatabaseSync(dbPath, { timeout: 5000 });
+
+  try {
+    const row = db
+      .prepare("SELECT value FROM ItemTable WHERE key = ?")
+      .get(REACTIVE_KEY) as { value?: unknown } | undefined;
+
+    if (!row || typeof row.value !== "string") {
+      return { success: false, error: "Reactive storage key not found in database" };
+    }
+
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(row.value) as Record<string, unknown>;
+    } catch {
+      return { success: false, error: "Failed to parse reactive storage JSON" };
+    }
+
+    const aiSettings = (data.aiSettings ?? {}) as Record<string, unknown>;
+    const modelConfig = (aiSettings.modelConfig ?? {}) as Record<string, unknown>;
+
+    let changed = false;
+    for (const surface of FALLBACK_SURFACES) {
+      if (JSON.stringify(modelConfig[surface]) !== JSON.stringify(TARGET_COMPOSER)) {
+        modelConfig[surface] = TARGET_COMPOSER;
+        changed = true;
+      }
+    }
+
+    if (!changed) {
+      return { success: true, alreadySet: true };
+    }
+
+    aiSettings.modelConfig = modelConfig;
+    data.aiSettings = aiSettings;
+
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      db
+        .prepare("UPDATE ItemTable SET value = ? WHERE key = ?")
+        .run(JSON.stringify(data), REACTIVE_KEY);
+      db.exec("COMMIT");
+    } catch (error) {
+      try {
+        db.exec("ROLLBACK");
+      } catch {
+        // Ignore rollback failures
+      }
+      throw error;
+    }
+
+    return { success: true };
+  } finally {
+    db.close();
+  }
+}
+
+export async function applyComposerFallbackModel(): Promise<{
+  success: boolean;
+  error?: string;
+  alreadySet?: boolean;
+}> {
   const dbPath = getCursorGlobalStoragePath();
   if (!fs.existsSync(dbPath)) {
     return { success: false, error: "Database file does not exist" };
   }
 
-  // Clean up any stale backups from previous runs
   cleanupStaleBackups(dbPath);
 
-  // Step 1: Validate database integrity before any operations
   const integrityCheck = validateDatabaseIntegrity(dbPath);
   if (!integrityCheck.valid) {
-    return { success: false, error: `Database integrity check failed: ${integrityCheck.reason}` };
+    return {
+      success: false,
+      error: `Database integrity check failed: ${integrityCheck.reason}`,
+    };
   }
 
-  const targetComposer = {
-    modelName: "composer-2.5",
-    maxMode: false,
-    selectedModels: [
-      {
-        modelId: "composer-2.5",
-        parameters: [{ id: "fast", value: "false" }],
-      },
-    ],
-  };
-
-  const surfaces = [
-    "composer",
-    "quick-agent",
-    "plan-execution",
-    "background-composer",
-    "composer-ensemble",
-  ];
-
-  // Step 2: Create backup before modifications
   const backupPath = createBackup(dbPath);
   if (!backupPath) {
     return { success: false, error: "Failed to create database backup" };
   }
 
-  const attemptModification = async (): Promise<{ success: boolean; error?: string; alreadySet?: boolean }> => {
-    let db: Database | null = null;
-    try {
-      db = await openDatabase(dbPath, wasmPath);
-
-      const result = db.exec(
-        "SELECT value FROM ItemTable WHERE key = ?",
-        [REACTIVE_KEY]
-      );
-      if (!result.length || !result[0].values.length) {
-        return { success: false, error: "Reactive storage key not found in database" };
-      }
-
-      const raw = result[0].values[0][0];
-      if (typeof raw !== "string") {
-        return { success: false, error: "Reactive storage value is not a string" };
-      }
-
-      let data: Record<string, unknown>;
-      try {
-        data = JSON.parse(raw) as Record<string, unknown>;
-      } catch {
-        return { success: false, error: "Failed to parse reactive storage JSON" };
-      }
-
-      const aiSettings = (data.aiSettings ?? {}) as Record<string, unknown>;
-      const modelConfig = (aiSettings.modelConfig ?? {}) as Record<string, unknown>;
-
-      let changed = false;
-      for (const surface of surfaces) {
-        if (JSON.stringify(modelConfig[surface]) !== JSON.stringify(targetComposer)) {
-          modelConfig[surface] = targetComposer;
-          changed = true;
-        }
-      }
-
-      if (!changed) {
-        return { success: true, alreadySet: true };
-      }
-
-      aiSettings.modelConfig = modelConfig;
-      data.aiSettings = aiSettings;
-
-      const updated = JSON.stringify(data);
-      db.run("UPDATE ItemTable SET value = ? WHERE key = ?", [updated, REACTIVE_KEY]);
-
-      const exported = db.export();
-
-      // Close DB before writing to avoid holding references during file I/O
-      db.close();
-      db = null;
-
-      // Step 3: Use atomic write instead of direct write
-      const writeResult = atomicWrite(dbPath, Buffer.from(exported));
-      if (!writeResult.success) {
-        return { success: false, error: `Atomic write failed: ${writeResult.reason}` };
-      }
-
-      // Step 4: Verify integrity after write
-      const postWriteCheck = validateDatabaseIntegrity(dbPath);
-      if (!postWriteCheck.valid) {
-        return { success: false, error: `Post-write integrity check failed: ${postWriteCheck.reason}` };
-      }
-
-      return { success: true };
-    } finally {
-      if (db) {
-        try { db.close(); } catch { /* ignore close errors */ }
-      }
-    }
-  };
+  const attemptModification = async (): Promise<{
+    success: boolean;
+    error?: string;
+    alreadySet?: boolean;
+  }> => applyFallbackWithSqlite(dbPath);
 
   try {
-    // First attempt with timeout
     let attemptResult = await withTimeout(
       attemptModification(),
       DB_OPERATION_TIMEOUT_MS,
@@ -381,7 +334,6 @@ export async function applyComposerFallbackModel(
       return attemptResult;
     }
 
-    // Retry once: restore from backup then try again
     const restored = restoreFromBackup(backupPath, dbPath);
     if (!restored) {
       cleanupBackup(backupPath);
@@ -399,26 +351,22 @@ export async function applyComposerFallbackModel(
       return attemptResult;
     }
 
-    // Final failure — restore backup
     restoreFromBackup(backupPath, dbPath);
     cleanupBackup(backupPath);
     return {
       success: false,
-      error: attemptResult.error || "Failed to apply fallback model after retry"
+      error: attemptResult.error || "Failed to apply fallback model after retry",
     };
   } catch (error) {
-    // Restore backup on any unhandled error
     restoreFromBackup(backupPath, dbPath);
     cleanupBackup(backupPath);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error during fallback model application"
+      error: error instanceof Error ? error.message : "Unknown error during fallback model application",
     };
   }
 }
 
-export async function readCachedAccountEmail(
-  _wasmPath: string
-): Promise<string | null> {
+export async function readCachedAccountEmail(): Promise<string | null> {
   return readCursorKeyDirect("cursorAuth/cachedEmail");
 }
