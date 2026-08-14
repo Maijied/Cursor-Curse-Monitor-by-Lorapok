@@ -6,8 +6,8 @@ compatibility_date = "2024-08-14"
 # wrangler kv namespace create ADMIN_KV
 [[kv_namespaces]]
 binding = "ADMIN_KV"
-id = "REPLACE_WITH_PRODUCTION_KV_ID"
-preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+id = "5fb05edceefa493c83efbb469b6012a4"
+preview_id = "4e30f97e540b49b286aa56dcdd54bf7b"
 
 [vars]
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"

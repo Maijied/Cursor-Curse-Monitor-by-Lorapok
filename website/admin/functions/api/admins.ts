@@ -3,8 +3,8 @@ import {
   isMasterEmail,
   listStoredAdminEmails,
   removeStoredAdminEmail,
-} from "../_shared/admins.js";
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+} from "./_shared/admins.js";
+import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;

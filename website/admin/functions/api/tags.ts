@@ -1,6 +1,6 @@
-import { GITHUB_REPO, jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
-import { githubFetch } from "../_shared/github.js";
-import { fetchSiteData, tagsFromSiteData } from "../_shared/site-data.js";
+import { GITHUB_REPO, jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
+import { githubFetch } from "./_shared/github.js";
+import { fetchSiteData, tagsFromSiteData } from "./_shared/site-data.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
