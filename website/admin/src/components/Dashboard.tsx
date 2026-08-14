@@ -2,21 +2,12 @@ import { useState, useEffect } from "react";
 import { auth } from "../lib/firebase";
 import { fetchTags, triggerDeployment } from "../lib/api";
 import Team from "./Team";
-import { LogOut, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { LogOut, AlertTriangle, LayoutDashboard, Rocket, Users, Activity, CheckCircle2, XCircle } from "lucide-react";
+import { useNavigate, Routes, Route, NavLink, useLocation } from "react-router-dom";
 
-export default function Dashboard() {
-  const [tags, setTags] = useState<string[]>([]);
-  const [deploying, setDeploying] = useState(false);
-  const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
-  
-  // Form state
-  const [branch, setBranch] = useState("development");
-  const [channel, setChannel] = useState("beta");
-  const [selectedTag, setSelectedTag] = useState("");
-  const [market, setMarket] = useState("open-vsx");
-  
+export default function DashboardLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(user => {
@@ -25,11 +16,159 @@ export default function Dashboard() {
     return unsub;
   }, [navigate]);
 
+  if (!auth.currentUser) return null;
+
+  return (
+    <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-300">
+      
+      {/* Sidebar */}
+      <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between">
+        <div>
+          <div className="h-20 flex items-center px-6 border-b border-slate-800 gap-3">
+            <img src="/assets/welcome-animation.svg" alt="Logo" className="w-8 h-8" />
+            <h1 className="font-bold text-lg bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              Cursor Monitor
+            </h1>
+          </div>
+          
+          <nav className="p-4 space-y-2">
+            <NavLink 
+              to="/dashboard"
+              end
+              className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-indigo-500/10 text-indigo-400 font-medium' : 'hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <LayoutDashboard size={20} />
+              Overview
+            </NavLink>
+            <NavLink 
+              to="/dashboard/deploy"
+              className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-indigo-500/10 text-indigo-400 font-medium' : 'hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <Rocket size={20} />
+              Deployments
+            </NavLink>
+            <NavLink 
+              to="/dashboard/team"
+              className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-indigo-500/10 text-indigo-400 font-medium' : 'hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <Users size={20} />
+              Team Access
+            </NavLink>
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-slate-800">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
+              {auth.currentUser.email?.[0].toUpperCase()}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-medium text-slate-200 truncate">{auth.currentUser.email}</p>
+              <p className="text-xs text-slate-500">Administrator</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => auth.signOut()}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-700"
+          >
+            <LogOut size={16} />
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
+        <div className="p-8 max-w-6xl mx-auto">
+          <Routes>
+            <Route path="/" element={<Overview />} />
+            <Route path="/deploy" element={<DeployForm />} />
+            <Route path="/team" element={<Team />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function Overview() {
+  const stats = [
+    { label: "Total Installs", value: "12,431", change: "+14%", icon: <Activity size={24} className="text-indigo-400" /> },
+    { label: "Active Deployments", value: "3", change: "Stable", icon: <Rocket size={24} className="text-blue-400" /> },
+    { label: "Error Rate", value: "0.12%", change: "-0.05%", icon: <AlertTriangle size={24} className="text-green-400" /> },
+  ];
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+      <div>
+        <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+        <p className="text-slate-400">Here's what's happening with the Cursor Curse Monitor extension.</p>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl shadow-xl flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-400 mb-1">{stat.label}</p>
+              <h3 className="text-3xl font-bold text-white mb-2">{stat.value}</h3>
+              <span className={`text-xs font-medium px-2 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-indigo-500/10 text-indigo-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                {stat.change}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-800/50 rounded-xl">
+              {stat.icon}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h3 className="text-xl font-bold text-white mb-6">Recent Deployments</h3>
+        <div className="space-y-4">
+          {[
+            { tag: "v1.0.1", channel: "Production", date: "2 hours ago", status: "success" },
+            { tag: "v0.8.2", channel: "Beta", date: "Yesterday", status: "success" },
+            { tag: "v0.8.1", channel: "Beta", date: "3 days ago", status: "failed" },
+          ].map((log, i) => (
+            <div key={i} className="flex items-center justify-between p-4 bg-slate-950/50 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
+              <div className="flex items-center gap-4">
+                {log.status === 'success' ? (
+                  <CheckCircle2 size={20} className="text-emerald-500" />
+                ) : (
+                  <XCircle size={20} className="text-red-500" />
+                )}
+                <div>
+                  <p className="font-semibold text-slate-200">{log.tag}</p>
+                  <p className="text-xs text-slate-500">{log.channel} Channel</p>
+                </div>
+              </div>
+              <span className="text-sm text-slate-400">{log.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeployForm() {
+  const [tags, setTags] = useState<string[]>([]);
+  const [deploying, setDeploying] = useState(false);
+  const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
+  
+  const [branch, setBranch] = useState("development");
+  const [channel, setChannel] = useState("beta");
+  const [selectedTag, setSelectedTag] = useState("");
+  const [market, setMarket] = useState("open-vsx");
+
   useEffect(() => {
-    // Mock tags for UI testing if API fails
     fetchTags().then(data => {
-      setTags(data.tags || []);
-      if (data.tags && data.tags.length > 0) setSelectedTag(data.tags[0]);
+      // the api now returns an array of objects like { name: 'v1.0.0' }
+      const tagNames = Array.isArray(data) ? data.map((t: any) => t.name) : data.tags || [];
+      setTags(tagNames);
+      if (tagNames.length > 0) setSelectedTag(tagNames[0]);
     }).catch(err => {
       console.warn("API not ready, using fallback tags", err);
       const fbTags = ["v1.0.1", "v0.8.1", "v0.7.2", "v0.7.1"];
@@ -56,76 +195,19 @@ export default function Dashboard() {
     return t.startsWith("v0.");
   });
 
-  if (!auth.currentUser) return null;
-
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+      <h2 className="text-3xl font-bold text-white mb-2">Deploy Release</h2>
+      <p className="text-slate-400 mb-8">Trigger a GitHub Actions workflow to publish the extension.</p>
       
-      <div className="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="bg-slate-700 p-2 rounded-full shadow-lg border border-slate-600">
-            <img src="/assets/security-shield.svg" alt="Auth" className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-400">Authenticated as</p>
-            <p className="font-semibold text-slate-200">{auth.currentUser.email}</p>
-          </div>
-        </div>
-        <button 
-          onClick={() => auth.signOut()}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-        >
-          <LogOut size={16} />
-          Sign Out
-        </button>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
-            <img src="/assets/monitor-dashboard.svg" alt="Deploy" className="w-7 h-7" />
-            Deploy Release
-          </h2>
-          
-          <form onSubmit={handleDeploy} className="space-y-5">
+      <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-8 rounded-2xl shadow-xl">
+        <form onSubmit={handleDeploy} className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Branch (Locked)</label>
-              <select 
-                value={branch} onChange={(e) => setBranch(e.target.value)}
-                disabled
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 opacity-50 cursor-not-allowed focus:outline-none"
-              >
-                <option value="development">development</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Release Channel</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="radio" name="channel" value="beta" 
-                    checked={channel === "beta"} onChange={(e) => setChannel(e.target.value)}
-                    className="text-blue-500 focus:ring-blue-500" 
-                  />
-                  <span>Beta (v0.x.x)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="radio" name="channel" value="production" 
-                    checked={channel === "production"} onChange={(e) => setChannel(e.target.value)}
-                    className="text-blue-500 focus:ring-blue-500" 
-                  />
-                  <span>Production (v1.x.x)</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Target Tag</label>
+              <label className="block text-sm font-medium mb-2 text-slate-300">Target Tag</label>
               <select 
                 value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
                 {filteredTags.length === 0 && <option value="">No tags available</option>}
                 {filteredTags.map(t => (
@@ -133,51 +215,67 @@ export default function Dashboard() {
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Target Market</label>
+              <label className="block text-sm font-medium mb-2 text-slate-300">Target Market</label>
               <select 
                 value={market} onChange={(e) => setMarket(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
                 <option value="open-vsx">Open VSX</option>
                 <option value="vscode-marketplace">VS Code Marketplace</option>
                 <option value="both">Both</option>
               </select>
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={deploying || filteredTags.length === 0}
-              className="w-full mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-bold hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-blue-500/25 disabled:opacity-50"
-            >
-              {deploying ? "Triggering..." : "Trigger Deployment"}
-            </button>
-          </form>
-
-          {message && (
-            <div className={`mt-6 p-4 rounded-xl flex items-start gap-4 shadow-xl overflow-hidden relative ${
-              message.type === 'success' ? 'bg-green-950/40 border border-green-800 text-green-300' : 'bg-red-950/40 border border-red-800 text-red-300'
-            }`}>
-              {message.type === 'success' && (
-                <div className="absolute inset-0 bg-green-500/10 animate-pulse mix-blend-overlay"></div>
-              )}
-              {message.type === 'success' ? (
-                <img src="/assets/deployment-success.png" alt="Success" className="w-16 h-16 rounded shadow-md object-cover relative z-10 border border-green-700" />
-              ) : (
-                <AlertTriangle size={24} className="shrink-0 relative z-10" />
-              )}
-              <div className="relative z-10 flex flex-col justify-center">
-                {message.type === 'success' && <h3 className="font-bold text-lg mb-1 text-green-400">Deployment Triggered!</h3>}
-                <p className="text-sm leading-relaxed">{message.text}</p>
-              </div>
+          <div>
+            <label className="block text-sm font-medium mb-3 text-slate-300">Release Channel</label>
+            <div className="flex gap-4">
+              <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${channel === 'beta' ? 'bg-indigo-500/10 border-indigo-500 text-indigo-300' : 'bg-slate-950 border-slate-700 hover:border-slate-600'}`}>
+                <input type="radio" name="channel" value="beta" className="hidden" checked={channel === "beta"} onChange={(e) => setChannel(e.target.value)} />
+                <div className="flex flex-col items-center">
+                  <span className="font-bold">Beta Channel</span>
+                  <span className="text-xs opacity-70">v0.x.x tags</span>
+                </div>
+              </label>
+              <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${channel === 'production' ? 'bg-indigo-500/10 border-indigo-500 text-indigo-300' : 'bg-slate-950 border-slate-700 hover:border-slate-600'}`}>
+                <input type="radio" name="channel" value="production" className="hidden" checked={channel === "production"} onChange={(e) => setChannel(e.target.value)} />
+                <div className="flex flex-col items-center">
+                  <span className="font-bold">Production</span>
+                  <span className="text-xs opacity-70">v1.x.x tags</span>
+                </div>
+              </label>
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="space-y-8">
-          <Team />
-        </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-slate-300">Branch (Locked)</label>
+            <input 
+              value={branch} disabled
+              className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 opacity-50 cursor-not-allowed text-slate-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={deploying || filteredTags.length === 0}
+            className="w-full mt-4 flex items-center justify-center gap-3 bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50"
+          >
+            <Rocket size={20} />
+            {deploying ? "Triggering Deployment..." : "Trigger Deployment"}
+          </button>
+        </form>
+
+        {message && (
+          <div className={`mt-6 p-4 rounded-xl flex items-start gap-4 shadow-xl ${
+            message.type === 'success' ? 'bg-emerald-950/40 border border-emerald-800 text-emerald-300' : 'bg-red-950/40 border border-red-800 text-red-300'
+          }`}>
+            <div className="relative z-10 flex flex-col justify-center">
+              {message.type === 'success' && <h3 className="font-bold text-lg mb-1 text-emerald-400">Deployment Triggered!</h3>}
+              <p className="text-sm leading-relaxed">{message.text}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

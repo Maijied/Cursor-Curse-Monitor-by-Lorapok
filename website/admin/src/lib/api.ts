@@ -3,7 +3,12 @@ import { auth } from "./firebase";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8787";
 
 export async function fetchTags() {
-  const res = await fetch(`${API_BASE}/api/tags`);
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not authenticated");
+  const token = await user.getIdToken();
+  const res = await fetch(`${API_BASE}/api/tags`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
   if (!res.ok) throw new Error("Failed to fetch tags");
   return res.json();
 }
