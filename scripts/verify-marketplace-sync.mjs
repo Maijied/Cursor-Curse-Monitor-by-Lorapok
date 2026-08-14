@@ -17,6 +17,21 @@ const EXT_NAME = pkg.name;
 const TARGET_VERSION = pkg.version.replace(/^v/, "");
 
 async function fetchVersion(namespace) {
+  const versionsUrl = `https://open-vsx.org/api/${namespace}/${EXT_NAME}/versions`;
+  try {
+    const res = await fetch(versionsUrl, { headers: { Accept: "application/json" } });
+    if (res.ok) {
+      const data = await res.json();
+      const keys = Object.keys(data?.versions ?? {});
+      if (keys.length > 0) {
+        keys.sort((a, b) => compareSemver(b, a));
+        return keys[0];
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+
   const url = `https://open-vsx.org/api/${namespace}/${EXT_NAME}`;
   try {
     const res = await fetch(url, { headers: { Accept: "application/json" } });
