@@ -126,7 +126,13 @@ function publishVsix(vsixPath, preRelease) {
     throw new Error("OVSX_PAT is not set");
   }
 
-  run("npx", ["ovsx", "create-namespace", OVSX_PUBLISHER, "-p", token], { inherit: true });
+  const nsResult = spawnSync("npx", ["ovsx", "create-namespace", OVSX_PUBLISHER, "-p", token], {
+    encoding: "utf8",
+  });
+  const nsOutput = `${nsResult.stdout ?? ""}${nsResult.stderr ?? ""}`;
+  if (nsResult.status !== 0 && !/already exists/i.test(nsOutput)) {
+    throw new Error(`create-namespace failed: ${nsOutput.trim() || nsResult.status}`);
+  }
 
   const publishArgs = ["ovsx", "publish", "-i", vsixPath, "-p", token];
   if (preRelease) publishArgs.push("--pre-release");
