@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-08-14T08:53:10.435Z",
+  "generatedAt": "2026-08-14T09:11:54.813Z",
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.4",
   "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
-  "syncStatus": "duplicate-listing",
+  "syncStatus": "synced",
   "keywords": [
     "cursor",
     "lorapok",
