@@ -10,5 +10,6 @@ id = "5fb05edceefa493c83efbb469b6012a4"
 preview_id = "4e30f97e540b49b286aa56dcdd54bf7b"
 
 [vars]
+ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
 SITE_DATA_URL = "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json"
