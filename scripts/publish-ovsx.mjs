@@ -2,9 +2,9 @@
 /**
  * Publish to Open VSX under the canonical lorapok-labs namespace.
  *
- * package.json uses publisher "LorapokLabs" for VS Code Marketplace, but ovsx
- * reads the publisher from the VSIX manifest. Without repacking, publishes land
- * on the wrong Open VSX namespace (LorapokLabs duplicate listing).
+ * package.json uses publisher "LorapokLabs" for VS Code Marketplace. Open VSX
+ * reads Publisher from extension.vsixmanifest (and package.json). Both must be
+ * patched before publish or the extension lands on the wrong namespace.
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -20,8 +20,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const OVSX_PUBLISHER = "lorapok-labs";
 const VSCE_PUBLISHER = "LorapokLabs";
+const EXT_NAME = pkg.name;
 
 function parseArgs(argv) {
   const args = { dryRun: false, preRelease: false, vsix: null };
@@ -57,8 +59,6 @@ function findDefaultVsix() {
     throw new Error("No *.vsix found in repo root. Run npm run package first.");
   }
 
-  // Prefer package.json version match, else newest by name sort (semver-ish)
-  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   const expected = `${pkg.name}-${pkg.version}.vsix`;
   const exact = candidates.find((c) => c.name === expected);
   if (exact) return exact.path;
@@ -83,6 +83,16 @@ function run(cmd, args, opts = {}) {
   return result.stdout ?? "";
 }
 
+function patchPublisherInVsixManifest(vsixManifestPath) {
+  let xml = readFileSync(vsixManifestPath, "utf8");
+  const before = xml;
+  xml = xml.replace(/Publisher="[^"]+"/, `Publisher="${OVSX_PUBLISHER}"`);
+  if (xml === before) {
+    throw new Error("Could not patch Publisher in extension.vsixmanifest");
+  }
+  writeFileSync(vsixManifestPath, xml);
+}
+
 function repackForOvsx(sourceVsix) {
   const workDir = mkdtempSync(join(tmpdir(), "ovsx-repack-"));
   const extractDir = join(workDir, "extract");
@@ -91,20 +101,15 @@ function repackForOvsx(sourceVsix) {
   try {
     run("unzip", ["-q", sourceVsix, "-d", extractDir]);
 
-    const manifestPath = join(extractDir, "extension", "package.json");
-    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    const packagePath = join(extractDir, "extension", "package.json");
+    const manifest = JSON.parse(readFileSync(packagePath, "utf8"));
     const originalPublisher = manifest.publisher;
 
-    if (originalPublisher !== OVSX_PUBLISHER) {
-      manifest.publisher = OVSX_PUBLISHER;
-      writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-    }
+    manifest.publisher = OVSX_PUBLISHER;
+    writeFileSync(packagePath, JSON.stringify(manifest, null, 2) + "\n");
 
-    if (manifest.publisher !== OVSX_PUBLISHER) {
-      throw new Error(`Failed to set Open VSX publisher to ${OVSX_PUBLISHER}`);
-    }
+    patchPublisherInVsixManifest(join(extractDir, "extension.vsixmanifest"));
 
-    // Recreate VSIX preserving [Content_Types].xml and extension.vsixmanifest
     run("zip", ["-qr", outVsix, ".", "-x", "*.DS_Store"], { cwd: extractDir });
 
     return {
@@ -112,7 +117,7 @@ function repackForOvsx(sourceVsix) {
       workDir,
       version: manifest.version,
       originalPublisher,
-      patchedPublisher: manifest.publisher,
+      patchedPublisher: OVSX_PUBLISHER,
     };
   } catch (err) {
     rmSync(workDir, { recursive: true, force: true });
@@ -120,11 +125,18 @@ function repackForOvsx(sourceVsix) {
   }
 }
 
+async function fetchCanonicalVersion() {
+  const res = await fetch(`https://open-vsx.org/api/${OVSX_PUBLISHER}/${EXT_NAME}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.version?.replace(/^v/, "") ?? null;
+}
+
 function publishVsix(vsixPath, preRelease) {
   const token = process.env.OVSX_PAT;
-  if (!token) {
-    throw new Error("OVSX_PAT is not set");
-  }
+  if (!token) throw new Error("OVSX_PAT is not set");
 
   const nsResult = spawnSync("npx", ["ovsx", "create-namespace", OVSX_PUBLISHER, "-p", token], {
     encoding: "utf8",
@@ -137,14 +149,17 @@ function publishVsix(vsixPath, preRelease) {
   const publishArgs = ["ovsx", "publish", "-i", vsixPath, "-p", token];
   if (preRelease) publishArgs.push("--pre-release");
 
-  const output = run("npx", publishArgs);
+  const result = spawnSync("npx", publishArgs, { encoding: "utf8" });
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+  if (result.status !== 0) {
+    throw new Error(output.trim() || `ovsx publish failed (${result.status})`);
+  }
   return output;
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const sourceVsix = resolve(args.vsix ?? findDefaultVsix());
-  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
   console.log(`Source VSIX: ${sourceVsix}`);
   console.log(`Root package publisher (VS Code): ${pkg.publisher}`);
@@ -162,22 +177,48 @@ async function main() {
   );
 
   if (args.dryRun) {
-    console.log("Dry run OK — manifest patched for lorapok-labs namespace.");
+    const xml = readFileSync(
+      join(repacked.workDir, "extract", "extension.vsixmanifest"),
+      "utf8"
+    );
+    if (!xml.includes(`Publisher="${OVSX_PUBLISHER}"`)) {
+      throw new Error("Dry run failed: extension.vsixmanifest publisher not patched");
+    }
+    console.log("Dry run OK — package.json and extension.vsixmanifest patched for lorapok-labs.");
     rmSync(repacked.workDir, { recursive: true, force: true });
     return;
   }
 
   try {
+    const before = await fetchCanonicalVersion();
     const output = publishVsix(repacked.outVsix, args.preRelease);
     if (output) process.stdout.write(output);
-    console.log(`Published ${repacked.version} to Open VSX namespace ${OVSX_PUBLISHER}`);
-  } catch (err) {
-    const message = String(err.message ?? err);
-    if (/already published/i.test(message)) {
-      console.warn("::warning::Version already published on Open VSX (lorapok-labs) — treating as success");
+
+    // Allow registry propagation
+    await new Promise((r) => setTimeout(r, 3000));
+    const after = await fetchCanonicalVersion();
+    const target = repacked.version.replace(/^v/, "");
+
+    if (after === target) {
+      console.log(`Published ${target} to Open VSX namespace ${OVSX_PUBLISHER}`);
       return;
     }
-    throw err;
+
+    if (/already published/i.test(output) && after === target) {
+      console.log(`Version ${target} already on canonical Open VSX listing`);
+      return;
+    }
+
+    if (/already published/i.test(output) && before !== target && after !== target) {
+      throw new Error(
+        `ovsx reported "already published" but canonical ${OVSX_PUBLISHER} is still at ${after ?? "missing"} ` +
+          `(expected ${target}). Version may be blocked by duplicate LorapokLabs listing — contact Open VSX support.`
+      );
+    }
+
+    throw new Error(
+      `Publish finished but canonical Open VSX version is ${after ?? "missing"} (expected ${target})`
+    );
   } finally {
     rmSync(repacked.workDir, { recursive: true, force: true });
   }
