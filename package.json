@@ -102,6 +102,17 @@
           "default": true,
           "description": "Show usage percentage in the status bar."
         },
+        "cursorCurseMonitor.statusBarUsageSource": {
+          "type": "string",
+          "enum": ["plan", "autoApi", "both"],
+          "enumDescriptions": [
+            "Included quota or USD budget percent (rounded).",
+            "Auto and API feature percents from Cursor (up to 2 decimal places).",
+            "Plan percent plus Auto and API percents."
+          ],
+          "default": "autoApi",
+          "description": "Which usage numbers to show in the status bar."
+        },
         "cursorCurseMonitor.warnAtPercent": {
           "type": "number",
           "default": 80,

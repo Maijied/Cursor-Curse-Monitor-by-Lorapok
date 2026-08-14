@@ -96,7 +96,20 @@ Reload Cursor: `Developer: Reload Window`
 | `cursorCurseMonitor.customBudgetLimit` | `0` | Personal USD budget cap |
 | `cursorCurseMonitor.autoApplyFallbackModel` | `false` | Auto-switch to Composer 2.5 (Fast off) at 100%. Rewrites `state.vscdb`; unsafe on large databases. |
 | `cursorCurseMonitor.showStatusBar` | `true` | Show usage in status bar |
+| `cursorCurseMonitor.statusBarUsageSource` | `autoApi` | Status bar numbers: `plan` (included/budget %), `autoApi` (Auto · API %), or `both` |
 | `cursorCurseMonitor.warnAtPercent` | `80` | Warning notification threshold |
+
+### Status bar
+
+Toggle visibility and choose which Cursor usage numbers appear in the bottom status bar. Open **Cursor Settings → Extensions → Cursor Curse Monitor by Lorapok**.
+
+- `cursorCurseMonitor.showStatusBar` — show or hide the status bar item.
+- `cursorCurseMonitor.statusBarUsageSource`:
+  - `plan` — included quota (`totalPercentUsed`) or USD budget %, rounded. Same number as the dashboard Usage gauge. This is **not** the API features percent.
+  - `autoApi` (default) — `Auto X% · API Y%` from Cursor (`autoPercentUsed` / `apiPercentUsed`), up to 2 decimal places. Same numbers as the **API features** chip.
+  - `both` — plan percent plus Auto/API.
+
+Hover the status bar to see Plan, Auto, and API percentages together.
 
 ## Commands
 
