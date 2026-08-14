@@ -159,10 +159,17 @@ jobs:
       - name: Publish to Open VSX
         if: steps.config.outputs.do_ovsx == 'true'
         run: |
-          ovsx create-namespace lorapok-labs -p "$OVSX_PAT" || true
-          ovsx publish -p "$OVSX_PAT" ${{ steps.config.outputs.pre_release_flag }}
+          PRE_FLAG=""
+          if [ -n "${{ steps.config.outputs.pre_release_flag }}" ]; then
+            PRE_FLAG="--pre-release"
+          fi
+          node scripts/publish-ovsx.mjs $PRE_FLAG
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Verify marketplace sync
+        if: steps.config.outputs.do_ovsx == 'true'
+        run: node scripts/verify-marketplace-sync.mjs --strict
 
       - name: Publish to VS Code Marketplace
         if: steps.config.outputs.do_vsce == 'true'

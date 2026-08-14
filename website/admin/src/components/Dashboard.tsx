@@ -158,23 +158,25 @@ function DeployForm() {
   const [deploying, setDeploying] = useState(false);
   const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
   
-  const [branch, setBranch] = useState("development");
-  const [channel, setChannel] = useState("beta");
+  const [branch] = useState("main");
+  const [channel, setChannel] = useState<"beta" | "production">("beta");
   const [selectedTag, setSelectedTag] = useState("");
-  const [market, setMarket] = useState("open-vsx");
+  const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace">("Both");
+  const [tagsError, setTagsError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTags().then(data => {
-      // the api now returns an array of objects like { name: 'v1.0.0' }
-      const tagNames = Array.isArray(data) ? data.map((t: any) => t.name) : data.tags || [];
-      setTags(tagNames);
-      if (tagNames.length > 0) setSelectedTag(tagNames[0]);
-    }).catch(err => {
-      console.warn("API not ready, using fallback tags", err);
-      const fbTags = ["v1.0.1", "v0.8.1", "v0.7.2", "v0.7.1"];
-      setTags(fbTags);
-      setSelectedTag(fbTags[0]);
-    });
+    fetchTags()
+      .then((data) => {
+        const tagNames = data.tags ?? [];
+        setTags(tagNames);
+        setTagsError(null);
+        if (tagNames.length > 0) setSelectedTag(tagNames[0]);
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch tags", err);
+        setTags([]);
+        setTagsError(err.message || "Failed to load tags from API");
+      });
   }, []);
 
   const handleDeploy = async (e: React.FormEvent) => {
@@ -182,7 +184,11 @@ function DeployForm() {
     setDeploying(true);
     setMessage(null);
     try {
-      await triggerDeployment(selectedTag, branch, channel, market);
+      await triggerDeployment({
+        target_tag: selectedTag,
+        publish_market: market,
+        release_channel: channel === "production" ? "Production" : "Beta (Pre-release)",
+      });
       setMessage({ type: 'success', text: `Deployment triggered for ${selectedTag} to ${channel}!` });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
@@ -190,9 +196,9 @@ function DeployForm() {
     setDeploying(false);
   };
 
-  const filteredTags = tags.filter(t => {
-    if (channel === "production") return t.startsWith("v1.");
-    return t.startsWith("v0.");
+  const filteredTags = tags.filter((t) => {
+    if (channel === "production") return !/beta|alpha|rc/i.test(t);
+    return /beta|alpha|rc/i.test(t) || t.startsWith("v0.");
   });
 
   return (
@@ -218,12 +224,12 @@ function DeployForm() {
             <div>
               <label className="block text-sm font-medium mb-2 text-slate-300">Target Market</label>
               <select 
-                value={market} onChange={(e) => setMarket(e.target.value)}
+                value={market} onChange={(e) => setMarket(e.target.value as typeof market)}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
-                <option value="open-vsx">Open VSX</option>
-                <option value="vscode-marketplace">VS Code Marketplace</option>
-                <option value="both">Both</option>
+                <option value="Open VSX">Open VSX</option>
+                <option value="VS Code Marketplace">VS Code Marketplace</option>
+                <option value="Both">Both</option>
               </select>
             </div>
           </div>
@@ -247,6 +253,12 @@ function DeployForm() {
               </label>
             </div>
           </div>
+
+          {tagsError && (
+            <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+              {tagsError}
+            </p>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2 text-slate-300">Branch (Locked)</label>

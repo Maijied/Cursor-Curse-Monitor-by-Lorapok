@@ -1,0 +1,49 @@
+name: SEO & Sitemap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "package.json"
+      - "scripts/generate-site-data.mjs"
+      - "scripts/generate-seo.mjs"
+      - "scripts/validate-seo.mjs"
+      - ".github/workflows/seo.yml"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo:
+    name: Generate & Validate SEO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate site data
+        run: node scripts/generate-site-data.mjs
+
+      - name: Generate SEO artifacts
+        run: node scripts/generate-seo.mjs
+
+      - name: Validate SEO
+        run: node scripts/validate-seo.mjs
+
+      - name: Upload SEO artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-artifacts
+          path: |
+            website/sitemap.xml
+            website/robots.txt
+            website/seo.json
+            website/site-data.json

@@ -80,12 +80,33 @@ cursor --install-extension *.vsix
 For a manual local publish:
 
 ```bash
-# Open VSX
-npx ovsx publish -p $OVSX_PAT
+# Open VSX (canonical lorapok-labs namespace — do NOT use bare ovsx publish)
+npm run package
+npm run publish:ovsx
 
-# VS Code Marketplace
+# VS Code Marketplace (uses LorapokLabs from package.json)
 npx vsce publish -p $VSCE_PAT
+
+# Verify all channels match package.json version
+npm run verify:marketplace
 ```
+
+### Open VSX publisher namespaces
+
+| Namespace | Purpose | How it is published |
+|-----------|---------|---------------------|
+| **`lorapok-labs`** | Canonical Open VSX listing (verified) | `npm run publish:ovsx` repacks VSIX with this publisher |
+| **`LorapokLabs`** | VS Code Marketplace publisher only | `vsce publish` — **never** bare `ovsx publish` |
+
+`package.json` keeps `"publisher": "LorapokLabs"` for VS Code Marketplace. The `ovsx` CLI reads the publisher from the VSIX manifest, so CI uses `scripts/publish-ovsx.mjs` to repack before publishing to `lorapok-labs`.
+
+If search shows two Open VSX listings, the duplicate `LorapokLabs/...` entry was created by earlier bare `ovsx publish` runs. After syncing `lorapok-labs` to the latest version, request deprecation of the duplicate via [Open VSX](https://open-vsx.org).
+
+Or trigger the **Sync Open VSX (Canonical)** workflow after pushing:
+
+1. Push changes to `main`
+2. **Actions → Sync Open VSX (Canonical) → Run workflow**
+3. Confirm `verify-marketplace-sync.mjs --strict` passes in the workflow log
 
 Or use the release script for a tag-based release:
 
@@ -131,6 +152,8 @@ cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
 | Issue | Fix |
 |-------|-----|
 | Activity bar shows gray square | Use SVG icon (`media/activity-bar.svg`) — fixed in v0.2.0 |
+| Open VSX version drift (lorapok-labs behind) | Run `npm run package && npm run publish:ovsx` with `OVSX_PAT` set |
+| Duplicate Open VSX listing (LorapokLabs) | Stop using bare `ovsx publish`; use `publish-ovsx.mjs`; request duplicate deprecation |
 | Deploy fails on Open VSX | Check `OVSX_PAT` secret and namespace `lorapok-labs` |
 | Deploy fails on VS Code Marketplace | Check `VSCE_PAT` secret and publisher `LorapokLabs` |
 | "Already published" warning | Normal — CI treats this as success. Bump version if you need to re-publish |

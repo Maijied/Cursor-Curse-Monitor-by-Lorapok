@@ -1,87 +1,74 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import {
+  GITHUB_REPO,
+  jsonResponse,
+  mapPublishMarket,
+  mapReleaseChannel,
+  verifyAdminRequest,
+} from "../_shared/auth.js";
 
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  // 1. Verify Authorization Header
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Missing or invalid Authorization header" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-  const token = authHeader.split("Bearer ")[1];
+  const auth = await verifyAdminRequest(request, env);
+  if (auth.error) return auth.error;
 
   try {
-    // Firebase JWKS URL
-    const JWKS = createRemoteJWKSet(
-      new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
-    );
-    
-    const projectId = "cursor-curse-by-lorapok";
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: `https://securetoken.google.com/${projectId}`,
-      audience: projectId,
-    });
-
-    const email = payload.email;
-    if (!email) {
-       return new Response(JSON.stringify({ error: "No email found in token" }), { status: 403 });
-    }
-
-    // 2. We can do further checks if needed, but the frontend also guards this.
-    // Ideally, we could check a Firestore collection here, but for simplicity we rely on the valid Firebase Auth token.
-    // The master admin is mdshuvo40@gmail.com
-    
-    // Parse deployment request
     const body = await request.json();
-    const { tag, branch, channel, market } = body;
+    const targetTag = body.target_tag ?? body.tag;
+    const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
+    const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
 
-    if (!tag) {
-      return new Response(JSON.stringify({ error: "Tag is required" }), { status: 400 });
+    if (!targetTag) {
+      return jsonResponse({ error: "target_tag is required" }, 400);
+    }
+    if (!publishMarket) {
+      return jsonResponse({ error: "Invalid publish_market" }, 400);
+    }
+    if (!releaseChannel) {
+      return jsonResponse({ error: "Invalid release_channel" }, 400);
     }
 
-    // 3. Trigger GitHub API
     const githubToken = env.GITHUB_TOKEN;
     if (!githubToken) {
-      return new Response(JSON.stringify({ error: "GitHub Token not configured on server" }), { status: 500 });
+      return jsonResponse({ error: "GitHub Token not configured on server" }, 500);
     }
 
-    const githubRepo = "lorapok-labs/cursor-curse-monitor-by-lorapok";
     const workflowId = "deployment.yml";
-
-    const githubRes = await fetch(`https://api.github.com/repos/${githubRepo}/actions/workflows/${workflowId}/dispatches`, {
-      method: "POST",
-      headers: {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": `Bearer ${githubToken}`,
-        "User-Agent": "Cloudflare-Pages"
-      },
-      body: JSON.stringify({
-        ref: branch || "development",
-        inputs: {
-          tag: tag,
-          channel: channel || "beta",
-          market: market || "open-vsx"
-        }
-      })
-    });
+    const githubRes = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          Authorization: `Bearer ${githubToken}`,
+          "User-Agent": "Cloudflare-Pages",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        body: JSON.stringify({
+          ref: "main",
+          inputs: {
+            target_tag: targetTag,
+            publish_market: publishMarket,
+            release_channel: releaseChannel,
+          },
+        }),
+      }
+    );
 
     if (!githubRes.ok) {
-      const errorText = await githubRes.text();
-      return new Response(JSON.stringify({ error: `GitHub API failed: ${errorText}` }), { status: 502 });
+      console.error("GitHub deploy dispatch failed", githubRes.status, await githubRes.text());
+      return jsonResponse({ error: "Failed to trigger deployment workflow" }, 502);
     }
 
-    return new Response(JSON.stringify({ success: true, message: "Deployment triggered successfully" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
+    return jsonResponse({
+      success: true,
+      message: "Deployment triggered successfully",
+      target_tag: targetTag,
+      publish_market: publishMarket,
+      release_channel: releaseChannel,
     });
-
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Authentication failed or server error", details: err.message }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    console.error("Deploy handler error", err);
+    return jsonResponse({ error: "Server error" }, 500);
   }
 }

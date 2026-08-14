@@ -132,9 +132,12 @@
     "validate:assets": "node scripts/validate-assets.mjs",
     "sync:icons": "node scripts/sync-icons.mjs",
     "prepackage": "npm run validate:assets && npm run sync:icons",
-    "publish:ovsx": "ovsx publish",
+    "publish:ovsx": "node scripts/publish-ovsx.mjs",
     "publish:vscode": "vsce publish",
-    "site:data": "node scripts/generate-site-data.mjs"
+    "verify:marketplace": "node scripts/verify-marketplace-sync.mjs --strict",
+    "site:data": "node scripts/generate-site-data.mjs",
+    "site:seo": "node scripts/generate-seo.mjs",
+    "site:seo:validate": "node scripts/validate-seo.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

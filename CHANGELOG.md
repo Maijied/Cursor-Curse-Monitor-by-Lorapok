@@ -8,14 +8,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `scripts/publish-ovsx.mjs` — repacks VSIX with Open VSX publisher `lorapok-labs` before publish (fixes duplicate LorapokLabs listing drift)
+- `scripts/verify-marketplace-sync.mjs` — CI guard for canonical vs duplicate Open VSX version parity
+- `syncStatus` and `ovsxDuplicate` fields in `website/site-data.json` from `generate-site-data.mjs`
 - `cursorCurseMonitor.statusBarUsageSource` (`plan`, `autoApi`, `both`) so the status bar can show included-quota usage, Cursor Auto/API percents, or both. Default is `autoApi`. Hovering the status bar lists Plan, Auto, and API percentages.
 
 ### Fixed
 
+- Open VSX CI publish no longer uses bare `ovsx publish` (which read `LorapokLabs` from the VSIX manifest and updated the wrong namespace)
+- `generate-site-data.mjs` retries on Open VSX HTTP 429 rate limits
 - Auth token and cached email reads now use file-backed `node:sqlite` (`SELECT` one row) instead of loading the entire `state.vscdb` into sql.js/WASM, which failed on databases larger than 2 GiB.
 
 ### Changed
 
+- CI/CD and deployment workflows use `node scripts/publish-ovsx.mjs` + post-publish marketplace verification
 - `cursorCurseMonitor.autoApplyFallbackModel` now defaults to `false`. The fallback writer still loads the full database through sql.js and is unsafe on large Cursor state files.
 
 ## [0.5.0] - 2026-08-13

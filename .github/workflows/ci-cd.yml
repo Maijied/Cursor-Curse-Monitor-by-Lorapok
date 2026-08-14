@@ -253,7 +253,7 @@ jobs:
           echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
           echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
 
-      # ── Open VSX ──────────────────────────────────────────────────────────
+      # ── Open VSX (canonical lorapok-labs namespace) ───────────────────────
       - name: Publish to Open VSX
         if: steps.config.outputs.do_ovsx == 'true'
         run: |
@@ -261,22 +261,17 @@ jobs:
             echo "::warning::OVSX_PAT not set — skipping Open VSX publish"
             exit 0
           fi
-          ovsx create-namespace $OVSX_PUBLISHER -p "$OVSX_PAT" || true
-          
-          echo "Publishing to Open VSX (Flags: ${{ steps.config.outputs.pre_release_flag }})..."
-          set +e
-          OUTPUT=$(ovsx publish -p "$OVSX_PAT" ${{ steps.config.outputs.pre_release_flag }} 2>&1)
-          CODE=$?
-          echo "$OUTPUT"
-          if [ $CODE -ne 0 ]; then
-            if echo "$OUTPUT" | grep -qi "already published"; then
-              echo "::warning::Version already on Open VSX — treating as success"
-              exit 0
-            fi
-            exit $CODE
+          PRE_FLAG=""
+          if [ -n "${{ steps.config.outputs.pre_release_flag }}" ]; then
+            PRE_FLAG="--pre-release"
           fi
+          node scripts/publish-ovsx.mjs $PRE_FLAG
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Verify marketplace sync
+        if: steps.config.outputs.do_ovsx == 'true'
+        run: node scripts/verify-marketplace-sync.mjs --strict
 
       # ── VS Code Marketplace ──────────────────────────────────────────────
       - name: Publish to VS Code Marketplace
@@ -354,6 +349,11 @@ jobs:
 
       - name: Generate dynamic site data
         run: node scripts/generate-site-data.mjs
+
+      - name: Generate SEO artifacts
+        run: |
+          node scripts/generate-seo.mjs
+          node scripts/validate-seo.mjs
 
       - name: Prepare site
         run: |

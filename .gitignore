@@ -4,3 +4,8 @@ dist/
 .DS_Store
 .vscode-test/
 *.log
+.env
+.env.*
+!.env.example
+website/admin/.env
+website/admin/.env.local

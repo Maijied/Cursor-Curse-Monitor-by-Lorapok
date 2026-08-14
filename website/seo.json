@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-08-14T08:53:10.435Z",
+  "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+  "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
+  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "version": "0.5.4",
+  "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+  "syncStatus": "duplicate-listing",
+  "keywords": [
+    "cursor",
+    "lorapok",
+    "usage",
+    "billing",
+    "budget",
+    "monitor",
+    "composer",
+    "curse",
+    "Cursor IDE",
+    "Open VSX",
+    "VS Code extension",
+    "Lorapok Labs",
+    "usage monitor"
+  ],
+  "openGraph": {
+    "type": "website",
+    "title": "Cursor Curse Monitor by Lorapok",
+    "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+    "url": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+    "image": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/marketing/og-social-card.png"
+  },
+  "marketplaces": {
+    "openVsxCanonical": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
+    "openVsxDuplicate": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
+    "vscode": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
+    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.4"
+  },
+  "structuredData": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Cursor Curse Monitor by Lorapok",
+    "softwareVersion": "0.5.4",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.4/cursor-curse-monitor-by-lorapok-0.5.4.vsix",
+    "author": {
+      "@type": "Person",
+      "name": "Mohammad Maizied Hasan Majumder",
+      "url": "https://lorapok.tech"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Lorapok Labs",
+      "url": "https://lorapok.tech"
+    }
+  }
+}
