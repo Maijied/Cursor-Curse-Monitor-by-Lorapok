@@ -36,18 +36,15 @@ on:
           - Beta (Pre-release)
         default: Production
       version_type:
-        description: "Version Bump Type"
+        description: "Release Type (Tagging Rules)"
         required: true
         type: choice
         options:
-          - patch
-          - minor
-          - major
-          - prepatch
-          - preminor
-          - prerelease
-          - custom
-        default: patch
+          - "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)"
+          - "minor - New Feature (e.g. v0.8.0)"
+          - "major - Production / Breaking (e.g. v1.0.0)"
+          - "custom - Specify exact version below"
+        default: "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)"
       custom_version:
         description: "Custom version (e.g. 0.6.0-beta.1)"
         required: false
@@ -138,7 +135,10 @@ jobs:
       - name: Calculate and apply version bump
         id: bump
         run: |
-          if [ "${{ inputs.version_type }}" == "custom" ]; then
+          # Extract the base action type (e.g. "patch" from "patch - Bug fix...")
+          BUMP_TYPE=$(echo "${{ inputs.version_type }}" | awk '{print $1}')
+          
+          if [ "$BUMP_TYPE" == "custom" ]; then
             if [ -z "${{ inputs.custom_version }}" ]; then
               echo "Error: custom_version is required when version_type is custom."
               exit 1
@@ -150,15 +150,15 @@ jobs:
             node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
             CURRENT=$(node -p "require('./package.json').version")
             echo "Current base version: $CURRENT"
-            npm version ${{ inputs.version_type }} --no-git-tag-version --preid=beta
+            npm version $BUMP_TYPE --no-git-tag-version --preid=beta
             NEW_VERSION=$(node -p "require('./package.json').version")
-            echo "Auto-bumped ${{ inputs.version_type }}: $NEW_VERSION"
+            echo "Auto-bumped $BUMP_TYPE: $NEW_VERSION"
           fi
 
           TAG="v$NEW_VERSION"
           
           # Only run npm version again if we used custom (to actually set the package.json)
-          if [ "${{ inputs.version_type }}" == "custom" ]; then
+          if [ "$BUMP_TYPE" == "custom" ]; then
              npm version --no-git-tag-version "$NEW_VERSION"
           fi
 

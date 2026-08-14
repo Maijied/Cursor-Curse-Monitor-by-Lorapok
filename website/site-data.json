@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-13T11:59:08.054Z",
+  "generatedAt": "2026-08-14T02:29:32.598Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.3.0",
-  "packageVersion": "0.5.0",
+  "version": "0.5.4",
+  "packageVersion": "0.5.4",
   "ovsxPublisher": "lorapok-labs",
   "vscePublisher": "LorapokLabs",
   "extensionName": "cursor-curse-monitor-by-lorapok",
@@ -23,7 +23,7 @@
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
-    "version": "0.4.1",
+    "version": "0.5.4",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
     "installCount": 0,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok",
@@ -31,18 +31,18 @@
   },
   "github": {
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
-    "releaseTag": "v0.3.0",
-    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.3.0",
-    "vsixName": "cursor-curse-monitor-by-lorapok-0.3.0.vsix",
-    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.3.0/cursor-curse-monitor-by-lorapok-0.3.0.vsix",
-    "publishedAt": "2026-08-13T06:20:05Z"
+    "releaseTag": "v0.5.4",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.4",
+    "vsixName": "cursor-curse-monitor-by-lorapok-0.5.4.vsix",
+    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.4/cursor-curse-monitor-by-lorapok-0.5.4.vsix",
+    "publishedAt": "2026-08-13T13:53:50Z"
   },
   "install": {
     "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "vsceSearch": "LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.3.0.vsix",
+    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.5.4.vsix",
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
-    "releaseTag": "./scripts/release.sh 0.3.0"
+    "releaseTag": "./scripts/release.sh 0.5.4"
   }
 }
