@@ -2,7 +2,7 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "publisher": "LorapokLabs",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -104,7 +104,11 @@
         },
         "cursorCurseMonitor.statusBarUsageSource": {
           "type": "string",
-          "enum": ["plan", "autoApi", "both"],
+          "enum": [
+            "plan",
+            "autoApi",
+            "both"
+          ],
           "enumDescriptions": [
             "Included quota or USD budget percent (rounded).",
             "Auto and API feature percents from Cursor (up to 2 decimal places).",
