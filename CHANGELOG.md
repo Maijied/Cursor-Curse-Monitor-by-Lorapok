@@ -16,8 +16,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - Open VSX CI publish no longer uses bare `ovsx publish` (which read `LorapokLabs` from the VSIX manifest and updated the wrong namespace)
-- `generate-site-data.mjs` retries on Open VSX HTTP 429 rate limits
-- Bump to **0.5.5** so canonical `lorapok-labs` can publish (0.5.4 blocked by duplicate `LorapokLabs` listing on Open VSX)
 - Auth token and cached email reads now use file-backed `node:sqlite` (`SELECT` one row) instead of loading the entire `state.vscdb` into sql.js/WASM, which failed on databases larger than 2 GiB.
 
 ### Changed

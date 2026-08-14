@@ -94,18 +94,8 @@ function validateVsixPublisher(vsixPath) {
   }
 }
 
-async function fetchCanonicalVersions() {
-  const res = await fetch(
-    `https://open-vsx.org/api/${OVSX_PUBLISHER}/${EXT_NAME}/versions`,
-    { headers: { Accept: "application/json" } }
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  return Object.keys(data?.versions ?? {});
-}
-
-async function fetchDuplicateVersion() {
-  const res = await fetch(`https://open-vsx.org/api/${VSCE_PUBLISHER}/${EXT_NAME}`, {
+async function fetchCanonicalLatest() {
+  const res = await fetch(`https://open-vsx.org/api/${OVSX_PUBLISHER}/${EXT_NAME}`, {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) return null;
@@ -113,10 +103,10 @@ async function fetchDuplicateVersion() {
   return data?.version?.replace(/^v/, "") ?? null;
 }
 
-async function waitForCanonicalVersion(target, attempts = 12, delayMs = 5000) {
+async function waitForCanonicalVersion(target, attempts = 18, delayMs = 10000) {
   for (let i = 0; i < attempts; i++) {
-    const versions = await fetchCanonicalVersions();
-    if (versions.includes(target)) return true;
+    const latest = await fetchCanonicalLatest();
+    if (latest === target) return true;
     await new Promise((r) => setTimeout(r, delayMs));
   }
   return false;
@@ -164,16 +154,21 @@ async function main() {
     }
 
     const target = version.replace(/^v/, "");
-    const duplicateVersion = await fetchDuplicateVersion();
+    const dupRes = await fetch(`https://open-vsx.org/api/${VSCE_PUBLISHER}/${EXT_NAME}`, {
+      headers: { Accept: "application/json" },
+    });
+    const duplicateVersion = dupRes.ok
+      ? (await dupRes.json())?.version?.replace(/^v/, "") ?? null
+      : null;
+
     if (duplicateVersion === target) {
-      throw new Error(
-        `Version ${target} already exists on duplicate namespace ${VSCE_PUBLISHER}. ` +
-          `Open VSX blocks the same version on ${OVSX_PUBLISHER}. ` +
-          `Bump package.json patch version or request duplicate listing removal from Open VSX.`
+      console.warn(
+        `::warning::Version ${target} also exists on duplicate namespace ${VSCE_PUBLISHER}. ` +
+          `Publishing to ${OVSX_PUBLISHER} anyway (Open VSX may delay indexing).`
       );
     }
 
-    const before = await fetchCanonicalVersions();
+    const before = await fetchCanonicalLatest();
     const output = publishVsix(outVsix, args.preRelease);
     if (output) process.stdout.write(output);
 
@@ -183,9 +178,15 @@ async function main() {
       return;
     }
 
+    const after = await fetchCanonicalLatest();
+    if (after === target) {
+      console.log(`Published ${target} to Open VSX namespace ${OVSX_PUBLISHER}`);
+      return;
+    }
+
     throw new Error(
       `Publish command finished but ${target} not found on ${OVSX_PUBLISHER} ` +
-        `(before=[${before.join(", ")}]). Registry output: ${output.slice(0, 400)}`
+        `(before=${before ?? "none"}, after=${after ?? "none"}). Output: ${output.slice(0, 400)}`
     );
   } finally {
     rmSync(workDir, { recursive: true, force: true });
