@@ -1,6 +1,11 @@
 import * as vscode from "vscode";
 import { applyComposerFallbackModel } from "./cursorAuth";
-import { DashboardViewProvider, formatStatusBarText } from "./dashboardView";
+import {
+  DashboardViewProvider,
+  formatStatusBarText,
+  formatStatusBarTooltip,
+  StatusBarUsageSource,
+} from "./dashboardView";
 import { UsageMonitorService } from "./usageMonitor";
 import { NotificationProvider } from "./notificationProvider";
 
@@ -51,12 +56,9 @@ export function activate(context: vscode.ExtensionContext): void {
       statusBar.show();
       return;
     }
-    statusBar.text = formatStatusBarText(snapshot);
-    statusBar.tooltip = snapshot.error
-      ? snapshot.error
-      : snapshot.budget?.hasUsdBudget
-        ? `Usage: ${Math.round(snapshot.budget.percentUsed)}% · ${snapshot.budget.spentUsd.toFixed(2)} / ${snapshot.budget.capUsd.toFixed(2)} USD`
-        : `Cursor usage: ${snapshot.usage?.individualUsage.plan.totalPercentUsed ?? 0}%`;
+    const source = config.get<StatusBarUsageSource>("statusBarUsageSource", "autoApi");
+    statusBar.text = formatStatusBarText(snapshot, source);
+    statusBar.tooltip = formatStatusBarTooltip(snapshot);
     statusBar.show();
   };
 
@@ -64,6 +66,14 @@ export function activate(context: vscode.ExtensionContext): void {
   updateStatusBar();
 
   context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration("cursorCurseMonitor.showStatusBar") ||
+        event.affectsConfiguration("cursorCurseMonitor.statusBarUsageSource")
+      ) {
+        updateStatusBar();
+      }
+    }),
     statusBar,
     vscode.window.registerWebviewViewProvider(
       DashboardViewProvider.viewType,

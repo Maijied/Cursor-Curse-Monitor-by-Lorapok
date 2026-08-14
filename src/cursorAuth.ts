@@ -214,28 +214,44 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
-export async function readCursorAccessToken(
-  wasmPath: string
-): Promise<string | null> {
+function readCursorKeyDirect(key: string): string | null {
   const dbPath = getCursorGlobalStoragePath();
+
   if (!fs.existsSync(dbPath)) {
     return null;
   }
 
-  const db = await openDatabase(dbPath, wasmPath);
+  let DatabaseSync: typeof import("node:sqlite").DatabaseSync;
+
   try {
-    const result = db.exec(
-      "SELECT value FROM ItemTable WHERE key = ?",
-      ['cursorAuth/accessToken']
+    ({ DatabaseSync } = require("node:sqlite") as typeof import("node:sqlite"));
+  } catch {
+    throw new Error(
+      `This Cursor build does not provide node:sqlite. ` +
+      `Extension host Node version: ${process.versions.node}`
     );
-    if (!result.length || !result[0].values.length) {
-      return null;
-    }
-    const token = result[0].values[0][0];
-    return typeof token === "string" ? token : null;
+  }
+
+  const db = new DatabaseSync(dbPath, {
+    readOnly: true,
+    timeout: 5000,
+  });
+
+  try {
+    const row = db
+      .prepare("SELECT value FROM ItemTable WHERE key = ?")
+      .get(key) as { value?: unknown } | undefined;
+
+    return typeof row?.value === "string" ? row.value : null;
   } finally {
     db.close();
   }
+}
+
+export async function readCursorAccessToken(
+  _wasmPath: string
+): Promise<string | null> {
+  return readCursorKeyDirect("cursorAuth/accessToken");
 }
 
 export async function applyComposerFallbackModel(
@@ -401,31 +417,8 @@ export async function applyComposerFallbackModel(
   }
 }
 
-export function readCachedAccountEmail(wasmPath: string): Promise<string | null> {
-  return readKeyValue(wasmPath, "cursorAuth/cachedEmail");
-}
-
-async function readKeyValue(
-  wasmPath: string,
-  key: string
+export async function readCachedAccountEmail(
+  _wasmPath: string
 ): Promise<string | null> {
-  const dbPath = getCursorGlobalStoragePath();
-  if (!fs.existsSync(dbPath)) {
-    return null;
-  }
-
-  const db = await openDatabase(dbPath, wasmPath);
-  try {
-    const result = db.exec(
-      "SELECT value FROM ItemTable WHERE key = ?",
-      [key]
-    );
-    if (!result.length || !result[0].values.length) {
-      return null;
-    }
-    const value = result[0].values[0][0];
-    return typeof value === "string" ? value : null;
-  } finally {
-    db.close();
-  }
+  return readCursorKeyDirect("cursorAuth/cachedEmail");
 }

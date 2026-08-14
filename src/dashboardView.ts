@@ -690,22 +690,99 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   }
 }
 
-export function formatStatusBarText(snapshot: DashboardSnapshot): string {
+export type StatusBarUsageSource = "plan" | "autoApi" | "both";
+
+function formatFeaturePercent(n: number): string {
+  if (!Number.isFinite(n)) {
+    return "0";
+  }
+  return String(Math.round(n * 100) / 100);
+}
+
+function planPercent(snapshot: DashboardSnapshot): number {
+  return snapshot.budget?.percentUsed
+    ?? snapshot.usage?.individualUsage.plan.totalPercentUsed
+    ?? 0;
+}
+
+function autoApiPercents(snapshot: DashboardSnapshot): { auto: number; api: number } {
+  const plan = snapshot.usage?.individualUsage.plan;
+  return {
+    auto: snapshot.budget?.autoPercentUsed ?? plan?.autoPercentUsed ?? 0,
+    api: snapshot.budget?.apiPercentUsed ?? plan?.apiPercentUsed ?? 0,
+  };
+}
+
+function statusBarIcon(snapshot: DashboardSnapshot, warnPercent: number): string {
+  if (snapshot.error) {
+    return "$(warning)";
+  }
+  if (snapshot.limitExceeded) {
+    return "$(pass)";
+  }
+  if (warnPercent >= (snapshot.budget?.thresholdPercent ?? 80)) {
+    return "$(warning)";
+  }
+  return "$(graph)";
+}
+
+function formatPlanUsage(snapshot: DashboardSnapshot): string {
+  const pct = Math.round(planPercent(snapshot));
+  const b = snapshot.budget;
+  if (snapshot.limitExceeded) {
+    return `Usage: ${pct}% (free)`;
+  }
+  if (b?.hasUsdBudget) {
+    return `Usage: ${pct}% (${money(b.spentUsd)} / ${money(b.capUsd)})`;
+  }
+  return `Usage: ${pct}%`;
+}
+
+function formatAutoApiUsage(snapshot: DashboardSnapshot): string {
+  const { auto, api } = autoApiPercents(snapshot);
+  const suffix = snapshot.limitExceeded ? " (free)" : "";
+  return `Auto ${formatFeaturePercent(auto)}% · API ${formatFeaturePercent(api)}%${suffix}`;
+}
+
+export function formatStatusBarText(
+  snapshot: DashboardSnapshot,
+  source: StatusBarUsageSource = "plan"
+): string {
   if (snapshot.error) {
     return "$(warning) Cursor usage";
   }
+  const { auto, api } = autoApiPercents(snapshot);
+  const warnPercent =
+    source === "plan"
+      ? planPercent(snapshot)
+      : Math.max(auto, api, source === "both" ? planPercent(snapshot) : 0);
+  const icon = statusBarIcon(snapshot, warnPercent);
+
+  if (source === "autoApi") {
+    return `${icon} ${formatAutoApiUsage(snapshot)}`;
+  }
+  if (source === "both") {
+    return `${icon} ${formatPlanUsage(snapshot)} · ${formatAutoApiUsage(snapshot)}`;
+  }
+  return `${icon} ${formatPlanUsage(snapshot)}`;
+}
+
+export function formatStatusBarTooltip(snapshot: DashboardSnapshot): string {
+  if (snapshot.error) {
+    return snapshot.error;
+  }
+  const { auto, api } = autoApiPercents(snapshot);
+  const planPct = planPercent(snapshot);
+  const lines = [
+    `Plan: ${Math.round(planPct)}%`,
+    `Auto: ${formatFeaturePercent(auto)}%`,
+    `API: ${formatFeaturePercent(api)}%`,
+  ];
   const b = snapshot.budget;
-  const pct = b?.percentUsed ?? snapshot.usage?.individualUsage.plan.totalPercentUsed ?? 0;
-  if (snapshot.limitExceeded) {
-    return `$(pass) Usage: ${Math.round(pct)}% (free)`;
-  }
   if (b?.hasUsdBudget) {
-    return `$(graph) Usage: ${Math.round(pct)}% (${money(b.spentUsd)} / ${money(b.capUsd)})`;
+    lines.push(`${b.spentUsd.toFixed(2)} / ${b.capUsd.toFixed(2)} USD`);
   }
-  if (pct >= (b?.thresholdPercent ?? 80)) {
-    return `$(warning) Usage: ${Math.round(pct)}%`;
-  }
-  return `$(graph) Usage: ${Math.round(pct)}%`;
+  return lines.join("\n");
 }
 
 function money(n: number): string {

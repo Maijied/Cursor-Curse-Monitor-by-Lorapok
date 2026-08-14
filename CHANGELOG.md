@@ -4,6 +4,20 @@ All notable changes to **Cursor Curse Monitor by Lorapok** are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `cursorCurseMonitor.statusBarUsageSource` (`plan`, `autoApi`, `both`) so the status bar can show included-quota usage, Cursor Auto/API percents, or both. Default is `autoApi`. Hovering the status bar lists Plan, Auto, and API percentages.
+
+### Fixed
+
+- Auth token and cached email reads now use file-backed `node:sqlite` (`SELECT` one row) instead of loading the entire `state.vscdb` into sql.js/WASM, which failed on databases larger than 2 GiB.
+
+### Changed
+
+- `cursorCurseMonitor.autoApplyFallbackModel` now defaults to `false`. The fallback writer still loads the full database through sql.js and is unsafe on large Cursor state files.
+
 ## [0.5.0] - 2026-08-13
 
 ### Added
