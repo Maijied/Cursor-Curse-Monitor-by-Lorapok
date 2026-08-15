@@ -1,5 +1,6 @@
 import {
   Activity,
+  FileBarChart,
   LayoutDashboard,
   MessageSquare,
   Package,
@@ -23,6 +24,7 @@ export const APP_ROUTES: AppRoute[] = [
   { path: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { path: "/dashboard/releases", label: "Releases", icon: Package },
   { path: "/dashboard/activity", label: "Activity", icon: Activity },
+  { path: "/dashboard/reports", label: "Reports", icon: FileBarChart },
   { path: "/dashboard/discussions", label: "Community", icon: MessageSquare },
   { path: "/dashboard/deployments", label: "Deployments", icon: Rocket },
   { path: "/dashboard/seo", label: "SEO", icon: Search },

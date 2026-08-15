@@ -96,10 +96,48 @@
     }
 
     document.title = `${data.displayName} v${data.version} — Live Cursor Usage Dashboard`;
+
+    renderDevNotice(data.notice);
   }
 
   initLightbox();
 })();
+
+function renderDevNotice(notice) {
+  const banner = document.getElementById("dev-notice-banner");
+  const content = document.getElementById("dev-notice-content");
+  const dismissBtn = document.getElementById("dev-notice-dismiss");
+  if (!banner || !content || !notice?.enabled) return;
+
+  const storageKey = "ccm-dev-notice-dismissed";
+  const noticeId = notice.updatedAt ?? notice.title;
+  if (notice.dismissible && localStorage.getItem(storageKey) === noticeId) return;
+
+  const links = [
+    notice.feedbackUrl ? `<a href="${notice.feedbackUrl}" target="_blank" rel="noopener">Share feedback</a>` : "",
+    notice.collaborateUrl ? `<a href="${notice.collaborateUrl}" target="_blank" rel="noopener">Collaborate with Lorapok Labs</a>` : "",
+  ].filter(Boolean).join(" · ");
+
+  const html = `
+    <span class="notice-badge">${notice.title ?? "Notice"}</span>
+    <span>${notice.shortMessage ?? notice.message}</span>
+    ${links ? `<span>— ${links}</span>` : ""}
+  `;
+
+  content.innerHTML = html;
+  const duplicate = banner.querySelector(".dev-notice-duplicate");
+  if (duplicate) duplicate.innerHTML = html;
+
+  banner.hidden = false;
+
+  if (notice.dismissible && dismissBtn) {
+    dismissBtn.hidden = false;
+    dismissBtn.addEventListener("click", () => {
+      localStorage.setItem(storageKey, noticeId);
+      banner.hidden = true;
+    });
+  }
+}
 
 function initLightbox() {
   const lightbox = document.getElementById("lightbox");

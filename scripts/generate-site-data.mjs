@@ -19,6 +19,22 @@ const NAME = pkg.name;
 const OVSX_EXT_ID = `${OVSX_NS}.${NAME}`;
 const VSCE_EXT_ID = `${VSCE_NS}.${NAME}`;
 
+/** Public development notice — shown on website banner and admin reports. */
+const DEV_NOTICE = {
+  enabled: true,
+  type: "development",
+  severity: "warning",
+  title: "Active Development Notice",
+  message:
+    "Cursor Curse Monitor is still in active development. Some users may experience conflicts with their Cursor database — we are deeply sorry, especially to Lorapok Labs members and everyone affected. A stable release is targeted soon (expected by tomorrow). Thank you for your support — your feedback helps us improve. Interested in collaborating on Lorapok Labs projects? You're welcome to reach out.",
+  shortMessage:
+    "Still in development — some users may see Cursor database conflicts. Stable release coming soon. We apologize to everyone affected.",
+  feedbackUrl: `https://github.com/${REPO}/issues`,
+  collaborateUrl: `https://github.com/${REPO}/discussions`,
+  updatedAt: "2026-08-15T00:00:00.000Z",
+  dismissible: true,
+};
+
 async function fetchJson(url, retries = 3) {
   const headers = { Accept: "application/json" };
   if (process.env.GITHUB_TOKEN) {
@@ -351,6 +367,7 @@ const siteData = {
     releaseMinor: "./scripts/release.sh minor",
     releaseTag: `./scripts/release.sh ${version}`,
   },
+  notice: DEV_NOTICE,
 };
 
 const out = join(root, "website", "site-data.json");

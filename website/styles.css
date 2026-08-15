@@ -35,6 +35,100 @@ a:hover { color: #7cb8ff; }
 
 .container { width: min(100% - 40px, var(--container)); margin-inline: auto; }
 
+/* Development notice marquee */
+.dev-notice-banner {
+  position: relative;
+  z-index: 110;
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.18), rgba(251, 146, 60, 0.14), rgba(251, 191, 36, 0.18));
+  border-bottom: 1px solid rgba(251, 191, 36, 0.35);
+  overflow: hidden;
+}
+.dev-notice-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.08), transparent);
+  animation: notice-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes notice-shimmer {
+  0%, 100% { opacity: 0.4; transform: translateX(-30%); }
+  50% { opacity: 1; transform: translateX(30%); }
+}
+.dev-notice-track {
+  display: flex;
+  width: max-content;
+  animation: notice-scroll 45s linear infinite;
+  padding: 10px 0;
+}
+.dev-notice-banner:hover .dev-notice-track {
+  animation-play-state: paused;
+}
+@keyframes notice-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.dev-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fde68a;
+}
+.dev-notice-content .notice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.22);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #fef3c7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dev-notice-content .notice-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+  animation: notice-pulse 1.5s ease-in-out infinite;
+}
+@keyframes notice-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.dev-notice-content a {
+  color: #fcd34d;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dev-notice-content a:hover { color: #fef08a; }
+.dev-notice-dismiss {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fde68a;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dev-notice-dismiss:hover { background: rgba(0, 0, 0, 0.55); }
+
 /* Header */
 .site-header {
   position: sticky;

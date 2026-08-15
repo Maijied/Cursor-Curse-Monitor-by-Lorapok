@@ -31,11 +31,25 @@ export interface CommunityTopic {
   }>;
 }
 
+export interface DevNotice {
+  enabled: boolean;
+  type: string;
+  severity: "info" | "warning" | "critical" | string;
+  title: string;
+  message: string;
+  shortMessage: string;
+  feedbackUrl: string;
+  collaborateUrl: string;
+  updatedAt: string;
+  dismissible: boolean;
+}
+
 export interface SiteData {
   generatedAt: string;
   version: string;
   packageVersion: string;
   syncStatus: "synced" | "drift" | "duplicate-listing" | "ahead" | "missing" | string;
+  notice?: DevNotice;
   downloads?: {
     total: number;
     breakdown: DownloadBreakdown;
