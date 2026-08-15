@@ -3,6 +3,7 @@ import { Download, FileText, Printer } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
+import StableFallbackPanel from "../ui/StableFallbackPanel";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import { useSiteData } from "../../hooks/useSiteData";
@@ -99,9 +100,14 @@ export default function Reports() {
     return <ErrorState message={error ?? "Unable to build status report"} />;
   }
 
-  const sections = [report.summary, report.marketplace, report.downloads, report.engagement, report.notice].filter(
-    Boolean
-  ) as StatusReportSection[];
+  const sections = [
+    report.summary,
+    report.marketplace,
+    report.downloads,
+    report.engagement,
+    report.stableFallback,
+    report.notice,
+  ].filter(Boolean) as StatusReportSection[];
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
@@ -159,6 +165,12 @@ export default function Reports() {
           Lorapok Labs · Cursor Curse Monitor Admin · Confidential internal record
         </footer>
       </Card>
+
+      {data.stableFallback && (
+        <div className="no-print">
+          <StableFallbackPanel info={data.stableFallback} />
+        </div>
+      )}
     </div>
   );
 }

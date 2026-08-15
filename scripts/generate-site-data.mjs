@@ -35,6 +35,56 @@ const DEV_NOTICE = {
   dismissible: true,
 };
 
+/** First version with safe atomic fallback writes (no full state.vscdb rewrite). */
+const SAFE_FALLBACK_SINCE = "0.5.7";
+
+const FALLBACK_MODEL = {
+  displayName: "Composer 2.5 (Fast off)",
+  modelId: "composer-2.5",
+  description: "Free slow-pool fallback when usage limits are reached.",
+};
+
+function classifyFallbackStability(version) {
+  const v = normalizeVersion(version);
+  if (!v) return "unknown";
+  if (compareSemver(v, SAFE_FALLBACK_SINCE) >= 0) return "stable";
+  if (compareSemver(v, "0.5.0") >= 0) return "unsafe";
+  return "legacy";
+}
+
+function buildStableFallbackVersions(tags, latestTag) {
+  const seen = new Set();
+  const rows = [];
+
+  for (const tag of tags) {
+    const version = normalizeVersion(tag);
+    if (!version || seen.has(version)) continue;
+    seen.add(version);
+    const stability = classifyFallbackStability(version);
+    rows.push({
+      tag: tag.startsWith("v") ? tag : `v${tag}`,
+      version,
+      stability,
+      recommended: stability === "stable" && tag.replace(/^v/, "") === normalizeVersion(latestTag),
+      vsixUrl: `https://github.com/${REPO}/releases/download/${tag.startsWith("v") ? tag : `v${tag}`}/${NAME}-${version}.vsix`,
+      note:
+        stability === "stable"
+          ? "Safe for fallback model writes"
+          : stability === "unsafe"
+            ? "May conflict with Cursor database — upgrade to 0.5.7+"
+            : "Legacy release — fallback behavior differs",
+    });
+    if (rows.length >= 12) break;
+  }
+
+  return {
+    safeSinceVersion: SAFE_FALLBACK_SINCE,
+    recommendedVersion: normalizeVersion(latestTag) ?? pkg.version,
+    model: FALLBACK_MODEL,
+    versions: rows,
+  };
+}
+
 async function fetchJson(url, retries = 3) {
   const headers = { Accept: "application/json" };
   if (process.env.GITHUB_TOKEN) {
@@ -368,6 +418,7 @@ const siteData = {
     releaseTag: `./scripts/release.sh ${version}`,
   },
   notice: DEV_NOTICE,
+  stableFallback: buildStableFallbackVersions(deployTags, github?.tag ?? `v${version}`),
 };
 
 const out = join(root, "website", "site-data.json");

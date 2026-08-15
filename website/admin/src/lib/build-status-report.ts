@@ -22,6 +22,7 @@ export interface StatusReport {
   downloads: StatusReportSection;
   engagement: StatusReportSection;
   notice?: StatusReportSection;
+  stableFallback?: StatusReportSection;
 }
 
 function rowStatus(ok: boolean, warn?: boolean): StatusReportRow["status"] {
@@ -134,6 +135,34 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
       }
     : undefined;
 
+  const fallbackSection: StatusReportSection | undefined = data.stableFallback
+    ? {
+        title: "Stable Fallback Versions",
+        rows: [
+          {
+            label: "Safe since",
+            value: `v${data.stableFallback.safeSinceVersion}`,
+            status: "ok",
+          },
+          {
+            label: "Recommended version",
+            value: `v${data.stableFallback.recommendedVersion}`,
+            status: "ok",
+          },
+          {
+            label: "Fallback model",
+            value: `${data.stableFallback.model.displayName} (${data.stableFallback.model.modelId})`,
+            status: "neutral",
+          },
+          ...data.stableFallback.versions.map((v) => ({
+            label: v.tag,
+            value: `${v.stability} — ${v.note}`,
+            status: (v.stability === "stable" ? "ok" : v.stability === "unsafe" ? "danger" : "warn") as StatusReportRow["status"],
+          })),
+        ],
+      }
+    : undefined;
+
   return {
     generatedAt: new Date().toISOString(),
     reportTitle: "Cursor Curse Monitor — Status Report",
@@ -152,6 +181,7 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
     downloads: { title: "Download Records", rows: downloadRows },
     engagement: { title: "Website & Engagement Records", rows: engagementRows },
     notice: noticeSection,
+    stableFallback: fallbackSection,
   };
 }
 
@@ -181,6 +211,7 @@ export function reportToHtml(report: StatusReport): string {
     report.marketplace,
     report.downloads,
     report.engagement,
+    report.stableFallback,
     report.notice,
   ]
     .filter(Boolean)

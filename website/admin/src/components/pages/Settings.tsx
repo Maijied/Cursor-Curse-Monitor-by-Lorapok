@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
+import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import { fetchHealth } from "../../lib/api";
 
 export default function Settings() {
@@ -47,8 +48,10 @@ export default function Settings() {
         </div>
       </Card>
 
+      <ConnectedServicesCard />
+
       <Card>
-        <h3 className="font-semibold mb-4">API Health</h3>
+        <h3 className="font-semibold mb-4">API Health (detailed)</h3>
         {health ? (
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between items-center">
