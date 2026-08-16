@@ -6,6 +6,7 @@ import Overview from "../pages/Overview";
 import MarketplaceHealth from "../pages/MarketplaceHealth";
 import Releases from "../pages/Releases";
 import Activity from "../pages/Activity";
+import Reports from "../pages/Reports";
 import Discussions from "../pages/Discussions";
 import Deployments from "../pages/Deployments";
 import SeoDashboard from "../pages/SeoDashboard";
@@ -36,6 +37,7 @@ export default function AppShell() {
             <Route path="marketplace" element={<MarketplaceHealth />} />
             <Route path="releases" element={<Releases />} />
             <Route path="activity" element={<Activity />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="discussions" element={<Discussions />} />
             <Route path="deployments" element={<Deployments />} />
             <Route path="deploy" element={<Navigate to="../deployments" replace />} />

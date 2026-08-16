@@ -7,6 +7,7 @@ import StatusDot from "../ui/StatusDot";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DriftAlert from "../ui/DriftAlert";
+import StableFallbackPanel from "../ui/StableFallbackPanel";
 import DownloadBreakdownPanel from "../ui/DownloadBreakdown";
 import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
@@ -108,6 +109,8 @@ export default function Overview() {
       </div>
 
       <VisitorStatsPanel stats={visitors} live={visitorsLive} />
+
+      {data.stableFallback && <StableFallbackPanel info={data.stableFallback} />}
 
       <Card>
         <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>

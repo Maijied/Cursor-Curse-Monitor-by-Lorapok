@@ -62,6 +62,22 @@ body {
   box-shadow: var(--shadow-card);
 }
 
+@media print {
+  body { overflow: visible !important; background: #fff !important; color: #111 !important; }
+  .app-shell-bg { display: none !important; }
+  aside, .no-print { display: none !important; }
+  .app-scroll-pane { overflow: visible !important; height: auto !important; position: static !important; }
+  main { padding: 0 !important; max-width: none !important; }
+  .glass-panel, .report-document {
+    background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #111 !important;
+  }
+  .report-document * { color: #111 !important; }
+  .report-table th, .report-table td { border-color: #ccc !important; }
+}
+
 .mesh-bg {
   background:
     radial-gradient(ellipse 80% 50% at 100% 0%, rgba(124, 92, 255, 0.12), transparent 50%),

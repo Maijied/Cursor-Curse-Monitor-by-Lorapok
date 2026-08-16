@@ -4,6 +4,8 @@
 
   <h1>Cursor Curse Monitor by Lorapok</h1>
 
+> **⚠️ Active Development Notice** — Cursor Curse Monitor is still in active development. Some users may experience conflicts with their Cursor database — we are deeply sorry, especially to **Lorapok Labs** members and everyone affected. A stable release is targeted soon (expected by tomorrow). Thank you for your support — [your feedback](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues) helps us improve. Interested in collaborating on Lorapok Labs projects? [You're welcome to reach out](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions).
+
   <p>
     <strong>Live Cursor usage dashboard for limits, budget, billing cycles, and free-fallback model switching.</strong>
   </p>
