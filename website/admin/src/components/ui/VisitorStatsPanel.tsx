@@ -3,21 +3,19 @@ import Card from "./Card";
 import type { VisitorStats } from "../../lib/site-data";
 import { formatCount } from "../../lib/site-data";
 
-const CLICK_CHANNELS: { key: string; label: string }[] = [
+type PackageClickKey = keyof NonNullable<VisitorStats["packageClicks"]>;
+
+const CLICK_CHANNELS: { key: PackageClickKey; label: string }[] = [
   { key: "ovsx", label: "Open VSX" },
   { key: "vscode", label: "VS Code Marketplace" },
   { key: "github", label: "GitHub / repo" },
   { key: "vsix", label: "VSIX download" },
   { key: "openvsxDuplicate", label: "Duplicate listing" },
-  { key: "npm", label: "npm" },
 ];
 
 export default function VisitorStatsPanel({ stats, live }: { stats: VisitorStats; live?: boolean }) {
   const clicks = stats.packageClicks ?? {};
   const clickTotal = Object.values(clicks).reduce((s, n) => s + (n ?? 0), 0);
-  const channelRows = CLICK_CHANNELS.filter(
-    (ch) => ch.key in clicks || CLICK_CHANNELS.slice(0, 5).some((c) => c.key === ch.key)
-  );
 
   return (
     <Card>
@@ -58,7 +56,7 @@ export default function VisitorStatsPanel({ stats, live }: { stats: VisitorStats
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-        {channelRows.map(({ key, label }) => (
+        {CLICK_CHANNELS.map(({ key, label }) => (
           <div
             key={key}
             className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-white/[0.03] border border-[var(--color-border)] min-w-0"
