@@ -136,7 +136,7 @@
 
   // Admin links prefer social.api.base when present
   if (social?.api?.base) {
-    document.querySelectorAll(".nav-admin, .footer-admin").forEach((el) => {
+    document.querySelectorAll(".footer-admin").forEach((el) => {
       el.href = social.api.base;
     });
   }
