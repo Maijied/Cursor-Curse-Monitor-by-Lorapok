@@ -16,7 +16,7 @@
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci-cd.yml?branch=main&label=CI%2FCD" alt="CI/CD" /></a>
     <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/open-vsx/v/lorapok-labs/cursor-curse-monitor-by-lorapok?label=Open%20VSX" alt="Open VSX" /></a>
     <a href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/visual-studio-marketplace/v/LorapokLabs.cursor-curse-monitor-by-lorapok?label=VS%20Code%20Marketplace" alt="VS Code Marketplace" /></a>
-    <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
+    <img src="https://img.shields.io/badge/license-Proprietary-red" alt="Proprietary License" />
     <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
   </p>
 
@@ -257,8 +257,15 @@ Full setup: [DEPLOYMENT.md](DEPLOYMENT.md)
 
 **Mohammad Maizied Hasan Majumder** (Maijied) — Founder & Principal Engineer @ [Lorapok Labs](https://lorapok.tech)
 
-MIT © Lorapok Labs — see [LICENSE](LICENSE)
+## License
+
+**Proprietary product of [Lorapok Labs](https://lorapok.tech).**  
+Founder: **Mohammad Maizied Hasan Majumder**
+
+You may download, install, and use this extension for personal or internal use from official Lorapok Labs channels. You may **not** sell, redistribute, modify, or create derivative works without written permission from Lorapok Labs.
+
+Full terms: [LICENSE](LICENSE) · [Terms of Use](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/terms.html)
 
 ## Disclaimer
 
-Independent open-source product by Lorapok Labs. Not affiliated with, endorsed by, or sponsored by Cursor / Anysphere.
+Independent product by Lorapok Labs. Not affiliated with, endorsed by, or sponsored by Cursor / Anysphere.

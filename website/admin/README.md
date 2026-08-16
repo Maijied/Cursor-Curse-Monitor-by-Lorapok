@@ -142,4 +142,4 @@ website/admin/
 
 ## License
 
-MIT — same as the parent repository.
+Proprietary — Lorapok Labs product. See [LICENSE](../../LICENSE) in the repository root. Founder: Mohammad Maizied Hasan Majumder. Personal download/install/use only; no sale or modification without written permission.

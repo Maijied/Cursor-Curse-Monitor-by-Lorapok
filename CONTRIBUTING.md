@@ -32,6 +32,10 @@ npm run dev
 
 See [website/admin/README.md](website/admin/README.md).
 
+## License
+
+This repository and product are **proprietary** to Lorapok Labs. By contributing, you agree that Lorapok Labs may use your contribution under the [LICENSE](LICENSE) and that you will not redistribute modified copies without written permission.
+
 ## Pull requests
 
 1. Fork the repository

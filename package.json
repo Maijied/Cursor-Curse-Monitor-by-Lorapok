@@ -4,7 +4,7 @@
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.8",
   "publisher": "LorapokLabs",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "icon": "media/icon.png",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
