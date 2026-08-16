@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-16T17:44:14.444Z",
+  "generatedAt": "2026-08-16T19:05:30.147Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.8",
@@ -48,7 +48,9 @@
     "repoIssuesUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
   },
   "analytics": {
-    "beaconPath": "/api/analytics/visit"
+    "beaconPath": "/api/analytics/visit",
+    "beaconUrl": "https://cursor-dev.lorapok.tech/api/analytics/visit",
+    "gaMeasurementId": ""
   },
   "ovsx": {
     "namespace": "lorapok-labs",

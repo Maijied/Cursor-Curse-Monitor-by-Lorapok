@@ -36,6 +36,7 @@ async function run() {
   db.close();
 
   process.env.CURSOR_DB_PATH = dbPath;
+  process.env.CURSOR_EDITOR_RUNNING = "0";
 
   const Module = require("module");
   const originalResolveFilename = Module._resolveFilename;

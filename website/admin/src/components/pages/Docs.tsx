@@ -106,6 +106,90 @@ npx vsce publish -p $VSCE_PAT # VS Code Marketplace`}
     ),
   },
   {
+    id: "opt-in-heartbeat",
+    title: "Opt-in heartbeat",
+    content: (
+      <>
+        <p>
+          When users enable anonymous usage reporting in the extension, a periodic heartbeat POSTs to{" "}
+          <code className="font-[family-name:var(--font-mono)] text-sm">/api/usage/ping</code> with a stable install id,
+          OS, and host editor — never Cursor tokens or chat content.
+        </p>
+        <p className="mt-4">
+          Admin Overview dual KPIs combine these opt-in uniques with marketplace downloads and website visits from{" "}
+          <code className="font-[family-name:var(--font-mono)] text-sm">/api/usage/stats</code>.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "quit-then-write",
+    title: "Quit-then-write DB",
+    content: (
+      <>
+        <p>
+          Local usage snapshots are written on editor quit (or flush), not continuously streamed. The extension treats the
+          on-disk store as read-mostly during sessions so crash recovery stays simple and private to the machine.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "discussions-github",
+    title: "Discussion posts vs GitHub-only",
+    content: (
+      <>
+        <p>
+          Mission Control can <strong>create discussion posts</strong> via GraphQL when{" "}
+          <code className="font-[family-name:var(--font-mono)] text-sm">GITHUB_TOKEN</code> is configured (
+          <code className="font-[family-name:var(--font-mono)] text-sm">capabilities.canCreatePosts</code>).
+        </p>
+        <p className="mt-4">
+          <strong>Categories</strong> and <strong>polls</strong> remain GitHub-only — use “Manage categories on GitHub” and
+          “Create poll on GitHub” deep links. Community featured URLs / default slug are stored via{" "}
+          <code className="font-[family-name:var(--font-mono)] text-sm">PUT /api/community/config</code> (master admin).
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "usage-dual-signals",
+    title: "Usage stats dual signals",
+    content: (
+      <>
+        <p>Two independent signals power reach reporting:</p>
+        <ul className="list-disc pl-5 space-y-2 mt-4">
+          <li>
+            <strong>Opt-in uniques</strong> — install heartbeats aggregated in KV (
+            <code className="font-[family-name:var(--font-mono)] text-sm">optInUniques</code>).
+          </li>
+          <li>
+            <strong>Visits / downloads</strong> — marketing site visits and marketplace download totals from{" "}
+            <code className="font-[family-name:var(--font-mono)] text-sm">site-data.json</code> (
+            <code className="font-[family-name:var(--font-mono)] text-sm">visitors</code> +{" "}
+            <code className="font-[family-name:var(--font-mono)] text-sm">marketplace</code>).
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "admin-button",
+    title: "Admin button",
+    content: (
+      <>
+        <p>
+          Discreet <strong>Admin</strong> links on the marketing site and Community page footer point to{" "}
+          <a href="https://cursor-dev.lorapok.tech" className="text-[var(--color-accent-2)] hover:underline" target="_blank" rel="noopener noreferrer">
+            cursor-dev.lorapok.tech
+          </a>
+          . The sidebar pins an Admin control to{" "}
+          <code className="font-[family-name:var(--font-mono)] text-sm">/dashboard</code> for signed-in operators.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "mail",
     title: "Mail",
     content: (

@@ -11,6 +11,7 @@ import Activity from "../pages/Activity";
 import ApiActivity from "../pages/ApiActivity";
 import Reports from "../pages/Reports";
 import Discussions from "../pages/Discussions";
+import Architecture from "../pages/Architecture";
 import Deployments from "../pages/Deployments";
 import Notices from "../pages/Notices";
 import Docs from "../pages/Docs";
@@ -77,6 +78,7 @@ export default function AppShell() {
                 <Route path="api-activity" element={<ApiActivity />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="discussions" element={<Discussions />} />
+                <Route path="architecture" element={<Architecture />} />
                 <Route path="deployments" element={<Deployments />} />
                 <Route path="deploy" element={<Navigate to="../deployments" replace />} />
                 <Route path="notices" element={<Notices />} />

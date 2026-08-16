@@ -101,6 +101,12 @@
       vscodeLive.textContent = data.vscode?.published ? "✅ Live" : "⏳ Coming soon";
     }
 
+    // KPI strip from site-data
+    const fmt = (n) => (typeof n === "number" ? n.toLocaleString() : "—");
+    setText("[data-downloads-total]", fmt(data.downloads?.total));
+    setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
+    setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
+
     // OG image
     const metaOg = document.querySelector('meta[property="og:image"]');
     if (metaOg) {
@@ -110,6 +116,29 @@
     if (!window.location.pathname.endsWith("privacy.html")) {
       document.title = `${data.displayName} v${data.version} — Live Cursor Usage Dashboard`;
     }
+  }
+
+  // Contact fallback from social.json
+  if (social?.contact) {
+    const primary = document.querySelector("[data-contact-primary]");
+    const fallback = document.querySelector("[data-contact-fallback]");
+    if (primary && social.contact.email) {
+      primary.href = `mailto:${social.contact.email}`;
+      if (!primary.textContent || primary.textContent === "Contact") {
+        /* keep Contact label */
+      }
+    }
+    if (fallback && social.contact.fallbackEmail) {
+      fallback.href = `mailto:${social.contact.fallbackEmail}`;
+      fallback.textContent = social.contact.fallbackEmail;
+    }
+  }
+
+  // Admin links prefer social.api.base when present
+  if (social?.api?.base) {
+    document.querySelectorAll(".nav-admin, .footer-admin").forEach((el) => {
+      el.href = social.api.base;
+    });
   }
 
   const liveNotice = await fetchLiveNotice(NOTICE_URL);

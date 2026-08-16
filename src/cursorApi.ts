@@ -88,6 +88,9 @@ export interface DashboardSnapshot {
   onDemandSpendUsd: number;
   budget: BudgetMetrics | null;
   features: string[];
+  /** True when Cursor/VS Code state.vscdb is missing on disk. */
+  cursorMissing?: boolean;
+  host?: "cursor" | "vscode" | "unknown";
 }
 
 const API_BASE = "https://api2.cursor.sh/auth";

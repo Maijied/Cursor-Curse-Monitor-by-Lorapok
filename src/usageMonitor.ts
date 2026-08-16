@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import {
   applyComposerFallbackModel,
+  cursorDbExists,
+  detectEditorHost,
   readCachedAccountEmail,
   readCursorAccessToken,
 } from "./cursorAuth";
@@ -86,7 +88,19 @@ export class UsageMonitorService implements vscode.Disposable {
       onDemandSpendUsd: 0,
       budget: null,
       features: [],
+      host: detectEditorHost(vscode.env.appName),
+      cursorMissing: !cursorDbExists(),
     };
+
+    if (snapshot.cursorMissing) {
+      snapshot.error =
+        "Cursor storage database not found. Install or open Cursor, sign in, then refresh. Monitoring stays read-only until the database exists.";
+      this.lastSnapshot = snapshot;
+      for (const listener of this.listeners) {
+        listener(snapshot);
+      }
+      return snapshot;
+    }
 
     try {
       const token = await readCursorAccessToken();

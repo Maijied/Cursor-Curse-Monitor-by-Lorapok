@@ -32,6 +32,28 @@ vi.mock('../../lib/api', () => ({
   fetchNotice: vi.fn().mockResolvedValue({ enabled: false }),
   saveNotice: vi.fn(),
   clearNotice: vi.fn(),
+  fetchUsageStatsApi: vi.fn().mockResolvedValue(null),
+  fetchAnalyticsStatsApi: vi.fn().mockResolvedValue({
+    websiteVisits: 0,
+    packageClicks: {},
+    totalEngagement: 0,
+    updatedAt: null,
+  }),
+  fetchDiscussionsApi: vi.fn().mockResolvedValue({
+    enabled: true,
+    discussions: [],
+    categories: [],
+    topics: [],
+    settingsUrl: '',
+    repoIssuesUrl: '',
+  }),
+  fetchCommunityConfigApi: vi.fn().mockResolvedValue({
+    featuredDiscussionUrls: [],
+    defaultCategorySlug: 'announcements',
+    collaborateUrl: '',
+    updatedAt: null,
+    updatedBy: null,
+  }),
 }));
 
 vi.mock('../../hooks/useSiteData', () => ({

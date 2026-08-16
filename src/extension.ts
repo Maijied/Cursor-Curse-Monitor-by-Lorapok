@@ -8,6 +8,7 @@ import {
 } from "./dashboardView";
 import { UsageMonitorService } from "./usageMonitor";
 import { NotificationProvider } from "./notificationProvider";
+import { maybeSendAnonymousHeartbeat } from "./telemetry";
 
 let monitor: UsageMonitorService | undefined;
 
@@ -15,6 +16,16 @@ export function activate(context: vscode.ExtensionContext): void {
   NotificationProvider.setExtensionUri(context.extensionUri);
   monitor = new UsageMonitorService(context);
   monitor.start();
+
+  const extensionVersion = String(context.extension.packageJSON.version ?? "0.0.0");
+  void maybeSendAnonymousHeartbeat(context, extensionVersion);
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("cursorCurseMonitor.anonymousUsageStats")) {
+        void maybeSendAnonymousHeartbeat(context, extensionVersion);
+      }
+    })
+  );
 
   // Show welcome message on first installation
   const isFirstInstall = !context.globalState.get<boolean>("hasShownWelcome", false);
