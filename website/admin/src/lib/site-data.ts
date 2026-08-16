@@ -62,6 +62,8 @@ export interface DevNotice {
   collaborateUrl: string;
   updatedAt: string;
   dismissible: boolean;
+  id?: string | null;
+  source?: "generated" | "admin" | string;
 }
 
 export interface SiteData {

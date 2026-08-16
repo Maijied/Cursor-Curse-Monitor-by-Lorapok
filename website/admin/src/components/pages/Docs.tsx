@@ -72,14 +72,18 @@ npx vsce publish -p $VSCE_PAT # VS Code Marketplace`}
     content: (
       <>
         <p>
-          Site notices power the public development banner on the marketing site. They are stored via the{" "}
-          <code className="font-[family-name:var(--font-mono)] text-sm">/api/notice</code> endpoint and surfaced in{" "}
-          <code className="font-[family-name:var(--font-mono)] text-sm">site-data.json</code> for static fallbacks.
+          Site notices power the public development banner on the marketing site. The catalog lives in KV and is managed from
+          the Notices page: generated marketing news is imported once, and admins can enable, disable, or delete any row.
+          Public <code className="font-[family-name:var(--font-mono)] text-sm">GET /api/notice</code> returns the currently
+          enabled item (one at a time). Admin list/create/update/delete uses{" "}
+          <code className="font-[family-name:var(--font-mono)] text-sm">/api/notices</code>.
         </p>
         <p className="mt-4">
           Each notice has a title, short message (banner), full message, severity (info / warning / critical), dismissible flag,
           and optional feedback / collaborate URLs. Visitors who dismiss a notice won&apos;t see it again until the{" "}
-          <code className="font-[family-name:var(--font-mono)] text-sm">updatedAt</code> timestamp changes.
+          <code className="font-[family-name:var(--font-mono)] text-sm">updatedAt</code> timestamp changes. The marketing site
+          falls back to <code className="font-[family-name:var(--font-mono)] text-sm">site-data.json</code> only when the live
+          API is unreachable — a disabled catalog item will not keep showing the generated banner.
         </p>
       </>
     ),

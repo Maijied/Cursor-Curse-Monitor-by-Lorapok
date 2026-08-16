@@ -2,30 +2,48 @@
 
 Thank you for your interest in **Cursor Curse Monitor by Lorapok**.
 
-## Getting started
+## Repository layout
+
+This monorepo has three main areas — see the [architecture section in README.md](README.md#architecture) before opening a PR:
+
+- `src/` — VS Code / Cursor extension
+- `website/` — static marketing site (GitHub Pages)
+- `website/admin/` — Mission Control admin SPA + Cloudflare Pages Functions
+
+## Getting started (extension)
 
 ```bash
 git clone https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git
 cd Cursor-Curse-Monitor-by-Lorapok
 npm install
 npm run compile
+npm test
 ```
 
 Press **F5** in Cursor to launch the Extension Development Host.
 
+## Getting started (admin)
+
+```bash
+cd website/admin
+npm install
+npm run dev
+```
+
+See [website/admin/README.md](website/admin/README.md).
+
 ## Pull requests
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/your-feature`
-3. Make focused changes with clear commit messages
-4. Run `npm run compile` before submitting
-5. Open a PR against `main` with a description of what changed and why
+2. Create a focused branch: `git checkout -b feat/your-feature`
+3. Run tests for the area you changed (`npm test` at repo root and/or in `website/admin/`)
+4. Open a PR against `main` with a clear description of what changed and why
 
 ## Reporting issues
 
 Use [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues) and include:
 
-- Cursor version (`Help → About`)
+- Cursor or VS Code version (`Help → About`)
 - Extension version
 - OS and platform
 - Steps to reproduce
@@ -33,9 +51,9 @@ Use [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/i
 
 ## Code style
 
-- TypeScript strict mode
+- TypeScript strict mode in extension and admin
 - Match existing naming and file structure
-- Keep changes minimal and scoped
+- Keep changes minimal and scoped to the task
 
 ## Contact
 

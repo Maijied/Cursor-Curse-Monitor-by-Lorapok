@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { GENERATED_DEV_NOTICE } from "./functions/api/_shared/notices.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -11,17 +12,8 @@ const adminDataDir = resolve(rootDir, ".data");
 const adminEmailsPath = resolve(adminDataDir, "admin-emails.json");
 
 const devStore = {
-  notice: {
-    enabled: false,
-    title: "",
-    message: "",
-    shortMessage: "",
-    severity: "info",
-    feedbackUrl: "",
-    collaborateUrl: "",
-    updatedAt: null,
-    dismissible: true,
-  },
+  notice: { ...GENERATED_DEV_NOTICE },
+  notices: [{ ...GENERATED_DEV_NOTICE }],
   subscribers: [],
   activity: [],
   usageInstalls: new Map(),
@@ -33,6 +25,11 @@ const devStore = {
     updatedBy: null,
   },
 };
+
+export function resetDevStore() {
+  devStore.notice = { ...GENERATED_DEV_NOTICE };
+  devStore.notices = [{ ...GENERATED_DEV_NOTICE }];
+}
 
 function logDevActivity(req, status, email = "dev@local") {
   const path = req.url?.split("?")[0] ?? "/";
@@ -666,7 +663,106 @@ export function createDevApiMiddleware() {
     if (url === "/api/notice" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
       res.setHeader("Access-Control-Allow-Origin", "*");
-      res.end(JSON.stringify(devStore.notice));
+      const active = devStore.notices.find((n) => n.enabled) ?? { ...devStore.notice, enabled: false };
+      res.end(JSON.stringify(active));
+      return;
+    }
+
+    if (url === "/api/notices" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      const active = devStore.notices.find((n) => n.enabled) ?? null;
+      res.end(JSON.stringify({ items: devStore.notices, active }));
+      return;
+    }
+
+    if (url === "/api/notices" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const notice = {
+            id: crypto.randomUUID(),
+            source: "admin",
+            enabled: Boolean(parsed.enabled),
+            type: "development",
+            title: String(parsed.title ?? "").trim(),
+            message: String(parsed.message ?? "").trim(),
+            shortMessage: String(parsed.shortMessage ?? "").trim(),
+            severity: String(parsed.severity ?? "info").trim() || "info",
+            feedbackUrl: String(parsed.feedbackUrl ?? "").trim(),
+            collaborateUrl: String(parsed.collaborateUrl ?? "").trim(),
+            updatedAt: new Date().toISOString(),
+            dismissible: parsed.dismissible !== false,
+          };
+          if (notice.enabled) {
+            devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
+          }
+          devStore.notices.unshift(notice);
+          devStore.notice = notice.enabled ? notice : (devStore.notices.find((n) => n.enabled) ?? notice);
+          logDevActivity(req, 200);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, notice, items: devStore.notices }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid payload" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/notices" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const id = String(parsed.id ?? "");
+          const index = devStore.notices.findIndex((n) => n.id === id);
+          if (index < 0) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Notice not found" }));
+            return;
+          }
+          if (typeof parsed.enabled === "boolean" && Object.keys(parsed).every((k) => ["id", "enabled"].includes(k))) {
+            devStore.notices = devStore.notices.map((n) => ({
+              ...n,
+              enabled: parsed.enabled ? n.id === id : n.id === id ? false : n.enabled,
+              updatedAt: n.id === id ? new Date().toISOString() : n.updatedAt,
+            }));
+          } else {
+            devStore.notices[index] = { ...devStore.notices[index], ...parsed, id, updatedAt: new Date().toISOString() };
+            if (devStore.notices[index].enabled) {
+              devStore.notices = devStore.notices.map((n) => (n.id === id ? n : { ...n, enabled: false }));
+            }
+          }
+          const active = devStore.notices.find((n) => n.enabled) ?? null;
+          devStore.notice = active ?? { ...devStore.notices[0], enabled: false };
+          logDevActivity(req, 200);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, notice: devStore.notices.find((n) => n.id === id), items: devStore.notices }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid payload" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/notices" && req.method === "DELETE") {
+      const id = new URL(req.url ?? "/", "http://localhost").searchParams.get("id");
+      const before = devStore.notices.length;
+      devStore.notices = devStore.notices.filter((n) => n.id !== id);
+      if (devStore.notices.length === before) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Notice not found" }));
+        return;
+      }
+      const active = devStore.notices.find((n) => n.enabled) ?? null;
+      devStore.notice = active ?? { enabled: false, title: "", message: "", shortMessage: "", severity: "info", feedbackUrl: "", collaborateUrl: "", updatedAt: new Date().toISOString(), dismissible: true };
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, items: devStore.notices, notice: devStore.notice }));
       return;
     }
 
@@ -676,8 +772,11 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
-          devStore.notice = {
-            enabled: Boolean(parsed.enabled),
+          const notice = {
+            id: crypto.randomUUID(),
+            source: "admin",
+            enabled: parsed.enabled !== false,
+            type: "development",
             title: String(parsed.title ?? "").trim(),
             message: String(parsed.message ?? "").trim(),
             shortMessage: String(parsed.shortMessage ?? parsed.short_message ?? "").trim(),
@@ -687,9 +786,12 @@ export function createDevApiMiddleware() {
             updatedAt: new Date().toISOString(),
             dismissible: parsed.dismissible !== false,
           };
+          devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
+          devStore.notices.unshift(notice);
+          devStore.notice = notice;
           logDevActivity(req, 200);
           res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, notice: devStore.notice }));
+          res.end(JSON.stringify({ ok: true, notice, items: devStore.notices }));
         } catch {
           res.statusCode = 400;
           res.setHeader("Content-Type", "application/json");
@@ -700,24 +802,15 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/notice" && req.method === "DELETE") {
-      devStore.notice = {
-        enabled: false,
-        title: "",
-        message: "",
-        shortMessage: "",
-        severity: "info",
-        feedbackUrl: "",
-        collaborateUrl: "",
-        updatedAt: new Date().toISOString(),
-        dismissible: true,
-      };
+      devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
+      devStore.notice = { ...devStore.notice, enabled: false, updatedAt: new Date().toISOString() };
       logDevActivity(req, 200);
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ ok: true, notice: devStore.notice }));
+      res.end(JSON.stringify({ ok: true, notice: devStore.notice, items: devStore.notices }));
       return;
     }
 
-    if (url === "/api/notice" && req.method === "OPTIONS") {
+    if ((url === "/api/notice" || url === "/api/notices") && req.method === "OPTIONS") {
       res.statusCode = 204;
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");

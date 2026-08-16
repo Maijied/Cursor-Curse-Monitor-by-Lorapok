@@ -3,24 +3,28 @@ import Card from "./Card";
 import type { VisitorStats } from "../../lib/site-data";
 import { formatCount } from "../../lib/site-data";
 
-const CLICK_LABELS: Record<string, string> = {
-  ovsx: "Open VSX",
-  vscode: "VS Code Marketplace",
-  github: "GitHub / repo",
-  vsix: "VSIX download",
-  openvsxDuplicate: "Duplicate listing",
-};
+const CLICK_CHANNELS: { key: string; label: string }[] = [
+  { key: "ovsx", label: "Open VSX" },
+  { key: "vscode", label: "VS Code Marketplace" },
+  { key: "github", label: "GitHub / repo" },
+  { key: "vsix", label: "VSIX download" },
+  { key: "openvsxDuplicate", label: "Duplicate listing" },
+  { key: "npm", label: "npm" },
+];
 
 export default function VisitorStatsPanel({ stats, live }: { stats: VisitorStats; live?: boolean }) {
   const clicks = stats.packageClicks ?? {};
   const clickTotal = Object.values(clicks).reduce((s, n) => s + (n ?? 0), 0);
+  const channelRows = CLICK_CHANNELS.filter(
+    (ch) => ch.key in clicks || CLICK_CHANNELS.slice(0, 5).some((c) => c.key === ch.key)
+  );
 
   return (
     <Card>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h3 className="text-lg font-semibold text-[var(--color-text)]">Website & Package Reach</h3>
         {live && (
-          <span className="text-xs text-[var(--color-neon)] flex items-center gap-1">
+          <span className="text-xs text-[var(--color-neon)] flex items-center gap-1 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-neon)] animate-pulse-neon" />
             Live
           </span>
@@ -28,36 +32,39 @@ export default function VisitorStatsPanel({ stats, live }: { stats: VisitorStats
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="p-4 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
+        <div className="p-4 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] min-h-[5.5rem]">
           <div className="flex items-center gap-2 text-[var(--color-muted)] text-sm mb-2">
             <Eye size={16} aria-hidden="true" />
             Website visits
           </div>
-          <p className="text-2xl font-bold font-[family-name:var(--font-mono)]">{formatCount(stats.websiteVisits)}</p>
+          <p className="text-2xl font-bold font-[family-name:var(--font-mono)] tabular-nums">{formatCount(stats.websiteVisits)}</p>
         </div>
-        <div className="p-4 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
+        <div className="p-4 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] min-h-[5.5rem]">
           <div className="flex items-center gap-2 text-[var(--color-muted)] text-sm mb-2">
             <MousePointerClick size={16} aria-hidden="true" />
             Package clicks
           </div>
-          <p className="text-2xl font-bold font-[family-name:var(--font-mono)]">{formatCount(clickTotal)}</p>
+          <p className="text-2xl font-bold font-[family-name:var(--font-mono)] tabular-nums">{formatCount(clickTotal)}</p>
         </div>
-        <div className="p-4 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
+        <div className="p-4 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] min-h-[5.5rem] sm:col-span-1 col-span-1">
           <div className="flex items-center gap-2 text-[var(--color-muted)] text-sm mb-2">
             <Download size={16} aria-hidden="true" />
             Total engagement
           </div>
-          <p className="text-2xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">
+          <p className="text-2xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-accent-2)] tabular-nums">
             {formatCount(stats.totalEngagement)}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-        {Object.entries(clicks).map(([key, value]) => (
-          <div key={key} className="flex justify-between px-3 py-2 rounded-lg bg-white/[0.03] border border-[var(--color-border)]">
-            <span className="text-[var(--color-muted)]">{CLICK_LABELS[key] ?? key}</span>
-            <span className="font-[family-name:var(--font-mono)]">{formatCount(value)}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+        {channelRows.map(({ key, label }) => (
+          <div
+            key={key}
+            className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-white/[0.03] border border-[var(--color-border)] min-w-0"
+          >
+            <span className="text-[var(--color-muted)] truncate">{label}</span>
+            <span className="font-[family-name:var(--font-mono)] tabular-nums shrink-0">{formatCount(clicks[key] ?? 0)}</span>
           </div>
         ))}
       </div>

@@ -164,9 +164,9 @@ export default function Overview() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
         {downloads && (
-          <div className="lg:col-span-2">
+          <div className="min-w-0">
             <DownloadBreakdownPanel
               total={downloads.total}
               breakdown={downloads.breakdown}
@@ -174,75 +174,18 @@ export default function Overview() {
             />
           </div>
         )}
-        <SyncRadar data={data} />
+        <div className="min-w-0">
+          <SyncRadar data={data} />
+        </div>
       </div>
 
       <VisitorStatsPanel stats={visitors} live={visitorsLive} />
 
       {data.stableFallback && <StableFallbackPanel info={data.stableFallback} />}
 
-      <Card>
-        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
-                <th className="pb-3 pr-4 font-medium">Channel</th>
-                <th className="pb-3 pr-4 font-medium">Version</th>
-                <th className="pb-3 pr-4 font-medium">Downloads</th>
-                <th className="pb-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {[
-                {
-                  name: "GitHub",
-                  version: data.github.releaseTag,
-                  downloads: data.github.totalReleaseDownloads,
-                  ok: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
-                },
-                {
-                  name: "Open VSX (lorapok-labs)",
-                  version: data.ovsx.version ?? "—",
-                  downloads: data.ovsx.downloadCount,
-                  ok: data.ovsx.version === data.packageVersion,
-                },
-                {
-                  name: "VS Code",
-                  version: data.vscode.version ?? "—",
-                  downloads: data.vscode.downloadCount ?? data.vscode.installCount,
-                  ok: data.vscode.version === data.packageVersion,
-                },
-                {
-                  name: "Open VSX duplicate",
-                  version: data.ovsxDuplicate?.version ?? "—",
-                  downloads: data.ovsxDuplicate?.downloadCount,
-                  ok: false,
-                  warn: true,
-                },
-              ].map((row) => (
-                <tr key={row.name} className="hover:bg-white/[0.02]">
-                  <td className="py-3 pr-4 text-[var(--color-text)]">{row.name}</td>
-                  <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{row.version}</td>
-                  <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{formatCount(row.downloads ?? 0)}</td>
-                  <td className="py-3">
-                    {"warn" in row && row.warn ? (
-                      <Badge variant="warn">Deprecate listing</Badge>
-                    ) : row.ok ? (
-                      <Badge variant="synced" pulse>Synced</Badge>
-                    ) : (
-                      <Badge variant="drift">Behind</Badge>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-xs text-[var(--color-muted)] mt-4">
-          Data refreshed {new Date(data.generatedAt).toLocaleString()}
-        </p>
-      </Card>
+      <p className="text-xs text-[var(--color-muted)] text-center">
+        Site data refreshed {new Date(data.generatedAt).toLocaleString()}
+      </p>
     </div>
   );
 }

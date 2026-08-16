@@ -69,7 +69,7 @@ export default function AppShell() {
         <div className="flex-1 relative min-w-0 min-h-0">
           <div className="app-shell-bg" aria-hidden="true" />
           <main className="app-scroll-pane">
-            <div className="p-6 md:p-8 max-w-6xl mx-auto">
+            <div className="p-6 md:p-8 max-w-7xl mx-auto w-full">
               <Routes>
                 <Route index element={<Overview />} />
                 <Route path="marketplace" element={<MarketplaceHealth />} />
