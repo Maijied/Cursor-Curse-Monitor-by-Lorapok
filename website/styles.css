@@ -882,7 +882,8 @@ h1 em { font-style: normal; color: var(--accent); }
 }
 .author-card h2 { margin: 8px 0 10px; font-size: 1.5rem; }
 .author-card p { color: var(--muted); margin: 0 0 8px; }
-.oss-note { font-size: 0.9rem; }
+.oss-note,
+.license-note { font-size: 0.9rem; }
 .founder-strip {
   display: flex;
   flex-wrap: wrap;
