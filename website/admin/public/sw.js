@@ -1,5 +1,5 @@
 /* Minimal shell cache for admin PWA install */
-const CACHE = "ccm-admin-shell-v1";
+const CACHE = "ccm-admin-shell-v2";
 const PRECACHE = ["/", "/index.html", "/manifest.webmanifest", "/favicon.svg", "/assets/icon.png"];
 
 self.addEventListener("install", (event) => {
