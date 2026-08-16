@@ -1,15 +1,23 @@
+# Deploy target: Cloudflare account "Lorapok Facility" (f049faaf2f67549f5c58837479596a4a)
+# Set CLOUDFLARE_ACCOUNT_ID to that value for wrangler / GitHub Actions.
+# KV namespaces live in Facility; dashboard titles use key-style prefix
+# CURSOR_CURSOR-ADMIN_KV / CURSOR_CURSOR-ADMIN_KV_PREVIEW while the code
+# binding stays ADMIN_KV. Prod URL: cursor-monitor-admin-2x8.pages.dev
 name = "cursor-monitor-admin"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-08-14"
 
-# Create namespace in Cloudflare dashboard, then replace id values:
-# wrangler kv namespace create ADMIN_KV
+# Lorapok Facility (f049faaf2f67549f5c58837479596a4a) — created 2026-08-16
 [[kv_namespaces]]
 binding = "ADMIN_KV"
-id = "5fb05edceefa493c83efbb469b6012a4"
-preview_id = "4e30f97e540b49b286aa56dcdd54bf7b"
+id = "8a29ab111ed0488297e12725072e9a10"
+preview_id = "1555368c415e40a7b7e591784f1dc22c"
 
 [vars]
 ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
 SITE_DATA_URL = "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json"
+
+# Cloudflare Email Sending binding (lorapok.tech must be enabled via `wrangler email sending enable`)
+[[send_email]]
+name = "EMAIL"

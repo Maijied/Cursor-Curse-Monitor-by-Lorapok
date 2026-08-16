@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { sendSignInLinkToEmail } from "firebase/auth";
 import { auth, db } from "../lib/firebase";
 import { UserPlus, Shield, Trash2 } from "lucide-react";
 import { syncAdminAccess } from "../lib/api";
@@ -45,6 +46,17 @@ export default function Team() {
         role: "admin",
         createdAt: new Date(),
       });
+
+      try {
+        await sendSignInLinkToEmail(auth, normalized, {
+          url: `${window.location.origin}/login`,
+          handleCodeInApp: true,
+        });
+        window.localStorage.setItem("emailForSignIn", normalized);
+      } catch (linkErr) {
+        console.warn("Magic link email failed:", linkErr);
+      }
+
       if (isMaster) {
         try {
           await syncAdminAccess({ email: normalized, action: "add" });
@@ -59,7 +71,7 @@ export default function Team() {
           return;
         }
       }
-      setMsg("Admin added successfully. They can now log in and use API endpoints.");
+      setMsg("Admin added. A sign-in invite email was sent — they can log in at /login.");
       setEmail("");
       fetchAdmins();
     } catch (err: unknown) {

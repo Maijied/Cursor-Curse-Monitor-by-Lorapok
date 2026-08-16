@@ -4,28 +4,34 @@ import {
   listStoredAdminEmails,
   removeStoredAdminEmail,
 } from "./_shared/admins.js";
+import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
 
 export async function onRequestGet(context) {
+  const startedAt = Date.now();
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
   if (!isMasterEmail(env, auth.email)) {
-    return jsonResponse({ error: "Only the master admin can list API admins" }, 403);
+    const response = jsonResponse({ error: "Only the master admin can list API admins" }, 403);
+    return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 
   const emails = await listStoredAdminEmails(env);
-  return jsonResponse({ emails, source: env.ADMIN_KV ? "kv" : "env" });
+  const response = jsonResponse({ emails, source: env.ADMIN_KV ? "kv" : "env" });
+  return logAuthenticatedRequest(context, auth, response, startedAt);
 }
 
 export async function onRequestPost(context) {
+  const startedAt = Date.now();
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
   if (!isMasterEmail(env, auth.email)) {
-    return jsonResponse({ error: "Only the master admin can modify API admins" }, 403);
+    const response = jsonResponse({ error: "Only the master admin can modify API admins" }, 403);
+    return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 
   try {
@@ -34,17 +40,19 @@ export async function onRequestPost(context) {
     const action = body.action ?? "add";
 
     if (!email || typeof email !== "string") {
-      return jsonResponse({ error: "email is required" }, 400);
+      const response = jsonResponse({ error: "email is required" }, 400);
+      return logAuthenticatedRequest(context, auth, response, startedAt);
     }
 
     if (!env.ADMIN_KV?.put) {
-      return jsonResponse(
+      const response = jsonResponse(
         {
           error: "ADMIN_KV binding not configured. Add invited emails to ADMIN_EMAILS env var.",
           hint: "Set ADMIN_EMAILS=colleague@example.com in Cloudflare Pages settings",
         },
         503
       );
+      return logAuthenticatedRequest(context, auth, response, startedAt);
     }
 
     const emails =
@@ -52,8 +60,10 @@ export async function onRequestPost(context) {
         ? await removeStoredAdminEmail(env, email)
         : await addStoredAdminEmail(env, email);
 
-    return jsonResponse({ ok: true, emails, action });
+    const response = jsonResponse({ ok: true, emails, action });
+    return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
-    return jsonResponse({ error: err instanceof Error ? err.message : "Server error" }, 500);
+    const response = jsonResponse({ error: err instanceof Error ? err.message : "Server error" }, 500);
+    return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 }

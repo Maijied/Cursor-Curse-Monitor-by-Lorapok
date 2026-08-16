@@ -62,8 +62,20 @@ export default function Login() {
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="app-shell-bg fixed inset-0" aria-hidden="true" />
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center py-12 px-4">
-      <img src="/assets/welcome-animation.svg" alt="Welcome" className="w-48 h-auto mb-8 animate-fade-slide-up" />
-      <div className="glass-panel p-8 w-full max-w-md relative overflow-hidden animate-fade-slide-up stagger-1">
+      <header className="mb-6 text-center animate-fade-slide-up">
+        <h1 className="brand-title text-3xl sm:text-4xl font-bold tracking-tight">
+          Cursor Curse Monitor
+        </h1>
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <span className="brand-rule h-px w-10 sm:w-14 bg-gradient-to-r from-transparent to-[var(--color-accent)]" aria-hidden="true" />
+          <span className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.3em] text-[var(--color-muted)]">
+            Login Panel
+          </span>
+          <span className="brand-rule h-px w-10 sm:w-14 bg-gradient-to-l from-transparent to-[var(--color-accent)]" aria-hidden="true" />
+        </div>
+      </header>
+      <img src="/assets/welcome-animation.svg" alt="Welcome" className="w-48 h-auto mb-8 animate-fade-slide-up stagger-1" />
+      <div className="glass-panel p-8 w-full max-w-md relative overflow-hidden animate-fade-slide-up stagger-2">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-accent-2)] via-[var(--color-accent)] to-[var(--color-neon)]" />
         <div className="flex items-center justify-center gap-3 mb-6">
           <img src="/assets/logo.svg" alt="Logo" className="w-8 h-8" />

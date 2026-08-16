@@ -1,30 +1,58 @@
 import { NavLink } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../routes";
+import OnlineStatus from "../ui/OnlineStatus";
+import InstallAppButton from "../ui/InstallAppButton";
 
-export default function Sidebar() {
+export default function Sidebar({
+  mobileOpen = false,
+  onClose,
+}: {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}) {
   const user = auth.currentUser;
 
   return (
-    <aside className="w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-bg-elevated)] flex flex-col justify-between">
+    <aside
+      className={`
+        w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-bg-elevated)] flex flex-col justify-between
+        fixed md:static inset-y-0 left-0 z-50 md:z-auto
+        transform transition-transform duration-200 ease-out
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}
+    >
       <div>
         <div className="h-20 flex items-center px-6 border-b border-[var(--color-border)] gap-3">
           <img src="/assets/welcome-animation.svg" alt="" className="w-9 h-9" />
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="font-bold text-base bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-accent)] bg-clip-text text-transparent">
               Cursor Monitor
             </h1>
             <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Mission Control</p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg hover:bg-white/5 text-[var(--color-muted)]"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <nav className="p-4 space-y-1" aria-label="Main navigation">
+        <div className="hidden md:flex px-6 py-3 border-b border-[var(--color-border)]">
+          <OnlineStatus />
+        </div>
+
+        <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-14rem)]" aria-label="Main navigation">
           {APP_ROUTES.map(({ path, label, icon: Icon, end }) => (
             <NavLink
               key={path}
               to={path}
               end={end}
+              onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-all border ${
                   isActive
@@ -52,6 +80,7 @@ export default function Sidebar() {
             </div>
           </div>
         )}
+        <InstallAppButton className="w-full mb-3" />
         <button
           type="button"
           onClick={() => auth.signOut()}

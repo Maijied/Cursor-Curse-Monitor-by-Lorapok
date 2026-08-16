@@ -10,6 +10,7 @@
     "[data-href-vsix]": "vsix",
     "[data-href-repo]": "github",
     "[data-href-release]": "github",
+    "[data-href-npm]": "npm",
   };
 
   let firestoreReady = false;
@@ -74,7 +75,7 @@
       try {
         await fsMod.setDoc(ref, {
           websiteVisits: channel === "website" ? 1 : 0,
-          packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0, [channel]: channel === "website" ? 0 : 1 },
+          packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, npm: 0, openvsxDuplicate: 0, [channel]: channel === "website" ? 0 : 1 },
           totalEngagement: 1,
           updatedAt: new Date().toISOString(),
         }, { merge: true });

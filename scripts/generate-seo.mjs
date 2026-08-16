@@ -20,6 +20,12 @@ function readSiteData() {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+function readSocial() {
+  const path = join(website, "social.json");
+  if (!existsSync(path)) return null;
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
 function isoDate(d = new Date()) {
   return d.toISOString().slice(0, 10);
 }
@@ -37,8 +43,11 @@ function lastGitDate(file) {
 }
 
 const siteData = readSiteData();
+const social = readSocial();
 const version = siteData?.version ?? pkg.version;
 const generatedAt = new Date().toISOString();
+const adminApiBase = social?.api?.base ?? "https://cursor-dev.lorapok.tech";
+const sameAs = social?.brand ? Object.values(social.brand) : [];
 
 const pages = [
   { loc: `${SITE_BASE}/`, priority: "1.0", changefreq: "weekly", file: "website/index.html" },
@@ -75,11 +84,13 @@ writeFileSync(join(website, "robots.txt"), robots);
 const seo = {
   generatedAt,
   siteBase: SITE_BASE,
+  adminApiBase,
   title: `${pkg.displayName} — Live Cursor Usage Dashboard`,
   description: pkg.description,
   version,
   canonical: SITE_BASE,
   syncStatus: siteData?.syncStatus ?? "unknown",
+  social: social?.brand ?? {},
   keywords: [
     ...(pkg.keywords ?? []),
     "Cursor IDE",
@@ -118,7 +129,8 @@ const seo = {
     publisher: {
       "@type": "Organization",
       name: "Lorapok Labs",
-      url: "https://lorapok.tech",
+      url: social?.brand?.labs ?? "https://lorapok.tech",
+      sameAs,
     },
   },
 };

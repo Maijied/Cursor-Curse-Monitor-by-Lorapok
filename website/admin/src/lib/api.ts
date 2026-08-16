@@ -1,4 +1,5 @@
 import { auth } from "./firebase";
+import type { DevNotice } from "./site-data";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
@@ -129,4 +130,94 @@ export async function triggerDeployment(payload: DeployRequest) {
   }
 
   return res.json();
+}
+
+export type NoticePayload = Partial<DevNotice> & { enabled: boolean };
+
+export type ApiActivityEntry = {
+  id?: string;
+  timestamp: string;
+  method: string;
+  path: string;
+  status: number;
+  latencyMs: number;
+  email?: string;
+};
+
+export type ApiActivityResponse = {
+  entries: ApiActivityEntry[];
+  page: number;
+  limit: number;
+  total: number;
+};
+
+export async function fetchNotice() {
+  return apiGet<{ notice: DevNotice | null }>("/notice");
+}
+
+export async function saveNotice(payload: NoticePayload) {
+  const res = await fetch(`${API_BASE}/notice`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save notice");
+  return data;
+}
+
+export async function clearNotice() {
+  const res = await fetch(`${API_BASE}/notice`, {
+    method: "DELETE",
+    headers: await authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to clear notice");
+  return data;
+}
+
+export async function subscribeEmail(email: string) {
+  const res = await fetch(`${API_BASE}/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Subscribe failed");
+  return data;
+}
+
+export async function fetchApiActivity(page = 1, limit = 25) {
+  return apiGet<ApiActivityResponse>(`/api-activity?page=${page}&limit=${limit}`);
+}
+
+export async function triggerRollback(payload: DeployRequest) {
+  const res = await fetch(`${API_BASE}/rollback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Rollback trigger failed");
+  return data;
+}
+
+export async function inviteAdminEmail(email: string) {
+  const res = await fetch(`${API_BASE}/admins/invite`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Invite failed");
+  return data;
 }

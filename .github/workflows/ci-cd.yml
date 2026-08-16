@@ -159,7 +159,7 @@ jobs:
       && !contains(github.event.head_commit.message, 'chore: release')
     environment:
       name: admin-production
-      url: https://admin.lorapok.tech
+      url: https://cursor-dev.lorapok.tech
     steps:
       - name: Checkout
         uses: actions/checkout@v4

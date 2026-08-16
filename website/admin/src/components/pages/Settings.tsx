@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
+import InstallAppButton from "../ui/InstallAppButton";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import { fetchHealth } from "../../lib/api";
 
@@ -46,6 +47,14 @@ export default function Settings() {
             </button>
           ))}
         </div>
+      </Card>
+
+      <Card>
+        <h3 className="font-semibold mb-4">Install app</h3>
+        <p className="text-sm text-[var(--color-muted)] mb-4">
+          Add Mission Control to your home screen for quick access.
+        </p>
+        <InstallAppButton />
       </Card>
 
       <ConnectedServicesCard />

@@ -1,11 +1,22 @@
 {
-  "generatedAt": "2026-08-15T00:30:54.949Z",
+  "generatedAt": "2026-08-16T17:44:14.520Z",
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+  "adminApiBase": "https://cursor-dev.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.8",
   "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "syncStatus": "synced",
+  "social": {
+    "github": "https://github.com/lorapok",
+    "linkedin": "https://www.linkedin.com/showcase/lorapok/",
+    "x": "https://x.com/LorapokLabs",
+    "reddit": "https://www.reddit.com/r/LorapokLabs/",
+    "instagram": "https://www.instagram.com/lorapoklabs/",
+    "facebook": "https://www.facebook.com/lorapoklabs",
+    "labs": "https://lorapok.tech",
+    "gravatar": "https://gravatar.com/lorapok"
+  },
   "keywords": [
     "cursor",
     "lorapok",
@@ -55,7 +66,17 @@
     "publisher": {
       "@type": "Organization",
       "name": "Lorapok Labs",
-      "url": "https://lorapok.tech"
+      "url": "https://lorapok.tech",
+      "sameAs": [
+        "https://github.com/lorapok",
+        "https://www.linkedin.com/showcase/lorapok/",
+        "https://x.com/LorapokLabs",
+        "https://www.reddit.com/r/LorapokLabs/",
+        "https://www.instagram.com/lorapoklabs/",
+        "https://www.facebook.com/lorapoklabs",
+        "https://lorapok.tech",
+        "https://gravatar.com/lorapok"
+      ]
     }
   }
 }
