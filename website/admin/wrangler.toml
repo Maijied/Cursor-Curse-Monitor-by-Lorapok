@@ -18,6 +18,7 @@ ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
 SITE_DATA_URL = "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json"
 
-# Cloudflare Email Sending binding (lorapok.tech must be enabled via `wrangler email sending enable`)
-[[send_email]]
-name = "EMAIL"
+# Outbound mail: Pages does not support [[send_email]] bindings.
+# Set Pages secret RESEND_API_KEY (and verify cursor-contact@lorapok.tech on Resend),
+# or keep Firebase magic-link invites only. Inbound routing already delivers
+# cursor-contact@lorapok.tech → mdshuvo40@gmail.com via Email Routing.
