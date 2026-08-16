@@ -1,6 +1,8 @@
+import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { GITHUB_REPO, jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
 
 export async function onRequestGet(context) {
+  const startedAt = Date.now();
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
@@ -64,11 +66,12 @@ export async function onRequestGet(context) {
     }
   }
 
-  return jsonResponse({
+  const response = jsonResponse({
     enabled,
     discussions,
     topics: [...topicMap.values()].sort((a, b) => b.count - a.count),
     settingsUrl: `https://github.com/${GITHUB_REPO}/settings#features`,
     repoIssuesUrl: `https://github.com/${GITHUB_REPO}/issues`,
   });
+  return logAuthenticatedRequest(context, auth, response, startedAt);
 }

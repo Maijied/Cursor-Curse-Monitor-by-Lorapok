@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Rocket } from "lucide-react";
-import { fetchTags, triggerDeployment } from "../../lib/api";
+import { AlertTriangle, Rocket, Undo2 } from "lucide-react";
+import { fetchTags, triggerDeployment, triggerRollback } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
@@ -13,8 +13,11 @@ function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) 
   return [`v${siteData.packageVersion.replace(/^v/, "")}`];
 }
 
+type Mode = "deploy" | "rollback";
+
 export default function Deployments() {
   const { data: siteData } = useSiteData();
+  const [mode, setMode] = useState<Mode>("deploy");
   const [tags, setTags] = useState<string[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -48,21 +51,27 @@ export default function Deployments() {
       });
   }, [siteData]);
 
-  const handleDeploy = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetTag = customTag.trim() || selectedTag;
     if (!targetTag) return;
     setDeploying(true);
     setMessage(null);
+    const payload = {
+      target_tag: targetTag,
+      publish_market: market,
+      release_channel: channel === "production" ? "Production" as const : "Beta (Pre-release)" as const,
+    };
     try {
-      await triggerDeployment({
-        target_tag: targetTag,
-        publish_market: market,
-        release_channel: channel === "production" ? "Production" : "Beta (Pre-release)",
-      });
-      setMessage({ type: "success", text: `Deployment triggered for ${targetTag} (${market}).` });
+      if (mode === "rollback") {
+        await triggerRollback(payload);
+        setMessage({ type: "success", text: `Rollback triggered for ${targetTag} (${market}).` });
+      } else {
+        await triggerDeployment(payload);
+        setMessage({ type: "success", text: `Deployment triggered for ${targetTag} (${market}).` });
+      }
     } catch (err: unknown) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Deployment failed" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : `${mode === "rollback" ? "Rollback" : "Deployment"} failed` });
     }
     setDeploying(false);
   };
@@ -73,7 +82,7 @@ export default function Deployments() {
   });
 
   const effectiveTag = customTag.trim() || selectedTag;
-  const canDeploy = Boolean(effectiveTag) && !tagsError;
+  const canSubmit = Boolean(effectiveTag) && !tagsError;
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -81,9 +90,37 @@ export default function Deployments() {
   return (
     <div className="max-w-3xl animate-fade-slide-up">
       <PageHeader
-        title="Deploy Release"
+        title="Deploy & Rollback"
         description="Trigger the GitHub Actions deployment workflow with the correct marketplace inputs."
       />
+
+      <div className="flex gap-2 mb-6 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
+        {(["deploy", "rollback"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setMode(value)}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold capitalize transition-all ${
+              mode === value
+                ? "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] shadow-sm"
+                : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            {value === "deploy" ? <Rocket size={18} aria-hidden="true" /> : <Undo2 size={18} aria-hidden="true" />}
+            {value === "deploy" ? "Deploy" : "Rollback"}
+          </button>
+        ))}
+      </div>
+
+      {mode === "rollback" && (
+        <div className="glass-panel p-4 mb-4 border-[color-mix(in_srgb,var(--color-warn)_30%,transparent)] flex gap-3 text-sm text-[var(--color-warn)]">
+          <AlertTriangle size={20} className="shrink-0 mt-0.5" aria-hidden="true" />
+          <p>
+            Rollback will restore the selected tag across the chosen marketplaces. Verify the tag is a known-good release
+            before triggering — this re-publishes that version, not a git revert.
+          </p>
+        </div>
+      )}
 
       {tagsError && <ErrorState title="Tags unavailable" message={tagsError} />}
 
@@ -94,10 +131,12 @@ export default function Deployments() {
       )}
 
       <Card className="mt-6">
-        <form onSubmit={handleDeploy} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">Target Tag</label>
+              <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
+                {mode === "rollback" ? "Rollback to tag" : "Target Tag"}
+              </label>
               <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass}>
                 {filteredTags.length === 0 && <option value="">No tags in list</option>}
                 {filteredTags.map((t) => (
@@ -154,11 +193,17 @@ export default function Deployments() {
 
           <button
             type="submit"
-            disabled={deploying || !canDeploy}
-            className="w-full flex items-center justify-center gap-3 bg-[var(--color-accent)] text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-[0_8px_24px_rgba(124,92,255,0.25)]"
+            disabled={deploying || !canSubmit}
+            className={`w-full flex items-center justify-center gap-3 text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-[0_8px_24px_rgba(124,92,255,0.25)] ${
+              mode === "rollback" ? "bg-[var(--color-warn)]" : "bg-[var(--color-accent)]"
+            }`}
           >
-            <Rocket size={20} aria-hidden="true" />
-            {deploying ? "Triggering…" : "Trigger Deployment"}
+            {mode === "rollback" ? <Undo2 size={20} aria-hidden="true" /> : <Rocket size={20} aria-hidden="true" />}
+            {deploying
+              ? "Triggering…"
+              : mode === "rollback"
+                ? "Trigger Rollback"
+                : "Trigger Deployment"}
           </button>
         </form>
 

@@ -1,8 +1,10 @@
+import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { GITHUB_REPO, jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { fetchSiteData, tagsFromSiteData } from "./_shared/site-data.js";
 
 export async function onRequestGet(context) {
+  const startedAt = Date.now();
   const { request, env } = context;
 
   const auth = await verifyAdminRequest(request, env);
@@ -13,7 +15,8 @@ export async function onRequestGet(context) {
   if (res.ok) {
     const data = await res.json();
     const tags = Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [];
-    return jsonResponse({ tags, source: "github" }, 200);
+    const response = jsonResponse({ tags, source: "github" }, 200);
+    return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 
   try {
@@ -24,11 +27,13 @@ export async function onRequestGet(context) {
         res.status === 403
           ? "GitHub API rate limit — using cached tags from site-data.json"
           : `GitHub tags ${res.status} — using cached tags from site-data.json`;
-      return jsonResponse({ tags: cached, source: "cache", warning }, 200);
+      const response = jsonResponse({ tags: cached, source: "cache", warning }, 200);
+      return logAuthenticatedRequest(context, auth, response, startedAt);
     }
   } catch {
     /* fall through */
   }
 
-  return jsonResponse({ error: `Failed to fetch tags from GitHub (${res.status})` }, 502);
+  const response = jsonResponse({ error: `Failed to fetch tags from GitHub (${res.status})` }, 502);
+  return logAuthenticatedRequest(context, auth, response, startedAt);
 }

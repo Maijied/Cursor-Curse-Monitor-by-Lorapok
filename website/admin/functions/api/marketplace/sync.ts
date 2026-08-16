@@ -1,3 +1,4 @@
+import { logAuthenticatedRequest } from "../_shared/activity-log.js";
 import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
 import { fetchSiteData, packageVersionFromSiteData } from "../_shared/site-data.js";
 
@@ -8,6 +9,7 @@ async function fetchJson(url) {
 }
 
 export async function onRequestGet(context) {
+  const startedAt = Date.now();
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
@@ -16,7 +18,8 @@ export async function onRequestGet(context) {
   try {
     siteData = await fetchSiteData(env);
   } catch (err) {
-    return jsonResponse({ error: err instanceof Error ? err.message : "site-data unavailable" }, 502);
+    const response = jsonResponse({ error: err instanceof Error ? err.message : "site-data unavailable" }, 502);
+    return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 
   const name = siteData.extensionName ?? "cursor-curse-monitor-by-lorapok";
@@ -69,10 +72,11 @@ export async function onRequestGet(context) {
 
   const allSynced = channels.filter((c) => !c.warn).every((c) => c.synced);
 
-  return jsonResponse({
+  const response = jsonResponse({
     packageVersion: target,
     syncStatus: allSynced ? "synced" : "drift",
     channels,
     checkedAt: new Date().toISOString(),
   });
+  return logAuthenticatedRequest(context, auth, response, startedAt);
 }

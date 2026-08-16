@@ -6,6 +6,18 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
 
+  let social = null;
+  try {
+    const socialRes = await fetch("social.json", { cache: "no-store" });
+    if (socialRes.ok) social = await socialRes.json();
+  } catch {
+    /* ignore */
+  }
+
+  const ADMIN_API = social?.api?.base ?? "https://cursor-dev.lorapok.tech";
+  const SUBSCRIBE_URL = social?.api?.subscribe ?? `${ADMIN_API}/api/subscribe`;
+  const NOTICE_URL = social?.api?.notice ?? `${ADMIN_API}/api/notice`;
+
   let data;
   try {
     const res = await fetch("site-data.json", { cache: "no-store" });
@@ -95,13 +107,30 @@
       metaOg.setAttribute("content", new URL("assets/marketing/og-social-card.png", window.location.href).href);
     }
 
-    document.title = `${data.displayName} v${data.version} — Live Cursor Usage Dashboard`;
-
-    renderDevNotice(data.notice);
+    if (!window.location.pathname.endsWith("privacy.html")) {
+      document.title = `${data.displayName} v${data.version} — Live Cursor Usage Dashboard`;
+    }
   }
 
+  const liveNotice = await fetchLiveNotice(NOTICE_URL);
+  const notice = liveNotice ?? data?.notice;
+  renderDevNotice(notice);
+
   initLightbox();
+  initMobileNav();
+  initSubscribeForm(SUBSCRIBE_URL);
 })();
+
+async function fetchLiveNotice(url) {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const notice = await res.json();
+    return notice?.enabled ? notice : null;
+  } catch {
+    return null;
+  }
+}
 
 function renderDevNotice(notice) {
   const banner = document.getElementById("dev-notice-banner");
@@ -137,6 +166,75 @@ function renderDevNotice(notice) {
       banner.hidden = true;
     });
   }
+}
+
+function initMobileNav() {
+  const toggle = document.getElementById("nav-toggle");
+  const nav = document.getElementById("nav-links");
+  if (!toggle || !nav) return;
+
+  const close = () => {
+    nav.classList.remove("nav-open");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Open menu");
+    document.body.classList.remove("nav-menu-open");
+  };
+
+  toggle.addEventListener("click", () => {
+    const open = nav.classList.toggle("nav-open");
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    document.body.classList.toggle("nav-menu-open", open);
+  });
+
+  nav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", close);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && nav.classList.contains("nav-open")) close();
+  });
+}
+
+function initSubscribeForm(subscribeUrl) {
+  const form = document.getElementById("subscribe-form");
+  const message = document.getElementById("subscribe-message");
+  if (!form || !message) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = form.querySelector('[name="email"]');
+    const email = input?.value?.trim();
+    if (!email) return;
+
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    message.hidden = false;
+    message.textContent = "Subscribing…";
+    message.className = "subscribe-message pending";
+
+    try {
+      const res = await fetch(subscribeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) {
+        message.textContent = body.message || "You're subscribed! Check your inbox to confirm.";
+        message.className = "subscribe-message success";
+        form.reset();
+      } else {
+        message.textContent = body.error || "Subscription failed. Please try again later.";
+        message.className = "subscribe-message error";
+      }
+    } catch {
+      message.textContent = "Network error. Please try again later.";
+      message.className = "subscribe-message error";
+    } finally {
+      btn.disabled = false;
+    }
+  });
 }
 
 function initLightbox() {

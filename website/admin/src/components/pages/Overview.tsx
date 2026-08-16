@@ -1,4 +1,15 @@
 import { Activity, Download, Package, Store } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 import PageHeader from "../layout/PageHeader";
 import KpiCard from "../ui/KpiCard";
 import Card from "../ui/Card";
@@ -47,6 +58,27 @@ export default function Overview() {
   const syncVariant = syncBadgeVariant(data.syncStatus);
   const downloads = data.downloads;
 
+  const clickChartData = [
+    { name: "Open VSX", value: visitors.packageClicks.ovsx ?? 0 },
+    { name: "VS Code", value: visitors.packageClicks.vscode ?? 0 },
+    { name: "GitHub", value: visitors.packageClicks.github ?? 0 },
+    { name: "VSIX", value: visitors.packageClicks.vsix ?? 0 },
+    { name: "Duplicate", value: visitors.packageClicks.openvsxDuplicate ?? 0 },
+  ];
+
+  const reachChartData = [
+    { name: "Visits", value: visitors.websiteVisits },
+    { name: "Clicks", value: Object.values(visitors.packageClicks).reduce((s, n) => s + (n ?? 0), 0) },
+    { name: "Engagement", value: visitors.totalEngagement },
+  ];
+
+  const chartTooltipStyle = {
+    backgroundColor: "var(--color-bg-elevated)",
+    border: "1px solid var(--color-border)",
+    borderRadius: "0.75rem",
+    color: "var(--color-text)",
+  };
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -93,6 +125,43 @@ export default function Overview() {
           icon={<Package className="text-[var(--color-accent)]" size={24} />}
           delayClass="stagger-4"
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Package Click Channels</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={clickChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="name" tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
+                <YAxis tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar dataKey="value" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card>
+          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Website Reach</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={reachChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="name" tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
+                <YAxis tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="var(--color-accent-2)"
+                  fill="color-mix(in srgb, var(--color-accent-2) 25%, transparent)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -11,10 +11,10 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const response = await dispatchDeploymentWorkflow(env, body, "Deployment triggered successfully");
+    const response = await dispatchDeploymentWorkflow(env, body, "Rollback triggered");
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
-    console.error("Deploy handler error", err);
+    console.error("Rollback handler error", err);
     const response = jsonResponse({ error: "Server error" }, 500);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }

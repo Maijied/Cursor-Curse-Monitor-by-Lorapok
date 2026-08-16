@@ -151,13 +151,18 @@ cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
 
 ## Admin Panel (Mission Control)
 
-**Target URL:** `https://admin.lorapok.tech` (staging: `https://cursor-monitor-admin.pages.dev`)
+**Target URL:** `https://cursor-dev.lorapok.tech` (Pages origin: `https://cursor-monitor-admin-2x8.pages.dev`)
+
+**Cloudflare account:** **Lorapok Facility** (`f049faaf2f67549f5c58837479596a4a`) only.  
+Do **not** use orphan Worker builds under other accounts (e.g. `cursor-curse-monitor-by-lorapok` Workers Builds) — that Worker is not part of this repo. Mail: `cursor-contact@lorapok.tech` (Email Routing → Gmail).
 
 The admin SPA lives in `website/admin/` and deploys to **Cloudflare Pages** with co-located **Pages Functions** (`website/admin/functions/api/`). It is **not** served from GitHub Pages.
 
+Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/cred/CLOUDFLARE_MIGRATION.md`
+
 ### One-time Cloudflare setup
 
-1. Create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally).
+1. In **Lorapok Facility**, create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally with `CLOUDFLARE_ACCOUNT_ID` set to Facility).
 2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
 3. **Pages → Settings → Environment variables** (Production):
    - `GITHUB_TOKEN` — PAT with `actions:write` for deploy workflow dispatch
@@ -165,8 +170,9 @@ The admin SPA lives in `website/admin/` and deploys to **Cloudflare Pages** with
    - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
    - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
    - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
-4. **DNS:** CNAME `admin.lorapok.tech` → `<project>.pages.dev`
-5. **Firebase Console → Auth → Authorized domains:** add `admin.lorapok.tech` and your `*.pages.dev` host.
+4. **DNS:** CNAME `cursor-dev.lorapok.tech` → `cursor-monitor-admin-2x8.pages.dev` (proxied)
+5. **Firebase Console → Auth → Authorized domains:** add `cursor-dev.lorapok.tech` and your `*.pages.dev` host.
+6. **Email:** Email Routing rule `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com` (inbound ready). Outbound invite/subscribe mail uses the Pages `EMAIL` binding when Cloudflare Email Sending is enabled for the zone, or optional `RESEND_API_KEY` Pages secret. Team invites also send Firebase magic links.
 
 ### Firestore rules
 

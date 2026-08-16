@@ -10,6 +10,35 @@ const siteDataPath = resolve(repoRoot, "website/site-data.json");
 const adminDataDir = resolve(rootDir, ".data");
 const adminEmailsPath = resolve(adminDataDir, "admin-emails.json");
 
+const devStore = {
+  notice: {
+    enabled: false,
+    title: "",
+    message: "",
+    shortMessage: "",
+    severity: "info",
+    feedbackUrl: "",
+    collaborateUrl: "",
+    updatedAt: null,
+    dismissible: true,
+  },
+  subscribers: [],
+  activity: [],
+};
+
+function logDevActivity(req, status, email = "dev@local") {
+  const path = req.url?.split("?")[0] ?? "/";
+  devStore.activity.unshift({
+    ts: new Date().toISOString(),
+    method: req.method ?? "GET",
+    path,
+    status,
+    latencyMs: Math.floor(Math.random() * 120) + 20,
+    email,
+  });
+  if (devStore.activity.length > 500) devStore.activity.length = 500;
+}
+
 function readDevAdminEmails() {
   try {
     if (!existsSync(adminEmailsPath)) return [];
@@ -426,15 +455,158 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         triggerDeployment(JSON.parse(body || "{}"))
           .then((result) => {
+            logDevActivity(req, 200);
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(result));
           })
           .catch((err) => {
-            res.statusCode = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
+            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
+            logDevActivity(req, code);
+            res.statusCode = code;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ error: err.message }));
           });
       });
+      return;
+    }
+
+    if (url === "/api/rollback" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        triggerDeployment(JSON.parse(body || "{}"))
+          .then((result) => {
+            logDevActivity(req, 200);
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ ...result, message: "Rollback triggered" }));
+          })
+          .catch((err) => {
+            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
+            logDevActivity(req, code);
+            res.statusCode = code;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: err.message }));
+          });
+      });
+      return;
+    }
+
+    if (url === "/api/notice" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.end(JSON.stringify(devStore.notice));
+      return;
+    }
+
+    if (url === "/api/notice" && (req.method === "POST" || req.method === "PUT")) {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          devStore.notice = {
+            enabled: Boolean(parsed.enabled),
+            title: String(parsed.title ?? "").trim(),
+            message: String(parsed.message ?? "").trim(),
+            shortMessage: String(parsed.shortMessage ?? parsed.short_message ?? "").trim(),
+            severity: String(parsed.severity ?? "info").trim() || "info",
+            feedbackUrl: String(parsed.feedbackUrl ?? parsed.feedback_url ?? "").trim(),
+            collaborateUrl: String(parsed.collaborateUrl ?? parsed.collaborate_url ?? "").trim(),
+            updatedAt: new Date().toISOString(),
+            dismissible: parsed.dismissible !== false,
+          };
+          logDevActivity(req, 200);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, notice: devStore.notice }));
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid payload" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/notice" && req.method === "DELETE") {
+      devStore.notice = {
+        enabled: false,
+        title: "",
+        message: "",
+        shortMessage: "",
+        severity: "info",
+        feedbackUrl: "",
+        collaborateUrl: "",
+        updatedAt: new Date().toISOString(),
+        dismissible: true,
+      };
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, notice: devStore.notice }));
+      return;
+    }
+
+    if (url === "/api/notice" && req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.end();
+      return;
+    }
+
+    if (url === "/api/subscribe" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const email = String(parsed.email ?? "").trim().toLowerCase();
+          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.end(JSON.stringify({ error: "Valid email is required" }));
+            return;
+          }
+          if (!devStore.subscribers.includes(email)) devStore.subscribers.push(email);
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.end(JSON.stringify({ ok: true, emailed: false }));
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.end(JSON.stringify({ error: "Invalid payload" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/subscribe" && req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.end();
+      return;
+    }
+
+    if (url.startsWith("/api/activity") && req.method === "GET") {
+      const query = new URL(req.url ?? "", "http://localhost");
+      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
+      const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "20", 10) || 20));
+      const total = devStore.activity.length;
+      const start = (page - 1) * limit;
+      const items = devStore.activity.slice(start, start + limit);
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        items,
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      }));
       return;
     }
 

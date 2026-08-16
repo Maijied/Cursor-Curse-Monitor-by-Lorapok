@@ -26,6 +26,12 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('../../lib/api', () => ({
   fetchTags: vi.fn().mockResolvedValue({ tags: ['v1.0.0'] }),
   triggerDeployment: vi.fn(),
+  triggerRollback: vi.fn(),
+  fetchHealth: vi.fn().mockResolvedValue({ ok: true, checks: { github: true, timestamp: new Date().toISOString() } }),
+  fetchApiActivity: vi.fn().mockResolvedValue({ items: [], page: 1, limit: 25, total: 0 }),
+  fetchNotice: vi.fn().mockResolvedValue({ enabled: false }),
+  saveNotice: vi.fn(),
+  clearNotice: vi.fn(),
 }));
 
 vi.mock('../../hooks/useSiteData', () => ({
@@ -81,6 +87,9 @@ describe('Dashboard Component', () => {
     expect(screen.getByText('Reports')).toBeInTheDocument();
     expect(screen.getByText('Community')).toBeInTheDocument();
     expect(screen.getByText('Deployments')).toBeInTheDocument();
+    expect(screen.getByText('Notices')).toBeInTheDocument();
+    expect(screen.getByText('Docs')).toBeInTheDocument();
+    expect(screen.getByText('API Activity')).toBeInTheDocument();
     expect(screen.getByText('Team Access')).toBeInTheDocument();
   });
 
