@@ -17,11 +17,16 @@
   },
   "contact": {
     "email": "cursor-contact@lorapok.tech",
-    "fallbackEmail": "mdshuvo40@gmail.com"
+    "fallbackEmail": "lorapokdev@gmail.com"
   },
   "api": {
     "base": "https://cursor-dev.lorapok.tech",
     "notice": "https://cursor-dev.lorapok.tech/api/notice",
-    "subscribe": "https://cursor-dev.lorapok.tech/api/subscribe"
+    "subscribe": "https://cursor-dev.lorapok.tech/api/subscribe",
+    "analyticsVisit": "https://cursor-dev.lorapok.tech/api/analytics/visit",
+    "analyticsStats": "https://cursor-dev.lorapok.tech/api/analytics/stats"
+  },
+  "analytics": {
+    "gaMeasurementId": ""
   }
 }

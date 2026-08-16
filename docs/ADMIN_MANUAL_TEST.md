@@ -99,26 +99,35 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 8. Community, SEO, Settings, Team
+## 8. Community, SEO, Settings, Team, Architecture
 
 | # | Step | Expected |
 |---|------|----------|
-| 8.1 | **Community** | Discussions/issues fallback UI |
-| 8.2 | **SEO** | Keywords, links, schema preview from `seo.json` |
-| 8.3 | **Settings** | Theme toggle, env hints |
-| 8.4 | **Team Access** | Master admin shown; add/remove admin emails (Firestore) |
+| 8.1 | **Community Overview** | Lists discussions + category chips; capabilities flags visible |
+| 8.2 | **Community Compose** | Create post into existing category (needs Discussions write token); disabled if token missing |
+| 8.3 | **Community Manage** | Categories read-only; “Manage on GitHub” / poll deep links; community config (master) |
+| 8.4 | **Admin button** | Sidebar + marketing footer/community link to `https://cursor-dev.lorapok.tech` |
+| 8.5 | **Architecture** | `/dashboard/architecture` animated read-only flow |
+| 8.6 | **Channel Sync Strip** | Labeled Synced/Drift badges (not thin SyncRadar) |
+| 8.7 | **Usage stats** | Overview shows opt-in uniques + downloads/visits |
+| 8.8 | **SEO** | Keywords, links, schema; sitemap includes `terms.html` |
+| 8.9 | **Settings** | Theme, GA measurement slot (no echo), health booleans |
+| 8.10 | **Team Access** | Master admin shown; add/remove admin emails |
 
 ---
 
-## 9. Extension smoke (0.5.6)
+## 9. Extension smoke
 
 | # | Step | Expected |
 |---|------|----------|
 | 9.1 | `npm run package` | VSIX builds without errors |
 | 9.2 | Install VSIX in Cursor/VS Code | Extension activates |
-| 9.3 | Open usage dashboard sidebar | Version shows **0.5.6** |
-| 9.4 | Trigger refresh | No duplicate refresh / mutex warnings in dev console |
-| 9.5 | Large `state.vscdb` fixture | Token read succeeds (sqlite path, not full WASM load) |
+| 9.3 | Open usage dashboard sidebar | Version matches package |
+| 9.4 | Missing Cursor DB | Full “Cursor not found” overlay; controls disabled except refresh |
+| 9.5 | Apply fallback while Cursor running | Refused with quit-then-write message |
+| 9.6 | Opt-in heartbeat off | No network to `/api/usage/ping` |
+| 9.7 | Opt-in heartbeat on | One ping/day; installId stable across reload |
+| 9.8 | Offline VSIX → marketplace | Same `anonymousInstallId` in globalState |
 
 ---
 
@@ -132,12 +141,21 @@ node scripts/validate-seo.mjs
 
 | # | Check | Expected |
 |---|-------|----------|
-| 10.1 | `website/site-data.json` | `"version": "0.5.6"`, `github.tags` populated |
-| 10.2 | `website/seo.json` | `softwareVersion` = 0.5.6 |
-| 10.3 | Local website preview | Install commands reference 0.5.6 |
+| 10.1 | `website/site-data.json` | version + downloads + visitors |
+| 10.2 | `website/seo.json` / sitemap | includes `terms.html` and `privacy.html` |
+| 10.3 | Contact fallback | `lorapokdev@gmail.com` on index/privacy/terms |
+| 10.4 | Analytics | Beacon to Facility `/api/analytics/visit` (no client Firestore writes) |
+| 10.5 | Terms linked | Footer Privacy · Terms |
 
 ---
 
+## 11. Automated coverage map
+
+| Area | Command / file |
+|------|----------------|
+| Extension auth/fallback/telemetry/write-guard | `npm test` |
+| Admin API + UI | `cd website/admin && npm test` |
+| SEO | `npm run site:seo:validate` |
 ## 11. Publish stable 0.5.6 to marketplaces
 
 ### Option A — GitHub Actions (recommended)

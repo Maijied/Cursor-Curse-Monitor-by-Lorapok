@@ -402,9 +402,65 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       color: var(--muted);
       font-weight: 600;
     }
+    .cursor-missing-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(6, 8, 13, 0.82);
+      backdrop-filter: blur(6px);
+      padding: 24px 16px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .cursor-missing-overlay.visible { display: flex; }
+    .cursor-missing-card {
+      max-width: 320px;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,107,107,.35);
+      background: rgba(17, 24, 39, 0.95);
+    }
+    .cursor-missing-anim {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 14px;
+      border-radius: 18px;
+      border: 2px dashed rgba(255,107,107,.55);
+      display: grid;
+      place-items: center;
+      animation: pulseMiss 1.6s ease-in-out infinite;
+      font-size: 28px;
+    }
+    @keyframes pulseMiss {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+    body.cursor-missing .actions button,
+    body.cursor-missing .icon-btn,
+    body.cursor-missing input,
+    body.cursor-missing .edit-link {
+      pointer-events: none;
+      opacity: 0.45;
+    }
+    body.cursor-missing #refreshBtn,
+    body.cursor-missing #refreshBtn2 {
+      pointer-events: auto;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
+  <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
+    <div class="cursor-missing-card">
+      <div class="cursor-missing-anim" aria-hidden="true">⌘</div>
+      <h2 style="margin:0 0 8px;font-size:16px;">Cursor not found</h2>
+      <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.5;">
+        Install or open Cursor, sign in once, then refresh. This dashboard stays read-only and will not write your database while Cursor is missing.
+      </p>
+    </div>
+  </div>
   <header class="header">
     <div class="logo-wrap" id="mascotLogo">
       ${logoSvg}
@@ -584,6 +640,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const b = snapshot.budget;
       const usage = snapshot.usage;
       const errorBox = document.getElementById('errorBox');
+      const missingOverlay = document.getElementById('cursorMissingOverlay');
+      if (snapshot.cursorMissing) {
+        document.body.classList.add('cursor-missing');
+        if (missingOverlay) missingOverlay.classList.add('visible');
+      } else {
+        document.body.classList.remove('cursor-missing');
+        if (missingOverlay) missingOverlay.classList.remove('visible');
+      }
 
       document.getElementById('subtitle').textContent = (snapshot.email ? snapshot.email + ' · ' : '') +
         'Lorapok Labs · ' + new Date(snapshot.fetchedAt).toLocaleTimeString();

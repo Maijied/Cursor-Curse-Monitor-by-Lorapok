@@ -49,6 +49,57 @@ export async function fetchDiscussionsApi() {
   return apiGet<DiscussionResponse>("/discussions");
 }
 
+export async function createDiscussionApi(payload: {
+  title: string;
+  body: string;
+  categoryId: string;
+  repositoryId?: string;
+}) {
+  const res = await fetch(`${API_BASE}/discussions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to create discussion");
+  return data as { ok: boolean; discussion: { id: string; url: string; title: string } | null };
+}
+
+export async function fetchUsageStatsApi() {
+  return apiGet<UsageStatsResponse>("/usage/stats");
+}
+
+export async function fetchAnalyticsStatsApi() {
+  return apiGet<{
+    websiteVisits: number;
+    packageClicks: Record<string, number>;
+    totalEngagement: number;
+    updatedAt: string | null;
+    source?: string;
+  }>("/analytics/stats", false);
+}
+
+export async function fetchCommunityConfigApi() {
+  return apiGet<CommunityConfig>("/community/config", false);
+}
+
+export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
+  const res = await fetch(`${API_BASE}/community/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save community config");
+  return data as { ok: boolean; config: CommunityConfig };
+}
+
 export type DeployRequest = {
   target_tag: string;
   publish_market: "Both" | "Open VSX" | "VS Code Marketplace";
@@ -92,12 +143,81 @@ export type MarketplaceSync = {
   checkedAt: string;
 };
 
+export type DiscussionCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  emoji?: string;
+  description?: string;
+  isAnswerable?: boolean;
+  format?: "qa" | "announcement" | "discussion" | string;
+};
+
+export type DiscussionCapabilities = {
+  canCreatePosts: boolean;
+  canManageCategories: boolean;
+  canCreatePolls: boolean;
+  tokenConfigured: boolean;
+};
+
+export type DiscussionItem = {
+  id?: string;
+  title: string;
+  url: string;
+  category: string;
+  categorySlug?: string;
+  createdAt: string;
+  comments: number;
+  answered?: boolean;
+  hasPoll?: boolean;
+};
+
 export type DiscussionResponse = {
   enabled: boolean;
-  discussions: Array<{ title: string; url: string; category: string; createdAt: string; comments: number }>;
-  topics: Array<{ topic: string; count: number; items: Array<{ title: string; url: string; state?: string }> }>;
+  discussions: DiscussionItem[];
+  categories: DiscussionCategory[];
+  repositoryId?: string | null;
+  topics: Array<{
+    topic: string;
+    count: number;
+    items: Array<{ title: string; url: string; state?: string; comments?: number; updatedAt?: string }>;
+  }>;
   settingsUrl: string;
+  manageCategoriesUrl?: string;
+  discussionsUrl?: string;
   repoIssuesUrl: string;
+  capabilities?: DiscussionCapabilities;
+};
+
+export type UsageStatsResponse = {
+  optInUniques: {
+    unique7d: number;
+    unique30d: number;
+    uniqueAll: number;
+    byOs?: Record<string, number>;
+    byHost?: Record<string, number>;
+  };
+  marketplace?: {
+    total?: number;
+    breakdown?: Record<string, number>;
+    note?: string;
+  } | null;
+  visitors?: {
+    websiteVisits?: number;
+    totalEngagement?: number;
+    packageClicks?: Record<string, number>;
+    updatedAt?: string | null;
+  } | null;
+  updatedAt: string;
+};
+
+export type CommunityConfig = {
+  featuredDiscussionUrls: string[];
+  defaultCategorySlug: string;
+  issueTopicLabelMap?: Record<string, string>;
+  collaborateUrl: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
 };
 
 export async function syncAdminAccess(payload: { email: string; action: "add" | "remove" }) {

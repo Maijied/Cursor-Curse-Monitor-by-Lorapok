@@ -14,9 +14,11 @@ service cloud.firestore {
       allow create, update, delete: if isMaster();
     }
 
+    // Visitor counters moved to ADMIN_KV via /api/analytics/visit.
+    // Keep doc readable for legacy admin UI; block all client writes.
     match /stats/visitors {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update, delete: if false;
     }
   }
 }

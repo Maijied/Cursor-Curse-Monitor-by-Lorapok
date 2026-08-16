@@ -1,17 +1,19 @@
-import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { readVisitorStats } from "../_shared/visitor-stats.js";
 
-/** Visitor stats are stored in Firestore (stats/visitors). This endpoint is deprecated on Pages. */
+const CORS = { "Access-Control-Allow-Origin": "*" };
+
+/** Aggregated visitor stats from ADMIN_KV (no PII). */
 export async function onRequestGet(context) {
   const { request, env } = context;
-  const auth = await verifyAdminRequest(request, env);
-  if (auth.error) return auth.error;
+  const url = new URL(request.url);
+  const adminOnly = url.searchParams.get("admin") === "1";
 
-  return jsonResponse({
-    websiteVisits: 0,
-    packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0 },
-    totalEngagement: 0,
-    updatedAt: null,
-    source: "firestore",
-    message: "Live visitor stats are read from Firestore in the admin UI.",
-  });
+  if (adminOnly) {
+    const auth = await verifyAdminRequest(request, env);
+    if (auth.error) return auth.error;
+  }
+
+  const stats = await readVisitorStats(env);
+  return jsonResponse({ ...stats, source: "admin-kv" }, 200, CORS);
 }

@@ -1,6 +1,7 @@
 /**
  * Anonymous visit + package link tracking for the marketing site.
- * Persists to Firestore (production) and beacons to /api/analytics/visit (dev snapshot).
+ * Beacons to Lorapok Facility /api/analytics/visit (ADMIN_KV). No client Firestore writes.
+ * Optional Google Analytics when a public measurement ID is configured.
  */
 (function () {
   const SESSION_KEY = "ccm-analytics-session";
@@ -13,81 +14,39 @@
     "[data-href-npm]": "npm",
   };
 
-  let firestoreReady = false;
-  let db = null;
+  const DEFAULT_API = "https://cursor-dev.lorapok.tech";
 
-  async function initFirestore() {
-    if (firestoreReady) return db;
-    try {
-      const [configRes, appMod, fsMod] = await Promise.all([
-        fetch("firebase-public.json"),
-        import("https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js"),
-        import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js"),
-      ]);
-      if (!configRes.ok) return null;
-      const config = await configRes.json();
-      const app = appMod.initializeApp(config);
-      db = fsMod.getFirestore(app);
-      firestoreReady = true;
-      return { db, fsMod };
-    } catch {
-      return null;
-    }
-  }
-
-  function getBeaconUrl(data) {
-    const path = data?.analytics?.beaconPath || "/api/analytics/visit";
-    try {
-      return new URL(path, window.location.origin).href;
-    } catch {
-      return path;
-    }
-  }
-
-  function sendBeacon(channel) {
+  function sendBeacon(url, channel) {
     const payload = JSON.stringify({
       channel,
       path: window.location.pathname,
       referrer: document.referrer || null,
     });
-    const url = window.__ccmBeaconUrl || "/api/analytics/visit";
     if (navigator.sendBeacon) {
       navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
     } else {
-      fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => {});
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
     }
   }
 
-  async function trackEvent(channel) {
-    sendBeacon(channel);
-    const fs = await initFirestore();
-    if (!fs) return;
-    const { db: firestore, fsMod } = fs;
-    const ref = fsMod.doc(firestore, "stats", "visitors");
-    const field = channel === "website" ? "websiteVisits" : `packageClicks.${channel}`;
-    try {
-      await fsMod.updateDoc(ref, {
-        [field]: fsMod.increment(1),
-        totalEngagement: fsMod.increment(1),
-        updatedAt: new Date().toISOString(),
-      });
-    } catch {
-      try {
-        await fsMod.setDoc(ref, {
-          websiteVisits: channel === "website" ? 1 : 0,
-          packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, npm: 0, openvsxDuplicate: 0, [channel]: channel === "website" ? 0 : 1 },
-          totalEngagement: 1,
-          updatedAt: new Date().toISOString(),
-        }, { merge: true });
-      } catch {
-        /* Firestore rules may block anonymous writes until configured */
-      }
-    }
+  function trackEvent(channel) {
+    const url = window.__ccmBeaconUrl;
+    if (!url) return;
+    sendBeacon(url, channel);
   }
 
   function trackPageView() {
-    if (sessionStorage.getItem(SESSION_KEY)) return;
-    sessionStorage.setItem(SESSION_KEY, "1");
+    try {
+      if (sessionStorage.getItem(SESSION_KEY)) return;
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {
+      /* private mode */
+    }
     trackEvent("website");
   }
 
@@ -99,17 +58,49 @@
     }
   }
 
+  function loadGtag(measurementId) {
+    if (!measurementId || !/^G-[A-Z0-9]+$/i.test(measurementId)) return;
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      window.dataLayer.push(arguments);
+    }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", measurementId, { anonymize_ip: true });
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(measurementId);
+    document.head.appendChild(s);
+  }
+
   async function init() {
-    let data = null;
+    let social = null;
+    let siteData = null;
     try {
-      const res = await fetch("site-data.json", { cache: "no-store" });
-      if (res.ok) data = await res.json();
+      const [socialRes, siteRes] = await Promise.all([
+        fetch("social.json", { cache: "no-store" }),
+        fetch("site-data.json", { cache: "no-store" }),
+      ]);
+      if (socialRes.ok) social = await socialRes.json();
+      if (siteRes.ok) siteData = await siteRes.json();
     } catch {
       /* ignore */
     }
-    window.__ccmBeaconUrl = getBeaconUrl(data);
+
+    const apiBase = (social?.api?.base || DEFAULT_API).replace(/\/$/, "");
+    window.__ccmBeaconUrl =
+      social?.api?.analyticsVisit ||
+      siteData?.analytics?.beaconUrl ||
+      `${apiBase}/api/analytics/visit`;
+
     trackPageView();
     bindPackageClicks();
+
+    const gaId =
+      siteData?.analytics?.gaMeasurementId ||
+      social?.analytics?.gaMeasurementId ||
+      "";
+    if (gaId) loadGtag(String(gaId).trim());
   }
 
   if (document.readyState === "loading") {

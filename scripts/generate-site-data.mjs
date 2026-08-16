@@ -138,7 +138,7 @@ function computeSyncStatus(canonicalVersion, duplicateVersion, targetVersion) {
   return "synced";
 }
 
-function readVisitorStats() {
+function readVisitorStatsFile() {
   const path = join(root, "website", "visitor-stats.json");
   if (!existsSync(path)) {
     return {
@@ -153,6 +153,44 @@ function readVisitorStats() {
   } catch {
     return { websiteVisits: 0, packageClicks: {}, totalEngagement: 0, updatedAt: null };
   }
+}
+
+async function readVisitorStats() {
+  const fileStats = readVisitorStatsFile();
+  const socialPath = join(root, "website", "social.json");
+  let statsUrl = process.env.ANALYTICS_STATS_URL || "";
+  if (!statsUrl && existsSync(socialPath)) {
+    try {
+      const social = JSON.parse(readFileSync(socialPath, "utf8"));
+      statsUrl = social?.api?.analyticsStats || "";
+    } catch {
+      /* ignore */
+    }
+  }
+  if (!statsUrl) return fileStats;
+  try {
+    const live = await fetchJson(statsUrl);
+    if (live && typeof live.websiteVisits === "number") {
+      const merged = {
+        websiteVisits: live.websiteVisits ?? 0,
+        packageClicks: { ...(fileStats.packageClicks ?? {}), ...(live.packageClicks ?? {}) },
+        totalEngagement: live.totalEngagement ?? 0,
+        updatedAt: live.updatedAt ?? new Date().toISOString(),
+      };
+      try {
+        writeFileSync(
+          join(root, "website", "visitor-stats.json"),
+          JSON.stringify(merged, null, 2) + "\n"
+        );
+      } catch {
+        /* non-fatal */
+      }
+      return merged;
+    }
+  } catch {
+    /* fall back to file when API unavailable in CI */
+  }
+  return fileStats;
 }
 
 async function githubTags() {
@@ -306,7 +344,7 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   ovsxLatest(OVSX_DUPLICATE_NS),
   vsceLatest(),
   githubDiscussionsAndIssues(),
-  Promise.resolve(readVisitorStats()),
+  readVisitorStats(),
 ]);
 
 const version = github?.version ?? pkg.version;
@@ -375,6 +413,15 @@ const siteData = {
   },
   analytics: {
     beaconPath: "/api/analytics/visit",
+    beaconUrl: "https://cursor-dev.lorapok.tech/api/analytics/visit",
+    gaMeasurementId: (() => {
+      try {
+        const social = JSON.parse(readFileSync(join(root, "website", "social.json"), "utf8"));
+        return social?.analytics?.gaMeasurementId || "";
+      } catch {
+        return "";
+      }
+    })(),
   },
   ovsx: {
     ...ovsx,

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LogOut, X } from "lucide-react";
+import { LayoutDashboard, LogOut, X } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../routes";
 import OnlineStatus from "../ui/OnlineStatus";
@@ -23,9 +23,21 @@ export default function Sidebar({
         ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}
     >
-      <div>
+      <div className="min-h-0 flex-1 flex flex-col">
         <div className="h-20 flex items-center px-6 border-b border-[var(--color-border)] gap-3">
-          <img src="/assets/welcome-animation.svg" alt="" className="w-9 h-9" />
+          <div className="relative shrink-0">
+            <span
+              className="absolute inset-0 rounded-xl animate-pulse-neon pointer-events-none"
+              aria-hidden="true"
+            />
+            <div className="relative w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--color-neon)_18%,transparent)] border border-[color-mix(in_srgb,var(--color-neon)_35%,transparent)] flex items-center justify-center overflow-hidden">
+              <img
+                src="/assets/logo.svg"
+                alt="Cursor Curse Monitor by Lorapok"
+                className="w-8 h-8 object-contain"
+              />
+            </div>
+          </div>
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-base bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-accent)] bg-clip-text text-transparent">
               Cursor Monitor
@@ -46,17 +58,18 @@ export default function Sidebar({
           <OnlineStatus />
         </div>
 
-        <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-14rem)]" aria-label="Main navigation">
-          {APP_ROUTES.map(({ path, label, icon: Icon, end }) => (
+        <nav className="p-4 space-y-1 overflow-y-auto flex-1" aria-label="Main navigation">
+          {APP_ROUTES.map(({ path, label, icon: Icon, end }, index) => (
             <NavLink
               key={path}
               to={path}
               end={end}
               onClick={onClose}
+              style={{ animationDelay: `${index * 0.04}s` }}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all border ${
+                `animate-fade-slide-up flex items-center gap-3 px-4 py-3 rounded-xl transition-all border relative ${
                   isActive
-                    ? "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] font-medium shadow-[inset_3px_0_0_var(--color-neon)]"
+                    ? "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] font-medium shadow-[inset_3px_0_0_var(--color-neon),0_0_20px_color-mix(in_srgb,var(--color-accent)_15%,transparent)]"
                     : "border-transparent text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
                 }`
               }
@@ -68,9 +81,25 @@ export default function Sidebar({
         </nav>
       </div>
 
-      <div className="p-4 border-t border-[var(--color-border)]">
+      <div className="p-4 border-t border-[var(--color-border)] space-y-3">
+        <NavLink
+          to="/dashboard"
+          end
+          onClick={onClose}
+          className={({ isActive }) =>
+            `w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-xl transition-colors border ${
+              isActive
+                ? "border-[var(--color-neon)] text-[var(--color-neon)] bg-[color-mix(in_srgb,var(--color-neon)_10%,transparent)]"
+                : "border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-white/5"
+            }`
+          }
+        >
+          <LayoutDashboard size={16} aria-hidden="true" />
+          Admin
+        </NavLink>
+
         {user && (
-          <div className="flex items-center gap-3 mb-4 px-2">
+          <div className="flex items-center gap-3 px-2">
             <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] flex items-center justify-center text-[var(--color-accent)] font-bold border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]">
               {user.email?.[0].toUpperCase()}
             </div>
@@ -80,7 +109,7 @@ export default function Sidebar({
             </div>
           </div>
         )}
-        <InstallAppButton className="w-full mb-3" />
+        <InstallAppButton className="w-full" />
         <button
           type="button"
           onClick={() => auth.signOut()}

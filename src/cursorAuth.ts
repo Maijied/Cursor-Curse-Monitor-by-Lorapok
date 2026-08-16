@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as crypto from "crypto";
+import { execSync } from "child_process";
 
 const REACTIVE_KEY =
   "src.vs.platform.reactivestorage.browser.reactiveStorageServiceImpl.persistentStorage.applicationUser";
@@ -14,40 +15,79 @@ const STALE_BACKUP_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 type SqliteModule = typeof import("node:sqlite");
 
-export function getCursorGlobalStoragePath(): string {
+export type EditorHost = "cursor" | "vscode" | "unknown";
+
+export function detectEditorHost(appName?: string): EditorHost {
+  const name = (appName || process.env.VSCODE_APP_NAME || "").toLowerCase();
+  if (name.includes("cursor")) return "cursor";
+  if (name.includes("visual studio code") || name.includes("vscode") || name === "code") {
+    return "vscode";
+  }
+  // Default path resolution prefers Cursor when ambiguous.
+  return "cursor";
+}
+
+function appDataRoot(host: EditorHost): { darwin: string; win32: string; linux: string } {
+  const product = host === "vscode" ? "Code" : "Cursor";
+  const home = os.homedir();
+  return {
+    darwin: path.join(home, "Library", "Application Support", product, "User", "globalStorage", "state.vscdb"),
+    win32: path.join(
+      process.env.APPDATA ?? path.join(home, "AppData", "Roaming"),
+      product,
+      "User",
+      "globalStorage",
+      "state.vscdb"
+    ),
+    linux: path.join(home, ".config", product, "User", "globalStorage", "state.vscdb"),
+  };
+}
+
+/** Resolve Cursor or VS Code globalStorage state.vscdb for the current host. */
+export function getCursorGlobalStoragePath(host?: EditorHost): string {
   if (process.env.CURSOR_DB_PATH) {
     return process.env.CURSOR_DB_PATH;
   }
-  const home = os.homedir();
+  const resolvedHost = host ?? detectEditorHost();
+  const roots = appDataRoot(resolvedHost === "unknown" ? "cursor" : resolvedHost);
   switch (process.platform) {
     case "darwin":
-      return path.join(
-        home,
-        "Library",
-        "Application Support",
-        "Cursor",
-        "User",
-        "globalStorage",
-        "state.vscdb"
-      );
+      return roots.darwin;
     case "win32":
-      return path.join(
-        process.env.APPDATA ?? path.join(home, "AppData", "Roaming"),
-        "Cursor",
-        "User",
-        "globalStorage",
-        "state.vscdb"
-      );
+      return roots.win32;
     default:
-      return path.join(
-        home,
-        ".config",
-        "Cursor",
-        "User",
-        "globalStorage",
-        "state.vscdb"
-      );
+      return roots.linux;
   }
+}
+
+/** True when the editor process that owns the DB appears to be running. */
+export function isEditorProcessRunning(host: EditorHost = detectEditorHost()): boolean {
+  if (process.env.CURSOR_EDITOR_RUNNING === "1") return true;
+  if (process.env.CURSOR_EDITOR_RUNNING === "0") return false;
+
+  const patterns =
+    host === "vscode"
+      ? ["Code.exe", "code", "Code - OSS", "code-oss"]
+      : ["Cursor.exe", "Cursor", "cursor"];
+
+  try {
+    if (process.platform === "win32") {
+      const out = execSync("tasklist", { encoding: "utf8", timeout: 3000 });
+      return patterns.some((p) => out.toLowerCase().includes(p.toLowerCase()));
+    }
+    const out = execSync("ps -A -o comm=", { encoding: "utf8", timeout: 3000 });
+    const lines = out.split("\n").map((l) => l.trim());
+    return patterns.some((p) =>
+      lines.some((line) => line === p || line.endsWith(`/${p}`) || line.toLowerCase() === p.toLowerCase())
+    );
+  } catch {
+    // If process detection fails, refuse writes (fail closed for data safety).
+    return true;
+  }
+}
+
+export function cursorDbExists(host?: EditorHost): boolean {
+  return fs.existsSync(getCursorGlobalStoragePath(host));
 }
 
 function loadSqlite(): SqliteModule {
@@ -56,7 +96,7 @@ function loadSqlite(): SqliteModule {
   } catch {
     throw new Error(
       `This Cursor build does not provide node:sqlite. ` +
-      `Extension host Node version: ${process.versions.node}`
+        `Extension host Node version: ${process.versions.node}`
     );
   }
 }
@@ -98,38 +138,57 @@ function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: s
   }
 }
 
-function createBackup(dbPath: string): string | null {
+type BackupBundle = {
+  stamp: string;
+  files: Array<{ original: string; backup: string }>;
+};
+
+function companionPaths(dbPath: string): string[] {
+  return [dbPath, `${dbPath}-wal`, `${dbPath}-shm`];
+}
+
+/** Backup state.vscdb + WAL + SHM. Fails closed if the main DB cannot be copied. */
+export function createFullBackup(dbPath: string): BackupBundle | null {
   try {
-    const backupPath = `${dbPath}.backup-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
-    fs.copyFileSync(dbPath, backupPath);
-    return backupPath;
+    const stamp = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+    const files: BackupBundle["files"] = [];
+    for (const original of companionPaths(dbPath)) {
+      if (!fs.existsSync(original)) continue;
+      const backup = `${original}.backup-${stamp}`;
+      fs.copyFileSync(original, backup);
+      files.push({ original, backup });
+    }
+    if (!files.some((f) => f.original === dbPath)) {
+      return null;
+    }
+    return { stamp, files };
   } catch {
     return null;
   }
 }
 
-function restoreFromBackup(backupPath: string, originalPath: string): boolean {
+function restoreFullBackup(bundle: BackupBundle | null): boolean {
+  if (!bundle) return false;
   try {
-    if (fs.existsSync(backupPath)) {
-      fs.copyFileSync(backupPath, originalPath);
-      return true;
+    for (const { original, backup } of bundle.files) {
+      if (fs.existsSync(backup)) {
+        fs.copyFileSync(backup, original);
+      }
     }
-    return false;
+    return true;
   } catch {
     return false;
   }
 }
 
-function cleanupBackup(backupPath: string | null): void {
-  if (!backupPath) {
-    return;
-  }
-  try {
-    if (fs.existsSync(backupPath)) {
-      fs.unlinkSync(backupPath);
+function cleanupFullBackup(bundle: BackupBundle | null): void {
+  if (!bundle) return;
+  for (const { backup } of bundle.files) {
+    try {
+      if (fs.existsSync(backup)) fs.unlinkSync(backup);
+    } catch {
+      // Non-critical
     }
-  } catch {
-    // Non-critical
   }
 }
 
@@ -140,7 +199,12 @@ function cleanupStaleBackups(dbPath: string): void {
     const entries = fs.readdirSync(dir);
     const now = Date.now();
     for (const entry of entries) {
-      if (entry.startsWith(`${basename}.backup-`) || entry.startsWith(`${basename}.tmp-`)) {
+      if (
+        entry.startsWith(`${basename}.backup-`) ||
+        entry.startsWith(`${basename}-wal.backup-`) ||
+        entry.startsWith(`${basename}-shm.backup-`) ||
+        entry.startsWith(`${basename}.tmp-`)
+      ) {
         const fullPath = path.join(dir, entry);
         try {
           const stats = fs.statSync(fullPath);
@@ -175,6 +239,25 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+function runPragmaIntegrityCheck(dbPath: string): { ok: boolean; detail?: string } {
+  try {
+    const { DatabaseSync } = loadSqlite();
+    const db = new DatabaseSync(dbPath, { readOnly: true, timeout: 5000 });
+    try {
+      const row = db.prepare("PRAGMA integrity_check").get() as { integrity_check?: string } | undefined;
+      const result = String(row?.integrity_check ?? "");
+      if (result.toLowerCase() !== "ok") {
+        return { ok: false, detail: result };
+      }
+      return { ok: true };
+    } finally {
+      db.close();
+    }
+  } catch (error) {
+    return { ok: false, detail: error instanceof Error ? error.message : "integrity check failed" };
+  }
+}
+
 function readCursorKeyDirect(key: string): string | null {
   const dbPath = getCursorGlobalStoragePath();
 
@@ -186,7 +269,7 @@ function readCursorKeyDirect(key: string): string | null {
   if (!integrityCheck.valid) {
     throw new Error(
       `Cursor storage database looks damaged (${integrityCheck.reason}). ` +
-      "Quit Cursor, remove state.vscdb-wal and state.vscdb-shm, then restart Cursor before using this extension."
+        "Quit Cursor, remove state.vscdb-wal and state.vscdb-shm, then restart Cursor before using this extension."
     );
   }
 
@@ -291,12 +374,25 @@ function applyFallbackWithSqlite(
   }
 }
 
+/**
+ * Quit-then-write fallback. Refuses while the editor process is running.
+ * Backs up db+wal+shm, updates in place, runs PRAGMA integrity_check, restores on failure.
+ */
 export async function applyComposerFallbackModel(): Promise<{
   success: boolean;
   error?: string;
   alreadySet?: boolean;
 }> {
-  const dbPath = getCursorGlobalStoragePath();
+  const host = detectEditorHost();
+  if (isEditorProcessRunning(host)) {
+    return {
+      success: false,
+      error:
+        "Cursor/VS Code is still running. Quit the editor completely, then run Apply Free Fallback Model again. Live writes are disabled to protect your data.",
+    };
+  }
+
+  const dbPath = getCursorGlobalStoragePath(host);
   if (!fs.existsSync(dbPath)) {
     return { success: false, error: "Database file does not exist" };
   }
@@ -311,9 +407,9 @@ export async function applyComposerFallbackModel(): Promise<{
     };
   }
 
-  const backupPath = createBackup(dbPath);
-  if (!backupPath) {
-    return { success: false, error: "Failed to create database backup" };
+  const backupBundle = createFullBackup(dbPath);
+  if (!backupBundle) {
+    return { success: false, error: "Failed to create database backup (aborting write)" };
   }
 
   const attemptModification = async (): Promise<{
@@ -330,13 +426,22 @@ export async function applyComposerFallbackModel(): Promise<{
     );
 
     if (attemptResult.success) {
-      cleanupBackup(backupPath);
+      const after = runPragmaIntegrityCheck(dbPath);
+      if (!after.ok) {
+        restoreFullBackup(backupBundle);
+        cleanupFullBackup(backupBundle);
+        return {
+          success: false,
+          error: `Post-write integrity check failed (${after.detail}). Restored backup.`,
+        };
+      }
+      // Keep backup for one session window (stale cleaner removes later).
       return attemptResult;
     }
 
-    const restored = restoreFromBackup(backupPath, dbPath);
+    const restored = restoreFullBackup(backupBundle);
     if (!restored) {
-      cleanupBackup(backupPath);
+      cleanupFullBackup(backupBundle);
       return { success: false, error: "Failed to restore backup for retry" };
     }
 
@@ -347,19 +452,27 @@ export async function applyComposerFallbackModel(): Promise<{
     );
 
     if (attemptResult.success) {
-      cleanupBackup(backupPath);
+      const after = runPragmaIntegrityCheck(dbPath);
+      if (!after.ok) {
+        restoreFullBackup(backupBundle);
+        cleanupFullBackup(backupBundle);
+        return {
+          success: false,
+          error: `Post-write integrity check failed (${after.detail}). Restored backup.`,
+        };
+      }
       return attemptResult;
     }
 
-    restoreFromBackup(backupPath, dbPath);
-    cleanupBackup(backupPath);
+    restoreFullBackup(backupBundle);
+    cleanupFullBackup(backupBundle);
     return {
       success: false,
       error: attemptResult.error || "Failed to apply fallback model after retry",
     };
   } catch (error) {
-    restoreFromBackup(backupPath, dbPath);
-    cleanupBackup(backupPath);
+    restoreFullBackup(backupBundle);
+    cleanupFullBackup(backupBundle);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error during fallback model application",

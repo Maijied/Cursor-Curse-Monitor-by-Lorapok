@@ -75,15 +75,15 @@
       <h2>Marketing website</h2>
       <ul>
         <li><strong>Email subscribe</strong> — if you opt in on the homepage, we store your email address to send release notes and important notices. You can unsubscribe at any time via the link in any email.</li>
-        <li><strong>Anonymous analytics</strong> — the marketing site counts page visits and marketplace link clicks only. No personal data, cookies for tracking, or fingerprinting is used.</li>
-        <li><strong>No extension telemetry</strong> — the VS Code/Cursor extension does not phone home or use third-party trackers.</li>
+        <li><strong>Anonymous analytics</strong> — the marketing site counts page visits and marketplace link clicks (sessionStorage may prevent double-counting in one session). Counters may be stored in Firestore and/or synced into public <code>visitor-stats.json</code>. No advertising cookies or fingerprinting.</li>
+        <li><strong>Optional extension heartbeat</strong> — off by default. If you enable <code>cursorCurseMonitor.anonymousUsageStats</code>, see <a href="terms.html">Terms</a> for the install-ID ping. With the setting off, the extension does not phone home.</li>
       </ul>
 
       <h2>What we do not do</h2>
       <ul>
-        <li>No usage data sent to Lorapok Labs servers from the extension</li>
+        <li>No forced extension telemetry (heartbeat is opt-in)</li>
         <li>No sale of personal data</li>
-        <li>No third-party ad trackers on the marketing site or in the extension</li>
+        <li>No third-party ad trackers in the extension</li>
       </ul>
 
       <h2>Model fallback</h2>
@@ -93,8 +93,9 @@
       <p>
         Mohammad Maizied Hasan Majumder —
         <a href="mailto:cursor-contact@lorapok.tech">cursor-contact@lorapok.tech</a>
-        (<a href="mailto:mdshuvo40@gmail.com">mdshuvo40@gmail.com</a> if the primary address is unavailable)
+        (<a href="mailto:lorapokdev@gmail.com">lorapokdev@gmail.com</a> if the primary address is unavailable)
       </p>
+      <p>See also <a href="terms.html">Terms of Use</a>.</p>
     </main>
   </div>
 
@@ -127,8 +128,8 @@
         </a>
       </nav>
       <p>MIT © Lorapok Labs · Not affiliated with Cursor / Anysphere</p>
-      <p><a href="./">← Back to home</a> · <a href="sitemap.xml">Sitemap</a> · <a href="mailto:cursor-contact@lorapok.tech">Contact</a></p>
-      <p class="footer-contact-fallback">If the primary address is unavailable, reach us at <a href="mailto:mdshuvo40@gmail.com">mdshuvo40@gmail.com</a>.</p>
+      <p><a href="./">← Back to home</a> · <a href="sitemap.xml">Sitemap</a> · <a href="terms.html">Terms</a> · <a href="mailto:cursor-contact@lorapok.tech">Contact</a></p>
+      <p class="footer-contact-fallback">If the primary address is unavailable, reach us at <a href="mailto:lorapokdev@gmail.com">lorapokdev@gmail.com</a>.</p>
     </div>
   </footer>
   <script src="analytics.js" defer></script>

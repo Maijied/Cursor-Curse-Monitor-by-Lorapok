@@ -48,7 +48,7 @@
 | **Limit alerts** | Warning at 80% (configurable) |
 | **Free fallback** | Auto-switches to Composer 2.5 (Fast off) at 100% |
 | **Team aware** | Shows team vs individual limit type |
-| **DB safety** | Atomic writes, backup/restore, integrity checks |
+| **DB safety** | Read-only while Cursor runs; quit-then-write with WAL/SHM backup + integrity checks |
 
 ## Screenshots
 
@@ -132,17 +132,18 @@ Hover the status bar to see Plan, Auto, and API percentages together.
 
 ### Database Safety
 
-The extension takes multiple precautions when writing to the Cursor state database:
+Monitoring is **read-only** while Cursor/VS Code is running. Optional free-fallback writes only run after the editor is fully quit:
 
+- **Process guard** — refuses writes if Cursor/VS Code appears to be running (fail closed if detection fails)
 - **Pre-write integrity check** — validates SQLite header, file size, and existence
-- **Automatic backup** — creates a timestamped backup before any write
-- **Atomic writes** — writes to a temp file then renames (with cross-filesystem fallback)
-- **Post-write verification** — validates integrity after writing
-- **Automatic restore** — restores from backup on any failure
-- **Retry with backoff** — retries once after restoring the backup
+- **Companion backup** — copies `state.vscdb` plus `-wal` and `-shm` before any write
+- **In-place transactional UPDATE** — never rewrites the whole database file
+- **PRAGMA integrity_check** — after write; restores all companions on failure
+- **Retry once** — restores backup and retries; aborts and restores again on second failure
 - **Timeout protection** — operations abort after 15s to prevent hangs
 - **Parameterized queries** — prevents SQL injection
 - **Stale backup cleanup** — removes old backups automatically
+- **Cursor-not-found overlay** — dashboard blocks controls when `state.vscdb` is missing
 
 ## CI/CD
 

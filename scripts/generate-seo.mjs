@@ -52,6 +52,7 @@ const sameAs = social?.brand ? Object.values(social.brand) : [];
 const pages = [
   { loc: `${SITE_BASE}/`, priority: "1.0", changefreq: "weekly", file: "website/index.html" },
   { loc: `${SITE_BASE}/privacy.html`, priority: "0.6", changefreq: "monthly", file: "website/privacy.html" },
+  { loc: `${SITE_BASE}/terms.html`, priority: "0.6", changefreq: "monthly", file: "website/terms.html" },
 ];
 
 const urlEntries = pages

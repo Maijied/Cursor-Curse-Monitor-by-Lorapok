@@ -24,6 +24,14 @@ const devStore = {
   },
   subscribers: [],
   activity: [],
+  usageInstalls: new Map(),
+  communityConfig: {
+    featuredDiscussionUrls: [],
+    defaultCategorySlug: "announcements",
+    collaborateUrl: `https://github.com/${GITHUB_REPO}/discussions`,
+    updatedAt: null,
+    updatedBy: null,
+  },
 };
 
 function logDevActivity(req, status, email = "dev@local") {
@@ -269,7 +277,27 @@ async function fetchDiscussions() {
     topics.push(...map.values());
   }
 
-  return { enabled, discussions, topics, settingsUrl: `https://github.com/${GITHUB_REPO}/settings#features` };
+  return {
+    enabled,
+    discussions,
+    topics,
+    settingsUrl: `https://github.com/${GITHUB_REPO}/settings#features`,
+    manageCategoriesUrl: `https://github.com/${GITHUB_REPO}/discussions/categories`,
+    discussionsUrl: `https://github.com/${GITHUB_REPO}/discussions`,
+    repoIssuesUrl: `https://github.com/${GITHUB_REPO}/issues`,
+    categories: [
+      { id: "dev-announce", name: "Announcements", slug: "announcements", emoji: "", description: "", isAnswerable: false, format: "announcement" },
+      { id: "dev-general", name: "General", slug: "general", emoji: "", description: "", isAnswerable: false, format: "discussion" },
+      { id: "dev-qa", name: "Q&A", slug: "q-a", emoji: "", description: "", isAnswerable: true, format: "qa" },
+    ],
+    repositoryId: "dev-repo",
+    capabilities: {
+      canCreatePosts: Boolean(loadGithubToken()),
+      canManageCategories: false,
+      canCreatePolls: false,
+      tokenConfigured: Boolean(loadGithubToken()),
+    },
+  };
 }
 
 async function fetchGitHubReleases() {
@@ -371,6 +399,113 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/usage/ping" && req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.end();
+      return;
+    }
+
+    if (url === "/api/usage/ping" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const installId = String(parsed.installId ?? "").trim().toLowerCase();
+          if (!/^[0-9a-f-]{36}$/i.test(installId)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "installId must be a UUID" }));
+            return;
+          }
+          const now = new Date().toISOString();
+          const prev = devStore.usageInstalls.get(installId);
+          devStore.usageInstalls.set(installId, {
+            installId,
+            os: String(parsed.os ?? "unknown").slice(0, 32),
+            host: ["cursor", "vscode"].includes(String(parsed.host)) ? parsed.host : "unknown",
+            version: String(parsed.version ?? "unknown").slice(0, 32),
+            lastSeenAt: now,
+            firstSeenAt: prev?.firstSeenAt ?? now,
+          });
+          res.end(JSON.stringify({ ok: true }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/usage/stats" && req.method === "GET") {
+      const records = [...devStore.usageInstalls.values()];
+      const cut7 = Date.now() - 7 * 86400000;
+      const cut30 = Date.now() - 30 * 86400000;
+      const byOs = {};
+      const byHost = {};
+      let unique7d = 0;
+      let unique30d = 0;
+      for (const r of records) {
+        const seen = Date.parse(r.lastSeenAt || "") || 0;
+        if (seen >= cut7) unique7d += 1;
+        if (seen >= cut30) unique30d += 1;
+        byOs[r.os] = (byOs[r.os] ?? 0) + 1;
+        byHost[r.host] = (byHost[r.host] ?? 0) + 1;
+      }
+      let visitors = null;
+      let marketplace = null;
+      try {
+        const site = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        visitors = site.visitors ?? null;
+        marketplace = site.downloads ?? site.marketplace ?? null;
+      } catch { /* ignore */ }
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        optInUniques: { unique7d, unique30d, uniqueAll: records.length, byOs, byHost },
+        marketplace,
+        visitors,
+        updatedAt: new Date().toISOString(),
+      }));
+      return;
+    }
+
+    if (url === "/api/community/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.end(JSON.stringify(devStore.communityConfig));
+      return;
+    }
+
+    if (url === "/api/community/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          devStore.communityConfig = {
+            ...devStore.communityConfig,
+            featuredDiscussionUrls: Array.isArray(parsed.featuredDiscussionUrls)
+              ? parsed.featuredDiscussionUrls.map(String).slice(0, 20)
+              : devStore.communityConfig.featuredDiscussionUrls,
+            defaultCategorySlug: String(parsed.defaultCategorySlug ?? devStore.communityConfig.defaultCategorySlug).slice(0, 64),
+            collaborateUrl: String(parsed.collaborateUrl ?? devStore.communityConfig.collaborateUrl).slice(0, 512),
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          };
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: devStore.communityConfig }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/tags" && req.method === "GET") {
       fetchGitHubTags()
         .then((result) => {
@@ -396,6 +531,43 @@ export function createDevApiMiddleware() {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ error: err.message }));
         });
+      return;
+    }
+
+    if (url === "/api/discussions" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const title = String(parsed.title ?? "").trim();
+          const markdown = String(parsed.body ?? "").trim();
+          const categoryId = String(parsed.categoryId ?? "").trim();
+          if (!title || !markdown || !categoryId) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "title, body, and categoryId are required" }));
+            return;
+          }
+          if (!loadGithubToken()) {
+            res.statusCode = 503;
+            res.end(JSON.stringify({ error: "GITHUB_TOKEN not configured" }));
+            return;
+          }
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({
+            ok: true,
+            discussion: {
+              id: `dev-${Date.now()}`,
+              url: `https://github.com/${GITHUB_REPO}/discussions`,
+              title,
+            },
+          }));
+          logDevActivity(req, 200);
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
       return;
     }
 
