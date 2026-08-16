@@ -19,7 +19,7 @@ const NAME = pkg.name;
 const OVSX_EXT_ID = `${OVSX_NS}.${NAME}`;
 const VSCE_EXT_ID = `${VSCE_NS}.${NAME}`;
 
-/** Public development notice — shown on website banner and admin reports. */
+/** Static fallback only — used when /api/notice is unreachable. Live banner is the admin catalog. */
 const DEV_NOTICE = {
   enabled: true,
   type: "development",

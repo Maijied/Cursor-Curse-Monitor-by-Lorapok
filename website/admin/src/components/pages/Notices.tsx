@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { Eye, Megaphone, Save, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Eye, Megaphone, Plus, Power, Save, Trash2 } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
-import { fetchNotice, saveNotice, clearNotice } from "../../lib/api";
+import DataTable, { type DataTableColumn } from "../ui/DataTable";
+import { createNotice, deleteNotice, fetchNotices, updateNotice } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;
@@ -21,25 +22,41 @@ const EMPTY: DevNotice = {
   collaborateUrl: "",
   updatedAt: new Date().toISOString(),
   dismissible: true,
+  id: undefined,
+  source: "admin",
 };
+
+function noticeKey(row: DevNotice, index: number) {
+  return row.id || `${row.title}-${row.updatedAt}-${index}`;
+}
 
 export default function Notices() {
   const [form, setForm] = useState<DevNotice>(EMPTY);
+  const [items, setItems] = useState<DevNotice[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
+  const applyCatalog = useCallback((nextItems: DevNotice[], preferredId?: string | null) => {
+    setItems(nextItems);
+    const preferred = preferredId ? nextItems.find((n) => n.id === preferredId) : undefined;
+    const active = nextItems.find((n) => n.enabled);
+    const selected = preferred ?? active;
+    if (selected) setForm({ ...EMPTY, ...selected });
+  }, []);
+
   useEffect(() => {
-    fetchNotice()
+    fetchNotices()
       .then((data) => {
-        if (data.notice) setForm({ ...EMPTY, ...data.notice });
+        applyCatalog(data.items ?? []);
         setError(null);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [applyCatalog]);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -48,13 +65,22 @@ export default function Notices() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const resetForm = () => {
+    setForm({ ...EMPTY, updatedAt: new Date().toISOString() });
+    setMessage(null);
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
     try {
-      await saveNotice({ ...form, enabled: true, updatedAt: new Date().toISOString() });
-      setMessage({ type: "success", text: "Site notice saved and enabled." });
+      const payload = { ...form, enabled: true, updatedAt: new Date().toISOString() };
+      const result = form.id
+        ? await updateNotice({ ...payload, id: form.id })
+        : await createNotice(payload);
+      applyCatalog(result.items ?? [], result.notice?.id);
+      setMessage({ type: "success", text: form.id ? "Notice updated and enabled." : "Notice saved and enabled." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
     }
@@ -62,41 +88,198 @@ export default function Notices() {
   };
 
   const handleDisable = async () => {
+    if (!form.id) {
+      setForm({ ...form, enabled: false });
+      setMessage({ type: "success", text: "Draft notice is not live." });
+      return;
+    }
     setSaving(true);
     setMessage(null);
     try {
-      await clearNotice();
-      setForm({ ...form, enabled: false });
-      setMessage({ type: "success", text: "Site notice disabled." });
+      const result = await updateNotice({ id: form.id, enabled: false });
+      applyCatalog(result.items ?? [], form.id);
+      setMessage({ type: "success", text: "Notice disabled." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Disable failed" });
     }
     setSaving(false);
   };
 
+  const handleToggle = async (row: DevNotice) => {
+    if (!row.id) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const result = await updateNotice({ id: row.id, enabled: !row.enabled });
+      applyCatalog(result.items ?? [], form.id);
+      setMessage({
+        type: "success",
+        text: row.enabled ? `"${row.title}" disabled.` : `"${row.title}" enabled on the marketing site.`,
+      });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Update failed" });
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (row: DevNotice) => {
+    if (!row.id) return;
+    if (!window.confirm(`Delete “${row.title || "this notice"}”? This cannot be undone.`)) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const result = await deleteNotice(row.id);
+      const remaining = result.items ?? [];
+      setItems(remaining);
+      if (form.id === row.id) {
+        const active = remaining.find((n) => n.enabled);
+        setForm(active ? { ...EMPTY, ...active } : { ...EMPTY, updatedAt: new Date().toISOString() });
+      }
+      setMessage({ type: "success", text: `"${row.title}" deleted.` });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Delete failed" });
+    }
+    setSaving(false);
+  };
+
+  const filteredItems = useMemo(() => {
+    if (statusFilter === "enabled") return items.filter((n) => n.enabled);
+    if (statusFilter === "disabled") return items.filter((n) => !n.enabled);
+    if (statusFilter === "generated") return items.filter((n) => n.source === "generated");
+    return items;
+  }, [items, statusFilter]);
+
+  const columns: DataTableColumn<DevNotice>[] = [
+    {
+      key: "title",
+      header: "Notice",
+      searchValue: (row) => `${row.title} ${row.shortMessage} ${row.message}`,
+      render: (row) => (
+        <button
+          type="button"
+          onClick={() => setForm({ ...EMPTY, ...row })}
+          className="text-left font-medium text-[var(--color-text)] hover:text-[var(--color-accent)]"
+        >
+          {row.title || "Untitled"}
+          {row.shortMessage && (
+            <span className="block text-xs font-normal text-[var(--color-muted)] mt-1 line-clamp-2">
+              {row.shortMessage}
+            </span>
+          )}
+        </button>
+      ),
+    },
+    {
+      key: "source",
+      header: "Source",
+      searchValue: (row) => row.source ?? "admin",
+      render: (row) => (
+        <Badge variant={row.source === "generated" ? "warn" : "neutral"}>
+          {row.source === "generated" ? "Generated" : "Admin"}
+        </Badge>
+      ),
+    },
+    {
+      key: "severity",
+      header: "Severity",
+      searchValue: (row) => row.severity,
+      render: (row) => {
+        const variant = row.severity === "critical" ? "danger" : row.severity === "warning" ? "warn" : "neutral";
+        return <Badge variant={variant}>{row.severity}</Badge>;
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      searchValue: (row) => (row.enabled ? "enabled live" : "disabled"),
+      render: (row) =>
+        row.enabled ? (
+          <Badge variant="synced" pulse>
+            Live
+          </Badge>
+        ) : (
+          <Badge variant="neutral">Disabled</Badge>
+        ),
+    },
+    {
+      key: "updated",
+      header: "Updated",
+      searchValue: (row) => row.updatedAt ?? "",
+      render: (row) => (
+        <span className="text-[var(--color-muted)] font-[family-name:var(--font-mono)] text-xs">
+          {row.updatedAt ? new Date(row.updatedAt).toLocaleString() : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (row) => (
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            disabled={saving || !row.id}
+            onClick={() => handleToggle(row)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs hover:bg-white/5 disabled:opacity-50"
+          >
+            <Power size={14} aria-hidden="true" />
+            {row.enabled ? "Disable" : "Enable"}
+          </button>
+          <button
+            type="button"
+            disabled={saving || !row.id}
+            onClick={() => handleDelete(row)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)] text-[var(--color-danger)] text-xs hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] disabled:opacity-50"
+          >
+            <Trash2 size={14} aria-hidden="true" />
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   if (loading) return <ShimmerSkeleton className="h-64" />;
   if (error) return <ErrorState message={error} />;
 
   const severityVariant = form.severity === "critical" ? "danger" : form.severity === "warning" ? "warn" : "neutral";
+  const liveCount = items.filter((n) => n.enabled).length;
+  const editing = Boolean(form.id);
 
   return (
-    <div className="max-w-3xl space-y-8 animate-fade-slide-up">
+    <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Site Notices"
-        description="Manage the public development banner shown on the marketing site via /api/notice."
+        description="Catalog of generated and admin notices. Only one can be live on the marketing banner at a time. Disable or delete here to hide it from the website."
         action={
-          form.enabled ? (
+          liveCount > 0 ? (
             <Badge variant={severityVariant} pulse>
               <Megaphone size={12} aria-hidden="true" />
-              Active
+              {liveCount} live
             </Badge>
           ) : (
-            <Badge variant="neutral">Disabled</Badge>
+            <Badge variant="neutral">None live</Badge>
           )
         }
       />
 
       <Card>
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <h3 className="text-lg font-semibold text-[var(--color-text)]">
+            {editing ? "Edit notice" : "New notice"}
+          </h3>
+          {editing && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="inline-flex items-center gap-2 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
+            >
+              <Plus size={16} aria-hidden="true" />
+              New notice
+            </button>
+          )}
+        </div>
         <form onSubmit={handleSave} className="space-y-5">
           <div>
             <label htmlFor="notice-title" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">Title</label>
@@ -201,15 +384,15 @@ export default function Notices() {
               className="flex-1 flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50"
             >
               <Save size={18} aria-hidden="true" />
-              {saving ? "Saving…" : "Save & Enable"}
+              {saving ? "Saving…" : editing ? "Update & Enable" : "Save & Enable"}
             </button>
             <button
               type="button"
               onClick={handleDisable}
-              disabled={saving}
+              disabled={saving || !form.id || !form.enabled}
               className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)] text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors disabled:opacity-50"
             >
-              <Trash2 size={18} aria-hidden="true" />
+              <Power size={18} aria-hidden="true" />
               Disable
             </button>
           </div>
@@ -248,6 +431,31 @@ export default function Notices() {
             {message.text}
           </div>
         )}
+      </Card>
+
+      <Card>
+        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2 flex items-center gap-2">
+          <Megaphone size={20} className="text-[var(--color-accent)]" aria-hidden="true" />
+          All notices
+        </h3>
+        <p className="text-sm text-[var(--color-muted)] mb-5">
+          Generated marketing news is imported here once. Enable one row to show it on the website, or disable/delete to hide it.
+        </p>
+        <DataTable
+          columns={columns}
+          rows={filteredItems}
+          getRowKey={noticeKey}
+          emptyMessage="No notices in the catalog yet."
+          filterOptions={[
+            { value: "", label: "All notices" },
+            { value: "enabled", label: "Live" },
+            { value: "disabled", label: "Disabled" },
+            { value: "generated", label: "Generated" },
+          ]}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterLabel="Status"
+        />
       </Card>
     </div>
   );

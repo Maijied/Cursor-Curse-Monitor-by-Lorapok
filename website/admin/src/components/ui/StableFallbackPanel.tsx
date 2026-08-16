@@ -60,8 +60,8 @@ function VersionRow({ row }: { row: StableFallbackVersion }) {
 export default function StableFallbackPanel({ info }: { info: StableFallbackInfo }) {
   return (
     <Card>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+        <div className="min-w-0 flex-1">
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Stable Fallback Versions</h3>
           <p className="text-sm text-[var(--color-muted)] mt-1 max-w-2xl">
             Extension releases and whether fallback model writes are safe for Cursor&apos;s{" "}
@@ -69,7 +69,7 @@ export default function StableFallbackPanel({ info }: { info: StableFallbackInfo
             <span className="font-[family-name:var(--font-mono)]">v{info.safeSinceVersion}</span> may cause database conflicts.
           </p>
         </div>
-        <div className="shrink-0 p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] text-sm">
+        <div className="shrink-0 w-full sm:w-auto p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] text-sm">
           <p className="text-[var(--color-muted)] text-xs mb-1">Fallback model</p>
           <p className="font-semibold text-[var(--color-text)]">{info.model.displayName}</p>
           <p className="text-xs text-[var(--color-muted)] font-[family-name:var(--font-mono)] mt-1">{info.model.modelId}</p>

@@ -271,8 +271,60 @@ export type ApiActivityResponse = {
   total: number;
 };
 
+function asNotice(data: unknown): DevNotice | null {
+  if (!data || typeof data !== "object") return null;
+  const raw = data as Record<string, unknown>;
+  const nested = raw.notice;
+  const notice = (nested && typeof nested === "object" ? nested : raw) as Partial<DevNotice>;
+  if (!notice.title && notice.enabled !== true && notice.enabled !== false) return null;
+  return notice as DevNotice;
+}
+
 export async function fetchNotice() {
-  return apiGet<{ notice: DevNotice | null }>("/notice");
+  const data = await apiGet<DevNotice | { notice: DevNotice | null }>("/notice", false);
+  return { notice: asNotice(data) };
+}
+
+export async function fetchNotices() {
+  return apiGet<{ items: DevNotice[]; active: DevNotice | null }>("/notices");
+}
+
+export async function createNotice(payload: NoticePayload & { enabled?: boolean }) {
+  const res = await fetch(`${API_BASE}/notices`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to create notice");
+  return data as { ok: boolean; notice: DevNotice; items: DevNotice[] };
+}
+
+export async function updateNotice(payload: Partial<DevNotice> & { id: string }) {
+  const res = await fetch(`${API_BASE}/notices`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to update notice");
+  return data as { ok: boolean; notice: DevNotice; items: DevNotice[] };
+}
+
+export async function deleteNotice(id: string) {
+  const res = await fetch(`${API_BASE}/notices?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: await authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to delete notice");
+  return data as { ok: boolean; items: DevNotice[] };
 }
 
 export async function saveNotice(payload: NoticePayload) {

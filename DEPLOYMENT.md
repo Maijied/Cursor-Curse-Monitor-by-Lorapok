@@ -1,5 +1,7 @@
 # Deployment Guide
 
+> **Architecture overview:** domains, hosting, Cloudflare migration, and system diagram — [README.md § Architecture](README.md#architecture).
+
 ## CI/CD Overview
 
 All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)

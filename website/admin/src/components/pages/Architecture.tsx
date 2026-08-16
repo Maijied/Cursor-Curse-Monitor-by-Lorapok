@@ -49,9 +49,37 @@ export default function Architecture() {
       />
 
       <Card>
+        <p className="text-sm text-[var(--color-muted)] mb-6 max-w-3xl">
+          End-to-end topology for the extension, marketing site, admin APIs, and release pipeline.
+          The canonical diagram lives in the repository{" "}
+          <a
+            href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#architecture"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--color-accent-2)] hover:underline"
+          >
+            README
+          </a>
+          . Summary below.
+        </p>
+
+        <div className="mb-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] p-4 overflow-x-auto">
+          <pre className="text-xs text-[var(--color-muted)] font-[family-name:var(--font-mono)] whitespace-pre leading-relaxed">
+{`Marketing site ──► GitHub Pages (maijied.github.io/…)
+                 └──► Cloudflare /api/notice + analytics
+
+Admin SPA ───────► cursor-dev.lorapok.tech (Cloudflare Pages)
+                 └──► Pages Functions /api/* + ADMIN_KV + Firebase Auth
+
+Extension ───────► Open VSX (lorapok-labs) + VS Code Marketplace
+                 └──► Cursor API (local machine only)
+
+CI/CD ───────────► GitHub Actions → marketplaces + Pages + admin deploy`}
+          </pre>
+        </div>
+
         <p className="text-sm text-[var(--color-muted)] mb-8 max-w-2xl">
-          This diagram is informational only — it does not mutate systems. Each step is a one-way read or a tightly scoped
-          admin write (deploy, notice, discussion post).
+          Each step below is a one-way read or a tightly scoped admin write (deploy, notice, discussion post).
         </p>
 
         <ol className="space-y-4" aria-label="Architecture flow">

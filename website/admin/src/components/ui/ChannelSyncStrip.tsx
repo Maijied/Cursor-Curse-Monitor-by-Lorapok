@@ -9,8 +9,8 @@ export default function ChannelSyncStrip({ data }: { data: SiteData }) {
   const allSynced = channels.filter((c) => !c.warn).every((c) => c.synced);
 
   return (
-    <Card className="animate-fade-slide-up">
-      <div className="flex items-center justify-between gap-3 mb-4">
+    <Card className="h-full animate-fade-slide-up">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h3 className="text-sm font-medium text-[var(--color-muted)]">Channel Sync Strip</h3>
         <Badge variant={allSynced ? "synced" : "drift"} pulse={allSynced}>
           {allSynced ? "All primary synced" : "Drift detected"}
@@ -20,25 +20,29 @@ export default function ChannelSyncStrip({ data }: { data: SiteData }) {
         {channels.map((ch, i) => (
           <div
             key={ch.id}
-            className={`rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-4 stagger-${Math.min(i + 1, 4)} animate-fade-slide-up`}
+            className={`min-w-0 rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-4 stagger-${Math.min(i + 1, 4)} animate-fade-slide-up`}
           >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <p className="text-sm font-semibold text-[var(--color-text)]">{ch.label}</p>
-              {ch.warn ? (
-                <Badge variant="warn">Deprecate</Badge>
-              ) : ch.synced ? (
-                <Badge variant="synced" pulse>
-                  Synced
-                </Badge>
-              ) : (
-                <Badge variant="drift">Drift</Badge>
-              )}
+            <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text)] truncate" title={ch.label}>
+                {ch.label}
+              </p>
+              <div className="shrink-0">
+                {ch.warn ? (
+                  <Badge variant="warn">Deprecate</Badge>
+                ) : ch.synced ? (
+                  <Badge variant="synced" pulse>
+                    Synced
+                  </Badge>
+                ) : (
+                  <Badge variant="drift">Drift</Badge>
+                )}
+              </div>
             </div>
-            <p className="font-[family-name:var(--font-mono)] text-lg text-[var(--color-text)]">
+            <p className="font-[family-name:var(--font-mono)] text-lg text-[var(--color-text)] tabular-nums">
               {ch.version ?? "—"}
             </p>
             {ch.downloadCount != null && (
-              <p className="text-xs text-[var(--color-muted)] mt-1">
+              <p className="text-xs text-[var(--color-muted)] mt-1 tabular-nums">
                 {formatCount(ch.downloadCount)} downloads
               </p>
             )}

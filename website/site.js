@@ -141,8 +141,10 @@
     });
   }
 
-  const liveNotice = await fetchLiveNotice(NOTICE_URL);
-  const notice = liveNotice ?? data?.notice;
+  const live = await fetchLiveNotice(NOTICE_URL);
+  // When the admin API is reachable, honor it even if the notice is disabled.
+  // Fall back to site-data.json only when the API cannot be reached.
+  const notice = live.reachable ? live.notice : data?.notice;
   renderDevNotice(notice);
 
   initLightbox();
@@ -153,11 +155,11 @@
 async function fetchLiveNotice(url) {
   try {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
+    if (!res.ok) return { reachable: false, notice: null };
     const notice = await res.json();
-    return notice?.enabled ? notice : null;
+    return { reachable: true, notice: notice?.enabled ? notice : null };
   } catch {
-    return null;
+    return { reachable: false, notice: null };
   }
 }
 
@@ -273,34 +275,59 @@ function initLightbox() {
   const counter = document.getElementById("lightbox-counter");
   if (!lightbox || !img) return;
 
-  const triggers = [...document.querySelectorAll(".lightbox-trigger")];
+  const allTriggers = [...document.querySelectorAll(".lightbox-trigger")];
+  let activeGroup = null;
   let index = 0;
+  let lastFocus = null;
 
-  const show = (i) => {
+  const groupFor = (btn) => btn.dataset.lightboxGroup || "page";
+  const triggersInGroup = (group) => allTriggers.filter((btn) => groupFor(btn) === group);
+
+  const show = (group, i) => {
+    const triggers = triggersInGroup(group);
     if (!triggers.length) return;
+    activeGroup = group;
     index = (i + triggers.length) % triggers.length;
     const btn = triggers[index];
-    const src = btn.dataset.src || btn.querySelector("img")?.src;
+    const src = btn.dataset.src || btn.querySelector("img")?.currentSrc || btn.querySelector("img")?.src;
     const alt = btn.querySelector("img")?.alt || btn.dataset.caption || "";
     if (!src) return;
 
+    img.classList.remove("is-loaded");
+    const onLoad = () => {
+      img.classList.add("is-loaded");
+      img.removeEventListener("load", onLoad);
+    };
+    img.addEventListener("load", onLoad);
     img.src = src;
+    if (img.complete) onLoad();
     img.alt = alt;
     caption.textContent = btn.dataset.caption || alt;
     counter.textContent = `${index + 1} / ${triggers.length}`;
     lightbox.hidden = false;
+    lightbox.setAttribute("aria-hidden", "false");
     document.body.classList.add("lightbox-open");
     lightbox.querySelector(".lightbox-close")?.focus();
   };
 
   const close = () => {
     lightbox.hidden = true;
+    lightbox.setAttribute("aria-hidden", "true");
     document.body.classList.remove("lightbox-open");
+    img.classList.remove("is-loaded");
     img.removeAttribute("src");
+    activeGroup = null;
+    lastFocus?.focus?.();
+    lastFocus = null;
   };
 
-  triggers.forEach((btn, i) => {
-    btn.addEventListener("click", () => show(i));
+  allTriggers.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      lastFocus = btn;
+      const group = groupFor(btn);
+      const triggers = triggersInGroup(group);
+      show(group, triggers.indexOf(btn));
+    });
   });
 
   lightbox.querySelectorAll("[data-lightbox-close]").forEach((el) => {
@@ -309,18 +336,18 @@ function initLightbox() {
 
   lightbox.querySelector(".lightbox-prev")?.addEventListener("click", (e) => {
     e.stopPropagation();
-    show(index - 1);
+    if (activeGroup) show(activeGroup, index - 1);
   });
 
   lightbox.querySelector(".lightbox-next")?.addEventListener("click", (e) => {
     e.stopPropagation();
-    show(index + 1);
+    if (activeGroup) show(activeGroup, index + 1);
   });
 
   document.addEventListener("keydown", (e) => {
-    if (lightbox.hidden) return;
+    if (lightbox.hidden || !activeGroup) return;
     if (e.key === "Escape") close();
-    if (e.key === "ArrowLeft") show(index - 1);
-    if (e.key === "ArrowRight") show(index + 1);
+    if (e.key === "ArrowLeft") show(activeGroup, index - 1);
+    if (e.key === "ArrowRight") show(activeGroup, index + 1);
   });
 }

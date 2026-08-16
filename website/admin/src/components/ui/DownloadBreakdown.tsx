@@ -20,15 +20,15 @@ export default function DownloadBreakdownPanel({
   note?: string;
 }) {
   return (
-    <Card>
+    <Card className="h-full">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Total Downloads</h3>
-          <p className="text-4xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-neon)] mt-1">
+          <p className="text-4xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-neon)] mt-1 tabular-nums">
             {formatCount(total)}
           </p>
         </div>
-        {note && <p className="text-xs text-[var(--color-muted)] max-w-xs">{note}</p>}
+        {note && <p className="text-xs text-[var(--color-muted)] sm:max-w-xs sm:text-right">{note}</p>}
       </div>
 
       <div className="space-y-3">
