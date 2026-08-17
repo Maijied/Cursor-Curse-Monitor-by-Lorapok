@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-16T19:05:30.147Z",
+  "generatedAt": "2026-08-17T06:42:35.091Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.8",
@@ -15,13 +15,13 @@
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
     "email": "mdshuvo40@gmail.com",
-    "url": "https://lorapok.tech"
+    "url": "https://github.com/Maijied"
   },
   "downloads": {
     "total": 1939,
     "breakdown": {
       "openVsxCanonical": 1936,
-      "openVsxDuplicate": 724,
+      "openVsxDuplicate": 744,
       "vscodeMarketplace": 0,
       "githubVsix": 3,
       "latestReleaseVsix": 0
@@ -42,7 +42,16 @@
   },
   "community": {
     "discussionsEnabled": true,
-    "discussions": [],
+    "discussions": [
+      {
+        "title": "Welcome to Cursor-Curse-Monitor-by-Lorapok Discussions!",
+        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions/8",
+        "category": "Announcements",
+        "createdAt": "2026-08-17T00:15:00Z",
+        "comments": 0,
+        "answered": false
+      }
+    ],
     "topics": [],
     "settingsUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/settings#features",
     "repoIssuesUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
@@ -66,7 +75,7 @@
     "version": "0.5.4",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 724,
+    "downloadCount": 744,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
