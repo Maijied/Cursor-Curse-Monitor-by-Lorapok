@@ -142,11 +142,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No SEO artifact changes to commit"
           else
-            git commit -m "$(cat <<'EOF'
-chore(seo): refresh site-data, sitemap, and SEO manifest.
-
-Automated marketplace sync, visitor stats, and sitemap lastmod update.
-EOF
-)"
+            git commit -m "chore(seo): refresh site-data, sitemap, and SEO manifest." \
+              -m "Automated marketplace sync, visitor stats, and sitemap lastmod update."
             git push
           fi
