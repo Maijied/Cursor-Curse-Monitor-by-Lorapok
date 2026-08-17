@@ -16,6 +16,8 @@ const devStore = {
   notices: [{ ...GENERATED_DEV_NOTICE }],
   subscribers: [],
   activity: [],
+  mailbox: [],
+  systemLogs: [],
   usageInstalls: new Map(),
   communityConfig: {
     featuredDiscussionUrls: [],
@@ -594,6 +596,8 @@ export function createDevApiMiddleware() {
             firebaseProject: "cursor-curse-by-lorapok",
             githubTokenConfigured: Boolean(loadGithubToken()),
             adminKvConfigured: true,
+            mailConfigured: true,
+            mailTransport: "dev-simulated",
             siteDataUrl: "/site-data.json",
           }));
         });
@@ -850,9 +854,39 @@ export function createDevApiMiddleware() {
             return;
           }
           if (!devStore.subscribers.includes(email)) devStore.subscribers.push(email);
+          const mailEntry = {
+            id: crypto.randomUUID(),
+            direction: "outbound",
+            from: "cursor-contact@lorapok.tech",
+            to: email,
+            subject: "Subscribed to Cursor Curse Monitor updates",
+            text: `Thanks for subscribing, ${email}.`,
+            status: "sent",
+            category: "subscribe",
+            ts: new Date().toISOString(),
+            sentBy: null,
+            error: null,
+            read: false,
+          };
+          devStore.mailbox.unshift(mailEntry);
+          devStore.systemLogs.unshift({
+            id: crypto.randomUUID(),
+            ts: new Date().toISOString(),
+            level: "info",
+            source: "mail",
+            message: `Email sent to ${email}`,
+            email: null,
+            meta: { category: "subscribe" },
+          });
           res.setHeader("Content-Type", "application/json");
           res.setHeader("Access-Control-Allow-Origin", "*");
-          res.end(JSON.stringify({ ok: true, emailed: false }));
+          res.end(
+            JSON.stringify({
+              ok: true,
+              emailed: true,
+              message: "You're subscribed! (Dev mode — no email sent locally.)",
+            })
+          );
         } catch {
           res.statusCode = 400;
           res.setHeader("Content-Type", "application/json");
@@ -869,6 +903,139 @@ export function createDevApiMiddleware() {
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
       res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       res.end();
+      return;
+    }
+
+    if (url.startsWith("/api/logs") && req.method === "GET") {
+      const query = new URL(req.url ?? "", "http://localhost");
+      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
+      const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));
+      const type = query.searchParams.get("type");
+      const merged = [
+        ...devStore.activity.map((row) => ({
+          id: `api-${row.ts}-${row.path}`,
+          type: "api",
+          ts: row.ts,
+          level: row.status >= 500 ? "error" : row.status >= 400 ? "warn" : "info",
+          source: "api",
+          method: row.method,
+          path: row.path,
+          status: row.status,
+          latencyMs: row.latencyMs,
+          email: row.email,
+          message: `${row.method} ${row.path} → ${row.status}`,
+        })),
+        ...devStore.mailbox.map((row) => ({
+          id: `mail-${row.id}`,
+          type: "mail",
+          ts: row.ts,
+          level: row.status === "failed" ? "error" : "info",
+          source: "mailbox",
+          status: row.status,
+          email: row.to,
+          subject: row.subject,
+          message: `${row.direction} ${row.category}: ${row.subject}`,
+        })),
+        ...devStore.systemLogs.map((row) => ({
+          id: `sys-${row.id}`,
+          type: "system",
+          ts: row.ts,
+          level: row.level,
+          source: row.source,
+          email: row.email,
+          message: row.message,
+        })),
+      ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+      const filtered = type && type !== "all" ? merged.filter((r) => r.type === type) : merged;
+      const start = (page - 1) * limit;
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        items: filtered.slice(start, start + limit),
+        page,
+        limit,
+        total: filtered.length,
+        totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
+        counts: {
+          api: devStore.activity.length,
+          mail: devStore.mailbox.length,
+          system: devStore.systemLogs.length,
+        },
+      }));
+      return;
+    }
+
+    if (url.startsWith("/api/mailbox") && req.method === "GET") {
+      const query = new URL(req.url ?? "", "http://localhost");
+      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
+      const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));
+      const start = (page - 1) * limit;
+      const items = devStore.mailbox.slice(start, start + limit);
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        items,
+        page,
+        limit,
+        total: devStore.mailbox.length,
+        totalPages: Math.max(1, Math.ceil(devStore.mailbox.length / limit)),
+        stats: {
+          total: devStore.mailbox.length,
+          unread: devStore.mailbox.filter((m) => !m.read).length,
+          outbound: devStore.mailbox.filter((m) => m.direction === "outbound").length,
+          inbound: devStore.mailbox.filter((m) => m.direction === "inbound").length,
+          failed: devStore.mailbox.filter((m) => m.status === "failed").length,
+        },
+        transport: { configured: true, transport: "dev-simulated" },
+      }));
+      return;
+    }
+
+    if (url === "/api/mailbox" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const action = parsed.action ?? "send";
+          if (action === "mark-read") {
+            const item = devStore.mailbox.find((m) => m.id === parsed.id);
+            if (item) item.read = true;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ ok: true, message: item }));
+            return;
+          }
+          const to = String(parsed.to ?? "dev@local").trim().toLowerCase();
+          const subject = action === "test"
+            ? "Cursor Curse Monitor — mailbox test"
+            : String(parsed.subject ?? "Dev compose");
+          const text = action === "test"
+            ? "Mailbox test (dev mode)"
+            : String(parsed.text ?? "");
+          const entry = {
+            id: crypto.randomUUID(),
+            direction: "outbound",
+            from: "cursor-contact@lorapok.tech",
+            to,
+            subject,
+            text,
+            status: "sent",
+            category: action === "test" ? "test" : "compose",
+            ts: new Date().toISOString(),
+            sentBy: "dev@local",
+            error: null,
+            read: false,
+          };
+          devStore.mailbox.unshift(entry);
+          logDevActivity(req, 200);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, emailed: true, message: `Dev: message queued to ${to}`, mailboxId: entry.id }));
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid payload" }));
+        }
+      });
       return;
     }
 

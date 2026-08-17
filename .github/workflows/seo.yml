@@ -6,44 +6,78 @@ on:
     paths:
       - "website/**"
       - "package.json"
+      - "package-lock.json"
+      - "scripts/generate-site-data.mjs"
+      - "scripts/generate-seo.mjs"
+      - "scripts/validate-seo.mjs"
+      - ".github/workflows/seo.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - "package.json"
       - "scripts/generate-site-data.mjs"
       - "scripts/generate-seo.mjs"
       - "scripts/validate-seo.mjs"
       - ".github/workflows/seo.yml"
   schedule:
+    # Mondays 06:00 UTC — refresh marketplace stats + sitemap lastmod
     - cron: "0 6 * * 1"
   workflow_dispatch:
+    inputs:
+      commit_to_main:
+        description: Commit refreshed artifacts to main when changed
+        type: boolean
+        default: true
 
 permissions:
   contents: write
 
+concurrency:
+  group: seo-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  seo:
-    name: Generate & Validate SEO
+  audit:
+    name: Audit & Validate SEO
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      - name: Generate site data
-        run: node scripts/generate-site-data.mjs
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate live site data
+        run: npm run site:data
         env:
           ANALYTICS_STATS_URL: https://cursor-dev.lorapok.tech/api/analytics/stats
 
-      - name: Generate SEO artifacts
-        run: node scripts/generate-seo.mjs
+      - name: Regenerate SEO artifacts
+        run: npm run site:seo
 
-      - name: Validate SEO
-        run: node scripts/validate-seo.mjs
+      - name: Validate SEO artifacts
+        run: npm run site:seo:validate
+
+      - name: Guard canonical Open VSX namespace
+        run: |
+          set -euo pipefail
+          if rg -n 'open-vsx\.org/extension/LorapokLabs' README.md website/index.html website/site-data.json 2>/dev/null; then
+            echo "::error::Duplicate Open VSX namespace (LorapokLabs) found — use lorapok-labs only."
+            exit 1
+          fi
+          echo "Canonical Open VSX links OK"
 
       - name: Upload SEO artifacts
         uses: actions/upload-artifact@v4
         with:
           name: seo-artifacts
+          if-no-files-found: error
           path: |
             website/sitemap.xml
             website/robots.txt
@@ -51,15 +85,68 @@ jobs:
             website/site-data.json
             website/visitor-stats.json
 
-      - name: Commit SEO artifacts when changed
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      - name: Job summary
+        run: |
+          {
+            echo "## SEO audit"
+            echo ""
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| Version | $(node -pe "JSON.parse(require('fs').readFileSync('website/site-data.json','utf8')).version") |"
+            echo "| Sync | $(node -pe "JSON.parse(require('fs').readFileSync('website/site-data.json','utf8')).syncStatus") |"
+            echo "| Generated | $(node -pe "JSON.parse(require('fs').readFileSync('website/seo.json','utf8')).generatedAt") |"
+            echo "| Sitemap URLs | $(rg -c '<url>' website/sitemap.xml) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish SEO artifacts
+    needs: audit
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (
+        github.event_name == 'schedule' ||
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(seo):'))
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate artifacts
+        run: |
+          npm run site:data
+          npm run site:seo
+        env:
+          ANALYTICS_STATS_URL: https://cursor-dev.lorapok.tech/api/analytics/stats
+
+      - name: Commit refreshed SEO artifacts
+        if: >-
+          (github.event_name != 'workflow_dispatch') ||
+          inputs.commit_to_main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json || true
+          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json
           if git diff --staged --quiet; then
-            echo "No SEO artifact changes"
+            echo "No SEO artifact changes to commit"
           else
-            git commit -m "chore(seo): weekly site-data and sitemap refresh"
+            git commit -m "$(cat <<'EOF'
+chore(seo): refresh site-data, sitemap, and SEO manifest.
+
+Automated marketplace sync, visitor stats, and sitemap lastmod update.
+EOF
+)"
             git push
           fi

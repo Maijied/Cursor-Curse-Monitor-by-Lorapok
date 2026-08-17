@@ -23,7 +23,8 @@
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
     <a href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/">Website</a> ·
-    <a href="https://cursor-dev.lorapok.tech">Admin</a> ·
+    <a href="https://cursor-dev.lorapok.tech">Mission Control</a> ·
+    <a href="CONTRIBUTING.md">Contributing</a> ·
     <a href="DEPLOYMENT.md">Deployment</a>
   </p>
 
@@ -41,7 +42,7 @@ This repository is a **monorepo** with three production surfaces:
 |-----------|------|------------|
 | **Extension** | `src/` | Open VSX · VS Code Marketplace · GitHub Releases |
 | **Marketing site** | `website/` | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
-| **Admin (Mission Control)** | `website/admin/` | https://cursor-dev.lorapok.tech |
+| **Mission Control (admin)** | `website/admin/` | https://cursor-dev.lorapok.tech |
 
 ---
 
@@ -128,29 +129,34 @@ cursor-usage-monitor/
 ├── dist/                         # Compiled extension output
 ├── media/                        # Icons and marketing assets
 ├── scripts/
-│   ├── generate-site-data.mjs    # Builds website/site-data.json
-│   ├── generate-seo.mjs          # Builds website/seo.json
+│   ├── generate-site-data.mjs    # Builds website/site-data.json (marketplace + analytics)
+│   ├── generate-seo.mjs          # Builds sitemap.xml, robots.txt, seo.json
+│   ├── validate-seo.mjs          # Lint SEO artifacts + canonical URL guard
 │   └── publish-ovsx.mjs          # Repacks VSIX for lorapok-labs namespace
 ├── tests/                        # Extension unit tests (node:sqlite)
 ├── website/
 │   ├── index.html                # Marketing landing page
-│   ├── site.js / analytics.js    # Client scripts (notice + beacon)
+│   ├── site.js / analytics.js    # Client scripts (notice banner + live KPI beacon)
 │   ├── site-data.json            # Generated marketplace + download stats
+│   ├── seo.json / sitemap.xml    # Generated SEO manifest + sitemap
 │   └── admin/
-│       ├── src/                  # React Mission Control SPA
+│       ├── src/                  # React Mission Control SPA (PWA-installable)
 │       ├── functions/api/        # Cloudflare Pages Functions (production API)
 │       └── vite-dev-api.mjs      # Local dev API middleware
-├── .github/workflows/ci-cd.yml   # Unified CI/CD pipeline
+├── .github/workflows/
+│   ├── ci-cd.yml                 # Unified CI/CD pipeline
+│   └── seo.yml                   # SEO audit, validation, and artifact refresh
+├── .github/ISSUE_TEMPLATE/       # Extension bug, website issue, security templates
 ├── DEPLOYMENT.md                 # Release + Cloudflare setup
 └── AGENTS.md                     # Agent / cloud dev instructions
 ```
 
 ### Data flows (summary)
 
-1. **Extension** — Reads local Cursor auth, calls `api2.cursor.sh`, optionally writes fallback model after quit with WAL-safe backups.
-2. **Marketing site** — Static HTML on GitHub Pages; loads `site-data.json` for download counts and falls back only when `/api/notice` is unreachable.
-3. **Admin** — Firebase-authenticated SPA on Cloudflare Pages; Pages Functions read/write KV (notices, admins), dispatch GitHub deploys, and proxy analytics.
-4. **CI/CD** — One workflow builds the extension, regenerates site data, deploys GitHub Pages, and deploys the admin panel when Cloudflare secrets are configured.
+1. **Extension** — Reads local Cursor auth, calls `api2.cursor.sh`, optionally writes fallback model after quit with WAL-safe backups. Opt-in heartbeats feed live-user counts to Mission Control.
+2. **Marketing site** — Static HTML on GitHub Pages; loads `site-data.json` for download counts, polls `/api/analytics/stats` for live visitor KPIs, and uses `/api/notice` for the public banner.
+3. **Mission Control** — Firebase-authenticated PWA on Cloudflare Pages; Pages Functions read/write KV (notices, admins), dispatch GitHub deploys, proxy analytics, and expose marketplace health APIs.
+4. **CI/CD** — Extension build, admin deploy, GitHub Pages publish, and a dedicated SEO workflow that regenerates sitemap and site-data artifacts on schedule and on merge to `main`.
 
 ---
 
@@ -221,16 +227,28 @@ See [website/admin/README.md](website/admin/README.md) and [AGENTS.md](AGENTS.md
 
 ## CI/CD
 
-Single workflow: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
+| Workflow | File | Purpose |
+|----------|------|---------|
+| **CI/CD** | [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) | Extension build, admin deploy, GitHub Pages |
+| **SEO** | [`.github/workflows/seo.yml`](.github/workflows/seo.yml) | Regenerate `site-data.json`, sitemap, validate canonical URLs |
+
+### CI/CD triggers
 
 | Trigger | Result |
 |---------|--------|
-| PR to `main` | Build, validate, package — no deploy |
-| Push to `main` | Extension CI, admin build/deploy*, marketing site update |
+| PR to `main` | Build, validate, package, SEO audit — no deploy |
+| Push to `main` | Extension CI, admin build/deploy*, marketing site update, SEO publish* |
+| Weekly (Mon 06:00 UTC) | Refresh SEO artifacts and marketplace stats |
 | Manual dispatch | Version bump → marketplace publish → website |
 | Tag `v*` | Marketplace deploy + GitHub Release + website |
 
-\* Admin deploy requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in GitHub secrets.
+\* Admin deploy requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. SEO publish commits refreshed artifacts when they change.
+
+Regenerate SEO locally:
+
+```bash
+npm run site:data && npm run site:seo && npm run site:seo:validate
+```
 
 Full setup: [DEPLOYMENT.md](DEPLOYMENT.md)
 
@@ -247,10 +265,12 @@ Full setup: [DEPLOYMENT.md](DEPLOYMENT.md)
 | Resource | URL |
 |----------|-----|
 | Website | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
-| Admin | https://cursor-dev.lorapok.tech |
-| Open VSX | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
+| Admin (Mission Control) | https://cursor-dev.lorapok.tech |
+| Open VSX (canonical) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
 | VS Code Marketplace | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
 | GitHub Releases | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
+| Report a bug | [Issue templates](.github/ISSUE_TEMPLATE/) |
+| Security | [.github/SECURITY.md](.github/SECURITY.md) |
 | Lorapok Labs | https://lorapok.tech |
 
 ## Author

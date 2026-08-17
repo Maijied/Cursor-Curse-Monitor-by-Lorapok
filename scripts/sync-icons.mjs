@@ -15,6 +15,7 @@ const copies = [
   ["media/icon.png", "website/admin/public/assets/icon.png"],
   ["media/icon.svg", "website/admin/public/assets/icon.svg"],
   ["media/logo.svg", "website/admin/public/assets/logo.svg"],
+  ["media/logo.png", "website/admin/public/assets/logo.png"],
 ];
 
 for (const [from, to] of copies) {

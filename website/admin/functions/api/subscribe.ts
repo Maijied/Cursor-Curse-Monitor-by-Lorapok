@@ -47,7 +47,8 @@ export async function onRequestPost(context) {
   }
 
   const subscribers = await readSubscribers(env);
-  if (!subscribers.includes(email)) {
+  const alreadySubscribed = subscribers.includes(email);
+  if (!alreadySubscribed) {
     subscribers.push(email);
     const stored = await writeSubscribers(env, subscribers);
     if (!stored) {
@@ -59,10 +60,34 @@ export async function onRequestPost(context) {
     to: email,
     subject: "Subscribed to Cursor Curse Monitor updates",
     html: buildSubscribeHtml({ email }),
-    text: `Thanks for subscribing, ${email}. We'll email you about important updates.`,
+    text: `Thanks for subscribing, ${email}. We'll email you about important updates from Cursor Curse Monitor.`,
+    category: "subscribe",
   });
 
-  return jsonResponse({ ok: true, emailed: mailResult.sent }, 200, CORS_HEADERS);
+  let message;
+  if (mailResult.sent) {
+    message = alreadySubscribed
+      ? "You're already subscribed — we resent the confirmation email."
+      : "You're subscribed! Check your inbox for a confirmation email.";
+  } else if (alreadySubscribed) {
+    message = "You're already on the list. We'll email you when there are updates.";
+  } else {
+    message =
+      "You're on the list, but the welcome email could not be sent right now. We'll still notify you when outbound mail is restored.";
+    console.error("subscribe welcome email failed", mailResult.reason);
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      emailed: mailResult.sent,
+      alreadySubscribed,
+      message,
+      ...(mailResult.sent ? {} : { mailWarning: mailResult.reason }),
+    },
+    200,
+    CORS_HEADERS
+  );
 }
 
 export async function onRequestOptions() {

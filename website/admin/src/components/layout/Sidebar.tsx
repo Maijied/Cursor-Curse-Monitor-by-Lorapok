@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, LogOut, X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../routes";
 import OnlineStatus from "../ui/OnlineStatus";
 import InstallAppButton from "../ui/InstallAppButton";
+import BackToWebsiteButton from "../ui/BackToWebsiteButton";
 
 export default function Sidebar({
   mobileOpen = false,
@@ -83,21 +84,7 @@ export default function Sidebar({
       </div>
 
       <div className="p-4 border-t border-[var(--color-border)] space-y-3">
-        <NavLink
-          to="/dashboard"
-          end
-          onClick={onClose}
-          className={({ isActive }) =>
-            `w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-xl transition-colors border ${
-              isActive
-                ? "border-[var(--color-neon)] text-[var(--color-neon)] bg-[color-mix(in_srgb,var(--color-neon)_10%,transparent)]"
-                : "border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-white/5"
-            }`
-          }
-        >
-          <LayoutDashboard size={16} aria-hidden="true" />
-          Admin
-        </NavLink>
+        <BackToWebsiteButton />
 
         {user && (
           <div className="flex items-center gap-3 px-2">

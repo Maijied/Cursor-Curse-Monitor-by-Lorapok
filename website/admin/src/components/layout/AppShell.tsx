@@ -9,7 +9,8 @@ import MarketplaceHealth from "../pages/MarketplaceHealth";
 import Releases from "../pages/Releases";
 import Activity from "../pages/Activity";
 import ApiExplorer from "../pages/ApiExplorer";
-import ApiActivity from "../pages/ApiActivity";
+import Logs from "../pages/Logs";
+import Mailbox from "../pages/Mailbox";
 import Reports from "../pages/Reports";
 import Discussions from "../pages/Discussions";
 import Architecture from "../pages/Architecture";
@@ -77,8 +78,10 @@ export default function AppShell() {
                 <Route path="marketplace" element={<MarketplaceHealth />} />
                 <Route path="releases" element={<Releases />} />
                 <Route path="activity" element={<Activity />} />
+                <Route path="logs" element={<Logs />} />
+                <Route path="mailbox" element={<Mailbox />} />
                 <Route path="api-explorer" element={<ApiExplorer />} />
-                <Route path="api-activity" element={<ApiActivity />} />
+                <Route path="api-activity" element={<Navigate to="../logs" replace />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="discussions" element={<Discussions />} />
                 <Route path="architecture" element={<Architecture />} />

@@ -174,7 +174,12 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
    - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
 4. **DNS:** CNAME `cursor-dev.lorapok.tech` → `cursor-monitor-admin-2x8.pages.dev` (proxied)
 5. **Firebase Console → Auth → Authorized domains:** add `cursor-dev.lorapok.tech` and your `*.pages.dev` host.
-6. **Email:** Email Routing rule `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com` (inbound ready). Outbound invite/subscribe mail uses the Pages `EMAIL` binding when Cloudflare Email Sending is enabled for the zone, or optional `RESEND_API_KEY` Pages secret. Team invites also send Firebase magic links.
+6. **Email (outbound):** Enable Cloudflare Email Sending for `lorapok.tech`:
+   ```bash
+   cd website/admin
+   npx wrangler email sending enable lorapok.tech
+   ```
+   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com`.
 
 ### Firestore rules
 
