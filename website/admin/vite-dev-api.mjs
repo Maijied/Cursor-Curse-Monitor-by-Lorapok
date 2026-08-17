@@ -87,7 +87,7 @@ function mapReleaseChannel(value) {
   return map[value] ?? null;
 }
 
-async function triggerDeployment(body) {
+async function dispatchGithubWorkflow(workflowId, body, successMessage) {
   const targetTag = body.target_tag ?? body.tag;
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
   const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
@@ -99,7 +99,7 @@ async function triggerDeployment(body) {
   if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
 
   const githubRes = await fetch(
-    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/deployment.yml/dispatches`,
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
     {
       method: "POST",
       headers: {
@@ -116,16 +116,25 @@ async function triggerDeployment(body) {
   );
 
   if (!githubRes.ok) {
-    throw new Error(`Failed to trigger deployment workflow (${githubRes.status})`);
+    throw new Error(`Failed to trigger ${workflowId} (${githubRes.status})`);
   }
 
   return {
     success: true,
-    message: "Deployment triggered successfully",
+    message: successMessage,
+    workflow: workflowId,
     target_tag: targetTag,
     publish_market: publishMarket,
     release_channel: releaseChannel,
   };
+}
+
+async function triggerDeployment(body) {
+  return dispatchGithubWorkflow("publish-tag.yml", body, "Deployment triggered successfully");
+}
+
+async function triggerRollback(body) {
+  return dispatchGithubWorkflow("deployment.yml", body, "Rollback triggered");
 }
 
 function loadGithubToken() {
@@ -680,7 +689,7 @@ export function createDevApiMiddleware() {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });
       req.on("end", () => {
-        triggerDeployment(JSON.parse(body || "{}"))
+        triggerRollback(JSON.parse(body || "{}"))
           .then((result) => {
             logDevActivity(req, 200);
             res.setHeader("Content-Type", "application/json");

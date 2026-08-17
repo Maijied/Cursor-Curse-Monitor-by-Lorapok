@@ -61,6 +61,10 @@ jobs:
             git tag --sort=-v:refname | head -n 15
             exit 1
           fi
+          if ! git cat-file -e "${{ inputs.target_tag }}:scripts/publish-ovsx.mjs" 2>/dev/null; then
+            echo "::error::Tag '${{ inputs.target_tag }}' has no scripts/publish-ovsx.mjs — choose v0.5.5 or newer."
+            exit 1
+          fi
 
       - name: Restore files from target tag
         run: |
@@ -159,6 +163,10 @@ jobs:
       - name: Publish to Open VSX
         if: steps.config.outputs.do_ovsx == 'true'
         run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::warning::OVSX_PAT not set — skipping Open VSX publish"
+            exit 0
+          fi
           PRE_FLAG=""
           if [ -n "${{ steps.config.outputs.pre_release_flag }}" ]; then
             PRE_FLAG="--pre-release"

@@ -1,0 +1,160 @@
+name: Publish Tag
+
+# Forward publish from Mission Control — checks out an existing tag and publishes
+# to marketplaces without rewriting main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_tag:
+        description: "Tag to publish (e.g. v0.5.9)"
+        required: true
+        type: string
+      publish_market:
+        description: "Publish Market"
+        required: true
+        type: choice
+        options:
+          - Both
+          - VS Code Marketplace
+          - Open VSX
+        default: Both
+      release_channel:
+        description: "Release Channel"
+        required: true
+        type: choice
+        options:
+          - Production
+          - Beta (Pre-release)
+        default: Production
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-tag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish Tag
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PUBLISHER: "LorapokLabs"
+      OVSX_PUBLISHER: "lorapok-labs"
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_tag }}
+          fetch-depth: 0
+
+      - name: Verify tag and publish tooling
+        run: |
+          if ! git rev-parse "${{ inputs.target_tag }}" >/dev/null 2>&1; then
+            echo "::error::Tag '${{ inputs.target_tag }}' not found."
+            git tag --sort=-v:refname | head -n 15
+            exit 1
+          fi
+          if ! git cat-file -e "${{ inputs.target_tag }}:scripts/publish-ovsx.mjs" 2>/dev/null; then
+            echo "::error::Tag '${{ inputs.target_tag }}' has no scripts/publish-ovsx.mjs — choose v0.5.5+."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies & package
+        run: |
+          npm ci
+          npm run compile
+          npm run package
+
+      - name: Install publishing tools
+        run: |
+          npm install -g @vscode/vsce
+          npm install -g ovsx
+
+      - name: Resolve Configuration
+        id: config
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "${{ inputs.target_tag }}" ]; then
+            VERSION="${{ inputs.target_tag }}"
+            VERSION="${VERSION#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          PRE_RELEASE_FLAG=""
+          if [[ "${{ inputs.release_channel }}" == "Beta (Pre-release)" ]]; then
+            PRE_RELEASE_FLAG="--pre-release"
+          fi
+          echo "pre_release_flag=$PRE_RELEASE_FLAG" >> "$GITHUB_OUTPUT"
+
+          DO_OVSX="false"
+          DO_VSCE="false"
+          TARGET="${{ inputs.publish_market }}"
+          if [[ "$TARGET" == "Both" ]]; then
+             DO_OVSX="true"; DO_VSCE="true"
+          elif [[ "$TARGET" == "Open VSX" ]]; then
+             DO_OVSX="true"
+          elif [[ "$TARGET" == "VS Code Marketplace" ]]; then
+             DO_VSCE="true"
+          fi
+          echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
+          echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Open VSX
+        if: steps.config.outputs.do_ovsx == 'true'
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::warning::OVSX_PAT not set — skipping Open VSX publish"
+            exit 0
+          fi
+          PRE_FLAG=""
+          if [ -n "${{ steps.config.outputs.pre_release_flag }}" ]; then
+            PRE_FLAG="--pre-release"
+          fi
+          node scripts/publish-ovsx.mjs $PRE_FLAG
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Verify marketplace sync
+        if: steps.config.outputs.do_ovsx == 'true'
+        run: node scripts/verify-marketplace-sync.mjs --strict --retry=12
+
+      - name: Publish to VS Code Marketplace
+        if: steps.config.outputs.do_vsce == 'true'
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::warning::VSCE_PAT not set — skipping VS Code Marketplace publish"
+            exit 0
+          fi
+          set +e
+          OUTPUT=$(vsce publish -p "$VSCE_PAT" ${{ steps.config.outputs.pre_release_flag }} 2>&1)
+          CODE=$?
+          echo "$OUTPUT"
+          if [ $CODE -ne 0 ]; then
+            if echo "$OUTPUT" | grep -qiE "already exists|already been published"; then
+              echo "::warning::Version already on VS Code Marketplace — treating as success"
+              exit 0
+            fi
+            exit $CODE
+          fi
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Ensure GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.target_tag }}
+          name: Cursor Curse Monitor v${{ steps.config.outputs.version }}
+          files: "*.vsix"
+          generate_release_notes: true
+          prerelease: ${{ steps.config.outputs.pre_release_flag != '' }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

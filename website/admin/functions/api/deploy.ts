@@ -1,6 +1,6 @@
 import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
-import { dispatchDeploymentWorkflow } from "./_shared/deploy-workflow.js";
+import { dispatchPublishWorkflow } from "./_shared/deploy-workflow.js";
 
 export async function onRequestPost(context) {
   const startedAt = Date.now();
@@ -11,7 +11,7 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const response = await dispatchDeploymentWorkflow(env, body, "Deployment triggered successfully");
+    const response = await dispatchPublishWorkflow(env, body, "Deployment triggered successfully");
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Deploy handler error", err);
