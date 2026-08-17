@@ -77,6 +77,10 @@ export default function Deployments() {
   };
 
   const filteredTags = tags.filter((t) => {
+    const version = t.replace(/^v/i, "");
+    const [major, minor] = version.split(".").map((part) => Number.parseInt(part, 10) || 0);
+    const publishable = major > 0 || minor >= 5;
+    if (!publishable) return false;
     if (channel === "production") return !/beta|alpha|rc/i.test(t);
     return /beta|alpha|rc/i.test(t) || t.startsWith("v0.");
   });
@@ -91,7 +95,7 @@ export default function Deployments() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Rollback"
-        description="Trigger the GitHub Actions deployment workflow with the correct marketplace inputs."
+        description="Deploy publishes an existing tag to marketplaces. Rollback restores an older tag on main and releases a new patch."
       />
 
       <div className="flex gap-2 mb-6 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
