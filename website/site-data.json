@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-17T10:44:10.615Z",
+  "generatedAt": "2026-08-17T11:03:16.422Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.9",
@@ -80,7 +80,7 @@
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
-    "version": "0.5.8",
+    "version": "0.5.9",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
     "downloadCount": 0,
     "installCount": 0,
@@ -92,7 +92,6 @@
     "releaseTag": "v0.5.9",
     "tags": [
       "v1.0.0",
-      "v0.5.10",
       "v0.5.9",
       "v0.5.8",
       "v0.5.7",
@@ -154,14 +153,6 @@
         "stability": "stable",
         "recommended": false,
         "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.0/cursor-curse-monitor-by-lorapok-1.0.0.vsix",
-        "note": "Safe for fallback model writes"
-      },
-      {
-        "tag": "v0.5.10",
-        "version": "0.5.10",
-        "stability": "stable",
-        "recommended": false,
-        "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.10/cursor-curse-monitor-by-lorapok-0.5.10.vsix",
         "note": "Safe for fallback model writes"
       },
       {
@@ -242,6 +233,14 @@
         "stability": "legacy",
         "recommended": false,
         "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.4.1/cursor-curse-monitor-by-lorapok-0.4.1.vsix",
+        "note": "Legacy release — fallback behavior differs"
+      },
+      {
+        "tag": "v0.4.0",
+        "version": "0.4.0",
+        "stability": "legacy",
+        "recommended": false,
+        "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.4.0/cursor-curse-monitor-by-lorapok-0.4.0.vsix",
         "note": "Legacy release — fallback behavior differs"
       }
     ]
