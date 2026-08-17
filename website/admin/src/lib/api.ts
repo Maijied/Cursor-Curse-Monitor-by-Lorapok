@@ -191,6 +191,8 @@ export type DiscussionResponse = {
 
 export type UsageStatsResponse = {
   optInUniques: {
+    unique1h: number;
+    unique24h: number;
     unique7d: number;
     unique30d: number;
     uniqueAll: number;

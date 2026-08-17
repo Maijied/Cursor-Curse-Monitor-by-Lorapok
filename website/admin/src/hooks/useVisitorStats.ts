@@ -4,7 +4,7 @@ import type { VisitorStats } from "../lib/site-data";
 
 const DEFAULT: VisitorStats = {
   websiteVisits: 0,
-  packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0 },
+  packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, npm: 0, openvsxDuplicate: 0 },
   totalEngagement: 0,
   updatedAt: null,
 };
@@ -12,6 +12,7 @@ const DEFAULT: VisitorStats = {
 export function useVisitorStats(fallback?: VisitorStats) {
   const [stats, setStats] = useState<VisitorStats>(fallback ?? DEFAULT);
   const [live, setLive] = useState(false);
+  const fallbackKey = fallback ? JSON.stringify(fallback) : "";
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +27,7 @@ export function useVisitorStats(fallback?: VisitorStats) {
               vscode: 0,
               github: 0,
               vsix: 0,
+              npm: 0,
               openvsxDuplicate: 0,
               ...(data.packageClicks ?? {}),
             },
@@ -35,7 +37,10 @@ export function useVisitorStats(fallback?: VisitorStats) {
           setLive(true);
         })
         .catch(() => {
-          if (!cancelled && fallback) setStats(fallback);
+          if (!cancelled) {
+            if (fallback) setStats(fallback);
+            setLive(false);
+          }
         });
     };
     load();
@@ -44,7 +49,7 @@ export function useVisitorStats(fallback?: VisitorStats) {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [fallback]);
+  }, [fallbackKey]);
 
   return { stats, live };
 }

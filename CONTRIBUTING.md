@@ -45,13 +45,16 @@ This repository and product are **proprietary** to Lorapok Labs. By contributing
 
 ## Reporting issues
 
-Use [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues) and include:
+Use [**New issue → choose a template**](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/new/choose):
 
-- Cursor or VS Code version (`Help → About`)
-- Extension version
-- OS and platform
-- Steps to reproduce
-- Expected vs actual behavior
+| Template | Use for |
+|----------|---------|
+| **Extension bug report** | Cursor / VS Code extension behavior |
+| **Website issue** | Marketing site or Mission Control admin panel |
+| **Blank issue** | Anything else |
+| **Report a security vulnerability** | See [SECURITY.md](.github/SECURITY.md) — do not file public issues for security bugs |
+
+For extension bugs, include Cursor or VS Code version (`Help → About`), extension version, OS, steps to reproduce, and expected vs actual behavior.
 
 ## Code style
 

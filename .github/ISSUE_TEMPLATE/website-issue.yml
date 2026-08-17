@@ -1,0 +1,67 @@
+name: Website issue
+description: A bug or enhancement request for the marketing site or Mission Control admin panel
+title: "[Website] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for issues on:
+
+        - **Marketing site** — https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/
+        - **Admin (Mission Control)** — https://cursor-dev.lorapok.tech
+
+        Extension bugs belong in **Extension bug report**.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Marketing site (GitHub Pages)
+        - Admin panel (Mission Control)
+        - Both / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Bug
+        - Enhancement
+        - Accessibility
+        - Mobile / responsive layout
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: Full URL or path where you saw the problem
+      placeholder: "https://cursor-dev.lorapok.tech/settings or /privacy.html"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device (optional)
+      placeholder: "Chrome 131 on Android 14, Safari on iPhone 16"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? Include expected vs actual behavior for bugs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings (optional)
+      description: Drag images into the issue comment after submitting, or paste links here.

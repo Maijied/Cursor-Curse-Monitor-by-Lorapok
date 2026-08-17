@@ -101,11 +101,26 @@
       vscodeLive.textContent = data.vscode?.published ? "✅ Live" : "⏳ Coming soon";
     }
 
-    // KPI strip from site-data
+    // KPI strip — static site-data first, then live analytics API
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString() : "—");
     setText("[data-downloads-total]", fmt(data.downloads?.total));
     setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
     setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
+
+    const refreshLiveVisitorKpis = async () => {
+      const statsUrl = social?.api?.analyticsStats ?? `${ADMIN_API}/api/analytics/stats`;
+      try {
+        const res = await fetch(statsUrl, { cache: "no-store" });
+        if (!res.ok) return;
+        const stats = await res.json();
+        setText("[data-visits-total]", fmt(stats.websiteVisits));
+        setText("[data-engagement-total]", fmt(stats.totalEngagement));
+      } catch {
+        /* keep static fallback */
+      }
+    };
+    refreshLiveVisitorKpis();
+    window.setInterval(refreshLiveVisitorKpis, 60_000);
 
     // OG image
     const metaOg = document.querySelector('meta[property="og:image"]');
