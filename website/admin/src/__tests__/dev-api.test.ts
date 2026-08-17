@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createDevApiMiddleware } from "../../vite-dev-api.mjs";
 import http from "node:http";
+import type { AddressInfo } from "node:net";
 
 function request(port: number, path: string) {
   return new Promise<{ status: number; body: unknown }>((resolve, reject) => {
@@ -22,10 +23,14 @@ describe("dev API middleware", () => {
   it("serves /api/health", async () => {
     const app = createDevApiMiddleware();
     const server = http.createServer((req, res: http.ServerResponse) => app(req, res, () => { res.statusCode = 404; res.end(); }));
-    await new Promise<void>((resolve) => server.listen(9877, resolve));
-    const { status, body } = await request(9877, "/api/health");
-    server.close();
-    expect(status).toBe(200);
-    expect(body).toHaveProperty("checks");
-  });
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const { status, body } = await request(port, "/api/health");
+      expect(status).toBe(200);
+      expect(body).toHaveProperty("checks");
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+    }
+  }, 10_000);
 });
