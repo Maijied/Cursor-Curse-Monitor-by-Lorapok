@@ -2,28 +2,14 @@
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.9",
-  "publisher": "LorapokLabs",
-  "license": "UNLICENSED",
+  "version": "0.5.10",
+  "publisher": "lorapok-labs",
+  "license": "MIT",
   "icon": "media/icon.png",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
     "email": "mdshuvo40@gmail.com",
-    "url": "https://github.com/Maijied"
-  },
-  "contributors": [
-    {
-      "name": "Lorapok Labs",
-      "email": "lorapokdev@gmail.com",
-      "url": "https://lorapok.tech"
-    }
-  ],
-  "company": {
-    "name": "Lorapok Labs",
-    "email": "lorapokdev@gmail.com",
-    "supportEmail": "cursor-contact@lorapok.tech",
-    "website": "https://lorapok.tech",
-    "adminUrl": "https://cursor-dev.lorapok.tech"
+    "url": "https://lorapok.tech"
   },
   "repository": {
     "type": "git",
@@ -108,28 +94,13 @@
         },
         "cursorCurseMonitor.autoApplyFallbackModel": {
           "type": "boolean",
-          "default": false,
-          "description": "When usage is at 100%, apply Composer 2.5 (Fast off) after Cursor/VS Code is fully quit (quit-then-write with WAL/SHM backup). Never writes while the editor is running."
+          "default": true,
+          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model."
         },
         "cursorCurseMonitor.showStatusBar": {
           "type": "boolean",
           "default": true,
           "description": "Show usage percentage in the status bar."
-        },
-        "cursorCurseMonitor.statusBarUsageSource": {
-          "type": "string",
-          "enum": [
-            "plan",
-            "autoApi",
-            "both"
-          ],
-          "enumDescriptions": [
-            "Included quota or USD budget percent (rounded).",
-            "Auto and API feature percents from Cursor (up to 2 decimal places).",
-            "Plan percent plus Auto and API percents."
-          ],
-          "default": "autoApi",
-          "description": "Which usage numbers to show in the status bar."
         },
         "cursorCurseMonitor.warnAtPercent": {
           "type": "number",
@@ -137,17 +108,11 @@
           "minimum": 1,
           "maximum": 100,
           "description": "Show a warning notification when usage reaches this percentage."
-        },
-        "cursorCurseMonitor.anonymousUsageStats": {
-          "type": "boolean",
-          "default": false,
-          "description": "Opt-in anonymous usage heartbeat. Sends a once-per-day ping with a random install ID, OS, and host editor (Cursor/VS Code) only. Off by default. No paths, tokens, emails, or workspace names are sent."
         }
       }
     }
   },
   "scripts": {
-    "test": "node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
@@ -155,19 +120,18 @@
     "validate:assets": "node scripts/validate-assets.mjs",
     "sync:icons": "node scripts/sync-icons.mjs",
     "prepackage": "npm run validate:assets && npm run sync:icons",
-    "publish:ovsx": "node scripts/publish-ovsx.mjs",
+    "publish:ovsx": "ovsx publish",
     "publish:vscode": "vsce publish",
-    "verify:marketplace": "node scripts/verify-marketplace-sync.mjs --strict",
-    "site:data": "node scripts/generate-site-data.mjs",
-    "site:seo": "node scripts/generate-seo.mjs",
-    "site:seo:validate": "node scripts/validate-seo.mjs"
+    "site:data": "node scripts/generate-site-data.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/vscode": "^1.93.0",
     "@vscode/vsce": "^3.2.1",
     "ovsx": "^0.10.2",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "sql.js": "^1.12.0"
   }
 }

@@ -13,3 +13,6 @@ AUTHORS.md
 CONTRIBUTING.md
 *.vsix
 node_modules/**
+!node_modules/sql.js/package.json
+!node_modules/sql.js/dist/sql-wasm.js
+media/sql-wasm.js

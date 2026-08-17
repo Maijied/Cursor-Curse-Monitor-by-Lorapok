@@ -10,6 +10,4 @@
 | **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) |
 | **GitHub** | [@Maijied](https://github.com/Maijied) |
 
-**Cursor Curse Monitor by Lorapok** is a proprietary product of Lorapok Labs, founded by Mohammad Maizied Hasan Majumder. It is not affiliated with Cursor / Anysphere.
-
-Use is limited to download, install, and personal/internal use per [LICENSE](LICENSE). Modification, resale, or redistribution requires written permission from Lorapok Labs.
+**Cursor Curse Monitor by Lorapok** is an independent open-source product by the author and Lorapok Labs. It is not affiliated with Cursor / Anysphere.

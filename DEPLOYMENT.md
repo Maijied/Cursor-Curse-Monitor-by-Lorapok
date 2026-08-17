@@ -1,230 +1,95 @@
 # Deployment Guide
 
-> **Architecture overview:** domains, hosting, Cloudflare migration, and system diagram — [README.md § Architecture](README.md#architecture).
+## CI/CD overview
 
-## CI/CD Overview
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| **CI** | Push/PR to `main` | Compile, package VSIX, upload artifact |
+| **Deploy** | Tag `v*` or manual | Package, publish Open VSX, GitHub Release |
 
-All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
+## One-time setup
 
-| Trigger | Jobs | What it does |
-|---------|------|-------------|
-| **PR to `main`** | `ci` | Compile, validate assets, package VSIX |
-| **Push to `main`** | `ci` → `admin-ci` → `admin-deploy`* → `website` | Extension CI, admin build/deploy, marketing site |
-| **Manual dispatch** | `release-bump` → `deploy` → `website` | Auto-bumps version, commits/tags, conditionally publishes to marketplaces, deploys website |
-| **Tag `v*` push** | `deploy` → `website` | Publishes existing tag to marketplaces, creates GitHub Release, deploys website |
-
-**Manual QA:** see [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) before tagging a stable release.
-
-### 1. Continuous Integration (Dynamic Per-Commit Builds)
-
-Every push to `main` automatically:
-1. Builds and validates the extension.
-2. Dynamically generates a version using the commit hash (e.g., `0.5.2-beta.a1b2c3d`).
-3. Packages the VSIX and saves it as a **workflow artifact**.
-4. Deploys the project website to ensure documentation is always up to date.
-
-> **Note:** Pushes to `main` do **NOT** automatically publish to the public marketplaces.
-
-### 2. Manual Releases (Marketplace Publishing)
-
-To actually publish a new version (Beta or Production) to the marketplaces:
-
-1. Go to **Actions → CI/CD → Run workflow**
-2. Configure the release:
-   - **Publish Market**: `Both`, `VS Code Marketplace`, or `Open VSX`
-   - **Release Channel**: `Production` or `Beta (Pre-release)`
-   - **Version Bump Type**: `patch`, `minor`, `major`, `prepatch`, `preminor`, `prerelease`, or `custom`
-   - **Custom Version**: (Only if you selected `custom` above)
-3. Click **Run workflow**
-
-The workflow will automatically bump `package.json`, commit, tag, and publish to the selected marketplaces with the appropriate flags (e.g., `--pre-release` for Beta).
-
----
-
-## One-Time Setup
-
-### 1. GitHub Secrets
+### 1. GitHub secrets
 
 In **Settings → Secrets and variables → Actions**, add:
 
 | Secret | Required | Description |
 |--------|----------|-------------|
-| `OVSX_PAT` | Yes (Open VSX) | Open VSX access token from [open-vsx.org](https://open-vsx.org) |
-| `VSCE_PAT` | Yes (VS Code) | Azure DevOps PAT for [VS Code Marketplace](https://marketplace.visualstudio.com/) |
+| `OVSX_PAT` | Yes (for Open VSX) | Open VSX access token from [open-vsx.org](https://open-vsx.org) |
+| `VSCE_PAT` | Optional | Azure DevOps PAT for [VS Code Marketplace](https://marketplace.visualstudio.com/) publish |
 
-### 2. VS Code Marketplace Publisher
+### 2. VS Code Marketplace publisher
 
-1. Create a publisher at [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) with name `LorapokLabs`
+1. Create a publisher at [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) (e.g. `lorapok-labs`)
 2. Generate an Azure DevOps Personal Access Token with **Marketplace (Manage)** scope
 3. Add it as GitHub secret `VSCE_PAT`
 
-### 3. Open VSX Namespace
+Local publish:
+
+```bash
+npx vsce login lorapok-labs
+npm run publish:vscode
+```
+
+### 3. Open VSX namespace
 
 ```bash
 npx ovsx create-namespace lorapok-labs -p <OVSX_PAT>
 ```
 
-### 4. GitHub Pages
+### 3. GitHub environment (optional)
 
-Enable GitHub Pages in repo settings:
-- Source: **GitHub Actions**
+Create environment **`production`** in repo settings if you want approval gates before deploy.
 
----
+## Deploy a release
 
-## Local Development Release
-
-For testing locally:
-
-```bash
-npm run compile
-npm run package
-cursor --install-extension *.vsix
-```
-
-For a manual local publish:
-
-```bash
-# Open VSX (canonical lorapok-labs namespace — do NOT use bare ovsx publish)
-npm run package
-npm run publish:ovsx
-
-# VS Code Marketplace (uses LorapokLabs from package.json)
-npx vsce publish -p $VSCE_PAT
-
-# Verify all channels match package.json version
-npm run verify:marketplace
-```
-
-### Open VSX publisher namespaces
-
-| Namespace | Purpose | How it is published |
-|-----------|---------|---------------------|
-| **`lorapok-labs`** | Canonical Open VSX listing (verified) | `npm run publish:ovsx` repacks VSIX with this publisher |
-| **`LorapokLabs`** | VS Code Marketplace publisher only | `vsce publish` — **never** bare `ovsx publish` |
-
-`package.json` keeps `"publisher": "LorapokLabs"` for VS Code Marketplace. The `ovsx` CLI reads the publisher from the VSIX manifest, so CI uses `scripts/publish-ovsx.mjs` to repack before publishing to `lorapok-labs`.
-
-If search shows two Open VSX listings, the duplicate `LorapokLabs/...` entry was created by earlier bare `ovsx publish` runs. After syncing `lorapok-labs` to the latest version, request deprecation of the duplicate via [Open VSX](https://open-vsx.org).
-
-Or trigger the **Sync Open VSX (Canonical)** workflow after pushing:
-
-1. Push changes to `main`
-2. **Actions → Sync Open VSX (Canonical) → Run workflow**
-3. Confirm `verify-marketplace-sync.mjs --strict` passes in the workflow log
-
-Or use the release script for a tag-based release:
+### Recommended: tag release
 
 ```bash
 ./scripts/release.sh patch   # bump patch, tag, push — CI does the rest
-./scripts/release.sh minor   # bump minor
+# or
+./scripts/release.sh minor
 ./scripts/release.sh         # tag current package.json version
 ```
 
----
+This runs **Deploy** workflow automatically:
+1. Builds VSIX
+2. Publishes to Open VSX
+3. Publishes to VS Code Marketplace (if `VSCE_PAT` is set)
+4. Creates GitHub Release with VSIX attached
 
-## Marketplace Links
+The **website** rebuilds on push and auto-fills install commands from GitHub + Open VSX APIs (`npm run site:data`).
 
-| Marketplace | URL |
-|-------------|-----|
-| **Open VSX** (Cursor) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
-| **VS Code Marketplace** | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
-| **GitHub Releases** | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
-| **Project Website** | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
+### Manual deploy
+
+1. Go to **Actions → Deploy → Run workflow**
+2. Set version (optional)
+3. Toggle Open VSX publish / GitHub release
+4. Run
+
+## Install from CI artifact
+
+1. Open **Actions → CI** run
+2. Download **cursor-curse-monitor-vsix-*** artifact
+3. Install:
+
+```bash
+cursor --install-extension cursor-curse-monitor-by-lorapok-0.1.0.vsix
+```
+
+## Cursor / VS Code marketplace
 
 After publish, search in Extensions:
 
-- **Cursor (Open VSX):** `lorapok-labs.cursor-curse-monitor-by-lorapok`
-- **VS Code Marketplace:** `LorapokLabs.cursor-curse-monitor-by-lorapok`
-
----
-
-## Install from CI Artifact
-
-1. Open **Actions → CI/CD** run
-2. Download **cursor-curse-monitor-vsix-*** artifact
-3. Extract the downloaded ZIP file.
-4. Install:
-
-```bash
-cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
-```
-
----
-
-## Admin Panel (Mission Control)
-
-**Target URL:** `https://cursor-dev.lorapok.tech` (Pages origin: `https://cursor-monitor-admin-2x8.pages.dev`)
-
-**Cloudflare account:** **Lorapok Facility** (`f049faaf2f67549f5c58837479596a4a`) only.  
-Do **not** use orphan Worker builds under other accounts (e.g. `cursor-curse-monitor-by-lorapok` Workers Builds) — that Worker is not part of this repo. Mail: `cursor-contact@lorapok.tech` (Email Routing → Gmail).
-
-The admin SPA lives in `website/admin/` and deploys to **Cloudflare Pages** with co-located **Pages Functions** (`website/admin/functions/api/`). It is **not** served from GitHub Pages.
-
-Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/cred/CLOUDFLARE_MIGRATION.md`
-
-### One-time Cloudflare setup
-
-1. In **Lorapok Facility**, create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally with `CLOUDFLARE_ACCOUNT_ID` set to Facility).
-2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
-3. **Pages → Settings → Environment variables** (Production):
-   - `GITHUB_TOKEN` — PAT with `actions:write` for deploy workflow dispatch
-   - `ADMIN_MASTER_EMAIL` — `mdshuvo40@gmail.com`
-   - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
-   - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
-   - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
-4. **DNS:** CNAME `cursor-dev.lorapok.tech` → `cursor-monitor-admin-2x8.pages.dev` (proxied)
-5. **Firebase Console → Auth → Authorized domains:** add `cursor-dev.lorapok.tech` and your `*.pages.dev` host.
-6. **Email (outbound):** Enable Cloudflare Email Sending for `lorapok.tech`:
-   ```bash
-   cd website/admin
-   npx wrangler email sending enable lorapok.tech
-   ```
-   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com`.
-
-### Firestore rules
-
-```bash
-cd website/admin
-firebase deploy --only firestore:rules --project cursor-curse-by-lorapok
-```
-
-### GitHub secrets (CI auto-deploy)
-
-| Secret | Purpose |
-|--------|---------|
-| `CLOUDFLARE_API_TOKEN` | Pages deploy from `admin-deploy` job |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
-| `CLOUDFLARE_EMAIL_API_TOKEN` | (Recommended) API token with **Email Sending → Send** for outbound mail; synced to Pages as `CLOUDFLARE_EMAIL_API_TOKEN` |
-
-The deploy token alone is not enough if it lacks Email Sending permission — subscribe/invite mail will return `401 Authentication error`. Create a dedicated token in **My Profile → API Tokens** with Account **Email Sending → Send** and add it as `CLOUDFLARE_EMAIL_API_TOKEN` in the `admin-production` environment. Onboard `lorapok.tech` once under **Email Service → Email Sending** in the Cloudflare dashboard.
-
-Push to `main` runs `admin-ci` then `admin-deploy` when secrets are configured.
-
-### Local dev
-
-```bash
-cd website/admin
-cp .env.example .env   # add GITHUB_TOKEN optional
-npm run dev            # http://localhost:5173/dashboard
-```
-
-See [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) for the full QA checklist.
-
-**Deprecated:** `website/admin-api/` standalone Worker — do not deploy; use Pages Functions instead.
-
----
+- **Open VSX / Cursor:** `lorapok-labs.cursor-curse-monitor-by-lorapok`
+- **VS Code Marketplace:** [Cursor Curse Monitor by Lorapok](https://marketplace.visualstudio.com/search?term=lorapok-labs.cursor-curse-monitor-by-lorapok)
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
 | Activity bar shows gray square | Use SVG icon (`media/activity-bar.svg`) — fixed in v0.2.0 |
-| Open VSX version drift (lorapok-labs behind) | Run `npm run package && npm run publish:ovsx` with `OVSX_PAT` set |
-| Duplicate Open VSX listing (LorapokLabs) | Stop using bare `ovsx publish`; use `publish-ovsx.mjs`; request duplicate deprecation |
-| Deploy fails on Open VSX | Check `OVSX_PAT` secret and namespace `lorapok-labs` |
-| Deploy fails on VS Code Marketplace | Check `VSCE_PAT` secret and publisher `LorapokLabs` |
-| "Already published" warning | Normal — CI treats this as success. Bump version if you need to re-publish |
+| Deploy fails on Open VSX | Check `OVSX_PAT` secret and namespace `lorapok-labs` (Lorapok Labs) |
+| "Already published but isn't active" | Log into [open-vsx.org](https://open-vsx.org), open extension settings, delete the inactive version, bump version, and re-tag |
 | Extension not in Cursor search | Lower `engines.vscode` if too high; reload window; wait for Open VSX sync |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |
-| Website not updating | Check GitHub Pages is enabled with source: GitHub Actions |
-| DB backup files accumulating | Stale backups (>1 hour old) are cleaned up automatically |

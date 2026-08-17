@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { escapeHtml } from "./htmlEscape";
 
 type NotificationType = "info" | "warning" | "error" | "success";
 
@@ -93,8 +92,6 @@ export class NotificationProvider {
     };
 
     const theme = colors[type];
-    const safeTitle = escapeHtml(title);
-    const safeMessage = escapeHtml(message);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -222,14 +219,14 @@ export class NotificationProvider {
       <div class="icon-container">
         ${iconSvg}
       </div>
-      <div class="title">${safeTitle}</div>
+      <div class="title">${title}</div>
     </div>
-    <div class="message">${safeMessage}</div>
+    <div class="message">${message}</div>
     ${actions.length > 0 ? `
     <div class="actions">
       ${actions.map((action, i) => `
-        <button class="action-btn ${i === 0 ? 'primary' : ''}" data-label="${escapeHtml(action.label)}">
-          ${escapeHtml(action.label)}
+        <button class="action-btn ${i === 0 ? 'primary' : ''}" data-label="${action.label}">
+          ${action.label}
         </button>
       `).join('')}
     </div>

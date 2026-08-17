@@ -9,8 +9,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly monitor: UsageMonitorService,
-    private readonly extensionUri: vscode.Uri,
-    private readonly extensionVersion: string
+    private readonly extensionUri: vscode.Uri
   ) {}
 
   resolveWebviewView(
@@ -29,16 +28,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       path.join(this.extensionUri.fsPath, "media", "logo.svg"),
       "utf8"
     );
-    const usageMeterSvg = fs.readFileSync(
-      path.join(this.extensionUri.fsPath, "media", "usage-meter.svg"),
-      "utf8"
-    );
 
     webviewView.webview.html = this.getHtml(
       logoSvg,
-      usageMeterSvg,
-      webviewView.webview.cspSource,
-      this.extensionVersion
+      webviewView.webview.cspSource
     );
 
     const push = (snapshot: DashboardSnapshot) => {
@@ -53,9 +46,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await this.monitor.refresh();
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
-        if (!Number.isFinite(message.value) || message.value < 0) {
-          return;
-        }
         await vscode.workspace
           .getConfiguration("cursorCurseMonitor")
           .update("customBudgetLimit", message.value, vscode.ConfigurationTarget.Global);
@@ -68,7 +58,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private getHtml(logoSvg: string, usageMeterSvg: string, cspSource: string, extensionVersion: string): string {
+  private getHtml(logoSvg: string, cspSource: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -78,10 +68,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   <title>Usage Dashboard</title>
   <style>
     :root {
-      --bg: #06080d;
-      --panel: rgba(17, 24, 39, 0.6);
-      --panel-2: rgba(22, 31, 46, 0.8);
-      --border: rgba(148, 163, 184, 0.15);
+      --bg: #0f1117;
+      --panel: #171a22;
+      --panel-2: #1c2030;
+      --border: #2a3040;
       --text: #eef2fb;
       --muted: #8b96ad;
       --accent: #7c5cff;
@@ -402,65 +392,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       color: var(--muted);
       font-weight: 600;
     }
-    .cursor-missing-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: rgba(6, 8, 13, 0.82);
-      backdrop-filter: blur(6px);
-      padding: 24px 16px;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-    .cursor-missing-overlay.visible { display: flex; }
-    .cursor-missing-card {
-      max-width: 320px;
-      padding: 20px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,107,107,.35);
-      background: rgba(17, 24, 39, 0.95);
-    }
-    .cursor-missing-anim {
-      width: 72px;
-      height: 72px;
-      margin: 0 auto 14px;
-      border-radius: 18px;
-      border: 2px dashed rgba(255,107,107,.55);
-      display: grid;
-      place-items: center;
-      animation: pulseMiss 1.6s ease-in-out infinite;
-      font-size: 28px;
-    }
-    @keyframes pulseMiss {
-      0%, 100% { transform: scale(1); opacity: 0.85; }
-      50% { transform: scale(1.06); opacity: 1; }
-    }
-    body.cursor-missing .actions button,
-    body.cursor-missing .icon-btn,
-    body.cursor-missing input,
-    body.cursor-missing .edit-link {
-      pointer-events: none;
-      opacity: 0.45;
-    }
-    body.cursor-missing #refreshBtn,
-    body.cursor-missing #refreshBtn2 {
-      pointer-events: auto;
-      opacity: 1;
-    }
   </style>
 </head>
 <body>
-  <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
-    <div class="cursor-missing-card">
-      <div class="cursor-missing-anim" aria-hidden="true">⌘</div>
-      <h2 style="margin:0 0 8px;font-size:16px;">Cursor not found</h2>
-      <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.5;">
-        Install or open Cursor, sign in once, then refresh. This dashboard stays read-only and will not write your database while Cursor is missing.
-      </p>
-    </div>
-  </div>
   <header class="header">
     <div class="logo-wrap" id="mascotLogo">
       ${logoSvg}
@@ -478,13 +412,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   <div id="errorBox" class="card error" style="display:none"></div>
 
   <section class="card" id="usageCard">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <p class="section-label" style="margin:0;">
-        <span style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;">${usageMeterSvg}</span>
-        Usage 
-      </p>
-      <span id="statusPill" class="pill ok">OK</span>
-    </div>
+    <p class="section-label">Usage <span id="statusPill" class="pill ok">OK</span></p>
     <div class="usage-big" id="usageBig">—%</div>
     <div class="usage-sub" id="usageSub">of included quota</div>
     <div class="bar">
@@ -609,7 +537,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>
     </div>
     <div class="footer-right">
-      v${extensionVersion}
+      v0.2.1
     </div>
   </footer>
 
@@ -628,26 +556,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       document.getElementById('gaugePct').textContent = Math.round(pct) + '%';
     }
 
-    function escHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
     function render(snapshot) {
       const b = snapshot.budget;
       const usage = snapshot.usage;
       const errorBox = document.getElementById('errorBox');
-      const missingOverlay = document.getElementById('cursorMissingOverlay');
-      if (snapshot.cursorMissing) {
-        document.body.classList.add('cursor-missing');
-        if (missingOverlay) missingOverlay.classList.add('visible');
-      } else {
-        document.body.classList.remove('cursor-missing');
-        if (missingOverlay) missingOverlay.classList.remove('visible');
-      }
 
       document.getElementById('subtitle').textContent = (snapshot.email ? snapshot.email + ' · ' : '') +
         'Lorapok Labs · ' + new Date(snapshot.fetchedAt).toLocaleTimeString();
@@ -736,7 +648,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
       const chips = document.getElementById('featureChips');
       chips.innerHTML = (snapshot.features || []).map(function(f) {
-        return '<span class="feature-chip">' + escHtml(f) + '</span>';
+        return '<span class="feature-chip">' + f + '</span>';
       }).join('');
 
       document.getElementById('footerMsg').textContent = b.thresholdReached
@@ -769,7 +681,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
     document.getElementById('saveBudgetBtn').addEventListener('click', function() {
       var value = Number(document.getElementById('budgetInput').value || 0);
-      if (!Number.isFinite(value) || value < 0) return;
       vscode.postMessage({ type: 'setBudget', value: value });
       document.getElementById('budgetEdit').classList.remove('open');
     });
@@ -779,99 +690,22 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   }
 }
 
-export type StatusBarUsageSource = "plan" | "autoApi" | "both";
-
-function formatFeaturePercent(n: number): string {
-  if (!Number.isFinite(n)) {
-    return "0";
-  }
-  return String(Math.round(n * 100) / 100);
-}
-
-function planPercent(snapshot: DashboardSnapshot): number {
-  return snapshot.budget?.percentUsed
-    ?? snapshot.usage?.individualUsage.plan.totalPercentUsed
-    ?? 0;
-}
-
-function autoApiPercents(snapshot: DashboardSnapshot): { auto: number; api: number } {
-  const plan = snapshot.usage?.individualUsage.plan;
-  return {
-    auto: snapshot.budget?.autoPercentUsed ?? plan?.autoPercentUsed ?? 0,
-    api: snapshot.budget?.apiPercentUsed ?? plan?.apiPercentUsed ?? 0,
-  };
-}
-
-function statusBarIcon(snapshot: DashboardSnapshot, warnPercent: number): string {
-  if (snapshot.error) {
-    return "$(warning)";
-  }
-  if (snapshot.limitExceeded) {
-    return "$(pass)";
-  }
-  if (warnPercent >= (snapshot.budget?.thresholdPercent ?? 80)) {
-    return "$(warning)";
-  }
-  return "$(graph)";
-}
-
-function formatPlanUsage(snapshot: DashboardSnapshot): string {
-  const pct = Math.round(planPercent(snapshot));
-  const b = snapshot.budget;
-  if (snapshot.limitExceeded) {
-    return `Usage: ${pct}% (free)`;
-  }
-  if (b?.hasUsdBudget) {
-    return `Usage: ${pct}% (${money(b.spentUsd)} / ${money(b.capUsd)})`;
-  }
-  return `Usage: ${pct}%`;
-}
-
-function formatAutoApiUsage(snapshot: DashboardSnapshot): string {
-  const { auto, api } = autoApiPercents(snapshot);
-  const suffix = snapshot.limitExceeded ? " (free)" : "";
-  return `Auto ${formatFeaturePercent(auto)}% · API ${formatFeaturePercent(api)}%${suffix}`;
-}
-
-export function formatStatusBarText(
-  snapshot: DashboardSnapshot,
-  source: StatusBarUsageSource = "plan"
-): string {
+export function formatStatusBarText(snapshot: DashboardSnapshot): string {
   if (snapshot.error) {
     return "$(warning) Cursor usage";
   }
-  const { auto, api } = autoApiPercents(snapshot);
-  const warnPercent =
-    source === "plan"
-      ? planPercent(snapshot)
-      : Math.max(auto, api, source === "both" ? planPercent(snapshot) : 0);
-  const icon = statusBarIcon(snapshot, warnPercent);
-
-  if (source === "autoApi") {
-    return `${icon} ${formatAutoApiUsage(snapshot)}`;
-  }
-  if (source === "both") {
-    return `${icon} ${formatPlanUsage(snapshot)} · ${formatAutoApiUsage(snapshot)}`;
-  }
-  return `${icon} ${formatPlanUsage(snapshot)}`;
-}
-
-export function formatStatusBarTooltip(snapshot: DashboardSnapshot): string {
-  if (snapshot.error) {
-    return snapshot.error;
-  }
-  const { auto, api } = autoApiPercents(snapshot);
-  const planPct = planPercent(snapshot);
-  const lines = [
-    `Plan: ${Math.round(planPct)}%`,
-    `Auto: ${formatFeaturePercent(auto)}%`,
-    `API: ${formatFeaturePercent(api)}%`,
-  ];
   const b = snapshot.budget;
-  if (b?.hasUsdBudget) {
-    lines.push(`${b.spentUsd.toFixed(2)} / ${b.capUsd.toFixed(2)} USD`);
+  const pct = b?.percentUsed ?? snapshot.usage?.individualUsage.plan.totalPercentUsed ?? 0;
+  if (snapshot.limitExceeded) {
+    return `$(pass) Usage: ${Math.round(pct)}% (free)`;
   }
-  return lines.join("\n");
+  if (b?.hasUsdBudget) {
+    return `$(graph) Usage: ${Math.round(pct)}% (${money(b.spentUsd)} / ${money(b.capUsd)})`;
+  }
+  if (pct >= (b?.thresholdPercent ?? 80)) {
+    return `$(warning) Usage: ${Math.round(pct)}%`;
+  }
+  return `$(graph) Usage: ${Math.round(pct)}%`;
 }
 
 function money(n: number): string {

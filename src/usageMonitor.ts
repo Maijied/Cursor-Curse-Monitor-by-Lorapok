@@ -1,8 +1,6 @@
 import * as vscode from "vscode";
 import {
   applyComposerFallbackModel,
-  cursorDbExists,
-  detectEditorHost,
   readCachedAccountEmail,
   readCursorAccessToken,
 } from "./cursorAuth";
@@ -21,12 +19,18 @@ type SnapshotListener = (snapshot: DashboardSnapshot) => void;
 export class UsageMonitorService implements vscode.Disposable {
   private timer: NodeJS.Timeout | undefined;
   private lastSnapshot: DashboardSnapshot | undefined;
-  private refreshInFlight: Promise<DashboardSnapshot> | null = null;
   private warnedAtThreshold = false;
   private fallbackAppliedThisCycle = false;
   private readonly listeners = new Set<SnapshotListener>();
+  private readonly wasmPath: string;
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(private readonly context: vscode.ExtensionContext) {
+    this.wasmPath = vscode.Uri.joinPath(
+      context.extensionUri,
+      "media",
+      "sql-wasm.wasm"
+    ).fsPath;
+  }
 
   onDidUpdate(listener: SnapshotListener): vscode.Disposable {
     this.listeners.add(listener);
@@ -60,21 +64,9 @@ export class UsageMonitorService implements vscode.Disposable {
   }
 
   async refresh(): Promise<DashboardSnapshot> {
-    if (this.refreshInFlight) {
-      return this.refreshInFlight;
-    }
-    this.refreshInFlight = this.doRefresh();
-    try {
-      return await this.refreshInFlight;
-    } finally {
-      this.refreshInFlight = null;
-    }
-  }
-
-  private async doRefresh(): Promise<DashboardSnapshot> {
     const config = vscode.workspace.getConfiguration("cursorCurseMonitor");
     const customBudgetLimit = config.get<number>("customBudgetLimit", 0);
-    const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", false);
+    const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", true);
     const warnAtPercent = config.get<number>("warnAtPercent", 80);
 
     const snapshot: DashboardSnapshot = {
@@ -88,29 +80,17 @@ export class UsageMonitorService implements vscode.Disposable {
       onDemandSpendUsd: 0,
       budget: null,
       features: [],
-      host: detectEditorHost(vscode.env.appName),
-      cursorMissing: !cursorDbExists(),
     };
 
-    if (snapshot.cursorMissing) {
-      snapshot.error =
-        "Cursor storage database not found. Install or open Cursor, sign in, then refresh. Monitoring stays read-only until the database exists.";
-      this.lastSnapshot = snapshot;
-      for (const listener of this.listeners) {
-        listener(snapshot);
-      }
-      return snapshot;
-    }
-
     try {
-      const token = await readCursorAccessToken();
+      const token = await readCursorAccessToken(this.wasmPath);
       if (!token) {
         throw new Error(
           "Cursor auth token not found. Sign in to Cursor and reload the window."
         );
       }
 
-      snapshot.email = await readCachedAccountEmail();
+      snapshot.email = await readCachedAccountEmail(this.wasmPath);
       snapshot.usage = await fetchUsageSummary(token);
       snapshot.profile = await fetchStripeProfile(token);
       snapshot.onDemandSpendUsd =
@@ -125,17 +105,12 @@ export class UsageMonitorService implements vscode.Disposable {
       );
       snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
 
-      const percent = snapshot.budget?.hasUsdBudget
-        ? snapshot.budget.budgetPercentUsed ?? snapshot.budget.percentUsed
-        : snapshot.usage.individualUsage.plan.totalPercentUsed;
+      const percent = snapshot.usage.individualUsage.plan.totalPercentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {
         this.warnedAtThreshold = true;
-        const budgetMsg = snapshot.budget?.hasUsdBudget
-          ? `Budget usage is at ${Math.round(percent)}% ($${snapshot.budget?.spentUsd?.toFixed(2) ?? "0"} / $${snapshot.budget?.capUsd?.toFixed(2) ?? "0"}).`
-          : `Cursor usage is at ${Math.round(percent)}%.`;
         NotificationProvider.show({
           title: "Usage Warning",
-          message: `${budgetMsg} Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
+          message: `Cursor usage is at ${percent}%. Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
           type: "warning",
           duration: 6000,
           actions: [
@@ -154,23 +129,20 @@ export class UsageMonitorService implements vscode.Disposable {
       }
 
       if (snapshot.limitExceeded && autoApplyFallback) {
-        const result = await applyComposerFallbackModel();
+        const result = await applyComposerFallbackModel(this.wasmPath);
         snapshot.fallbackApplied = result.success;
         if (result.success && !this.fallbackAppliedThisCycle) {
           this.fallbackAppliedThisCycle = true;
-          
-          if (!result.alreadySet) {
-            NotificationProvider.show({
-              title: "Fallback Applied",
-              message: "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback.",
-              type: "success",
-              duration: 10000,
-              actions: [
-                { label: "Reload Window (Apply)", action: () => void vscode.commands.executeCommand("workbench.action.reloadWindow") },
-                { label: "Dismiss", action: () => {} },
-              ],
-            });
-          }
+          NotificationProvider.show({
+            title: "Fallback Applied",
+            message: "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback.",
+            type: "success",
+            duration: 5000,
+            actions: [
+              { label: "Open Dashboard", action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard") },
+              { label: "Dismiss", action: () => {} },
+            ],
+          });
         } else if (!result.success && result.error) {
           // Show error to user but continue monitoring
           NotificationProvider.show({
