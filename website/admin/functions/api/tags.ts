@@ -2,6 +2,7 @@ import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { GITHUB_REPO, jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { fetchSiteData, tagsFromSiteData } from "./_shared/site-data.js";
+import { filterPublishableTags } from "./_shared/publishable-tags.js";
 
 export async function onRequestGet(context) {
   const startedAt = Date.now();
@@ -14,7 +15,9 @@ export async function onRequestGet(context) {
 
   if (res.ok) {
     const data = await res.json();
-    const tags = Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [];
+    const tags = filterPublishableTags(
+      Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : []
+    );
     const response = jsonResponse({ tags, source: "github" }, 200);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }
@@ -27,7 +30,7 @@ export async function onRequestGet(context) {
         res.status === 403
           ? "GitHub API rate limit — using cached tags from site-data.json"
           : `GitHub tags ${res.status} — using cached tags from site-data.json`;
-      const response = jsonResponse({ tags: cached, source: "cache", warning }, 200);
+      const response = jsonResponse({ tags: filterPublishableTags(cached), source: "cache", warning }, 200);
       return logAuthenticatedRequest(context, auth, response, startedAt);
     }
   } catch {
