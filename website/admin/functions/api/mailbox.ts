@@ -5,7 +5,7 @@ import {
   listMailboxMessages,
   patchMailboxMessage,
 } from "./_shared/mailbox.js";
-import { buildComposeHtml, buildSubscribeHtml, getMailTransportStatus, sendMail } from "./_shared/mail.js";
+import { buildComposeHtml, buildSubscribeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
 
 export async function onRequestGet(context) {
   const startedAt = Date.now();
@@ -81,7 +81,7 @@ export async function onRequestPost(context) {
     const result = await sendMail(env, {
       to,
       subject: "Cursor Curse Monitor — mailbox test",
-      html: buildSubscribeHtml({ email: to }),
+      html: buildTestHtml({ email: to, adminUrl: getAdminPublicUrl(env) }),
       text: `Mailbox test from Mission Control at ${new Date().toISOString()}. Outbound mail is working.`,
       category: "test",
       sentBy: auth.email,

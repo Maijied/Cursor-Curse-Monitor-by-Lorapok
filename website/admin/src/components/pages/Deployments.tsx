@@ -5,6 +5,8 @@ import { useSiteData } from "../../hooks/useSiteData";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
+import Notification from "../ui/Notification";
+import DeployRuntimePanel from "../ui/DeployRuntimePanel";
 
 function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) {
   if (!siteData) return [];
@@ -21,6 +23,8 @@ export default function Deployments() {
   const [tags, setTags] = useState<string[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [runtimeActive, setRuntimeActive] = useState(false);
+  const [lastTargetTag, setLastTargetTag] = useState("");
   const [channel, setChannel] = useState<"beta" | "production">("beta");
   const [selectedTag, setSelectedTag] = useState("");
   const [customTag, setCustomTag] = useState("");
@@ -66,9 +70,13 @@ export default function Deployments() {
       if (mode === "rollback") {
         await triggerRollback(payload);
         setMessage({ type: "success", text: `Rollback triggered for ${targetTag} (${market}).` });
+        setRuntimeActive(true);
+        setLastTargetTag(targetTag);
       } else {
         await triggerDeployment(payload);
         setMessage({ type: "success", text: `Deployment triggered for ${targetTag} (${market}).` });
+        setRuntimeActive(true);
+        setLastTargetTag(targetTag);
       }
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : `${mode === "rollback" ? "Rollback" : "Deployment"} failed` });
@@ -212,17 +220,20 @@ export default function Deployments() {
         </form>
 
         {message && (
-          <div
-            className={`mt-6 p-4 rounded-xl border ${
-              message.type === "success"
-                ? "bg-[color-mix(in_srgb,var(--color-ok)_10%,transparent)] border-[color-mix(in_srgb,var(--color-ok)_30%,transparent)] text-[var(--color-ok)]"
-                : "bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] text-[var(--color-danger)]"
-            }`}
-            role="status"
-          >
-            {message.text}
-          </div>
+          <Notification
+            tone={message.type === "success" ? "success" : "error"}
+            title={message.type === "success" ? "Workflow dispatched" : "Dispatch failed"}
+            message={message.text}
+            onDismiss={() => setMessage(null)}
+            className="mt-6"
+          />
         )}
+
+        <DeployRuntimePanel
+          active={runtimeActive}
+          workflowName={mode === "rollback" ? "deployment.yml" : "publish-tag.yml"}
+          targetTag={lastTargetTag}
+        />
       </Card>
     </div>
   );
