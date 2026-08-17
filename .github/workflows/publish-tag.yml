@@ -122,7 +122,13 @@ jobs:
           OUTPUT=$(node scripts/publish-ovsx.mjs $PRE_FLAG 2>&1)
           CODE=$?
           echo "$OUTPUT"
-          exit $CODE
+          if [ $CODE -ne 0 ]; then
+            if echo "$OUTPUT" | grep -qiE "already published|already exists"; then
+              echo "::warning::Version already on Open VSX — treating as success"
+              exit 0
+            fi
+            exit $CODE
+          fi
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
