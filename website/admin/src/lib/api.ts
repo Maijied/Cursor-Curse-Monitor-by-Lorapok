@@ -265,11 +265,54 @@ export type ApiActivityEntry = {
 };
 
 export type ApiActivityResponse = {
-  entries: ApiActivityEntry[];
+  items?: ApiActivityEntry[];
+  entries?: ApiActivityEntry[];
   page: number;
   limit: number;
   total: number;
 };
+
+export type ApiProbeResult = {
+  ok: boolean;
+  status: number;
+  latencyMs: number;
+  body: string;
+};
+
+export async function probeApiEndpoint(
+  path: string,
+  method: string,
+  options?: { auth?: boolean; body?: string }
+): Promise<ApiProbeResult> {
+  const started = performance.now();
+  const headers: Record<string, string> = {};
+  if (options?.auth) {
+    Object.assign(headers, await authHeaders());
+  }
+  if (options?.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: options?.body,
+  });
+
+  const text = await res.text();
+  const latencyMs = Math.round(performance.now() - started);
+  let body = text;
+  try {
+    body = JSON.stringify(JSON.parse(text), null, 2);
+  } catch {
+    /* keep raw text */
+  }
+  if (body.length > 6000) {
+    body = `${body.slice(0, 6000)}\n… (truncated)`;
+  }
+
+  return { ok: res.ok, status: res.status, latencyMs, body };
+}
 
 function asNotice(data: unknown): DevNotice | null {
   if (!data || typeof data !== "object") return null;
@@ -363,7 +406,11 @@ export async function subscribeEmail(email: string) {
 }
 
 export async function fetchApiActivity(page = 1, limit = 25) {
-  return apiGet<ApiActivityResponse>(`/api-activity?page=${page}&limit=${limit}`);
+  const data = await apiGet<ApiActivityResponse>(`/activity?page=${page}&limit=${limit}`);
+  return {
+    ...data,
+    entries: data.items ?? data.entries ?? [],
+  };
 }
 
 export async function triggerRollback(payload: DeployRequest) {

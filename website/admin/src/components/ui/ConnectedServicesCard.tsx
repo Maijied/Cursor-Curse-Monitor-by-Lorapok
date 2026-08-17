@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import Card from "./Card";
 import Badge from "./Badge";
@@ -112,9 +113,9 @@ export default function ConnectedServicesCard() {
   const connectedCount = services.filter((s) => s.status === "connected").length;
 
   return (
-    <Card>
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div>
+    <Card className="h-full min-h-[18rem] flex flex-col">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-[var(--color-text)]">Connected Services</h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
             Live connectivity between admin, APIs, and the public site feed.
@@ -125,7 +126,7 @@ export default function ConnectedServicesCard() {
         </Badge>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm" aria-label="Connected services status">
           <thead>
             <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
@@ -150,6 +151,13 @@ export default function ConnectedServicesCard() {
           </tbody>
         </table>
       </div>
+
+      <p className="text-sm text-[var(--color-muted)] mt-6 pt-4 border-t border-[var(--color-border)]">
+        Need full endpoint tests?{" "}
+        <Link to="/dashboard/api-explorer" className="text-[var(--color-accent)] font-medium hover:underline">
+          Open API Explorer
+        </Link>
+      </p>
     </Card>
   );
 }

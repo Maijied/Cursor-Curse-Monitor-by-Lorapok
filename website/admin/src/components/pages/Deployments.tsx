@@ -88,7 +88,7 @@ export default function Deployments() {
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
 
   return (
-    <div className="max-w-3xl animate-fade-slide-up">
+    <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Rollback"
         description="Trigger the GitHub Actions deployment workflow with the correct marketplace inputs."

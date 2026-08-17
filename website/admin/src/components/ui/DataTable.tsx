@@ -125,30 +125,30 @@ export default function DataTable<T>({
         </table>
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
-        <span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-[var(--color-muted)]">
+        <span className="text-center sm:text-left">
           {filtered.length === 0
             ? "0 results"
             : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
           <button
             type="button"
             disabled={safePage <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
+            className="inline-flex items-center justify-center gap-1 min-h-11 px-4 rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
             aria-label="Previous page"
           >
             <ChevronLeft size={16} /> Prev
           </button>
-          <span className="font-[family-name:var(--font-mono)] text-xs">
+          <span className="font-[family-name:var(--font-mono)] text-xs min-w-[3rem] text-center">
             {safePage}/{totalPages}
           </span>
           <button
             type="button"
             disabled={safePage >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
+            className="inline-flex items-center justify-center gap-1 min-h-11 px-4 rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
             aria-label="Next page"
           >
             Next <ChevronRight size={16} />

@@ -20,6 +20,7 @@ export default function Sidebar({
         w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-bg-elevated)] flex flex-col justify-between
         fixed md:static inset-y-0 left-0 z-50 md:z-auto
         transform transition-transform duration-200 ease-out
+        pb-[env(safe-area-inset-bottom)]
         ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}
     >
@@ -47,7 +48,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={onClose}
-            className="md:hidden p-1.5 rounded-lg hover:bg-white/5 text-[var(--color-muted)]"
+            className="md:hidden p-2.5 min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-white/5 text-[var(--color-muted)]"
             aria-label="Close menu"
           >
             <X size={18} />

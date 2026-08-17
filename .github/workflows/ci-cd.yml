@@ -139,6 +139,8 @@ jobs:
 
       - name: Test admin panel
         working-directory: website/admin
+        env:
+          ADMIN_MASTER_EMAIL: ${{ secrets.ADMIN_MASTER_EMAIL }}
         run: npm test
 
       - name: Build admin panel

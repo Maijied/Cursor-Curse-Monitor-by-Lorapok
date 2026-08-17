@@ -37,12 +37,12 @@ export default function DownloadBreakdownPanel({
           const pct = total > 0 && key !== "openVsxDuplicate" ? Math.round((value / total) * 100) : 0;
           return (
             <div key={key} className="group">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-[var(--color-text)]">
+              <div className="flex flex-col gap-1 sm:flex-row sm:justify-between text-sm mb-1">
+                <span className="text-[var(--color-text)] min-w-0">
                   {label}
-                  {hint && <span className="text-[var(--color-muted)] ml-2 text-xs">{hint}</span>}
+                  {hint && <span className="block sm:inline text-[var(--color-muted)] sm:ml-2 text-xs">{hint}</span>}
                 </span>
-                <span className="font-[family-name:var(--font-mono)] text-[var(--color-text)]">{formatCount(value)}</span>
+                <span className="font-[family-name:var(--font-mono)] text-[var(--color-text)] shrink-0">{formatCount(value)}</span>
               </div>
               {key !== "openVsxDuplicate" && total > 0 && (
                 <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">

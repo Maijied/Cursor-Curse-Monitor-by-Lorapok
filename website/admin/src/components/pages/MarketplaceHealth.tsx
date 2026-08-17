@@ -59,7 +59,8 @@ export default function MarketplaceHealth() {
               <p className="text-xs text-[var(--color-muted)] mb-4">
                 Checked {new Date(live.checkedAt).toLocaleString()}
               </p>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-1 px-1">
+              <table className="w-full text-sm min-w-[16rem]">
                 <thead>
                   <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
                     <th className="pb-2 pr-4">Channel</th>
@@ -87,6 +88,7 @@ export default function MarketplaceHealth() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </Card>
           </div>
 

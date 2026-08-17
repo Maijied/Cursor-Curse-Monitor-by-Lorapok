@@ -265,7 +265,7 @@ export default function Notices() {
       />
 
       <Card>
-        <div className="flex items-center justify-between gap-3 mb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <h3 className="text-lg font-semibold text-[var(--color-text)]">
             {editing ? "Edit notice" : "New notice"}
           </h3>

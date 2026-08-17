@@ -104,13 +104,14 @@ export default function Team() {
     "flex-1 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none transition-all text-[var(--color-text)]";
 
   return (
-    <div className="max-w-3xl animate-fade-slide-up">
+    <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Team Access"
         description="Manage who has access to the deployment dashboard and authenticated API routes."
       />
 
-      <Card className="mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
+      <Card className="min-h-[18rem] flex flex-col">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-3 text-[var(--color-text)]">
           <UserPlus className="text-[var(--color-accent)]" size={24} />
           Invite Administrator
@@ -151,8 +152,8 @@ export default function Team() {
             <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-neon)_20%,transparent)] flex items-center justify-center text-[var(--color-neon)] font-bold border border-[color-mix(in_srgb,var(--color-neon)_30%,transparent)]">
               {MASTER_ADMIN[0].toUpperCase()}
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-[var(--color-text)]">{MASTER_ADMIN}</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-[var(--color-text)] truncate">{MASTER_ADMIN}</p>
               <p className="text-xs text-[var(--color-neon)] font-medium">Master Admin</p>
             </div>
           </div>
@@ -174,7 +175,7 @@ export default function Team() {
                   type="button"
                   onClick={() => handleRemove(record)}
                   disabled={loading}
-                  className="p-2 rounded-lg text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors"
+                  className="p-2.5 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors"
                   aria-label={`Remove ${record.email}`}
                 >
                   <Trash2 size={18} />
@@ -184,6 +185,7 @@ export default function Team() {
           ))}
         </div>
       </Card>
+      </div>
     </div>
   );
 }

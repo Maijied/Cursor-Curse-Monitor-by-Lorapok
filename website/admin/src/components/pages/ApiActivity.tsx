@@ -55,7 +55,7 @@ export default function ApiActivity() {
         description="Authenticated admin API requests — method, path, status, and latency."
       />
 
-      <Card>
+      <Card className="min-h-[20rem]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -104,44 +104,49 @@ export default function ApiActivity() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--color-border)]">
-            <p className="text-sm text-[var(--color-muted)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-6 pt-4 border-t border-[var(--color-border)]">
+            <p className="text-sm text-[var(--color-muted)] text-center sm:text-left">
               Page {page} of {totalPages} · {total} total
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
               <button
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="p-2 rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5 transition-colors"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5 transition-colors"
                 aria-label="Previous page"
               >
                 <ChevronLeft size={18} />
               </button>
-              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                const start = Math.max(1, Math.min(page - 3, totalPages - 6));
-                const p = start + i;
-                if (p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPage(p)}
-                    className={`min-w-[2.25rem] px-2 py-1.5 rounded-lg text-sm border transition-colors ${
-                      p === page
-                        ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]"
-                        : "border-[var(--color-border)] hover:bg-white/5 text-[var(--color-muted)]"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
+              <span className="sm:hidden font-[family-name:var(--font-mono)] text-xs text-[var(--color-muted)] min-w-[3rem] text-center">
+                {page}/{totalPages}
+              </span>
+              <div className="hidden sm:flex flex-wrap gap-2">
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  const start = Math.max(1, Math.min(page - 3, totalPages - 6));
+                  const p = start + i;
+                  if (p > totalPages) return null;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPage(p)}
+                      className={`min-h-11 min-w-[2.25rem] px-2 rounded-lg text-sm border transition-colors ${
+                        p === page
+                          ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]"
+                          : "border-[var(--color-border)] hover:bg-white/5 text-[var(--color-muted)]"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="p-2 rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5 transition-colors"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5 transition-colors"
                 aria-label="Next page"
               >
                 <ChevronRight size={18} />

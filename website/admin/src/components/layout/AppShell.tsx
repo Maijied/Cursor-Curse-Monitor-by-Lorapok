@@ -8,6 +8,7 @@ import Overview from "../pages/Overview";
 import MarketplaceHealth from "../pages/MarketplaceHealth";
 import Releases from "../pages/Releases";
 import Activity from "../pages/Activity";
+import ApiExplorer from "../pages/ApiExplorer";
 import ApiActivity from "../pages/ApiActivity";
 import Reports from "../pages/Reports";
 import Discussions from "../pages/Discussions";
@@ -18,6 +19,7 @@ import Docs from "../pages/Docs";
 import SeoDashboard from "../pages/SeoDashboard";
 import Settings from "../pages/Settings";
 import Team from "../Team";
+import NotFound from "../pages/NotFound";
 
 export default function AppShell() {
   const navigate = useNavigate();
@@ -55,7 +57,7 @@ export default function AppShell() {
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-white/5"
+            className="p-2.5 min-h-11 min-w-11 flex items-center justify-center rounded-lg border border-[var(--color-border)] hover:bg-white/5"
             aria-label="Open menu"
           >
             <Menu size={20} />
@@ -69,12 +71,13 @@ export default function AppShell() {
         <div className="flex-1 relative min-w-0 min-h-0">
           <div className="app-shell-bg" aria-hidden="true" />
           <main className="app-scroll-pane">
-            <div className="p-6 md:p-8 max-w-7xl mx-auto w-full">
+            <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full min-w-0">
               <Routes>
                 <Route index element={<Overview />} />
                 <Route path="marketplace" element={<MarketplaceHealth />} />
                 <Route path="releases" element={<Releases />} />
                 <Route path="activity" element={<Activity />} />
+                <Route path="api-explorer" element={<ApiExplorer />} />
                 <Route path="api-activity" element={<ApiActivity />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="discussions" element={<Discussions />} />
@@ -86,6 +89,7 @@ export default function AppShell() {
                 <Route path="seo" element={<SeoDashboard />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="team" element={<Team />} />
+                <Route path="*" element={<NotFound inApp />} />
               </Routes>
             </div>
           </main>

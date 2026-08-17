@@ -89,34 +89,59 @@
     </div>
     <div class="container hero-inner">
       <div class="hero-copy">
-        <div class="badges">
-          <span class="badge">Lorapok Labs</span>
+        <p class="hero-kicker">
+          <span class="hero-kicker-dot" aria-hidden="true"></span>
+          Lorapok Labs · Cursor IDE extension
+        </p>
+        <div class="badges" aria-label="Release status">
+          <span class="badge badge-brand">Lorapok Labs</span>
           <span class="badge accent" id="ovsx-status">Open VSX · loading…</span>
           <span class="badge accent" id="vscode-status">VS Code · loading…</span>
           <span class="badge muted">v<span data-version>—</span></span>
         </div>
-        <h1>Know your Cursor limits <em>before</em> they know you.</h1>
+        <h1>Know your Cursor limits <span class="hero-accent">before</span> they know you.</h1>
         <p class="lead">Live usage dashboard for Cursor IDE — included quota, billing cycle, on-demand spend, and automatic free fallback to <strong>Composer 2.5 (Fast off)</strong> when limits are crossed.</p>
-        <div class="cta-row">
-          <a class="btn primary" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
-            Install from Open VSX
-            <small>v<span data-ovsx-version>—</span></small>
+        <ul class="hero-highlights" aria-label="Key capabilities">
+          <li>Real-time quota &amp; billing cycle</li>
+          <li>Personal budget cap &amp; warnings</li>
+          <li>Private — data stays on your machine</li>
+        </ul>
+        <div class="hero-cta">
+          <div class="hero-cta-primary">
+            <a class="btn btn-hero primary" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
+              <span class="btn-label">Install from Open VSX</span>
+              <small>v<span data-ovsx-version>—</span></small>
+            </a>
+            <a class="btn btn-hero primary alt" data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
+              <span class="btn-label">VS Code Marketplace</span>
+              <small>v<span data-vscode-version>—</span></small>
+            </a>
+          </div>
+          <a class="hero-cta-secondary btn secondary" data-href-release href="#">
+            Download VSIX <span class="hero-cta-version">v<span data-version>—</span></span>
           </a>
-          <a class="btn primary" data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">
-            Install from VS Code Marketplace
-            <small>v<span data-vscode-version>—</span></small>
-          </a>
-          <a class="btn secondary" data-href-release href="#">Download VSIX v<span data-version>—</span></a>
         </div>
-        <p class="meta-line">Extension ID: <code data-extension-id>lorapok-labs.cursor-curse-monitor-by-lorapok</code></p>
+        <div class="hero-meta">
+          <span class="hero-meta-label">Extension ID</span>
+          <code data-extension-id>lorapok-labs.cursor-curse-monitor-by-lorapok</code>
+        </div>
       </div>
       <aside class="hero-visual">
-        <button type="button" class="hero-shot-btn lightbox-trigger" data-lightbox-group="hero" data-src="assets/marketing/showcase-dashboard.png" data-caption="Live usage dashboard in Cursor IDE">
-          <img src="assets/marketing/showcase-dashboard.png" alt="Cursor Curse Monitor dashboard preview" class="hero-shot" />
-          <span class="zoom-hint">Click to enlarge</span>
-        </button>
+        <div class="hero-device">
+          <div class="hero-device-bar" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span class="hero-device-title">Cursor Curse Monitor</span>
+          </div>
+          <button type="button" class="hero-shot-btn lightbox-trigger" data-lightbox-group="hero" data-src="assets/marketing/showcase-dashboard.png" data-caption="Live usage dashboard in Cursor IDE">
+            <img src="assets/marketing/showcase-dashboard.png" alt="Cursor Curse Monitor dashboard preview" class="hero-shot" />
+            <span class="zoom-hint">Click to enlarge</span>
+          </button>
+        </div>
         <div class="hero-panel glass">
-          <div class="panel-head">Live preview</div>
+          <div class="panel-head">
+            <span class="panel-live-dot" aria-hidden="true"></span>
+            Live preview
+          </div>
           <div class="stat-row"><span>Included usage</span><strong>87%</strong></div>
           <div class="meter"><div class="meter-fill" style="width:87%"></div></div>
           <div class="stat-row"><span>Billing reset</span><strong>4 days</strong></div>
@@ -187,6 +212,99 @@
             <p>Your auth token never leaves your machine. No telemetry, no shared team dashboard.</p>
           </div>
         </article>
+      </div>
+
+      <div class="feature-list-wrap">
+        <div class="feature-list-head">
+          <h3 class="feature-list-title">Complete feature set</h3>
+          <p class="section-lead">Every install includes the full Lorapok Labs monitoring stack — local-first, no account required beyond your Cursor login.</p>
+        </div>
+        <ul class="feature-list-grid" role="list">
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/monitor-dashboard.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Sidebar dashboard</strong>
+              <p>Activity bar panel with included usage, billing reset, on-demand spend, and plan breakdown.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/usage-meter.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Status bar meter</strong>
+              <p>Live usage percentage in the editor status bar — plan, Auto/API, or both.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/api-connect.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Auto refresh</strong>
+              <p>Polls the Cursor API on a schedule (default 60s) with manual refresh on demand.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/budget-cap.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Personal budget cap</strong>
+              <p>Set a USD limit in settings and track spend against your included quota.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/billing-cycle.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Billing cycle countdown</strong>
+              <p>See days until reset so you can pace usage through the month.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/notification-warning.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Limit warnings</strong>
+              <p>Configurable alert (default 80%) before you hit included or budget limits.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/fallback-mode.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Composer 2.5 fallback</strong>
+              <p>Optional auto-switch to Composer 2.5 (Fast off) when usage reaches 100%.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/team-usage.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Team-aware limits</strong>
+              <p>Surfaces individual vs team limit type from your Cursor session context.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/security-shield.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Privacy-first</strong>
+              <p>Auth stays on your machine. No extension telemetry unless you opt in.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/activity-bar.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Safe DB writes</strong>
+              <p>Read-only while Cursor runs; fallback writes only after quit with WAL backups.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/notification-success.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Cursor &amp; VS Code</strong>
+              <p>Works in Cursor IDE and Visual Studio Code from Open VSX and Marketplace.</p>
+            </div>
+          </li>
+          <li class="feature-list-item">
+            <span class="feature-list-icon" aria-hidden="true"><img src="assets/notification-info.svg" alt="" width="24" height="24" /></span>
+            <div class="feature-list-copy">
+              <strong>Fully configurable</strong>
+              <p>Poll interval, status bar source, warnings, budget, and fallback toggles in settings.</p>
+            </div>
+          </li>
+        </ul>
       </div>
     </section>
 
