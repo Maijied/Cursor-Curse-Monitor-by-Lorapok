@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Home, Shield } from "lucide-react";
+import { MARKETING_SITE_URL } from "../../lib/marketing-site";
+import BackToWebsiteButton from "../ui/BackToWebsiteButton";
 
 type NotFoundProps = {
   /** Rendered inside authenticated dashboard shell */
@@ -63,13 +65,16 @@ export default function NotFound({ inApp = false }: NotFoundProps) {
             Go back
           </button>
           {inApp ? (
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-xl text-sm font-semibold bg-[var(--color-accent)] text-white hover:opacity-90"
-            >
-              <Home size={16} aria-hidden="true" />
-              Overview
-            </Link>
+            <>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-xl text-sm font-semibold bg-[var(--color-accent)] text-white hover:opacity-90"
+              >
+                <Home size={16} aria-hidden="true" />
+                Overview
+              </Link>
+              <BackToWebsiteButton className="!w-auto shrink-0" compact />
+            </>
           ) : (
             <>
               <Link
@@ -80,7 +85,9 @@ export default function NotFound({ inApp = false }: NotFoundProps) {
                 Admin login
               </Link>
               <a
-                href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/"
+                href={MARKETING_SITE_URL}
+                target="_blank"
+                rel="home noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-xl text-sm font-semibold border border-[var(--color-border)] hover:bg-white/5"
               >
                 <Home size={16} aria-hidden="true" />

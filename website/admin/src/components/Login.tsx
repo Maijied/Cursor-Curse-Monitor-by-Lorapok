@@ -3,6 +3,7 @@ import { signInWithPopup, signInWithEmailLink, isSignInWithEmailLink, sendSignIn
 import { auth, googleProvider } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { LogIn, Mail } from "lucide-react";
+import BackToWebsiteButton from "./ui/BackToWebsiteButton";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -129,6 +130,7 @@ export default function Login() {
           </div>
         )}
       </div>
+      <BackToWebsiteButton className="mt-6 w-full max-w-md animate-fade-slide-up stagger-3" />
       </div>
     </div>
   );
