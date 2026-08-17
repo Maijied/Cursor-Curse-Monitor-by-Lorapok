@@ -1,16 +1,26 @@
 {
-  "name": "Cursor Curse Monitor Admin",
+  "id": "/",
+  "name": "Cursor Curse Monitor — Mission Control",
   "short_name": "CCM Admin",
   "description": "Lorapok Labs Mission Control for Cursor Curse Monitor",
-  "start_url": "/",
+  "start_url": "/login?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0b0f1a",
   "theme_color": "#0b0f1a",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/assets/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     },
     {
