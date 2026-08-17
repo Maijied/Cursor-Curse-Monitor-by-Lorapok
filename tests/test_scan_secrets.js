@@ -22,7 +22,7 @@ async function run() {
   });
   assert.equal(allowed.length, 0, "single cursor token allowed in paste");
 
-  const multi = scanSecrets(`ghp_abcdefghijklmnopqrstuvwxyz1234567890\n${jwt}`, {
+  const multi = scanSecrets(`sk-abcdefghijklmnopqrstuvwxyz1234567890\n${jwt}`, {
     location: "Options paste",
     context: "paste",
     allowCursorToken: true,

@@ -19,7 +19,7 @@ const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.abc";
 const ok = scanPasteField(jwt, "Options paste", true);
 assert.equal(ok.length, 0);
 
-const bad = scanPasteField("ghp_abcdefghijklmnopqrstuvwxyz1234567890", "Options paste", true);
+const bad = scanPasteField("sk-abcdefghijklmnopqrstuvwxyz1234567890", "Options paste", true);
 assert.ok(bad.length >= 1);
 
 console.log("test-security-scan.cjs: OK");

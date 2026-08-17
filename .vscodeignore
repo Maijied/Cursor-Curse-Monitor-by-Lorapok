@@ -8,6 +8,14 @@ tsconfig.json
 .github/**
 website/**
 scripts/**
+tests/**
+browser-extension/**
+.husky/**
+.secretlintignore
+.secretlintrc.json
+.cursor/**
+docs/**
+AGENTS.md
 DEPLOYMENT.md
 AUTHORS.md
 CONTRIBUTING.md
