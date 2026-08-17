@@ -27,6 +27,7 @@
     "analyticsStats": "https://cursor-dev.lorapok.tech/api/analytics/stats"
   },
   "analytics": {
-    "gaMeasurementId": "G-ZK619CZWHM"
+    "gaMeasurementId": "G-ZK619CZWHM",
+    "gaGatewayPath": "/umva"
   }
 }

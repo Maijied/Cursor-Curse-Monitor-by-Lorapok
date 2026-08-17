@@ -60,7 +60,8 @@
   "analytics": {
     "beaconPath": "/api/analytics/visit",
     "beaconUrl": "https://cursor-dev.lorapok.tech/api/analytics/visit",
-    "gaMeasurementId": "G-ZK619CZWHM"
+    "gaMeasurementId": "G-ZK619CZWHM",
+    "gaGatewayPath": "/umva"
   },
   "ovsx": {
     "namespace": "lorapok-labs",
