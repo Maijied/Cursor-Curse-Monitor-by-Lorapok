@@ -194,6 +194,9 @@ firebase deploy --only firestore:rules --project cursor-curse-by-lorapok
 |--------|---------|
 | `CLOUDFLARE_API_TOKEN` | Pages deploy from `admin-deploy` job |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
+| `CLOUDFLARE_EMAIL_API_TOKEN` | (Recommended) API token with **Email Sending → Send** for outbound mail; synced to Pages as `CLOUDFLARE_EMAIL_API_TOKEN` |
+
+The deploy token alone is not enough if it lacks Email Sending permission — subscribe/invite mail will return `401 Authentication error`. Create a dedicated token in **My Profile → API Tokens** with Account **Email Sending → Send** and add it as `CLOUDFLARE_EMAIL_API_TOKEN` in the `admin-production` environment. Onboard `lorapok.tech` once under **Email Service → Email Sending** in the Cloudflare dashboard.
 
 Push to `main` runs `admin-ci` then `admin-deploy` when secrets are configured.
 

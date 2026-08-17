@@ -24,17 +24,52 @@ if (!token) {
   process.exit(1);
 }
 
-function run(args) {
+async function verifyEmailToken(token, accountId) {
+  const res = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: "verify@example.com",
+        from: { address: "cursor-contact@lorapok.tech", name: "CCM Verify" },
+        subject: "token probe",
+        text: "probe",
+      }),
+    }
+  );
+  const body = await res.json().catch(() => ({}));
+  if (res.status === 401 || res.status === 403) {
+    console.error(
+      "CLOUDFLARE_API_TOKEN cannot send mail (401/403). Create a token with Account → Email Sending → Send, " +
+        "or onboard lorapok.tech in Cloudflare Dashboard → Email Service → Email Sending."
+    );
+    console.error(JSON.stringify(body.errors ?? body).slice(0, 300));
+    return false;
+  }
+  return true;
+}
+
+function run(args, { allowFail = false } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {
     cwd: adminDir,
     stdio: "inherit",
     env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
   });
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  if (result.status !== 0 && !allowFail) process.exit(result.status ?? 1);
+}
+
+console.log("Checking token can access Email Sending API…");
+const tokenOk = await verifyEmailToken(token, accountId);
+if (!tokenOk) {
+  console.warn("Continuing to sync Pages secret, but sends will fail until token + domain onboarding are fixed.");
 }
 
 console.log("Enabling Email Sending for lorapok.tech…");
-run(["email", "sending", "enable", "lorapok.tech"]);
+run(["email", "sending", "enable", "lorapok.tech"], { allowFail: true });
 
 console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret…");
 const put = spawnSync(
