@@ -5,6 +5,8 @@
 ```
 cursor-usage-monitor/
 ├── src/                 # VS Code / Cursor extension (TypeScript)
+├── packages/shared/     # Shared API types + budget math
+├── browser-extension/   # Firefox AMO + Chrome zip WebExtension
 ├── website/             # Marketing static site (GitHub Pages)
 │   └── admin/           # Mission Control SPA + Cloudflare Pages Functions
 ├── media/               # Extension & repo assets
@@ -15,24 +17,46 @@ cursor-usage-monitor/
 
 ```mermaid
 flowchart LR
-  IDE[Cursor / VS Code] -->|auth token + local metadata| EXT[Extension]
+  IDE[Cursor / VS Code] -->|auth token + local metadata| EXT[IDE Extension]
   EXT -->|usage-summary + profile| API[api2.cursor.sh]
-  EXT -->|native toasts| Toast[Workbench overlay]
+  EXT -->|scan files / clipboard| SCAN[packages/shared scanSecrets]
+  Browser[Firefox / Chrome] -->|token from cursor.com or manual| BEXT[Browser Extension]
+  BEXT -->|usage-summary + profile| API
+  BEXT -->|paste validation| SCAN
+  SCAN -->|redacted findings| ALERT[Security Alert UI]
+  GitHook[pre-commit secretlint] --> SCAN
   Visitor[Website visitor] --> SITE[GitHub Pages]
   Admin[Admin operator] --> MC[Mission Control]
   MC -->|Pages Functions| KV[(ADMIN_KV)]
   MC -->|dispatch| GHA[GitHub Actions]
   GHA --> OVSX[Open VSX]
   GHA --> VSM[VS Code Marketplace]
-  MC -->|send| MAIL[Cloudflare Email]
+  GHA --> AMO[Firefox AMO]
+  GHA --> CHROME[Chrome zip]
 ```
 
-## Extension
+## IDE extension
 
 - Quota and billing come from Cursor’s remote usage API after reading the local auth token in `state.vscdb`
 - Local insights (read-only) include daily line-accept stats, active models, and composer session titles — not chat transcripts
 - Status bar + sidebar dashboard; native workbench toasts overlay the open editor
 - Optional Composer 2.5 fallback when limits exceeded (quit-then-write)
+- **Security monitor** (`securityMonitor.ts`): pattern-based credential scan via shared `scanSecrets`; Manage Processes–style alert panel; commands for workspace and clipboard scan. Does not read live Composer chat.
+
+## Browser extension
+
+- Hybrid auth: content script on `cursor.com` captures Bearer token from `api2.cursor.sh` requests, or manual paste in Options
+- Animated Budget Tracker popup; mandatory Lorapok Labs + Cursor footer
+- **Security scanner** on Options paste — warns when extra secrets appear alongside an intentional Cursor token
+- Firefox: auto-published to AMO via `web-ext sign` + generated metadata
+- Chrome: direct-download zip (not Chrome Web Store)
+
+## Security scanner (shared)
+
+- Core engine: `packages/shared/src/scanSecrets.ts` — Bearer/JWT, API keys, private keys, password assignments, `.env` patterns
+- Redaction: findings store `abcd…wxyz` snippets only; full matches are never logged or uploaded
+- Repo: `.secretlintrc.json` + Husky pre-commit + CI `security:scan`
+- **Limitation:** Composer chat secrets that never hit disk are not detectable
 
 ## Marketing site
 

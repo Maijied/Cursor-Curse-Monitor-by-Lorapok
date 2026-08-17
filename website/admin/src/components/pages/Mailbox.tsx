@@ -7,6 +7,8 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import Modal from "../ui/Modal";
 import Notification, { type NotificationTone } from "../ui/Notification";
+import SecurityAlertModal from "../ui/SecurityAlertModal";
+import { scanAdminText, type AdminSecurityFinding } from "../../lib/scanSecrets";
 import {
   fetchMailbox,
   markMailboxRead,
@@ -46,6 +48,7 @@ export default function Mailbox() {
   const [testTo, setTestTo] = useState(auth.currentUser?.email ?? "");
   const [sending, setSending] = useState(false);
   const [selected, setSelected] = useState<MailboxMessage | null>(null);
+  const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -70,6 +73,14 @@ export default function Mailbox() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
+    const findings = [
+      ...scanAdminText(subject, "Subject"),
+      ...scanAdminText(body, "Message body"),
+    ];
+    if (findings.length) {
+      setSecurityFindings(findings);
+      return;
+    }
     setSending(true);
     setNotice(null);
     try {
@@ -121,6 +132,9 @@ export default function Mailbox() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
+      {securityFindings.length > 0 && (
+        <SecurityAlertModal findings={securityFindings} onDismiss={() => setSecurityFindings([])} />
+      )}
       <PageHeader
         title="Mailbox"
         description="Professional outbound mail from Lorapok Labs — subscribe confirmations, invites, notices, and compose."

@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Browser extension** (`browser-extension/`) — Firefox Add-ons (AMO auto-publish) + Chrome direct-download zip
+- Animated Budget Tracker popup UI with spend-over-time chart, Lorapok + Cursor footer on every page
+- Hybrid auth: auto-capture from cursor.com dashboard or manual token in Options
+- **Security scanner** — Manage Processes-style alerts for exposed credentials in workspace files, clipboard, commits (pre-commit + CI), and extension paste fields
 - Local insights on the dashboard: daily Tab/Composer accepted lines, active models, and recent session titles (metadata only — no chat bodies)
 - Cycle trend sparkline from on-machine usage history
 - Team on-demand spend when Cursor’s API returns it

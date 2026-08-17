@@ -474,6 +474,18 @@ const siteData = {
   },
   notice: DEV_NOTICE,
   stableFallback: buildStableFallbackVersions(deployTags, github?.tag ?? `v${version}`),
+  browserExtension: {
+    firefox: {
+      version,
+      url: `https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/`,
+      slug: "cursor-curse-monitor-by-lorapok",
+    },
+    chrome: {
+      version,
+      zipUrl: `https://github.com/${REPO}/releases/latest/download/cursor-curse-monitor-chrome-${version}.zip`,
+      note: "Direct download only — not on Chrome Web Store",
+    },
+  },
 };
 
 const out = join(root, "website", "site-data.json");

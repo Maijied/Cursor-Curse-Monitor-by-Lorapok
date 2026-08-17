@@ -138,6 +138,28 @@ After publish, search in Extensions:
 
 ---
 
+## Development
+
+```bash
+npm install          # also runs husky via prepare
+npm run compile
+npm test          # extension tests (Node 22+)
+npm run security:scan   # full-repo secretlint (same as CI)
+npm run package   # build .vsix
+```
+
+### Pre-commit (contributors)
+
+After `npm install`, Husky installs a pre-commit hook that runs `secretlint` on **staged** files. To scan the entire repo:
+
+```bash
+npm run security:scan
+```
+
+Config: [`.secretlintrc.json`](.secretlintrc.json). Test fixtures under `tests/` and docs under `website/` are allowlisted where appropriate.
+
+---
+
 ## Install from CI Artifact
 
 1. Open **Actions → CI/CD** run
@@ -214,6 +236,44 @@ See [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) for the full QA che
 
 ---
 
+## Browser extension (Firefox AMO + Chrome zip)
+
+Built from `browser-extension/` on every release. **Not** submitted to Chrome Web Store — Chrome users download the zip from GitHub Releases or the marketing site.
+
+### Secrets (GitHub Actions)
+
+| Secret | Purpose |
+|--------|---------|
+| `AMO_JWT_ISSUER` | Firefox Add-ons API JWT issuer (`user:…`) |
+| `AMO_JWT_SECRET` | Firefox Add-ons API JWT secret |
+
+Generate at [Firefox Add-ons Developer Hub → API credentials](https://addons.mozilla.org/developers/addon/api/key/).
+
+### CI/CD flow (release tag / manual dispatch)
+
+1. `npm run browser-ext:build` — Vite → `browser-extension/dist/`
+2. `node browser-extension/scripts/generate-amo-metadata.mjs` — fills all AMO listing fields from `amo/amo-metadata.base.json` + `CHANGELOG.md`
+3. `node browser-extension/scripts/validate-amo-metadata.mjs`
+4. `npx web-ext@8 sign --channel listed --amo-metadata …` — signs and submits to AMO (zero manual form filling)
+5. `node browser-extension/scripts/verify-amo-status.mjs` — polls AMO API
+6. Chrome zip → GitHub Release + `website/downloads/`
+
+### Local dev
+
+```bash
+npm run build -w @lorapok/cursor-monitor-shared
+npm run browser-ext:build
+# Load unpacked: chrome://extensions or about:debugging → Load Temporary Add-on → dist/manifest.json
+```
+
+### Chrome install (users)
+
+1. Download `cursor-curse-monitor-chrome-{version}.zip` from Releases or website
+2. Extract folder
+3. `chrome://extensions` → Developer mode → **Load unpacked** → select extracted folder
+
+---
+
 ## Troubleshooting
 
 | Issue | Fix |
@@ -227,4 +287,6 @@ See [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) for the full QA che
 | Extension not in Cursor search | Lower `engines.vscode` if too high; reload window; wait for Open VSX sync |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |
 | Website not updating | Check GitHub Pages is enabled with source: GitHub Actions |
+| AMO sign fails | Verify `AMO_JWT_ISSUER` / `AMO_JWT_SECRET`; extension ID in manifest `browser_specific_settings.gecko.id` |
+| Chrome zip won't install | Use Load unpacked (not .crx); extract zip first |
 | DB backup files accumulating | Stale backups (>1 hour old) are cleaned up automatically |

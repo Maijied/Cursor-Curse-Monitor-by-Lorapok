@@ -16,7 +16,7 @@ async function run() {
     formatPercent,
     appendUsageHistory,
     buildFeatureList,
-  } = require("../src/cursorApi.ts");
+  } = require("../packages/shared/src/cursorApi.ts");
 
   const usage = {
     billingCycleStart: "2026-08-15T00:00:00.000Z",

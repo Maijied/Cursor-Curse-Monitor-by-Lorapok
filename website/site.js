@@ -51,6 +51,11 @@
     setText("[data-vscode-version]", data.vscode?.version ?? "—");
     setHref("[data-href-vscode]", data.vscode?.url ?? "#");
 
+    // Browser extension
+    setText("[data-firefox-version]", data.browserExtension?.firefox?.version ?? data.version ?? "—");
+    setHref("[data-href-firefox]", data.browserExtension?.firefox?.url ?? "#");
+    setHref("[data-href-chrome-zip]", data.browserExtension?.chrome?.zipUrl ?? data.github?.releaseUrl ?? "#");
+
     // GitHub links
     setHref("[data-href-release]", data.github.releaseUrl);
     setHref("[data-href-vsix]", data.github.vsixUrl);

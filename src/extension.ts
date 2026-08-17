@@ -9,12 +9,17 @@ import {
 import { UsageMonitorService } from "./usageMonitor";
 import { NotificationProvider } from "./notificationProvider";
 import { maybeSendAnonymousHeartbeat } from "./telemetry";
+import { SecurityMonitorService } from "./securityMonitor";
 
 let monitor: UsageMonitorService | undefined;
+let securityMonitor: SecurityMonitorService | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
   monitor = new UsageMonitorService(context);
   monitor.start();
+
+  securityMonitor = new SecurityMonitorService(context);
+  securityMonitor.start();
 
   const extensionVersion = String(context.extension.packageJSON.version ?? "0.0.0");
   void maybeSendAnonymousHeartbeat(context, extensionVersion);
@@ -118,11 +123,20 @@ export function activate(context: vscode.ExtensionContext): void {
         await monitor?.refresh();
       }
     ),
-    monitor
+    vscode.commands.registerCommand("cursorCurseMonitor.scanWorkspace", async () => {
+      await securityMonitor?.scanWorkspace();
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.scanClipboard", async () => {
+      await securityMonitor?.scanClipboard();
+    }),
+    monitor,
+    securityMonitor
   );
 }
 
 export function deactivate(): void {
+  securityMonitor?.dispose();
+  securityMonitor = undefined;
   monitor?.dispose();
   monitor = undefined;
 }

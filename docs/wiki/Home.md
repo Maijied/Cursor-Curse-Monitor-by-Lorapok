@@ -1,6 +1,6 @@
 # Cursor Curse Monitor Wiki
 
-Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs product for live Cursor IDE usage tracking, included quota, local insights, billing cycles, and free-fallback model switching.
+Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs product for live Cursor IDE usage tracking, included quota, local insights, billing cycles, free-fallback model switching, and local credential scanning.
 
 ## Quick links
 
@@ -22,6 +22,8 @@ Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs 
 | GitHub repository | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok |
 | Open VSX | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
 | VS Code Marketplace | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
+| Firefox Add-ons (browser) | https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/ |
+| Chrome zip (browser, direct) | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest |
 
 ## Current stable release
 

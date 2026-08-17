@@ -1,0 +1,12 @@
+{
+  "name": "@lorapok/cursor-monitor-shared",
+  "version": "0.5.9",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p ./",
+    "test": "node ../../tests/test_budget_metrics.js"
+  },
+  "files": ["dist"]
+}

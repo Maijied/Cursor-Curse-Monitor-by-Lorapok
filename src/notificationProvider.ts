@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import type { SecurityFinding } from "@lorapok/cursor-monitor-shared";
+import { SecurityAlertPanel } from "./securityAlertPanel";
 
 type NotificationType = "info" | "warning" | "error" | "success";
 
@@ -49,6 +51,10 @@ export class NotificationProvider {
       const action = runnable.find((item) => item.label === picked);
       action?.action();
     });
+  }
+
+  static showSecurityAlert(context: vscode.ExtensionContext, findings: SecurityFinding[]): void {
+    SecurityAlertPanel.show(context, findings);
   }
 
   static dispose(): void {

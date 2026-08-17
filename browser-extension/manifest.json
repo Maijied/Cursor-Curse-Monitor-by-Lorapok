@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Cursor Curse Monitor by Lorapok",
+  "version": "0.5.9",
+  "description": "Live Cursor usage & budget tracker in your browser — quota, Auto/API meters, billing cycle, and spend alerts.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "Cursor Curse Monitor",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/options/index.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": [
+    "https://api2.cursor.sh/*",
+    "https://cursor.com/*",
+    "https://*.cursor.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://cursor.com/*", "https://*.cursor.com/*"],
+      "js": ["src/content/auth-capture.ts"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cursor-curse-monitor@lorapok.tech",
+      "strict_min_version": "109.0"
+    }
+  }
+}
