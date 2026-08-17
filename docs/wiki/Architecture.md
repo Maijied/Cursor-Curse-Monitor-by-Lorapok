@@ -15,7 +15,9 @@ cursor-usage-monitor/
 
 ```mermaid
 flowchart LR
-  IDE[Cursor / VS Code] -->|reads local state| EXT[Extension]
+  IDE[Cursor / VS Code] -->|auth token + local metadata| EXT[Extension]
+  EXT -->|usage-summary + profile| API[api2.cursor.sh]
+  EXT -->|native toasts| Toast[Workbench overlay]
   Visitor[Website visitor] --> SITE[GitHub Pages]
   Admin[Admin operator] --> MC[Mission Control]
   MC -->|Pages Functions| KV[(ADMIN_KV)]
@@ -27,9 +29,10 @@ flowchart LR
 
 ## Extension
 
-- Reads Cursor usage from local workspace storage
-- Status bar + sidebar dashboard
-- Optional Composer 2.5 fallback when limits exceeded
+- Quota and billing come from Cursor’s remote usage API after reading the local auth token in `state.vscdb`
+- Local insights (read-only) include daily line-accept stats, active models, and composer session titles — not chat transcripts
+- Status bar + sidebar dashboard; native workbench toasts overlay the open editor
+- Optional Composer 2.5 fallback when limits exceeded (quit-then-write)
 
 ## Marketing site
 

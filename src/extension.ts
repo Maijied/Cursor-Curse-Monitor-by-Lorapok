@@ -13,7 +13,6 @@ import { maybeSendAnonymousHeartbeat } from "./telemetry";
 let monitor: UsageMonitorService | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
-  NotificationProvider.setExtensionUri(context.extensionUri);
   monitor = new UsageMonitorService(context);
   monitor.start();
 
@@ -43,7 +42,6 @@ export function activate(context: vscode.ExtensionContext): void {
             label: "Open Dashboard",
             action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard"),
           },
-          { label: "Dismiss", action: () => {} },
         ],
       });
     }, 1500);
@@ -97,12 +95,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.refresh", async () => {
       await monitor?.refresh();
-      NotificationProvider.show({
-        title: "Refreshed",
-        message: "Cursor usage data has been refreshed.",
-        type: "info",
-        duration: 3000,
-      });
     }),
     vscode.commands.registerCommand(
       "cursorCurseMonitor.applyFallbackModel",

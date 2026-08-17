@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-17T11:03:16.943Z",
+  "generatedAt": "2026-08-17T14:41:32.949Z",
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "adminApiBase": "https://cursor-dev.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
-  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.9",
   "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "syncStatus": "synced",
@@ -25,6 +25,7 @@
     "budget",
     "monitor",
     "composer",
+    "quota",
     "curse",
     "Cursor IDE",
     "Open VSX",
@@ -35,7 +36,7 @@
   "openGraph": {
     "type": "website",
     "title": "Cursor Curse Monitor by Lorapok",
-    "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+    "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
     "url": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
     "image": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/marketing/og-social-card.png"
   },

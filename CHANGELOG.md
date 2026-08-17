@@ -6,6 +6,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+
+- Local insights on the dashboard: daily Tab/Composer accepted lines, active models, and recent session titles (metadata only — no chat bodies)
+- Cycle trend sparkline from on-machine usage history
+- Team on-demand spend when Cursor’s API returns it
+
+### Changed
+
+- Dashboard restyle: included quota is the hero metric with Auto/API meters; personal USD cap no longer hides plan usage
+- Native workbench toasts overlay the open editor instead of opening a Notification tab
+- Manual refresh is quiet (status bar updates; no toast)
+
+### Fixed
+
+- Team/enterprise sessions with an unused personal budget cap showed 0% used while API was at 100%
+- Auto/API feature chips printed unrounded floats
+
 ## [0.5.9] - 2026-08-17
 
 ### Added

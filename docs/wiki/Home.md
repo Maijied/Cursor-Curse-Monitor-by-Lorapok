@@ -1,6 +1,6 @@
 # Cursor Curse Monitor Wiki
 
-Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs product for live Cursor IDE usage tracking, limits, billing cycles, and free-fallback model switching.
+Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs product for live Cursor IDE usage tracking, included quota, local insights, billing cycles, and free-fallback model switching.
 
 ## Quick links
 

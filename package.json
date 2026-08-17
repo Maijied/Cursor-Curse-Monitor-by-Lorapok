@@ -1,7 +1,7 @@
 {
   "name": "cursor-curse-monitor-by-lorapok",
   "displayName": "Cursor Curse Monitor by Lorapok",
-  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.9",
   "publisher": "LorapokLabs",
   "license": "UNLICENSED",
@@ -47,6 +47,7 @@
     "budget",
     "monitor",
     "composer",
+    "quota",
     "curse"
   ],
   "activationEvents": [
@@ -147,7 +148,7 @@
     }
   },
   "scripts": {
-    "test": "node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js",
+    "test": "node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",

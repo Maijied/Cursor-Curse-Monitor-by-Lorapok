@@ -48,7 +48,7 @@ export interface StripeProfile {
 }
 
 export interface BudgetMetrics {
-  /** Primary display percent (included plan or budget %) */
+  /** Hero percent: included quota, Auto, or API — never an unused personal USD cap. */
   percentUsed: number;
   includedPercent: number;
   includedUsed: number;
@@ -70,10 +70,23 @@ export interface BudgetMetrics {
   onDemandEnabled: boolean;
   onDemandCapUsd: number | null;
   onDemandRemainingUsd: number | null;
+  /** True when a USD cap exists (custom or on-demand). */
   hasUsdBudget: boolean;
+  /** True when USD spend should drive budget UI (on-demand on or spend > 0). */
+  usdBudgetActive: boolean;
   planBreakdownIncluded: number;
   planBreakdownBonus: number;
   planBreakdownTotal: number;
+  teamOnDemandEnabled: boolean;
+  teamOnDemandSpendUsd: number | null;
+}
+
+export interface UsageHistoryPoint {
+  t: number;
+  includedPercent: number;
+  auto: number;
+  api: number;
+  spentUsd: number;
 }
 
 export interface DashboardSnapshot {
@@ -91,6 +104,46 @@ export interface DashboardSnapshot {
   /** True when Cursor/VS Code state.vscdb is missing on disk. */
   cursorMissing?: boolean;
   host?: "cursor" | "vscode" | "unknown";
+  local?: LocalInsights;
+  history?: UsageHistoryPoint[];
+}
+
+export interface DailyCodeStats {
+  date: string;
+  tabSuggestedLines: number;
+  tabAcceptedLines: number;
+  composerSuggestedLines: number;
+  composerAcceptedLines: number;
+}
+
+export interface ActiveModel {
+  surface: string;
+  label: string;
+  modelName: string;
+}
+
+export interface RecentSession {
+  id: string;
+  name: string;
+  mode: string;
+  recency: number;
+  recencyLabel: string;
+  linesAdded: number;
+  linesRemoved: number;
+}
+
+export interface LocalInsights {
+  today: DailyCodeStats | null;
+  cycleSuggested: number;
+  cycleAccepted: number;
+  tabAccepted: number;
+  composerAccepted: number;
+  models: ActiveModel[];
+  lastUsedModel: string | null;
+  sessions: RecentSession[];
+  teamName: string | null;
+  teamId: number | null;
+  membershipType: string | null;
 }
 
 const API_BASE = "https://api2.cursor.sh/auth";
@@ -154,6 +207,35 @@ export function estimateDaysLeft(cycleEndIso: string): number {
   return Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
 }
 
+export function formatPercent(n: number, digits = 1): string {
+  if (!Number.isFinite(n)) {
+    return "0";
+  }
+  const rounded = Number(n.toFixed(digits));
+  return String(rounded);
+}
+
+export const USAGE_HISTORY_MAX = 90;
+export const USAGE_HISTORY_MIN_INTERVAL_MS = 8 * 60 * 60 * 1000;
+
+export function appendUsageHistory(
+  existing: UsageHistoryPoint[],
+  next: UsageHistoryPoint
+): UsageHistoryPoint[] {
+  const last = existing[existing.length - 1];
+  if (last) {
+    const jumped =
+      Math.abs(last.includedPercent - next.includedPercent) >= 2 ||
+      Math.abs(last.auto - next.auto) >= 2 ||
+      Math.abs(last.api - next.api) >= 2 ||
+      Math.abs(last.spentUsd - next.spentUsd) >= 0.5;
+    if (!jumped && next.t - last.t < USAGE_HISTORY_MIN_INTERVAL_MS) {
+      return existing;
+    }
+  }
+  return [...existing, next].slice(-USAGE_HISTORY_MAX);
+}
+
 export function buildBudgetMetrics(
   usage: UsageSummary,
   customBudgetLimit: number,
@@ -173,19 +255,33 @@ export function buildBudgetMetrics(
       ? customBudgetLimit
       : onDemandCapUsd ?? 0;
   const hasUsdBudget = capUsd > 0;
+  const usdBudgetActive = capUsd > 0 && (onDemand.enabled || onDemandSpendUsd > 0);
   const spentUsd = hasUsdBudget ? onDemandSpendUsd : 0;
   const leftUsd = hasUsdBudget ? Math.max(0, capUsd - spentUsd) : 0;
-  const budgetPercentUsed = hasUsdBudget
+  const budgetPercentUsed = hasUsdBudget && capUsd > 0
     ? Math.min(100, (spentUsd / capUsd) * 100)
+    : 0;
+
+  const exhaustedIncluded = plan.remaining <= 0 && plan.limit > 0;
+  const includedPercent = exhaustedIncluded
+    ? Math.max(100, plan.totalPercentUsed || 0)
     : plan.totalPercentUsed;
+  const percentUsed = Math.max(
+    includedPercent,
+    plan.autoPercentUsed || 0,
+    plan.apiPercentUsed || 0
+  );
 
   const breakdown = plan.breakdown;
   const thresholdReached =
-    plan.totalPercentUsed >= thresholdPercent || budgetPercentUsed >= thresholdPercent;
+    percentUsed >= thresholdPercent ||
+    (usdBudgetActive && budgetPercentUsed >= thresholdPercent);
+
+  const teamOnDemand = usage.teamUsage?.onDemand;
 
   return {
-    percentUsed: hasUsdBudget ? budgetPercentUsed : plan.totalPercentUsed,
-    includedPercent: plan.totalPercentUsed,
+    percentUsed,
+    includedPercent,
     includedUsed: plan.used,
     includedLimit: plan.limit,
     includedRemaining: plan.remaining,
@@ -206,9 +302,13 @@ export function buildBudgetMetrics(
     onDemandCapUsd,
     onDemandRemainingUsd,
     hasUsdBudget,
+    usdBudgetActive,
     planBreakdownIncluded: breakdown?.included ?? plan.used,
     planBreakdownBonus: breakdown?.bonus ?? 0,
     planBreakdownTotal: breakdown?.total ?? plan.limit,
+    teamOnDemandEnabled: Boolean(teamOnDemand?.enabled),
+    teamOnDemandSpendUsd:
+      teamOnDemand && teamOnDemand.used != null ? teamOnDemand.used / 100 : null,
   };
 }
 
@@ -230,7 +330,7 @@ export function buildFeatureList(
   if (plan.breakdown) {
     features.push(`Included ${plan.breakdown.included} + bonus ${plan.breakdown.bonus}`);
   }
-  features.push(`Auto ${plan.autoPercentUsed}% · API ${plan.apiPercentUsed}%`);
+  features.push(`Auto ${formatPercent(plan.autoPercentUsed)}% · API ${formatPercent(plan.apiPercentUsed)}%`);
   if (usage.individualUsage.onDemand.enabled) {
     features.push("On-demand enabled");
   }

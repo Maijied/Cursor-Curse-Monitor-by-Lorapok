@@ -14,6 +14,9 @@ module.exports = {
       dispose: () => {},
     }),
     registerWebviewViewProvider: () => ({ dispose: () => {} }),
+    showInformationMessage: async () => undefined,
+    showWarningMessage: async () => undefined,
+    showErrorMessage: async () => undefined,
   },
   commands: {
     registerCommand: () => ({ dispose: () => {} }),

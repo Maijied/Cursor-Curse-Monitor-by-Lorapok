@@ -35,7 +35,7 @@
 
 ## Overview
 
-**Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included limits, remaining quota, billing cycle reset, on-demand spend, and optional fallback to **Composer 2.5 (Fast off)** when limits are exceeded.
+**Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included quota with Auto/API meters, remaining units, billing cycle reset, on-demand spend, local session insights, and optional fallback to **Composer 2.5 (Fast off)** when limits are exceeded.
 
 This repository is a **monorepo** with three production surfaces:
 
@@ -60,8 +60,9 @@ flowchart TB
   end
 
   subgraph Local["On the developer machine"]
-    IDE -->|"read usage (api2.cursor.sh)"| CursorAPI["Cursor API"]
-    IDE -->|"optional quit-then-write"| VSCDB["state.vscdb"]
+    IDE -->|"usage-summary + profile"| CursorAPI["Cursor API"]
+    IDE -->|"read-only metadata"| VSCDB["state.vscdb"]
+    IDE -->|"optional quit-then-write"| VSCDB
     IDE -->|"opt-in heartbeat"| Ping["/api/usage/ping"]
   end
 
@@ -154,7 +155,7 @@ cursor-usage-monitor/
 
 ### Data flows (summary)
 
-1. **Extension** — Reads local Cursor auth, calls `api2.cursor.sh`, optionally writes fallback model after quit with WAL-safe backups. Opt-in heartbeats feed live-user counts to Mission Control.
+1. **Extension** — Reads local Cursor auth and privacy-safe metadata (daily line stats, active models, session titles), calls `api2.cursor.sh` for quota, optionally writes fallback model after quit with WAL-safe backups. Opt-in heartbeats feed live-user counts to Mission Control. Native workbench toasts overlay the open editor (no extra notification tab).
 2. **Marketing site** — Static HTML on GitHub Pages; loads `site-data.json` for download counts, polls `/api/analytics/stats` for live visitor KPIs, and uses `/api/notice` for the public banner.
 3. **Mission Control** — Firebase-authenticated PWA on Cloudflare Pages; Pages Functions read/write KV (notices, admins), dispatch GitHub deploys, proxy analytics, and expose marketplace health APIs.
 4. **CI/CD** — Extension build, admin deploy, GitHub Pages publish, and a dedicated SEO workflow that regenerates sitemap and site-data artifacts on schedule and on merge to `main`.
@@ -165,11 +166,13 @@ cursor-usage-monitor/
 
 | Feature | Description |
 |--------|-------------|
-| **Sidebar dashboard** | Activity bar → **Cursor Curse Monitor** |
+| **Sidebar dashboard** | Included quota, Auto/API meters, budget gauge, billing reset, local insights, cycle trend |
 | **Status bar** | Live usage percentage at a glance |
 | **Auto refresh** | Polls Cursor API every 60s (configurable) |
+| **Local insights** | Today’s accepted lines, active models, recent session titles (no chat bodies) |
+| **Cycle trend** | Sparkline from on-machine usage history |
 | **Custom budget** | Set a personal USD cap in the dashboard |
-| **Limit alerts** | Warning at 80% (configurable) |
+| **Limit alerts** | Native toast at 80% (configurable), over the open editor |
 | **Free fallback** | Auto-switches to Composer 2.5 (Fast off) at 100% |
 | **Team aware** | Shows team vs individual limit type |
 | **DB safety** | Read-only while Cursor runs; quit-then-write with WAL/SHM backup + integrity checks |
@@ -256,6 +259,7 @@ Full setup: [DEPLOYMENT.md](DEPLOYMENT.md)
 ## Privacy
 
 - Auth token stays on your machine; API calls go only to `api2.cursor.sh`
+- Local insights read session titles, model names, and line-accept stats — never chat transcripts
 - Opt-in install heartbeat uses an anonymous `installId` when enabled
 - No third-party analytics in the extension itself
 
