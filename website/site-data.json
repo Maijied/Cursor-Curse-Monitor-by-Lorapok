@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-17T07:54:37.541Z",
+  "generatedAt": "2026-08-17T09:16:19.840Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.8",
-  "packageVersion": "0.5.8",
+  "packageVersion": "0.5.9",
   "syncStatus": "synced",
   "ovsxPublisher": "lorapok-labs",
   "vscePublisher": "LorapokLabs",
