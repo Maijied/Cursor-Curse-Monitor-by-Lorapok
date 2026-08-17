@@ -13,6 +13,7 @@ export interface VisitorStats {
     vscode: number;
     github: number;
     vsix: number;
+    npm?: number;
     openvsxDuplicate?: number;
   };
   totalEngagement: number;

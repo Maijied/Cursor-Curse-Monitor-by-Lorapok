@@ -1,4 +1,4 @@
-import { Activity, Download, Package, Store } from "lucide-react";
+import { Activity, Download, Eye, Store, Users } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -24,6 +24,7 @@ import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
+import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
@@ -36,6 +37,8 @@ function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger
 export default function Overview() {
   const { data, error, loading } = useSiteData();
   const { stats: visitors, live: visitorsLive } = useVisitorStats(data?.visitors);
+  const { stats: usageStats, live: usageLive } = useUsageStats();
+  const activeUsers = usageStats?.optInUniques ?? null;
 
   if (loading) {
     return (
@@ -63,6 +66,7 @@ export default function Overview() {
     { name: "VS Code", value: visitors.packageClicks.vscode ?? 0 },
     { name: "GitHub", value: visitors.packageClicks.github ?? 0 },
     { name: "VSIX", value: visitors.packageClicks.vsix ?? 0 },
+    { name: "npm", value: visitors.packageClicks.npm ?? 0 },
     { name: "Duplicate", value: visitors.packageClicks.openvsxDuplicate ?? 0 },
   ];
 
@@ -94,7 +98,7 @@ export default function Overview() {
 
       <DriftAlert data={data} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         <KpiCard
           label="Total Downloads"
           value={formatCount(downloads?.total ?? 0)}
@@ -102,11 +106,35 @@ export default function Overview() {
           delayClass="stagger-1"
         />
         <KpiCard
-          label="Website Engagement"
-          value={formatCount(visitors.totalEngagement)}
-          sub={<span className="text-xs text-[var(--color-muted)]">{formatCount(visitors.websiteVisits)} page visits</span>}
-          icon={<Activity className="text-[var(--color-accent-2)]" size={24} />}
+          label="Website Visits"
+          value={formatCount(visitors.websiteVisits)}
+          sub={
+            visitorsLive ? (
+              <span className="text-xs text-[var(--color-neon)]">Live from analytics API</span>
+            ) : (
+              <span className="text-xs text-[var(--color-muted)]">Cached site data</span>
+            )
+          }
+          icon={<Eye className="text-[var(--color-accent-2)]" size={24} />}
           delayClass="stagger-2"
+        />
+        <KpiCard
+          label="Engagement"
+          value={formatCount(visitors.totalEngagement)}
+          sub={<span className="text-xs text-[var(--color-muted)]">visits + package clicks</span>}
+          icon={<Activity className="text-[var(--color-accent-2)]" size={24} />}
+          delayClass="stagger-3"
+        />
+        <KpiCard
+          label="Live Users"
+          value={formatCount(activeUsers?.unique1h ?? 0)}
+          sub={
+            <span className="text-xs text-[var(--color-muted)]">
+              {formatCount(activeUsers?.unique24h ?? 0)} in 24h · opt-in heartbeat
+            </span>
+          }
+          icon={<Users className="text-[var(--color-neon)]" size={24} />}
+          delayClass="stagger-4"
         />
         <KpiCard
           label="Open VSX (canonical)"
@@ -114,16 +142,12 @@ export default function Overview() {
           sub={
             data.ovsx.downloadCount != null ? (
               <span className="text-xs text-[var(--color-muted)]">{formatCount(data.ovsx.downloadCount)} downloads</span>
-            ) : undefined
+            ) : usageLive ? undefined : (
+              <span className="text-xs text-[var(--color-muted)]">Usage API offline</span>
+            )
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
-          delayClass="stagger-3"
-        />
-        <KpiCard
-          label="Package Version"
-          value={data.packageVersion}
-          icon={<Package className="text-[var(--color-accent)]" size={24} />}
-          delayClass="stagger-4"
+          delayClass="stagger-5"
         />
       </div>
 
@@ -193,7 +217,12 @@ export default function Overview() {
         </div>
       </div>
 
-      <VisitorStatsPanel stats={visitors} live={visitorsLive} />
+      <VisitorStatsPanel
+        stats={visitors}
+        live={visitorsLive}
+        activeUsers={activeUsers}
+        activeUsersLive={usageLive}
+      />
 
       {data.stableFallback && <StableFallbackPanel info={data.stableFallback} />}
 

@@ -1,0 +1,100 @@
+name: Extension bug report
+description: Report a bug in the Cursor Curse Monitor VS Code / Cursor extension
+title: "[Extension] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an extension issue.
+
+        Before submitting, please check [existing issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues) and confirm you are on the [latest release](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest).
+
+  - type: dropdown
+    id: ide
+    attributes:
+      label: IDE
+      options:
+        - Cursor
+        - VS Code
+    validations:
+      required: true
+
+  - type: input
+    id: ide-version
+    attributes:
+      label: IDE version
+      description: Help → About (e.g. Cursor 0.45.0 or VS Code 1.96.0)
+      placeholder: "Cursor 0.45.0"
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension version
+      description: Extensions sidebar → Cursor Curse Monitor → version number
+      placeholder: "1.2.3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version (optional)
+      placeholder: "Ubuntu 24.04, macOS 15.2, Windows 11 23H2"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps that consistently trigger the problem
+      placeholder: |
+        1. Open Cursor with the extension installed
+        2. Open the usage panel
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Output panel, extension logs, or screenshots (drag images into the comment box after submitting)
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find a duplicate
+          required: true
+        - label: I am using an official build from Open VSX, VS Code Marketplace, or GitHub Releases
+          required: false

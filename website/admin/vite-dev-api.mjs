@@ -188,10 +188,19 @@ async function fetchGitHubTags() {
 
 const DEFAULT_STATS = {
   websiteVisits: 0,
-  packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0 },
+  packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, npm: 0, openvsxDuplicate: 0 },
   totalEngagement: 0,
   updatedAt: null,
 };
+
+const ALLOWED_CLICK_CHANNELS = new Set([
+  "ovsx",
+  "vscode",
+  "github",
+  "vsix",
+  "npm",
+  "openvsxDuplicate",
+]);
 
 function readStats() {
   if (!existsSync(visitorStatsPath)) return { ...DEFAULT_STATS, packageClicks: { ...DEFAULT_STATS.packageClicks } };
@@ -219,10 +228,10 @@ function incrementStats(channel) {
 
   if (channel === "website") {
     stats.websiteVisits = (stats.websiteVisits ?? 0) + 1;
-  } else if (channel in stats.packageClicks) {
+  } else if (ALLOWED_CLICK_CHANNELS.has(channel)) {
     stats.packageClicks[channel] = (stats.packageClicks[channel] ?? 0) + 1;
-  } else if (channel === "openvsxDuplicate") {
-    stats.packageClicks.openvsxDuplicate = (stats.packageClicks.openvsxDuplicate ?? 0) + 1;
+  } else {
+    return stats;
   }
 
   stats.totalEngagement =
@@ -440,14 +449,21 @@ export function createDevApiMiddleware() {
 
     if (url === "/api/usage/stats" && req.method === "GET") {
       const records = [...devStore.usageInstalls.values()];
-      const cut7 = Date.now() - 7 * 86400000;
-      const cut30 = Date.now() - 30 * 86400000;
+      const now = Date.now();
+      const cut1h = now - 60 * 60 * 1000;
+      const cut24h = now - 24 * 60 * 60 * 1000;
+      const cut7 = now - 7 * 86400000;
+      const cut30 = now - 30 * 86400000;
       const byOs = {};
       const byHost = {};
+      let unique1h = 0;
+      let unique24h = 0;
       let unique7d = 0;
       let unique30d = 0;
       for (const r of records) {
         const seen = Date.parse(r.lastSeenAt || "") || 0;
+        if (seen >= cut1h) unique1h += 1;
+        if (seen >= cut24h) unique24h += 1;
         if (seen >= cut7) unique7d += 1;
         if (seen >= cut30) unique30d += 1;
         byOs[r.os] = (byOs[r.os] ?? 0) + 1;
@@ -462,7 +478,7 @@ export function createDevApiMiddleware() {
       } catch { /* ignore */ }
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({
-        optInUniques: { unique7d, unique30d, uniqueAll: records.length, byOs, byHost },
+        optInUniques: { unique1h, unique24h, unique7d, unique30d, uniqueAll: records.length, byOs, byHost },
         marketplace,
         visitors,
         updatedAt: new Date().toISOString(),

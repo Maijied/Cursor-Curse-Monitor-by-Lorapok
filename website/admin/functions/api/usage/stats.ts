@@ -40,10 +40,15 @@ async function loadInstallRecords(env) {
 }
 
 function aggregate(records) {
+  const now = Date.now();
+  const cut1h = now - 60 * 60 * 1000;
+  const cut24h = now - 24 * 60 * 60 * 1000;
   const cut7 = daysAgoMs(7);
   const cut30 = daysAgoMs(30);
   const byOs = {};
   const byHost = {};
+  let unique1h = 0;
+  let unique24h = 0;
   let unique7d = 0;
   let unique30d = 0;
   let uniqueAll = 0;
@@ -51,13 +56,15 @@ function aggregate(records) {
   for (const r of records) {
     uniqueAll += 1;
     const seen = Date.parse(r.lastSeenAt || "") || 0;
+    if (seen >= cut1h) unique1h += 1;
+    if (seen >= cut24h) unique24h += 1;
     if (seen >= cut7) unique7d += 1;
     if (seen >= cut30) unique30d += 1;
     bump(byOs, r.os || "unknown");
     bump(byHost, r.host || "unknown");
   }
 
-  return { unique7d, unique30d, uniqueAll, byOs, byHost };
+  return { unique1h, unique24h, unique7d, unique30d, uniqueAll, byOs, byHost };
 }
 
 export async function onRequestGet(context) {
