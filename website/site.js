@@ -267,8 +267,12 @@ function initSubscribeForm(subscribeUrl) {
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
-        message.textContent = body.message || "You're subscribed! Check your inbox to confirm.";
-        message.className = "subscribe-message success";
+        message.textContent =
+          body.message ||
+          (body.emailed
+            ? "You're subscribed! Check your inbox for a confirmation email."
+            : "You're on the list. Welcome email is delayed — we'll still notify you about updates.");
+        message.className = body.emailed ? "subscribe-message success" : "subscribe-message pending";
         form.reset();
       } else {
         message.textContent = body.error || "Subscription failed. Please try again later.";

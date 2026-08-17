@@ -17,8 +17,12 @@ preview_id = "1555368c415e40a7b7e591784f1dc22c"
 ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
 SITE_DATA_URL = "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json"
+ADMIN_PUBLIC_URL = "https://cursor-dev.lorapok.tech"
+CLOUDFLARE_ACCOUNT_ID = "f049faaf2f67549f5c58837479596a4a"
 
-# Outbound mail: Pages does not support [[send_email]] bindings.
-# Set Pages secret RESEND_API_KEY (and verify cursor-contact@lorapok.tech on Resend),
-# or keep Firebase magic-link invites only. Inbound routing already delivers
-# cursor-contact@lorapok.tech → mdshuvo40@gmail.com via Email Routing.
+# Outbound mail (Pages Functions — no Worker send_email binding):
+# 1. Enable Email Sending for lorapok.tech:
+#    npx wrangler email sending enable lorapok.tech
+# 2. Pages secret CLOUDFLARE_EMAIL_API_TOKEN (Account → Email Sending permission)
+#    CI syncs this from CLOUDFLARE_API_TOKEN on deploy.
+# Fallback: RESEND_API_KEY Pages secret with verified cursor-contact@lorapok.tech

@@ -59,7 +59,17 @@ export default function Team() {
 
       if (isMaster) {
         try {
-          await syncAdminAccess({ email: normalized, action: "add" });
+          const sync = await syncAdminAccess({ email: normalized, action: "add" });
+          const inviteSent = sync.inviteEmail?.sent;
+          if (inviteSent === false) {
+            setMsg(
+              `Admin added. API access synced, but the invite email could not be sent (${sync.inviteEmail?.reason ?? "mail transport unavailable"}). They can still sign in at /login with Google or a magic link.`
+            );
+            setEmail("");
+            fetchAdmins();
+            setLoading(false);
+            return;
+          }
         } catch (syncErr) {
           console.warn("API admin sync failed (Firestore invite still saved):", syncErr);
           setMsg(
@@ -71,7 +81,7 @@ export default function Team() {
           return;
         }
       }
-      setMsg("Admin added. A sign-in invite email was sent — they can log in at /login.");
+      setMsg("Admin added. Invite email sent — they can sign in at /login with Google or a magic link.");
       setEmail("");
       fetchAdmins();
     } catch (err: unknown) {

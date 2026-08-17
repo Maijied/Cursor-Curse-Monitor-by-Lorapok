@@ -82,7 +82,7 @@ flowchart LR
 | `GET /api/workflows/runs` | Admin | Recent workflow runs |
 | `GET /api/activity` | Admin | API activity log |
 | `GET/PUT /api/community/config` | Admin | Community feature flags |
-| `POST /api/subscribe` | Public | Mailing-list signup |
+| `POST /api/subscribe` | Public | Mailing-list signup + welcome email |
 
 Deprecated: `website/admin-api/` standalone Worker — **do not deploy**.
 
@@ -146,6 +146,8 @@ Public Firebase config ships in `.env` for local auth. Production secrets are se
 | `ADMIN_MASTER_EMAIL` | Master admin bypass |
 | `SITE_DATA_URL` | Marketing `site-data.json` URL |
 | `VITE_MARKETING_SITE_URL` | **Back to website** link target |
+| `CLOUDFLARE_EMAIL_API_TOKEN` | Outbound mail via Cloudflare Email Sending (Pages secret) |
+| `RESEND_API_KEY` | Optional fallback outbound mail provider |
 
 KV namespace IDs belong in `wrangler.toml`.
 

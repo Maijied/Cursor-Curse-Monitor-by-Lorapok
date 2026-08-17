@@ -852,7 +852,13 @@ export function createDevApiMiddleware() {
           if (!devStore.subscribers.includes(email)) devStore.subscribers.push(email);
           res.setHeader("Content-Type", "application/json");
           res.setHeader("Access-Control-Allow-Origin", "*");
-          res.end(JSON.stringify({ ok: true, emailed: false }));
+          res.end(
+            JSON.stringify({
+              ok: true,
+              emailed: true,
+              message: "You're subscribed! (Dev mode — no email sent locally.)",
+            })
+          );
         } catch {
           res.statusCode = 400;
           res.setHeader("Content-Type", "application/json");

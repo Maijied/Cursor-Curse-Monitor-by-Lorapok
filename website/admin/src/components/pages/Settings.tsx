@@ -162,7 +162,17 @@ export default function Settings() {
                 </dd>
               </div>
               <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center gap-x-4">
-                <dt className="text-[var(--color-muted)]">Firebase project</dt>
+                <dt className="text-[var(--color-muted)]">Outbound email</dt>
+                <dd>
+                  <Badge variant={health.mailConfigured ? "synced" : "danger"}>
+                    {health.mailConfigured ? health.mailTransport ?? "configured" : "not configured"}
+                  </Badge>
+                </dd>
+              </div>
+              {!health.mailConfigured && health.mailHint && (
+                <div className="md:col-span-2 text-xs text-[var(--color-muted)]">{health.mailHint}</div>
+              )}
+              <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center gap-x-4">
                 <dd className="font-[family-name:var(--font-mono)] sm:text-right break-all">{health.firebaseProject}</dd>
               </div>
               <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center gap-x-4">
@@ -184,7 +194,8 @@ export default function Settings() {
           <div className="mt-6 pt-4 border-t border-[var(--color-border)] text-sm text-[var(--color-muted)]">
             <p>
               <strong className="text-[var(--color-text)]">Pages secrets:</strong>{" "}
-              <code className="font-[family-name:var(--font-mono)] text-xs">GITHUB_TOKEN</code> and{" "}
+              <code className="font-[family-name:var(--font-mono)] text-xs">GITHUB_TOKEN</code>,{" "}
+              <code className="font-[family-name:var(--font-mono)] text-xs">CLOUDFLARE_EMAIL_API_TOKEN</code>, or{" "}
               <code className="font-[family-name:var(--font-mono)] text-xs">RESEND_API_KEY</code> stay in Cloudflare
               Pages environment variables — never shown in this UI.
             </p>

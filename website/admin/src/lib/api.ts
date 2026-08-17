@@ -30,7 +30,14 @@ export async function fetchTags() {
 }
 
 export async function fetchHealth() {
-  return apiGet<{ ok: boolean; checks: { github: boolean; timestamp: string }; firebaseProject?: string }>("/health", false);
+  return apiGet<{
+    ok: boolean;
+    checks: { github: boolean; timestamp: string };
+    firebaseProject?: string;
+    mailConfigured?: boolean;
+    mailTransport?: string;
+    mailHint?: string;
+  }>("/health", false);
 }
 
 export async function fetchReleases() {
