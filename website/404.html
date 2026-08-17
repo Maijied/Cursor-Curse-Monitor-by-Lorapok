@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#06080d" />
+  <meta name="robots" content="noindex" />
+  <title>Page not found — Lorapok Labs</title>
+  <meta name="description" content="This page does not exist. Return to Cursor Curse Monitor or Lorapok Labs." />
+  <base href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="error-body">
+  <div class="error-bg" aria-hidden="true">
+    <div class="error-mesh"></div>
+    <div class="error-glow error-glow-a"></div>
+    <div class="error-glow error-glow-b"></div>
+    <div class="error-scanlines"></div>
+  </div>
+
+  <main class="error-page">
+    <a class="error-brand" href="./">
+      <img src="assets/logo.svg" alt="" width="48" height="48" aria-hidden="true" />
+      <span>
+        <strong>Cursor Curse Monitor</strong>
+        <small>by Lorapok Labs</small>
+      </span>
+    </a>
+
+    <p class="error-kicker"><span class="hero-kicker-dot" aria-hidden="true"></span> Signal lost</p>
+
+    <h1 class="error-code" aria-label="Error 404">
+      <span class="error-digit" data-text="4">4</span>
+      <span class="error-orbit" aria-hidden="true">
+        <img src="assets/logo.svg" alt="" width="40" height="40" />
+      </span>
+      <span class="error-digit" data-text="4">4</span>
+    </h1>
+
+    <h2 class="error-title">This page isn’t on our map</h2>
+    <p class="error-lead">
+      The URL <code id="error-path" class="error-path">—</code> doesn’t exist or may have moved.
+    </p>
+
+    <div id="error-hint" class="error-hint" hidden></div>
+
+    <div class="error-actions">
+      <button type="button" class="btn primary" id="error-back">← Go back</button>
+      <a class="btn secondary" href="./">Homepage</a>
+      <a class="btn ghost" href="https://cursor-dev.lorapok.tech/login" id="error-admin-link" hidden>Mission Control login</a>
+    </div>
+
+    <p class="error-footer">
+      <a href="https://lorapok.tech" target="_blank" rel="noopener">Lorapok Labs</a>
+      ·
+      <a href="mailto:cursor-contact@lorapok.tech">Contact</a>
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      var path = window.location.pathname + window.location.search;
+      var pathEl = document.getElementById("error-path");
+      var hintEl = document.getElementById("error-hint");
+      var adminLink = document.getElementById("error-admin-link");
+      if (pathEl) pathEl.textContent = path || "/";
+
+      var lower = (window.location.pathname || "").toLowerCase();
+      if (/^\/(login|dashboard|admin|mission-control)(\/|$)/.test(lower)) {
+        if (hintEl) {
+          hintEl.hidden = false;
+          hintEl.innerHTML =
+            'Looking for <strong>Mission Control</strong>? Admin login lives at ' +
+            '<a href="https://cursor-dev.lorapok.tech/login">cursor-dev.lorapok.tech/login</a>.';
+        }
+        if (adminLink) adminLink.hidden = false;
+      }
+
+      var back = document.getElementById("error-back");
+      if (back) {
+        back.addEventListener("click", function () {
+          if (window.history.length > 1) window.history.back();
+          else window.location.href = "./";
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

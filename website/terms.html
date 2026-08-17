@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#06080d" />
+  <title>Terms of Use — Cursor Curse Monitor by Lorapok</title>
+  <meta name="description" content="Terms of use for Cursor Curse Monitor by Lorapok. Local-first extension; optional anonymous heartbeat; marketing site analytics." />
+  <link rel="canonical" href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/terms.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Terms of Use — Cursor Curse Monitor by Lorapok" />
+  <meta property="og:description" content="Terms of use for Cursor Curse Monitor by Lorapok Labs." />
+  <meta property="og:url" content="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/terms.html" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Terms of Use — Cursor Curse Monitor by Lorapok" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="./">
+        <span class="brand-logo">
+          <img src="assets/logo.svg" alt="Cursor Curse Monitor" width="56" height="56" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="./">Home</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html" aria-current="page">Terms</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Legal</p>
+      <h1>Terms of Use</h1>
+      <p class="lead">Last updated: August 17, 2026</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container">
+    <main class="prose">
+      <h2>Local-first product</h2>
+      <p>
+        Cursor Curse Monitor is a VS Code / Cursor extension that runs on your machine.
+        It reads your local Cursor session (for example auth material in <code>state.vscdb</code>)
+        only to show <strong>your</strong> usage in the dashboard. We do not read your project files,
+        chat history, or workspace contents for analytics.
+      </p>
+
+      <h2>Optional anonymous heartbeat</h2>
+      <p>
+        Usage statistics from the extension are <strong>off by default</strong>
+        (<code>cursorCurseMonitor.anonymousUsageStats</code>).
+        If you enable them, the extension sends at most one ping per UTC day containing:
+      </p>
+      <ul>
+        <li>A random install ID stored in extension <code>globalState</code> (created once and never regenerated so offline VSIX and later marketplace installs on the same machine stay unique)</li>
+        <li>Operating system platform, host editor (Cursor or VS Code), and extension version</li>
+      </ul>
+      <p>No email, path, token, workspace name, or Cursor chat content is included.</p>
+
+      <h2>Marketplace downloads and website visits</h2>
+      <p>
+        Public download counts and marketing-site visit/click totals are separate from the extension heartbeat.
+        They come from marketplace APIs and first-party site counters (and optional Google Analytics only if we configure a measurement ID).
+        These do not require any extension setting.
+      </p>
+
+      <h2>Database safety</h2>
+      <p>
+        Monitoring reads Cursor’s database in read-only mode while the editor is running.
+        Optional free-fallback model changes write only after Cursor/VS Code is fully quit,
+        with backups of <code>state.vscdb</code>, WAL, and SHM files and integrity checks so your data is not left corrupted.
+      </p>
+
+      <h2>License</h2>
+      <p>
+        <strong>Cursor Curse Monitor by Lorapok</strong> is a proprietary product of
+        <a href="https://lorapok.tech" target="_blank" rel="noopener">Lorapok Labs</a>,
+        founded by <strong>Mohammad Maizied Hasan Majumder</strong>.
+      </p>
+      <p>
+        You may download, install, and use the extension for personal or internal use from official Lorapok Labs channels
+        (Open VSX, VS Code Marketplace, GitHub Releases, and this website).
+        You may <strong>not</strong> sell, redistribute, modify, reverse-engineer for redistribution, or create derivative works
+        without prior written permission from Lorapok Labs.
+      </p>
+      <p>
+        Full terms:
+        <a data-href-repo href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/LICENSE">LICENSE</a>
+        on GitHub.
+        Licensing inquiries:
+        <a href="mailto:lorapokdev@gmail.com">lorapokdev@gmail.com</a> ·
+        <a href="mailto:cursor-contact@lorapok.tech">cursor-contact@lorapok.tech</a>.
+      </p>
+
+      <h2>Disclaimer</h2>
+      <p>
+        The extension is provided “as is” without warranty. It is not affiliated with Cursor / Anysphere.
+        You are responsible for how you use Cursor and for any settings you change locally.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        <a href="mailto:cursor-contact@lorapok.tech">cursor-contact@lorapok.tech</a>
+        (fallback: <a href="mailto:lorapokdev@gmail.com">lorapokdev@gmail.com</a>).
+        See also <a href="privacy.html">Privacy Policy</a>.
+      </p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© Lorapok Labs · Founder: Mohammad Maizied Hasan Majumder · Proprietary · Not affiliated with Cursor / Anysphere</p>
+      <p>
+        <a href="./">← Back to home</a> ·
+        <a href="privacy.html">Privacy</a> ·
+        <a href="terms.html">Terms</a> ·
+        <a href="mailto:cursor-contact@lorapok.tech">Contact</a>
+      </p>
+      <p class="footer-contact-fallback">If the primary address is unavailable, reach us at <a href="mailto:lorapokdev@gmail.com">lorapokdev@gmail.com</a>.</p>
+    </div>
+  </footer>
+  <script src="analytics.js" defer></script>
+  <script src="site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "brand": {
+    "github": "https://github.com/lorapok",
+    "linkedin": "https://www.linkedin.com/showcase/lorapok/",
+    "x": "https://x.com/LorapokLabs",
+    "reddit": "https://www.reddit.com/r/LorapokLabs/",
+    "instagram": "https://www.instagram.com/lorapoklabs/",
+    "facebook": "https://www.facebook.com/lorapoklabs",
+    "labs": "https://lorapok.tech",
+    "gravatar": "https://gravatar.com/lorapok"
+  },
+  "founder": {
+    "github": "https://github.com/Maijied",
+    "linkedin": "https://www.linkedin.com/in/maizied/",
+    "telegram": "https://t.me/Maijied",
+    "portfolio": "https://maijied.github.io/Maijied"
+  },
+  "contact": {
+    "email": "cursor-contact@lorapok.tech",
+    "fallbackEmail": "lorapokdev@gmail.com"
+  },
+  "api": {
+    "base": "https://cursor-dev.lorapok.tech",
+    "notice": "https://cursor-dev.lorapok.tech/api/notice",
+    "subscribe": "https://cursor-dev.lorapok.tech/api/subscribe",
+    "analyticsVisit": "https://cursor-dev.lorapok.tech/api/analytics/visit",
+    "analyticsStats": "https://cursor-dev.lorapok.tech/api/analytics/stats"
+  },
+  "analytics": {
+    "gaMeasurementId": ""
+  }
+}

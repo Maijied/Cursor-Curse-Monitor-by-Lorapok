@@ -1,0 +1,48 @@
+{
+	"name": "admin-api",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Deprecated standalone admin API worker — use website/admin/functions/api instead.",
+	"license": "UNLICENSED",
+	"author": {
+		"name": "Mohammad Maizied Hasan Majumder",
+		"email": "mdshuvo40@gmail.com",
+		"url": "https://github.com/Maijied"
+	},
+	"contributors": [
+		{
+			"name": "Lorapok Labs",
+			"email": "lorapokdev@gmail.com",
+			"url": "https://lorapok.tech"
+		}
+	],
+	"company": {
+		"name": "Lorapok Labs",
+		"email": "lorapokdev@gmail.com",
+		"supportEmail": "cursor-contact@lorapok.tech",
+		"website": "https://lorapok.tech",
+		"adminUrl": "https://cursor-dev.lorapok.tech"
+	},
+	"homepage": "https://cursor-dev.lorapok.tech",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git",
+		"directory": "website/admin-api"
+	},
+	"bugs": {
+		"url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
+	},
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"test": "vitest",
+		"cf-typegen": "wrangler types"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4"
+	}
+}

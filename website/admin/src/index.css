@@ -1,0 +1,107 @@
+@import "tailwindcss";
+@import "../../shared/tokens.css";
+@import "./styles/animations.css";
+
+@theme {
+  --color-bg-base: var(--color-bg-base);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-bg-surface: var(--color-bg-surface);
+  --color-accent: var(--color-accent);
+  --color-accent-2: var(--color-accent-2);
+  --color-neon: var(--color-neon);
+  --color-ok: var(--color-ok);
+  --color-warn: var(--color-warn);
+  --color-danger: var(--color-danger);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+/* Fixed panel background — stays out of the scroll layer to prevent repaint flicker */
+.app-shell-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(124, 92, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(77, 159, 255, 0.08), transparent 50%),
+    var(--color-bg-base);
+}
+
+.app-shell-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background: radial-gradient(circle at 70% 20%, rgba(124, 92, 255, 0.15), transparent 50%);
+  animation: mesh-drift 12s ease-in-out infinite;
+}
+
+.app-scroll-pane {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
+/* Readable docs + long URLs on narrow screens */
+.prose-docs code {
+  word-break: break-all;
+  font-size: 0.875em;
+}
+
+.prose-docs pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.prose-docs table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.prose-docs a {
+  word-break: break-all;
+}
+
+.glass-panel {
+  background: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+@media print {
+  body { overflow: visible !important; background: #fff !important; color: #111 !important; }
+  .app-shell-bg { display: none !important; }
+  aside, .no-print { display: none !important; }
+  .app-scroll-pane { overflow: visible !important; height: auto !important; position: static !important; }
+  main { padding: 0 !important; max-width: none !important; }
+  .glass-panel, .report-document {
+    background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #111 !important;
+  }
+  .report-document * { color: #111 !important; }
+  .report-table th, .report-table td { border-color: #ccc !important; }
+}
+
+.mesh-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(124, 92, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(77, 159, 255, 0.08), transparent 50%),
+    var(--color-bg-base);
+}

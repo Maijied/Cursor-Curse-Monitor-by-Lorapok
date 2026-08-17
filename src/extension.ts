@@ -1,8 +1,14 @@
 import * as vscode from "vscode";
 import { applyComposerFallbackModel } from "./cursorAuth";
-import { DashboardViewProvider, formatStatusBarText } from "./dashboardView";
+import {
+  DashboardViewProvider,
+  formatStatusBarText,
+  formatStatusBarTooltip,
+  StatusBarUsageSource,
+} from "./dashboardView";
 import { UsageMonitorService } from "./usageMonitor";
 import { NotificationProvider } from "./notificationProvider";
+import { maybeSendAnonymousHeartbeat } from "./telemetry";
 
 let monitor: UsageMonitorService | undefined;
 
@@ -10,6 +16,16 @@ export function activate(context: vscode.ExtensionContext): void {
   NotificationProvider.setExtensionUri(context.extensionUri);
   monitor = new UsageMonitorService(context);
   monitor.start();
+
+  const extensionVersion = String(context.extension.packageJSON.version ?? "0.0.0");
+  void maybeSendAnonymousHeartbeat(context, extensionVersion);
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("cursorCurseMonitor.anonymousUsageStats")) {
+        void maybeSendAnonymousHeartbeat(context, extensionVersion);
+      }
+    })
+  );
 
   // Show welcome message on first installation
   const isFirstInstall = !context.globalState.get<boolean>("hasShownWelcome", false);
@@ -51,12 +67,9 @@ export function activate(context: vscode.ExtensionContext): void {
       statusBar.show();
       return;
     }
-    statusBar.text = formatStatusBarText(snapshot);
-    statusBar.tooltip = snapshot.error
-      ? snapshot.error
-      : snapshot.budget?.hasUsdBudget
-        ? `Usage: ${Math.round(snapshot.budget.percentUsed)}% · ${snapshot.budget.spentUsd.toFixed(2)} / ${snapshot.budget.capUsd.toFixed(2)} USD`
-        : `Cursor usage: ${snapshot.usage?.individualUsage.plan.totalPercentUsed ?? 0}%`;
+    const source = config.get<StatusBarUsageSource>("statusBarUsageSource", "autoApi");
+    statusBar.text = formatStatusBarText(snapshot, source);
+    statusBar.tooltip = formatStatusBarTooltip(snapshot);
     statusBar.show();
   };
 
@@ -64,10 +77,18 @@ export function activate(context: vscode.ExtensionContext): void {
   updateStatusBar();
 
   context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration("cursorCurseMonitor.showStatusBar") ||
+        event.affectsConfiguration("cursorCurseMonitor.statusBarUsageSource")
+      ) {
+        updateStatusBar();
+      }
+    }),
     statusBar,
     vscode.window.registerWebviewViewProvider(
       DashboardViewProvider.viewType,
-      new DashboardViewProvider(monitor, context.extensionUri)
+      new DashboardViewProvider(monitor, context.extensionUri, context.extension.packageJSON.version ?? "0.0.0")
     ),
     vscode.commands.registerCommand("cursorCurseMonitor.openDashboard", async () => {
       await vscode.commands.executeCommand(
@@ -86,12 +107,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(
       "cursorCurseMonitor.applyFallbackModel",
       async () => {
-        const wasmPath = vscode.Uri.joinPath(
-          context.extensionUri,
-          "media",
-          "sql-wasm.wasm"
-        ).fsPath;
-        const result = await applyComposerFallbackModel(wasmPath);
+        const result = await applyComposerFallbackModel();
         if (result.success) {
           NotificationProvider.show({
             title: "Fallback Applied",

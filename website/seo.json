@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-08-17T10:25:11.854Z",
+  "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+  "adminApiBase": "https://cursor-dev.lorapok.tech",
+  "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
+  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "version": "0.5.9",
+  "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+  "syncStatus": "synced",
+  "social": {
+    "github": "https://github.com/lorapok",
+    "linkedin": "https://www.linkedin.com/showcase/lorapok/",
+    "x": "https://x.com/LorapokLabs",
+    "reddit": "https://www.reddit.com/r/LorapokLabs/",
+    "instagram": "https://www.instagram.com/lorapoklabs/",
+    "facebook": "https://www.facebook.com/lorapoklabs",
+    "labs": "https://lorapok.tech",
+    "gravatar": "https://gravatar.com/lorapok"
+  },
+  "keywords": [
+    "cursor",
+    "lorapok",
+    "usage",
+    "billing",
+    "budget",
+    "monitor",
+    "composer",
+    "curse",
+    "Cursor IDE",
+    "Open VSX",
+    "VS Code extension",
+    "Lorapok Labs",
+    "usage monitor"
+  ],
+  "openGraph": {
+    "type": "website",
+    "title": "Cursor Curse Monitor by Lorapok",
+    "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+    "url": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+    "image": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/marketing/og-social-card.png"
+  },
+  "marketplaces": {
+    "openVsxCanonical": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
+    "openVsxDuplicate": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
+    "vscode": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
+    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.9"
+  },
+  "structuredData": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Cursor Curse Monitor by Lorapok",
+    "softwareVersion": "0.5.9",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.9/cursor-curse-monitor-by-lorapok-0.5.9.vsix",
+    "author": {
+      "@type": "Person",
+      "name": "Mohammad Maizied Hasan Majumder",
+      "url": "https://github.com/Maijied"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Lorapok Labs",
+      "url": "https://lorapok.tech",
+      "sameAs": [
+        "https://github.com/lorapok",
+        "https://www.linkedin.com/showcase/lorapok/",
+        "https://x.com/LorapokLabs",
+        "https://www.reddit.com/r/LorapokLabs/",
+        "https://www.instagram.com/lorapoklabs/",
+        "https://www.facebook.com/lorapoklabs",
+        "https://lorapok.tech",
+        "https://gravatar.com/lorapok"
+      ]
+    }
+  }
+}
