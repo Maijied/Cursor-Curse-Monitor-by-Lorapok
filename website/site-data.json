@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-17T09:16:19.840Z",
+  "generatedAt": "2026-08-17T09:42:57.742Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "packageVersion": "0.5.9",
   "syncStatus": "synced",
   "ovsxPublisher": "lorapok-labs",
@@ -18,10 +18,10 @@
     "url": "https://github.com/Maijied"
   },
   "downloads": {
-    "total": 1939,
+    "total": 1941,
     "breakdown": {
-      "openVsxCanonical": 1936,
-      "openVsxDuplicate": 744,
+      "openVsxCanonical": 1938,
+      "openVsxDuplicate": 746,
       "vscodeMarketplace": 0,
       "githubVsix": 3,
       "latestReleaseVsix": 0
@@ -64,10 +64,10 @@
   },
   "ovsx": {
     "namespace": "lorapok-labs",
-    "version": "0.5.8",
+    "version": "0.5.9",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 1936,
+    "downloadCount": 1938,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -76,7 +76,7 @@
     "version": "0.5.4",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 744,
+    "downloadCount": 746,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
@@ -89,9 +89,10 @@
   },
   "github": {
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
-    "releaseTag": "v0.5.8",
+    "releaseTag": "v0.5.9",
     "tags": [
       "v1.0.0",
+      "v0.5.9",
       "v0.5.8",
       "v0.5.7",
       "v0.5.6",
@@ -110,20 +111,20 @@
       "v0.1.1",
       "v0.1.0"
     ],
-    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.8",
-    "vsixName": "cursor-curse-monitor-by-lorapok-0.5.8.vsix",
-    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.8/cursor-curse-monitor-by-lorapok-0.5.8.vsix",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.9",
+    "vsixName": "cursor-curse-monitor-by-lorapok-0.5.9.vsix",
+    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.9/cursor-curse-monitor-by-lorapok-0.5.9.vsix",
     "vsixDownloadCount": 0,
     "totalReleaseDownloads": 3,
-    "publishedAt": "2026-08-14T22:47:50Z"
+    "publishedAt": "2026-08-17T09:24:10Z"
   },
   "install": {
     "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "vsceSearch": "LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.5.8.vsix",
+    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.5.9.vsix",
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
-    "releaseTag": "./scripts/release.sh 0.5.8"
+    "releaseTag": "./scripts/release.sh 0.5.9"
   },
   "notice": {
     "enabled": true,
@@ -139,7 +140,7 @@
   },
   "stableFallback": {
     "safeSinceVersion": "0.5.7",
-    "recommendedVersion": "0.5.8",
+    "recommendedVersion": "0.5.9",
     "model": {
       "displayName": "Composer 2.5 (Fast off)",
       "modelId": "composer-2.5",
@@ -155,10 +156,18 @@
         "note": "Safe for fallback model writes"
       },
       {
+        "tag": "v0.5.9",
+        "version": "0.5.9",
+        "stability": "stable",
+        "recommended": true,
+        "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.9/cursor-curse-monitor-by-lorapok-0.5.9.vsix",
+        "note": "Safe for fallback model writes"
+      },
+      {
         "tag": "v0.5.8",
         "version": "0.5.8",
         "stability": "stable",
-        "recommended": true,
+        "recommended": false,
         "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.8/cursor-curse-monitor-by-lorapok-0.5.8.vsix",
         "note": "Safe for fallback model writes"
       },
@@ -232,14 +241,6 @@
         "stability": "legacy",
         "recommended": false,
         "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.4.0/cursor-curse-monitor-by-lorapok-0.4.0.vsix",
-        "note": "Legacy release — fallback behavior differs"
-      },
-      {
-        "tag": "v0.3.0",
-        "version": "0.3.0",
-        "stability": "legacy",
-        "recommended": false,
-        "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.3.0/cursor-curse-monitor-by-lorapok-0.3.0.vsix",
         "note": "Legacy release — fallback behavior differs"
       }
     ]
