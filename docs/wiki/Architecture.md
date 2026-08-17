@@ -29,6 +29,7 @@ flowchart LR
   Admin[Admin operator] --> MC[Mission Control]
   MC -->|Pages Functions| KV[(ADMIN_KV)]
   MC -->|dispatch| GHA[GitHub Actions]
+  MC -->|send| MAIL[Cloudflare Email]
   GHA --> OVSX[Open VSX]
   GHA --> VSM[VS Code Marketplace]
   GHA --> AMO[Firefox AMO]
