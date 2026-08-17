@@ -58,18 +58,24 @@
     }
   }
 
-  function loadGtag(measurementId) {
+  function loadGtag(measurementId, gatewayPath) {
     if (!measurementId || !/^G-[A-Z0-9]+$/i.test(measurementId)) return;
+    const path = typeof gatewayPath === "string" ? gatewayPath.trim().replace(/\/$/, "") : "";
     window.dataLayer = window.dataLayer || [];
     function gtag() {
       window.dataLayer.push(arguments);
     }
     window.gtag = gtag;
     gtag("js", new Date());
+    if (path) {
+      gtag("set", { transport_url: path });
+    }
     gtag("config", measurementId, { anonymize_ip: true });
     const s = document.createElement("script");
     s.async = true;
-    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(measurementId);
+    s.src = path
+      ? `${path}/gtag/js?id=${encodeURIComponent(measurementId)}`
+      : `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
     document.head.appendChild(s);
   }
 
@@ -100,7 +106,11 @@
       siteData?.analytics?.gaMeasurementId ||
       social?.analytics?.gaMeasurementId ||
       "";
-    if (gaId) loadGtag(String(gaId).trim());
+    const gaGatewayPath =
+      siteData?.analytics?.gaGatewayPath ||
+      social?.analytics?.gaGatewayPath ||
+      "";
+    if (gaId) loadGtag(String(gaId).trim(), String(gaGatewayPath || "").trim());
   }
 
   if (document.readyState === "loading") {

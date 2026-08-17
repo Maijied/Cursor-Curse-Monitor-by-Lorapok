@@ -422,6 +422,14 @@ const siteData = {
         return "";
       }
     })(),
+    gaGatewayPath: (() => {
+      try {
+        const social = JSON.parse(readFileSync(join(root, "website", "social.json"), "utf8"));
+        return social?.analytics?.gaGatewayPath || "";
+      } catch {
+        return "";
+      }
+    })(),
   },
   ovsx: {
     ...ovsx,
