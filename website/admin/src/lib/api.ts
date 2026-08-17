@@ -414,11 +414,149 @@ export async function subscribeEmail(email: string) {
   return data;
 }
 
-export async function fetchApiActivity(page = 1, limit = 25) {
-  const data = await apiGet<ApiActivityResponse>(`/activity?page=${page}&limit=${limit}`);
+export type LogEntry = {
+  id: string;
+  type: "api" | "mail" | "system";
+  ts: string;
+  level: string;
+  source: string;
+  message?: string;
+  method?: string;
+  path?: string;
+  status?: number | string;
+  latencyMs?: number;
+  email?: string | null;
+  subject?: string;
+  direction?: string;
+  category?: string;
+  error?: string | null;
+};
+
+export type MailboxMessage = {
+  id: string;
+  direction: "outbound" | "inbound";
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  status: string;
+  category: string;
+  ts: string;
+  sentBy?: string | null;
+  error?: string | null;
+  read: boolean;
+};
+
+export async function fetchLogs(
+  page = 1,
+  limit = 25,
+  filters: {
+    type?: string;
+    method?: string;
+    status?: string;
+    email?: string;
+    q?: string;
+    source?: string;
+    level?: string;
+  } = {}
+) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filters.type && filters.type !== "all") params.set("type", filters.type);
+  if (filters.method) params.set("method", filters.method);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.email) params.set("email", filters.email);
+  if (filters.q) params.set("q", filters.q);
+  if (filters.source) params.set("source", filters.source);
+  if (filters.level) params.set("level", filters.level);
+  return apiGet<{
+    items: LogEntry[];
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    counts?: { api: number; mail: number; system: number };
+  }>(`/logs?${params.toString()}`);
+}
+
+export async function fetchMailbox(
+  page = 1,
+  limit = 25,
+  filters: {
+    direction?: string;
+    category?: string;
+    status?: string;
+    unread?: boolean;
+    q?: string;
+  } = {}
+) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filters.direction) params.set("direction", filters.direction);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.unread) params.set("unread", "true");
+  if (filters.q) params.set("q", filters.q);
+  return apiGet<{
+    items: MailboxMessage[];
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    stats: { total: number; unread: number; outbound: number; inbound: number; failed: number };
+    transport: { configured: boolean; transport: string; hint?: string };
+  }>(`/mailbox?${params.toString()}`);
+}
+
+export async function sendMailboxMessage(payload: { to: string; subject: string; text: string }) {
+  const res = await fetch(`${API_BASE}/mailbox`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ action: "send", ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Send failed");
+  return data as { ok: boolean; message?: string };
+}
+
+export async function sendMailboxTest(to?: string) {
+  const res = await fetch(`${API_BASE}/mailbox`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ action: "test", to }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Test failed");
+  return data as { ok: boolean; message?: string; transport?: string; reason?: string };
+}
+
+export async function markMailboxRead(id: string) {
+  const res = await fetch(`${API_BASE}/mailbox`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ action: "mark-read", id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Update failed");
+  return data;
+}
+
+export async function fetchApiActivity(
+  page = 1,
+  limit = 25,
+  filters: { method?: string; status?: string; path?: string; email?: string; q?: string } = {}
+) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filters.method) params.set("method", filters.method);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.path) params.set("path", filters.path);
+  if (filters.email) params.set("email", filters.email);
+  if (filters.q) params.set("q", filters.q);
+  const data = await apiGet<ApiActivityResponse>(`/activity?${params.toString()}`);
   return {
     ...data,
-    entries: data.items ?? data.entries ?? [],
+    entries: (data.items ?? data.entries ?? []).map((row) => ({
+      ...row,
+      timestamp: (row as ApiActivityEntry & { ts?: string }).ts ?? row.timestamp,
+    })),
   };
 }
 

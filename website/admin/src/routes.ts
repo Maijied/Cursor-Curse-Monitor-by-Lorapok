@@ -14,6 +14,8 @@ import {
   Settings,
   Store,
   Users,
+  ScrollText,
+  Mail,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -29,6 +31,8 @@ export const APP_ROUTES: AppRoute[] = [
   { path: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { path: "/dashboard/releases", label: "Releases", icon: Package },
   { path: "/dashboard/activity", label: "Activity", icon: Activity },
+  { path: "/dashboard/logs", label: "Logs", icon: ScrollText },
+  { path: "/dashboard/mailbox", label: "Mailbox", icon: Mail },
   { path: "/dashboard/api-explorer", label: "API Explorer", icon: Terminal },
   { path: "/dashboard/api-activity", label: "API Activity", icon: ListTree },
   { path: "/dashboard/reports", label: "Reports", icon: FileBarChart },

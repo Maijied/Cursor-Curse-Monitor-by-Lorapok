@@ -1,3 +1,6 @@
+import { recordMailboxMessage } from "./mailbox.js";
+import { logSystemEvent } from "./system-log.js";
+
 const FROM_EMAIL = "cursor-contact@lorapok.tech";
 const FROM_NAME = "Cursor Curse Monitor";
 const DEFAULT_ADMIN_URL = "https://cursor-dev.lorapok.tech";
@@ -76,6 +79,11 @@ export function buildSubscribeHtml({ email }) {
     <p style="margin:0;color:#94a3b8;">You can unsubscribe any time by replying to this message.</p>
   `;
   return emailShell("You're subscribed", body);
+}
+
+export function buildComposeHtml({ subject, body }) {
+  const safeBody = escapeHtml(body);
+  return emailShell(subject, `<p style="margin:0;white-space:pre-wrap;">${safeBody}</p>`);
 }
 
 export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
@@ -210,48 +218,83 @@ async function sendViaResend(env, { to, subject, html, text }) {
 
 /**
  * @param {Record<string, unknown>} env
- * @param {{ to: string; subject: string; html: string; text?: string }} opts
- * @returns {Promise<{ sent: boolean; transport?: string; reason?: string }>}
+ * @param {{ to: string; subject: string; html: string; text?: string; category?: string; sentBy?: string | null }} opts
+ * @returns {Promise<{ sent: boolean; transport?: string; reason?: string; mailboxId?: string }>}
  */
-export async function sendMail(env, { to, subject, html, text }) {
+export async function sendMail(env, { to, subject, html, text, category = "system", sentBy = null }) {
   const textBody = text ?? subject;
   const payload = { to, subject, html, text: textBody };
 
+  let result = /** @type {{ sent: boolean; transport?: string; reason?: string }} */ ({ sent: false });
+
   if (env.EMAIL?.send) {
     try {
-      return await sendViaCloudflareBinding(env, payload);
+      result = await sendViaCloudflareBinding(env, payload);
     } catch (err) {
       console.error("EMAIL.send failed", err);
-      return {
+      result = {
         sent: false,
         reason: err instanceof Error ? err.message : "EMAIL binding failed",
       };
     }
-  }
-
-  try {
-    const cf = await sendViaCloudflareRest(env, payload);
-    if (cf.sent) return cf;
-    if (cf.reason && !cf.reason.includes("credentials missing")) {
-      console.error("Cloudflare Email REST failed", cf.reason);
+  } else {
+    try {
+      const cf = await sendViaCloudflareRest(env, payload);
+      if (cf.sent) result = cf;
+      else result = cf;
+    } catch (err) {
+      console.error("Cloudflare Email REST error", err);
+      result = { sent: false, reason: err instanceof Error ? err.message : "Cloudflare Email REST failed" };
     }
-  } catch (err) {
-    console.error("Cloudflare Email REST error", err);
-  }
 
-  try {
-    const resend = await sendViaResend(env, payload);
-    if (resend.sent) return resend;
-    if (resend.reason && !resend.reason.includes("not configured")) {
-      console.error("Resend failed", resend.reason);
+    if (!result.sent) {
+      try {
+        const resend = await sendViaResend(env, payload);
+        if (resend.sent) result = resend;
+        else if (!result.reason || result.reason.includes("credentials missing")) {
+          result = resend;
+        }
+      } catch (err) {
+        console.error("Resend error", err);
+      }
     }
-  } catch (err) {
-    console.error("Resend error", err);
   }
 
-  const status = getMailTransportStatus(env);
-  return {
-    sent: false,
-    reason: status.hint ?? "No outbound email transport configured",
-  };
+  if (!result.sent) {
+    const status = getMailTransportStatus(env);
+    result = {
+      sent: false,
+      reason: result.reason ?? status.hint ?? "No outbound email transport configured",
+    };
+  }
+
+  let mailboxId;
+  try {
+    const recorded = await recordMailboxMessage(env, {
+      direction: "outbound",
+      from: FROM_EMAIL,
+      to,
+      subject,
+      text: textBody,
+      html,
+      status: result.sent ? "sent" : "failed",
+      category,
+      sentBy,
+      error: result.sent ? null : result.reason,
+      read: false,
+    });
+    mailboxId = recorded.id;
+  } catch (err) {
+    console.error("recordMailboxMessage failed", err);
+  }
+
+  await logSystemEvent(env, {
+    level: result.sent ? "info" : "error",
+    source: "mail",
+    message: result.sent ? `Email sent to ${to}` : `Email failed to ${to}`,
+    email: sentBy,
+    meta: { to, subject, category, transport: result.transport, reason: result.reason },
+  });
+
+  return { ...result, mailboxId };
 }

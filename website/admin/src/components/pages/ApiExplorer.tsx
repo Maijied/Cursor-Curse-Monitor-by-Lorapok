@@ -84,7 +84,7 @@ export default function ApiExplorer() {
               Test all safe
             </button>
             <Link
-              to="/dashboard/api-activity"
+              to="/dashboard/logs"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
             >
               View request log

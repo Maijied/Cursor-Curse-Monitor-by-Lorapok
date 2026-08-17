@@ -61,6 +61,7 @@ export async function onRequestPost(context) {
     subject: "Subscribed to Cursor Curse Monitor updates",
     html: buildSubscribeHtml({ email }),
     text: `Thanks for subscribing, ${email}. We'll email you about important updates from Cursor Curse Monitor.`,
+    category: "subscribe",
   });
 
   let message;

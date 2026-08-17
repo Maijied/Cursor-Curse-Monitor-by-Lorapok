@@ -69,6 +69,8 @@ export async function onRequestPost(context) {
         subject: "You're invited to Cursor Curse Monitor Mission Control",
         html: buildInviteHtml({ inviteUrl, invitedBy: auth.email }),
         text: `You've been invited to the Cursor Curse Monitor admin dashboard. Sign in at ${inviteUrl}`,
+        category: "invite",
+        sentBy: auth.email,
       });
       if (!inviteEmail.sent) {
         console.error("admin invite email failed", inviteEmail.reason);
