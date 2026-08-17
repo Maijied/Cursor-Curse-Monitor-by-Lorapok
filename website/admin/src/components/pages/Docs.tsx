@@ -359,7 +359,7 @@ export default function Docs() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="lg:w-56 shrink-0">
-          <Card className="sticky top-6">
+          <Card className="lg:sticky lg:top-6">
             <div className="relative mb-4">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" aria-hidden="true" />
               <input

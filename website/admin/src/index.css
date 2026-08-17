@@ -48,11 +48,32 @@ body {
   position: relative;
   z-index: 1;
   height: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+}
+
+/* Readable docs + long URLs on narrow screens */
+.prose-docs code {
+  word-break: break-all;
+  font-size: 0.875em;
+}
+
+.prose-docs pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.prose-docs table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.prose-docs a {
+  word-break: break-all;
 }
 
 .glass-panel {

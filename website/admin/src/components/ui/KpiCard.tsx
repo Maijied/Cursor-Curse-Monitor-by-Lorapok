@@ -14,13 +14,13 @@ export default function KpiCard({
   delayClass?: string;
 }) {
   return (
-    <div className={`glass-panel p-6 flex items-start justify-between animate-fade-slide-up ${delayClass}`}>
-      <div>
+    <div className={`glass-panel p-4 sm:p-6 flex items-start justify-between gap-3 animate-fade-slide-up ${delayClass}`}>
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-[var(--color-muted)] mb-1">{label}</p>
-        <h3 className="text-3xl font-bold text-[var(--color-text)] mb-2 font-[family-name:var(--font-mono)]">{value}</h3>
+        <h3 className="text-2xl sm:text-3xl font-bold text-[var(--color-text)] mb-2 font-[family-name:var(--font-mono)] truncate">{value}</h3>
         {sub}
       </div>
-      <div className="p-3 rounded-xl bg-white/5 border border-[var(--color-border)]">
+      <div className="p-3 rounded-xl bg-white/5 border border-[var(--color-border)] shrink-0">
         {icon}
       </div>
     </div>

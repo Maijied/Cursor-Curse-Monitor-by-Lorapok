@@ -134,7 +134,14 @@ export default function Overview() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={clickChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="name" tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: "var(--color-muted)", fontSize: 10 }}
+                  interval={0}
+                  angle={-28}
+                  textAnchor="end"
+                  height={52}
+                />
                 <YAxis tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Bar dataKey="value" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
@@ -149,7 +156,14 @@ export default function Overview() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={reachChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="name" tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: "var(--color-muted)", fontSize: 10 }}
+                  interval={0}
+                  angle={-28}
+                  textAnchor="end"
+                  height={52}
+                />
                 <YAxis tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Area

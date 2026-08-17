@@ -48,7 +48,7 @@ export default function SeoDashboard() {
           <div><dt className="text-[var(--color-muted)]">Title</dt><dd className="text-[var(--color-text)]">{seo.title}</dd></div>
           <div><dt className="text-[var(--color-muted)]">Version in meta</dt><dd className="font-[family-name:var(--font-mono)]">{seo.version}</dd></div>
           <div className="sm:col-span-2"><dt className="text-[var(--color-muted)]">Description</dt><dd>{seo.description}</dd></div>
-          <div className="sm:col-span-2"><dt className="text-[var(--color-muted)]">Canonical</dt><dd><a href={seo.canonical} className="text-[var(--color-accent-2)] hover:underline">{seo.canonical}</a></dd></div>
+          <div className="sm:col-span-2"><dt className="text-[var(--color-muted)]">Canonical</dt><dd><a href={seo.canonical} className="text-[var(--color-accent-2)] hover:underline break-all">{seo.canonical}</a></dd></div>
           <div><dt className="text-[var(--color-muted)]">Generated</dt><dd>{new Date(seo.generatedAt).toLocaleString()}</dd></div>
         </dl>
       </Card>
