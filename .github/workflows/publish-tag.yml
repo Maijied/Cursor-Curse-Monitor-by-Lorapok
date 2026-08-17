@@ -90,9 +90,9 @@ jobs:
 
           PRE_RELEASE_FLAG=""
           if [[ "${{ inputs.release_channel }}" == "Beta (Pre-release)" ]]; then
-            PRE_RELEASE_FLAG="--pre-release"
+            PRE_RELEASE_FLAG="true"
           fi
-          echo "pre_release_flag=$PRE_RELEASE_FLAG" >> "$GITHUB_OUTPUT"
+          echo "pre_release=$PRE_RELEASE_FLAG" >> "$GITHUB_OUTPUT"
 
           DO_OVSX="false"
           DO_VSCE="false"
@@ -115,10 +115,14 @@ jobs:
             exit 0
           fi
           PRE_FLAG=""
-          if [ -n "${{ steps.config.outputs.pre_release_flag }}" ]; then
+          if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
             PRE_FLAG="--pre-release"
           fi
-          node scripts/publish-ovsx.mjs $PRE_FLAG
+          set +e
+          OUTPUT=$(node scripts/publish-ovsx.mjs $PRE_FLAG 2>&1)
+          CODE=$?
+          echo "$OUTPUT"
+          exit $CODE
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
@@ -134,7 +138,7 @@ jobs:
             exit 0
           fi
           set +e
-          OUTPUT=$(vsce publish -p "$VSCE_PAT" ${{ steps.config.outputs.pre_release_flag }} 2>&1)
+          OUTPUT=$(vsce publish -p "$VSCE_PAT" $( [ "${{ steps.config.outputs.pre_release }}" = "true" ] && echo --pre-release ) 2>&1)
           CODE=$?
           echo "$OUTPUT"
           if [ $CODE -ne 0 ]; then
@@ -148,13 +152,14 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       - name: Ensure GitHub Release
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.target_tag }}
           name: Cursor Curse Monitor v${{ steps.config.outputs.version }}
           files: "*.vsix"
           generate_release_notes: true
-          prerelease: ${{ steps.config.outputs.pre_release_flag != '' }}
+          prerelease: ${{ steps.config.outputs.pre_release == 'true' }}
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
