@@ -1112,6 +1112,19 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url.startsWith("/api/workflows/run-logs") && req.method === "GET") {
+      const runId = new URL(req.url ?? "", "http://localhost").searchParams.get("run_id") ?? "0";
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          runId: Number(runId),
+          jobs: [{ id: 1, name: "publish", status: "completed", conclusion: "success" }],
+          text: `=== publish (dev mock) ===\nRun ${runId}\n✓ Package extension\n✓ Publish Open VSX\n✓ Publish VS Code Marketplace\nDone.`,
+        })
+      );
+      return;
+    }
+
     if (url === "/api/marketplace/sync" && req.method === "GET") {
       fetchMarketplaceSync()
         .then((data) => {

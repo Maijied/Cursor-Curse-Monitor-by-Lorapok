@@ -6,6 +6,7 @@ import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DataTable, { type DataTableColumn } from "../ui/DataTable";
+import Notification from "../ui/Notification";
 import { createNotice, deleteNotice, fetchNotices, updateNotice } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
 
@@ -420,16 +421,13 @@ export default function Notices() {
         )}
 
         {message && (
-          <div
-            className={`mt-6 p-4 rounded-xl border ${
-              message.type === "success"
-                ? "bg-[color-mix(in_srgb,var(--color-ok)_10%,transparent)] border-[color-mix(in_srgb,var(--color-ok)_30%,transparent)] text-[var(--color-ok)]"
-                : "bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] text-[var(--color-danger)]"
-            }`}
-            role="status"
-          >
-            {message.text}
-          </div>
+          <Notification
+            tone={message.type === "success" ? "success" : "error"}
+            title={message.type === "success" ? "Notice saved" : "Action failed"}
+            message={message.text}
+            onDismiss={() => setMessage(null)}
+            className="mt-6"
+          />
         )}
       </Card>
 

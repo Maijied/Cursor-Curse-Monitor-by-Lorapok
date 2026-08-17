@@ -48,6 +48,10 @@ export async function fetchWorkflowRuns() {
   return apiGet<{ runs: WorkflowRun[]; total: number }>("/workflows/runs");
 }
 
+export async function fetchWorkflowRunLogs(runId: number | string) {
+  return apiGet<WorkflowRunLogs>(`/workflows/run-logs?run_id=${encodeURIComponent(String(runId))}`);
+}
+
 export async function fetchMarketplaceSync() {
   return apiGet<MarketplaceSync>("/marketplace/sync");
 }
@@ -439,12 +443,27 @@ export type MailboxMessage = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   status: string;
   category: string;
   ts: string;
   sentBy?: string | null;
   error?: string | null;
   read: boolean;
+};
+
+export type WorkflowRunLogs = {
+  runId: number;
+  jobs: Array<{
+    id: number;
+    name: string;
+    status: string;
+    conclusion: string | null;
+    startedAt?: string;
+    completedAt?: string;
+    steps?: Array<{ name: string; status: string; conclusion: string | null; number: number }>;
+  }>;
+  text: string;
 };
 
 export async function fetchLogs(

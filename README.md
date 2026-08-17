@@ -25,7 +25,8 @@
     <a href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/">Website</a> ·
     <a href="https://cursor-dev.lorapok.tech">Mission Control</a> ·
     <a href="CONTRIBUTING.md">Contributing</a> ·
-    <a href="DEPLOYMENT.md">Deployment</a>
+    <a href="DEPLOYMENT.md">Deployment</a> ·
+    <a href="docs/wiki/Home.md">Wiki</a>
   </p>
 
 </div>
