@@ -15,7 +15,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "health", path: "/health", method: "GET", auth: "public", description: "GitHub + env health check", safeProbe: true },
   { id: "notice-get", path: "/notice", method: "GET", auth: "public", description: "Active public development notice", safeProbe: true },
   { id: "notices", path: "/notices", method: "GET", auth: "admin", description: "Admin notices catalog", safeProbe: true },
-  { id: "tags", path: "/tags", method: "GET", auth: "admin", description: "GitHub release tags", safeProbe: true },
+  { id: "tags", path: "/tags", method: "GET", auth: "admin", description: "GitHub release tags with live/suggested metadata", safeProbe: true },
   { id: "releases", path: "/releases", method: "GET", auth: "admin", description: "GitHub releases + VSIX assets", safeProbe: true },
   { id: "workflows", path: "/workflows/runs", method: "GET", auth: "admin", description: "Recent GitHub Actions runs", safeProbe: true },
   { id: "activity", path: "/activity?page=1&limit=5", method: "GET", auth: "admin", description: "Authenticated API request log", safeProbe: true },

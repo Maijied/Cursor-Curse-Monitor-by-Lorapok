@@ -26,7 +26,14 @@ async function apiGet<T>(path: string, authRequired = true): Promise<T> {
 }
 
 export async function fetchTags() {
-  return apiGet<{ tags: string[]; source?: string; warning?: string }>("/tags");
+  return apiGet<{
+    tags: string[];
+    liveTag: string | null;
+    latestTag: string | null;
+    suggestedTag: string | null;
+    source?: string;
+    warning?: string;
+  }>("/tags");
 }
 
 export async function fetchHealth() {
@@ -113,6 +120,13 @@ export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
 
 export type DeployRequest = {
   target_tag: string;
+  publish_market: "Both" | "Open VSX" | "VS Code Marketplace";
+  release_channel: "Production" | "Beta (Pre-release)";
+};
+
+export type ReleaseRequest = {
+  version_type: "patch" | "minor" | "major" | "custom";
+  custom_version?: string;
   publish_market: "Both" | "Open VSX" | "VS Code Marketplace";
   release_channel: "Production" | "Beta (Pre-release)";
 };
@@ -263,6 +277,20 @@ export async function triggerDeployment(payload: DeployRequest) {
   }
 
   return res.json();
+}
+
+export async function triggerRelease(payload: ReleaseRequest) {
+  const res = await fetch(`${API_BASE}/release`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Release trigger failed");
+  return data;
 }
 
 export type NoticePayload = Partial<DevNotice> & { enabled: boolean };
@@ -464,6 +492,8 @@ export type WorkflowRunLogs = {
     steps?: Array<{ name: string; status: string; conclusion: string | null; number: number }>;
   }>;
   text: string;
+  logsUnavailable?: boolean;
+  logsHint?: string;
 };
 
 export async function fetchLogs(

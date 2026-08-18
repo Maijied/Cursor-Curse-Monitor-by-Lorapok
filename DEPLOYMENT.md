@@ -189,7 +189,7 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
 1. In **Lorapok Facility**, create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally with `CLOUDFLARE_ACCOUNT_ID` set to Facility).
 2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
 3. **Pages → Settings → Environment variables** (Production):
-   - `GITHUB_TOKEN` — PAT with `actions:write` for deploy workflow dispatch
+   - `GITHUB_TOKEN` — PAT with `repo`, `actions:read`, and `actions:write` (workflow dispatch + runtime logs)
    - `ADMIN_MASTER_EMAIL` — `mdshuvo40@gmail.com`
    - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
    - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
