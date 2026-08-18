@@ -57,11 +57,10 @@ export default function MailboxMessagePreview({ message, expanded = false }: Mai
         <div className={`rounded-xl border border-[var(--color-border)] overflow-hidden bg-white ${expanded ? "" : "max-h-64"}`}>
           <iframe
             title="Email HTML preview"
-            srcDoc={message.html}
+            srcDoc={`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; connect-src 'none';">${message.html}`}
             className={`w-full bg-white ${iframeHeight}`}
             sandbox=""
             referrerPolicy="no-referrer"
-            {...({ csp: "default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; connect-src 'none';" } as React.IframeHTMLAttributes<HTMLIFrameElement>)}
           />
         </div>
       ) : null}
