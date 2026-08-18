@@ -18,14 +18,13 @@
 | Area | What you get |
 |------|----------------|
 | **Overview** | Marketplace sync status, live visitor KPIs, extension heartbeat counts |
-| **Notices** | Enable / disable / delete public site banners |
-| **Deployments** | Trigger CI/CD, view workflow runs, rollback releases |
+| **Deployments** | New release, deploy existing tag, rollback, live workflow runtime |
 | **Marketplace** | Open VSX + VS Code version parity and sync health |
+| **Releases** | GitHub release history |
 | **Discussions** | GitHub Discussions feed and reply tooling |
 | **SEO** | Live `seo.json` manifest, sitemap status, canonical URL checks |
-| **API Explorer** | Interactive route tester for Pages Functions |
 | **Settings** | Connected services, health checks, environment summary |
-| **PWA** | Install to home screen with colorful Lorapok logo and offline shell |
+| **Team** | Admin email allowlist management |
 
 ---
 
@@ -66,23 +65,19 @@ flowchart LR
 | Route | Auth | Purpose |
 |-------|------|---------|
 | `GET /api/health` | Public | Liveness + GitHub connectivity |
-| `GET /api/notice` | Public | Active site banner (CORS) |
-| `GET/POST/PUT/DELETE /api/notices` | Admin | Notice catalog |
 | `GET/POST /api/admins` | Admin | Team member management |
-| `POST /api/deploy` | Admin | Trigger deployment workflow |
-| `POST /api/rollback` | Admin | Roll back a release |
+| `POST /api/release` | Admin | Bump version and trigger `ci-cd.yml` |
+| `POST /api/deploy` | Admin | Re-publish an existing tag |
+| `POST /api/rollback` | Admin | Roll back to a prior tag |
+| `GET /api/tags` | Admin | Publishable tags with live/suggested labels |
 | `GET /api/analytics/stats` | Admin | Visitor + engagement totals |
 | `POST /api/analytics/visit` | Public | Marketing site beacon |
-| `POST /api/usage/ping` | Public | Opt-in extension heartbeat |
-| `GET /api/usage/stats` | Public | Live extension user counts |
 | `GET /api/discussions` | Admin | GitHub Discussions feed |
 | `POST /api/discussions` | Admin | Create discussion replies |
 | `GET /api/marketplace/sync` | Admin | Marketplace version parity |
 | `GET /api/releases` | Admin | GitHub release list |
 | `GET /api/workflows/runs` | Admin | Recent workflow runs |
-| `GET /api/activity` | Admin | API activity log |
-| `GET/PUT /api/community/config` | Admin | Community feature flags |
-| `POST /api/subscribe` | Public | Mailing-list signup + welcome email |
+| `GET /api/workflows/run-logs` | Admin | Workflow job logs for runtime panel |
 
 Deprecated: `website/admin-api/` standalone Worker — **do not deploy**.
 
