@@ -89,17 +89,43 @@
       vscodeLive.textContent = data.vscode?.published ? "✅ Live" : "⏳ Coming soon";
     }
 
-    // OG image
-    const metaOg = document.querySelector('meta[property="og:image"]');
-    if (metaOg) {
-      metaOg.setAttribute("content", new URL("assets/marketing/og-social-card.png", window.location.href).href);
-    }
-
-    document.title = `${data.displayName} v${data.version} — Live Cursor Usage Dashboard`;
+    // OG image and document.title are set at build time via generate-seo.mjs — do not mutate here.
   }
 
+  initEcosystemTabs();
   initLightbox();
 })();
+
+function initEcosystemTabs() {
+  const tabs = [...document.querySelectorAll("[data-ecosystem-tab]")];
+  const panels = [...document.querySelectorAll("[data-ecosystem-panel]")];
+  if (!tabs.length || !panels.length) return;
+
+  const activate = (id) => {
+    tabs.forEach((tab) => {
+      const on = tab.dataset.ecosystemTab === id;
+      tab.classList.toggle("active", on);
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    panels.forEach((panel) => {
+      const on = panel.dataset.ecosystemPanel === id;
+      panel.classList.toggle("active", on);
+      panel.hidden = !on;
+    });
+  };
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => activate(tab.dataset.ecosystemTab || "ide"));
+  });
+
+  let i = 0;
+  const ids = tabs.map((t) => t.dataset.ecosystemTab).filter(Boolean);
+  setInterval(() => {
+    if (document.hidden || !ids.length) return;
+    i = (i + 1) % ids.length;
+    activate(ids[i]);
+  }, 8000);
+}
 
 function initLightbox() {
   const lightbox = document.getElementById("lightbox");

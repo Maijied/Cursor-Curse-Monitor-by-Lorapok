@@ -8,13 +8,14 @@ type ModalProps = {
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "md" | "lg" | "xl";
+  size?: "md" | "lg" | "xl" | "full";
 };
 
 const sizeClass = {
   md: "max-w-lg",
   lg: "max-w-3xl",
   xl: "max-w-5xl",
+  full: "max-w-6xl w-[min(96vw,72rem)] max-h-[min(92vh,960px)]",
 };
 
 export default function Modal({ open, onClose, title, subtitle, children, footer, size = "lg" }: ModalProps) {
@@ -47,7 +48,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`relative w-full ${sizeClass[size]} max-h-[min(90vh,900px)] flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[0_24px_80px_rgba(0,0,0,0.55)] animate-fade-slide-up`}
+        className={`relative w-full ${sizeClass[size]} ${size === "full" ? "" : "max-h-[min(90vh,900px)]"} flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[0_24px_80px_rgba(0,0,0,0.55)] animate-fade-slide-up`}
       >
         <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-[var(--color-border)]">
           <div className="min-w-0">

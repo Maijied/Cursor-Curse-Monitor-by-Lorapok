@@ -205,14 +205,15 @@
   },
   "devDependencies": {
     "@secretlint/secretlint-rule-preset-recommend": "^10.2.2",
-    "husky": "^9.1.7",
-    "secretlint": "^10.2.2",
     "@types/node": "^22.10.0",
     "@types/vscode": "^1.93.0",
     "@vscode/vsce": "^3.2.1",
+    "husky": "^9.1.7",
     "ovsx": "^0.10.2",
+    "secretlint": "^10.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "yaml": "^2.9.0"
   },
   "allowScripts": {
     "esbuild@0.25.12": true,

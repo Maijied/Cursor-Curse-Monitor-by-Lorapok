@@ -75,13 +75,16 @@ describe("Dashboard Component", () => {
     expect(screen.getByText("Marketplace")).toBeInTheDocument();
     expect(screen.getByText("Releases")).toBeInTheDocument();
     expect(screen.getByText("Activity")).toBeInTheDocument();
+    expect(screen.getByText("Logs")).toBeInTheDocument();
+    expect(screen.getByText("Mailbox")).toBeInTheDocument();
     expect(screen.getByText("Reports")).toBeInTheDocument();
     expect(screen.getByText("Community")).toBeInTheDocument();
     expect(screen.getByText("Deployments")).toBeInTheDocument();
     expect(screen.getByText("Notices")).toBeInTheDocument();
     expect(screen.getByText("Docs")).toBeInTheDocument();
-    expect(screen.getByText("API Activity")).toBeInTheDocument();
     expect(screen.getByText("API Explorer")).toBeInTheDocument();
+    expect(screen.getByText("SEO")).toBeInTheDocument();
+    expect(screen.getByText("Architecture")).toBeInTheDocument();
     expect(screen.getByText("Team Access")).toBeInTheDocument();
   });
 

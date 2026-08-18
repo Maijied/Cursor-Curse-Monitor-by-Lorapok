@@ -78,6 +78,15 @@ flowchart LR
 | `GET /api/releases` | Admin | GitHub release list |
 | `GET /api/workflows/runs` | Admin | Recent workflow runs |
 | `GET /api/workflows/run-logs` | Admin | Workflow job logs for runtime panel |
+| `GET /api/mailbox` | Admin | Mail log with filters and stats |
+| `POST /api/mailbox` | Admin | Compose outbound mail |
+| `POST /api/mailbox/test` | Admin | Send transport test email |
+| `PATCH /api/mailbox/:id/read` | Admin | Mark message read |
+| `GET/POST /api/notices` | Admin | Site notice catalog CRUD |
+| `GET /api/notice` | Public | Active development banner |
+| `GET /api/logs` | Admin | Unified API/mail/system activity logs |
+| `GET /api/activity` | Admin | KV activity feed (legacy) |
+| `POST /api/subscribe` | Public | Marketing email subscribe |
 
 Deprecated: `website/admin-api/` standalone Worker — **do not deploy**.
 

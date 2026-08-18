@@ -1,65 +1,118 @@
 {
-  "generatedAt": "2026-08-18T05:29:33.701Z",
+  "generatedAt": "2026-08-18T06:41:00.235Z",
+  "source": "website/seo.yml",
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
-  "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "description": "Cursor Curse Monitor by Lorapok Labs — live included quota, Auto/API meters, budget tracking, local credential scanner, Firefox & Chrome browser extension, and free Composer 2.5 fallback. Private to your Cursor login only.",
   "version": "0.5.12",
-  "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
-  "syncStatus": "drift",
+  "packageVersion": "0.5.12",
+  "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
+  "syncStatus": "synced",
   "keywords": [
+    "Cursor IDE",
+    "usage monitor",
+    "Lorapok Labs",
+    "Composer 2.5",
+    "billing",
+    "budget",
+    "quota",
+    "extension",
+    "Open VSX",
+    "VS Code Marketplace",
+    "Firefox",
+    "browser extension",
+    "security scanner",
+    "credential leak",
     "cursor",
     "lorapok",
     "usage",
-    "billing",
-    "budget",
     "monitor",
     "composer",
-    "quota",
     "curse",
-    "browser extension",
     "firefox",
-    "security",
-    "Cursor IDE",
-    "Open VSX",
-    "VS Code extension",
-    "Lorapok Labs",
-    "usage monitor"
+    "security"
   ],
   "openGraph": {
     "type": "website",
     "title": "Cursor Curse Monitor by Lorapok",
-    "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-    "url": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
+    "description": "Live Cursor usage dashboard with local security scanner. Firefox & Chrome extensions. Your data stays on your machine.",
+    "url": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
     "image": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/marketing/og-social-card.png"
+  },
+  "twitter": {
+    "card": "summary_large_image",
+    "title": "Cursor Curse Monitor by Lorapok",
+    "description": "Monitor Cursor usage limits, scan for leaked credentials locally, and auto-fallback to free Composer 2.5.",
+    "image": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/assets/marketing/og-social-card.png"
+  },
+  "pages": {
+    "index": {
+      "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
+      "description": "Cursor Curse Monitor by Lorapok Labs — live included quota, Auto/API meters, budget tracking, local credential scanner, Firefox & Chrome browser extension, and free Composer 2.5 fallback. Private to your Cursor login only.",
+      "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/"
+    },
+    "privacy": {
+      "title": "Privacy Policy — Cursor Curse Monitor by Lorapok",
+      "description": "Privacy policy for Cursor Curse Monitor. Usage data is visible only to the logged-in Cursor user on their own machine.",
+      "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html"
+    },
+    "terms": {
+      "title": "Terms of Use — Cursor Curse Monitor by Lorapok",
+      "description": "Terms of use for Cursor Curse Monitor by Lorapok. Local-first extension; optional anonymous heartbeat; marketing site analytics.",
+      "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/terms.html"
+    }
   },
   "marketplaces": {
     "openVsxCanonical": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "openVsxDuplicate": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "vscode": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"
+    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.11"
   },
   "structuredData": {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Cursor Curse Monitor by Lorapok",
-    "softwareVersion": "0.5.12",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Windows, macOS, Linux",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest/download/cursor-curse-monitor-by-lorapok-0.5.12.vsix",
-    "author": {
-      "@type": "Person",
-      "name": "Mohammad Maizied Hasan Majumder",
-      "url": "https://github.com/Maijied"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Lorapok Labs",
-      "url": "https://lorapok.tech"
-    }
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Cursor Curse Monitor by Lorapok",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": "Usage dashboard, security scanner, local insights, budget tracking",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.11/cursor-curse-monitor-by-lorapok-0.5.11.vsix",
+        "softwareVersion": "0.5.12",
+        "author": {
+          "@type": "Person",
+          "name": "Mohammad Maizied Hasan Majumder",
+          "url": "https://github.com/Maijied"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Lorapok Labs",
+          "url": "https://lorapok.tech"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Cursor Curse Monitor by Lorapok Browser Extension",
+        "applicationCategory": "BrowserApplication",
+        "operatingSystem": "Firefox, Chrome",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
+        "downloadUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Lorapok Labs",
+          "url": "https://lorapok.tech"
+        }
+      }
+    ]
   }
 }
