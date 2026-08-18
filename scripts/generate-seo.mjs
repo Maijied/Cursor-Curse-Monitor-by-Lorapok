@@ -64,7 +64,7 @@ const generatedAt = new Date().toISOString();
 
 const vars = {
   displayName: pkg.displayName ?? pkg.name,
-  version,
+  version: siteData?.version ?? pkg.version,
   vsixUrl: siteData?.github?.vsixUrl ?? `${SITE_BASE}/releases/latest`,
   packageVersion: pkg.version,
 };

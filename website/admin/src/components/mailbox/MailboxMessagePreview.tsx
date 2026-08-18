@@ -61,7 +61,7 @@ export default function MailboxMessagePreview({ message, expanded = false }: Mai
             className={`w-full bg-white ${iframeHeight}`}
             sandbox=""
             referrerPolicy="no-referrer"
-            {...({ csp: "default-src 'none'; style-src 'unsafe-inline'; img-src data:;" } as React.IframeHTMLAttributes<HTMLIFrameElement>)}
+            {...({ csp: "default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; connect-src 'none';" } as React.IframeHTMLAttributes<HTMLIFrameElement>)}
           />
         </div>
       ) : null}

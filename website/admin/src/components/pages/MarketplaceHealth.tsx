@@ -44,8 +44,8 @@ export default function MarketplaceHealth() {
         }
       />
 
-      {loading && !live ? <ShimmerSkeleton className="h-48" /> : null}
-      {error && !live ? <ErrorState message={error} /> : null}
+      {loading && !live && !siteData ? <ShimmerSkeleton className="h-48" /> : null}
+      {error && !live && !siteData ? <ErrorState message={error} /> : null}
 
       {live && (
         <>
@@ -55,7 +55,7 @@ export default function MarketplaceHealth() {
             {siteData && <SyncRadar data={siteData} />}
             <Card>
               <h3 className="text-lg font-semibold mb-4">Live sync check</h3>
-              <p className="text-xs text-[var(--color-muted)] mb-4">Checked {new Date(live.checkedAt).toLocaleString()}</p>
+              <p className="text-xs text-[var(--color-muted)] mb-4">Live data from {new Date(live.checkedAt).toLocaleString()}</p>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
@@ -88,6 +88,23 @@ export default function MarketplaceHealth() {
           {siteData?.downloads && (
             <Card>
               <h3 className="text-lg font-semibold mb-2">Download snapshot</h3>
+              <p className="text-3xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-neon)]">
+                {formatCount(siteData.downloads.total)}
+              </p>
+              <p className="text-xs text-[var(--color-muted)] mt-2">{siteData.downloads.note}</p>
+            </Card>
+          )}
+        </>
+      )}
+
+      {!live && siteData && (
+        <>
+          {error && <ErrorState message={`Live check failed: ${error}. Showing cached snapshot below.`} />}
+          <SyncRadar data={siteData} />
+          {siteData.downloads && (
+            <Card>
+              <h3 className="text-lg font-semibold mb-2">Download snapshot</h3>
+              <p className="text-xs text-[var(--color-muted)] mb-2">Generated {new Date(siteData.generatedAt).toLocaleString()}</p>
               <p className="text-3xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-neon)]">
                 {formatCount(siteData.downloads.total)}
               </p>
