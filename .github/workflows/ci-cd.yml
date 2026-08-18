@@ -177,7 +177,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: website/admin/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            website/admin/package-lock.json
+
+      - name: Install root dependencies (SEO scripts)
+        run: npm ci
 
       - name: Generate site artifacts for admin build
         run: |
@@ -222,7 +227,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: website/admin/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            website/admin/package-lock.json
+
+      - name: Install root dependencies (SEO scripts)
+        run: npm ci
 
       - name: Generate site artifacts
         run: |
@@ -555,6 +565,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
 
       - name: Generate dynamic site data
         run: node scripts/generate-site-data.mjs
