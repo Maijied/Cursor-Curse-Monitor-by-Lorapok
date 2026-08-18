@@ -43,6 +43,11 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 - **Running the extension itself requires the VS Code Extension Development Host
   (F5 / `launch.json`), which needs a GUI VS Code and is not runnable headlessly.**
   Use `npm test` + `npm run package` as the headless proof of correctness.
+- After `npm ci` / reinstall, run `npm run validate:reinstall` to verify all
+  `package.json` files parse and the extension compiles.
+- If Cursor shows **“Npm task detection: failed to parse package.json”** while
+  terminal scripts work, that is usually an IDE race (not invalid JSON). Reload
+  the window; scripts still run via `npm run …`.
 
 ### Marketing website (`website/`) — run / regenerate
 

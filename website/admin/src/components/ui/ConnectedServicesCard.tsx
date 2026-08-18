@@ -29,6 +29,7 @@ export default function ConnectedServicesCard() {
   const [services, setServices] = useState<ServiceRow[]>([
     { id: "firebase", label: "Firebase Auth", status: "checking", detail: "Checking session…" },
     { id: "github", label: "GitHub API", status: "checking", detail: "Checking API…" },
+    { id: "mail", label: "Outbound mail", status: "checking", detail: "Checking mail transport…" },
     { id: "site-data", label: "Site data feed", status: "checking", detail: "Checking site-data.json…" },
     { id: "notice", label: "Development notice", status: "checking", detail: "Checking notice config…" },
   ]);
@@ -57,10 +58,24 @@ export default function ConnectedServicesCard() {
             ? `OK · ${new Date(health.checks.timestamp).toLocaleString()}`
             : "API unreachable",
         });
+        next.push({
+          id: "mail",
+          label: "Outbound mail",
+          status: health.mailConfigured ? "connected" : "disconnected",
+          detail: health.mailConfigured
+            ? String(health.mailTransport ?? "configured")
+            : health.mailHint ?? "Mail transport not configured",
+        });
       } catch {
         next.push({
           id: "github",
           label: "GitHub API",
+          status: "disconnected",
+          detail: "Health check failed",
+        });
+        next.push({
+          id: "mail",
+          label: "Outbound mail",
           status: "disconnected",
           detail: "Health check failed",
         });

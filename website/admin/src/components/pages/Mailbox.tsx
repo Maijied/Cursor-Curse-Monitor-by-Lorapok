@@ -266,6 +266,12 @@ export default function Mailbox() {
                 {!transport.configured && transport.hint && (
                   <p className="text-[var(--color-muted)] text-xs leading-relaxed">{transport.hint}</p>
                 )}
+                {transport.configured && (
+                  <p className="text-[var(--color-muted)] text-xs leading-relaxed">
+                    Transport is configured. If sends fail, check Cloudflare Email Sending permissions for{" "}
+                    <code className="text-[var(--color-accent-2)]">cursor-contact@lorapok.tech</code>.
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-sm text-[var(--color-muted)]">Unknown</p>

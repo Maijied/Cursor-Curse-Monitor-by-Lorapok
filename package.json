@@ -197,6 +197,7 @@
     "site:seo": "node scripts/generate-seo.mjs",
     "site:seo:validate": "node scripts/validate-seo.mjs",
     "security:scan": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",
+    "validate:reinstall": "node scripts/validate-reinstall.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -214,6 +215,9 @@
     "typescript": "^5.7.2"
   },
   "allowScripts": {
-    "esbuild@0.25.12": true
+    "esbuild@0.25.12": true,
+    "@vscode/vsce-sign@2.0.9": true,
+    "keytar@7.9.0": true,
+    "spawn-sync@1.0.15": true
   }
 }
