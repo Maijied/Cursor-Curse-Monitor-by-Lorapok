@@ -17,7 +17,9 @@
     <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/open-vsx/v/lorapok-labs/cursor-curse-monitor-by-lorapok?label=Open%20VSX" alt="Open VSX" /></a>
     <a href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/visual-studio-marketplace/v/LorapokLabs.cursor-curse-monitor-by-lorapok?label=VS%20Code%20Marketplace" alt="VS Code Marketplace" /></a>
     <img src="https://img.shields.io/badge/license-Proprietary-red" alt="Proprietary License" />
-    <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
+    <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code%20%7C%20Browser-6C5CE7" alt="Platform" />
+    <a href="https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/"><img src="https://img.shields.io/badge/Firefox-AMO-FF7139" alt="Firefox Add-ons" /></a>
+    <img src="https://img.shields.io/badge/Chrome-direct%20zip-4285F4" alt="Chrome direct download" />
   </p>
 
   <p>
@@ -35,13 +37,14 @@
 
 ## Overview
 
-**Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included limits, remaining quota, billing cycle reset, on-demand spend, and optional fallback to **Composer 2.5 (Fast off)** when limits are exceeded.
+**Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included quota with Auto/API meters, remaining units, billing cycle reset, on-demand spend, local session insights, and optional fallback to **Composer 2.5 (Fast off)** when limits are exceeded.
 
-This repository is a **monorepo** with three production surfaces:
+This repository is a **monorepo** with four production surfaces:
 
 | Component | Path | Public URL |
 |-----------|------|------------|
-| **Extension** | `src/` | Open VSX · VS Code Marketplace · GitHub Releases |
+| **IDE extension** | `src/` | Open VSX · VS Code Marketplace · GitHub Releases |
+| **Browser extension** | `browser-extension/` | Firefox AMO · Chrome zip (website / GitHub Releases) |
 | **Marketing site** | `website/` | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
 | **Mission Control (admin)** | `website/admin/` | https://cursor-dev.lorapok.tech |
 
@@ -60,8 +63,9 @@ flowchart TB
   end
 
   subgraph Local["On the developer machine"]
-    IDE -->|"read usage (api2.cursor.sh)"| CursorAPI["Cursor API"]
-    IDE -->|"optional quit-then-write"| VSCDB["state.vscdb"]
+    IDE -->|"usage-summary + profile"| CursorAPI["Cursor API"]
+    IDE -->|"read-only metadata"| VSCDB["state.vscdb"]
+    IDE -->|"optional quit-then-write"| VSCDB
     IDE -->|"opt-in heartbeat"| Ping["/api/usage/ping"]
   end
 
@@ -154,7 +158,7 @@ cursor-usage-monitor/
 
 ### Data flows (summary)
 
-1. **Extension** — Reads local Cursor auth, calls `api2.cursor.sh`, optionally writes fallback model after quit with WAL-safe backups. Opt-in heartbeats feed live-user counts to Mission Control.
+1. **Extension** — Reads local Cursor auth and privacy-safe metadata (daily line stats, active models, session titles), calls `api2.cursor.sh` for quota, optionally writes fallback model after quit with WAL-safe backups. Opt-in heartbeats feed live-user counts to Mission Control. Native workbench toasts overlay the open editor (no extra notification tab).
 2. **Marketing site** — Static HTML on GitHub Pages; loads `site-data.json` for download counts, polls `/api/analytics/stats` for live visitor KPIs, and uses `/api/notice` for the public banner.
 3. **Mission Control** — Firebase-authenticated PWA on Cloudflare Pages; Pages Functions read/write KV (notices, admins), dispatch GitHub deploys, proxy analytics, and expose marketplace health APIs.
 4. **CI/CD** — Extension build, admin deploy, GitHub Pages publish, and a dedicated SEO workflow that regenerates sitemap and site-data artifacts on schedule and on merge to `main`.
@@ -165,14 +169,20 @@ cursor-usage-monitor/
 
 | Feature | Description |
 |--------|-------------|
-| **Sidebar dashboard** | Activity bar → **Cursor Curse Monitor** |
+| **Sidebar dashboard** | Included quota, Auto/API meters, budget gauge, billing reset, local insights, cycle trend |
 | **Status bar** | Live usage percentage at a glance |
 | **Auto refresh** | Polls Cursor API every 60s (configurable) |
+| **Local insights** | Today’s accepted lines, active models, recent session titles (no chat bodies) |
+| **Cycle trend** | Sparkline from on-machine usage history |
 | **Custom budget** | Set a personal USD cap in the dashboard |
-| **Limit alerts** | Warning at 80% (configurable) |
+| **Limit alerts** | Native toast at 80% (configurable), over the open editor |
 | **Free fallback** | Auto-switches to Composer 2.5 (Fast off) at 100% |
 | **Team aware** | Shows team vs individual limit type |
 | **DB safety** | Read-only while Cursor runs; quit-then-write with WAL/SHM backup + integrity checks |
+| **Security scanner** | Manage Processes–style alerts when API keys, tokens, or private keys appear in files, clipboard, or paste fields |
+| **Pre-commit / CI** | `secretlint` on staged files and in CI to block accidental secret commits |
+
+**Chat limitation:** secrets pasted only into Cursor Composer (never saved to disk) are **not** detectable — use scan-on-save and pre-commit for files you commit.
 
 ## Installation
 
@@ -205,6 +215,18 @@ cursor --install-extension *.vsix
 | `cursorCurseMonitor.showStatusBar` | `true` | Show usage in status bar |
 | `cursorCurseMonitor.statusBarUsageSource` | `autoApi` | `plan`, `autoApi`, or `both` |
 | `cursorCurseMonitor.warnAtPercent` | `80` | Warning notification threshold |
+| `cursorCurseMonitor.securityScanEnabled` | `true` | Scan open files and paste for exposed credentials |
+| `cursorCurseMonitor.scanOnSave` | `true` | Scan document buffer before save |
+| `cursorCurseMonitor.blockSaveOnSecret` | `false` | Block save when secrets detected (warn-only by default) |
+
+### Security commands
+
+| Command | Description |
+|---------|-------------|
+| `Cursor Curse Monitor: Scan Workspace for Secrets` | Scan all workspace text files |
+| `Cursor Curse Monitor: Scan Clipboard for Secrets` | One-shot clipboard scan |
+
+Contributors: pre-commit runs `secretlint` on staged files (`npm run security:scan` for full-repo check).
 
 ## Development
 
@@ -256,6 +278,9 @@ Full setup: [DEPLOYMENT.md](DEPLOYMENT.md)
 ## Privacy
 
 - Auth token stays on your machine; API calls go only to `api2.cursor.sh`
+- Local insights read session titles, model names, and line-accept stats — never chat transcripts
+- **Security scanner** runs locally; detected secrets are never uploaded — only redacted snippets appear in the alert UI
+- Secrets pasted only into Composer chat (never saved to disk) are not scannable; use scan-on-save and pre-commit for committed files
 - Opt-in install heartbeat uses an anonymous `installId` when enabled
 - No third-party analytics in the extension itself
 

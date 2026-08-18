@@ -57,7 +57,7 @@
     <div class="container">
       <p class="eyebrow">Legal</p>
       <h1>Privacy Policy</h1>
-      <p class="lead">Last updated: August 16, 2026</p>
+      <p class="lead">Last updated: August 17, 2026</p>
     </div>
   </section>
 
@@ -70,6 +70,8 @@
       <ul>
         <li>Your Cursor auth token from local <code>state.vscdb</code> (on your computer only)</li>
         <li>Usage summary and profile from <code>api2.cursor.sh</code> using that token</li>
+        <li>Privacy-safe local metadata from Cursor storage: daily Tab/Composer line-accept stats, active model names, and recent session <em>titles</em>. Chat bodies, transcripts, and project files are not read</li>
+        <li>A compact usage-history series stored in extension <code>globalState</code> on this machine for the dashboard sparkline</li>
         <li>Your extension settings (poll interval, budget cap) stored in VS Code/Cursor settings</li>
       </ul>
 
@@ -80,6 +82,14 @@
         <li><strong>Team limits</strong> — if your plan is team-based, you may see team limit <em>context</em> returned by Cursor's API for your session, not a full team usage breakdown.</li>
       </ul>
 
+      <h2>Browser extension (Firefox / Chrome)</h2>
+      <ul>
+        <li>Auth token stored in <code>browser.storage.local</code> on your device only — never sent to Lorapok servers</li>
+        <li>On <code>cursor.com</code>, a content script captures the Bearer token from requests to <code>api2.cursor.sh</code> when you are signed in; you may also paste a token manually in Options</li>
+        <li>Usage data is fetched directly from Cursor's API from your browser; local insights and fallback model switching are IDE-extension only</li>
+        <li>Optional anonymous heartbeat (off by default) — same install-ID ping as the IDE extension when enabled</li>
+      </ul>
+
       <h2>Marketing website</h2>
       <ul>
         <li><strong>Email subscribe</strong> — if you opt in on the homepage, we store your email address to send release notes and important notices. You can unsubscribe at any time via the link in any email.</li>
@@ -87,11 +97,20 @@
         <li><strong>Optional extension heartbeat</strong> — off by default. If you enable <code>cursorCurseMonitor.anonymousUsageStats</code>, see <a href="terms.html">Terms</a> for the install-ID ping. With the setting off, the extension does not phone home.</li>
       </ul>
 
+      <h2>Security scanner</h2>
+      <ul>
+        <li><strong>Local only</strong> — pattern-based credential detection runs on your machine; detected secrets are never uploaded to Lorapok servers</li>
+        <li><strong>IDE extension</strong> — scans workspace files on save (configurable), clipboard on demand, and shows redacted previews in a Security Alert panel</li>
+        <li><strong>Browser extension</strong> — scans token paste in Options for accidental multi-secret dumps</li>
+        <li><strong>Not scanned</strong> — live Cursor Composer / agent chat (no API access). Secrets pasted only into chat and never saved to disk cannot be detected</li>
+      </ul>
+
       <h2>What we do not do</h2>
       <ul>
         <li>No forced extension telemetry (heartbeat is opt-in)</li>
         <li>No sale of personal data</li>
         <li>No third-party ad trackers in the extension</li>
+        <li>No reading of chat transcripts or message bodies</li>
       </ul>
 
       <h2>Model fallback</h2>

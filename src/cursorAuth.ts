@@ -4,8 +4,10 @@ import * as path from "path";
 import * as crypto from "crypto";
 import { execSync } from "child_process";
 
-const REACTIVE_KEY =
+export const REACTIVE_STORAGE_KEY =
   "src.vs.platform.reactivestorage.browser.reactiveStorageServiceImpl.persistentStorage.applicationUser";
+
+const REACTIVE_KEY = REACTIVE_STORAGE_KEY;
 
 /** Maximum time (ms) a DB operation is allowed before we consider it hung. */
 const DB_OPERATION_TIMEOUT_MS = 15_000;
@@ -14,6 +16,7 @@ const DB_OPERATION_TIMEOUT_MS = 15_000;
 const STALE_BACKUP_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 type SqliteModule = typeof import("node:sqlite");
+type SqliteDb = InstanceType<SqliteModule["DatabaseSync"]>;
 
 export type EditorHost = "cursor" | "vscode" | "unknown";
 
@@ -258,11 +261,11 @@ function runPragmaIntegrityCheck(dbPath: string): { ok: boolean; detail?: string
   }
 }
 
-function readCursorKeyDirect(key: string): string | null {
+function openReadOnlyCursorDb(): SqliteDb {
   const dbPath = getCursorGlobalStoragePath();
 
   if (!fs.existsSync(dbPath)) {
-    return null;
+    throw new Error("Cursor storage database not found");
   }
 
   const integrityCheck = validateDatabaseIntegrity(dbPath);
@@ -274,20 +277,34 @@ function readCursorKeyDirect(key: string): string | null {
   }
 
   const { DatabaseSync } = loadSqlite();
-  const db = new DatabaseSync(dbPath, {
+  return new DatabaseSync(dbPath, {
     readOnly: true,
     timeout: 5000,
   });
+}
 
+/** Run a read-only callback against Cursor's state.vscdb. Always closes the handle. */
+export function withReadOnlyCursorDb<T>(fn: (db: SqliteDb) => T): T {
+  const db = openReadOnlyCursorDb();
   try {
-    const row = db
-      .prepare("SELECT value FROM ItemTable WHERE key = ?")
-      .get(key) as { value?: unknown } | undefined;
-
-    return typeof row?.value === "string" ? row.value : null;
+    return fn(db);
   } finally {
     db.close();
   }
+}
+
+function readCursorKeyDirect(key: string): string | null {
+  const dbPath = getCursorGlobalStoragePath();
+  if (!fs.existsSync(dbPath)) {
+    return null;
+  }
+
+  return withReadOnlyCursorDb((db) => {
+    const row = db
+      .prepare("SELECT value FROM ItemTable WHERE key = ?")
+      .get(key) as { value?: unknown } | undefined;
+    return typeof row?.value === "string" ? row.value : null;
+  });
 }
 
 export async function readCursorAccessToken(): Promise<string | null> {

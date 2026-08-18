@@ -2,20 +2,35 @@
 
 ## Cursor Cloud specific instructions
 
-This repo contains three related components. The update script already runs
+This repo contains four related components. The update script already runs
 `npm ci` in the repo root and in `website/admin/`, so dependencies are installed
 before you start.
 
 ### Components
 
-- **Extension (repo root)** — the primary product: a VS Code / Cursor extension
-  in TypeScript (`src/`). Compiled with `tsc` to `dist/`, packaged with `vsce`.
-- **Marketing website (`website/`)** — a static site (`index.html`, `privacy.html`)
-  that reads generated `site-data.json` / `seo.json`. Deployed to GitHub Pages.
-- **Admin SPA (`website/admin/`)** — a Vite + React "Mission Control" panel with
-  co-located Cloudflare Pages Functions in `website/admin/functions/api/`.
+- **IDE extension (repo root)** — VS Code / Cursor extension in TypeScript (`src/`).
+  Compiled with `tsc` to `dist/`, packaged with `vsce`.
+- **Browser extension (`browser-extension/`)** — Manifest V3 WebExtension (Firefox +
+  Chrome). Vite build → `browser-extension/dist/`. Firefox publishes to AMO via
+  `web-ext sign` in CI; Chrome is a direct-download zip only.
+- **Marketing website (`website/`)** — static site deployed to GitHub Pages.
+- **Admin SPA (`website/admin/`)** — Mission Control on Cloudflare Pages.
 
-### Extension (root) — build / test / package
+### Browser extension — build / test
+
+```bash
+npm run build -w @lorapok/cursor-monitor-shared
+npm run browser-ext:test
+npm run browser-ext:build
+npm run build:chrome -w browser-extension   # zip artifact
+node browser-extension/scripts/generate-amo-metadata.mjs
+```
+
+- Popup/options UI must include footer: Lorapok Labs (`https://lorapok.tech`) +
+  Cursor (`https://cursor.com`) on every page.
+- Shared API logic lives in `packages/shared/` (`@lorapok/cursor-monitor-shared`).
+
+### IDE extension (root) — build / test / package
 
 Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 `package`). Notes:
@@ -28,6 +43,11 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 - **Running the extension itself requires the VS Code Extension Development Host
   (F5 / `launch.json`), which needs a GUI VS Code and is not runnable headlessly.**
   Use `npm test` + `npm run package` as the headless proof of correctness.
+- After `npm ci` / reinstall, run `npm run validate:reinstall` to verify all
+  `package.json` files parse and the extension compiles.
+- If Cursor shows **“Npm task detection: failed to parse package.json”** while
+  terminal scripts work, that is usually an IDE race (not invalid JSON). Reload
+  the window; scripts still run via `npm run …`.
 
 ### Marketing website (`website/`) — run / regenerate
 

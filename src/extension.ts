@@ -9,13 +9,17 @@ import {
 import { UsageMonitorService } from "./usageMonitor";
 import { NotificationProvider } from "./notificationProvider";
 import { maybeSendAnonymousHeartbeat } from "./telemetry";
+import { SecurityMonitorService } from "./securityMonitor";
 
 let monitor: UsageMonitorService | undefined;
+let securityMonitor: SecurityMonitorService | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
-  NotificationProvider.setExtensionUri(context.extensionUri);
   monitor = new UsageMonitorService(context);
   monitor.start();
+
+  securityMonitor = new SecurityMonitorService(context);
+  securityMonitor.start();
 
   const extensionVersion = String(context.extension.packageJSON.version ?? "0.0.0");
   void maybeSendAnonymousHeartbeat(context, extensionVersion);
@@ -43,7 +47,6 @@ export function activate(context: vscode.ExtensionContext): void {
             label: "Open Dashboard",
             action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard"),
           },
-          { label: "Dismiss", action: () => {} },
         ],
       });
     }, 1500);
@@ -97,12 +100,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.refresh", async () => {
       await monitor?.refresh();
-      NotificationProvider.show({
-        title: "Refreshed",
-        message: "Cursor usage data has been refreshed.",
-        type: "info",
-        duration: 3000,
-      });
     }),
     vscode.commands.registerCommand(
       "cursorCurseMonitor.applyFallbackModel",
@@ -126,11 +123,20 @@ export function activate(context: vscode.ExtensionContext): void {
         await monitor?.refresh();
       }
     ),
-    monitor
+    vscode.commands.registerCommand("cursorCurseMonitor.scanWorkspace", async () => {
+      await securityMonitor?.scanWorkspace();
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.scanClipboard", async () => {
+      await securityMonitor?.scanClipboard();
+    }),
+    monitor,
+    securityMonitor
   );
 }
 
 export function deactivate(): void {
+  securityMonitor?.dispose();
+  securityMonitor = undefined;
   monitor?.dispose();
   monitor = undefined;
 }

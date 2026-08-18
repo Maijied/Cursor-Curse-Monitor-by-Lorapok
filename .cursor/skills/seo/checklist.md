@@ -28,9 +28,18 @@
 ## Extension metadata
 
 - [ ] `package.json` keywords include: cursor, usage, lorapok, monitor
+- [ ] `package.json` keywords include: browser extension, firefox, security
 - [ ] `displayName` and `description` are clear for store search
 - [ ] `homepage` points to GitHub Pages site
 - [ ] `repository` URL is correct
+
+## Browser extension
+
+- [ ] Firefox AMO URL in `website/index.html` and `site-data.json` / `seo.json` marketplaces.firefox
+- [ ] Chrome zip `downloadUrl` / `installUrl` in JSON-LD (`@graph` browser entry)
+- [ ] AMO listing (`browser-extension/amo/amo-metadata.base.json`) mentions security scanner
+- [ ] Website feature list includes security scanner + browser install CTAs
+- [ ] `browser-extension` CI job passes build + tests
 
 ## CI
 

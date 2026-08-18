@@ -43,6 +43,21 @@ If you are unsure how to classify a report, report it privately rather than publ
 
 Security fixes are provided for the latest release on [GitHub Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases), Open VSX, and the VS Code Marketplace. Older releases may receive fixes at Lorapok Labs' discretion.
 
+## Built-in credential scanner
+
+Cursor Curse Monitor includes a **local-only** secret scanner across the IDE extension, browser extension Options paste fields, and repository tooling:
+
+| Surface | Behavior |
+|---------|----------|
+| **IDE extension** | Scans open files on save (configurable), debounced edits, workspace scan command, and on-demand clipboard scan. Findings open in a Manage Processes–style Security Alert panel with redacted previews only. |
+| **Browser extension** | Scans token paste in Options; warns if additional secrets appear in the same paste. |
+| **Pre-commit** | Husky hook runs `secretlint` on staged files. |
+| **CI** | `npm run security:scan` (secretlint) on every PR and push. |
+
+**What is not scanned:** live Cursor Composer / agent chat (no public API; aligns with our privacy stance). Secrets that never touch disk cannot be detected — use scan-on-save and pre-commit for files you share or commit.
+
+**Reporting scanner false positives:** open a private security report (see above) with the file pattern and a redacted example. Do not paste full secrets in public issues.
+
 ## Safe Harbor
 
 Lorapok Labs appreciates responsible disclosure. We will not pursue legal action against researchers who follow this policy and act in good faith.

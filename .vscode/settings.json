@@ -1,0 +1,11 @@
+{
+  "npm.packageManager": "npm",
+  "npm.enableRunFromFolder": true,
+  "npm.scriptExplorerAction": "run",
+  "npm.exclude": "**/node_modules/**",
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.git/objects/**": true
+  }
+}
