@@ -13,6 +13,7 @@ export interface VisitorStats {
     vscode: number;
     github: number;
     vsix: number;
+    npm?: number;
     openvsxDuplicate?: number;
   };
   totalEngagement: number;
@@ -31,11 +32,48 @@ export interface CommunityTopic {
   }>;
 }
 
+export interface StableFallbackVersion {
+  tag: string;
+  version: string;
+  stability: "stable" | "unsafe" | "legacy" | "unknown" | string;
+  recommended: boolean;
+  vsixUrl: string;
+  note: string;
+}
+
+export interface StableFallbackInfo {
+  safeSinceVersion: string;
+  recommendedVersion: string;
+  model: {
+    displayName: string;
+    modelId: string;
+    description: string;
+  };
+  versions: StableFallbackVersion[];
+}
+
+export interface DevNotice {
+  enabled: boolean;
+  type: string;
+  severity: "info" | "warning" | "critical" | string;
+  title: string;
+  message: string;
+  shortMessage: string;
+  feedbackUrl: string;
+  collaborateUrl: string;
+  updatedAt: string;
+  dismissible: boolean;
+  id?: string | null;
+  source?: "generated" | "admin" | string;
+}
+
 export interface SiteData {
   generatedAt: string;
   version: string;
   packageVersion: string;
   syncStatus: "synced" | "drift" | "duplicate-listing" | "ahead" | "missing" | string;
+  notice?: DevNotice;
+  stableFallback?: StableFallbackInfo;
   downloads?: {
     total: number;
     breakdown: DownloadBreakdown;
