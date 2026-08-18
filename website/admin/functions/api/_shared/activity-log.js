@@ -1,35 +1,27 @@
-const ACTIVITY_KEY = "api:activity";
-const MAX_ENTRIES = 500;
+const ACTIVITY_PREFIX = "api:activity:";
+const ENTRY_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 /**
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} env
  * @param {{ ts?: string; method: string; path: string; status: number; latencyMs: number; email?: string | null }} entry
  */
 export async function logApiActivity(env, entry) {
-  if (!env?.ADMIN_KV?.get || !env?.ADMIN_KV?.put) return;
+  if (!env?.ADMIN_KV?.put) return;
 
   try {
-    const raw = await env.ADMIN_KV.get(ACTIVITY_KEY);
-    let list = [];
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) list = parsed;
-    }
-
-    list.unshift({
-      ts: entry.ts ?? new Date().toISOString(),
-      method: entry.method,
-      path: entry.path,
-      status: entry.status,
-      latencyMs: entry.latencyMs,
-      email: entry.email ?? null,
-    });
-
-    if (list.length > MAX_ENTRIES) {
-      list = list.slice(0, MAX_ENTRIES);
-    }
-
-    await env.ADMIN_KV.put(ACTIVITY_KEY, JSON.stringify(list));
+    const key = `${ACTIVITY_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    await env.ADMIN_KV.put(
+      key,
+      JSON.stringify({
+        ts: entry.ts ?? new Date().toISOString(),
+        method: entry.method,
+        path: entry.path,
+        status: entry.status,
+        latencyMs: entry.latencyMs,
+        email: entry.email ?? null,
+      }),
+      { expirationTtl: ENTRY_TTL_SECONDS }
+    );
   } catch (err) {
     console.error("logApiActivity failed", err);
   }
@@ -46,16 +38,21 @@ export async function logAuthenticatedRequest(context, auth, response, startedAt
   if (auth.error) return response;
 
   const { request, env } = context;
-  try {
-    await logApiActivity(env, {
-      method: request.method,
-      path: new URL(request.url).pathname,
-      status: response.status,
-      latencyMs: Date.now() - startedAt,
-      email: auth.email ?? null,
-    });
-  } catch {
-    /* best effort */
+  const logPromise = logApiActivity(env, {
+    method: request.method,
+    path: new URL(request.url).pathname,
+    status: response.status,
+    latencyMs: Date.now() - startedAt,
+    email: auth.email ?? null,
+  });
+  if (context.waitUntil) {
+    context.waitUntil(logPromise);
+  } else {
+    try {
+      await logPromise;
+    } catch {
+      /* best effort */
+    }
   }
   return response;
 }
