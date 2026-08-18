@@ -6,6 +6,7 @@ import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import SyncRadar from "../ui/SyncRadar";
+import ChannelSyncStrip from "../ui/ChannelSyncStrip";
 import { fetchMarketplaceSync, type MarketplaceSync } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
@@ -43,6 +44,8 @@ export default function MarketplaceHealth() {
 
       {live && (
         <>
+          {siteData && <ChannelSyncStrip data={siteData} />}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {siteData && <SyncRadar data={siteData} />}
             <Card>

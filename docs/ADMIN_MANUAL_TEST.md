@@ -1,7 +1,7 @@
 # Admin Panel & Release — Manual Test Guide
 
-**Version:** 0.5.6  
-**Last updated:** 2026-08-14
+**Version:** 0.5.12  
+**Last updated:** 2026-08-18
 
 Use this checklist before tagging a stable release or after significant admin panel changes.
 
@@ -65,10 +65,33 @@ node scripts/validate-seo.mjs
 | 4.2 | Sync radar / drift alert | Shows if Open VSX ≠ package version |
 | 4.3 | Download breakdown | Open VSX, VS Code, GitHub numbers load from `site-data.json` |
 | 4.4 | Visitor stats panel | Loads (local cache or Firebase when deployed) |
+| 4.5 | Connected services card | Firebase, GitHub API, mail transport, site-data, notice status |
 
 ---
 
-## 5. Marketplace (`/dashboard/marketplace`)
+## 5. Mailbox (`/dashboard/mailbox`)
+
+| # | Step | Expected |
+|---|------|----------|
+| 5.1 | Message log table | Loads with filters (direction, category, status, search) |
+| 5.2 | Select a message | Preview panel (desktop) or full modal (mobile) |
+| 5.3 | Send test email | Success toast or clear transport error |
+| 5.4 | Compose message | Security scan blocks secrets; send succeeds when clean |
+| 5.5 | Transport badge | Shows configured transport or setup hint |
+
+---
+
+## 6. Logs & Notices
+
+| # | Step | Expected |
+|---|------|----------|
+| 6.1 | **Logs** page | API/mail/system log entries with filters |
+| 6.2 | **Notices** page | Create, enable/disable, delete site notices |
+| 6.3 | Public `GET /api/notice` | Returns active notice for marketing banner |
+
+---
+
+## 7. Marketplace (`/dashboard/marketplace`)
 
 | # | Step | Expected |
 |---|------|----------|
@@ -78,7 +101,7 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 6. Releases & Activity
+## 8. Releases & Activity
 
 | # | Step | Expected |
 |---|------|----------|
@@ -88,7 +111,7 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 7. Deployments (`/dashboard/deployments`)
+## 9. Deployments (`/dashboard/deployments`)
 
 | # | Step | Expected |
 |---|------|----------|
@@ -99,7 +122,7 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 8. Community, SEO, Settings, Team
+## 10. Community, SEO, Settings, Team
 
 | # | Step | Expected |
 |---|------|----------|
@@ -110,7 +133,7 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 9. Extension smoke (0.5.6)
+## 11. Extension smoke
 
 | # | Step | Expected |
 |---|------|----------|
@@ -122,7 +145,7 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 10. Website & SEO artifacts
+## 12. Website & SEO artifacts
 
 ```bash
 npm run site:data
@@ -138,7 +161,7 @@ node scripts/validate-seo.mjs
 
 ---
 
-## 11. Publish stable 0.5.6 to marketplaces
+## 13. Publish to marketplaces
 
 ### Option A — GitHub Actions (recommended)
 
@@ -174,10 +197,10 @@ npm run verify:marketplace
 
 ---
 
-## 12. Admin panel production
+## 14. Admin panel production
 
-**Live URL (after deploy):** `https://admin.lorapok.tech`  
-**Staging:** `https://cursor-monitor-admin.pages.dev`
+**Live URL (after deploy):** `https://cursor-dev.lorapok.tech`  
+**Pages preview:** `https://cursor-monitor-admin.pages.dev`
 
 CI job `admin-deploy` publishes on push to `main` when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets are set.
 
@@ -185,20 +208,21 @@ CI job `admin-deploy` publishes on push to `main` when `CLOUDFLARE_API_TOKEN` an
 
 | # | Step | Expected |
 |---|------|----------|
-| 12.1 | `curl -s https://admin.lorapok.tech/api/health` | JSON with `firebaseProject`, `githubTokenConfigured` |
-| 12.2 | `curl -s https://admin.lorapok.tech/site-data.json \| jq .version` | Current package version |
-| 12.3 | Open `/login` → sign in | Redirect to `/dashboard` |
-| 12.4 | Deep link `/dashboard/deployments` | SPA loads (not 404) |
-| 12.5 | Team → add admin → sign in as them | Dashboard + API routes work (no 403) |
-| 12.6 | Deployments → trigger beta deploy | GitHub Actions run starts |
+| 14.1 | `curl -s https://cursor-dev.lorapok.tech/api/health` | JSON with `firebaseProject`, `githubTokenConfigured` |
+| 14.2 | `curl -s https://cursor-dev.lorapok.tech/site-data.json \| jq .version` | Current package version |
+| 14.3 | Open `/login` → sign in | Redirect to `/dashboard` |
+| 14.4 | Deep link `/dashboard/mailbox` | Mailbox loads with message log |
+| 14.5 | Deep link `/dashboard/deployments` | SPA loads (not 404) |
+| 14.6 | Team → add admin → sign in as them | Dashboard + API routes work (no 403) |
+| 14.7 | Deployments → trigger beta deploy | GitHub Actions run starts |
 
 ### One-time setup checklist
 
 - [ ] Cloudflare Pages project `cursor-monitor-admin`
 - [ ] KV namespace `ADMIN_KV` bound in `wrangler.toml`
 - [ ] Pages env: `GITHUB_TOKEN`, `ADMIN_MASTER_EMAIL`, `FIREBASE_PROJECT_ID`
-- [ ] DNS CNAME `admin.lorapok.tech`
-- [ ] Firebase authorized domain `admin.lorapok.tech`
+- [ ] DNS CNAME `cursor-dev.lorapok.tech`
+- [ ] Firebase authorized domain `cursor-dev.lorapok.tech`
 - [ ] Firestore rules deployed (`firebase deploy --only firestore:rules`)
 - [ ] GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 

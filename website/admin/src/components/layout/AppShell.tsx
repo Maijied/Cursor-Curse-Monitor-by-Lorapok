@@ -81,7 +81,6 @@ export default function AppShell() {
                 <Route path="logs" element={<Logs />} />
                 <Route path="mailbox" element={<Mailbox />} />
                 <Route path="api-explorer" element={<ApiExplorer />} />
-                <Route path="api-activity" element={<Navigate to="../logs" replace />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="discussions" element={<Discussions />} />
                 <Route path="architecture" element={<Architecture />} />

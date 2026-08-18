@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Eye, Mail, RefreshCw, Send, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, Mail, PenLine, RefreshCw, Send, Zap } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -8,6 +8,7 @@ import ErrorState from "../ui/ErrorState";
 import Modal from "../ui/Modal";
 import Notification, { type NotificationTone } from "../ui/Notification";
 import SecurityAlertModal from "../ui/SecurityAlertModal";
+import MailboxMessagePreview, { formatMailboxAddress } from "../mailbox/MailboxMessagePreview";
 import { scanAdminText, type AdminSecurityFinding } from "../../lib/scanSecrets";
 import {
   fetchMailbox,
@@ -34,47 +35,6 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-function categoryVariant(category: string): "synced" | "neutral" | "danger" {
-  if (category === "test" || category === "subscribe") return "synced";
-  if (category === "notice") return "neutral";
-  return "neutral";
-}
-
-function formatAddress(row: MailboxMessage): string {
-  return row.direction === "outbound" ? `→ ${row.to}` : `← ${row.from}`;
-}
-
-function MessagePreview({ message }: { message: MailboxMessage }) {
-  return (
-    <div className="space-y-3 min-h-[12rem]">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={message.status === "failed" ? "danger" : "synced"}>{message.status}</Badge>
-        <Badge variant={categoryVariant(message.category)}>{message.category}</Badge>
-        <span className="text-xs text-[var(--color-muted)]">{new Date(message.ts).toLocaleString()}</span>
-      </div>
-      <p className="text-xs font-[family-name:var(--font-mono)] text-[var(--color-accent-2)] break-all">
-        {formatAddress(message)}
-      </p>
-      {message.error ? (
-        <p className="text-sm text-[var(--color-danger)] rounded-lg border border-[color-mix(in_srgb,var(--color-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)] px-3 py-2">
-          {message.error}
-        </p>
-      ) : null}
-      {message.html ? (
-        <div className="rounded-xl border border-[var(--color-border)] overflow-hidden bg-white max-h-64">
-          <iframe title="Email HTML preview" srcDoc={message.html} className="w-full h-64 bg-white" sandbox="" />
-        </div>
-      ) : null}
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] p-3 max-h-48 overflow-y-auto">
-        <p className="text-xs uppercase tracking-wider text-[var(--color-muted)] mb-2">Plain text</p>
-        <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-mono)] text-[var(--color-text)] leading-relaxed">
-          {message.text || "No message body."}
-        </pre>
-      </div>
-    </div>
-  );
-}
-
 export default function Mailbox() {
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<MailboxMessage[]>([]);
@@ -97,6 +57,8 @@ export default function Mailbox() {
   const [testTo, setTestTo] = useState(auth.currentUser?.email ?? "");
   const [sending, setSending] = useState(false);
   const [selected, setSelected] = useState<MailboxMessage | null>(null);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
   const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
   const isWide = useMediaQuery("(min-width: 1280px)");
 
@@ -142,6 +104,7 @@ export default function Mailbox() {
       if (res.ok) {
         setBody("");
         setSubject("");
+        setComposeOpen(false);
       }
       load();
     } catch (err: unknown) {
@@ -176,6 +139,12 @@ export default function Mailbox() {
     }
   };
 
+  const previewSubtitle = selected
+    ? `${selected.direction === "outbound" ? "To" : "From"} ${
+        selected.direction === "outbound" ? selected.to : selected.from
+      } · ${new Date(selected.ts).toLocaleString()}`
+    : undefined;
+
   if (loading && items.length === 0) return <ShimmerSkeleton className="h-64" />;
   if (error) return <ErrorState message={error} />;
 
@@ -187,7 +156,51 @@ export default function Mailbox() {
       <PageHeader
         title="Mailbox"
         description="Outbound mail from Lorapok Labs — subscribe confirmations, invites, notices, and compose."
+        action={
+          <button
+            type="button"
+            onClick={() => setComposeOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 shadow-[0_8px_24px_rgba(124,92,255,0.25)] transition-opacity"
+          >
+            <PenLine size={16} /> Compose
+          </button>
+        }
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-elevated)_80%,transparent)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 min-w-0">
+          <span className="text-xs uppercase tracking-wider text-[var(--color-muted)]">Transport</span>
+          {transport ? (
+            <>
+              <Badge variant={transport.configured ? "synced" : "danger"}>
+                {transport.configured ? transport.transport : "not configured"}
+              </Badge>
+              {!transport.configured && transport.hint && (
+                <span className="text-xs text-[var(--color-muted)] max-w-xl">{transport.hint}</span>
+              )}
+            </>
+          ) : (
+            <span className="text-sm text-[var(--color-muted)]">Checking…</span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="email"
+            value={testTo}
+            onChange={(e) => setTestTo(e.target.value)}
+            placeholder="Test recipient"
+            className={`${inputClass} !w-auto min-w-[12rem] max-w-xs`}
+          />
+          <button
+            type="button"
+            disabled={sending}
+            onClick={handleTest}
+            className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60"
+          >
+            <Zap size={16} /> Test
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
@@ -213,7 +226,7 @@ export default function Mailbox() {
         />
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] gap-6 min-w-0 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-6 min-w-0 items-start">
         <Card className="min-w-0 min-h-[28rem] flex flex-col">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h3 className="font-semibold flex items-center gap-2">
@@ -296,8 +309,8 @@ export default function Mailbox() {
                           <td className="px-3 py-2.5 text-[var(--color-muted)] text-xs truncate" title={new Date(row.ts).toLocaleString()}>
                             {new Date(row.ts).toLocaleString(undefined, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" })}
                           </td>
-                          <td className="px-3 py-2.5 font-[family-name:var(--font-mono)] text-xs truncate" title={formatAddress(row)}>
-                            {formatAddress(row)}
+                          <td className="px-3 py-2.5 font-[family-name:var(--font-mono)] text-xs truncate" title={formatMailboxAddress(row)}>
+                            {formatMailboxAddress(row)}
                           </td>
                           <td className="px-3 py-2.5 truncate font-medium" title={row.subject}>
                             {row.subject}
@@ -358,93 +371,84 @@ export default function Mailbox() {
           </div>
         </Card>
 
-        <div className="space-y-4 min-w-0 xl:sticky xl:top-4">
-          <Card className="min-w-0 hidden xl:block">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Eye size={16} className="text-[var(--color-accent-2)]" />
+        <Card className="min-w-0 hidden xl:block xl:sticky xl:top-4">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Mail size={16} className="text-[var(--color-accent-2)]" />
               Preview
             </h3>
-            {selected ? (
-              <MessagePreview message={selected} />
-            ) : (
-              <div className="flex flex-col items-center justify-center min-h-[12rem] rounded-xl border border-dashed border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-base)_50%,transparent)] text-center px-4">
-                <Mail size={28} className="text-[var(--color-muted)] mb-2 opacity-50" />
-                <p className="text-sm text-[var(--color-muted)]">Select a message to preview</p>
-              </div>
-            )}
-          </Card>
-
-          <Card className="min-w-0">
-            <h3 className="font-semibold mb-3">Transport</h3>
-            {transport ? (
-              <div className="space-y-2 text-sm">
-                <Badge variant={transport.configured ? "synced" : "danger"}>
-                  {transport.configured ? transport.transport : "not configured"}
-                </Badge>
-                {!transport.configured && transport.hint && (
-                  <p className="text-[var(--color-muted)] text-xs leading-relaxed">{transport.hint}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-[var(--color-muted)]">Unknown</p>
-            )}
-
-            <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-3">
-              <label className="block text-sm">
-                <span className="text-[var(--color-muted)]">Test recipient</span>
-                <input type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)} className={`${inputClass} mt-1`} />
-              </label>
+            {selected && (
               <button
                 type="button"
-                disabled={sending}
-                onClick={handleTest}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60 shadow-[0_8px_24px_rgba(124,92,255,0.25)]"
+                onClick={() => setPreviewExpanded(true)}
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--color-accent-2)] hover:underline"
               >
-                <Zap size={16} /> Send test email
+                <Expand size={14} /> Expand
               </button>
+            )}
+          </div>
+          {selected ? (
+            <MailboxMessagePreview message={selected} />
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[16rem] rounded-xl border border-dashed border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-base)_50%,transparent)] text-center px-4">
+              <Mail size={28} className="text-[var(--color-muted)] mb-2 opacity-50" />
+              <p className="text-sm text-[var(--color-muted)]">Select a message to preview</p>
             </div>
-          </Card>
-
-          <Card className="min-w-0">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Send size={18} className="text-[var(--color-accent-2)]" />
-              Compose
-            </h3>
-            <form onSubmit={handleSend} className="space-y-3">
-              <input type="email" value={to} onChange={(e) => setTo(e.target.value)} required placeholder="Recipient email" className={inputClass} />
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} required placeholder="Subject line" className={inputClass} />
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                required
-                rows={4}
-                placeholder="Message body (Lorapok Labs HTML template)"
-                className={`${inputClass} resize-y min-h-[6rem]`}
-              />
-              <button
-                type="submit"
-                disabled={sending}
-                className="w-full py-2.5 rounded-xl border border-[var(--color-border)] hover:bg-white/5 font-medium disabled:opacity-60"
-              >
-                Send message
-              </button>
-            </form>
-          </Card>
-        </div>
+          )}
+        </Card>
       </div>
 
       <Modal
-        open={Boolean(selected) && !isWide}
-        onClose={() => setSelected(null)}
-        title={selected?.subject ?? "Message"}
-        subtitle={
-          selected
-            ? `${selected.direction === "outbound" ? "To" : "From"} ${
-                selected.direction === "outbound" ? selected.to : selected.from
-              } · ${new Date(selected.ts).toLocaleString()}`
-            : undefined
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        title="Compose message"
+        subtitle="Outbound mail uses Lorapok Labs HTML template and secret scanning."
+        size="full"
+        footer={
+          <p className="text-xs text-[var(--color-muted)]">
+            Messages are logged in the mailbox and scanned for secrets before send.
+          </p>
         }
-        size="xl"
+      >
+        <form onSubmit={handleSend} className="space-y-4 max-w-3xl">
+          <label className="block text-sm">
+            <span className="text-[var(--color-muted)]">Recipient</span>
+            <input type="email" value={to} onChange={(e) => setTo(e.target.value)} required placeholder="name@example.com" className={`${inputClass} mt-1`} />
+          </label>
+          <label className="block text-sm">
+            <span className="text-[var(--color-muted)]">Subject</span>
+            <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} required placeholder="Subject line" className={`${inputClass} mt-1`} />
+          </label>
+          <label className="block text-sm">
+            <span className="text-[var(--color-muted)]">Message body</span>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              required
+              rows={12}
+              placeholder="Plain text body — rendered with Lorapok Labs email template on send."
+              className={`${inputClass} mt-1 resize-y min-h-[14rem] font-[family-name:var(--font-mono)]`}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={sending}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60"
+          >
+            <Send size={16} /> {sending ? "Sending…" : "Send message"}
+          </button>
+        </form>
+      </Modal>
+
+      <Modal
+        open={Boolean(selected) && (!isWide || previewExpanded)}
+        onClose={() => {
+          setSelected(null);
+          setPreviewExpanded(false);
+        }}
+        title={selected?.subject ?? "Message"}
+        subtitle={previewSubtitle}
+        size="full"
         footer={
           selected && (
             <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -455,7 +459,7 @@ export default function Mailbox() {
           )
         }
       >
-        {selected && <MessagePreview message={selected} />}
+        {selected && <MailboxMessagePreview message={selected} expanded />}
       </Modal>
     </div>
   );

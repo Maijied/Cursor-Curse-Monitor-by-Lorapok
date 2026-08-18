@@ -10,6 +10,7 @@ import DriftAlert from "../ui/DriftAlert";
 import DownloadBreakdownPanel from "../ui/DownloadBreakdown";
 import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
+import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
@@ -108,6 +109,8 @@ export default function Overview() {
       </div>
 
       <VisitorStatsPanel stats={visitors} live={visitorsLive} />
+
+      <ConnectedServicesCard />
 
       <Card>
         <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>
