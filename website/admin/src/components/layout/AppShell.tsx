@@ -22,6 +22,11 @@ import Settings from "../pages/Settings";
 import Team from "../Team";
 import NotFound from "../pages/NotFound";
 
+/**
+ * Renders the authenticated application shell and its routed pages.
+ *
+ * Redirects unauthenticated users to the login page and closes the mobile sidebar when the route changes.
+ */
 export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();

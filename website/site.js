@@ -96,6 +96,9 @@
   initLightbox();
 })();
 
+/**
+ * Initializes ecosystem tabs with accessible panel switching and automatic cycling.
+ */
 function initEcosystemTabs() {
   const tabs = [...document.querySelectorAll("[data-ecosystem-tab]")];
   const panels = [...document.querySelectorAll("[data-ecosystem-panel]")];
@@ -127,6 +130,9 @@ function initEcosystemTabs() {
   }, 8000);
 }
 
+/**
+ * Initializes the image lightbox and its controls for opening, closing, and navigating between images.
+ */
 function initLightbox() {
   const lightbox = document.getElementById("lightbox");
   const img = document.getElementById("lightbox-img");
