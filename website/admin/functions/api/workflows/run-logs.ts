@@ -1,5 +1,6 @@
 import { GITHUB_REPO, verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
 import { githubFetch } from "../_shared/github.js";
+import { buildWorkflowLogText } from "../_shared/workflow-logs.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -33,41 +34,22 @@ export async function onRequestGet(context) {
     })),
   }));
 
-  const logChunks = [];
-  let logsUnavailable = false;
-
+  const jobResults = [];
   for (const job of jobsData.jobs ?? []) {
     const logRes = await githubFetch(`/repos/${GITHUB_REPO}/actions/jobs/${job.id}/logs`, env, {
       redirect: "follow",
     });
-    if (logRes.ok) {
-      const text = await logRes.text();
-      logChunks.push(`=== ${job.name} ===\n${text}`);
-    } else {
-      logsUnavailable = true;
-      logChunks.push(`=== ${job.name} ===\n(log unavailable: HTTP ${logRes.status})`);
-    }
+    const body = logRes.ok ? await logRes.text() : "";
+    jobResults.push({ name: job.name, status: logRes.status, body });
   }
 
-  if (logsUnavailable && logChunks.every((chunk) => chunk.includes("(log unavailable"))) {
-    const runLogRes = await githubFetch(`/repos/${GITHUB_REPO}/actions/runs/${runId}/logs`, env, {
-      redirect: "follow",
-    });
-    if (runLogRes.ok) {
-      const archive = await runLogRes.text();
-      logChunks.length = 0;
-      logChunks.push(`=== Workflow run logs ===\n${archive}`);
-      logsUnavailable = false;
-    }
-  }
+  const { text, logsUnavailable, logsHint } = buildWorkflowLogText(jobResults);
 
   return jsonResponse({
     runId: Number(runId),
     jobs,
-    text: logChunks.join("\n\n").slice(-120_000),
+    text,
     logsUnavailable,
-    logsHint: logsUnavailable
-      ? "Logs need GITHUB_TOKEN with actions:read scope. Open the run in GitHub for full output."
-      : undefined,
+    logsHint,
   });
 }

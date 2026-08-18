@@ -310,10 +310,10 @@ jobs:
           elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
             node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
             CURRENT=$(node -p "require('./package.json').version")
-            echo "Current base version: $CURRENT — beta prerelease bump"
-            npm version prerelease --preid=beta --no-git-tag-version
+            echo "Current base version: $CURRENT — beta $BUMP_TYPE bump"
+            npm version $BUMP_TYPE --no-git-tag-version --preid=beta
             NEW_VERSION=$(node -p "require('./package.json').version")
-            echo "Auto-bumped beta prerelease: $NEW_VERSION"
+            echo "Auto-bumped beta $BUMP_TYPE: $NEW_VERSION"
           else
             node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
             CURRENT=$(node -p "require('./package.json').version")
@@ -534,9 +534,9 @@ jobs:
   # ───────────────────────────────────────────────────────────────────────────
   website:
     name: Deploy Website
-    # Run after deploy on main, or on regular main pushes when deploy was skipped.
+    # Only refresh public site-data after marketplace deploy succeeds.
     needs: [deploy]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always() && github.ref == 'refs/heads/main' && (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
     runs-on: ubuntu-latest
     environment:
       name: github-pages

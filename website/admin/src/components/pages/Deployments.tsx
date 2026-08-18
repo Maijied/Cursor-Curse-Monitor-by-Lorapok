@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { AlertTriangle, Package, Rocket, Undo2 } from "lucide-react";
 import {
   fetchTags,
@@ -54,8 +54,11 @@ export default function Deployments() {
   const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace">("Both");
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
+  const [dispatchedAfter, setDispatchedAfter] = useState(0);
+  const [displayLiveTag, setDisplayLiveTag] = useState<string | null>(null);
+  const [displayPkgVersion, setDisplayPkgVersion] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadTags = useCallback(() => {
     fetchTags()
       .then((data) => {
         const tagNames = data.tags ?? [];
@@ -83,6 +86,17 @@ export default function Deployments() {
         }
       });
   }, [siteData]);
+
+  useEffect(() => {
+    loadTags();
+  }, [loadTags]);
+
+  useEffect(() => {
+    if (!runtimeActive && liveTag) {
+      setDisplayLiveTag(liveTag);
+      setDisplayPkgVersion(siteData?.packageVersion ?? null);
+    }
+  }, [liveTag, runtimeActive, siteData?.packageVersion]);
 
   const filteredTags = tags.filter((t) => {
     if (channel === "production") return !/beta|alpha|rc/i.test(t);
@@ -121,6 +135,7 @@ export default function Deployments() {
         await triggerRelease(payload);
         const label = previewTag ?? "next version";
         setMessage({ type: "success", text: `Release triggered — will create ${label} (${market}).` });
+        setDispatchedAfter(Date.now());
         setRuntimeActive(true);
         setLastTargetTag(label);
       } catch (err: unknown) {
@@ -158,6 +173,7 @@ export default function Deployments() {
       }
       setRuntimeActive(true);
       setLastTargetTag(selectedTag);
+      setDispatchedAfter(Date.now());
     } catch (err: unknown) {
       setMessage({
         type: "error",
@@ -178,7 +194,15 @@ export default function Deployments() {
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
 
-  const pkgVersion = siteData?.packageVersion ?? "—";
+  const pkgVersion = displayPkgVersion ?? siteData?.packageVersion ?? "—";
+  const shownLiveTag = displayLiveTag ?? liveTag;
+
+  const handleRuntimeComplete = useCallback(
+    ({ success }: { success: boolean }) => {
+      if (success) loadTags();
+    },
+    [loadTags]
+  );
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
@@ -189,7 +213,10 @@ export default function Deployments() {
 
       <div className="glass-panel px-4 py-3 text-sm text-[var(--color-muted)] flex flex-wrap gap-x-4 gap-y-1">
         <span>
-          Live: <strong className="text-[var(--color-text)]">{liveTag ?? "unknown"}</strong>
+          Live: <strong className="text-[var(--color-text)]">{shownLiveTag ?? "unknown"}</strong>
+          {runtimeActive && previewTag && mode === "release" ? (
+            <span className="text-[var(--color-warn)]"> (pending {previewTag})</span>
+          ) : null}
         </span>
         <span>
           Latest tag: <strong className="text-[var(--color-text)]">{latestTag ?? "—"}</strong>
@@ -395,7 +422,13 @@ export default function Deployments() {
           />
         )}
 
-        <DeployRuntimePanel active={runtimeActive} workflowName={workflowName} targetTag={lastTargetTag} />
+        <DeployRuntimePanel
+          active={runtimeActive}
+          workflowName={workflowName}
+          targetTag={lastTargetTag}
+          dispatchedAfter={dispatchedAfter}
+          onComplete={handleRuntimeComplete}
+        />
       </Card>
     </div>
   );
