@@ -34,6 +34,8 @@ export async function onRequestGet(context) {
   }));
 
   const logChunks = [];
+  let logsUnavailable = false;
+
   for (const job of jobsData.jobs ?? []) {
     const logRes = await githubFetch(`/repos/${GITHUB_REPO}/actions/jobs/${job.id}/logs`, env, {
       redirect: "follow",
@@ -42,7 +44,20 @@ export async function onRequestGet(context) {
       const text = await logRes.text();
       logChunks.push(`=== ${job.name} ===\n${text}`);
     } else {
+      logsUnavailable = true;
       logChunks.push(`=== ${job.name} ===\n(log unavailable: HTTP ${logRes.status})`);
+    }
+  }
+
+  if (logsUnavailable && logChunks.every((chunk) => chunk.includes("(log unavailable"))) {
+    const runLogRes = await githubFetch(`/repos/${GITHUB_REPO}/actions/runs/${runId}/logs`, env, {
+      redirect: "follow",
+    });
+    if (runLogRes.ok) {
+      const archive = await runLogRes.text();
+      logChunks.length = 0;
+      logChunks.push(`=== Workflow run logs ===\n${archive}`);
+      logsUnavailable = false;
     }
   }
 
@@ -50,5 +65,9 @@ export async function onRequestGet(context) {
     runId: Number(runId),
     jobs,
     text: logChunks.join("\n\n").slice(-120_000),
+    logsUnavailable,
+    logsHint: logsUnavailable
+      ? "Logs need GITHUB_TOKEN with actions:read scope. Open the run in GitHub for full output."
+      : undefined,
   });
 }

@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { GENERATED_DEV_NOTICE } from "./functions/api/_shared/notices.js";
+import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
+import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -137,6 +139,66 @@ async function triggerRollback(body) {
   return dispatchGithubWorkflow("deployment.yml", body, "Rollback triggered");
 }
 
+const VERSION_TYPE_INPUTS = {
+  patch: "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)",
+  minor: "minor - New Feature (e.g. v0.8.0)",
+  major: "major - Production / Breaking (e.g. v1.0.0)",
+  custom: "custom - Specify exact version below",
+};
+
+async function triggerRelease(body) {
+  const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
+  const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
+  const bumpKey = String(body.version_type ?? body.bump_type ?? "patch");
+  const versionTypeInput = VERSION_TYPE_INPUTS[bumpKey] ?? String(body.version_type ?? "");
+  const customVersion = String(body.custom_version ?? "").trim();
+  if (!publishMarket) throw new Error("Invalid publish_market");
+  if (!releaseChannel) throw new Error("Invalid release_channel");
+  if (!versionTypeInput) throw new Error("Invalid version_type");
+  if (versionTypeInput.startsWith("custom") && !customVersion) {
+    throw new Error("custom_version is required for custom releases");
+  }
+
+  const githubToken = loadGithubToken();
+  if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
+
+  const githubRes = await fetch(
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/ci-cd.yml/dispatches`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${githubToken}`,
+        "User-Agent": "cursor-usage-monitor-dev",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({
+        ref: "main",
+        inputs: {
+          version_type: versionTypeInput,
+          custom_version: customVersion,
+          publish_market: publishMarket,
+          release_channel: releaseChannel,
+        },
+      }),
+    }
+  );
+
+  if (!githubRes.ok) {
+    throw new Error(`Failed to trigger ci-cd.yml (${githubRes.status})`);
+  }
+
+  return {
+    success: true,
+    message: "Release workflow triggered successfully",
+    workflow: "ci-cd.yml",
+    version_type: bumpKey,
+    custom_version: customVersion,
+    publish_market: publishMarket,
+    release_channel: releaseChannel,
+  };
+}
+
 function loadGithubToken() {
   if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
   const envPath = resolve(rootDir, ".env");
@@ -173,23 +235,31 @@ function readCachedTags() {
   return [];
 }
 
+function readLiveTag() {
+  try {
+    const data = JSON.parse(readFileSync(siteDataPath, "utf8"));
+    return liveTagFromSiteData(data);
+  } catch {
+    return null;
+  }
+}
+
 async function fetchGitHubTags() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=30`, {
     headers: githubHeaders(),
   });
+  const liveTag = readLiveTag();
   if (res.ok) {
     const data = await res.json();
-    return {
-      tags: Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [],
-      source: "github",
-    };
+    const raw = Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [];
+    return { ...enrichTags(filterPublishableTags(raw), liveTag), source: "github" };
   }
   const cached = readCachedTags();
   if (cached.length > 0) {
     const msg = res.status === 403
       ? "GitHub API rate limit — using cached tags from site-data.json. Add GITHUB_TOKEN to website/admin/.env"
       : `GitHub tags ${res.status} — using cached tags from site-data.json`;
-    return { tags: cached, source: "cache", warning: msg };
+    return { ...enrichTags(filterPublishableTags(cached), liveTag), source: "cache", warning: msg };
   }
   if (res.status === 403) {
     throw new Error("GitHub API rate limit exceeded. Add GITHUB_TOKEN to website/admin/.env and restart npm run dev.");
@@ -694,6 +764,27 @@ export function createDevApiMiddleware() {
             logDevActivity(req, 200);
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ ...result, message: "Rollback triggered" }));
+          })
+          .catch((err) => {
+            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
+            logDevActivity(req, code);
+            res.statusCode = code;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: err.message }));
+          });
+      });
+      return;
+    }
+
+    if (url === "/api/release" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        triggerRelease(JSON.parse(body || "{}"))
+          .then((result) => {
+            logDevActivity(req, 200);
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result));
           })
           .catch((err) => {
             const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;

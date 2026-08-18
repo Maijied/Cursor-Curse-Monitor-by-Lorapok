@@ -297,7 +297,8 @@ jobs:
         run: |
           # Extract the base action type (e.g. "patch" from "patch - Bug fix...")
           BUMP_TYPE=$(echo "${{ inputs.version_type }}" | awk '{print $1}')
-          
+          CHANNEL="${{ inputs.release_channel }}"
+
           if [ "$BUMP_TYPE" == "custom" ]; then
             if [ -z "${{ inputs.custom_version }}" ]; then
               echo "Error: custom_version is required when version_type is custom."
@@ -305,22 +306,24 @@ jobs:
             fi
             NEW_VERSION="${{ inputs.custom_version }}"
             echo "Using custom version: $NEW_VERSION"
+            npm version --no-git-tag-version "$NEW_VERSION"
+          elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
+            node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+            CURRENT=$(node -p "require('./package.json').version")
+            echo "Current base version: $CURRENT — beta prerelease bump"
+            npm version prerelease --preid=beta --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            echo "Auto-bumped beta prerelease: $NEW_VERSION"
           else
-            # Strip pre-release suffixes from package.json first to ensure clean bump
             node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
             CURRENT=$(node -p "require('./package.json').version")
             echo "Current base version: $CURRENT"
-            npm version $BUMP_TYPE --no-git-tag-version --preid=beta
+            npm version $BUMP_TYPE --no-git-tag-version
             NEW_VERSION=$(node -p "require('./package.json').version")
             echo "Auto-bumped $BUMP_TYPE: $NEW_VERSION"
           fi
 
           TAG="v$NEW_VERSION"
-          
-          # Only run npm version again if we used custom (to actually set the package.json)
-          if [ "$BUMP_TYPE" == "custom" ]; then
-             npm version --no-git-tag-version "$NEW_VERSION"
-          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

@@ -104,6 +104,10 @@ export default function DeployRuntimePanel({ active, workflowName, targetTag, on
         </div>
       )}
 
+      {logs?.logsHint && (
+        <Notification tone="warning" message={logs.logsHint} />
+      )}
+
       {logs?.jobs?.length ? (
         <div className="flex flex-wrap gap-2">
           {logs.jobs.map((job) => (

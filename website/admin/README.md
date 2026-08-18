@@ -141,7 +141,7 @@ Public Firebase config ships in `.env` for local auth. Production secrets are se
 
 | Variable | Purpose |
 |----------|---------|
-| `GITHUB_TOKEN` | Workflow dispatch + GraphQL |
+| `GITHUB_TOKEN` | Workflow dispatch, runtime logs (`actions:read`), GraphQL |
 | `FIREBASE_PROJECT_ID` | `cursor-curse-by-lorapok` |
 | `ADMIN_MASTER_EMAIL` | Master admin bypass |
 | `SITE_DATA_URL` | Marketing `site-data.json` URL |

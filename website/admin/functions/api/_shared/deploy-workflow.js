@@ -138,3 +138,55 @@ export async function dispatchRollbackWorkflow(env, body, successMessage) {
 export async function dispatchDeploymentWorkflow(env, body, successMessage) {
   return dispatchRollbackWorkflow(env, body, successMessage);
 }
+
+const VERSION_TYPE_INPUTS = {
+  patch: "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)",
+  minor: "minor - New Feature (e.g. v0.8.0)",
+  major: "major - Production / Breaking (e.g. v1.0.0)",
+  custom: "custom - Specify exact version below",
+};
+
+/**
+ * New release — bump package.json, create tag, publish via ci-cd.yml.
+ * @param {Record<string, unknown>} env
+ * @param {Record<string, unknown>} body
+ * @param {string} successMessage
+ */
+export async function dispatchReleaseWorkflow(env, body, successMessage) {
+  const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
+  const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
+  const bumpKey = String(body.version_type ?? body.bump_type ?? "patch");
+  const versionTypeInput = VERSION_TYPE_INPUTS[bumpKey] ?? String(body.version_type ?? "");
+  const customVersion = String(body.custom_version ?? "").trim();
+
+  if (!publishMarket) {
+    return jsonResponse({ error: "Invalid publish_market" }, 400);
+  }
+  if (!releaseChannel) {
+    return jsonResponse({ error: "Invalid release_channel" }, 400);
+  }
+  if (!versionTypeInput) {
+    return jsonResponse({ error: "Invalid version_type" }, 400);
+  }
+  if (versionTypeInput.startsWith("custom") && !customVersion) {
+    return jsonResponse({ error: "custom_version is required for custom releases" }, 400);
+  }
+
+  return dispatchWorkflow(
+    env,
+    "ci-cd.yml",
+    {
+      version_type: versionTypeInput,
+      custom_version: customVersion,
+      publish_market: publishMarket,
+      release_channel: releaseChannel,
+    },
+    successMessage,
+    {
+      version_type: bumpKey,
+      custom_version: customVersion,
+      publish_market: publishMarket,
+      release_channel: releaseChannel,
+    }
+  );
+}
