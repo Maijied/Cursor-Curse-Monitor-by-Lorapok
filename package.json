@@ -1,15 +1,33 @@
 {
   "name": "cursor-curse-monitor-by-lorapok",
+  "workspaces": [
+    "packages/shared",
+    "browser-extension"
+  ],
   "displayName": "Cursor Curse Monitor by Lorapok",
-  "description": "Live Cursor usage dashboard — limits, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.11",
   "publisher": "LorapokLabs",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "icon": "media/icon.png",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
     "email": "mdshuvo40@gmail.com",
-    "url": "https://lorapok.tech"
+    "url": "https://github.com/Maijied"
+  },
+  "contributors": [
+    {
+      "name": "Lorapok Labs",
+      "email": "lorapokdev@gmail.com",
+      "url": "https://lorapok.tech"
+    }
+  ],
+  "company": {
+    "name": "Lorapok Labs",
+    "email": "lorapokdev@gmail.com",
+    "supportEmail": "cursor-contact@lorapok.tech",
+    "website": "https://lorapok.tech",
+    "adminUrl": "https://cursor-dev.lorapok.tech"
   },
   "repository": {
     "type": "git",
@@ -33,7 +51,11 @@
     "budget",
     "monitor",
     "composer",
-    "curse"
+    "quota",
+    "curse",
+    "browser extension",
+    "firefox",
+    "security"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -55,6 +77,16 @@
       {
         "command": "cursorCurseMonitor.applyFallbackModel",
         "title": "Cursor Curse Monitor: Apply Free Fallback Model",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.scanWorkspace",
+        "title": "Cursor Curse Monitor: Scan Workspace for Secrets",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.scanClipboard",
+        "title": "Cursor Curse Monitor: Scan Clipboard for Secrets",
         "category": "Cursor Curse Monitor"
       }
     ],
@@ -95,7 +127,7 @@
         "cursorCurseMonitor.autoApplyFallbackModel": {
           "type": "boolean",
           "default": false,
-          "description": "When usage is at 100%, automatically set Composer 2.5 (Fast off) as the agent model. Off by default: this updates Cursor's state.vscdb in place via SQLite and should only be used when limits are exceeded."
+          "description": "When usage is at 100%, apply Composer 2.5 (Fast off) after Cursor/VS Code is fully quit (quit-then-write with WAL/SHM backup). Never writes while the editor is running."
         },
         "cursorCurseMonitor.showStatusBar": {
           "type": "boolean",
@@ -123,14 +155,36 @@
           "minimum": 1,
           "maximum": 100,
           "description": "Show a warning notification when usage reaches this percentage."
+        },
+        "cursorCurseMonitor.anonymousUsageStats": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt-in anonymous usage heartbeat. Sends a once-per-day ping with a random install ID, OS, and host editor (Cursor/VS Code) only. Off by default. No paths, tokens, emails, or workspace names are sent."
+        },
+        "cursorCurseMonitor.securityScanEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan workspace files for exposed credentials and show security alerts."
+        },
+        "cursorCurseMonitor.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan files when saving for potential credentials."
+        },
+        "cursorCurseMonitor.blockSaveOnSecret": {
+          "type": "boolean",
+          "default": false,
+          "description": "Block saving files that contain detected credentials (warn-only when false)."
         }
       }
     }
   },
   "scripts": {
-    "test": "node tests/test_fallback.js && node tests/test_auth_read.js",
+    "test": "node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && npm run browser-ext:test",
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./",
+    "browser-ext:build": "npm run build -w browser-extension",
+    "browser-ext:test": "npm run test -w browser-extension",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
     "validate:assets": "node scripts/validate-assets.mjs",
@@ -141,14 +195,29 @@
     "verify:marketplace": "node scripts/verify-marketplace-sync.mjs --strict",
     "site:data": "node scripts/generate-site-data.mjs",
     "site:seo": "node scripts/generate-seo.mjs",
-    "site:seo:validate": "node scripts/validate-seo.mjs"
+    "site:seo:validate": "node scripts/validate-seo.mjs",
+    "security:scan": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",
+    "validate:reinstall": "node scripts/validate-reinstall.mjs",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@lorapok/cursor-monitor-shared": "file:packages/shared"
   },
   "devDependencies": {
+    "@secretlint/secretlint-rule-preset-recommend": "^10.2.2",
+    "husky": "^9.1.7",
+    "secretlint": "^10.2.2",
     "@types/node": "^22.10.0",
     "@types/vscode": "^1.93.0",
     "@vscode/vsce": "^3.2.1",
     "ovsx": "^0.10.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "@vscode/vsce-sign@2.0.9": true,
+    "keytar@7.9.0": true,
+    "spawn-sync@1.0.15": true
   }
 }

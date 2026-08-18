@@ -1,18 +1,25 @@
 import * as vscode from "vscode";
 import {
   applyComposerFallbackModel,
+  cursorDbExists,
+  detectEditorHost,
   readCachedAccountEmail,
   readCursorAccessToken,
 } from "./cursorAuth";
 import {
+  appendUsageHistory,
   buildBudgetMetrics,
   buildFeatureList,
   DashboardSnapshot,
   fetchStripeProfile,
   fetchUsageSummary,
   isLimitExceeded,
+  UsageHistoryPoint,
 } from "./cursorApi";
+import { emptyLocalInsights, readLocalInsights } from "./cursorLocalStore";
 import { NotificationProvider } from "./notificationProvider";
+
+const USAGE_HISTORY_KEY = "usageHistoryV1";
 
 type SnapshotListener = (snapshot: DashboardSnapshot) => void;
 
@@ -86,7 +93,24 @@ export class UsageMonitorService implements vscode.Disposable {
       onDemandSpendUsd: 0,
       budget: null,
       features: [],
+      host: detectEditorHost(vscode.env.appName),
+      cursorMissing: !cursorDbExists(),
+      local: emptyLocalInsights(),
+      history: this.loadHistory(),
     };
+
+    if (snapshot.cursorMissing) {
+      snapshot.error =
+        "Cursor storage database not found. Install or open Cursor, sign in, then refresh. Monitoring stays read-only until the database exists.";
+      this.publish(snapshot);
+      return snapshot;
+    }
+
+    try {
+      snapshot.local = readLocalInsights();
+    } catch {
+      snapshot.local = emptyLocalInsights();
+    }
 
     try {
       const token = await readCursorAccessToken();
@@ -110,20 +134,18 @@ export class UsageMonitorService implements vscode.Disposable {
         snapshot.limitExceeded
       );
       snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
+      snapshot.history = this.recordHistory(snapshot);
 
-      const percent = snapshot.budget?.hasUsdBudget
-        ? snapshot.budget.budgetPercentUsed ?? snapshot.budget.percentUsed
-        : snapshot.usage.individualUsage.plan.totalPercentUsed;
+      const percent = snapshot.budget.percentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {
         this.warnedAtThreshold = true;
-        const budgetMsg = snapshot.budget?.hasUsdBudget
-          ? `Budget usage is at ${Math.round(percent)}% ($${snapshot.budget?.spentUsd?.toFixed(2) ?? "0"} / $${snapshot.budget?.capUsd?.toFixed(2) ?? "0"}).`
+        const budgetMsg = snapshot.budget.usdBudgetActive
+          ? `Budget usage is at ${Math.round(snapshot.budget.budgetPercentUsed)}% ($${snapshot.budget.spentUsd.toFixed(2)} / $${snapshot.budget.capUsd.toFixed(2)}).`
           : `Cursor usage is at ${Math.round(percent)}%.`;
         NotificationProvider.show({
           title: "Usage Warning",
           message: `${budgetMsg} Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
           type: "warning",
-          duration: 6000,
           actions: [
             {
               label: "Apply Fallback",
@@ -131,7 +153,6 @@ export class UsageMonitorService implements vscode.Disposable {
                 void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
               },
             },
-            { label: "Dismiss", action: () => {} },
           ],
         });
       }
@@ -144,29 +165,30 @@ export class UsageMonitorService implements vscode.Disposable {
         snapshot.fallbackApplied = result.success;
         if (result.success && !this.fallbackAppliedThisCycle) {
           this.fallbackAppliedThisCycle = true;
-          
+
           if (!result.alreadySet) {
             NotificationProvider.show({
               title: "Fallback Applied",
               message: "Usage limit reached. Switched agent model to Composer 2.5 (Fast off) for free fallback.",
               type: "success",
-              duration: 10000,
               actions: [
-                { label: "Reload Window (Apply)", action: () => void vscode.commands.executeCommand("workbench.action.reloadWindow") },
-                { label: "Dismiss", action: () => {} },
+                {
+                  label: "Reload Window (Apply)",
+                  action: () => void vscode.commands.executeCommand("workbench.action.reloadWindow"),
+                },
               ],
             });
           }
         } else if (!result.success && result.error) {
-          // Show error to user but continue monitoring
           NotificationProvider.show({
             title: "Fallback Failed",
             message: `Failed to apply fallback model: ${result.error}. Extension will continue monitoring usage.`,
             type: "error",
-            duration: 7000,
             actions: [
-              { label: "Retry", action: () => void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel") },
-              { label: "Dismiss", action: () => {} },
+              {
+                label: "Retry",
+                action: () => void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel"),
+              },
             ],
           });
         }
@@ -178,11 +200,37 @@ export class UsageMonitorService implements vscode.Disposable {
         error instanceof Error ? error.message : "Unknown refresh error";
     }
 
+    this.publish(snapshot);
+    return snapshot;
+  }
+
+  private loadHistory(): UsageHistoryPoint[] {
+    const stored = this.context.globalState.get<UsageHistoryPoint[]>(USAGE_HISTORY_KEY, []);
+    return Array.isArray(stored) ? stored : [];
+  }
+
+  private recordHistory(snapshot: DashboardSnapshot): UsageHistoryPoint[] {
+    const budget = snapshot.budget;
+    if (!budget) {
+      return this.loadHistory();
+    }
+    const next: UsageHistoryPoint = {
+      t: Date.now(),
+      includedPercent: budget.percentUsed,
+      auto: budget.autoPercentUsed,
+      api: budget.apiPercentUsed,
+      spentUsd: budget.spentUsd,
+    };
+    const merged = appendUsageHistory(this.loadHistory(), next);
+    void this.context.globalState.update(USAGE_HISTORY_KEY, merged);
+    return merged;
+  }
+
+  private publish(snapshot: DashboardSnapshot): void {
     this.lastSnapshot = snapshot;
     for (const listener of this.listeners) {
       listener(snapshot);
     }
-    return snapshot;
   }
 
   private schedule(): void {

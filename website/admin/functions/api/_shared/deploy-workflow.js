@@ -156,7 +156,10 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
   const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
   const bumpKey = String(body.version_type ?? body.bump_type ?? "patch");
-  const versionTypeInput = VERSION_TYPE_INPUTS[bumpKey] ?? String(body.version_type ?? "");
+  if (!(bumpKey in VERSION_TYPE_INPUTS)) {
+    return jsonResponse({ error: "Invalid version_type" }, 400);
+  }
+  const versionTypeInput = VERSION_TYPE_INPUTS[bumpKey];
   const customVersion = String(body.custom_version ?? "").trim();
 
   if (!publishMarket) {
@@ -164,9 +167,6 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
   }
   if (!releaseChannel) {
     return jsonResponse({ error: "Invalid release_channel" }, 400);
-  }
-  if (!versionTypeInput) {
-    return jsonResponse({ error: "Invalid version_type" }, 400);
   }
   if (versionTypeInput.startsWith("custom") && !customVersion) {
     return jsonResponse({ error: "custom_version is required for custom releases" }, 400);

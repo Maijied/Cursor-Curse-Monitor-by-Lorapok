@@ -199,6 +199,7 @@ export default function Deployments() {
 
   const handleRuntimeComplete = useCallback(
     ({ success }: { success: boolean }) => {
+      setRuntimeActive(false);
       if (success) loadTags();
     },
     [loadTags]

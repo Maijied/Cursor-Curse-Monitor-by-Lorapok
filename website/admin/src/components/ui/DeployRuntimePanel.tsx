@@ -86,10 +86,10 @@ export default function DeployRuntimePanel({
           setError(null);
         }
 
+        const finished = match?.status === "completed";
         const shouldPoll = Date.now() - startedAt < 15 * 60 * 1000;
-        if (shouldPoll && !cancelled) {
-          const finished = match?.status === "completed";
-          window.setTimeout(poll, finished ? 8000 : 4000);
+        if (shouldPoll && !cancelled && !finished) {
+          window.setTimeout(poll, 4000);
         }
       } catch (err: unknown) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load workflow status");

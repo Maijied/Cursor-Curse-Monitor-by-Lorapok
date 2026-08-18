@@ -4,10 +4,10 @@ import { githubFetch } from "./_shared/github.js";
 import { fetchSiteData, liveTagFromSiteData, tagsFromSiteData } from "./_shared/site-data.js";
 import { enrichTags, filterPublishableTags } from "./_shared/publishable-tags.js";
 
-async function buildTagsPayload(env, rawTags, source, warning) {
+async function buildTagsPayload(env, rawTags, source, warning, siteDataOverride) {
   let liveTag = null;
   try {
-    const siteData = await fetchSiteData(env);
+    const siteData = siteDataOverride ?? (await fetchSiteData(env));
     liveTag = liveTagFromSiteData(siteData);
   } catch {
     /* liveTag stays null */
@@ -41,7 +41,7 @@ export async function onRequestGet(context) {
         res.status === 403
           ? "GitHub API rate limit — using cached tags from site-data.json"
           : `GitHub tags ${res.status} — using cached tags from site-data.json`;
-      const payload = await buildTagsPayload(env, cached, "cache", warning);
+      const payload = await buildTagsPayload(env, cached, "cache", warning, siteData);
       const response = jsonResponse(payload, 200);
       return logAuthenticatedRequest(context, auth, response, startedAt);
     }
