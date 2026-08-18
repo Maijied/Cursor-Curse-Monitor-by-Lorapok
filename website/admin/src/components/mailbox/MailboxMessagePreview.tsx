@@ -60,6 +60,8 @@ export default function MailboxMessagePreview({ message, expanded = false }: Mai
             srcDoc={message.html}
             className={`w-full bg-white ${iframeHeight}`}
             sandbox=""
+            referrerPolicy="no-referrer"
+            {...({ csp: "default-src 'none'; style-src 'unsafe-inline'; img-src data:;" } as React.IframeHTMLAttributes<HTMLIFrameElement>)}
           />
         </div>
       ) : null}

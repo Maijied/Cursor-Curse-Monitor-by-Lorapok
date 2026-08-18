@@ -49,7 +49,7 @@ export default function MarketplaceHealth() {
 
       {live && (
         <>
-          {siteData && <ChannelSyncStrip data={siteData} />}
+          <ChannelSyncStrip channels={live.channels} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {siteData && <SyncRadar data={siteData} />}

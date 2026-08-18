@@ -59,7 +59,7 @@ function interpolate(text, vars) {
 }
 
 const siteData = readSiteData();
-const version = siteData?.packageVersion ?? siteData?.version ?? pkg.version;
+const version = siteData?.version ?? pkg.version;
 const generatedAt = new Date().toISOString();
 
 const vars = {
