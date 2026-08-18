@@ -22,10 +22,14 @@ describe("dev API middleware", () => {
   it("serves /api/health", async () => {
     const app = createDevApiMiddleware();
     const server = http.createServer((req, res: http.ServerResponse) => app(req, res, () => { res.statusCode = 404; res.end(); }));
-    await new Promise<void>((resolve) => server.listen(9877, resolve));
-    const { status, body } = await request(9877, "/api/health");
-    server.close();
-    expect(status).toBe(200);
-    expect(body).toHaveProperty("checks");
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+    const port = (server.address() as { port: number }).port;
+    try {
+      const { status, body } = await request(port, "/api/health");
+      expect(status).toBe(200);
+      expect(body).toHaveProperty("checks");
+    } finally {
+      server.close();
+    }
   });
 });

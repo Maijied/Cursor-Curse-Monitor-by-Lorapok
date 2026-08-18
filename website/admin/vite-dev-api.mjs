@@ -371,18 +371,25 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/health" && req.method === "GET") {
-      fetch("https://api.github.com/zen", { headers: githubHeaders() })
-        .then((gh) => {
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({
-            ok: gh.ok,
-            checks: { github: gh.ok, timestamp: new Date().toISOString() },
+      const respond = (githubOk) => {
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            ok: githubOk,
+            checks: { github: githubOk, timestamp: new Date().toISOString() },
             firebaseProject: "cursor-curse-by-lorapok",
             githubTokenConfigured: Boolean(loadGithubToken()),
             adminKvConfigured: true,
             siteDataUrl: "/site-data.json",
-          }));
-        });
+          })
+        );
+      };
+      fetch("https://api.github.com/zen", {
+        headers: githubHeaders(),
+        signal: AbortSignal.timeout(3000),
+      })
+        .then((gh) => respond(gh.ok))
+        .catch(() => respond(false));
       return;
     }
 
