@@ -22,6 +22,12 @@
     const setHref = (sel, href) => {
       $$(sel).forEach((el) => { el.href = href; });
     };
+    const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toLocaleString());
+
+    // KPI strip (downloads + engagement)
+    setText("[data-downloads-total]", fmt(data.downloads?.total));
+    setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
+    setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
 
     // Core version data
     setText("[data-version]", data.version);
@@ -43,6 +49,11 @@
     setHref("[data-href-release]", data.github.releaseUrl);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
+    setHref("[data-href-firefox]", data.browserExtension?.firefox?.url ?? "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/");
+    setHref(
+      "[data-href-chrome-zip]",
+      data.browserExtension?.chrome?.zipUrl ?? data.github?.chromeZipUrl ?? data.github?.releaseUrl ?? "#"
+    );
 
     // Install commands
     const cmd = (id, text) => {

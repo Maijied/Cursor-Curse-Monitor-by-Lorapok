@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T07:53:18.945Z",
+  "generatedAt": "2026-08-18T11:11:00.388Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.11",
@@ -18,10 +18,10 @@
     "url": "https://github.com/Maijied"
   },
   "downloads": {
-    "total": 2461,
+    "total": 2473,
     "breakdown": {
-      "openVsxCanonical": 2458,
-      "openVsxDuplicate": 752,
+      "openVsxCanonical": 2470,
+      "openVsxDuplicate": 754,
       "vscodeMarketplace": 0,
       "githubVsix": 3,
       "latestReleaseVsix": 0
@@ -29,16 +29,17 @@
     "note": "Total excludes duplicate Open VSX namespace to avoid double-counting."
   },
   "visitors": {
-    "websiteVisits": 0,
+    "websiteVisits": 37,
     "packageClicks": {
-      "ovsx": 0,
+      "ovsx": 3,
       "vscode": 0,
       "github": 0,
       "vsix": 0,
       "openvsxDuplicate": 0
     },
-    "totalEngagement": 0,
-    "updatedAt": null
+    "totalEngagement": 40,
+    "updatedAt": "2026-08-18T09:14:48.984Z",
+    "source": "firestore"
   },
   "community": {
     "discussionsEnabled": true,
@@ -64,7 +65,7 @@
     "version": "0.5.11",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 2458,
+    "downloadCount": 2470,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -73,7 +74,7 @@
     "version": "0.5.4",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 752,
+    "downloadCount": 754,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
@@ -116,7 +117,21 @@
     "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.11/cursor-curse-monitor-by-lorapok-0.5.11.vsix",
     "vsixDownloadCount": 0,
     "totalReleaseDownloads": 3,
-    "publishedAt": "2026-08-18T01:42:14Z"
+    "publishedAt": "2026-08-18T01:42:14Z",
+    "chromeZipUrl": null,
+    "chromeZipName": null
+  },
+  "browserExtension": {
+    "version": "0.5.9",
+    "firefox": {
+      "url": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+      "published": true
+    },
+    "chrome": {
+      "zipUrl": null,
+      "zipName": null,
+      "webStorePublished": false
+    }
   },
   "install": {
     "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",

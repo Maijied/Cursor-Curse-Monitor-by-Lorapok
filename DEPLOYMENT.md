@@ -196,7 +196,8 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
    - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
 4. **DNS:** CNAME `cursor-dev.lorapok.tech` → `cursor-monitor-admin-2x8.pages.dev` (proxied)
 5. **Firebase Console → Auth → Authorized domains:** add `cursor-dev.lorapok.tech` and your `*.pages.dev` host.
-6. **Email (outbound):** Enable Cloudflare Email Sending for `lorapok.tech`:
+6. **Firebase magic link:** Authentication → Sign-in method → Email/Password → enable **Email link (passwordless sign-in)**. Or run `node scripts/enable-firebase-email-link.mjs` with `gcloud` authenticated.
+7. **Email (outbound):** Enable Cloudflare Email Sending for `lorapok.tech`:
    ```bash
    cd website/admin
    npx wrangler email sending enable lorapok.tech

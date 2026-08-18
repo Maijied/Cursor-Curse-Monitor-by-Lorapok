@@ -104,6 +104,13 @@ export interface SiteData {
     tags?: string[];
     vsixDownloadCount?: number;
     totalReleaseDownloads?: number;
+    chromeZipUrl?: string | null;
+    chromeZipName?: string | null;
+  };
+  browserExtension?: {
+    version: string | null;
+    firefox?: { url: string; published: boolean };
+    chrome?: { zipUrl: string | null; zipName?: string | null; webStorePublished: boolean };
   };
 }
 
