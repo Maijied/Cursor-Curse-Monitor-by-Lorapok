@@ -4,8 +4,17 @@ import { formatCount } from "../../lib/site-data";
 import Badge from "./Badge";
 import Card from "./Card";
 
-export default function ChannelSyncStrip({ data }: { data: SiteData }) {
-  const channels = buildSyncChannels(data);
+type Channel = {
+  id: string;
+  label: string;
+  version: string | null;
+  downloadCount?: number;
+  synced: boolean;
+  warn?: boolean;
+};
+
+export default function ChannelSyncStrip({ data, channels: providedChannels }: { data?: SiteData; channels?: Channel[] }) {
+  const channels = providedChannels ?? (data ? buildSyncChannels(data) : []);
   const allSynced = channels.filter((c) => !c.warn).every((c) => c.synced);
 
   return (

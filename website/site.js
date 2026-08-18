@@ -117,14 +117,19 @@ function initEcosystemTabs() {
     });
   };
 
+  let rotationActive = true;
+
   tabs.forEach((tab) => {
-    tab.addEventListener("click", () => activate(tab.dataset.ecosystemTab || "ide"));
+    tab.addEventListener("click", () => {
+      rotationActive = false;
+      activate(tab.dataset.ecosystemTab || "ide");
+    });
   });
 
   let i = 0;
   const ids = tabs.map((t) => t.dataset.ecosystemTab).filter(Boolean);
   setInterval(() => {
-    if (document.hidden || !ids.length) return;
+    if (document.hidden || !ids.length || !rotationActive) return;
     i = (i + 1) % ids.length;
     activate(ids[i]);
   }, 8000);
