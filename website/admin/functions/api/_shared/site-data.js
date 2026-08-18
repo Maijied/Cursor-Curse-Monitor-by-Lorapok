@@ -20,3 +20,9 @@ export function tagsFromSiteData(data) {
 export function packageVersionFromSiteData(data) {
   return String(data?.packageVersion ?? data?.version ?? "").replace(/^v/, "");
 }
+
+export function liveTagFromSiteData(data) {
+  if (data?.github?.releaseTag) return String(data.github.releaseTag);
+  if (data?.packageVersion) return `v${packageVersionFromSiteData(data)}`;
+  return null;
+}

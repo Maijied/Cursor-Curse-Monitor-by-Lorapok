@@ -127,12 +127,24 @@ function publishVsix(vsixPath, preRelease) {
   const publishArgs = ["ovsx", "publish", "-i", vsixPath, "-p", token];
   if (preRelease) publishArgs.push("--pre-release");
 
-  const result = spawnSync("npx", publishArgs, { encoding: "utf8" });
-  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-  if (result.status !== 0) {
-    throw new Error(output.trim() || `ovsx publish failed (${result.status})`);
+  const maxAttempts = 3;
+  let lastError = "";
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const result = spawnSync("npx", publishArgs, { encoding: "utf8" });
+    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+    if (result.status === 0) return output;
+    if (/already published/i.test(output)) {
+      console.warn("::warning::Version already on Open VSX — treating as success");
+      return output;
+    }
+    lastError = output.trim() || `ovsx publish failed (${result.status})`;
+    const retryable = /504|gateway timeout|502|503|ETIMEDOUT|ECONNRESET/i.test(output);
+    if (!retryable || attempt === maxAttempts) break;
+    const waitMs = attempt * 15000;
+    console.warn(`::warning::Open VSX publish attempt ${attempt} failed (${lastError.slice(0, 120)}). Retrying in ${waitMs / 1000}s…`);
+    spawnSync("sleep", [`${waitMs / 1000}`]);
   }
-  return output;
+  throw new Error(lastError);
 }
 
 async function main() {
@@ -154,6 +166,12 @@ async function main() {
     }
 
     const target = version.replace(/^v/, "");
+    const canonicalLatest = await fetchCanonicalLatest();
+    if (canonicalLatest === target) {
+      console.warn(`::warning::Version ${target} is already live on Open VSX (${OVSX_PUBLISHER}) — skipping publish`);
+      return;
+    }
+
     const dupRes = await fetch(`https://open-vsx.org/api/${VSCE_PUBLISHER}/${EXT_NAME}`, {
       headers: { Accept: "application/json" },
     });
