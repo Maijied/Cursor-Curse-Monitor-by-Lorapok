@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-17T19:57:23.204Z",
+  "generatedAt": "2026-08-18T00:44:16.758Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.9",
@@ -18,10 +18,10 @@
     "url": "https://github.com/Maijied"
   },
   "downloads": {
-    "total": 2199,
+    "total": 2201,
     "breakdown": {
-      "openVsxCanonical": 2196,
-      "openVsxDuplicate": 748,
+      "openVsxCanonical": 2198,
+      "openVsxDuplicate": 750,
       "vscodeMarketplace": 0,
       "githubVsix": 3,
       "latestReleaseVsix": 0
@@ -29,7 +29,7 @@
     "note": "Total excludes duplicate Open VSX namespace to avoid double-counting."
   },
   "visitors": {
-    "websiteVisits": 2,
+    "websiteVisits": 1,
     "packageClicks": {
       "ovsx": 0,
       "vscode": 0,
@@ -38,8 +38,8 @@
       "openvsxDuplicate": 0,
       "npm": 0
     },
-    "totalEngagement": 2,
-    "updatedAt": "2026-08-17T12:47:39.948Z"
+    "totalEngagement": 1,
+    "updatedAt": "2026-08-17T07:14:33.157Z"
   },
   "community": {
     "discussionsEnabled": true,
@@ -68,7 +68,7 @@
     "version": "0.5.9",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 2196,
+    "downloadCount": 2198,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -77,11 +77,11 @@
     "version": "0.5.4",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 748,
+    "downloadCount": 750,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
-    "version": "0.5.8",
+    "version": "0.5.9",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
     "downloadCount": 0,
     "installCount": 0,
