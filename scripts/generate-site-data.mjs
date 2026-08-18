@@ -19,72 +19,6 @@ const NAME = pkg.name;
 const OVSX_EXT_ID = `${OVSX_NS}.${NAME}`;
 const VSCE_EXT_ID = `${VSCE_NS}.${NAME}`;
 
-/** Static fallback only — used when /api/notice is unreachable. Live banner is the admin catalog. */
-const DEV_NOTICE = {
-  enabled: true,
-  type: "development",
-  severity: "warning",
-  title: "Active Development Notice",
-  message:
-    "Cursor Curse Monitor is still in active development. Some users may experience conflicts with their Cursor database — we are deeply sorry, especially to Lorapok Labs members and everyone affected. A stable release is targeted soon (expected by tomorrow). Thank you for your support — your feedback helps us improve. Interested in collaborating on Lorapok Labs projects? You're welcome to reach out.",
-  shortMessage:
-    "Still in development — some users may see Cursor database conflicts. Stable release coming soon. We apologize to everyone affected.",
-  feedbackUrl: `https://github.com/${REPO}/issues`,
-  collaborateUrl: `https://github.com/${REPO}/discussions`,
-  updatedAt: "2026-08-15T00:00:00.000Z",
-  dismissible: true,
-};
-
-/** First version with safe atomic fallback writes (no full state.vscdb rewrite). */
-const SAFE_FALLBACK_SINCE = "0.5.7";
-
-const FALLBACK_MODEL = {
-  displayName: "Composer 2.5 (Fast off)",
-  modelId: "composer-2.5",
-  description: "Free slow-pool fallback when usage limits are reached.",
-};
-
-function classifyFallbackStability(version) {
-  const v = normalizeVersion(version);
-  if (!v) return "unknown";
-  if (compareSemver(v, SAFE_FALLBACK_SINCE) >= 0) return "stable";
-  if (compareSemver(v, "0.5.0") >= 0) return "unsafe";
-  return "legacy";
-}
-
-function buildStableFallbackVersions(tags, latestTag) {
-  const seen = new Set();
-  const rows = [];
-
-  for (const tag of tags) {
-    const version = normalizeVersion(tag);
-    if (!version || seen.has(version)) continue;
-    seen.add(version);
-    const stability = classifyFallbackStability(version);
-    rows.push({
-      tag: tag.startsWith("v") ? tag : `v${tag}`,
-      version,
-      stability,
-      recommended: stability === "stable" && tag.replace(/^v/, "") === normalizeVersion(latestTag),
-      vsixUrl: `https://github.com/${REPO}/releases/download/${tag.startsWith("v") ? tag : `v${tag}`}/${NAME}-${version}.vsix`,
-      note:
-        stability === "stable"
-          ? "Safe for fallback model writes"
-          : stability === "unsafe"
-            ? "May conflict with Cursor database — upgrade to 0.5.7+"
-            : "Legacy release — fallback behavior differs",
-    });
-    if (rows.length >= 12) break;
-  }
-
-  return {
-    safeSinceVersion: SAFE_FALLBACK_SINCE,
-    recommendedVersion: normalizeVersion(latestTag) ?? pkg.version,
-    model: FALLBACK_MODEL,
-    versions: rows,
-  };
-}
-
 async function fetchJson(url, retries = 3) {
   const headers = { Accept: "application/json" };
   if (process.env.GITHUB_TOKEN) {
@@ -138,7 +72,7 @@ function computeSyncStatus(canonicalVersion, duplicateVersion, targetVersion) {
   return "synced";
 }
 
-function readVisitorStatsFile() {
+function readVisitorStats() {
   const path = join(root, "website", "visitor-stats.json");
   if (!existsSync(path)) {
     return {
@@ -153,44 +87,6 @@ function readVisitorStatsFile() {
   } catch {
     return { websiteVisits: 0, packageClicks: {}, totalEngagement: 0, updatedAt: null };
   }
-}
-
-async function readVisitorStats() {
-  const fileStats = readVisitorStatsFile();
-  const socialPath = join(root, "website", "social.json");
-  let statsUrl = process.env.ANALYTICS_STATS_URL || "";
-  if (!statsUrl && existsSync(socialPath)) {
-    try {
-      const social = JSON.parse(readFileSync(socialPath, "utf8"));
-      statsUrl = social?.api?.analyticsStats || "";
-    } catch {
-      /* ignore */
-    }
-  }
-  if (!statsUrl) return fileStats;
-  try {
-    const live = await fetchJson(statsUrl);
-    if (live && typeof live.websiteVisits === "number") {
-      const merged = {
-        websiteVisits: live.websiteVisits ?? 0,
-        packageClicks: { ...(fileStats.packageClicks ?? {}), ...(live.packageClicks ?? {}) },
-        totalEngagement: live.totalEngagement ?? 0,
-        updatedAt: live.updatedAt ?? new Date().toISOString(),
-      };
-      try {
-        writeFileSync(
-          join(root, "website", "visitor-stats.json"),
-          JSON.stringify(merged, null, 2) + "\n"
-        );
-      } catch {
-        /* non-fatal */
-      }
-      return merged;
-    }
-  } catch {
-    /* fall back to file when API unavailable in CI */
-  }
-  return fileStats;
 }
 
 async function githubTags() {
@@ -344,7 +240,7 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   ovsxLatest(OVSX_DUPLICATE_NS),
   vsceLatest(),
   githubDiscussionsAndIssues(),
-  readVisitorStats(),
+  Promise.resolve(readVisitorStats()),
 ]);
 
 const version = github?.version ?? pkg.version;
@@ -413,23 +309,6 @@ const siteData = {
   },
   analytics: {
     beaconPath: "/api/analytics/visit",
-    beaconUrl: "https://cursor-dev.lorapok.tech/api/analytics/visit",
-    gaMeasurementId: (() => {
-      try {
-        const social = JSON.parse(readFileSync(join(root, "website", "social.json"), "utf8"));
-        return social?.analytics?.gaMeasurementId || "";
-      } catch {
-        return "";
-      }
-    })(),
-    gaGatewayPath: (() => {
-      try {
-        const social = JSON.parse(readFileSync(join(root, "website", "social.json"), "utf8"));
-        return social?.analytics?.gaGatewayPath || "";
-      } catch {
-        return "";
-      }
-    })(),
   },
   ovsx: {
     ...ovsx,
@@ -471,20 +350,6 @@ const siteData = {
     releasePatch: "./scripts/release.sh patch",
     releaseMinor: "./scripts/release.sh minor",
     releaseTag: `./scripts/release.sh ${version}`,
-  },
-  notice: DEV_NOTICE,
-  stableFallback: buildStableFallbackVersions(deployTags, github?.tag ?? `v${version}`),
-  browserExtension: {
-    firefox: {
-      version,
-      url: `https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/`,
-      slug: "cursor-curse-monitor-by-lorapok",
-    },
-    chrome: {
-      version,
-      zipUrl: `https://github.com/${REPO}/releases/latest/download/cursor-curse-monitor-chrome-${version}.zip`,
-      note: "Direct download only — not on Chrome Web Store",
-    },
   },
 };
 

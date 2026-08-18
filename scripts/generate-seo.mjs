@@ -20,12 +20,6 @@ function readSiteData() {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function readSocial() {
-  const path = join(website, "social.json");
-  if (!existsSync(path)) return null;
-  return JSON.parse(readFileSync(path, "utf8"));
-}
-
 function isoDate(d = new Date()) {
   return d.toISOString().slice(0, 10);
 }
@@ -43,16 +37,12 @@ function lastGitDate(file) {
 }
 
 const siteData = readSiteData();
-const social = readSocial();
 const version = siteData?.version ?? pkg.version;
 const generatedAt = new Date().toISOString();
-const adminApiBase = social?.api?.base ?? "https://cursor-dev.lorapok.tech";
-const sameAs = social?.brand ? Object.values(social.brand) : [];
 
 const pages = [
   { loc: `${SITE_BASE}/`, priority: "1.0", changefreq: "weekly", file: "website/index.html" },
   { loc: `${SITE_BASE}/privacy.html`, priority: "0.6", changefreq: "monthly", file: "website/privacy.html" },
-  { loc: `${SITE_BASE}/terms.html`, priority: "0.6", changefreq: "monthly", file: "website/terms.html" },
 ];
 
 const urlEntries = pages
@@ -85,13 +75,11 @@ writeFileSync(join(website, "robots.txt"), robots);
 const seo = {
   generatedAt,
   siteBase: SITE_BASE,
-  adminApiBase,
   title: `${pkg.displayName} — Live Cursor Usage Dashboard`,
   description: pkg.description,
   version,
   canonical: SITE_BASE,
   syncStatus: siteData?.syncStatus ?? "unknown",
-  social: social?.brand ?? {},
   keywords: [
     ...(pkg.keywords ?? []),
     "Cursor IDE",
@@ -111,51 +99,27 @@ const seo = {
     openVsxCanonical: siteData?.ovsx?.url ?? `https://open-vsx.org/extension/lorapok-labs/${pkg.name}`,
     openVsxDuplicate: siteData?.ovsxDuplicate?.url ?? null,
     vscode: siteData?.vscode?.url ?? `https://marketplace.visualstudio.com/items?itemName=LorapokLabs.${pkg.name}`,
-    firefox: siteData?.browserExtension?.firefox?.url ?? null,
-    chromeZip: siteData?.browserExtension?.chrome?.zipUrl ?? null,
     github: siteData?.github?.releaseUrl ?? `${SITE_BASE}`,
   },
   structuredData: {
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "SoftwareApplication",
-        name: pkg.displayName,
-        softwareVersion: version,
-        applicationCategory: "DeveloperApplication",
-        operatingSystem: "Windows, macOS, Linux",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-        downloadUrl: siteData?.github?.vsixUrl ?? null,
-        featureList: "Usage dashboard, security scanner, local insights, budget tracking",
-        author: {
-          "@type": "Person",
-          name: pkg.author?.name,
-          url: pkg.author?.url ?? pkg.repository?.url,
-        },
-        publisher: {
-          "@type": "Organization",
-          name: "Lorapok Labs",
-          url: social?.brand?.labs ?? "https://lorapok.tech",
-          sameAs,
-        },
-      },
-      {
-        "@type": "SoftwareApplication",
-        name: `${pkg.displayName} Browser Extension`,
-        softwareVersion: version,
-        applicationCategory: "BrowserApplication",
-        operatingSystem: "Firefox, Chrome",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-        downloadUrl: siteData?.browserExtension?.firefox?.url ?? null,
-        installUrl: siteData?.browserExtension?.chrome?.zipUrl ?? null,
-        featureList: "Budget tracker popup, credential paste guard, cursor.com token capture",
-        publisher: {
-          "@type": "Organization",
-          name: "Lorapok Labs",
-          url: social?.brand?.labs ?? "https://lorapok.tech",
-        },
-      },
-    ],
+    "@type": "SoftwareApplication",
+    name: pkg.displayName,
+    softwareVersion: version,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Windows, macOS, Linux",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    downloadUrl: siteData?.github?.vsixUrl ?? null,
+    author: {
+      "@type": "Person",
+      name: pkg.author?.name,
+      url: pkg.author?.url ?? pkg.repository?.url,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Lorapok Labs",
+      url: "https://lorapok.tech",
+    },
   },
 };
 

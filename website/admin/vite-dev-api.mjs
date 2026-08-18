@@ -1,9 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { GENERATED_DEV_NOTICE } from "./functions/api/_shared/notices.js";
-import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
-import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -12,41 +9,6 @@ const GITHUB_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
 const siteDataPath = resolve(repoRoot, "website/site-data.json");
 const adminDataDir = resolve(rootDir, ".data");
 const adminEmailsPath = resolve(adminDataDir, "admin-emails.json");
-
-const devStore = {
-  notice: { ...GENERATED_DEV_NOTICE },
-  notices: [{ ...GENERATED_DEV_NOTICE }],
-  subscribers: [],
-  activity: [],
-  mailbox: [],
-  systemLogs: [],
-  usageInstalls: new Map(),
-  communityConfig: {
-    featuredDiscussionUrls: [],
-    defaultCategorySlug: "announcements",
-    collaborateUrl: `https://github.com/${GITHUB_REPO}/discussions`,
-    updatedAt: null,
-    updatedBy: null,
-  },
-};
-
-export function resetDevStore() {
-  devStore.notice = { ...GENERATED_DEV_NOTICE };
-  devStore.notices = [{ ...GENERATED_DEV_NOTICE }];
-}
-
-function logDevActivity(req, status, email = "dev@local") {
-  const path = req.url?.split("?")[0] ?? "/";
-  devStore.activity.unshift({
-    ts: new Date().toISOString(),
-    method: req.method ?? "GET",
-    path,
-    status,
-    latencyMs: Math.floor(Math.random() * 120) + 20,
-    email,
-  });
-  if (devStore.activity.length > 500) devStore.activity.length = 500;
-}
 
 function readDevAdminEmails() {
   try {
@@ -89,7 +51,7 @@ function mapReleaseChannel(value) {
   return map[value] ?? null;
 }
 
-async function dispatchGithubWorkflow(workflowId, body, successMessage) {
+async function triggerDeployment(body) {
   const targetTag = body.target_tag ?? body.tag;
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
   const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
@@ -101,7 +63,7 @@ async function dispatchGithubWorkflow(workflowId, body, successMessage) {
   if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
 
   const githubRes = await fetch(
-    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/deployment.yml/dispatches`,
     {
       method: "POST",
       headers: {
@@ -118,82 +80,13 @@ async function dispatchGithubWorkflow(workflowId, body, successMessage) {
   );
 
   if (!githubRes.ok) {
-    throw new Error(`Failed to trigger ${workflowId} (${githubRes.status})`);
+    throw new Error(`Failed to trigger deployment workflow (${githubRes.status})`);
   }
 
   return {
     success: true,
-    message: successMessage,
-    workflow: workflowId,
+    message: "Deployment triggered successfully",
     target_tag: targetTag,
-    publish_market: publishMarket,
-    release_channel: releaseChannel,
-  };
-}
-
-async function triggerDeployment(body) {
-  return dispatchGithubWorkflow("publish-tag.yml", body, "Deployment triggered successfully");
-}
-
-async function triggerRollback(body) {
-  return dispatchGithubWorkflow("deployment.yml", body, "Rollback triggered");
-}
-
-const VERSION_TYPE_INPUTS = {
-  patch: "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)",
-  minor: "minor - New Feature (e.g. v0.8.0)",
-  major: "major - Production / Breaking (e.g. v1.0.0)",
-  custom: "custom - Specify exact version below",
-};
-
-async function triggerRelease(body) {
-  const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
-  const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
-  const bumpKey = String(body.version_type ?? body.bump_type ?? "patch");
-  const versionTypeInput = VERSION_TYPE_INPUTS[bumpKey] ?? String(body.version_type ?? "");
-  const customVersion = String(body.custom_version ?? "").trim();
-  if (!publishMarket) throw new Error("Invalid publish_market");
-  if (!releaseChannel) throw new Error("Invalid release_channel");
-  if (!versionTypeInput) throw new Error("Invalid version_type");
-  if (versionTypeInput.startsWith("custom") && !customVersion) {
-    throw new Error("custom_version is required for custom releases");
-  }
-
-  const githubToken = loadGithubToken();
-  if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
-
-  const githubRes = await fetch(
-    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/ci-cd.yml/dispatches`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${githubToken}`,
-        "User-Agent": "cursor-usage-monitor-dev",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      body: JSON.stringify({
-        ref: "main",
-        inputs: {
-          version_type: versionTypeInput,
-          custom_version: customVersion,
-          publish_market: publishMarket,
-          release_channel: releaseChannel,
-        },
-      }),
-    }
-  );
-
-  if (!githubRes.ok) {
-    throw new Error(`Failed to trigger ci-cd.yml (${githubRes.status})`);
-  }
-
-  return {
-    success: true,
-    message: "Release workflow triggered successfully",
-    workflow: "ci-cd.yml",
-    version_type: bumpKey,
-    custom_version: customVersion,
     publish_market: publishMarket,
     release_channel: releaseChannel,
   };
@@ -235,31 +128,23 @@ function readCachedTags() {
   return [];
 }
 
-function readLiveTag() {
-  try {
-    const data = JSON.parse(readFileSync(siteDataPath, "utf8"));
-    return liveTagFromSiteData(data);
-  } catch {
-    return null;
-  }
-}
-
 async function fetchGitHubTags() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=30`, {
     headers: githubHeaders(),
   });
-  const liveTag = readLiveTag();
   if (res.ok) {
     const data = await res.json();
-    const raw = Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [];
-    return { ...enrichTags(filterPublishableTags(raw), liveTag), source: "github" };
+    return {
+      tags: Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [],
+      source: "github",
+    };
   }
   const cached = readCachedTags();
   if (cached.length > 0) {
     const msg = res.status === 403
       ? "GitHub API rate limit — using cached tags from site-data.json. Add GITHUB_TOKEN to website/admin/.env"
       : `GitHub tags ${res.status} — using cached tags from site-data.json`;
-    return { ...enrichTags(filterPublishableTags(cached), liveTag), source: "cache", warning: msg };
+    return { tags: cached, source: "cache", warning: msg };
   }
   if (res.status === 403) {
     throw new Error("GitHub API rate limit exceeded. Add GITHUB_TOKEN to website/admin/.env and restart npm run dev.");
@@ -269,19 +154,10 @@ async function fetchGitHubTags() {
 
 const DEFAULT_STATS = {
   websiteVisits: 0,
-  packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, npm: 0, openvsxDuplicate: 0 },
+  packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0 },
   totalEngagement: 0,
   updatedAt: null,
 };
-
-const ALLOWED_CLICK_CHANNELS = new Set([
-  "ovsx",
-  "vscode",
-  "github",
-  "vsix",
-  "npm",
-  "openvsxDuplicate",
-]);
 
 function readStats() {
   if (!existsSync(visitorStatsPath)) return { ...DEFAULT_STATS, packageClicks: { ...DEFAULT_STATS.packageClicks } };
@@ -309,10 +185,10 @@ function incrementStats(channel) {
 
   if (channel === "website") {
     stats.websiteVisits = (stats.websiteVisits ?? 0) + 1;
-  } else if (ALLOWED_CLICK_CHANNELS.has(channel)) {
+  } else if (channel in stats.packageClicks) {
     stats.packageClicks[channel] = (stats.packageClicks[channel] ?? 0) + 1;
-  } else {
-    return stats;
+  } else if (channel === "openvsxDuplicate") {
+    stats.packageClicks.openvsxDuplicate = (stats.packageClicks.openvsxDuplicate ?? 0) + 1;
   }
 
   stats.totalEngagement =
@@ -364,27 +240,7 @@ async function fetchDiscussions() {
     topics.push(...map.values());
   }
 
-  return {
-    enabled,
-    discussions,
-    topics,
-    settingsUrl: `https://github.com/${GITHUB_REPO}/settings#features`,
-    manageCategoriesUrl: `https://github.com/${GITHUB_REPO}/discussions/categories`,
-    discussionsUrl: `https://github.com/${GITHUB_REPO}/discussions`,
-    repoIssuesUrl: `https://github.com/${GITHUB_REPO}/issues`,
-    categories: [
-      { id: "dev-announce", name: "Announcements", slug: "announcements", emoji: "", description: "", isAnswerable: false, format: "announcement" },
-      { id: "dev-general", name: "General", slug: "general", emoji: "", description: "", isAnswerable: false, format: "discussion" },
-      { id: "dev-qa", name: "Q&A", slug: "q-a", emoji: "", description: "", isAnswerable: true, format: "qa" },
-    ],
-    repositoryId: "dev-repo",
-    capabilities: {
-      canCreatePosts: Boolean(loadGithubToken()),
-      canManageCategories: false,
-      canCreatePolls: false,
-      tokenConfigured: Boolean(loadGithubToken()),
-    },
-  };
+  return { enabled, discussions, topics, settingsUrl: `https://github.com/${GITHUB_REPO}/settings#features` };
 }
 
 async function fetchGitHubReleases() {
@@ -486,120 +342,6 @@ export function createDevApiMiddleware() {
       return;
     }
 
-    if (url === "/api/usage/ping" && req.method === "OPTIONS") {
-      res.statusCode = 204;
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      res.end();
-      return;
-    }
-
-    if (url === "/api/usage/ping" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        res.setHeader("Content-Type", "application/json");
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const installId = String(parsed.installId ?? "").trim().toLowerCase();
-          if (!/^[0-9a-f-]{36}$/i.test(installId)) {
-            res.statusCode = 400;
-            res.end(JSON.stringify({ error: "installId must be a UUID" }));
-            return;
-          }
-          const now = new Date().toISOString();
-          const prev = devStore.usageInstalls.get(installId);
-          devStore.usageInstalls.set(installId, {
-            installId,
-            os: String(parsed.os ?? "unknown").slice(0, 32),
-            host: ["cursor", "vscode"].includes(String(parsed.host)) ? parsed.host : "unknown",
-            version: String(parsed.version ?? "unknown").slice(0, 32),
-            lastSeenAt: now,
-            firstSeenAt: prev?.firstSeenAt ?? now,
-          });
-          res.end(JSON.stringify({ ok: true }));
-        } catch {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Invalid JSON" }));
-        }
-      });
-      return;
-    }
-
-    if (url === "/api/usage/stats" && req.method === "GET") {
-      const records = [...devStore.usageInstalls.values()];
-      const now = Date.now();
-      const cut1h = now - 60 * 60 * 1000;
-      const cut24h = now - 24 * 60 * 60 * 1000;
-      const cut7 = now - 7 * 86400000;
-      const cut30 = now - 30 * 86400000;
-      const byOs = {};
-      const byHost = {};
-      let unique1h = 0;
-      let unique24h = 0;
-      let unique7d = 0;
-      let unique30d = 0;
-      for (const r of records) {
-        const seen = Date.parse(r.lastSeenAt || "") || 0;
-        if (seen >= cut1h) unique1h += 1;
-        if (seen >= cut24h) unique24h += 1;
-        if (seen >= cut7) unique7d += 1;
-        if (seen >= cut30) unique30d += 1;
-        byOs[r.os] = (byOs[r.os] ?? 0) + 1;
-        byHost[r.host] = (byHost[r.host] ?? 0) + 1;
-      }
-      let visitors = null;
-      let marketplace = null;
-      try {
-        const site = JSON.parse(readFileSync(siteDataPath, "utf8"));
-        visitors = site.visitors ?? null;
-        marketplace = site.downloads ?? site.marketplace ?? null;
-      } catch { /* ignore */ }
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        optInUniques: { unique1h, unique24h, unique7d, unique30d, uniqueAll: records.length, byOs, byHost },
-        marketplace,
-        visitors,
-        updatedAt: new Date().toISOString(),
-      }));
-      return;
-    }
-
-    if (url === "/api/community/config" && req.method === "GET") {
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.end(JSON.stringify(devStore.communityConfig));
-      return;
-    }
-
-    if (url === "/api/community/config" && req.method === "PUT") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          devStore.communityConfig = {
-            ...devStore.communityConfig,
-            featuredDiscussionUrls: Array.isArray(parsed.featuredDiscussionUrls)
-              ? parsed.featuredDiscussionUrls.map(String).slice(0, 20)
-              : devStore.communityConfig.featuredDiscussionUrls,
-            defaultCategorySlug: String(parsed.defaultCategorySlug ?? devStore.communityConfig.defaultCategorySlug).slice(0, 64),
-            collaborateUrl: String(parsed.collaborateUrl ?? devStore.communityConfig.collaborateUrl).slice(0, 512),
-            updatedAt: new Date().toISOString(),
-            updatedBy: "dev@local",
-          };
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, config: devStore.communityConfig }));
-        } catch {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Invalid JSON" }));
-        }
-      });
-      return;
-    }
-
     if (url === "/api/tags" && req.method === "GET") {
       fetchGitHubTags()
         .then((result) => {
@@ -628,49 +370,9 @@ export function createDevApiMiddleware() {
       return;
     }
 
-    if (url === "/api/discussions" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const title = String(parsed.title ?? "").trim();
-          const markdown = String(parsed.body ?? "").trim();
-          const categoryId = String(parsed.categoryId ?? "").trim();
-          if (!title || !markdown || !categoryId) {
-            res.statusCode = 400;
-            res.end(JSON.stringify({ error: "title, body, and categoryId are required" }));
-            return;
-          }
-          if (!loadGithubToken()) {
-            res.statusCode = 503;
-            res.end(JSON.stringify({ error: "GITHUB_TOKEN not configured" }));
-            return;
-          }
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({
-            ok: true,
-            discussion: {
-              id: `dev-${Date.now()}`,
-              url: `https://github.com/${GITHUB_REPO}/discussions`,
-              title,
-            },
-          }));
-          logDevActivity(req, 200);
-        } catch {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Invalid JSON" }));
-        }
-      });
-      return;
-    }
-
     if (url === "/api/health" && req.method === "GET") {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 2500);
-      fetch("https://api.github.com/zen", { headers: githubHeaders(), signal: controller.signal })
+      fetch("https://api.github.com/zen", { headers: githubHeaders() })
         .then((gh) => {
-          clearTimeout(timer);
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({
             ok: gh.ok,
@@ -678,22 +380,6 @@ export function createDevApiMiddleware() {
             firebaseProject: "cursor-curse-by-lorapok",
             githubTokenConfigured: Boolean(loadGithubToken()),
             adminKvConfigured: true,
-            mailConfigured: true,
-            mailTransport: "dev-simulated",
-            siteDataUrl: "/site-data.json",
-          }));
-        })
-        .catch(() => {
-          clearTimeout(timer);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({
-            ok: false,
-            checks: { github: false, timestamp: new Date().toISOString() },
-            firebaseProject: "cursor-curse-by-lorapok",
-            githubTokenConfigured: Boolean(loadGithubToken()),
-            adminKvConfigured: true,
-            mailConfigured: true,
-            mailTransport: "dev-simulated",
             siteDataUrl: "/site-data.json",
           }));
         });
@@ -740,438 +426,15 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         triggerDeployment(JSON.parse(body || "{}"))
           .then((result) => {
-            logDevActivity(req, 200);
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(result));
           })
           .catch((err) => {
-            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
-            logDevActivity(req, code);
-            res.statusCode = code;
+            res.statusCode = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ error: err.message }));
           });
       });
-      return;
-    }
-
-    if (url === "/api/rollback" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        triggerRollback(JSON.parse(body || "{}"))
-          .then((result) => {
-            logDevActivity(req, 200);
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ ...result, message: "Rollback triggered" }));
-          })
-          .catch((err) => {
-            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
-            logDevActivity(req, code);
-            res.statusCode = code;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ error: err.message }));
-          });
-      });
-      return;
-    }
-
-    if (url === "/api/release" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        triggerRelease(JSON.parse(body || "{}"))
-          .then((result) => {
-            logDevActivity(req, 200);
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify(result));
-          })
-          .catch((err) => {
-            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
-            logDevActivity(req, code);
-            res.statusCode = code;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ error: err.message }));
-          });
-      });
-      return;
-    }
-
-    if (url === "/api/notice" && req.method === "GET") {
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      const active = devStore.notices.find((n) => n.enabled) ?? { ...devStore.notice, enabled: false };
-      res.end(JSON.stringify(active));
-      return;
-    }
-
-    if (url === "/api/notices" && req.method === "GET") {
-      res.setHeader("Content-Type", "application/json");
-      const active = devStore.notices.find((n) => n.enabled) ?? null;
-      res.end(JSON.stringify({ items: devStore.notices, active }));
-      return;
-    }
-
-    if (url === "/api/notices" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const notice = {
-            id: crypto.randomUUID(),
-            source: "admin",
-            enabled: Boolean(parsed.enabled),
-            type: "development",
-            title: String(parsed.title ?? "").trim(),
-            message: String(parsed.message ?? "").trim(),
-            shortMessage: String(parsed.shortMessage ?? "").trim(),
-            severity: String(parsed.severity ?? "info").trim() || "info",
-            feedbackUrl: String(parsed.feedbackUrl ?? "").trim(),
-            collaborateUrl: String(parsed.collaborateUrl ?? "").trim(),
-            updatedAt: new Date().toISOString(),
-            dismissible: parsed.dismissible !== false,
-          };
-          if (notice.enabled) {
-            devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
-          }
-          devStore.notices.unshift(notice);
-          devStore.notice = notice.enabled ? notice : (devStore.notices.find((n) => n.enabled) ?? notice);
-          logDevActivity(req, 200);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, notice, items: devStore.notices }));
-        } catch {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Invalid payload" }));
-        }
-      });
-      return;
-    }
-
-    if (url === "/api/notices" && req.method === "PUT") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const id = String(parsed.id ?? "");
-          const index = devStore.notices.findIndex((n) => n.id === id);
-          if (index < 0) {
-            res.statusCode = 404;
-            res.end(JSON.stringify({ error: "Notice not found" }));
-            return;
-          }
-          if (typeof parsed.enabled === "boolean" && Object.keys(parsed).every((k) => ["id", "enabled"].includes(k))) {
-            devStore.notices = devStore.notices.map((n) => ({
-              ...n,
-              enabled: parsed.enabled ? n.id === id : n.id === id ? false : n.enabled,
-              updatedAt: n.id === id ? new Date().toISOString() : n.updatedAt,
-            }));
-          } else {
-            devStore.notices[index] = { ...devStore.notices[index], ...parsed, id, updatedAt: new Date().toISOString() };
-            if (devStore.notices[index].enabled) {
-              devStore.notices = devStore.notices.map((n) => (n.id === id ? n : { ...n, enabled: false }));
-            }
-          }
-          const active = devStore.notices.find((n) => n.enabled) ?? null;
-          devStore.notice = active ?? { ...devStore.notices[0], enabled: false };
-          logDevActivity(req, 200);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, notice: devStore.notices.find((n) => n.id === id), items: devStore.notices }));
-        } catch {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Invalid payload" }));
-        }
-      });
-      return;
-    }
-
-    if (url === "/api/notices" && req.method === "DELETE") {
-      const id = new URL(req.url ?? "/", "http://localhost").searchParams.get("id");
-      const before = devStore.notices.length;
-      devStore.notices = devStore.notices.filter((n) => n.id !== id);
-      if (devStore.notices.length === before) {
-        res.statusCode = 404;
-        res.end(JSON.stringify({ error: "Notice not found" }));
-        return;
-      }
-      const active = devStore.notices.find((n) => n.enabled) ?? null;
-      devStore.notice = active ?? { enabled: false, title: "", message: "", shortMessage: "", severity: "info", feedbackUrl: "", collaborateUrl: "", updatedAt: new Date().toISOString(), dismissible: true };
-      logDevActivity(req, 200);
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ ok: true, items: devStore.notices, notice: devStore.notice }));
-      return;
-    }
-
-    if (url === "/api/notice" && (req.method === "POST" || req.method === "PUT")) {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const notice = {
-            id: crypto.randomUUID(),
-            source: "admin",
-            enabled: parsed.enabled !== false,
-            type: "development",
-            title: String(parsed.title ?? "").trim(),
-            message: String(parsed.message ?? "").trim(),
-            shortMessage: String(parsed.shortMessage ?? parsed.short_message ?? "").trim(),
-            severity: String(parsed.severity ?? "info").trim() || "info",
-            feedbackUrl: String(parsed.feedbackUrl ?? parsed.feedback_url ?? "").trim(),
-            collaborateUrl: String(parsed.collaborateUrl ?? parsed.collaborate_url ?? "").trim(),
-            updatedAt: new Date().toISOString(),
-            dismissible: parsed.dismissible !== false,
-          };
-          devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
-          devStore.notices.unshift(notice);
-          devStore.notice = notice;
-          logDevActivity(req, 200);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, notice, items: devStore.notices }));
-        } catch {
-          res.statusCode = 400;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ error: "Invalid payload" }));
-        }
-      });
-      return;
-    }
-
-    if (url === "/api/notice" && req.method === "DELETE") {
-      devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
-      devStore.notice = { ...devStore.notice, enabled: false, updatedAt: new Date().toISOString() };
-      logDevActivity(req, 200);
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ ok: true, notice: devStore.notice, items: devStore.notices }));
-      return;
-    }
-
-    if ((url === "/api/notice" || url === "/api/notices") && req.method === "OPTIONS") {
-      res.statusCode = 204;
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-      res.end();
-      return;
-    }
-
-    if (url === "/api/subscribe" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const email = String(parsed.email ?? "").trim().toLowerCase();
-          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            res.statusCode = 400;
-            res.setHeader("Content-Type", "application/json");
-            res.setHeader("Access-Control-Allow-Origin", "*");
-            res.end(JSON.stringify({ error: "Valid email is required" }));
-            return;
-          }
-          if (!devStore.subscribers.includes(email)) devStore.subscribers.push(email);
-          const mailEntry = {
-            id: crypto.randomUUID(),
-            direction: "outbound",
-            from: "cursor-contact@lorapok.tech",
-            to: email,
-            subject: "Subscribed to Cursor Curse Monitor updates",
-            text: `Thanks for subscribing, ${email}.`,
-            status: "sent",
-            category: "subscribe",
-            ts: new Date().toISOString(),
-            sentBy: null,
-            error: null,
-            read: false,
-          };
-          devStore.mailbox.unshift(mailEntry);
-          devStore.systemLogs.unshift({
-            id: crypto.randomUUID(),
-            ts: new Date().toISOString(),
-            level: "info",
-            source: "mail",
-            message: `Email sent to ${email}`,
-            email: null,
-            meta: { category: "subscribe" },
-          });
-          res.setHeader("Content-Type", "application/json");
-          res.setHeader("Access-Control-Allow-Origin", "*");
-          res.end(
-            JSON.stringify({
-              ok: true,
-              emailed: true,
-              message: "You're subscribed! (Dev mode — no email sent locally.)",
-            })
-          );
-        } catch {
-          res.statusCode = 400;
-          res.setHeader("Content-Type", "application/json");
-          res.setHeader("Access-Control-Allow-Origin", "*");
-          res.end(JSON.stringify({ error: "Invalid payload" }));
-        }
-      });
-      return;
-    }
-
-    if (url === "/api/subscribe" && req.method === "OPTIONS") {
-      res.statusCode = 204;
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      res.end();
-      return;
-    }
-
-    if (url.startsWith("/api/logs") && req.method === "GET") {
-      const query = new URL(req.url ?? "", "http://localhost");
-      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
-      const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));
-      const type = query.searchParams.get("type");
-      const merged = [
-        ...devStore.activity.map((row) => ({
-          id: `api-${row.ts}-${row.path}`,
-          type: "api",
-          ts: row.ts,
-          level: row.status >= 500 ? "error" : row.status >= 400 ? "warn" : "info",
-          source: "api",
-          method: row.method,
-          path: row.path,
-          status: row.status,
-          latencyMs: row.latencyMs,
-          email: row.email,
-          message: `${row.method} ${row.path} → ${row.status}`,
-        })),
-        ...devStore.mailbox.map((row) => ({
-          id: `mail-${row.id}`,
-          type: "mail",
-          ts: row.ts,
-          level: row.status === "failed" ? "error" : "info",
-          source: "mailbox",
-          status: row.status,
-          email: row.to,
-          subject: row.subject,
-          message: `${row.direction} ${row.category}: ${row.subject}`,
-        })),
-        ...devStore.systemLogs.map((row) => ({
-          id: `sys-${row.id}`,
-          type: "system",
-          ts: row.ts,
-          level: row.level,
-          source: row.source,
-          email: row.email,
-          message: row.message,
-        })),
-      ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-      const filtered = type && type !== "all" ? merged.filter((r) => r.type === type) : merged;
-      const start = (page - 1) * limit;
-      logDevActivity(req, 200);
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        items: filtered.slice(start, start + limit),
-        page,
-        limit,
-        total: filtered.length,
-        totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
-        counts: {
-          api: devStore.activity.length,
-          mail: devStore.mailbox.length,
-          system: devStore.systemLogs.length,
-        },
-      }));
-      return;
-    }
-
-    if (url.startsWith("/api/mailbox") && req.method === "GET") {
-      const query = new URL(req.url ?? "", "http://localhost");
-      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
-      const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));
-      const start = (page - 1) * limit;
-      const items = devStore.mailbox.slice(start, start + limit);
-      logDevActivity(req, 200);
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        items,
-        page,
-        limit,
-        total: devStore.mailbox.length,
-        totalPages: Math.max(1, Math.ceil(devStore.mailbox.length / limit)),
-        stats: {
-          total: devStore.mailbox.length,
-          unread: devStore.mailbox.filter((m) => !m.read).length,
-          outbound: devStore.mailbox.filter((m) => m.direction === "outbound").length,
-          inbound: devStore.mailbox.filter((m) => m.direction === "inbound").length,
-          failed: devStore.mailbox.filter((m) => m.status === "failed").length,
-        },
-        transport: { configured: true, transport: "dev-simulated" },
-      }));
-      return;
-    }
-
-    if (url === "/api/mailbox" && req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const parsed = JSON.parse(body || "{}");
-          const action = parsed.action ?? "send";
-          if (action === "mark-read") {
-            const item = devStore.mailbox.find((m) => m.id === parsed.id);
-            if (item) item.read = true;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ ok: true, message: item }));
-            return;
-          }
-          const to = String(parsed.to ?? "dev@local").trim().toLowerCase();
-          const subject = action === "test"
-            ? "Cursor Curse Monitor — mailbox test"
-            : String(parsed.subject ?? "Dev compose");
-          const text = action === "test"
-            ? "Mailbox test (dev mode)"
-            : String(parsed.text ?? "");
-          const entry = {
-            id: crypto.randomUUID(),
-            direction: "outbound",
-            from: "cursor-contact@lorapok.tech",
-            to,
-            subject,
-            text,
-            status: "sent",
-            category: action === "test" ? "test" : "compose",
-            ts: new Date().toISOString(),
-            sentBy: "dev@local",
-            error: null,
-            read: false,
-          };
-          devStore.mailbox.unshift(entry);
-          logDevActivity(req, 200);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, emailed: true, message: `Dev: message queued to ${to}`, mailboxId: entry.id }));
-        } catch {
-          res.statusCode = 400;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ error: "Invalid payload" }));
-        }
-      });
-      return;
-    }
-
-    if (url.startsWith("/api/activity") && req.method === "GET") {
-      const query = new URL(req.url ?? "", "http://localhost");
-      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
-      const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "20", 10) || 20));
-      const total = devStore.activity.length;
-      const start = (page - 1) * limit;
-      const items = devStore.activity.slice(start, start + limit);
-      logDevActivity(req, 200);
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        items,
-        page,
-        limit,
-        total,
-        totalPages: Math.max(1, Math.ceil(total / limit)),
-      }));
       return;
     }
 
@@ -1200,19 +463,6 @@ export function createDevApiMiddleware() {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ error: err.message }));
         });
-      return;
-    }
-
-    if (url.startsWith("/api/workflows/run-logs") && req.method === "GET") {
-      const runId = new URL(req.url ?? "", "http://localhost").searchParams.get("run_id") ?? "0";
-      res.setHeader("Content-Type", "application/json");
-      res.end(
-        JSON.stringify({
-          runId: Number(runId),
-          jobs: [{ id: 1, name: "publish", status: "completed", conclusion: "success" }],
-          text: `=== publish (dev mock) ===\nRun ${runId}\n✓ Package extension\n✓ Publish Open VSX\n✓ Publish VS Code Marketplace\nDone.`,
-        })
-      );
       return;
     }
 

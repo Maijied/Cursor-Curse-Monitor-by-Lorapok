@@ -48,32 +48,11 @@ body {
   position: relative;
   z-index: 1;
   height: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
-}
-
-/* Readable docs + long URLs on narrow screens */
-.prose-docs code {
-  word-break: break-all;
-  font-size: 0.875em;
-}
-
-.prose-docs pre {
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.prose-docs table {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-}
-
-.prose-docs a {
-  word-break: break-all;
 }
 
 .glass-panel {
@@ -81,22 +60,6 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-}
-
-@media print {
-  body { overflow: visible !important; background: #fff !important; color: #111 !important; }
-  .app-shell-bg { display: none !important; }
-  aside, .no-print { display: none !important; }
-  .app-scroll-pane { overflow: visible !important; height: auto !important; position: static !important; }
-  main { padding: 0 !important; max-width: none !important; }
-  .glass-panel, .report-document {
-    background: #fff !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: #111 !important;
-  }
-  .report-document * { color: #111 !important; }
-  .report-table th, .report-table td { border-color: #ccc !important; }
 }
 
 .mesh-bg {

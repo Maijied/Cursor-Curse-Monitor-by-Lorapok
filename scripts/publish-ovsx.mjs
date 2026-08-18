@@ -130,10 +130,6 @@ function publishVsix(vsixPath, preRelease) {
   const result = spawnSync("npx", publishArgs, { encoding: "utf8" });
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
   if (result.status !== 0) {
-    if (/already published/i.test(output)) {
-      console.warn("::warning::Version already on Open VSX — treating as success");
-      return output;
-    }
     throw new Error(output.trim() || `ovsx publish failed (${result.status})`);
   }
   return output;
@@ -158,12 +154,6 @@ async function main() {
     }
 
     const target = version.replace(/^v/, "");
-    const canonicalLatest = await fetchCanonicalLatest();
-    if (canonicalLatest === target) {
-      console.warn(`::warning::Version ${target} is already live on Open VSX (${OVSX_PUBLISHER}) — skipping publish`);
-      return;
-    }
-
     const dupRes = await fetch(`https://open-vsx.org/api/${VSCE_PUBLISHER}/${EXT_NAME}`, {
       headers: { Accept: "application/json" },
     });

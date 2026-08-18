@@ -1,7 +1,5 @@
 # Deployment Guide
 
-> **Architecture overview:** domains, hosting, Cloudflare migration, and system diagram — [README.md § Architecture](README.md#architecture).
-
 ## CI/CD Overview
 
 All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
@@ -138,28 +136,6 @@ After publish, search in Extensions:
 
 ---
 
-## Development
-
-```bash
-npm install          # also runs husky via prepare
-npm run compile
-npm test          # extension tests (Node 22+)
-npm run security:scan   # full-repo secretlint (same as CI)
-npm run package   # build .vsix
-```
-
-### Pre-commit (contributors)
-
-After `npm install`, Husky installs a pre-commit hook that runs `secretlint` on **staged** files. To scan the entire repo:
-
-```bash
-npm run security:scan
-```
-
-Config: [`.secretlintrc.json`](.secretlintrc.json). Test fixtures under `tests/` and docs under `website/` are allowlisted where appropriate.
-
----
-
 ## Install from CI Artifact
 
 1. Open **Actions → CI/CD** run
@@ -175,33 +151,22 @@ cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
 
 ## Admin Panel (Mission Control)
 
-**Target URL:** `https://cursor-dev.lorapok.tech` (Pages origin: `https://cursor-monitor-admin-2x8.pages.dev`)
-
-**Cloudflare account:** **Lorapok Facility** (`f049faaf2f67549f5c58837479596a4a`) only.  
-Do **not** use orphan Worker builds under other accounts (e.g. `cursor-curse-monitor-by-lorapok` Workers Builds) — that Worker is not part of this repo. Mail: `cursor-contact@lorapok.tech` (Email Routing → Gmail).
+**Target URL:** `https://admin.lorapok.tech` (staging: `https://cursor-monitor-admin.pages.dev`)
 
 The admin SPA lives in `website/admin/` and deploys to **Cloudflare Pages** with co-located **Pages Functions** (`website/admin/functions/api/`). It is **not** served from GitHub Pages.
 
-Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/cred/CLOUDFLARE_MIGRATION.md`
-
 ### One-time Cloudflare setup
 
-1. In **Lorapok Facility**, create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally with `CLOUDFLARE_ACCOUNT_ID` set to Facility).
+1. Create a Pages project named `cursor-monitor-admin` (or run `npm run deploy:pages` from `website/admin/` once locally).
 2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
 3. **Pages → Settings → Environment variables** (Production):
-   - `GITHUB_TOKEN` — PAT with `repo`, `actions:read`, and `actions:write` (workflow dispatch + runtime logs)
+   - `GITHUB_TOKEN` — PAT with `actions:write` for deploy workflow dispatch
    - `ADMIN_MASTER_EMAIL` — `mdshuvo40@gmail.com`
    - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
    - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
    - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
-4. **DNS:** CNAME `cursor-dev.lorapok.tech` → `cursor-monitor-admin-2x8.pages.dev` (proxied)
-5. **Firebase Console → Auth → Authorized domains:** add `cursor-dev.lorapok.tech` and your `*.pages.dev` host.
-6. **Email (outbound):** Enable Cloudflare Email Sending for `lorapok.tech`:
-   ```bash
-   cd website/admin
-   npx wrangler email sending enable lorapok.tech
-   ```
-   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com`.
+4. **DNS:** CNAME `admin.lorapok.tech` → `<project>.pages.dev`
+5. **Firebase Console → Auth → Authorized domains:** add `admin.lorapok.tech` and your `*.pages.dev` host.
 
 ### Firestore rules
 
@@ -216,9 +181,6 @@ firebase deploy --only firestore:rules --project cursor-curse-by-lorapok
 |--------|---------|
 | `CLOUDFLARE_API_TOKEN` | Pages deploy from `admin-deploy` job |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
-| `CLOUDFLARE_EMAIL_API_TOKEN` | (Recommended) API token with **Email Sending → Send** for outbound mail; synced to Pages as `CLOUDFLARE_EMAIL_API_TOKEN` |
-
-The deploy token alone is not enough if it lacks Email Sending permission — subscribe/invite mail will return `401 Authentication error`. Create a dedicated token in **My Profile → API Tokens** with Account **Email Sending → Send** and add it as `CLOUDFLARE_EMAIL_API_TOKEN` in the `admin-production` environment. Onboard `lorapok.tech` once under **Email Service → Email Sending** in the Cloudflare dashboard.
 
 Push to `main` runs `admin-ci` then `admin-deploy` when secrets are configured.
 
@@ -236,44 +198,6 @@ See [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) for the full QA che
 
 ---
 
-## Browser extension (Firefox AMO + Chrome zip)
-
-Built from `browser-extension/` on every release. **Not** submitted to Chrome Web Store — Chrome users download the zip from GitHub Releases or the marketing site.
-
-### Secrets (GitHub Actions)
-
-| Secret | Purpose |
-|--------|---------|
-| `AMO_JWT_ISSUER` | Firefox Add-ons API JWT issuer (`user:…`) |
-| `AMO_JWT_SECRET` | Firefox Add-ons API JWT secret |
-
-Generate at [Firefox Add-ons Developer Hub → API credentials](https://addons.mozilla.org/developers/addon/api/key/).
-
-### CI/CD flow (release tag / manual dispatch)
-
-1. `npm run browser-ext:build` — Vite → `browser-extension/dist/`
-2. `node browser-extension/scripts/generate-amo-metadata.mjs` — fills all AMO listing fields from `amo/amo-metadata.base.json` + `CHANGELOG.md`
-3. `node browser-extension/scripts/validate-amo-metadata.mjs`
-4. `npx web-ext@8 sign --channel listed --amo-metadata …` — signs and submits to AMO (zero manual form filling)
-5. `node browser-extension/scripts/verify-amo-status.mjs` — polls AMO API
-6. Chrome zip → GitHub Release + `website/downloads/`
-
-### Local dev
-
-```bash
-npm run build -w @lorapok/cursor-monitor-shared
-npm run browser-ext:build
-# Load unpacked: chrome://extensions or about:debugging → Load Temporary Add-on → dist/manifest.json
-```
-
-### Chrome install (users)
-
-1. Download `cursor-curse-monitor-chrome-{version}.zip` from Releases or website
-2. Extract folder
-3. `chrome://extensions` → Developer mode → **Load unpacked** → select extracted folder
-
----
-
 ## Troubleshooting
 
 | Issue | Fix |
@@ -287,6 +211,4 @@ npm run browser-ext:build
 | Extension not in Cursor search | Lower `engines.vscode` if too high; reload window; wait for Open VSX sync |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |
 | Website not updating | Check GitHub Pages is enabled with source: GitHub Actions |
-| AMO sign fails | Verify `AMO_JWT_ISSUER` / `AMO_JWT_SECRET`; extension ID in manifest `browser_specific_settings.gecko.id` |
-| Chrome zip won't install | Use Load unpacked (not .crx); extract zip first |
 | DB backup files accumulating | Stale backups (>1 hour old) are cleaned up automatically |

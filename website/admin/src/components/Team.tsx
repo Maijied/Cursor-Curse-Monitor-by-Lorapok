@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
-import { sendSignInLinkToEmail } from "firebase/auth";
 import { auth, db } from "../lib/firebase";
 import { UserPlus, Shield, Trash2 } from "lucide-react";
 import { syncAdminAccess } from "../lib/api";
@@ -46,30 +45,9 @@ export default function Team() {
         role: "admin",
         createdAt: new Date(),
       });
-
-      try {
-        await sendSignInLinkToEmail(auth, normalized, {
-          url: `${window.location.origin}/login`,
-          handleCodeInApp: true,
-        });
-        window.localStorage.setItem("emailForSignIn", normalized);
-      } catch (linkErr) {
-        console.warn("Magic link email failed:", linkErr);
-      }
-
       if (isMaster) {
         try {
-          const sync = await syncAdminAccess({ email: normalized, action: "add" });
-          const inviteSent = sync.inviteEmail?.sent;
-          if (inviteSent === false) {
-            setMsg(
-              `Admin added. API access synced, but the invite email could not be sent (${sync.inviteEmail?.reason ?? "mail transport unavailable"}). They can still sign in at /login with Google or a magic link.`
-            );
-            setEmail("");
-            fetchAdmins();
-            setLoading(false);
-            return;
-          }
+          await syncAdminAccess({ email: normalized, action: "add" });
         } catch (syncErr) {
           console.warn("API admin sync failed (Firestore invite still saved):", syncErr);
           setMsg(
@@ -81,7 +59,7 @@ export default function Team() {
           return;
         }
       }
-      setMsg("Admin added. Invite email sent — they can sign in at /login with Google or a magic link.");
+      setMsg("Admin added successfully. They can now log in and use API endpoints.");
       setEmail("");
       fetchAdmins();
     } catch (err: unknown) {
@@ -114,14 +92,13 @@ export default function Team() {
     "flex-1 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none transition-all text-[var(--color-text)]";
 
   return (
-    <div className="space-y-8 animate-fade-slide-up">
+    <div className="max-w-3xl animate-fade-slide-up">
       <PageHeader
         title="Team Access"
         description="Manage who has access to the deployment dashboard and authenticated API routes."
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
-      <Card className="min-h-[18rem] flex flex-col">
+      <Card className="mb-6">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-3 text-[var(--color-text)]">
           <UserPlus className="text-[var(--color-accent)]" size={24} />
           Invite Administrator
@@ -162,8 +139,8 @@ export default function Team() {
             <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-neon)_20%,transparent)] flex items-center justify-center text-[var(--color-neon)] font-bold border border-[color-mix(in_srgb,var(--color-neon)_30%,transparent)]">
               {MASTER_ADMIN[0].toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[var(--color-text)] truncate">{MASTER_ADMIN}</p>
+            <div className="flex-1">
+              <p className="font-semibold text-[var(--color-text)]">{MASTER_ADMIN}</p>
               <p className="text-xs text-[var(--color-neon)] font-medium">Master Admin</p>
             </div>
           </div>
@@ -185,7 +162,7 @@ export default function Team() {
                   type="button"
                   onClick={() => handleRemove(record)}
                   disabled={loading}
-                  className="p-2.5 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors"
+                  className="p-2 rounded-lg text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors"
                   aria-label={`Remove ${record.email}`}
                 >
                   <Trash2 size={18} />
@@ -195,7 +172,6 @@ export default function Team() {
           ))}
         </div>
       </Card>
-      </div>
     </div>
   );
 }

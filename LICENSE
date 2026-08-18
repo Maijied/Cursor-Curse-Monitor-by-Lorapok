@@ -1,62 +1,22 @@
-Lorapok Labs Proprietary License
-Cursor Curse Monitor by Lorapok — End User License Agreement (EULA)
+MIT License
 
-Copyright (c) 2026 Lorapok Labs
-Founder & Principal Engineer: Mohammad Maizied Hasan Majumder
+Copyright (c) 2026 Mohammad Maizied Hasan Majumder / Lorapok Labs
 https://lorapok.tech
 
-All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-This software, documentation, marketing materials, and related assets
-(collectively, the "Software") are a proprietary product of Lorapok Labs.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-1. GRANT OF LICENSE
-   Lorapok Labs grants you a limited, non-exclusive, non-transferable,
-   revocable license to download, install, and use the Software solely
-   for your personal or internal business use with Cursor IDE or Visual
-   Studio Code, from official Lorapok Labs distribution channels
-   (including Open VSX, the VS Code Marketplace, GitHub Releases, and
-   https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/).
-
-2. RESTRICTIONS
-   You may NOT, without prior written permission from Lorapok Labs:
-   - sell, rent, lease, sublicense, or commercially exploit the Software;
-   - modify, adapt, translate, or create derivative works from the Software;
-   - reverse engineer, decompile, or disassemble the Software except where
-     applicable law expressly permits and only after written notice;
-   - redistribute, republish, mirror, or host copies of the Software or
-     source code (in whole or in part);
-   - remove or alter copyright, trademark, or proprietary notices.
-
-3. OWNERSHIP
-   The Software is licensed, not sold. Lorapok Labs and Mohammad Maizied
-   Hasan Majumder retain all right, title, and interest in the Software,
-   including all intellectual property rights.
-
-4. THIRD-PARTY SERVICES
-   The Software interacts with Cursor / Anysphere services under your own
-   account. Lorapok Labs is not affiliated with, endorsed by, or sponsored
-   by Cursor / Anysphere.
-
-5. DISCLAIMER
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-
-6. LIMITATION OF LIABILITY
-   TO THE MAXIMUM EXTENT PERMITTED BY LAW, LORAPOK LABS AND MOHAMMAD MAIZIED
-   HASAN MAJUMDER SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
-   CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR
-   GOODWILL, ARISING FROM USE OF THE SOFTWARE.
-
-7. TERMINATION
-   This license terminates automatically if you breach any term. Upon
-   termination you must stop using the Software and delete all copies.
-
-8. PERMISSIONS & LICENSING INQUIRIES
-   For modification rights, redistribution, resale, OEM, or enterprise
-   licensing, contact:
-   - lorapokdev@gmail.com
-   - cursor-contact@lorapok.tech
-
-By downloading, installing, or using the Software, you agree to this EULA.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

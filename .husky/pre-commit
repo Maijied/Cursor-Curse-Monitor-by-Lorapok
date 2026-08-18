@@ -1,6 +1,0 @@
-#!/bin/sh
-STAGED=$(git diff --cached --name-only --diff-filter=ACM)
-if [ -z "$STAGED" ]; then
-  exit 0
-fi
-echo "$STAGED" | tr '\n' '\0' | xargs -0 npx secretlint --secretlintrc .secretlintrc.json

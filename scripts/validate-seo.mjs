@@ -26,8 +26,7 @@ if (!existsSync(sitemapPath)) {
 } else {
   const xml = readFileSync(sitemapPath, "utf8");
   if (!xml.includes("<urlset")) fail("sitemap.xml is not valid urlset XML");
-  if (!xml.includes("privacy.html")) fail("sitemap.xml missing privacy.html");
-  if (!xml.includes("terms.html")) fail("sitemap.xml missing terms.html");
+  if (!xml.includes("lastmod")) warn("sitemap.xml has no lastmod entries");
   if (xml.includes("LorapokLabs/cursor-curse")) {
     fail("sitemap.xml must not link to duplicate Open VSX LorapokLabs namespace");
   }

@@ -1,10 +1,8 @@
 {
-  "id": "/Cursor-Curse-Monitor-by-Lorapok/",
   "name": "Cursor Curse Monitor by Lorapok",
   "short_name": "Curse Monitor",
   "description": "Live Cursor usage dashboard by Lorapok Labs",
   "start_url": "/Cursor-Curse-Monitor-by-Lorapok/",
-  "scope": "/Cursor-Curse-Monitor-by-Lorapok/",
   "display": "standalone",
   "background_color": "#0b0f14",
   "theme_color": "#5b9dff",
@@ -12,8 +10,7 @@
     {
       "src": "assets/icon.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

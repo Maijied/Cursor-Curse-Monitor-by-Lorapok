@@ -5,7 +5,7 @@ import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
-import ChannelSyncStrip from "../ui/ChannelSyncStrip";
+import SyncRadar from "../ui/SyncRadar";
 import { fetchMarketplaceSync, type MarketplaceSync } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
@@ -19,17 +19,12 @@ export default function MarketplaceHealth() {
   const load = () => {
     setLoading(true);
     fetchMarketplaceSync()
-      .then((data) => {
-        setLive(data);
-        setError(null);
-      })
+      .then((data) => { setLive(data); setError(null); })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
@@ -37,11 +32,7 @@ export default function MarketplaceHealth() {
         title="Marketplace Health"
         description="Live channel-by-channel version comparison from registry APIs."
         action={
-          <button
-            type="button"
-            onClick={load}
-            className="inline-flex items-center gap-2 text-sm text-[var(--color-accent-2)] hover:underline"
-          >
+          <button type="button" onClick={load} className="inline-flex items-center gap-2 text-sm text-[var(--color-accent-2)] hover:underline">
             <RefreshCw size={16} aria-hidden="true" /> Refresh
           </button>
         }
@@ -53,14 +44,11 @@ export default function MarketplaceHealth() {
       {live && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {siteData && <ChannelSyncStrip data={siteData} />}
+            {siteData && <SyncRadar data={siteData} />}
             <Card>
               <h3 className="text-lg font-semibold mb-4">Live sync check</h3>
-              <p className="text-xs text-[var(--color-muted)] mb-4">
-                Checked {new Date(live.checkedAt).toLocaleString()}
-              </p>
-              <div className="overflow-x-auto -mx-1 px-1">
-              <table className="w-full text-sm min-w-[16rem]">
+              <p className="text-xs text-[var(--color-muted)] mb-4">Checked {new Date(live.checkedAt).toLocaleString()}</p>
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
                     <th className="pb-2 pr-4">Channel</th>
@@ -77,9 +65,7 @@ export default function MarketplaceHealth() {
                         {ch.warn ? (
                           <Badge variant="warn">Deprecate</Badge>
                         ) : ch.synced ? (
-                          <Badge variant="synced" pulse>
-                            Synced
-                          </Badge>
+                          <Badge variant="synced" pulse>Synced</Badge>
                         ) : (
                           <Badge variant="drift">Drift</Badge>
                         )}
@@ -88,7 +74,6 @@ export default function MarketplaceHealth() {
                   ))}
                 </tbody>
               </table>
-              </div>
             </Card>
           </div>
 

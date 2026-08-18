@@ -9,26 +9,20 @@
   </p>
 
   <p>
-    <a href="https://lorapok.tech">Lorapok Labs</a> · Built for Cursor IDE &amp; VS Code
+    <a href="https://lorapok.tech">Lorapok Labs</a> · Built for Cursor IDE & VS Code
   </p>
 
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci-cd.yml?branch=main&label=CI%2FCD" alt="CI/CD" /></a>
     <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/open-vsx/v/lorapok-labs/cursor-curse-monitor-by-lorapok?label=Open%20VSX" alt="Open VSX" /></a>
     <a href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/visual-studio-marketplace/v/LorapokLabs.cursor-curse-monitor-by-lorapok?label=VS%20Code%20Marketplace" alt="VS Code Marketplace" /></a>
-    <img src="https://img.shields.io/badge/license-Proprietary-red" alt="Proprietary License" />
-    <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code%20%7C%20Browser-6C5CE7" alt="Platform" />
-    <a href="https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/"><img src="https://img.shields.io/badge/Firefox-AMO-FF7139" alt="Firefox Add-ons" /></a>
-    <img src="https://img.shields.io/badge/Chrome-direct%20zip-4285F4" alt="Chrome direct download" />
+    <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
+    <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
   </p>
 
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
-    <a href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/">Website</a> ·
-    <a href="https://cursor-dev.lorapok.tech">Mission Control</a> ·
-    <a href="CONTRIBUTING.md">Contributing</a> ·
-    <a href="DEPLOYMENT.md">Deployment</a> ·
-    <a href="docs/wiki/Home.md">Wiki</a>
+    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases"><img src="https://img.shields.io/github/downloads/Maijied/Cursor-Curse-Monitor-by-Lorapok/total?label=Downloads" alt="Downloads" /></a>
   </p>
 
 </div>
@@ -37,173 +31,62 @@
 
 ## Overview
 
-**Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included quota with Auto/API meters, remaining units, billing cycle reset, on-demand spend, local session insights, and optional fallback to **Composer 2.5 (Fast off)** when limits are exceeded.
+**Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included limits, remaining quota, billing cycle reset, on-demand spend, and automatic fallback to **Composer 2.5 (Fast off)** when limits are exceeded (free slow-pool mode).
 
-This repository is a **monorepo** with four production surfaces:
-
-| Component | Path | Public URL |
-|-----------|------|------------|
-| **IDE extension** | `src/` | Open VSX · VS Code Marketplace · GitHub Releases |
-| **Browser extension** | `browser-extension/` | Firefox AMO · Chrome zip (website / GitHub Releases) |
-| **Marketing site** | `website/` | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
-| **Mission Control (admin)** | `website/admin/` | https://cursor-dev.lorapok.tech |
-
----
-
-## Architecture
-
-### System diagram
-
-```mermaid
-flowchart TB
-  subgraph Users["Users"]
-    IDE["Cursor / VS Code + Extension"]
-    Visitor["Marketing site visitor"]
-    Admin["Admin operator"]
-  end
-
-  subgraph Local["On the developer machine"]
-    IDE -->|"usage-summary + profile"| CursorAPI["Cursor API"]
-    IDE -->|"read-only metadata"| VSCDB["state.vscdb"]
-    IDE -->|"optional quit-then-write"| VSCDB
-    IDE -->|"opt-in heartbeat"| Ping["/api/usage/ping"]
-  end
-
-  subgraph GitHub["GitHub — Maijied/Cursor-Curse-Monitor-by-Lorapok"]
-    Repo["Monorepo source"]
-    GHA["GitHub Actions CI/CD"]
-    GHPages["GitHub Pages (static marketing)"]
-    Releases["Releases + VSIX assets"]
-    GHDisc["Discussions / Issues"]
-  end
-
-  subgraph Marketplaces["Extension distribution"]
-    OVSX["Open VSX — lorapok-labs"]
-    VSCE["VS Code Marketplace — LorapokLabs"]
-  end
-
-  subgraph CF["Cloudflare — Lorapok Facility account"]
-    DNS["cursor-dev.lorapok.tech"]
-    Pages["Pages: cursor-monitor-admin"]
-    Fn["Pages Functions /api/*"]
-    KV["ADMIN_KV"]
-    Email["Email Routing — cursor-contact@lorapok.tech"]
-  end
-
-  subgraph Firebase["Firebase — cursor-curse-by-lorapok"]
-    Auth["Auth (Google + magic link)"]
-    FS["Firestore (visitor stats, rules)"]
-  end
-
-  GHA -->|"vsce / publish-ovsx"| OVSX
-  GHA -->|"vsce publish"| VSCE
-  GHA -->|"site:data + Pages deploy"| GHPages
-  GHA -->|"wrangler pages deploy"| Pages
-  Repo --> GHA
-
-  Visitor --> GHPages
-  Visitor -->|"notice banner, analytics beacon"| Fn
-  Admin --> DNS --> Pages
-  Pages --> Fn
-  Fn --> KV
-  Fn --> Auth
-  Fn -->|"deploy dispatch"| GHA
-  Fn -->|"discussions GraphQL"| GHDisc
-  Ping --> Fn
-  Fn --> FS
-```
-
-### Domains & hosting
-
-| Surface | Domain / host | Provider | Deploy path |
-|---------|---------------|----------|-------------|
-| Marketing website | `maijied.github.io/Cursor-Curse-Monitor-by-Lorapok` | **GitHub Pages** | `ci-cd.yml` → `website` job |
-| Admin SPA + API | `cursor-dev.lorapok.tech` | **Cloudflare Pages** (project `cursor-monitor-admin`) | `ci-cd.yml` → `admin-deploy` job |
-| Pages origin (fallback) | `cursor-monitor-admin-2x8.pages.dev` | Cloudflare Pages | Same as admin |
-| Brand / DNS zone | `lorapok.tech` | **Cloudflare DNS** | CNAME `cursor-dev` → Pages |
-| Extension registries | Open VSX, VS Code Marketplace | Third-party | `deploy` job on release |
-| Auth & analytics store | Firebase project `cursor-curse-by-lorapok` | **Google Firebase** | Rules via `firebase deploy` |
-
-**Cloudflare migration:** Admin and API were consolidated onto the **Lorapok Facility** Cloudflare account. DNS for `cursor-dev.lorapok.tech` points at the Pages project; the legacy standalone Worker in `website/admin-api/` is **deprecated** — all `/api/*` routes live in `website/admin/functions/api/`. See [DEPLOYMENT.md](DEPLOYMENT.md) for secrets, KV bindings, and the full checklist.
-
-### Project structure
-
-```
-cursor-usage-monitor/
-├── src/                          # VS Code / Cursor extension (TypeScript)
-├── dist/                         # Compiled extension output
-├── media/                        # Icons and marketing assets
-├── scripts/
-│   ├── generate-site-data.mjs    # Builds website/site-data.json (marketplace + analytics)
-│   ├── generate-seo.mjs          # Builds sitemap.xml, robots.txt, seo.json
-│   ├── validate-seo.mjs          # Lint SEO artifacts + canonical URL guard
-│   └── publish-ovsx.mjs          # Repacks VSIX for lorapok-labs namespace
-├── tests/                        # Extension unit tests (node:sqlite)
-├── website/
-│   ├── index.html                # Marketing landing page
-│   ├── site.js / analytics.js    # Client scripts (notice banner + live KPI beacon)
-│   ├── site-data.json            # Generated marketplace + download stats
-│   ├── seo.json / sitemap.xml    # Generated SEO manifest + sitemap
-│   └── admin/
-│       ├── src/                  # React Mission Control SPA (PWA-installable)
-│       ├── functions/api/        # Cloudflare Pages Functions (production API)
-│       └── vite-dev-api.mjs      # Local dev API middleware
-├── .github/workflows/
-│   ├── ci-cd.yml                 # Unified CI/CD pipeline
-│   └── seo.yml                   # SEO audit, validation, and artifact refresh
-├── .github/ISSUE_TEMPLATE/       # Extension bug, website issue, security templates
-├── DEPLOYMENT.md                 # Release + Cloudflare setup
-└── AGENTS.md                     # Agent / cloud dev instructions
-```
-
-### Data flows (summary)
-
-1. **Extension** — Reads local Cursor auth and privacy-safe metadata (daily line stats, active models, session titles), calls `api2.cursor.sh` for quota, optionally writes fallback model after quit with WAL-safe backups. Opt-in heartbeats feed live-user counts to Mission Control. Native workbench toasts overlay the open editor (no extra notification tab).
-2. **Marketing site** — Static HTML on GitHub Pages; loads `site-data.json` for download counts, polls `/api/analytics/stats` for live visitor KPIs, and uses `/api/notice` for the public banner.
-3. **Mission Control** — Firebase-authenticated PWA on Cloudflare Pages; Pages Functions read/write KV (notices, admins), dispatch GitHub deploys, proxy analytics, and expose marketplace health APIs.
-4. **CI/CD** — Extension build, admin deploy, GitHub Pages publish, and a dedicated SEO workflow that regenerates sitemap and site-data artifacts on schedule and on merge to `main`.
-
----
+> *"Know your limits before they know you."* — Lorapok Labs
 
 ## Features
 
 | Feature | Description |
 |--------|-------------|
-| **Sidebar dashboard** | Included quota, Auto/API meters, budget gauge, billing reset, local insights, cycle trend |
+| **Sidebar dashboard** | Activity bar → **Cursor Curse Monitor** |
 | **Status bar** | Live usage percentage at a glance |
 | **Auto refresh** | Polls Cursor API every 60s (configurable) |
-| **Local insights** | Today’s accepted lines, active models, recent session titles (no chat bodies) |
-| **Cycle trend** | Sparkline from on-machine usage history |
 | **Custom budget** | Set a personal USD cap in the dashboard |
-| **Limit alerts** | Native toast at 80% (configurable), over the open editor |
+| **Limit alerts** | Warning at 80% (configurable) |
 | **Free fallback** | Auto-switches to Composer 2.5 (Fast off) at 100% |
 | **Team aware** | Shows team vs individual limit type |
-| **DB safety** | Read-only while Cursor runs; quit-then-write with WAL/SHM backup + integrity checks |
-| **Security scanner** | Manage Processes–style alerts when API keys, tokens, or private keys appear in files, clipboard, or paste fields |
-| **Pre-commit / CI** | `secretlint` on staged files and in CI to block accidental secret commits |
+| **DB safety** | Atomic writes, backup/restore, integrity checks |
 
-**Chat limitation:** secrets pasted only into Cursor Composer (never saved to disk) are **not** detectable — use scan-on-save and pre-commit for files you commit.
+## Screenshots
+
+Open the **Cursor Curse Monitor** panel in the activity bar after install to see:
+
+- Usage progress bar (included / remaining)
+- Billing cycle and days until reset
+- On-demand status and spend
+- Fallback model status when limit is crossed
 
 ## Installation
 
-### Open VSX (Cursor) — recommended
+### From Open VSX (Cursor Marketplace) — Recommended for Cursor
 
-[open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok)
+1. Open **Extensions** in Cursor
+2. Search `Cursor Curse Monitor by Lorapok` or `lorapok-labs.cursor-curse-monitor-by-lorapok`
+3. Click **Install**
 
-Search: `lorapok-labs.cursor-curse-monitor-by-lorapok`
+**Direct link:** [Open VSX Registry](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok)
 
-### VS Code Marketplace
+### From VS Code Marketplace — Recommended for VS Code
 
-[marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok)
+1. Open **Extensions** in VS Code
+2. Search `Cursor Curse Monitor by Lorapok` or `LorapokLabs.cursor-curse-monitor-by-lorapok`
+3. Click **Install**
 
-### From VSIX
+**Direct link:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok)
+
+### From VSIX (manual)
 
 ```bash
 git clone https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git
 cd Cursor-Curse-Monitor-by-Lorapok
-npm install && npm run compile && npm run package
+npm install
+npm run compile
+npm run package
 cursor --install-extension *.vsix
 ```
+
+Reload Cursor: `Developer: Reload Window`
 
 ## Configuration
 
@@ -211,107 +94,151 @@ cursor --install-extension *.vsix
 |---------|---------|-------------|
 | `cursorCurseMonitor.pollIntervalSeconds` | `60` | API refresh interval |
 | `cursorCurseMonitor.customBudgetLimit` | `0` | Personal USD budget cap |
-| `cursorCurseMonitor.autoApplyFallbackModel` | `false` | Auto-switch at 100% (writes `state.vscdb`) |
+| `cursorCurseMonitor.autoApplyFallbackModel` | `false` | Auto-switch to Composer 2.5 (Fast off) at 100%. Rewrites `state.vscdb`; unsafe on large databases. |
 | `cursorCurseMonitor.showStatusBar` | `true` | Show usage in status bar |
-| `cursorCurseMonitor.statusBarUsageSource` | `autoApi` | `plan`, `autoApi`, or `both` |
+| `cursorCurseMonitor.statusBarUsageSource` | `autoApi` | Status bar numbers: `plan` (included/budget %), `autoApi` (Auto · API %), or `both` |
 | `cursorCurseMonitor.warnAtPercent` | `80` | Warning notification threshold |
-| `cursorCurseMonitor.securityScanEnabled` | `true` | Scan open files and paste for exposed credentials |
-| `cursorCurseMonitor.scanOnSave` | `true` | Scan document buffer before save |
-| `cursorCurseMonitor.blockSaveOnSecret` | `false` | Block save when secrets detected (warn-only by default) |
 
-### Security commands
+### Status bar
+
+Toggle visibility and choose which Cursor usage numbers appear in the bottom status bar. Open **Cursor Settings → Extensions → Cursor Curse Monitor by Lorapok**.
+
+- `cursorCurseMonitor.showStatusBar` — show or hide the status bar item.
+- `cursorCurseMonitor.statusBarUsageSource`:
+  - `plan` — included quota (`totalPercentUsed`) or USD budget %, rounded. Same number as the dashboard Usage gauge. This is **not** the API features percent.
+  - `autoApi` (default) — `Auto X% · API Y%` from Cursor (`autoPercentUsed` / `apiPercentUsed`), up to 2 decimal places. Same numbers as the **API features** chip.
+  - `both` — plan percent plus Auto/API.
+
+Hover the status bar to see Plan, Auto, and API percentages together.
+
+## Commands
 
 | Command | Description |
 |---------|-------------|
-| `Cursor Curse Monitor: Scan Workspace for Secrets` | Scan all workspace text files |
-| `Cursor Curse Monitor: Scan Clipboard for Secrets` | One-shot clipboard scan |
+| `Cursor Curse Monitor: Open Dashboard` | Open sidebar panel |
+| `Cursor Curse Monitor: Refresh Now` | Force refresh usage data |
+| `Cursor Curse Monitor: Apply Free Fallback Model` | Manually apply Composer 2.5 (Fast off) |
 
-Contributors: pre-commit runs `secretlint` on staged files (`npm run security:scan` for full-repo check).
+## How it works
+
+1. Reads `cursorAuth/accessToken` from Cursor's local SQLite state (`state.vscdb`)
+2. Calls `https://api2.cursor.sh/auth/usage-summary`
+3. Calls `https://api2.cursor.sh/auth/full_stripe_profile`
+4. When usage ≥ 100%, optionally writes Composer 2.5 (Fast off) into Cursor model config
+
+> **Note:** Uses undocumented Cursor internal APIs. Behavior may change if Cursor updates their endpoints.
+
+### Database Safety
+
+The extension takes multiple precautions when writing to the Cursor state database:
+
+- **Pre-write integrity check** — validates SQLite header, file size, and existence
+- **Automatic backup** — creates a timestamped backup before any write
+- **Atomic writes** — writes to a temp file then renames (with cross-filesystem fallback)
+- **Post-write verification** — validates integrity after writing
+- **Automatic restore** — restores from backup on any failure
+- **Retry with backoff** — retries once after restoring the backup
+- **Timeout protection** — operations abort after 15s to prevent hangs
+- **Parameterized queries** — prevents SQL injection
+- **Stale backup cleanup** — removes old backups automatically
+
+## CI/CD
+
+All CI/CD is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-cd.yml)):
+
+| Trigger | What happens |
+|---------|-------------|
+| **PR to `main`** | Build, compile, validate, package — no deploy |
+| **Push to `main`** | Auto-patch bump → deploy to both marketplaces → update website |
+| **Manual dispatch** | Major/minor/patch bump → deploy → update website |
+| **Tag `v*`** | Deploy to both marketplaces → update website |
+
+### Auto-patch (default)
+
+Every push to `main` automatically:
+1. Bumps the patch version (e.g., `0.5.0` → `0.5.1`)
+2. Creates and pushes a git tag
+3. Publishes to Open VSX + VS Code Marketplace
+4. Creates a GitHub Release with VSIX
+5. Updates the project website
+
+### Major/Minor releases
+
+For breaking or feature releases, use GitHub Actions:
+1. Go to **Actions → CI/CD → Run workflow**
+2. Select `major` or `minor`
+3. Optionally set a custom version
+4. Run
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full setup details.
+
+## Privacy
+
+**Only your logged-in Cursor account** can see usage in this extension. Team members' individual usage is not shown.
+
+- Auth token stays on your machine
+- API calls go only to `api2.cursor.sh`
+- No telemetry, analytics, or third-party tracking
+
+See the [privacy policy](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html).
 
 ## Development
 
 ```bash
 npm install
 npm run compile
-npm test          # extension tests (Node 22+)
-npm run package   # build .vsix
+npm run watch   # optional, during development
 ```
 
-Press **F5** in Cursor/VS Code for the Extension Development Host.
+Press **F5** in Cursor/VS Code to launch the Extension Development Host.
 
-**Admin panel (local):**
+## Publishing
 
-```bash
-cd website/admin && npm install && npm run dev
-# http://localhost:5173
-```
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full CI/CD setup.
 
-See [website/admin/README.md](website/admin/README.md) and [AGENTS.md](AGENTS.md) for component-specific commands.
+Requires GitHub secrets:
+- `OVSX_PAT` — Open VSX access token
+- `VSCE_PAT` — VS Code Marketplace personal access token
 
-## CI/CD
+## Marketplace Links
 
-| Workflow | File | Purpose |
-|----------|------|---------|
-| **CI/CD** | [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) | Extension build, admin deploy, GitHub Pages |
-| **SEO** | [`.github/workflows/seo.yml`](.github/workflows/seo.yml) | Regenerate `site-data.json`, sitemap, validate canonical URLs |
-
-### CI/CD triggers
-
-| Trigger | Result |
-|---------|--------|
-| PR to `main` | Build, validate, package, SEO audit — no deploy |
-| Push to `main` | Extension CI, admin build/deploy*, marketing site update, SEO publish* |
-| Weekly (Mon 06:00 UTC) | Refresh SEO artifacts and marketplace stats |
-| Manual dispatch | Version bump → marketplace publish → website |
-| Tag `v*` | Marketplace deploy + GitHub Release + website |
-
-\* Admin deploy requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. SEO publish commits refreshed artifacts when they change.
-
-Regenerate SEO locally:
-
-```bash
-npm run site:data && npm run site:seo && npm run site:seo:validate
-```
-
-Full setup: [DEPLOYMENT.md](DEPLOYMENT.md)
-
-## Privacy
-
-- Auth token stays on your machine; API calls go only to `api2.cursor.sh`
-- Local insights read session titles, model names, and line-accept stats — never chat transcripts
-- **Security scanner** runs locally; detected secrets are never uploaded — only redacted snippets appear in the alert UI
-- Secrets pasted only into Composer chat (never saved to disk) are not scannable; use scan-on-save and pre-commit for committed files
-- Opt-in install heartbeat uses an anonymous `installId` when enabled
-- No third-party analytics in the extension itself
-
-[Privacy policy](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html)
-
-## Links
-
-| Resource | URL |
-|----------|-----|
-| Website | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
-| Admin (Mission Control) | https://cursor-dev.lorapok.tech |
-| Open VSX (canonical) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
-| VS Code Marketplace | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
-| GitHub Releases | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
-| Report a bug | [Issue templates](.github/ISSUE_TEMPLATE/) |
-| Security | [.github/SECURITY.md](.github/SECURITY.md) |
-| Lorapok Labs | https://lorapok.tech |
+| Marketplace | URL |
+|-------------|-----|
+| **Open VSX** (Cursor) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
+| **VS Code Marketplace** | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
+| **GitHub Releases** | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
+| **Project Website** | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
 
 ## Author
 
-**Mohammad Maizied Hasan Majumder** (Maijied) — Founder & Principal Engineer @ [Lorapok Labs](https://lorapok.tech)
+| Field | Detail |
+|-------|--------|
+| **Name** | Mohammad Maizied Hasan Majumder |
+| **Alias** | Maijied |
+| **Publisher** | Lorapok Labs (`lorapok-labs` on Open VSX, `LorapokLabs` on VS Code Marketplace) |
+| **Role** | Founder and Principal Engineer @ [Lorapok Labs](https://lorapok.tech) · Senior Software Engineer @ [Shohoz Ltd](https://shohoz.com) |
+| **Location** | Dhaka, Bangladesh |
+| **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) |
+| **GitHub** | [@Maijied](https://github.com/Maijied) |
+
+### Lorapok Labs
+
+| | |
+|---|---|
+| **Company** | [Lorapok Labs](https://lorapok.tech) |
+| **Model** | Mostly open source — **20+** public projects |
+| **Focus** | Cross-platform media, Laravel packages, Android AI |
+| **Platforms** | Web · Windows · Mac · Linux · Android · npm · PyPI · Packagist |
+
+> *"Code is the language of the future. Every line written is a step toward it."*  
+> — **Maizied**
 
 ## License
 
-**Proprietary product of [Lorapok Labs](https://lorapok.tech).**  
-Founder: **Mohammad Maizied Hasan Majumder**
+MIT © [Mohammad Maizied Hasan Majumder](https://github.com/Maijied) / [Lorapok Labs](https://lorapok.tech)
 
-You may download, install, and use this extension for personal or internal use from official Lorapok Labs channels. You may **not** sell, redistribute, modify, or create derivative works without written permission from Lorapok Labs.
-
-Full terms: [LICENSE](LICENSE) · [Terms of Use](https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/terms.html)
+See [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
-Independent product by Lorapok Labs. Not affiliated with, endorsed by, or sponsored by Cursor / Anysphere.
+This extension is an independent open-source product by Lorapok Labs. It is not affiliated with, endorsed by, or sponsored by Cursor / Anysphere. "Cursor" is a trademark of its respective owner.

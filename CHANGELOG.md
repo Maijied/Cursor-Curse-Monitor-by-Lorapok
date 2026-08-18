@@ -6,46 +6,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
-### Added
-
-- **Browser extension** (`browser-extension/`) — Firefox Add-ons (AMO auto-publish) + Chrome direct-download zip
-- Animated Budget Tracker popup UI with spend-over-time chart, Lorapok + Cursor footer on every page
-- Hybrid auth: auto-capture from cursor.com dashboard or manual token in Options
-- **Security scanner** — Manage Processes-style alerts for exposed credentials in workspace files, clipboard, commits (pre-commit + CI), and extension paste fields
-- Local insights on the dashboard: daily Tab/Composer accepted lines, active models, and recent session titles (metadata only — no chat bodies)
-- Cycle trend sparkline from on-machine usage history
-- Team on-demand spend when Cursor’s API returns it
-
-### Changed
-
-- Dashboard restyle: included quota is the hero metric with Auto/API meters; personal USD cap no longer hides plan usage
-- Native workbench toasts overlay the open editor instead of opening a Notification tab
-- Manual refresh is quiet (status bar updates; no toast)
-
-### Fixed
-
-- Team/enterprise sessions with an unused personal budget cap showed 0% used while API was at 100%
-- Auto/API feature chips printed unrounded floats
-
-## [0.5.9] - 2026-08-17
-
-### Added
-
-- **Logs panel** and **Mailbox** in Mission Control — unified API/mail/system logs with filters; compose and test outbound mail
-- Mail ops scripts: `probe-mail-token.mjs`, `setup-mail-secrets.mjs`, `enable-mail.mjs`
-- GitHub social preview asset (`media/github-social-preview.png`, `website/assets/marketing/github-social-preview.png`)
-- Refreshed OG social card for v0.5.9 stable (Mission Control, Mailbox, Logs, PWA)
-
-### Fixed
-
-- CI deploy syncs `CLOUDFLARE_EMAIL_API_TOKEN` **before** Pages deploy; dedicated email secret supported
-- Outbound mail via Cloudflare Email REST API with mailbox logging and subscribe confirmation emails
-- Android PWA routing, Remember me auth, SEO CI audit/publish workflow
-
-### Changed
-
-- Marketing OG image and GitHub social preview updated for stable release branding
-
 ## [0.5.7] - 2026-08-14
 
 ### Fixed

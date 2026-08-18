@@ -1,15 +1,4 @@
-import { Activity, Download, Eye, Store, Users } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-} from "recharts";
+import { Activity, Download, Package, Store } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import KpiCard from "../ui/KpiCard";
 import Card from "../ui/Card";
@@ -18,13 +7,11 @@ import StatusDot from "../ui/StatusDot";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DriftAlert from "../ui/DriftAlert";
-import StableFallbackPanel from "../ui/StableFallbackPanel";
 import DownloadBreakdownPanel from "../ui/DownloadBreakdown";
 import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
-import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
@@ -37,8 +24,6 @@ function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger
 export default function Overview() {
   const { data, error, loading } = useSiteData();
   const { stats: visitors, live: visitorsLive } = useVisitorStats(data?.visitors);
-  const { stats: usageStats, live: usageLive } = useUsageStats();
-  const activeUsers = usageStats?.optInUniques ?? null;
 
   if (loading) {
     return (
@@ -61,28 +46,6 @@ export default function Overview() {
   const syncVariant = syncBadgeVariant(data.syncStatus);
   const downloads = data.downloads;
 
-  const clickChartData = [
-    { name: "Open VSX", value: visitors.packageClicks.ovsx ?? 0 },
-    { name: "VS Code", value: visitors.packageClicks.vscode ?? 0 },
-    { name: "GitHub", value: visitors.packageClicks.github ?? 0 },
-    { name: "VSIX", value: visitors.packageClicks.vsix ?? 0 },
-    { name: "npm", value: visitors.packageClicks.npm ?? 0 },
-    { name: "Duplicate", value: visitors.packageClicks.openvsxDuplicate ?? 0 },
-  ];
-
-  const reachChartData = [
-    { name: "Visits", value: visitors.websiteVisits },
-    { name: "Clicks", value: Object.values(visitors.packageClicks).reduce((s, n) => s + (n ?? 0), 0) },
-    { name: "Engagement", value: visitors.totalEngagement },
-  ];
-
-  const chartTooltipStyle = {
-    backgroundColor: "var(--color-bg-elevated)",
-    border: "1px solid var(--color-border)",
-    borderRadius: "0.75rem",
-    color: "var(--color-text)",
-  };
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -98,7 +61,7 @@ export default function Overview() {
 
       <DriftAlert data={data} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="Total Downloads"
           value={formatCount(downloads?.total ?? 0)}
@@ -106,35 +69,11 @@ export default function Overview() {
           delayClass="stagger-1"
         />
         <KpiCard
-          label="Website Visits"
-          value={formatCount(visitors.websiteVisits)}
-          sub={
-            visitorsLive ? (
-              <span className="text-xs text-[var(--color-neon)]">Live from analytics API</span>
-            ) : (
-              <span className="text-xs text-[var(--color-muted)]">Cached site data</span>
-            )
-          }
-          icon={<Eye className="text-[var(--color-accent-2)]" size={24} />}
-          delayClass="stagger-2"
-        />
-        <KpiCard
-          label="Engagement"
+          label="Website Engagement"
           value={formatCount(visitors.totalEngagement)}
-          sub={<span className="text-xs text-[var(--color-muted)]">visits + package clicks</span>}
+          sub={<span className="text-xs text-[var(--color-muted)]">{formatCount(visitors.websiteVisits)} page visits</span>}
           icon={<Activity className="text-[var(--color-accent-2)]" size={24} />}
-          delayClass="stagger-3"
-        />
-        <KpiCard
-          label="Live Users"
-          value={formatCount(activeUsers?.unique1h ?? 0)}
-          sub={
-            <span className="text-xs text-[var(--color-muted)]">
-              {formatCount(activeUsers?.unique24h ?? 0)} in 24h · opt-in heartbeat
-            </span>
-          }
-          icon={<Users className="text-[var(--color-neon)]" size={24} />}
-          delayClass="stagger-4"
+          delayClass="stagger-2"
         />
         <KpiCard
           label="Open VSX (canonical)"
@@ -142,69 +81,22 @@ export default function Overview() {
           sub={
             data.ovsx.downloadCount != null ? (
               <span className="text-xs text-[var(--color-muted)]">{formatCount(data.ovsx.downloadCount)} downloads</span>
-            ) : usageLive ? undefined : (
-              <span className="text-xs text-[var(--color-muted)]">Usage API offline</span>
-            )
+            ) : undefined
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
-          delayClass="stagger-5"
+          delayClass="stagger-3"
+        />
+        <KpiCard
+          label="Package Version"
+          value={data.packageVersion}
+          icon={<Package className="text-[var(--color-accent)]" size={24} />}
+          delayClass="stagger-4"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Package Click Channels</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={clickChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: "var(--color-muted)", fontSize: 10 }}
-                  interval={0}
-                  angle={-28}
-                  textAnchor="end"
-                  height={52}
-                />
-                <YAxis tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Bar dataKey="value" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card>
-          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Website Reach</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={reachChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: "var(--color-muted)", fontSize: 10 }}
-                  interval={0}
-                  angle={-28}
-                  textAnchor="end"
-                  height={52}
-                />
-                <YAxis tick={{ fill: "var(--color-muted)", fontSize: 12 }} />
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="var(--color-accent-2)"
-                  fill="color-mix(in srgb, var(--color-accent-2) 25%, transparent)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {downloads && (
-          <div className="min-w-0">
+          <div className="lg:col-span-2">
             <DownloadBreakdownPanel
               total={downloads.total}
               breakdown={downloads.breakdown}
@@ -212,23 +104,73 @@ export default function Overview() {
             />
           </div>
         )}
-        <div className="min-w-0">
-          <SyncRadar data={data} />
-        </div>
+        <SyncRadar data={data} />
       </div>
 
-      <VisitorStatsPanel
-        stats={visitors}
-        live={visitorsLive}
-        activeUsers={activeUsers}
-        activeUsersLive={usageLive}
-      />
+      <VisitorStatsPanel stats={visitors} live={visitorsLive} />
 
-      {data.stableFallback && <StableFallbackPanel info={data.stableFallback} />}
-
-      <p className="text-xs text-[var(--color-muted)] text-center">
-        Site data refreshed {new Date(data.generatedAt).toLocaleString()}
-      </p>
+      <Card>
+        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
+                <th className="pb-3 pr-4 font-medium">Channel</th>
+                <th className="pb-3 pr-4 font-medium">Version</th>
+                <th className="pb-3 pr-4 font-medium">Downloads</th>
+                <th className="pb-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {[
+                {
+                  name: "GitHub",
+                  version: data.github.releaseTag,
+                  downloads: data.github.totalReleaseDownloads,
+                  ok: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
+                },
+                {
+                  name: "Open VSX (lorapok-labs)",
+                  version: data.ovsx.version ?? "—",
+                  downloads: data.ovsx.downloadCount,
+                  ok: data.ovsx.version === data.packageVersion,
+                },
+                {
+                  name: "VS Code",
+                  version: data.vscode.version ?? "—",
+                  downloads: data.vscode.downloadCount ?? data.vscode.installCount,
+                  ok: data.vscode.version === data.packageVersion,
+                },
+                {
+                  name: "Open VSX duplicate",
+                  version: data.ovsxDuplicate?.version ?? "—",
+                  downloads: data.ovsxDuplicate?.downloadCount,
+                  ok: false,
+                  warn: true,
+                },
+              ].map((row) => (
+                <tr key={row.name} className="hover:bg-white/[0.02]">
+                  <td className="py-3 pr-4 text-[var(--color-text)]">{row.name}</td>
+                  <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{row.version}</td>
+                  <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{formatCount(row.downloads ?? 0)}</td>
+                  <td className="py-3">
+                    {"warn" in row && row.warn ? (
+                      <Badge variant="warn">Deprecate listing</Badge>
+                    ) : row.ok ? (
+                      <Badge variant="synced" pulse>Synced</Badge>
+                    ) : (
+                      <Badge variant="drift">Behind</Badge>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-[var(--color-muted)] mt-4">
+          Data refreshed {new Date(data.generatedAt).toLocaleString()}
+        </p>
+      </Card>
     </div>
   );
 }
