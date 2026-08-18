@@ -23,6 +23,10 @@ export async function onRequestGet(context) {
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
+  // #region agent log
+  fetch('http://127.0.0.1:7556/ingest/7c000e6b-3ce8-413e-a7c5-8206c8de10b1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'434d23'},body:JSON.stringify({sessionId:'434d23',location:'tags.ts:onRequestGet',message:'tags handler entered',data:{hasActivityLog:true,path:new URL(request.url).pathname},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+
   const res = await githubFetch(`/repos/${GITHUB_REPO}/tags?per_page=30`, env);
 
   if (res.ok) {
