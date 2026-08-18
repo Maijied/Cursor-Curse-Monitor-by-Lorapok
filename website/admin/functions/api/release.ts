@@ -15,7 +15,9 @@ export async function onRequestPost(context) {
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Release handler error", err);
-    const response = jsonResponse({ error: "Server error" }, 500);
+    const status = err instanceof SyntaxError ? 400 : 500;
+    const message = status === 400 ? "Invalid JSON body" : "Server error";
+    const response = jsonResponse({ error: message }, status);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 }
