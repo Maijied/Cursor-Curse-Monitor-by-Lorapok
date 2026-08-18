@@ -11,6 +11,11 @@ import { fetchMarketplaceSync, type MarketplaceSync } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
 
+/**
+ * Displays live marketplace synchronization status and channel health.
+ *
+ * @returns The marketplace health page content
+ */
 export default function MarketplaceHealth() {
   const { data: siteData } = useSiteData();
   const [live, setLive] = useState<MarketplaceSync | null>(null);

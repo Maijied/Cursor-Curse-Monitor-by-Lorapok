@@ -1,12 +1,24 @@
 import Badge from "../ui/Badge";
 import type { MailboxMessage } from "../../lib/api";
 
+/**
+ * Selects the badge variant for a mailbox message category.
+ *
+ * @param category - The message category.
+ * @returns `synced` for test and subscribe categories; `neutral` for all other categories.
+ */
 function categoryVariant(category: string): "synced" | "neutral" | "danger" {
   if (category === "test" || category === "subscribe") return "synced";
   if (category === "notice") return "neutral";
   return "neutral";
 }
 
+/**
+ * Formats a mailbox message address with a direction indicator.
+ *
+ * @param row - The mailbox message containing the direction and address.
+ * @returns The recipient address prefixed with `→` for outbound messages, or the sender address prefixed with `←` for inbound messages.
+ */
 export function formatMailboxAddress(row: MailboxMessage): string {
   return row.direction === "outbound" ? `→ ${row.to}` : `← ${row.from}`;
 }
@@ -16,6 +28,12 @@ type MailboxMessagePreviewProps = {
   expanded?: boolean;
 };
 
+/**
+ * Renders a mailbox message with its metadata, address, errors, and available content previews.
+ *
+ * @param message - The mailbox message to display
+ * @param expanded - Whether to use expanded content previews
+ */
 export default function MailboxMessagePreview({ message, expanded = false }: MailboxMessagePreviewProps) {
   const iframeHeight = expanded ? "min-h-[50vh] h-[50vh]" : "h-64";
   const textMax = expanded ? "max-h-[min(40vh,24rem)]" : "max-h-48";

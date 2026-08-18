@@ -33,6 +33,9 @@ type SeoManifest = {
   marketplaces: Record<string, string | null>;
 };
 
+/**
+ * Displays the generated SEO manifest, including metadata, social previews, sitemap pages, structured data, and marketplace links.
+ */
 export default function SeoDashboard() {
   const [seo, setSeo] = useState<SeoManifest | null>(null);
   const [error, setError] = useState<string | null>(null);

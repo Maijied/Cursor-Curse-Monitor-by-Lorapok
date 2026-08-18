@@ -22,6 +22,9 @@ function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger
   return "neutral";
 }
 
+/**
+ * Renders the Mission Control dashboard with synchronization status, marketplace metrics, visitor statistics, and service information.
+ */
 export default function Overview() {
   const { data, error, loading } = useSiteData();
   const { stats: visitors, live: visitorsLive } = useVisitorStats(data?.visitors);

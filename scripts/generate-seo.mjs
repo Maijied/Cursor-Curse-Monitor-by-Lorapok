@@ -16,6 +16,10 @@ const seoConfig = parseYaml(readFileSync(join(website, "seo.yml"), "utf8"));
 
 const SITE_BASE = (seoConfig.site?.base ?? pkg.homepage ?? "").replace(/\/$/, "");
 
+/**
+ * Reads optional site metadata from the website configuration file.
+ * @return {Object|null} The parsed site metadata, or `null` when the file is absent.
+ */
 function readSiteData() {
   const path = join(website, "site-data.json");
   if (!existsSync(path)) return null;
@@ -26,6 +30,11 @@ function isoDate(d = new Date()) {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Retrieves the latest Git commit date for a file.
+ * @param {string} file - The path to the file.
+ * @return {string} The commit date in `YYYY-MM-DD` format, or the current date if unavailable.
+ */
 function lastGitDate(file) {
   try {
     const out = execSync(`git log -1 --format=%cs -- "${file}"`, {
@@ -38,6 +47,12 @@ function lastGitDate(file) {
   }
 }
 
+/**
+ * Replaces recognized variable placeholders in text with their corresponding values.
+ * @param {string} text - The text containing `{variable}` placeholders.
+ * @param {Object} vars - The values to substitute for matching variable names.
+ * @returns {string} The text with matching placeholders replaced and unknown placeholders preserved.
+ */
 function interpolate(text, vars) {
   if (!text || typeof text !== "string") return text;
   return text.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
@@ -54,17 +69,32 @@ const vars = {
   packageVersion: pkg.version,
 };
 
+/**
+ * Converts a page path into an absolute site URL.
+ * @param {string} path - The page path, with or without a leading slash.
+ * @return {string} The absolute URL for the page.
+ */
 function pageUrl(path) {
   const p = path.startsWith("/") ? path : `/${path}`;
   return p === "/" ? `${SITE_BASE}/` : `${SITE_BASE}${p}`;
 }
 
+/**
+ * Resolves an image path to an absolute URL.
+ * @param {string} path - The image path or URL.
+ * @return {string} The absolute image URL, using the default social-card image when no path is provided.
+ */
 function absImage(path) {
   if (!path) return `${SITE_BASE}/assets/marketing/og-social-card.png`;
   if (path.startsWith("http")) return path;
   return `${SITE_BASE}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * Builds SEO-related HTML metadata for a configured page.
+ * @param {Object} pageCfg - The page configuration containing title, description, path, and optional social metadata.
+ * @return {Object} The generated metadata lines and resolved page values, including title, description, canonical URL, keywords, and social metadata.
+ */
 function buildHeadBlock(pageKey, pageCfg) {
   const title = interpolate(pageCfg.title, vars);
   const description = interpolate(pageCfg.description, vars);
@@ -103,14 +133,28 @@ function buildHeadBlock(pageKey, pageCfg) {
   return { lines: lines.join("\n  "), title, description, canonical, keywords: uniqueKeywords, ogTitle, ogDescription, twitterTitle, twitterDescription, ogImage };
 }
 
+/**
+ * Escapes characters with special meaning in HTML text.
+ * @param {*} s - The value to escape.
+ * @return {string} The HTML-safe text.
+ */
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/**
+ * Escapes text for safe use in an HTML attribute value.
+ * @param {*} s - The value to escape.
+ * @return {string} The HTML-escaped attribute value.
+ */
 function escapeAttr(s) {
   return escapeHtml(s).replace(/"/g, "&quot;");
 }
 
+/**
+ * Builds the Schema.org JSON-LD graph for the configured structured data.
+ * @return {string} A formatted JSON-LD document containing the Schema.org context and graph.
+ */
 function buildJsonLd() {
   const graph = (seoConfig.structuredData?.graph ?? []).map((item) => {
     const node = {
@@ -141,6 +185,12 @@ function buildJsonLd() {
   return JSON.stringify({ "@context": "https://schema.org", "@graph": graph }, null, 2);
 }
 
+/**
+ * Synchronizes SEO metadata and structured data in an HTML file.
+ * @param {string} htmlPath - The path to the HTML file relative to the website directory.
+ * @param {string} headLines - The SEO metadata to place in the document head.
+ * @param {string} jsonLd - The serialized structured data to place in the document.
+ */
 function injectSeoBlock(htmlPath, headLines, jsonLd) {
   const fullPath = join(website, htmlPath);
   if (!existsSync(fullPath)) {

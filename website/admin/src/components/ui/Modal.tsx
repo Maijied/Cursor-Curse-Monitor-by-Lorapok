@@ -18,6 +18,18 @@ const sizeClass = {
   full: "max-w-6xl w-[min(96vw,72rem)] max-h-[min(92vh,960px)]",
 };
 
+/**
+ * Renders an accessible modal dialog with optional subtitle, content, footer, and size configuration.
+ *
+ * @param open - Whether the modal is visible.
+ * @param onClose - Called when the modal is dismissed.
+ * @param title - The dialog title.
+ * @param subtitle - Optional supporting text displayed below the title.
+ * @param children - The modal's main content.
+ * @param footer - Optional content displayed in the modal footer.
+ * @param size - The modal width configuration.
+ * @returns The modal dialog when open, or `null` when closed.
+ */
 export default function Modal({ open, onClose, title, subtitle, children, footer, size = "lg" }: ModalProps) {
   const titleId = useId();
 

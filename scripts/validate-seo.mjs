@@ -17,21 +17,41 @@ function fail(msg) {
   failed = true;
 }
 
+/**
+ * Emits a GitHub Actions-formatted warning message.
+ * @param {string} msg - The warning message.
+ */
 function warn(msg) {
   console.warn(`::warning::${msg}`);
 }
 
+/**
+ * Extract the marked SEO block from an HTML document.
+ * @param {string} html - The HTML document to inspect.
+ * @return {string} The SEO block, or the complete document when no marked block exists.
+ */
 function readSeoBlock(html) {
   const m = html.match(/<!-- seo:begin -->[\s\S]*?<!-- seo:end -->/);
   return m?.[0] ?? html;
 }
 
+/**
+ * Extracts the trimmed title text from an HTML document's SEO block.
+ * @param {string} html - The HTML document to inspect.
+ * @returns {string} The trimmed title text, or an empty string when no title is present.
+ */
 function readTitle(html) {
   const block = readSeoBlock(html);
   const m = block.match(/<title>([^<]*)<\/title>/);
   return m?.[1]?.trim() ?? "";
 }
 
+/**
+ * Extracts the content of a named or property-based meta tag from an SEO block.
+ * @param {string} html - The HTML document to search.
+ * @param {string} name - The meta tag name or property value.
+ * @return {string} The decoded meta tag content, or an empty string when no matching tag exists.
+ */
 function readMeta(html, name) {
   const block = readSeoBlock(html);
   const re = new RegExp(`<meta[^>]+(?:name|property)="${name}"[^>]+content="([^"]*)"`, "i");

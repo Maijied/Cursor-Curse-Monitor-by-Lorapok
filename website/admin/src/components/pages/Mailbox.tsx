@@ -21,6 +21,12 @@ import { auth } from "../../lib/firebase";
 
 const PAGE_SIZE = 20;
 
+/**
+ * Tracks whether the current viewport matches a CSS media query.
+ *
+ * @param query - The CSS media query to evaluate
+ * @returns `true` if the media query matches, `false` otherwise
+ */
 function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia(query).matches : true
@@ -35,6 +41,9 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
+/**
+ * Displays a responsive mailbox interface for monitoring, filtering, previewing, testing, and composing messages.
+ */
 export default function Mailbox() {
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<MailboxMessage[]>([]);
