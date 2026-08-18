@@ -131,7 +131,9 @@ export default function SeoDashboard() {
       {seo.structuredData?.["@graph"] && (
         <Card>
           <h3 className="font-semibold mb-3">Structured data (@graph)</h3>
-          <p className="text-sm text-[var(--color-muted)] mb-2">{seo.structuredData["@graph"].length} JSON-LD node(s)</p>
+          <p className="text-sm text-[var(--color-muted)] mb-2">
+            {seo.structuredData["@graph"].length} JSON-LD node(s)
+          </p>
           <pre className="text-xs font-[family-name:var(--font-mono)] overflow-x-auto p-3 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border)] max-h-64">
             {JSON.stringify(seo.structuredData, null, 2)}
           </pre>
