@@ -143,6 +143,8 @@ export default function DeployRuntimePanel({
         {targetTag && <span className="text-[var(--color-muted)] font-normal">· {targetTag}</span>}
       </div>
 
+      {error && <Notification tone="error" message={error} />}
+
       {waiting && !run && (
         <Notification tone="info" message={`Waiting for ${workflowName ?? "workflow"} run to appear…`} />
       )}
