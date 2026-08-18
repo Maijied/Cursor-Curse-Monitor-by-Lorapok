@@ -23,7 +23,6 @@ export function packageVersionFromSiteData(data) {
 
 export function liveTagFromSiteData(data) {
   if (data?.github?.releaseTag) return String(data.github.releaseTag);
-  const pkg = data?.packageVersion ?? data?.version;
-  if (pkg) return `v${String(pkg).replace(/^v/i, "")}`;
-  return null;
+  const normalized = packageVersionFromSiteData(data);
+  return normalized ? `v${normalized}` : null;
 }

@@ -2,7 +2,7 @@ export type ReleaseBumpType = "patch" | "minor" | "major" | "custom";
 
 export function normalizeTag(tag: string): string {
   const trimmed = tag.trim();
-  return trimmed.match(/^v/i) ? trimmed : `v${trimmed}`;
+  return /^v/i.test(trimmed) ? trimmed : `v${trimmed}`;
 }
 
 export function bumpVersion(baseTag: string | null, type: ReleaseBumpType, custom?: string): string | null {

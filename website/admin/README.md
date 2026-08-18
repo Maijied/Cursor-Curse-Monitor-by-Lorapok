@@ -71,7 +71,8 @@ flowchart LR
 | `GET/POST /api/admins` | Admin | Team member management |
 | `POST /api/deploy` | Admin | Trigger deployment workflow |
 | `POST /api/rollback` | Admin | Roll back a release |
-| `GET /api/analytics/stats` | Admin | Visitor + engagement totals |
+| `POST /api/release` | Admin | Trigger release workflow dispatch |
+| `GET /api/analytics/stats` | Public | Visitor + engagement totals |
 | `POST /api/analytics/visit` | Public | Marketing site beacon |
 | `POST /api/usage/ping` | Public | Opt-in extension heartbeat |
 | `GET /api/usage/stats` | Public | Live extension user counts |
@@ -80,8 +81,7 @@ flowchart LR
 | `GET /api/marketplace/sync` | Admin | Marketplace version parity |
 | `GET /api/releases` | Admin | GitHub release list |
 | `GET /api/workflows/runs` | Admin | Recent workflow runs |
-| `GET /api/activity` | Admin | API activity log |
-| `GET/PUT /api/community/config` | Admin | Community feature flags |
+| `GET /api/workflows/run-logs` | Admin | Fetch logs for a specific workflow run |
 | `POST /api/subscribe` | Public | Mailing-list signup + welcome email |
 
 Deprecated: `website/admin-api/` standalone Worker — **do not deploy**.

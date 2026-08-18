@@ -177,12 +177,10 @@ cursor --install-extension cursor-curse-monitor-by-lorapok-*.vsix
 
 **Target URL:** `https://cursor-dev.lorapok.tech` (Pages origin: `https://cursor-monitor-admin-2x8.pages.dev`)
 
-**Cloudflare account:** **Lorapok Facility** (`f049faaf2f67549f5c58837479596a4a`) only.  
-Do **not** use orphan Worker builds under other accounts (e.g. `cursor-curse-monitor-by-lorapok` Workers Builds) — that Worker is not part of this repo. Mail: `cursor-contact@lorapok.tech` (Email Routing → Gmail).
+**Cloudflare account:** **Lorapok Facility** (`<CLOUDFLARE_ACCOUNT_ID>`) only.
+Do **not** use orphan Worker builds under other accounts (e.g. `cursor-curse-monitor-by-lorapok` Workers Builds) — that Worker is not part of this repo. Mail: `cursor-contact@lorapok.tech` (Email Routing → `<admin-email-target>`).
 
 The admin SPA lives in `website/admin/` and deploys to **Cloudflare Pages** with co-located **Pages Functions** (`website/admin/functions/api/`). It is **not** served from GitHub Pages.
-
-Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/cred/CLOUDFLARE_MIGRATION.md`
 
 ### One-time Cloudflare setup
 
@@ -190,7 +188,7 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
 2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
 3. **Pages → Settings → Environment variables** (Production):
    - `GITHUB_TOKEN` — PAT with `repo`, `actions:read`, and `actions:write` (workflow dispatch + runtime logs)
-   - `ADMIN_MASTER_EMAIL` — `mdshuvo40@gmail.com`
+   - `ADMIN_MASTER_EMAIL` — `<admin-master-email>`
    - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
    - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
    - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
@@ -201,7 +199,7 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
    cd website/admin
    npx wrangler email sending enable lorapok.tech
    ```
-   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com`.
+   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `<admin-email-target>`.
 
 ### Firestore rules
 

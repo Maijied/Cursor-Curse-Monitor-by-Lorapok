@@ -16,6 +16,17 @@ async function buildTagsPayload(env, rawTags, source, warning, siteDataOverride)
   return { ...enriched, source, ...(warning ? { warning } : {}) };
 }
 
+/**
+ * Parse GitHub Link header for pagination.
+ * @param {string | null} linkHeader
+ * @returns {string | null} next URL or null
+ */
+function parseNextLink(linkHeader) {
+  if (!linkHeader) return null;
+  const match = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+  return match ? match[1] : null;
+}
+
 export async function onRequestGet(context) {
   const startedAt = Date.now();
   const { request, env } = context;
@@ -23,15 +34,34 @@ export async function onRequestGet(context) {
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
-  const res = await githubFetch(`/repos/${GITHUB_REPO}/tags?per_page=30`, env);
+  // Fetch all pages of tags
+  let allTags = [];
+  let nextUrl = `/repos/${GITHUB_REPO}/tags?per_page=100`;
+  let firstRes = null;
 
-  if (res.ok) {
+  while (nextUrl) {
+    const res = await githubFetch(nextUrl, env);
+    if (!firstRes) firstRes = res;
+
+    if (!res.ok) break;
+
     const data = await res.json();
-    const tagNames = Array.isArray(data) ? data.map((t) => t.name).filter(Boolean) : [];
-    const payload = await buildTagsPayload(env, tagNames, "github");
+    if (Array.isArray(data)) {
+      allTags = allTags.concat(data.map((t) => t.name).filter(Boolean));
+    }
+
+    // Parse Link header for next page
+    const linkHeader = res.headers.get("Link");
+    nextUrl = parseNextLink(linkHeader);
+  }
+
+  if (firstRes && firstRes.ok && allTags.length > 0) {
+    const payload = await buildTagsPayload(env, allTags, "github");
     const response = jsonResponse(payload, 200);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }
+
+  const res = firstRes ?? await githubFetch(`/repos/${GITHUB_REPO}/tags?per_page=100`, env);
 
   try {
     const siteData = await fetchSiteData(env);
