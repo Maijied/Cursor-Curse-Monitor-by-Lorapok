@@ -82,10 +82,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
-  contents: write
-  pull-requests: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
@@ -427,8 +424,10 @@ jobs:
   # 6. RELEASE TRIGGER & ROLLBACK RESOLUTION
   # ───────────────────────────────────────────────────────────────────────────
   release-prep:
-    name: Prepare Release or Rollback
+    name: Prepare & Tag Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: >-
       github.event_name == 'workflow_dispatch'
       && (
@@ -453,11 +452,14 @@ jobs:
 
       - name: Calculate Release Version
         id: version_calc
+        env:
+          ACTION: ${{ inputs.action_type }}
+          TARGET_TAG: ${{ inputs.target_tag }}
+          VERSION_TYPE: ${{ inputs.version_type }}
+          CUSTOM_VERSION: ${{ inputs.custom_version }}
+          RELEASE_CHANNEL: ${{ inputs.release_channel }}
         run: |
-          ACTION="${{ inputs.action_type }}"
-
           if [[ "$ACTION" == "rollback"* ]]; then
-            TARGET_TAG="${{ inputs.target_tag }}"
             if [ -z "$TARGET_TAG" ]; then
               echo "::error::target_tag is required for rollback."
               exit 1
@@ -486,11 +488,11 @@ jobs:
             git push origin main
             git push origin "$TAG"
           else
-            BUMP_TYPE=$(echo "${{ inputs.version_type }}" | awk '{print $1}')
-            CHANNEL="${{ inputs.release_channel }}"
+            BUMP_TYPE=$(echo "$VERSION_TYPE" | awk '{print $1}')
+            CHANNEL="$RELEASE_CHANNEL"
 
-            if [ "$BUMP_TYPE" == "custom" ]; then
-              if [ -z "${{ inputs.custom_version }}" ]; then
+            if [ "$BUMP_TYPE" = "custom" ]; then
+              if [ -z "$CUSTOM_VERSION" ]; then
                 echo "::error::custom_version is required when version_type is custom."
                 exit 1
               fi
@@ -528,6 +530,8 @@ jobs:
   deploy:
     name: Deploy to Marketplaces
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: [release-prep]
     if: >-
       always() && (
@@ -535,12 +539,6 @@ jobs:
         (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
         (github.event_name == 'workflow_dispatch' && (inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces' || inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'))
       )
-    concurrency:
-      group: deploy-production
-      cancel-in-progress: false
-    env:
-      VSCE_PUBLISHER: "LorapokLabs"
-      OVSX_PUBLISHER: "lorapok-labs"
     steps:
       - name: Checkout target ref
         uses: actions/checkout@v4
@@ -552,30 +550,41 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - name: Install dependencies & Compile
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and Package Extension
         run: |
-          npm ci
           npm run compile
           npm run package
 
-      - name: Install publishing tools
+      - name: Build WebExtensions
+        run: |
+          npm run browser-ext:build
+          npm run build:chrome -w browser-extension
+
+      - name: Setup Market Tooling
         run: |
           npm install -g @vscode/vsce
           npm install -g ovsx
 
       - name: Resolve Configuration
         id: config
+        env:
+          ACTION: ${{ inputs.action_type }}
+          VERSION_INPUT: ${{ needs.release-prep.outputs.new_version }}
+          TARGET_TAG: ${{ inputs.target_tag }}
+          RELEASE_CHANNEL: ${{ inputs.release_channel }}
+          PUBLISH_MARKET: ${{ inputs.publish_market }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
-          ACTION="${{ inputs.action_type }}"
-          VERSION="${{ needs.release-prep.outputs.new_version }}"
+          VERSION="$VERSION_INPUT"
           if [ -z "$VERSION" ]; then
-            if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            if [ "$REF_TYPE" = "tag" ]; then
               VERSION="${GITHUB_REF#refs/tags/v}"
-            elif [ -n "${{ inputs.target_tag }}" ]; then
-              VERSION="${{ inputs.target_tag }}"
-              VERSION="${VERSION#v}"
+            elif [ -n "$TARGET_TAG" ]; then
+              VERSION="${TARGET_TAG#v}"
             else
               VERSION="$(node -p "require('./package.json').version")"
             fi
@@ -583,7 +592,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           PRE_RELEASE=""
-          if [[ "${{ inputs.release_channel }}" == "Beta (Pre-release)" || "$VERSION" == *"beta"* || "$VERSION" == *"rc"* || "$VERSION" == *"alpha"* ]]; then
+          if [[ "$RELEASE_CHANNEL" == "Beta (Pre-release)" || "$VERSION" == *"beta"* || "$VERSION" == *"rc"* || "$VERSION" == *"alpha"* ]]; then
             PRE_RELEASE="true"
           fi
           echo "pre_release=$PRE_RELEASE" >> "$GITHUB_OUTPUT"
@@ -591,7 +600,7 @@ jobs:
           DO_OVSX="false"
           DO_VSCE="false"
           DO_AMO="false"
-          TARGET="${{ inputs.publish_market }}"
+          TARGET="$PUBLISH_MARKET"
 
           if [[ "$ACTION" == "sync-open-vsx"* ]]; then
             DO_OVSX="true"
@@ -601,77 +610,47 @@ jobs:
             DO_OVSX="true"
           elif [[ "$TARGET" == "VS Code Marketplace" ]]; then
             DO_VSCE="true"
+          elif [[ "$TARGET" == "Firefox AMO" ]]; then
+            DO_AMO="true"
           fi
 
           echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
           echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
           echo "do_amo=$DO_AMO" >> "$GITHUB_OUTPUT"
 
-      # ── Open VSX (canonical lorapok-labs namespace) ───────────────────────
-      - name: Publish to Open VSX
-        if: steps.config.outputs.do_ovsx == 'true'
-        run: |
-          if [ -z "$OVSX_PAT" ]; then
-            echo "::warning::OVSX_PAT not set — skipping Open VSX publish"
-            exit 0
-          fi
-          PRE_FLAG=""
-          if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
-            PRE_FLAG="--pre-release"
-          fi
-          set +e
-          OUTPUT=$(node scripts/publish-ovsx.mjs $PRE_FLAG 2>&1)
-          CODE=$?
-          echo "$OUTPUT"
-          if [ $CODE -ne 0 ]; then
-            if echo "$OUTPUT" | grep -qiE "already published|already exists"; then
-              echo "::warning::Version already on Open VSX — treating as success"
-              exit 0
-            fi
-            exit $CODE
-          fi
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-
-      - name: Verify marketplace sync
-        if: steps.config.outputs.do_ovsx == 'true'
-        run: node scripts/verify-marketplace-sync.mjs --strict --retry=12
-
-      # ── VS Code Marketplace ──────────────────────────────────────────────
+      # ── VS Code Marketplace ────────────────────────────────────────────────
       - name: Publish to VS Code Marketplace
         if: steps.config.outputs.do_vsce == 'true'
-        run: |
-          if [ -z "$VSCE_PAT" ]; then
-            echo "::warning::VSCE_PAT not set — skipping VS Code Marketplace publish"
-            exit 0
-          fi
-          echo "Publishing to VS Code Marketplace (pre_release=${{ steps.config.outputs.pre_release }})..."
-          set +e
-          OUTPUT=$(vsce publish -p "$VSCE_PAT" $( [ "${{ steps.config.outputs.pre_release }}" = "true" ] && echo --pre-release ) 2>&1)
-          CODE=$?
-          echo "$OUTPUT"
-          if [ $CODE -ne 0 ]; then
-            if echo "$OUTPUT" | grep -qiE "already exists|already been published"; then
-              echo "::warning::Version already on VS Code Marketplace — treating as success"
-              exit 0
-            fi
-            exit $CODE
-          fi
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-
-      # ── Browser extension (Firefox AMO + Chrome zip) ─────────────────────
-      - name: Build and Package Browser Extensions
-        if: steps.config.outputs.do_amo == 'true'
         run: |
-          npm run build -w @lorapok/cursor-monitor-shared
-          npm run browser-ext:build
-          npm run build:chrome -w browser-extension
-          node browser-extension/scripts/generate-amo-metadata.mjs --version=${{ steps.config.outputs.version }}
-          node browser-extension/scripts/validate-amo-metadata.mjs
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::error::VSCE_PAT secret missing."
+            exit 1
+          fi
+          VSIX=$(ls -t *.vsix 2>/dev/null | head -n 1)
+          FLAGS=()
+          if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
+            FLAGS+=(--pre-release)
+          fi
+          vsce publish --packagePath "$VSIX" -p "$VSCE_PAT" "${FLAGS[@]}"
 
-      - name: Sign & submit to Firefox Add-ons (AMO)
-        if: steps.config.outputs.do_amo == 'true' && env.AMO_JWT_ISSUER != '' && env.AMO_JWT_SECRET != ''
+      # ── Open VSX ──────────────────────────────────────────────────────────
+      - name: Publish to Open VSX (canonical lorapok-labs)
+        if: steps.config.outputs.do_ovsx == 'true'
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::error::OVSX_PAT secret missing."
+            exit 1
+          fi
+          VSIX=$(ls -t *.vsix 2>/dev/null | head -n 1)
+          ovsx publish "$VSIX" -p "$OVSX_PAT"
+
+      # ── Firefox AMO ────────────────────────────────────────────────────────
+      - name: Publish to Firefox Add-ons (AMO)
+        if: steps.config.outputs.do_amo == 'true'
         run: |
           mkdir -p browser-extension/artifacts/firefox
           npx web-ext@8 sign \

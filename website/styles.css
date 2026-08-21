@@ -43,6 +43,17 @@ a:hover { color: #7cb8ff; }
 
 .container { width: min(100% - 40px, var(--container)); margin-inline: auto; }
 
+/* Ensure page content cleanly stacks above fixed ambient mesh background */
+.site-header,
+.hero,
+.section,
+.page-hero,
+.prose-wrap,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
 /* Development notice marquee */
 .dev-notice-banner {
   position: relative;
