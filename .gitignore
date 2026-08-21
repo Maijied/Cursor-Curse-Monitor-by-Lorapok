@@ -12,6 +12,7 @@ website/admin/.env
 website/admin/.env.local
 website/admin/.data/
 website/admin/_worker.bundle
+tests/*.vscdb
 tests/*.vscdb.backup-*
 tests/*-wal.backup-*
 tests/*-shm.backup-*
