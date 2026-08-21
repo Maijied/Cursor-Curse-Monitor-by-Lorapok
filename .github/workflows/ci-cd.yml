@@ -124,8 +124,8 @@ jobs:
       - name: Guard canonical Open VSX namespace
         run: |
           set -euo pipefail
-          if grep -rn 'open-vsx\.org/extension/LorapokLabs' README.md website/index.html website/site-data.json 2>/dev/null; then
-            echo "::error::Duplicate Open VSX namespace (LorapokLabs) found — use lorapok-labs only."
+          if grep -rn 'open-vsx\.org/extension/LorapokLabs' README.md website/index.html website/privacy.html 2>/dev/null; then
+            echo "::error::Duplicate Open VSX namespace (LorapokLabs) found in user-facing pages — use lorapok-labs only."
             exit 1
           fi
           echo "Canonical Open VSX links verified OK."
