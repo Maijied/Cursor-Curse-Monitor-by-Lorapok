@@ -253,27 +253,19 @@ async function githubDiscussionsAndIssues() {
   let discussions = [];
   let discussionsEnabled = false;
   try {
-    const headers = { Accept: "application/vnd.github+json" };
-    if (process.env.GITHUB_TOKEN) {
-      headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-    }
-    const discussionsRes = await fetch(
-      `https://api.github.com/repos/${REPO}/discussions?per_page=10`,
-      { headers }
+    const data = await fetchJson(
+      `https://api.github.com/repos/${REPO}/discussions?per_page=10`
     );
-    discussionsEnabled = Boolean(discussionsRes?.ok);
-    if (discussionsRes?.ok) {
-      const data = await discussionsRes.json();
-      discussions = Array.isArray(data)
-        ? data.map((d) => ({
-            title: d.title,
-            url: d.html_url,
-            category: d.category?.name ?? "General",
-            createdAt: d.created_at,
-            comments: d.comments ?? 0,
-            answered: Boolean(d.answer_chosen_at),
-          }))
-        : [];
+    if (Array.isArray(data)) {
+      discussionsEnabled = true;
+      discussions = data.map((d) => ({
+        title: d.title,
+        url: d.html_url,
+        category: d.category?.name ?? "General",
+        createdAt: d.created_at,
+        comments: d.comments ?? 0,
+        answered: Boolean(d.answer_chosen_at),
+      }));
     }
   } catch {
     /* fallback when offline or rate limited */
