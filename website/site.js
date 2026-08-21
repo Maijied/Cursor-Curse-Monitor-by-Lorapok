@@ -233,8 +233,11 @@ function initLightbox() {
   const counter = document.getElementById("lightbox-counter");
   if (!lightbox || !img) return;
 
-  const getVisibleTriggers = () => {
+  let activeGroup = "";
+
+  const getVisibleTriggers = (group = activeGroup) => {
     return [...document.querySelectorAll(".lightbox-trigger")].filter((btn) => {
+      if (group && (btn.dataset.lightboxGroup || "") !== group) return false;
       const figure = btn.closest(".gallery-item");
       return !figure || !figure.hidden;
     });
@@ -242,8 +245,9 @@ function initLightbox() {
 
   let index = 0;
 
-  const show = (i) => {
-    const triggers = getVisibleTriggers();
+  const show = (i, group = activeGroup) => {
+    activeGroup = group;
+    const triggers = getVisibleTriggers(group);
     if (!triggers.length) return;
     index = (i + triggers.length) % triggers.length;
     const btn = triggers[index];
@@ -277,11 +281,12 @@ function initLightbox() {
   document.addEventListener("click", (e) => {
     const trigger = e.target.closest(".lightbox-trigger");
     if (!trigger) return;
-    const triggers = getVisibleTriggers();
+    const group = trigger.dataset.lightboxGroup || "";
+    const triggers = getVisibleTriggers(group);
     const triggerIdx = triggers.indexOf(trigger);
     if (triggerIdx !== -1) {
       e.preventDefault();
-      show(triggerIdx);
+      show(triggerIdx, group);
     }
   });
 
@@ -319,8 +324,12 @@ function initGalleryFilters() {
 
   filterBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      filterBtns.forEach((b) => b.classList.remove("active"));
+      filterBtns.forEach((b) => {
+        b.classList.remove("active");
+        b.setAttribute("aria-pressed", "false");
+      });
       btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
       const filter = btn.dataset.filter || "all";
 
       galleryItems.forEach((item) => {
