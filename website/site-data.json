@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T11:11:00.388Z",
+  "generatedAt": "2026-08-18T08:17:55.920Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
   "version": "0.5.11",
@@ -18,10 +18,10 @@
     "url": "https://github.com/Maijied"
   },
   "downloads": {
-    "total": 2473,
+    "total": 2467,
     "breakdown": {
-      "openVsxCanonical": 2470,
-      "openVsxDuplicate": 754,
+      "openVsxCanonical": 2464,
+      "openVsxDuplicate": 752,
       "vscodeMarketplace": 0,
       "githubVsix": 3,
       "latestReleaseVsix": 0
@@ -65,7 +65,7 @@
     "version": "0.5.11",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 2470,
+    "downloadCount": 2464,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -117,21 +117,7 @@
     "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.11/cursor-curse-monitor-by-lorapok-0.5.11.vsix",
     "vsixDownloadCount": 0,
     "totalReleaseDownloads": 3,
-    "publishedAt": "2026-08-18T01:42:14Z",
-    "chromeZipUrl": null,
-    "chromeZipName": null
-  },
-  "browserExtension": {
-    "version": "0.5.9",
-    "firefox": {
-      "url": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
-      "published": true
-    },
-    "chrome": {
-      "zipUrl": null,
-      "zipName": null,
-      "webStorePublished": false
-    }
+    "publishedAt": "2026-08-18T01:42:14Z"
   },
   "install": {
     "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",

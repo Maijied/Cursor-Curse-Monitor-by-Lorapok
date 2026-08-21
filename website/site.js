@@ -117,7 +117,6 @@
     // OG image and document.title are set at build time via generate-seo.mjs — do not mutate here.
   }
 
-  await initNotice();
   initEcosystemTabs();
   initLightbox();
 
