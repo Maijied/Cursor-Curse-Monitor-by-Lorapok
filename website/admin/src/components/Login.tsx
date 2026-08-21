@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   signInWithPopup,
   signInWithEmailLink,
@@ -27,31 +27,7 @@ export default function Login() {
   const [messageTone, setMessageTone] = useState<"info" | "error" | "success">("info");
   const navigate = useNavigate();
 
-  // If already logged in, automatically redirect to dashboard
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setAuthChecking(false);
-      if (u && !isSignInWithEmailLink(auth, window.location.href)) {
-        navigate("/dashboard", { replace: true });
-      }
-    });
-    return unsub;
-  }, [navigate]);
-
-  // Handle incoming email magic links
-  useEffect(() => {
-    if (!isSignInWithEmailLink(auth, window.location.href)) return;
-
-    const stored = window.localStorage.getItem("emailForSignIn");
-    if (stored) {
-      setConfirmEmail(stored);
-      void completeEmailLinkSignIn(stored);
-      return;
-    }
-    setNeedsEmailConfirm(true);
-  }, []);
-
-  const completeEmailLinkSignIn = async (emailForSignIn: string) => {
+  const completeEmailLinkSignIn = useCallback(async (emailForSignIn: string) => {
     setLoading(true);
     setMessageTone("info");
     setMessage("Verifying magic link…");
@@ -74,7 +50,31 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, rememberMe]);
+
+  // If already logged in, automatically redirect to dashboard
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setAuthChecking(false);
+      if (u && !isSignInWithEmailLink(auth, window.location.href)) {
+        navigate("/dashboard", { replace: true });
+      }
+    });
+    return unsub;
+  }, [navigate]);
+
+  // Handle incoming email magic links
+  useEffect(() => {
+    if (!isSignInWithEmailLink(auth, window.location.href)) return;
+
+    const stored = window.localStorage.getItem("emailForSignIn");
+    if (stored) {
+      setConfirmEmail(stored);
+      void completeEmailLinkSignIn(stored);
+      return;
+    }
+    setNeedsEmailConfirm(true);
+  }, [completeEmailLinkSignIn]);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);

@@ -352,9 +352,12 @@ jobs:
   seo-pipeline:
     name: SEO & Metadata Pipeline
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     if: >-
       github.event_name == 'schedule' ||
-      (github.event_name == 'workflow_dispatch' && inputs.action_type == 'seo-refresh') ||
+      (github.event_name == 'workflow_dispatch' && startsWith(inputs.action_type, 'seo-refresh')) ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(seo):'))
     steps:
       - name: Checkout
