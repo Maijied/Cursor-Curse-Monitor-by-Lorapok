@@ -120,10 +120,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify GitHub Release asset
-        run: |
-          gh release view "${{ inputs.target_tag }}" --json assets --jq '.assets[].name' | grep -E '\.vsix$'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_TAG: ${{ inputs.target_tag }}
+        run: |
+          gh release view "$TARGET_TAG" --json assets --jq '.assets[].name' | grep -E '\.vsix$'
 
       - name: Publish to Open VSX
         if: steps.config.outputs.do_ovsx == 'true'
