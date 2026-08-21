@@ -171,23 +171,39 @@ export default function Overview() {
             <tbody className="divide-y divide-[var(--color-border)]">
               {[
                 {
-                  name: "GitHub",
+                  name: "GitHub Releases",
                   version: data.github.releaseTag,
                   downloads: data.github.totalReleaseDownloads,
                   ok: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
                 },
                 {
-                  name: "Open VSX (lorapok-labs)",
+                  name: "Open VSX (canonical)",
                   version: data.ovsx.version ?? "—",
                   downloads: data.ovsx.downloadCount,
                   ok: data.ovsx.version === data.packageVersion,
                 },
                 {
-                  name: "VS Code",
+                  name: "VS Code Marketplace",
                   version: data.vscode.version ?? "—",
                   downloads: data.vscode.downloadCount ?? data.vscode.installCount,
                   ok: data.vscode.version === data.packageVersion,
                 },
+                ...(data.browserExtension
+                  ? [
+                      {
+                        name: "Firefox Add-ons (AMO)",
+                        version: data.browserExtension.version ? `v${data.browserExtension.version}` : "—",
+                        downloads: data.browserExtension.firefox?.downloads ?? null,
+                        ok: Boolean(data.browserExtension.firefox?.published),
+                      },
+                      {
+                        name: "Chrome WebExtension (Zip)",
+                        version: data.browserExtension.version ? `v${data.browserExtension.version}` : "—",
+                        downloads: null,
+                        ok: true,
+                      },
+                    ]
+                  : []),
                 {
                   name: "Open VSX duplicate",
                   version: data.ovsxDuplicate?.version ?? "—",
@@ -197,9 +213,11 @@ export default function Overview() {
                 },
               ].map((row) => (
                 <tr key={row.name} className="hover:bg-white/[0.02]">
-                  <td className="py-3 pr-4 text-[var(--color-text)]">{row.name}</td>
+                  <td className="py-3 pr-4 text-[var(--color-text)] font-medium">{row.name}</td>
                   <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{row.version}</td>
-                  <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{formatCount(row.downloads ?? 0)}</td>
+                  <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">
+                    {row.downloads != null ? formatCount(row.downloads) : "—"}
+                  </td>
                   <td className="py-3">
                     {"warn" in row && row.warn ? (
                       <Badge variant="warn">Deprecate listing</Badge>

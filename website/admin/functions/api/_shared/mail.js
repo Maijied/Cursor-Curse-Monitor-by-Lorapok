@@ -242,9 +242,27 @@ async function sendViaCloudflareRest(env, { to, subject, html, text }) {
     const errors = Array.isArray(payload.errors)
       ? payload.errors.map((e) => e.message || e.code).join("; ")
       : "";
+
+    // If Resend API key is configured as a fallback, attempt sending via Resend
+    if (typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim()) {
+      const fallbackResult = await sendViaResend(env, { to, subject, html, text });
+      if (fallbackResult.sent) {
+        return {
+          sent: true,
+          transport: "resend-fallback",
+          note: `Cloudflare Email failed (${res.status}: ${errors}); delivered via Resend fallback.`,
+        };
+      }
+    }
+
+    const authDiagnostic =
+      res.status === 401
+        ? " (Verify CLOUDFLARE_EMAIL_API_TOKEN has 'Account.Email Sending: Edit' permission and domain 'lorapok.tech' is onboarded)"
+        : "";
+
     return {
       sent: false,
-      reason: `Cloudflare Email ${res.status}: ${errors || JSON.stringify(payload).slice(0, 200)}`,
+      reason: `Cloudflare Email ${res.status}: ${errors || JSON.stringify(payload).slice(0, 200)}${authDiagnostic}`,
     };
   }
 

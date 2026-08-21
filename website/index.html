@@ -80,6 +80,7 @@
   <!-- /seo:jsonld -->
 </head>
 <body>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
   <div id="dev-notice-banner" class="dev-notice-banner" hidden role="region" aria-label="Development notice">
     <div class="dev-notice-track">
       <div class="dev-notice-content" id="dev-notice-content"></div>
@@ -422,71 +423,86 @@
           <h2>Built for every Cursor-compatible editor</h2>
           <p class="section-lead">IDE extension, browser guard, and Mission Control — polished visuals for the full Lorapok ecosystem.</p>
         </div>
+        <div class="gallery-filter-bar" role="tablist" aria-label="Filter gallery visuals">
+          <button type="button" class="gallery-filter-btn active" data-filter="all">All Visuals</button>
+          <button type="button" class="gallery-filter-btn" data-filter="ide">IDE & Budget</button>
+          <button type="button" class="gallery-filter-btn" data-filter="browser">Browser Guard</button>
+          <button type="button" class="gallery-filter-btn" data-filter="admin">Mission Control</button>
+          <button type="button" class="gallery-filter-btn" data-filter="oss">Open Source & Install</button>
+          <button type="button" class="gallery-filter-btn" data-filter="founder">Founder</button>
+        </div>
         <div class="gallery-masonry">
-          <figure class="gallery-item wide">
+          <figure class="gallery-item wide" data-category="ide oss">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/hero-marketing.png" data-caption="Hero launch visual" aria-label="Hero launch visual — enlarge">
               <img src="assets/marketing/hero-marketing.png" alt="Cursor Curse Monitor hero" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Hero launch visual</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="ide">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-dashboard.png" data-caption="Usage dashboard" aria-label="Usage dashboard — enlarge">
               <img src="assets/marketing/showcase-dashboard.png" alt="Dashboard" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Usage dashboard</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="browser">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-browser-ext.png" data-caption="Browser extension" aria-label="Browser extension — enlarge">
               <img src="assets/marketing/showcase-browser-ext.png" alt="Browser extension" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Browser extension</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="admin">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-admin.png" data-caption="Mission Control admin" aria-label="Mission Control admin — enlarge">
               <img src="assets/marketing/showcase-admin.png" alt="Mission Control admin" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Mission Control</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="ide">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-fallback.png" data-caption="Model fallback" aria-label="Model fallback — enlarge">
               <img src="assets/marketing/showcase-fallback.png" alt="Fallback" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Model fallback</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="ide">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-budget.png" data-caption="Budget tracking" aria-label="Budget tracking — enlarge">
               <img src="assets/marketing/showcase-budget.png" alt="Budget" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Budget tracking</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="browser">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-privacy.png" data-caption="Local privacy" aria-label="Local privacy — enlarge">
               <img src="assets/marketing/showcase-privacy.png" alt="Privacy" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Local privacy</figcaption>
           </figure>
-          <figure class="gallery-item">
+          <figure class="gallery-item" data-category="oss">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-install.png" data-caption="Install guide" aria-label="Install guide — enlarge">
               <img src="assets/marketing/showcase-install.png" alt="Install steps" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Install guide</figcaption>
           </figure>
-          <figure class="gallery-item">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-oss.png" data-caption="Lorapok Labs product" aria-label="Lorapok Labs product — enlarge">
+          <figure class="gallery-item" data-category="oss">
+            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-oss.png" data-caption="Lorapok Labs open source community" aria-label="Lorapok Labs product — enlarge">
               <img src="assets/marketing/showcase-oss.png" alt="Lorapok Labs product" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
-            <figcaption>Lorapok Labs product</figcaption>
+            <figcaption>Open source community</figcaption>
           </figure>
-          <figure class="gallery-item wide">
+          <figure class="gallery-item" data-category="founder">
+            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/founder-profile.png" data-caption="Mohammad Maizied Hasan Majumder · Founder & Principal Engineer @ Lorapok Labs" aria-label="Founder portrait — enlarge">
+              <img src="assets/marketing/founder-profile.png" alt="Mohammad Maizied Hasan Majumder · Founder" loading="lazy" decoding="async" />
+              <span class="zoom-hint">Click to enlarge</span>
+            </button>
+            <figcaption>Founder & Engineering</figcaption>
+          </figure>
+          <figure class="gallery-item wide" data-category="oss">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/og-social-card.png" data-caption="Social share card" aria-label="Social share card — enlarge">
               <img src="assets/marketing/og-social-card.png" alt="Social card" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
@@ -637,8 +653,8 @@
 
     <section class="section container author-section" id="about">
       <div class="author-card">
-        <button type="button" class="author-visual-btn lightbox-trigger" data-lightbox-group="author" data-src="assets/marketing/showcase-oss.png" data-caption="Lorapok Labs product · Mohammad Maizied Hasan Majumder">
-          <img src="assets/marketing/showcase-oss.png" alt="Lorapok Labs product" class="author-visual" loading="lazy" />
+        <button type="button" class="author-visual-btn lightbox-trigger" data-lightbox-group="author" data-src="assets/marketing/founder-profile.png" data-caption="Founder & Principal Engineer · Mohammad Maizied Hasan Majumder">
+          <img src="assets/marketing/founder-profile.png" alt="Mohammad Maizied Hasan Majumder · Founder & Principal Engineer" class="author-visual" loading="lazy" />
           <span class="zoom-hint">Click to enlarge</span>
         </button>
         <div>
