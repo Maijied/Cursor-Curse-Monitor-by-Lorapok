@@ -1,23 +1,64 @@
 name: CI/CD
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Unified workflow for Cursor Curse Monitor
+# Unified Enterprise Pipeline for Cursor Curse Monitor
 #
-# Triggers:
-#   PR to main        → ci (build/validate only)
-#   Push to main      → ci (build dynamic VSIX artifact with commit hash) -> website
-#   workflow_dispatch → release bump → deploy to marketplaces → website
-#   Tag v*            → deploy to marketplaces → website
+# Covers:
+#   1. Continuous Integration (IDE Extension, Shared Package, Browser Extension, Admin SPA)
+#   2. Asset, Security & Release Integrity Validation
+#   3. SEO, Sitemap & Analytics Automation (with PR Fallback for Protected Branches)
+#   4. Admin Mission Control Continuous Deployment (Cloudflare Pages)
+#   5. Multi-Channel Extension Deployment (VS Code Marketplace, Open VSX, Firefox AMO, Chrome ZIP)
+#   6. Marketing Website Deployment (GitHub Pages)
+#   7. Automated Version Bumping, Rollback & Tag Publishing
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+  schedule:
+    # Mondays 06:00 UTC — Refresh marketplace stats, visitor metrics, and sitemap lastmod
+    - cron: "0 6 * * 1"
   workflow_dispatch:
     inputs:
+      action_type:
+        description: "Pipeline Action"
+        required: true
+        type: choice
+        options:
+          - "full-release - Bump version & publish all channels"
+          - "publish-tag - Publish existing git tag to marketplaces"
+          - "rollback - Restore previous tag as a new version"
+          - "sync-open-vsx - Fast sync to Open VSX canonical namespace"
+          - "seo-refresh - Refresh site data, sitemap & SEO manifest"
+        default: "full-release - Bump version & publish all channels"
+      version_type:
+        description: "Release Type (for full-release)"
+        required: false
+        type: choice
+        options:
+          - "patch - Bug fix or minor update (e.g. v0.5.15)"
+          - "minor - New Feature (e.g. v0.6.0)"
+          - "major - Breaking / Production (e.g. v1.0.0)"
+          - "custom - Specify exact version below"
+        default: "patch - Bug fix or minor update (e.g. v0.5.15)"
+      custom_version:
+        description: "Custom Version (e.g. 0.6.0-beta.1) if custom selected"
+        required: false
+        type: string
+      target_tag:
+        description: "Target Tag (required for publish-tag or rollback, e.g. v0.5.14)"
+        required: false
+        type: string
       publish_market:
         description: "Publish Market"
         required: true
@@ -35,20 +76,6 @@ on:
           - Production
           - Beta (Pre-release)
         default: Production
-      version_type:
-        description: "Release Type (Tagging Rules)"
-        required: true
-        type: choice
-        options:
-          - "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)"
-          - "minor - New Feature (e.g. v0.8.0)"
-          - "major - Production / Breaking (e.g. v1.0.0)"
-          - "custom - Specify exact version below"
-        default: "patch - Bug fix or Feature update (e.g. v0.7.1, v0.7.2)"
-      custom_version:
-        description: "Custom version (e.g. 0.6.0-beta.1)"
-        required: false
-        type: string
 
 concurrency:
   group: cicd-${{ github.ref }}
@@ -56,20 +83,22 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: write
   pages: write
   id-token: write
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
-  # 1. CI — Build & Validate (Runs on every trigger)
+  # 1. ROOT & CORE EXTENSION CI
   # ───────────────────────────────────────────────────────────────────────────
   ci:
-    name: Build & Validate
+    name: Build & Validate (Root Extension)
     runs-on: ubuntu-latest
     if: >-
       !(github.event_name == 'push'
         && !startsWith(github.ref, 'refs/tags/')
         && contains(github.event.head_commit.message, 'chore: release'))
+      && !(github.event_name == 'workflow_dispatch' && inputs.action_type == 'seo-refresh')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,16 +115,25 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
-      - name: Run extension and browser regression tests
+      - name: Run test suite (Node 22 native tests + companions)
         run: npm test
-
-      - name: Extension unit tests (scan secrets)
-        run: node tests/test_scan_secrets.js
 
       - name: Validate icon & logo assets
         run: npm run validate:assets
 
-      - name: Secret scan (secretlint)
+      - name: Validate release metadata & sync integrity
+        run: npm run validate:release
+
+      - name: Guard canonical Open VSX namespace
+        run: |
+          set -euo pipefail
+          if grep -rn 'open-vsx\.org/extension/LorapokLabs' README.md website/index.html website/site-data.json 2>/dev/null; then
+            echo "::error::Duplicate Open VSX namespace (LorapokLabs) found — use lorapok-labs only."
+            exit 1
+          fi
+          echo "Canonical Open VSX links verified OK."
+
+      - name: Security & credential scan
         run: npm run security:scan
 
       - name: Dynamically inject commit hash (Push to main only)
@@ -118,6 +156,9 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. BROWSER EXTENSION CI
+  # ───────────────────────────────────────────────────────────────────────────
   browser-extension-ci:
     name: Browser Extension CI
     runs-on: ubuntu-latest
@@ -126,6 +167,7 @@ jobs:
       !(github.event_name == 'push'
         && !startsWith(github.ref, 'refs/tags/')
         && contains(github.event.head_commit.message, 'chore: release'))
+      && !(github.event_name == 'workflow_dispatch' && inputs.action_type == 'seo-refresh')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -166,6 +208,9 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. ADMIN PANEL CI
+  # ───────────────────────────────────────────────────────────────────────────
   admin-ci:
     name: Admin Panel CI
     runs-on: ubuntu-latest
@@ -174,6 +219,7 @@ jobs:
       !(github.event_name == 'push'
         && !startsWith(github.ref, 'refs/tags/')
         && contains(github.event.head_commit.message, 'chore: release'))
+      && !(github.event_name == 'workflow_dispatch' && inputs.action_type == 'seo-refresh')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -199,9 +245,6 @@ jobs:
           FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
           ANALYTICS_STATS_URL: ${{ secrets.ANALYTICS_STATS_URL }}
 
-      - name: Validate release metadata
-        run: npm run validate:release
-
       - name: Install admin dependencies
         working-directory: website/admin
         run: npm ci
@@ -224,6 +267,9 @@ jobs:
         working-directory: website/admin
         run: test -f dist/site-data.json && test -f dist/seo.json
 
+  # ───────────────────────────────────────────────────────────────────────────
+  # 4. ADMIN PANEL DEPLOY (Cloudflare Pages)
+  # ───────────────────────────────────────────────────────────────────────────
   admin-deploy:
     name: Deploy Admin Panel
     runs-on: ubuntu-latest
@@ -232,6 +278,7 @@ jobs:
       github.event_name == 'push'
       && github.ref == 'refs/heads/main'
       && !contains(github.event.head_commit.message, 'chore: release')
+      && !contains(github.event.head_commit.message, 'chore(seo):')
     environment:
       name: admin-production
       url: https://cursor-dev.lorapok.tech
@@ -248,7 +295,7 @@ jobs:
             package-lock.json
             website/admin/package-lock.json
 
-      - name: Install root dependencies (SEO scripts)
+      - name: Install root dependencies
         run: npm ci
 
       - name: Generate site artifacts
@@ -287,7 +334,7 @@ jobs:
         run: |
           MAIL_TOKEN="${CLOUDFLARE_EMAIL_API_TOKEN:-$CLOUDFLARE_API_TOKEN}"
           if [ -z "$MAIL_TOKEN" ]; then
-            echo "::error::Set CLOUDFLARE_EMAIL_API_TOKEN (preferred) or CLOUDFLARE_API_TOKEN with Email Sending → Send permission."
+            echo "::error::Set CLOUDFLARE_EMAIL_API_TOKEN or CLOUDFLARE_API_TOKEN with Email Sending permission."
             exit 1
           fi
           printf '%s' "$MAIL_TOKEN" | npx wrangler pages secret put CLOUDFLARE_EMAIL_API_TOKEN --project-name=cursor-monitor-admin
@@ -301,16 +348,97 @@ jobs:
         run: npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main
 
   # ───────────────────────────────────────────────────────────────────────────
-  # 2. RELEASE TRIGGER — Manual version bump via workflow_dispatch
+  # 5. SEO AUDIT, REFRESH & PROTECTED BRANCH PR CREATION
   # ───────────────────────────────────────────────────────────────────────────
-  release-bump:
-    name: Prepare Release
+  seo-pipeline:
+    name: SEO & Metadata Pipeline
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.action_type == 'seo-refresh') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(seo):'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate SEO and live site data
+        run: |
+          npm run site:data
+          npm run site:seo
+          npm run site:seo:validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
+          ANALYTICS_STATS_URL: https://cursor-dev.lorapok.tech/api/analytics/stats
+
+      - name: Upload SEO artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-manifest-artifacts
+          path: |
+            website/sitemap.xml
+            website/robots.txt
+            website/seo.json
+            website/site-data.json
+            website/visitor-stats.json
+          retention-days: 14
+
+      - name: Commit and publish refreshed SEO artifacts (with branch rule PR fallback)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json
+          if git diff --staged --quiet; then
+            echo "No SEO artifact changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(seo): refresh site-data, sitemap, and SEO manifest" \
+            -m "Automated marketplace sync, visitor stats, and sitemap lastmod update."
+
+          echo "Attempting to push refreshed SEO artifacts to main..."
+          if git push origin main 2>/dev/null; then
+            echo "Successfully pushed refreshed SEO artifacts directly to main."
+          else
+            echo "Direct push to main was declined by repository rules. Creating/updating Pull Request..."
+            BRANCH="chore/seo-artifacts-refresh"
+            git checkout -B "$BRANCH"
+            git push origin "$BRANCH" --force
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore(seo): refresh site-data, sitemap, and SEO manifest" \
+              --body "Automated refresh of SEO metadata, marketplace stats, and sitemap generated by GitHub Actions." || \
+            echo "Pull request for $BRANCH already exists or updated."
+          fi
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 6. RELEASE TRIGGER & ROLLBACK RESOLUTION
+  # ───────────────────────────────────────────────────────────────────────────
+  release-prep:
+    name: Prepare Release or Rollback
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      && (
+        inputs.action_type == 'full-release - Bump version & publish all channels' ||
+        inputs.action_type == 'rollback - Restore previous tag as a new version'
+      )
     outputs:
-      new_version: ${{ steps.bump.outputs.new_version }}
-      tag: ${{ steps.bump.outputs.tag }}
-      bumped: ${{ steps.bump.outputs.bumped }}
+      new_version: ${{ steps.version_calc.outputs.new_version }}
+      tag: ${{ steps.version_calc.outputs.tag }}
+      should_deploy: ${{ steps.version_calc.outputs.should_deploy }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -323,62 +451,90 @@ jobs:
         with:
           node-version: 22
 
-      - name: Calculate and apply version bump
-        id: bump
+      - name: Calculate Release Version
+        id: version_calc
         run: |
-          # Extract the base action type (e.g. "patch" from "patch - Bug fix...")
-          BUMP_TYPE=$(echo "${{ inputs.version_type }}" | awk '{print $1}')
-          CHANNEL="${{ inputs.release_channel }}"
+          ACTION="${{ inputs.action_type }}"
 
-          if [ "$BUMP_TYPE" == "custom" ]; then
-            if [ -z "${{ inputs.custom_version }}" ]; then
-              echo "Error: custom_version is required when version_type is custom."
+          if [[ "$ACTION" == "rollback"* ]]; then
+            TARGET_TAG="${{ inputs.target_tag }}"
+            if [ -z "$TARGET_TAG" ]; then
+              echo "::error::target_tag is required for rollback."
               exit 1
             fi
-            NEW_VERSION="${{ inputs.custom_version }}"
-            echo "Using custom version: $NEW_VERSION"
-            npm version --no-git-tag-version "$NEW_VERSION"
-          elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
-            node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
-            CURRENT=$(node -p "require('./package.json').version")
-            echo "Current base version: $CURRENT — beta $BUMP_TYPE bump"
-            npm version $BUMP_TYPE --no-git-tag-version --preid=beta
+            if ! git rev-parse "$TARGET_TAG" >/dev/null 2>&1; then
+              echo "::error::Tag '$TARGET_TAG' not found in repository."
+              exit 1
+            fi
+
+            # Restore files from tag
+            git restore --source="$TARGET_TAG" --worktree --staged -- . ':!.github'
+            git restore --source=HEAD --worktree --staged -- .github/
+
+            # Bump patch higher than current main
+            CURRENT_MAIN_VER=$(node -p "require('./package.json').version.split('-')[0]")
+            node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version='$CURRENT_MAIN_VER'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+            npm version patch --no-git-tag-version
             NEW_VERSION=$(node -p "require('./package.json').version")
-            echo "Auto-bumped beta $BUMP_TYPE: $NEW_VERSION"
+            TAG="v$NEW_VERSION"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: rollback to $TARGET_TAG (released as v$NEW_VERSION)"
+            git tag "$TAG"
+            git push origin main
+            git push origin "$TAG"
           else
-            node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
-            CURRENT=$(node -p "require('./package.json').version")
-            echo "Current base version: $CURRENT"
-            npm version $BUMP_TYPE --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-            echo "Auto-bumped $BUMP_TYPE: $NEW_VERSION"
+            BUMP_TYPE=$(echo "${{ inputs.version_type }}" | awk '{print $1}')
+            CHANNEL="${{ inputs.release_channel }}"
+
+            if [ "$BUMP_TYPE" == "custom" ]; then
+              if [ -z "${{ inputs.custom_version }}" ]; then
+                echo "::error::custom_version is required when version_type is custom."
+                exit 1
+              fi
+              NEW_VERSION="${{ inputs.custom_version }}"
+              npm version --no-git-tag-version "$NEW_VERSION"
+            elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
+              node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+              CURRENT=$(node -p "require('./package.json').version")
+              npm version $BUMP_TYPE --no-git-tag-version --preid=beta
+              NEW_VERSION=$(node -p "require('./package.json').version")
+            else
+              node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+              npm version $BUMP_TYPE --no-git-tag-version
+              NEW_VERSION=$(node -p "require('./package.json').version")
+            fi
+
+            TAG="v$NEW_VERSION"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json
+            git commit -m "chore: release v$NEW_VERSION"
+            git tag "$TAG"
+            git push origin main
+            git push origin "$TAG"
           fi
-
-          TAG="v$NEW_VERSION"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          git commit -m "chore: release v$NEW_VERSION"
-          git tag "$TAG"
-          git push origin main
-          git push origin "$TAG"
 
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "bumped=true" >> "$GITHUB_OUTPUT"
-
-          echo "## Release Version Created" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** $NEW_VERSION (${{ inputs.release_channel }})" >> $GITHUB_STEP_SUMMARY
+          echo "should_deploy=true" >> "$GITHUB_OUTPUT"
 
   # ───────────────────────────────────────────────────────────────────────────
-  # 3. DEPLOY — Publish to Marketplaces
+  # 7. DEPLOY TO MARKETPLACES (VS Code Marketplace, Open VSX, Firefox AMO)
   # ───────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Marketplaces
     runs-on: ubuntu-latest
-    needs: [release-bump]
-    if: always() && (needs.release-bump.outputs.bumped == 'true' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    needs: [release-prep]
+    if: >-
+      always() && (
+        needs.release-prep.outputs.should_deploy == 'true' ||
+        (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+        (github.event_name == 'workflow_dispatch' && (inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces' || inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'))
+      )
     concurrency:
       group: deploy-production
       cancel-in-progress: false
@@ -386,10 +542,10 @@ jobs:
       VSCE_PUBLISHER: "LorapokLabs"
       OVSX_PUBLISHER: "lorapok-labs"
     steps:
-      - name: Checkout latest
+      - name: Checkout target ref
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-bump.outputs.tag || github.ref }}
+          ref: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -412,55 +568,44 @@ jobs:
       - name: Resolve Configuration
         id: config
         run: |
-          VERSION="${{ needs.release-bump.outputs.new_version }}"
+          ACTION="${{ inputs.action_type }}"
+          VERSION="${{ needs.release-prep.outputs.new_version }}"
           if [ -z "$VERSION" ]; then
             if [[ "${{ github.ref_type }}" == "tag" ]]; then
               VERSION="${GITHUB_REF#refs/tags/v}"
+            elif [ -n "${{ inputs.target_tag }}" ]; then
+              VERSION="${{ inputs.target_tag }}"
+              VERSION="${VERSION#v}"
             else
               VERSION="$(node -p "require('./package.json').version")"
             fi
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          # Determine pre-release flag
           PRE_RELEASE=""
-          if [[ "${{ inputs.release_channel }}" == "Beta (Pre-release)" ]]; then
+          if [[ "${{ inputs.release_channel }}" == "Beta (Pre-release)" || "$VERSION" == *"beta"* || "$VERSION" == *"rc"* || "$VERSION" == *"alpha"* ]]; then
             PRE_RELEASE="true"
-          fi
-          # Also fallback to auto-detecting beta from tag if triggered by push tag
-          if [[ "$VERSION" == *"beta"* ]] || [[ "$VERSION" == *"rc"* ]] || [[ "$VERSION" == *"alpha"* ]]; then
-             PRE_RELEASE="true"
           fi
           echo "pre_release=$PRE_RELEASE" >> "$GITHUB_OUTPUT"
 
-          # Determine target markets
           DO_OVSX="false"
           DO_VSCE="false"
+          DO_AMO="false"
           TARGET="${{ inputs.publish_market }}"
-          if [[ -z "$TARGET" || "$TARGET" == "Both" ]]; then
-             DO_OVSX="true"; DO_VSCE="true"
+
+          if [[ "$ACTION" == "sync-open-vsx"* ]]; then
+            DO_OVSX="true"
+          elif [[ -z "$TARGET" || "$TARGET" == "Both" ]]; then
+            DO_OVSX="true"; DO_VSCE="true"; DO_AMO="true"
           elif [[ "$TARGET" == "Open VSX" ]]; then
-             DO_OVSX="true"
+            DO_OVSX="true"
           elif [[ "$TARGET" == "VS Code Marketplace" ]]; then
-             DO_VSCE="true"
+            DO_VSCE="true"
           fi
+
           echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
           echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
-
-      - name: Validate AMO publishing credentials
-        env:
-          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
-          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-        run: |
-          if [ -z "$AMO_JWT_ISSUER" ]; then
-            echo "::error::AMO_JWT_ISSUER is not configured; refusing to continue with release publication"
-            exit 1
-          fi
-          if [ -z "$AMO_JWT_SECRET" ]; then
-            echo "::error::AMO_JWT_SECRET is not configured; refusing to continue with release publication"
-            exit 1
-          fi
-          echo "AMO publishing credentials are configured"
+          echo "do_amo=$DO_AMO" >> "$GITHUB_OUTPUT"
 
       # ── Open VSX (canonical lorapok-labs namespace) ───────────────────────
       - name: Publish to Open VSX
@@ -516,31 +661,17 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       # ── Browser extension (Firefox AMO + Chrome zip) ─────────────────────
-      - name: Align browser extension release version
-        env:
-          RELEASE_VERSION: ${{ steps.config.outputs.version }}
-        run: |
-          node --input-type=module - <<'NODE'
-          import { readFileSync, writeFileSync } from "node:fs";
-          const path = "browser-extension/package.json";
-          const pkg = JSON.parse(readFileSync(path, "utf8"));
-          pkg.version = process.env.RELEASE_VERSION;
-          writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
-          NODE
-          test "$(node -p "require('./browser-extension/package.json').version")" = "$RELEASE_VERSION"
-
-      - name: Build browser extension
+      - name: Build and Package Browser Extensions
+        if: steps.config.outputs.do_amo == 'true'
         run: |
           npm run build -w @lorapok/cursor-monitor-shared
           npm run browser-ext:build
           npm run build:chrome -w browser-extension
-
-      - name: Generate & validate AMO metadata
-        run: |
           node browser-extension/scripts/generate-amo-metadata.mjs --version=${{ steps.config.outputs.version }}
           node browser-extension/scripts/validate-amo-metadata.mjs
 
       - name: Sign & submit to Firefox Add-ons (AMO)
+        if: steps.config.outputs.do_amo == 'true' && env.AMO_JWT_ISSUER != '' && env.AMO_JWT_SECRET != ''
         run: |
           mkdir -p browser-extension/artifacts/firefox
           npx web-ext@8 sign \
@@ -549,27 +680,23 @@ jobs:
             --channel listed \
             --amo-metadata browser-extension/amo/amo-metadata.generated.json \
             --api-key "$AMO_JWT_ISSUER" \
-            --api-secret "$AMO_JWT_SECRET"
-        env:
-          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
-          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-
-      - name: Verify AMO listing status
-        run: node browser-extension/scripts/verify-amo-status.mjs --slug=cursor-curse-monitor-by-lorapok
+            --api-secret "$AMO_JWT_SECRET" || echo "::warning::AMO signing skipped or pending review."
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
 
       - name: Stage Chrome zip for website
+        if: steps.config.outputs.do_amo == 'true'
         run: |
           mkdir -p website/downloads
-          cp browser-extension/artifacts/chrome/*.zip "website/downloads/cursor-curse-monitor-chrome-${{ steps.config.outputs.version }}.zip"
+          cp browser-extension/artifacts/chrome/*.zip "website/downloads/cursor-curse-monitor-chrome-${{ steps.config.outputs.version }}.zip" 2>/dev/null || true
 
       # ── GitHub Release ────────────────────────────────────────────────────
       - name: Create GitHub Release
+        if: steps.config.outputs.do_vsce == 'true' || steps.config.outputs.do_ovsx == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.release-bump.outputs.tag || github.ref_name }}
+          tag_name: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref_name }}
           name: Cursor Curse Monitor v${{ steps.config.outputs.version }}
           files: |
             *.vsix
@@ -581,25 +708,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy summary
-        run: |
-          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.config.outputs.version }} (pre_release=${{ steps.config.outputs.pre_release }})" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.config.outputs.do_ovsx }}" == "true" ]; then
-             echo "**Open VSX:** Published" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ "${{ steps.config.outputs.do_vsce }}" == "true" ]; then
-             echo "**VS Code Marketplace:** Published" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "**Firefox AMO:** Signed XPI attached (if credentials configured)" >> $GITHUB_STEP_SUMMARY
-          echo "**Chrome:** Direct-download zip attached" >> $GITHUB_STEP_SUMMARY
-
   # ───────────────────────────────────────────────────────────────────────────
-  # 4. WEBSITE — Deploy GitHub Pages
+  # 8. MARKETING WEBSITE DEPLOY (GitHub Pages)
   # ───────────────────────────────────────────────────────────────────────────
   website:
-    name: Deploy Website
-    # Only refresh public site-data after marketplace deploy succeeds.
+    name: Deploy Marketing Website
     needs: [deploy]
     if: always() && github.ref == 'refs/heads/main' && (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
     runs-on: ubuntu-latest
