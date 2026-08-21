@@ -82,7 +82,7 @@ export class SecurityAlertPanel {
       .join("");
 
     const first = findings[0];
-    const target = parseFindingTarget(first);
+    const target = first ? parseFindingTarget(first) : { file: "", line: 1 };
     const openPayload = JSON.stringify(target).replace(/</g, "\\u003c");
 
     return `<!DOCTYPE html>
