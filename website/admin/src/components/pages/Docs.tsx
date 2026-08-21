@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
-import { BookOpen, Search } from "lucide-react";
+import { motion } from "framer-motion";
+import { BookOpen, Download, ExternalLink, Search } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
+import { useSiteData } from "../../hooks/useSiteData";
+import { formatCount } from "../../lib/site-data";
+
+const QUICK_LINKS = [
+  { label: "Firebase Console", href: "https://console.firebase.google.com/project/cursor-curse-by-lorapok" },
+  { label: "GitHub Actions", href: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions" },
+  { label: "Open VSX", href: "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" },
+  { label: "Firefox AMO", href: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/" },
+  { label: "VS Code Marketplace", href: "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" },
+];
 
 const SECTIONS = [
   {
@@ -338,6 +349,7 @@ npx vsce publish -p $VSCE_PAT # VS Code Marketplace`}
 
 export default function Docs() {
   const [query, setQuery] = useState("");
+  const { data: siteData } = useSiteData();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -388,8 +400,16 @@ export default function Docs() {
         </aside>
 
         <div className="flex-1 min-w-0 space-y-10">
-          {filtered.map((section) => (
-            <section key={section.id} id={section.id} className="scroll-mt-8">
+          {filtered.map((section, index) => (
+            <motion.section
+              key={section.id}
+              id={section.id}
+              className="scroll-mt-8"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.35, delay: index * 0.03 }}
+            >
               <Card>
                 <h3 className="text-xl font-bold text-[var(--color-text)] mb-4 pb-3 border-b border-[var(--color-border)]">
                   {section.title}
@@ -398,9 +418,59 @@ export default function Docs() {
                   {section.content}
                 </div>
               </Card>
-            </section>
+            </motion.section>
           ))}
         </div>
+
+        <aside className="hidden xl:block xl:w-56 shrink-0">
+          <div className="sticky top-6 space-y-4">
+            {siteData?.downloads && (
+              <Card className="text-center">
+                <Download className="mx-auto text-[var(--color-neon)] mb-2" size={22} aria-hidden="true" />
+                <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Total downloads</p>
+                <p className="text-2xl font-bold text-[var(--color-text)] mt-1">
+                  {formatCount(siteData.downloads.total)}
+                </p>
+                <p className="text-[10px] text-[var(--color-muted)] mt-2">All marketplaces combined</p>
+              </Card>
+            )}
+            <Card>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-3">Quick links</h4>
+              <ul className="space-y-2 text-sm">
+                {QUICK_LINKS.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[var(--color-muted)] hover:text-[var(--color-accent-2)] transition-colors"
+                    >
+                      {link.label}
+                      <ExternalLink size={12} aria-hidden="true" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+            <Card>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-2">Environment</h4>
+              <dl className="text-xs space-y-2 text-[var(--color-muted)]">
+                <div>
+                  <dt className="text-[var(--color-muted)]">Admin</dt>
+                  <dd className="font-[family-name:var(--font-mono)] break-all">cursor-dev.lorapok.tech</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--color-muted)]">Firebase</dt>
+                  <dd className="font-[family-name:var(--font-mono)]">cursor-curse-by-lorapok</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--color-muted)]">KV binding</dt>
+                  <dd className="font-[family-name:var(--font-mono)]">ADMIN_KV</dd>
+                </div>
+              </dl>
+            </Card>
+          </div>
+        </aside>
       </div>
     </div>
   );

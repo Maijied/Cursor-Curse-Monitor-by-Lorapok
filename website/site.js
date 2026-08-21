@@ -5,6 +5,20 @@
 (async function () {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
+  const NOTICE_URL = "https://cursor-dev.lorapok.tech/api/notice";
+  const FALLBACK_NOTICE = {
+    enabled: true,
+    id: "rollback-recovery-fallback",
+    title: "Rollback and Recovery Notice",
+    shortMessage:
+      "We’re extremely sorry — an immediate rollback is in progress to restore stability. We’ll update you as soon as recovery is confirmed.",
+    message:
+      "We’re extremely sorry for the disruption. We have initiated an immediate rollback to restore the last stable version while we investigate the issue.",
+    severity: "warning",
+    dismissible: false,
+    feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+    collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+  };
 
   let data;
   try {
@@ -22,6 +36,12 @@
     const setHref = (sel, href) => {
       $$(sel).forEach((el) => { el.href = href; });
     };
+    const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toLocaleString());
+
+    // KPI strip (downloads + engagement)
+    setText("[data-downloads-total]", fmt(data.downloads?.total));
+    setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
+    setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
 
     // Core version data
     setText("[data-version]", data.version);
@@ -43,6 +63,11 @@
     setHref("[data-href-release]", data.github.releaseUrl);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
+    setHref("[data-href-firefox]", data.browserExtension?.firefox?.url ?? "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/");
+    setHref(
+      "[data-href-chrome-zip]",
+      data.browserExtension?.chrome?.zipUrl ?? data.github?.chromeZipUrl ?? data.github?.releaseUrl ?? "#"
+    );
 
     // Install commands
     const cmd = (id, text) => {
@@ -92,8 +117,67 @@
     // OG image and document.title are set at build time via generate-seo.mjs — do not mutate here.
   }
 
+  await initNotice();
   initEcosystemTabs();
   initLightbox();
+
+  async function initNotice() {
+    const banner = $("#dev-notice-banner");
+    const content = $("#dev-notice-content");
+    const duplicate = $(".dev-notice-duplicate");
+    const dismiss = $("#dev-notice-dismiss");
+    if (!banner || !content) return;
+
+    let notice = FALLBACK_NOTICE;
+    try {
+      const response = await fetch(NOTICE_URL, { cache: "no-store" });
+      if (response.ok) {
+        const live = await response.json();
+        if (live?.enabled && live.title && (live.shortMessage || live.message)) notice = live;
+        else if (!live?.enabled) return;
+      }
+    } catch {
+      // Keep the recovery message visible when the admin API is unavailable.
+    }
+
+    const dismissedKey = `ccm-notice-dismissed:${notice.id || notice.title}`;
+    if (notice.dismissible && window.localStorage.getItem(dismissedKey) === "1") return;
+
+    const buildContent = () => {
+      const fragment = document.createDocumentFragment();
+      const badge = document.createElement("span");
+      badge.className = "notice-badge";
+      badge.textContent = notice.title;
+      fragment.append(badge);
+
+      const text = document.createElement("span");
+      text.textContent = notice.shortMessage || notice.message;
+      fragment.append(text);
+
+      for (const [label, href] of [["Report an issue", notice.feedbackUrl], ["Collaborate", notice.collaborateUrl]]) {
+        if (!href) continue;
+        const link = document.createElement("a");
+        link.href = href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = label;
+        fragment.append(link);
+      }
+      return fragment;
+    };
+
+    content.replaceChildren(buildContent());
+    if (duplicate) duplicate.replaceChildren(buildContent());
+    banner.hidden = false;
+    banner.setAttribute("aria-label", notice.title);
+    if (dismiss) {
+      dismiss.hidden = !notice.dismissible;
+      dismiss.addEventListener("click", () => {
+        window.localStorage.setItem(dismissedKey, "1");
+        banner.hidden = true;
+      });
+    }
+  }
 })();
 
 /**

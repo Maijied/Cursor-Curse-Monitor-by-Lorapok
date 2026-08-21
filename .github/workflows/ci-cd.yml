@@ -86,6 +86,9 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Extension unit tests (scan secrets)
+        run: node tests/test_scan_secrets.js
+
       - name: Validate icon & logo assets
         run: npm run validate:assets
 
@@ -188,6 +191,10 @@ jobs:
         run: |
           node scripts/generate-site-data.mjs
           node scripts/generate-seo.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
+          ANALYTICS_STATS_URL: ${{ secrets.ANALYTICS_STATS_URL }}
 
       - name: Install admin dependencies
         working-directory: website/admin
@@ -238,6 +245,10 @@ jobs:
         run: |
           node scripts/generate-site-data.mjs
           node scripts/generate-seo.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
+          ANALYTICS_STATS_URL: ${{ secrets.ANALYTICS_STATS_URL }}
 
       - name: Install admin dependencies
         working-directory: website/admin
@@ -438,7 +449,17 @@ jobs:
           if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
             PRE_FLAG="--pre-release"
           fi
-          node scripts/publish-ovsx.mjs $PRE_FLAG
+          set +e
+          OUTPUT=$(node scripts/publish-ovsx.mjs $PRE_FLAG 2>&1)
+          CODE=$?
+          echo "$OUTPUT"
+          if [ $CODE -ne 0 ]; then
+            if echo "$OUTPUT" | grep -qiE "already published|already exists"; then
+              echo "::warning::Version already on Open VSX — treating as success"
+              exit 0
+            fi
+            exit $CODE
+          fi
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
@@ -572,6 +593,10 @@ jobs:
 
       - name: Generate dynamic site data
         run: node scripts/generate-site-data.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
+          ANALYTICS_STATS_URL: ${{ secrets.ANALYTICS_STATS_URL }}
 
       - name: Generate SEO artifacts
         run: |

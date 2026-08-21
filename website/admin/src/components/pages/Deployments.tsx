@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { AlertTriangle, Package, Rocket, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Package, Rocket, Undo2 } from "lucide-react";
 import {
   fetchTags,
   triggerDeployment,
@@ -226,6 +226,53 @@ export default function Deployments() {
           package.json: <strong className="text-[var(--color-text)] font-[family-name:var(--font-mono)]">v{pkgVersion}</strong>
         </span>
       </div>
+
+      {siteData?.browserExtension && (
+        <Card>
+          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Browser extensions</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-bg-base)]">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h4 className="font-medium text-[var(--color-text)]">Firefox (AMO)</h4>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-neon)_15%,transparent)] text-[var(--color-neon)]">
+                  Published
+                </span>
+              </div>
+              <p className="text-sm text-[var(--color-muted)] mb-3">
+                Version <span className="font-[family-name:var(--font-mono)]">{siteData.browserExtension.version ?? "—"}</span>
+                {" · "}auto-signed on release via CI
+              </p>
+              <a
+                href={siteData.browserExtension.firefox?.url ?? "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-[var(--color-accent-2)] hover:underline"
+              >
+                View on AMO <ExternalLink size={14} />
+              </a>
+            </div>
+            <div className="rounded-xl border border-[color-mix(in_srgb,var(--color-warn)_30%,transparent)] p-4 bg-[var(--color-bg-base)] opacity-90">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h4 className="font-medium text-[var(--color-text)]">Chrome</h4>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-warn)_15%,transparent)] text-[var(--color-warn)]">
+                  Zip only
+                </span>
+              </div>
+              <p className="text-sm text-[var(--color-muted)] mb-3">
+                Web Store publish disabled. Chrome zip is attached to GitHub Releases after deploy.
+              </p>
+              <a
+                href={siteData.browserExtension.chrome?.zipUrl ?? siteData.github.chromeZipUrl ?? siteData.github.releaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-[var(--color-accent-2)] hover:underline"
+              >
+                Download latest zip <ExternalLink size={14} />
+              </a>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
         {(

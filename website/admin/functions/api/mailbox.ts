@@ -5,7 +5,7 @@ import {
   listMailboxMessages,
   patchMailboxMessage,
 } from "./_shared/mailbox.js";
-import { buildComposeHtml, buildSubscribeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
+import { buildComposeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
 
 export async function onRequestGet(context) {
   const startedAt = Date.now();

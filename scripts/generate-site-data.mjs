@@ -89,6 +89,75 @@ function readVisitorStats() {
   }
 }
 
+function parseFirestoreValue(value) {
+  if (!value || typeof value !== "object") return null;
+  if ("stringValue" in value) return value.stringValue;
+  if ("integerValue" in value) return Number(value.integerValue);
+  if ("doubleValue" in value) return value.doubleValue;
+  if ("booleanValue" in value) return value.booleanValue;
+  if ("mapValue" in value) {
+    const out = {};
+    for (const [k, v] of Object.entries(value.mapValue.fields ?? {})) {
+      out[k] = parseFirestoreValue(v);
+    }
+    return out;
+  }
+  return null;
+}
+
+async function fetchFirestoreVisitorStats() {
+  const projectId = process.env.FIREBASE_PROJECT_ID ?? "cursor-curse-by-lorapok";
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/stats/visitors`;
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    const doc = await res.json();
+    const fields = doc.fields ?? {};
+    const websiteVisits = parseFirestoreValue(fields.websiteVisits) ?? 0;
+    const packageClicks = parseFirestoreValue(fields.packageClicks) ?? {};
+    const updatedAt = parseFirestoreValue(fields.updatedAt) ?? new Date().toISOString();
+    const clicks = {
+      ovsx: Number(packageClicks.ovsx ?? 0),
+      vscode: Number(packageClicks.vscode ?? 0),
+      github: Number(packageClicks.github ?? 0),
+      vsix: Number(packageClicks.vsix ?? 0),
+      openvsxDuplicate: Number(packageClicks.openvsxDuplicate ?? 0),
+    };
+    const totalEngagement =
+      websiteVisits + Object.values(clicks).reduce((s, n) => s + (n ?? 0), 0);
+    return { websiteVisits, packageClicks: clicks, totalEngagement, updatedAt, source: "firestore" };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchRemoteVisitorStats() {
+  const remoteUrl = process.env.ANALYTICS_STATS_URL?.trim();
+  if (remoteUrl) {
+    try {
+      const res = await fetch(remoteUrl, { headers: { Accept: "application/json" } });
+      if (res.ok) {
+        const data = await res.json();
+        return { ...data, source: "remote" };
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  const firestore = await fetchFirestoreVisitorStats();
+  if (firestore) return firestore;
+  return readVisitorStats();
+}
+
+function readBrowserExtensionVersion() {
+  try {
+    const extPkg = JSON.parse(readFileSync(join(root, "browser-extension", "package.json"), "utf8"));
+    return extPkg.version ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function githubTags() {
   const data = await fetchJson(`https://api.github.com/repos/${REPO}/tags?per_page=30`);
   if (!Array.isArray(data)) return [];
@@ -100,6 +169,7 @@ async function githubLatestRelease() {
   if (!data?.tag_name) return null;
   const tag = data.tag_name.replace(/^v/, "");
   const vsix = (data.assets ?? []).find((a) => a.name?.endsWith(".vsix"));
+  const chromeZip = (data.assets ?? []).find((a) => /chrome.*\.zip$/i.test(a.name ?? ""));
   return {
     tag: data.tag_name,
     version: tag,
@@ -107,6 +177,8 @@ async function githubLatestRelease() {
     vsixName: vsix?.name ?? `${NAME}-${tag}.vsix`,
     vsixUrl: vsix?.browser_download_url ?? null,
     vsixDownloadCount: vsix?.download_count ?? 0,
+    chromeZipUrl: chromeZip?.browser_download_url ?? null,
+    chromeZipName: chromeZip?.name ?? null,
     publishedAt: data.published_at,
   };
 }
@@ -240,7 +312,7 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   ovsxLatest(OVSX_DUPLICATE_NS),
   vsceLatest(),
   githubDiscussionsAndIssues(),
-  Promise.resolve(readVisitorStats()),
+  Promise.resolve(fetchRemoteVisitorStats()),
 ]);
 
 const version = github?.version ?? pkg.version;
@@ -342,6 +414,20 @@ const siteData = {
     vsixDownloadCount: github?.vsixDownloadCount ?? 0,
     totalReleaseDownloads: githubDownloads,
     publishedAt: github?.publishedAt ?? null,
+    chromeZipUrl: github?.chromeZipUrl ?? null,
+    chromeZipName: github?.chromeZipName ?? null,
+  },
+  browserExtension: {
+    version: readBrowserExtensionVersion() ?? version,
+    firefox: {
+      url: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+      published: true,
+    },
+    chrome: {
+      zipUrl: github?.chromeZipUrl ?? null,
+      zipName: github?.chromeZipName ?? null,
+      webStorePublished: false,
+    },
   },
   install: {
     ovsxSearch: OVSX_EXT_ID,
@@ -355,7 +441,10 @@ const siteData = {
 
 const out = join(root, "website", "site-data.json");
 writeFileSync(out, JSON.stringify(siteData, null, 2) + "\n");
+const visitorOut = join(root, "website", "visitor-stats.json");
+writeFileSync(visitorOut, JSON.stringify(siteData.visitors, null, 2) + "\n");
 console.log(`Wrote ${out}`);
+console.log(`Wrote ${visitorOut}`);
 console.log(`  Version:          ${version}`);
 console.log(`  Sync status:      ${syncStatus}`);
 console.log(`  Total downloads:  ${totalDownloads.toLocaleString()}`);

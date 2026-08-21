@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { SiteData } from "../../lib/site-data";
 
 type Node = { id: string; label: string; version: string | null; synced: boolean; warn?: boolean };
@@ -9,31 +10,114 @@ function nodeStatus(node: Node): "ok" | "warn" | "danger" {
 }
 
 export default function SyncRadar({ data }: { data: SiteData }) {
+  const extVersion = data.browserExtension?.version ?? null;
   const nodes: Node[] = [
-    { id: "github", label: "GitHub", version: data.github.releaseTag.replace(/^v/, ""), synced: data.github.releaseTag.replace(/^v/, "") === data.packageVersion },
-    { id: "ovsx", label: "Open VSX", version: data.ovsx.version, synced: data.ovsx.version === data.packageVersion },
-    { id: "vscode", label: "VS Code", version: data.vscode.version, synced: data.vscode.version === data.packageVersion },
+    {
+      id: "github",
+      label: "GitHub",
+      version: data.github.releaseTag.replace(/^v/, ""),
+      synced: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
+    },
+    {
+      id: "ovsx",
+      label: "Open VSX",
+      version: data.ovsx.version,
+      synced: data.ovsx.version === data.packageVersion,
+    },
+    {
+      id: "vscode",
+      label: "VS Code",
+      version: data.vscode.version,
+      synced: data.vscode.version === data.packageVersion,
+    },
+    {
+      id: "firefox",
+      label: "Firefox",
+      version: extVersion,
+      synced: Boolean(extVersion && extVersion === data.packageVersion),
+      warn: !data.browserExtension?.firefox?.published,
+    },
   ];
   const drift = data.syncStatus !== "synced";
+  const cx = 110;
+  const cy = 110;
+  const radius = 72;
 
   return (
     <div className="glass-panel p-6 flex flex-col items-center">
       <h3 className="text-sm font-medium text-[var(--color-muted)] mb-4 self-start">Marketplace Sync Radar</h3>
-      <svg viewBox="0 0 220 220" className="w-48 h-48" aria-label="Marketplace sync radar">
-        <circle cx="110" cy="110" r="90" fill="none" stroke="var(--color-border)" strokeWidth="1" strokeDasharray={drift ? "6 4" : "none"} />
-        <circle cx="110" cy="110" r="6" fill={drift ? "var(--color-warn)" : "var(--color-neon)"} className={drift ? "" : "animate-pulse-neon"} />
+      <svg viewBox="0 0 220 220" className="w-52 h-52" aria-label="Marketplace sync radar">
+        <circle
+          cx={cx}
+          cy={cy}
+          r="90"
+          fill="none"
+          stroke="var(--color-border)"
+          strokeWidth="1"
+          strokeDasharray={drift ? "6 4" : "none"}
+        />
+        <motion.g
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        >
+          <path
+            d={`M ${cx} ${cy} L ${cx} ${cy - 90} A 90 90 0 0 1 ${cx + 63} ${cy - 63} Z`}
+            fill="url(#radarSweep)"
+            opacity="0.35"
+          />
+        </motion.g>
+        <defs>
+          <radialGradient id="radarSweep" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0" />
+            <stop offset="100%" stopColor="var(--color-neon)" stopOpacity="0.9" />
+          </radialGradient>
+        </defs>
+        <motion.circle
+          cx={cx}
+          cy={cy}
+          r="6"
+          fill={drift ? "var(--color-warn)" : "var(--color-neon)"}
+          animate={{ scale: drift ? 1 : [1, 1.25, 1], opacity: drift ? 1 : [0.85, 1, 0.85] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
         {nodes.map((node, i) => {
           const angle = (i / nodes.length) * Math.PI * 2 - Math.PI / 2;
-          const x = 110 + Math.cos(angle) * 72;
-          const y = 110 + Math.sin(angle) * 72;
+          const x = cx + Math.cos(angle) * radius;
+          const y = cy + Math.sin(angle) * radius;
           const status = nodeStatus(node);
-          const color = status === "ok" ? "var(--color-neon)" : status === "warn" ? "var(--color-warn)" : "var(--color-danger)";
+          const color =
+            status === "ok" ? "var(--color-neon)" : status === "warn" ? "var(--color-warn)" : "var(--color-danger)";
           return (
             <g key={node.id}>
-              <line x1="110" y1="110" x2={x} y2={y} stroke={color} strokeWidth="1.5" opacity="0.6" />
-              <circle cx={x} cy={y} r="14" fill="var(--color-bg-surface)" stroke={color} strokeWidth="2" />
-              <text x={x} y={y - 22} textAnchor="middle" fill="var(--color-muted)" fontSize="9">{node.label}</text>
-              <text x={x} y={y + 4} textAnchor="middle" fill="var(--color-text)" fontSize="10" fontFamily="monospace">{node.version ?? "—"}</text>
+              <motion.line
+                x1={cx}
+                y1={cy}
+                x2={x}
+                y2={y}
+                stroke={color}
+                strokeWidth="1.5"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.65 }}
+                transition={{ duration: 0.6, delay: i * 0.12 }}
+              />
+              <motion.circle
+                cx={x}
+                cy={y}
+                r="14"
+                fill="var(--color-bg-surface)"
+                stroke={color}
+                strokeWidth="2"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 + i * 0.1 }}
+              />
+              <text x={x} y={y - 22} textAnchor="middle" fill="var(--color-muted)" fontSize="9">
+                {node.label}
+              </text>
+              <text x={x} y={y + 4} textAnchor="middle" fill="var(--color-text)" fontSize="10" fontFamily="monospace">
+                {node.version ?? "—"}
+              </text>
             </g>
           );
         })}

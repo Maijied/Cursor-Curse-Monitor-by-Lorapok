@@ -1,4 +1,4 @@
-import { Activity, Download, Package, Store } from "lucide-react";
+import { Activity, Download, Package, Store, Users } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import KpiCard from "../ui/KpiCard";
 import Card from "../ui/Card";
@@ -13,6 +13,7 @@ import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
+import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
@@ -28,6 +29,7 @@ function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger
 export default function Overview() {
   const { data, error, loading } = useSiteData();
   const { stats: visitors, live: visitorsLive } = useVisitorStats(data?.visitors);
+  const { stats: usageStats, live: usageLive } = useUsageStats();
 
   if (loading) {
     return (
@@ -80,6 +82,17 @@ export default function Overview() {
           delayClass="stagger-2"
         />
         <KpiCard
+          label="Opt-in installs (24h)"
+          value={formatCount(usageStats?.optInUniques?.unique24h ?? 0)}
+          sub={
+            <span className="text-xs text-[var(--color-muted)]">
+              {usageLive ? "Live heartbeat" : "Polling"} · {formatCount(usageStats?.optInUniques?.uniqueAll ?? 0)} all-time
+            </span>
+          }
+          icon={<Users className="text-[var(--color-accent)]" size={24} />}
+          delayClass="stagger-3"
+        />
+        <KpiCard
           label="Open VSX (canonical)"
           value={data.ovsx.version ?? "—"}
           sub={
@@ -88,14 +101,30 @@ export default function Overview() {
             ) : undefined
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
-          delayClass="stagger-3"
+          delayClass="stagger-4"
         />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="Package Version"
           value={data.packageVersion}
           icon={<Package className="text-[var(--color-accent)]" size={24} />}
-          delayClass="stagger-4"
+          delayClass="stagger-1"
         />
+        {data.browserExtension && (
+          <KpiCard
+            label="Firefox AMO"
+            value={data.browserExtension.version ?? "—"}
+            sub={
+              <span className="text-xs text-[var(--color-muted)]">
+                {data.browserExtension.firefox?.published ? "Published on AMO" : "Pending"}
+              </span>
+            }
+            icon={<Store className="text-[var(--color-warn)]" size={24} />}
+            delayClass="stagger-2"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

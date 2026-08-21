@@ -35,16 +35,16 @@ export default function Sidebar({
             <div className="relative w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--color-neon)_18%,transparent)] border border-[color-mix(in_srgb,var(--color-neon)_35%,transparent)] flex items-center justify-center overflow-hidden">
               <img
                 src="/assets/logo.svg"
-                alt="Cursor Curse Monitor by Lorapok"
-                className="w-8 h-8 object-contain"
+                alt="Cursor Curse Monitor"
+                className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(52,211,153,0.35)]"
               />
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-base bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-accent)] bg-clip-text text-transparent">
-              Cursor Monitor
+            <h1 className="font-bold text-base bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-neon)] bg-clip-text text-transparent">
+              Cursor Curse Monitor
             </h1>
-            <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Mission Control</p>
+            <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Mission Control · Lorapok Labs</p>
           </div>
           <button
             type="button"

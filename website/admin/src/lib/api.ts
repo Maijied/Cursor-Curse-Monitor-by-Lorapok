@@ -44,6 +44,10 @@ export async function fetchHealth() {
     mailConfigured?: boolean;
     mailTransport?: string;
     mailHint?: string;
+    adminPublicUrl?: string;
+    githubTokenConfigured?: boolean;
+    adminKvConfigured?: boolean;
+    siteDataUrl?: string;
   }>("/health", false);
 }
 
