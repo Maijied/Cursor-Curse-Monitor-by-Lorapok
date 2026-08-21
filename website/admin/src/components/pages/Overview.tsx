@@ -193,7 +193,7 @@ export default function Overview() {
                       {
                         name: "Firefox Add-ons (AMO)",
                         version: data.browserExtension.version ? `v${data.browserExtension.version}` : "—",
-                        downloads: data.browserExtension.firefox?.downloads ?? null,
+                        downloads: null,
                         ok: Boolean(data.browserExtension.firefox?.published),
                       },
                       {
