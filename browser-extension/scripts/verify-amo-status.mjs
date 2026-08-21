@@ -12,8 +12,8 @@ const issuer = process.env.AMO_JWT_ISSUER;
 const secret = process.env.AMO_JWT_SECRET;
 
 if (!issuer || !secret) {
-  console.log("AMO credentials not set — skipping verify");
-  process.exit(0);
+  console.error("AMO credentials are required for listing verification");
+  process.exit(1);
 }
 
 const pkg = JSON.parse(
@@ -38,8 +38,8 @@ const res = await fetch(url, {
 });
 
 if (!res.ok) {
-  console.warn(`AMO verify: HTTP ${res.status} for ${slug} (may be first listing)`);
-  process.exit(0);
+  console.error(`AMO verification failed: HTTP ${res.status} for ${slug}`);
+  process.exit(1);
 }
 
 const data = await res.json();

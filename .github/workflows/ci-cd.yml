@@ -437,6 +437,21 @@ jobs:
           echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
           echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
 
+      - name: Validate AMO publishing credentials
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          if [ -z "$AMO_JWT_ISSUER" ]; then
+            echo "::error::AMO_JWT_ISSUER is not configured; refusing to continue with release publication"
+            exit 1
+          fi
+          if [ -z "$AMO_JWT_SECRET" ]; then
+            echo "::error::AMO_JWT_SECRET is not configured; refusing to continue with release publication"
+            exit 1
+          fi
+          echo "AMO publishing credentials are configured"
+
       # ── Open VSX (canonical lorapok-labs namespace) ───────────────────────
       - name: Publish to Open VSX
         if: steps.config.outputs.do_ovsx == 'true'
@@ -491,6 +506,19 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       # ── Browser extension (Firefox AMO + Chrome zip) ─────────────────────
+      - name: Align browser extension release version
+        env:
+          RELEASE_VERSION: ${{ steps.config.outputs.version }}
+        run: |
+          node --input-type=module - <<'NODE'
+          import { readFileSync, writeFileSync } from "node:fs";
+          const path = "browser-extension/package.json";
+          const pkg = JSON.parse(readFileSync(path, "utf8"));
+          pkg.version = process.env.RELEASE_VERSION;
+          writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
+          NODE
+          test "$(node -p "require('./browser-extension/package.json').version")" = "$RELEASE_VERSION"
+
       - name: Build browser extension
         run: |
           npm run build -w @lorapok/cursor-monitor-shared
@@ -504,10 +532,6 @@ jobs:
 
       - name: Sign & submit to Firefox Add-ons (AMO)
         run: |
-          if [ -z "$AMO_JWT_ISSUER" ] || [ -z "$AMO_JWT_SECRET" ]; then
-            echo "::warning::AMO_JWT_* not set — skipping Firefox AMO publish"
-            exit 0
-          fi
           mkdir -p browser-extension/artifacts/firefox
           npx web-ext@8 sign \
             --source-dir browser-extension/dist \
