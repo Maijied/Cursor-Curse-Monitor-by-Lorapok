@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-08-18T08:17:56.126Z",
+  "generatedAt": "2026-08-21T01:02:48.379Z",
   "source": "website/seo.yml",
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
   "description": "Cursor Curse Monitor by Lorapok Labs — live included quota, Auto/API meters, budget tracking, local credential scanner, Firefox & Chrome browser extension, and free Composer 2.5 fallback. Private to your Cursor login only.",
   "version": "0.5.11",
-  "packageVersion": "0.5.12",
+  "packageVersion": "0.5.13",
   "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
-  "syncStatus": "synced",
+  "syncStatus": "ahead",
   "keywords": [
     "Cursor IDE",
     "usage monitor",
