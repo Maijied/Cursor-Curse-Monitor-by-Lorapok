@@ -20,6 +20,11 @@
     collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
   };
 
+  // Register local interactions before any network request. A slow data or
+  // notice request must never make image previews feel unresponsive.
+  initEcosystemTabs();
+  initLightbox();
+
   let data;
   try {
     const res = await fetch("site-data.json", { cache: "no-store" });
@@ -117,9 +122,9 @@
     // OG image and document.title are set at build time via generate-seo.mjs — do not mutate here.
   }
 
-  await initNotice();
-  initEcosystemTabs();
-  initLightbox();
+  // Register interactive previews immediately. The remote notice API must not
+  // block image previews when it is slow or temporarily unavailable.
+  void initNotice();
 
   async function initNotice() {
     const banner = $("#dev-notice-banner");
