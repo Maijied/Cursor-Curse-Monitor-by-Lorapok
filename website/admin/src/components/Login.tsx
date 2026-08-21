@@ -7,8 +7,8 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
-import { useNavigate, Link } from "react-router-dom";
-import { CheckCircle2, ExternalLink, Loader2, LogIn, Mail, Shield, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { CheckCircle2, ExternalLink, Loader2, LogIn, Mail, Sparkles } from "lucide-react";
 import {
   configureAuthPersistence,
   getRememberMePreference,
@@ -113,6 +113,7 @@ export default function Login() {
       handleCodeInApp: true,
     };
     try {
+      await configureAuthPersistence(auth, rememberMe);
       await sendSignInLinkToEmail(auth, email.trim(), actionCodeSettings);
       window.localStorage.setItem("emailForSignIn", email.trim());
       setMessageTone("success");
@@ -138,42 +139,39 @@ export default function Login() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden flex flex-col">
+    <div className="relative min-h-screen overflow-x-hidden flex flex-col justify-between">
       <div className="app-shell-bg fixed inset-0" aria-hidden="true" />
 
-      <header className="relative z-10 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-elevated)_85%,transparent)] backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <Link to="/login" className="flex items-center gap-3 min-w-0">
-            <img src="/assets/logo.svg" alt="" className="w-10 h-10 shrink-0" />
-            <div className="min-w-0">
-              <p className="font-bold text-base bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-accent)] bg-clip-text text-transparent truncate">
-                Cursor Curse Monitor
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-10 px-4">
+        {/* Animated Welcome Illustration & Glowing Title */}
+        <div className="flex flex-col items-center mb-6 animate-fade-slide-up text-center">
+          <img
+            src="/assets/welcome-animation.svg"
+            alt="Welcome to Mission Control"
+            className="w-44 h-auto mb-4"
+          />
+          <div className="flex items-center justify-center gap-3">
+            <div className="relative shrink-0">
+              <img
+                src="/assets/logo.svg"
+                alt="Logo"
+                className="w-9 h-9 drop-shadow-[0_0_12px_rgba(124,92,255,0.4)]"
+              />
+            </div>
+            <div className="text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-accent-2)] via-[var(--color-accent)] to-[var(--color-neon)] bg-clip-text text-transparent leading-tight">
+                Cursor Curse Admin Panel
+              </h1>
+              <p className="text-[11px] uppercase tracking-wider text-[var(--color-muted)] font-medium">
+                Mission Control · Lorapok Labs
               </p>
-              <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Mission Control · Lorapok Labs</p>
             </div>
-          </Link>
-          <BackToWebsiteButton compact className="w-auto shrink-0" />
-        </div>
-      </header>
-
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-12 px-4">
-        <img
-          src="/assets/welcome-animation.svg"
-          alt=""
-          className="w-36 h-auto mb-6 animate-fade-slide-up"
-        />
-
-        <div className="glass-panel p-8 w-full max-w-md relative overflow-hidden animate-fade-slide-up shadow-2xl border border-[var(--color-border)]">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-accent-2)] via-[var(--color-accent)] to-[var(--color-neon)]" />
-          
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)] text-xs text-[var(--color-accent-2)] font-medium mb-3">
-              <Shield size={13} />
-              Mission Control
-            </div>
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">Admin Sign In</h1>
-            <p className="text-xs text-[var(--color-muted)] mt-1">Authorized Lorapok administrators and contributors</p>
           </div>
+        </div>
+
+        {/* Login Card */}
+        <div className="glass-panel p-6 sm:p-8 w-full max-w-md relative overflow-hidden animate-fade-slide-up shadow-2xl border border-[var(--color-border)]">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-accent-2)] via-[var(--color-accent)] to-[var(--color-neon)]" />
 
           {needsEmailConfirm ? (
             <form
@@ -214,21 +212,11 @@ export default function Login() {
             </form>
           ) : (
             <>
-              <label className="flex items-center gap-2 mb-4 text-xs text-[var(--color-muted)] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-                />
-                Keep me signed in on this device
-              </label>
-
               <button
                 type="button"
                 onClick={() => void handleGoogleSignIn()}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2.5 bg-white text-[#0f172a] py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all mb-5 disabled:opacity-50 shadow-sm text-sm"
+                className="w-full flex items-center justify-center gap-2.5 bg-white text-[#0f172a] py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all mb-4 disabled:opacity-50 shadow-sm text-sm"
               >
                 {loading ? (
                   <Loader2 size={18} className="animate-spin text-slate-600" />
@@ -255,9 +243,21 @@ export default function Login() {
                 {loading ? "Authenticating…" : "Sign in with Google"}
               </button>
 
+              <label className="flex items-center gap-2 mb-4 text-xs text-[var(--color-muted)] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                />
+                Keep me signed in on this device
+              </label>
+
               <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-[var(--color-border)]" />
-                <span className="flex-shrink-0 mx-3 text-[var(--color-muted)] text-[11px] uppercase tracking-wider">or email link</span>
+                <span className="flex-shrink-0 mx-3 text-[var(--color-muted)] text-[11px] uppercase tracking-wider">
+                  or email link
+                </span>
                 <div className="flex-grow border-t border-[var(--color-border)]" />
               </div>
 
@@ -274,6 +274,7 @@ export default function Login() {
                     required
                     className={inputClass}
                     placeholder="admin@lorapok.tech"
+                    autoComplete="email"
                   />
                 </div>
                 <button
@@ -303,9 +304,15 @@ export default function Login() {
             </div>
           )}
         </div>
+
+        {/* Back to Website Button Below Card */}
+        <div className="mt-6 w-full max-w-md animate-fade-slide-up">
+          <BackToWebsiteButton className="w-full" />
+        </div>
       </main>
 
-      <footer className="relative z-10 border-t border-[var(--color-border)] py-6 px-4 mt-auto">
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-[var(--color-border)] py-6 px-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--color-muted)]">
           <p>© {new Date().getFullYear()} Lorapok Labs · Cursor Curse Monitor</p>
           <div className="flex items-center gap-4">

@@ -7,12 +7,12 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
-import { parse as parseYaml } from "yaml";
+import yaml from "js-yaml";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const website = join(root, "website");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const seoConfig = parseYaml(readFileSync(join(website, "seo.yml"), "utf8"));
+const seoConfig = yaml.load(readFileSync(join(website, "seo.yml"), "utf8"));
 
 const SITE_BASE = (seoConfig.site?.base ?? pkg.homepage ?? "").replace(/\/$/, "");
 
