@@ -180,7 +180,7 @@
     }
   },
   "scripts": {
-    "test": "node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && npm run browser-ext:test",
+    "test": "node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && node tests/test_release_integrity.js && npm run browser-ext:test",
     "vscode:prepublish": "npm run compile",
     "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./",
     "browser-ext:build": "npm run build -w browser-extension",
@@ -196,6 +196,7 @@
     "site:data": "node scripts/generate-site-data.mjs",
     "site:seo": "node scripts/generate-seo.mjs",
     "site:seo:validate": "node scripts/validate-seo.mjs",
+    "validate:release": "node scripts/validate-release.mjs",
     "security:scan": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",
     "validate:reinstall": "node scripts/validate-reinstall.mjs",
     "prepare": "husky"

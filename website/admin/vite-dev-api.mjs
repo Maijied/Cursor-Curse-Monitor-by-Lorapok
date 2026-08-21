@@ -296,13 +296,6 @@ function writeStats(stats) {
   writeFileSync(visitorStatsPath, JSON.stringify(stats, null, 2) + "\n");
 }
 
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
 function incrementStats(channel) {
   const stats = readStats();
   if (!stats.packageClicks) stats.packageClicks = { ...DEFAULT_STATS.packageClicks };

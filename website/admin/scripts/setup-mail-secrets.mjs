@@ -19,19 +19,6 @@ function wranglerOAuth() {
 }
 
 async function createMailToken(oauth) {
-  const body = {
-    name: `ccm-email-sending-${new Date().toISOString().slice(0, 10)}`,
-    policies: [
-      {
-        effect: "allow",
-        resources: { [`com.cloudflare.api.account.${accountId}`]: "*" },
-        permission_groups: [
-          { id: "0b2f6c6d8e9f4a1b2c3d4e5f6a7b8c9d" },
-        ],
-      },
-    ],
-  };
-
   // Resolve permission group IDs dynamically
   const pgRes = await fetch(
     "https://api.cloudflare.com/client/v4/user/tokens/permission_groups",

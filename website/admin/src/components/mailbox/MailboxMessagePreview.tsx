@@ -1,5 +1,6 @@
 import Badge from "../ui/Badge";
 import type { MailboxMessage } from "../../lib/api";
+import { formatMailboxAddress } from "./mailbox-format";
 
 /**
  * Selects the badge variant for a mailbox message category.
@@ -19,10 +20,6 @@ function categoryVariant(category: string): "synced" | "neutral" | "danger" {
  * @param row - The mailbox message containing the direction and address.
  * @returns The recipient address prefixed with `→` for outbound messages, or the sender address prefixed with `←` for inbound messages.
  */
-export function formatMailboxAddress(row: MailboxMessage): string {
-  return row.direction === "outbound" ? `→ ${row.to}` : `← ${row.from}`;
-}
-
 type MailboxMessagePreviewProps = {
   message: MailboxMessage;
   expanded?: boolean;

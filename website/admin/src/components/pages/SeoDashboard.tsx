@@ -104,14 +104,16 @@ export default function SeoDashboard() {
         </Card>
       )}
 
-      <Card>
-        <h3 className="font-semibold mb-3">Keywords</h3>
-        <div className="flex flex-wrap gap-2">
-          {seo.keywords.map((k) => (
-            <Badge key={k} variant="neutral">{k}</Badge>
-          ))}
-        </div>
-      </Card>
+      {(seo.keywords?.length ?? 0) > 0 && (
+        <Card>
+          <h3 className="font-semibold mb-3">Keywords</h3>
+          <div className="flex flex-wrap gap-2">
+            {(seo.keywords ?? []).map((k) => (
+              <Badge key={k} variant="neutral">{k}</Badge>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {seo.pages && (
         <Card>
@@ -140,6 +142,7 @@ export default function SeoDashboard() {
         </Card>
       )}
 
+      {seo.marketplaces && (
       <Card>
         <h3 className="font-semibold mb-3">Marketplace URLs</h3>
         <ul className="space-y-2 text-sm">
@@ -151,6 +154,7 @@ export default function SeoDashboard() {
           ))}
         </ul>
       </Card>
+      )}
     </div>
   );
 }

@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import Sidebar from "./Sidebar";
 import OnlineStatus from "../ui/OnlineStatus";
 import Overview from "../pages/Overview";
-import MarketplaceHealth from "../pages/MarketplaceHealth";
-import Releases from "../pages/Releases";
-import Activity from "../pages/Activity";
-import ApiExplorer from "../pages/ApiExplorer";
-import Logs from "../pages/Logs";
-import Mailbox from "../pages/Mailbox";
-import Reports from "../pages/Reports";
-import Discussions from "../pages/Discussions";
-import Architecture from "../pages/Architecture";
-import Deployments from "../pages/Deployments";
-import Notices from "../pages/Notices";
-import Docs from "../pages/Docs";
-import SeoDashboard from "../pages/SeoDashboard";
-import Settings from "../pages/Settings";
-import Team from "../Team";
-import NotFound from "../pages/NotFound";
+const MarketplaceHealth = lazy(() => import("../pages/MarketplaceHealth"));
+const Releases = lazy(() => import("../pages/Releases"));
+const Activity = lazy(() => import("../pages/Activity"));
+const ApiExplorer = lazy(() => import("../pages/ApiExplorer"));
+const Logs = lazy(() => import("../pages/Logs"));
+const Mailbox = lazy(() => import("../pages/Mailbox"));
+const Reports = lazy(() => import("../pages/Reports"));
+const Discussions = lazy(() => import("../pages/Discussions"));
+const Architecture = lazy(() => import("../pages/Architecture"));
+const Deployments = lazy(() => import("../pages/Deployments"));
+const Notices = lazy(() => import("../pages/Notices"));
+const Docs = lazy(() => import("../pages/Docs"));
+const SeoDashboard = lazy(() => import("../pages/SeoDashboard"));
+const Settings = lazy(() => import("../pages/Settings"));
+const Team = lazy(() => import("../Team"));
+const NotFound = lazy(() => import("../pages/NotFound"));
 
 /**
  * Renders the authenticated application shell and its routed pages.
@@ -78,26 +78,27 @@ export default function AppShell() {
           <div className="app-shell-bg" aria-hidden="true" />
           <main className="app-scroll-pane">
             <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full min-w-0">
-              <Routes>
-                <Route index element={<Overview />} />
-                <Route path="marketplace" element={<MarketplaceHealth />} />
-                <Route path="releases" element={<Releases />} />
-                <Route path="activity" element={<Activity />} />
-                <Route path="logs" element={<Logs />} />
-                <Route path="mailbox" element={<Mailbox />} />
-                <Route path="api-explorer" element={<ApiExplorer />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="discussions" element={<Discussions />} />
-                <Route path="architecture" element={<Architecture />} />
-                <Route path="deployments" element={<Deployments />} />
-                <Route path="deploy" element={<Navigate to="../deployments" replace />} />
-                <Route path="notices" element={<Notices />} />
-                <Route path="docs" element={<Docs />} />
-                <Route path="seo" element={<SeoDashboard />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="team" element={<Team />} />
-                <Route path="*" element={<NotFound inApp />} />
-              </Routes>
+              <Suspense fallback={<div className="min-h-64 animate-pulse rounded-xl bg-white/5" aria-label="Loading dashboard page" />}>
+                <Routes>
+                  <Route index element={<Overview />} />
+                  <Route path="marketplace" element={<MarketplaceHealth />} />
+                  <Route path="releases" element={<Releases />} />
+                  <Route path="activity" element={<Activity />} />
+                  <Route path="logs" element={<Logs />} />
+                  <Route path="mailbox" element={<Mailbox />} />
+                  <Route path="api-explorer" element={<ApiExplorer />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="discussions" element={<Discussions />} />
+                  <Route path="architecture" element={<Architecture />} />
+                  <Route path="deployments" element={<Deployments />} />
+                  <Route path="notices" element={<Notices />} />
+                  <Route path="docs" element={<Docs />} />
+                  <Route path="seo" element={<SeoDashboard />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="team" element={<Team />} />
+                  <Route path="*" element={<NotFound inApp />} />
+                </Routes>
+              </Suspense>
             </div>
           </main>
         </div>

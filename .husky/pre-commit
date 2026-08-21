@@ -4,3 +4,4 @@ if [ -z "$STAGED" ]; then
   exit 0
 fi
 echo "$STAGED" | tr '\n' '\0' | xargs -0 npx secretlint --secretlintrc .secretlintrc.json
+node scripts/check-governance-surface.mjs

@@ -8,7 +8,8 @@ import ErrorState from "../ui/ErrorState";
 import Modal from "../ui/Modal";
 import Notification, { type NotificationTone } from "../ui/Notification";
 import SecurityAlertModal from "../ui/SecurityAlertModal";
-import MailboxMessagePreview, { formatMailboxAddress } from "../mailbox/MailboxMessagePreview";
+import MailboxMessagePreview from "../mailbox/MailboxMessagePreview";
+import { formatMailboxAddress } from "../mailbox/mailbox-format";
 import { scanAdminText, type AdminSecurityFinding } from "../../lib/scanSecrets";
 import {
   fetchMailbox,

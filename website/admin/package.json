@@ -8,7 +8,7 @@
     "dev:polling": "CHOKIDAR_USEPOLLING=1 vite",
     "prebuild": "node ../../scripts/generate-site-data.mjs && node ../../scripts/generate-seo.mjs",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
     "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=cursor-monitor-admin",

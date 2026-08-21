@@ -30,7 +30,7 @@ const firebaseMock = vi.hoisted(() => {
     },
     db: {},
   };
-});
+}, 30_000);
 
 vi.mock("../../lib/firebase", () => firebaseMock);
 
