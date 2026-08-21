@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { BookOpen, Download, ExternalLink, Search } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
@@ -400,15 +399,11 @@ export default function Docs() {
         </aside>
 
         <div className="flex-1 min-w-0 space-y-10">
-          {filtered.map((section, index) => (
-            <motion.section
+          {filtered.map((section) => (
+            <section
               key={section.id}
               id={section.id}
-              className="scroll-mt-8"
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.35, delay: index * 0.03 }}
+              className="scroll-mt-8 animate-fade-slide-up"
             >
               <Card>
                 <h3 className="text-xl font-bold text-[var(--color-text)] mb-4 pb-3 border-b border-[var(--color-border)]">
@@ -418,7 +413,7 @@ export default function Docs() {
                   {section.content}
                 </div>
               </Card>
-            </motion.section>
+            </section>
           ))}
         </div>
 

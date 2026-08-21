@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, ChevronRight, ExternalLink, Terminal } from "lucide-react";
 import { fetchWorkflowRunLogs, fetchWorkflowRuns, type WorkflowRun, type WorkflowRunLogs } from "../../lib/api";
 import { pickWorkflowRun } from "../../lib/workflow-run-match";
@@ -141,10 +140,8 @@ export default function DeployRuntimePanel({
       )}
 
       {run && (
-        <motion.div
-          className="flex flex-wrap items-center gap-3 text-sm"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
+          className="flex flex-wrap items-center gap-3 text-sm animate-fade-slide-up"
         >
           <Badge variant={runStatusTone(run)}>
             {run.status}
@@ -159,7 +156,7 @@ export default function DeployRuntimePanel({
           >
             Open in GitHub <ExternalLink size={14} />
           </a>
-        </motion.div>
+        </div>
       )}
 
       {jobs.length > 0 && (
@@ -172,17 +169,14 @@ export default function DeployRuntimePanel({
               const done = job.conclusion === "success";
               return (
                 <li key={job.id} className="flex items-center">
-                  <motion.div
-                    layout
-                    className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl border min-w-[7.5rem] max-w-[10rem] transition-colors ${
+                  <div
+                    className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl border min-w-[7.5rem] max-w-[10rem] transition-all duration-300 ${
                       activeStep
-                        ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] shadow-[0_0_20px_rgba(124,92,255,0.2)]"
+                        ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] shadow-[0_0_20px_rgba(124,92,255,0.2)] animate-pulse"
                         : browser
                           ? "border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-warn)_6%,transparent)]"
                           : "border-[var(--color-border)] bg-[var(--color-bg-base)]"
                     }`}
-                    animate={activeStep ? { scale: [1, 1.02, 1] } : { scale: 1 }}
-                    transition={{ duration: 1.2, repeat: activeStep ? Infinity : 0 }}
                   >
                     <Badge variant={tone}>
                       {done ? (
@@ -200,15 +194,13 @@ export default function DeployRuntimePanel({
                     {activeStep && (
                       <span className="text-[10px] text-[var(--color-accent)]">running…</span>
                     )}
-                  </motion.div>
+                  </div>
                   {index < jobs.length - 1 && (
                     <div className="flex items-center px-1 text-[var(--color-muted)]" aria-hidden="true">
-                      <motion.span
+                      <span
                         className={`inline-block w-6 border-t-2 ${
                           done ? "border-[var(--color-neon)]" : "border-[var(--color-border)]"
                         }`}
-                        animate={activeStep ? { opacity: [0.4, 1, 0.4] } : { opacity: 1 }}
-                        transition={{ duration: 1, repeat: activeStep ? Infinity : 0 }}
                       />
                       <ChevronRight size={14} className={activeStep ? "text-[var(--color-accent)]" : ""} />
                     </div>
@@ -234,21 +226,15 @@ export default function DeployRuntimePanel({
           </span>
           <span className="text-xs text-[var(--color-muted)]">{logsOpen ? "Collapse" : "Expand"}</span>
         </button>
-        <AnimatePresence initial={false}>
-          {logsOpen && (
-            <motion.pre
-              ref={logRef}
-              key="console"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="max-h-72 overflow-auto border-t border-[var(--color-border)] bg-[#05070c] p-4 text-xs font-[family-name:var(--font-mono)] text-[#c8d6e5] leading-relaxed whitespace-pre-wrap"
-            >
-              {logs?.text?.trim() || "Waiting for GitHub Actions to start…"}
-            </motion.pre>
-          )}
-        </AnimatePresence>
+        {logsOpen && (
+          <pre
+            ref={logRef}
+            key="console"
+            className="max-h-72 overflow-auto border-t border-[var(--color-border)] bg-[#05070c] p-4 text-xs font-[family-name:var(--font-mono)] text-[#c8d6e5] leading-relaxed whitespace-pre-wrap animate-fade-slide-up"
+          >
+            {logs?.text?.trim() || "Waiting for GitHub Actions to start…"}
+          </pre>
+        )}
       </div>
     </div>
   );

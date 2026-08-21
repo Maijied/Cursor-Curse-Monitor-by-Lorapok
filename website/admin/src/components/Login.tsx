@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   signInWithPopup,
   signInWithEmailLink,
@@ -109,20 +108,14 @@ export default function Login() {
       </header>
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-10 px-4">
-        <motion.img
+        <img
           src="/assets/welcome-animation.svg"
           alt=""
-          className="w-40 h-auto mb-6"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          className="w-40 h-auto mb-6 animate-fade-slide-up"
         />
 
-        <motion.div
-          className="glass-panel p-8 w-full max-w-md relative overflow-hidden"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.08 }}
+        <div
+          className="glass-panel p-8 w-full max-w-md relative overflow-hidden animate-fade-slide-up"
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-accent-2)] via-[var(--color-accent)] to-[var(--color-neon)]" />
           <div className="text-center mb-6">
@@ -230,7 +223,7 @@ export default function Login() {
               {message}
             </div>
           )}
-        </motion.div>
+        </div>
       </main>
 
       <footer className="relative z-10 border-t border-[var(--color-border)] py-6 px-4 mt-auto">
