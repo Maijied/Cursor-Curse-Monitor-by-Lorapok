@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import type { SiteData } from "../../lib/site-data";
 
 type Node = { id: string; label: string; version: string | null; synced: boolean; warn?: boolean };
@@ -56,30 +55,32 @@ export default function SyncRadar({ data }: { data: SiteData }) {
           strokeWidth="1"
           strokeDasharray={drift ? "6 4" : "none"}
         />
-        <motion.g
-          style={{ transformOrigin: `${cx}px ${cy}px` }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-        >
+        <g style={{ transformOrigin: `${cx}px ${cy}px`, animationDuration: "8s" }} className="animate-spin">
           <path
             d={`M ${cx} ${cy} L ${cx} ${cy - 90} A 90 90 0 0 1 ${cx + 63} ${cy - 63} Z`}
             fill="url(#radarSweep)"
             opacity="0.35"
           />
-        </motion.g>
+        </g>
         <defs>
           <radialGradient id="radarSweep" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0" />
             <stop offset="100%" stopColor="var(--color-neon)" stopOpacity="0.9" />
           </radialGradient>
         </defs>
-        <motion.circle
+        <circle
           cx={cx}
           cy={cy}
           r="6"
           fill={drift ? "var(--color-warn)" : "var(--color-neon)"}
-          animate={{ scale: drift ? 1 : [1, 1.25, 1], opacity: drift ? 1 : [0.85, 1, 0.85] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          className={drift ? "" : "animate-ping"}
+          style={{ transformOrigin: `${cx}px ${cy}px`, animationDuration: "2.5s" }}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r="6"
+          fill={drift ? "var(--color-warn)" : "var(--color-neon)"}
         />
         {nodes.map((node, i) => {
           const angle = (i / nodes.length) * Math.PI * 2 - Math.PI / 2;
@@ -90,27 +91,22 @@ export default function SyncRadar({ data }: { data: SiteData }) {
             status === "ok" ? "var(--color-neon)" : status === "warn" ? "var(--color-warn)" : "var(--color-danger)";
           return (
             <g key={node.id}>
-              <motion.line
+              <line
                 x1={cx}
                 y1={cy}
                 x2={x}
                 y2={y}
                 stroke={color}
                 strokeWidth="1.5"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.65 }}
-                transition={{ duration: 0.6, delay: i * 0.12 }}
+                strokeOpacity="0.75"
               />
-              <motion.circle
+              <circle
                 cx={x}
                 cy={y}
                 r="14"
                 fill="var(--color-bg-surface)"
                 stroke={color}
                 strokeWidth="2"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 + i * 0.1 }}
               />
               <text x={x} y={y - 22} textAnchor="middle" fill="var(--color-muted)" fontSize="9">
                 {node.label}

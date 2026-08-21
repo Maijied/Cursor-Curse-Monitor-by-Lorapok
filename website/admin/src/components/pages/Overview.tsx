@@ -10,6 +10,8 @@ import DriftAlert from "../ui/DriftAlert";
 import DownloadBreakdownPanel from "../ui/DownloadBreakdown";
 import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
+import TrafficTrendGraph from "../ui/TrafficTrendGraph";
+import MarketplaceDistributionChart from "../ui/MarketplaceDistributionChart";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
@@ -127,6 +129,13 @@ export default function Overview() {
         )}
       </div>
 
+      {/* Interactive Trend & Trajectory Graph */}
+      <TrafficTrendGraph
+        stats={visitors}
+        live={visitorsLive}
+        optIn24h={usageStats?.optInUniques?.unique24h ?? 0}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {downloads && (
           <div className="lg:col-span-2">
@@ -139,6 +148,9 @@ export default function Overview() {
         )}
         <SyncRadar data={data} />
       </div>
+
+      {/* Marketplace Channel Distribution Donut Graph */}
+      <MarketplaceDistributionChart data={data} />
 
       <VisitorStatsPanel stats={visitors} live={visitorsLive} />
 

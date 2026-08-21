@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Expand, Mail, PenLine, RefreshCw, Send, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Mail, PenLine, RefreshCw, Send, Zap } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -236,8 +236,9 @@ export default function Mailbox() {
         />
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-6 min-w-0 items-start">
-        <Card className="min-w-0 min-h-[28rem] flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,390px)_minmax(0,1fr)] gap-6 min-w-0 items-start">
+        {/* Left Column: Messages List */}
+        <Card className="min-w-0 min-h-[32rem] flex flex-col">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Mail size={18} className="text-[var(--color-accent)]" />
@@ -246,13 +247,13 @@ export default function Mailbox() {
             <button
               type="button"
               onClick={load}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] hover:bg-white/5 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-[var(--color-border)] hover:bg-white/5 transition-colors"
             >
-              <RefreshCw size={16} /> Refresh
+              <RefreshCw size={14} /> Refresh
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
             <select value={direction} onChange={(e) => { setDirection(e.target.value); setPage(1); }} className={inputClass}>
               <option value="">All directions</option>
               <option value="outbound">Outbound</option>
@@ -276,136 +277,120 @@ export default function Mailbox() {
               type="search"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search subject or address…"
+              placeholder="Search…"
               className={inputClass}
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-[var(--color-muted)] mb-4">
+          <label className="flex items-center gap-2 text-xs text-[var(--color-muted)] mb-3">
             <input type="checkbox" checked={unreadOnly} onChange={(e) => { setUnreadOnly(e.target.checked); setPage(1); }} />
             Unread only
           </label>
 
           <div className="flex-1 min-h-0 rounded-xl border border-[var(--color-border)] overflow-hidden">
-            <div className="overflow-y-auto max-h-[min(52vh,32rem)]">
-              <table className="w-full table-fixed text-sm">
-                <thead className="sticky top-0 z-10 bg-[color-mix(in_srgb,var(--color-bg-elevated)_95%,transparent)] backdrop-blur-sm">
-                  <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
-                    <th className="px-3 py-2.5 font-medium w-[26%]">Time</th>
-                    <th className="px-3 py-2.5 font-medium w-[30%]">Address</th>
-                    <th className="px-3 py-2.5 font-medium w-[28%]">Subject</th>
-                    <th className="px-3 py-2.5 font-medium w-[8%]">Cat.</th>
-                    <th className="px-3 py-2.5 font-medium w-[8%]">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]">
-                  {items.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-12 text-center text-[var(--color-muted)]">
-                        No messages yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    items.map((row) => {
-                      const active = selected?.id === row.id;
-                      return (
-                        <tr
-                          key={row.id}
-                          className={`cursor-pointer transition-colors hover:bg-white/[0.03] ${
-                            active ? "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)]" : ""
-                          } ${!row.read ? "bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]" : ""}`}
-                          onClick={() => openMessage(row)}
+            <div className="overflow-y-auto max-h-[30rem] divide-y divide-[var(--color-border)]">
+              {items.length === 0 ? (
+                <div className="py-12 text-center text-[var(--color-muted)] text-sm">
+                  No messages found.
+                </div>
+              ) : (
+                items.map((row) => {
+                  const active = selected?.id === row.id;
+                  return (
+                    <div
+                      key={row.id}
+                      onClick={() => openMessage(row)}
+                      className={`p-3 cursor-pointer transition-colors hover:bg-white/[0.04] ${
+                        active
+                          ? "bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] border-l-2 border-[var(--color-accent)]"
+                          : ""
+                      } ${!row.read ? "bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)] font-medium" : ""}`}
+                    >
+                      <div className="flex items-center justify-between gap-2 text-xs mb-1">
+                        <span className="font-semibold text-[var(--color-text)] truncate max-w-[180px]">
+                          {formatMailboxAddress(row)}
+                        </span>
+                        <span className="text-[10px] text-[var(--color-muted)] shrink-0 font-[family-name:var(--font-mono)]">
+                          {new Date(row.ts).toLocaleDateString(undefined, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[var(--color-text)] font-medium truncate mb-1.5">
+                        {row.subject || "(No subject)"}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                            row.status === "failed"
+                              ? "bg-red-500/20 text-red-400"
+                              : "bg-emerald-500/20 text-emerald-400"
+                          }`}
                         >
-                          <td className="px-3 py-2.5 text-[var(--color-muted)] text-xs truncate" title={new Date(row.ts).toLocaleString()}>
-                            {new Date(row.ts).toLocaleString(undefined, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                          </td>
-                          <td className="px-3 py-2.5 font-[family-name:var(--font-mono)] text-xs truncate" title={formatMailboxAddress(row)}>
-                            {formatMailboxAddress(row)}
-                          </td>
-                          <td className="px-3 py-2.5 truncate font-medium" title={row.subject}>
-                            {row.subject}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={`block truncate text-[10px] font-medium uppercase tracking-wide ${
-                                row.category === "test" || row.category === "subscribe"
-                                  ? "text-[var(--color-neon)]"
-                                  : "text-[var(--color-muted)]"
-                              }`}
-                              title={row.category}
-                            >
-                              {row.category}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={`block truncate text-[10px] font-medium uppercase tracking-wide ${
-                                row.status === "failed" ? "text-[var(--color-danger)]" : "text-[var(--color-neon)]"
-                              }`}
-                              title={row.status}
-                            >
-                              {row.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                          {row.status}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-wider text-[var(--color-muted)]">
+                          {row.category}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-[var(--color-border)]">
             <p className="text-xs text-[var(--color-muted)]">
-              {total} message(s) · page {page} of {totalPages}
+              {total} message(s) · {page}/{totalPages}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
               >
-                <ChevronLeft size={14} /> Prev
+                <ChevronLeft size={13} /> Prev
               </button>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border border-[var(--color-border)] disabled:opacity-40 hover:bg-white/5"
               >
-                Next <ChevronRight size={14} />
+                Next <ChevronRight size={13} />
               </button>
             </div>
           </div>
         </Card>
 
-        <Card className="min-w-0 hidden xl:block xl:sticky xl:top-4">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Mail size={16} className="text-[var(--color-accent-2)]" />
-              Preview
-            </h3>
-            {selected && (
-              <button
-                type="button"
-                onClick={() => setPreviewExpanded(true)}
-                className="inline-flex items-center gap-1.5 text-xs text-[var(--color-accent-2)] hover:underline"
-              >
-                <Expand size={14} /> Expand
-              </button>
-            )}
-          </div>
+        {/* Right Column: Full-Width Professional Reading Pane */}
+        <div className="min-w-0">
           {selected ? (
-            <MailboxMessagePreview message={selected} />
+            <MailboxMessagePreview
+              message={selected}
+              onExpand={() => setPreviewExpanded(true)}
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center min-h-[16rem] rounded-xl border border-dashed border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-base)_50%,transparent)] text-center px-4">
-              <Mail size={28} className="text-[var(--color-muted)] mb-2 opacity-50" />
-              <p className="text-sm text-[var(--color-muted)]">Select a message to preview</p>
-            </div>
+            <Card className="flex flex-col items-center justify-center min-h-[32rem] text-center p-8 border-dashed">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--color-bg-base)] border border-[var(--color-border)] flex items-center justify-center mb-4 text-[var(--color-muted)] shadow-inner">
+                <Mail size={32} className="opacity-60" />
+              </div>
+              <h3 className="text-lg font-bold text-[var(--color-text)] mb-1">Select an email to view</h3>
+              <p className="text-xs text-[var(--color-muted)] max-w-sm mb-6">
+                Choose a message from the list on the left to inspect formatted HTML delivery, headers, and transmission logs.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setComposeOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white text-xs font-medium hover:opacity-90 transition-opacity shadow-sm"
+                >
+                  <PenLine size={14} /> Compose New Email
+                </button>
+              </div>
+            </Card>
           )}
-        </Card>
+        </div>
       </div>
 
       <Modal
