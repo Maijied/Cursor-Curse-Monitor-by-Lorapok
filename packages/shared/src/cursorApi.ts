@@ -146,6 +146,133 @@ export interface LocalInsights {
   membershipType: string | null;
 }
 
+export function validateUsageSummary(data: unknown): UsageSummary {
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid API response: payload is not an object");
+  }
+
+  const obj = data as Record<string, unknown>;
+  const individualUsage = obj.individualUsage as Record<string, unknown> | undefined;
+
+  if (!individualUsage || typeof individualUsage !== "object") {
+    throw new Error("Invalid API response: missing 'individualUsage' field");
+  }
+
+  const plan = individualUsage.plan as Record<string, unknown> | undefined;
+  if (!plan || typeof plan !== "object") {
+    throw new Error("Invalid API response: missing 'individualUsage.plan' field");
+  }
+
+  const onDemand = individualUsage.onDemand as Record<string, unknown> | undefined;
+  if (!onDemand || typeof onDemand !== "object") {
+    throw new Error("Invalid API response: missing 'individualUsage.onDemand' field");
+  }
+
+  const safeNumber = (val: unknown, fallback = 0): number =>
+    typeof val === "number" && Number.isFinite(val) ? val : fallback;
+  const safeString = (val: unknown, fallback = ""): string =>
+    typeof val === "string" ? val : fallback;
+  const safeBool = (val: unknown, fallback = false): boolean =>
+    typeof val === "boolean" ? val : fallback;
+
+  const validatedPlan: UsagePlan = {
+    enabled: safeBool(plan.enabled, true),
+    used: safeNumber(plan.used, 0),
+    limit: safeNumber(plan.limit, 0),
+    remaining: safeNumber(plan.remaining, 0),
+    autoPercentUsed: safeNumber(plan.autoPercentUsed, 0),
+    apiPercentUsed: safeNumber(plan.apiPercentUsed, 0),
+    totalPercentUsed: safeNumber(plan.totalPercentUsed, 0),
+  };
+
+  if (plan.breakdown && typeof plan.breakdown === "object") {
+    const b = plan.breakdown as Record<string, unknown>;
+    validatedPlan.breakdown = {
+      included: safeNumber(b.included, 0),
+      bonus: safeNumber(b.bonus, 0),
+      total: safeNumber(b.total, 0),
+    };
+  }
+
+  const validatedOnDemand: OnDemandUsage = {
+    enabled: safeBool(onDemand.enabled, false),
+    used: safeNumber(onDemand.used, 0),
+    limit: typeof onDemand.limit === "number" && Number.isFinite(onDemand.limit) ? onDemand.limit : null,
+    remaining: typeof onDemand.remaining === "number" && Number.isFinite(onDemand.remaining) ? onDemand.remaining : null,
+  };
+
+  const summary: UsageSummary = {
+    billingCycleStart: safeString(obj.billingCycleStart, new Date().toISOString()),
+    billingCycleEnd: safeString(obj.billingCycleEnd, new Date().toISOString()),
+    membershipType: safeString(obj.membershipType, "Pro"),
+    limitType: safeString(obj.limitType, "Monthly"),
+    isUnlimited: safeBool(obj.isUnlimited, false),
+    individualUsage: {
+      plan: validatedPlan,
+      onDemand: validatedOnDemand,
+    },
+  };
+
+  if (typeof obj.autoModelSelectedDisplayMessage === "string") {
+    summary.autoModelSelectedDisplayMessage = obj.autoModelSelectedDisplayMessage;
+  }
+  if (typeof obj.namedModelSelectedDisplayMessage === "string") {
+    summary.namedModelSelectedDisplayMessage = obj.namedModelSelectedDisplayMessage;
+  }
+
+  if (obj.teamUsage && typeof obj.teamUsage === "object") {
+    const teamObj = obj.teamUsage as Record<string, unknown>;
+    if (teamObj.onDemand && typeof teamObj.onDemand === "object") {
+      const teamOnDemand = teamObj.onDemand as Record<string, unknown>;
+      summary.teamUsage = {
+        onDemand: {
+          enabled: safeBool(teamOnDemand.enabled, false),
+          used: safeNumber(teamOnDemand.used, 0),
+          limit: typeof teamOnDemand.limit === "number" && Number.isFinite(teamOnDemand.limit) ? teamOnDemand.limit : null,
+          remaining: typeof teamOnDemand.remaining === "number" && Number.isFinite(teamOnDemand.remaining) ? teamOnDemand.remaining : null,
+        },
+      };
+    }
+  }
+
+  return summary;
+}
+
+export function validateStripeProfile(data: unknown): StripeProfile {
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid Profile API response: payload is not an object");
+  }
+
+  const obj = data as Record<string, unknown>;
+  const safeString = (val: unknown, fallback = ""): string =>
+    typeof val === "string" ? val : fallback;
+  const safeBool = (val: unknown, fallback = false): boolean =>
+    typeof val === "boolean" ? val : fallback;
+
+  const profile: StripeProfile = {
+    membershipType: safeString(obj.membershipType, "Pro"),
+    isTeamMember: safeBool(obj.isTeamMember, false),
+  };
+
+  if (typeof obj.teamId === "number") {
+    profile.teamId = obj.teamId;
+  }
+  if (typeof obj.teamMembershipType === "string") {
+    profile.teamMembershipType = obj.teamMembershipType;
+  }
+  if (typeof obj.individualMembershipType === "string") {
+    profile.individualMembershipType = obj.individualMembershipType;
+  }
+  if (typeof obj.isOnBillableAuto === "boolean") {
+    profile.isOnBillableAuto = obj.isOnBillableAuto;
+  }
+  if (typeof obj.isYearlyPlan === "boolean") {
+    profile.isYearlyPlan = obj.isYearlyPlan;
+  }
+
+  return profile;
+}
+
 const API_BASE = "https://api2.cursor.sh/auth";
 
 export async function fetchUsageSummary(token: string): Promise<UsageSummary> {
@@ -160,7 +287,8 @@ export async function fetchUsageSummary(token: string): Promise<UsageSummary> {
     throw new Error(`Usage API failed (${response.status})`);
   }
 
-  return (await response.json()) as UsageSummary;
+  const json = await response.json();
+  return validateUsageSummary(json);
 }
 
 export async function fetchStripeProfile(token: string): Promise<StripeProfile> {
@@ -175,7 +303,8 @@ export async function fetchStripeProfile(token: string): Promise<StripeProfile> 
     throw new Error(`Profile API failed (${response.status})`);
   }
 
-  return (await response.json()) as StripeProfile;
+  const json = await response.json();
+  return validateStripeProfile(json);
 }
 
 export function isLimitExceeded(usage: UsageSummary): boolean {
@@ -203,6 +332,9 @@ export function formatCycleDate(iso: string): string {
 
 export function estimateDaysLeft(cycleEndIso: string): number {
   const end = new Date(cycleEndIso).getTime();
+  if (!Number.isFinite(end)) {
+    return 0;
+  }
   const now = Date.now();
   return Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
 }

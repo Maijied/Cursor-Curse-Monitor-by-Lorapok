@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.vsix
+*.wasm
 .DS_Store
 .vscode-test/
 *.log

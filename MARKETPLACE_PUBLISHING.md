@@ -103,9 +103,7 @@ npx vsce publish -p YOUR_VSCE_PAT
 
 #### Publish to Open VSX
 ```bash
-npm run compile
-npm run package
-npx ovsx publish -p YOUR_OVSX_PAT
+npm run publish:ovsx -- -p YOUR_OVSX_PAT
 ```
 
 ## Verification

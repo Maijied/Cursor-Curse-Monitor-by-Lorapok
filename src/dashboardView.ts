@@ -3,15 +3,28 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { DashboardSnapshot, formatPercent } from "./cursorApi";
 import { UsageMonitorService } from "./usageMonitor";
+import { generateNonce } from "./utils";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
+
+  private logoSvgCache: string | null = null;
+  private usageMeterSvgCache: string | null = null;
 
   constructor(
     private readonly monitor: UsageMonitorService,
     private readonly extensionUri: vscode.Uri,
     private readonly extensionVersion: string
   ) {}
+
+  private getMediaSvg(filename: string): string {
+    const filePath = path.join(this.extensionUri.fsPath, "media", filename);
+    try {
+      return fs.readFileSync(filePath, "utf8");
+    } catch {
+      return "";
+    }
+  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -25,20 +38,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       ],
     };
 
-    const logoSvg = fs.readFileSync(
-      path.join(this.extensionUri.fsPath, "media", "logo.svg"),
-      "utf8"
-    );
-    const usageMeterSvg = fs.readFileSync(
-      path.join(this.extensionUri.fsPath, "media", "usage-meter.svg"),
-      "utf8"
-    );
+    if (!this.logoSvgCache) {
+      this.logoSvgCache = this.getMediaSvg("logo.svg");
+    }
+    if (!this.usageMeterSvgCache) {
+      this.usageMeterSvgCache = this.getMediaSvg("usage-meter.svg");
+    }
 
+    const nonce = generateNonce();
     webviewView.webview.html = this.getHtml(
-      logoSvg,
-      usageMeterSvg,
+      this.logoSvgCache,
+      this.usageMeterSvgCache,
       webviewView.webview.cspSource,
-      this.extensionVersion
+      this.extensionVersion,
+      nonce
     );
 
     const push = (snapshot: DashboardSnapshot) => {
@@ -53,7 +66,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await this.monitor.refresh();
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
-        if (!Number.isFinite(message.value) || message.value < 0) {
+        if (!Number.isFinite(message.value) || message.value < 0 || message.value > 100000) {
           return;
         }
         await vscode.workspace
@@ -68,13 +81,19 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private getHtml(logoSvg: string, usageMeterSvg: string, cspSource: string, extensionVersion: string): string {
+  private getHtml(
+    logoSvg: string,
+    usageMeterSvg: string,
+    cspSource: string,
+    extensionVersion: string,
+    nonce: string
+  ): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';" />
   <title>Usage Dashboard</title>
   <style>
     :root {
@@ -601,7 +620,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="footer-right">v${extensionVersion}</div>
   </footer>
 
-  <script>
+  <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
 
     function money(n) {
@@ -793,9 +812,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const chips = (snapshot.features || []).filter(function(f) {
         return f.indexOf('Auto ') !== 0;
       });
-      document.getElementById('featureChips').innerHTML = chips.map(function(f) {
-        return '<span class="feature-chip">' + escHtml(f) + '</span>';
-      }).join('');
+      const chipContainer = document.getElementById('featureChips');
+      if (chipContainer) {
+        chipContainer.replaceChildren();
+        chips.forEach(function(f) {
+          const chip = document.createElement('span');
+          chip.className = 'feature-chip';
+          chip.textContent = f;
+          chipContainer.appendChild(chip);
+        });
+      }
 
       document.getElementById('footerMsg').textContent = b.thresholdReached
         ? 'Usage is at ' + Math.round(hero) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.'

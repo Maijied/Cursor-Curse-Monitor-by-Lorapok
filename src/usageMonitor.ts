@@ -20,6 +20,7 @@ import { emptyLocalInsights, readLocalInsights } from "./cursorLocalStore";
 import { NotificationProvider } from "./notificationProvider";
 
 const USAGE_HISTORY_KEY = "usageHistoryV1";
+const REFRESH_COOLDOWN_MS = 3000;
 
 type SnapshotListener = (snapshot: DashboardSnapshot) => void;
 
@@ -27,6 +28,7 @@ export class UsageMonitorService implements vscode.Disposable {
   private timer: NodeJS.Timeout | undefined;
   private lastSnapshot: DashboardSnapshot | undefined;
   private refreshInFlight: Promise<DashboardSnapshot> | null = null;
+  private lastRefreshTime = 0;
   private warnedAtThreshold = false;
   private fallbackAppliedThisCycle = false;
   private readonly listeners = new Set<SnapshotListener>();
@@ -64,13 +66,19 @@ export class UsageMonitorService implements vscode.Disposable {
     this.listeners.clear();
   }
 
-  async refresh(): Promise<DashboardSnapshot> {
+  async refresh(force = false): Promise<DashboardSnapshot> {
+    const now = Date.now();
+    if (!force && this.lastSnapshot && now - this.lastRefreshTime < REFRESH_COOLDOWN_MS) {
+      return this.lastSnapshot;
+    }
     if (this.refreshInFlight) {
       return this.refreshInFlight;
     }
     this.refreshInFlight = this.doRefresh();
     try {
-      return await this.refreshInFlight;
+      const result = await this.refreshInFlight;
+      this.lastRefreshTime = Date.now();
+      return result;
     } finally {
       this.refreshInFlight = null;
     }

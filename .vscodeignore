@@ -18,4 +18,5 @@ DEPLOYMENT.md
 AUTHORS.md
 CONTRIBUTING.md
 *.vsix
+**/*.wasm
 node_modules/**

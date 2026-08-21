@@ -307,6 +307,11 @@ function readCursorKeyDirect(key: string): string | null {
   });
 }
 
+/**
+ * Reads the local Cursor authentication token directly from SQLite reactive storage.
+ * SECURITY: This token is sensitive and MUST NEVER be logged, serialized to telemetry,
+ * or exposed in unhandled error messages.
+ */
 export async function readCursorAccessToken(): Promise<string | null> {
   return readCursorKeyDirect("cursorAuth/accessToken");
 }

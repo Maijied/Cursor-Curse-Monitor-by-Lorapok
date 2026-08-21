@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { SecurityFinding } from "@lorapok/cursor-monitor-shared";
 import { escapeHtml } from "./htmlEscape";
+import { generateNonce } from "./utils";
 
 const PANEL_TYPE = "cursorCurseMonitor.securityAlert";
 
@@ -38,7 +39,7 @@ export class SecurityAlertPanel {
         PANEL_TYPE,
         "Security Alert",
         vscode.ViewColumn.Beside,
-        { enableScripts: true, retainContextWhenHidden: true }
+        { enableScripts: true }
       );
       SecurityAlertPanel.panel.onDidDispose(() => {
         SecurityAlertPanel.panel = undefined;
@@ -67,6 +68,7 @@ export class SecurityAlertPanel {
   }
 
   private static getHtml(findings: SecurityFinding[]): string {
+    const nonce = generateNonce();
     const rows = findings
       .map(
         (f) => `
@@ -87,7 +89,7 @@ export class SecurityAlertPanel {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';" />
   <style>
     :root {
       --bg: #1a1b1e;
@@ -189,7 +191,7 @@ export class SecurityAlertPanel {
       <button class="btn btn-danger" id="reviewBtn">Review finding</button>
     </div>
   </div>
-  <script>
+  <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const target = ${openPayload};
     document.getElementById('reviewBtn').onclick = () => vscode.postMessage({ type: 'open', file: target.file, line: target.line });
