@@ -32,6 +32,24 @@ export const GENERATED_DEV_NOTICE = {
   dismissible: true,
 };
 
+/** Public incident notice activated automatically after a successful rollback dispatch. */
+export const ROLLBACK_NOTICE = {
+  id: "rollback-recovery-notice",
+  source: "rollback",
+  enabled: true,
+  type: "incident",
+  severity: "warning",
+  title: "Rollback and Recovery Notice",
+  message:
+    "We’re extremely sorry for the disruption. We have initiated an immediate rollback to restore the last stable version while we investigate the issue. Please avoid retrying the affected action for now. We’ll post an update as soon as recovery is confirmed.",
+  shortMessage:
+    "We’re extremely sorry — an immediate rollback is in progress to restore stability. We’ll update you as soon as recovery is confirmed.",
+  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+  updatedAt: null,
+  dismissible: false,
+};
+
 export function normalizeNotice(body, extras = {}) {
   return {
     enabled: Boolean(body.enabled),
@@ -131,6 +149,18 @@ export async function ensureCatalogSeeded(env) {
   const next = { seeded: true, items };
   await writeCatalog(env, next);
   return next;
+}
+
+/** Make the recovery notice public after a rollback workflow has been accepted. */
+export async function activateRollbackNotice(env) {
+  const catalog = await ensureCatalogSeeded(env);
+  const notice = { ...ROLLBACK_NOTICE, updatedAt: new Date().toISOString() };
+  const items = [notice, ...catalog.items.filter((item) => item.id !== notice.id)].map((item) => ({
+    ...item,
+    enabled: item.id === notice.id,
+  }));
+  await writeCatalog(env, { ...catalog, items });
+  return publicNoticeShape(notice);
 }
 
 export function setEnabled(items, id, enabled) {

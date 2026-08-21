@@ -1,4 +1,5 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
+import { activateRollbackNotice } from "./notices.js";
 
 const MIN_PUBLISH_TAG = "v0.5.5";
 
@@ -121,7 +122,7 @@ export async function dispatchRollbackWorkflow(env, body, successMessage) {
     );
   }
 
-  return dispatchWorkflow(
+  const response = await dispatchWorkflow(
     env,
     "deployment.yml",
     {
@@ -132,6 +133,22 @@ export async function dispatchRollbackWorkflow(env, body, successMessage) {
     successMessage,
     { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel }
   );
+
+  if (!response.ok) return response;
+
+  try {
+    const payload = await response.json();
+    const notice = await activateRollbackNotice(env);
+    return jsonResponse({ ...payload, notice }, response.status);
+  } catch (error) {
+    console.error("Rollback dispatched but public recovery notice could not be activated", error);
+    return jsonResponse(
+      {
+        error: "Rollback was dispatched, but the public recovery notice could not be activated. Contact an administrator immediately.",
+      },
+      502
+    );
+  }
 }
 
 /** @deprecated Use dispatchPublishWorkflow or dispatchRollbackWorkflow */
