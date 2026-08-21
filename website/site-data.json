@@ -2,8 +2,8 @@
   "generatedAt": "2026-08-20T23:56:02.937Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.12",
-  "packageVersion": "0.5.12",
+  "version": "0.5.13",
+  "packageVersion": "0.5.13",
   "publishedReleaseVersion": null,
   "releaseStatus": "candidate",
   "syncStatus": "ahead",
@@ -80,13 +80,13 @@
   },
   "github": {
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
-    "releaseTag": "v0.5.12",
+    "releaseTag": "v0.5.13",
     "tags": [
-      "v0.5.12"
+      "v0.5.13"
     ],
     "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest",
-    "vsixName": "cursor-curse-monitor-by-lorapok-0.5.12.vsix",
-    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest/download/cursor-curse-monitor-by-lorapok-0.5.12.vsix",
+    "vsixName": "cursor-curse-monitor-by-lorapok-0.5.13.vsix",
+    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest/download/cursor-curse-monitor-by-lorapok-0.5.13.vsix",
     "vsixDownloadCount": 0,
     "totalReleaseDownloads": 0,
     "publishedAt": null,
@@ -108,9 +108,9 @@
   "install": {
     "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "vsceSearch": "LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.5.12.vsix",
+    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.5.13.vsix",
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
-    "releaseTag": "./scripts/release.sh 0.5.12"
+    "releaseTag": "./scripts/release.sh 0.5.13"
   }
 }

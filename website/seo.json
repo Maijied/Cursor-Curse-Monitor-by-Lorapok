@@ -4,8 +4,8 @@
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
   "description": "Cursor Curse Monitor by Lorapok Labs — live included quota, Auto/API meters, budget tracking, local credential scanner, Firefox & Chrome browser extension, and free Composer 2.5 fallback. Private to your Cursor login only.",
-  "version": "0.5.12",
-  "packageVersion": "0.5.12",
+  "version": "0.5.13",
+  "packageVersion": "0.5.13",
   "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
   "syncStatus": "ahead",
   "keywords": [
@@ -82,8 +82,8 @@
           "priceCurrency": "USD"
         },
         "featureList": "Usage dashboard, security scanner, local insights, budget tracking",
-        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest/download/cursor-curse-monitor-by-lorapok-0.5.12.vsix",
-        "softwareVersion": "0.5.12",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest/download/cursor-curse-monitor-by-lorapok-0.5.13.vsix",
+        "softwareVersion": "0.5.13",
         "author": {
           "@type": "Person",
           "name": "Mohammad Maizied Hasan Majumder",
