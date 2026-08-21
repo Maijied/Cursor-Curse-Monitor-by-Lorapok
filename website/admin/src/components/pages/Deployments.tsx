@@ -51,7 +51,7 @@ export default function Deployments() {
   const [selectedTag, setSelectedTag] = useState("");
   const [bumpType, setBumpType] = useState<ReleaseBumpType>("patch");
   const [customVersion, setCustomVersion] = useState("");
-  const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace">("Both");
+  const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO">("Both");
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
   const [dispatchedAfter, setDispatchedAfter] = useState(0);
@@ -404,9 +404,10 @@ export default function Deployments() {
               onChange={(e) => setMarket(e.target.value as typeof market)}
               className={inputClass}
             >
-              <option value="Open VSX">Open VSX</option>
+              <option value="Both">All Marketplaces (VS Code + Open VSX + Firefox AMO)</option>
               <option value="VS Code Marketplace">VS Code Marketplace</option>
-              <option value="Both">Both</option>
+              <option value="Open VSX">Open VSX (canonical lorapok-labs)</option>
+              <option value="Firefox AMO">Firefox Add-ons (AMO)</option>
             </select>
           </div>
 

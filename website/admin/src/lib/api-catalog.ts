@@ -30,7 +30,8 @@ export const API_CATALOG: ApiCatalogEntry[] = [
     path: "/subscribe",
     method: "POST",
     auth: "public",
-    description: "Newsletter subscribe (dry-run uses invalid email)",
-    sampleBody: { email: "probe-invalid@example.com" },
+    description: "Newsletter subscribe endpoint probe",
+    safeProbe: true,
+    sampleBody: { email: "probe@lorapok.tech", probe: true },
   },
 ];

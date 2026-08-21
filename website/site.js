@@ -233,10 +233,17 @@ function initLightbox() {
   const counter = document.getElementById("lightbox-counter");
   if (!lightbox || !img) return;
 
-  const triggers = [...document.querySelectorAll(".lightbox-trigger")];
+  const getVisibleTriggers = () => {
+    return [...document.querySelectorAll(".lightbox-trigger")].filter((btn) => {
+      const figure = btn.closest(".gallery-item");
+      return !figure || !figure.hidden;
+    });
+  };
+
   let index = 0;
 
   const show = (i) => {
+    const triggers = getVisibleTriggers();
     if (!triggers.length) return;
     index = (i + triggers.length) % triggers.length;
     const btn = triggers[index];
@@ -244,7 +251,14 @@ function initLightbox() {
     const alt = btn.querySelector("img")?.alt || btn.dataset.caption || "";
     if (!src) return;
 
+    img.classList.remove("is-loaded");
+    img.onload = () => {
+      img.classList.add("is-loaded");
+    };
     img.src = src;
+    if (img.complete) {
+      img.classList.add("is-loaded");
+    }
     img.alt = alt;
     caption.textContent = btn.dataset.caption || alt;
     counter.textContent = `${index + 1} / ${triggers.length}`;
@@ -256,11 +270,19 @@ function initLightbox() {
   const close = () => {
     lightbox.hidden = true;
     document.body.classList.remove("lightbox-open");
+    img.classList.remove("is-loaded");
     img.removeAttribute("src");
   };
 
-  triggers.forEach((btn, i) => {
-    btn.addEventListener("click", () => show(i));
+  document.addEventListener("click", (e) => {
+    const trigger = e.target.closest(".lightbox-trigger");
+    if (!trigger) return;
+    const triggers = getVisibleTriggers();
+    const triggerIdx = triggers.indexOf(trigger);
+    if (triggerIdx !== -1) {
+      e.preventDefault();
+      show(triggerIdx);
+    }
   });
 
   lightbox.querySelectorAll("[data-lightbox-close]").forEach((el) => {
@@ -282,5 +304,33 @@ function initLightbox() {
     if (e.key === "Escape") close();
     if (e.key === "ArrowLeft") show(index - 1);
     if (e.key === "ArrowRight") show(index + 1);
+  });
+
+  initGalleryFilters();
+}
+
+/**
+ * Filter gallery items by category
+ */
+function initGalleryFilters() {
+  const filterBtns = [...document.querySelectorAll(".gallery-filter-btn")];
+  const galleryItems = [...document.querySelectorAll(".gallery-item")];
+  if (!filterBtns.length || !galleryItems.length) return;
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const filter = btn.dataset.filter || "all";
+
+      galleryItems.forEach((item) => {
+        const category = item.dataset.category || "";
+        if (filter === "all" || category.includes(filter)) {
+          item.hidden = false;
+        } else {
+          item.hidden = true;
+        }
+      });
+    });
   });
 }
