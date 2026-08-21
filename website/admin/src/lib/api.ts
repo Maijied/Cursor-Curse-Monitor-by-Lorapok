@@ -3,6 +3,17 @@ import type { DevNotice } from "./site-data";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
+export function parseApiResponse<T>(text: string, ok: boolean, path: string): T {
+  let data: T & { error?: string };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`API ${path} returned invalid JSON — is the dev server running?`);
+  }
+  if (!ok) throw new Error(data.error || `API ${path} failed`);
+  return data;
+}
+
 async function authHeaders() {
   const user = auth.currentUser;
   if (!user) throw new Error("Not authenticated");
@@ -15,14 +26,7 @@ async function apiGet<T>(path: string, authRequired = true): Promise<T> {
   if (authRequired) Object.assign(headers, await authHeaders());
   const res = await fetch(`${API_BASE}${path}`, { headers });
   const text = await res.text();
-  let data: T & { error?: string };
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(`API ${path} returned invalid JSON — is the dev server running?`);
-  }
-  if (!res.ok) throw new Error((data as { error?: string }).error || `API ${path} failed`);
-  return data;
+  return parseApiResponse<T>(text, res.ok, path);
 }
 
 export async function fetchTags() {

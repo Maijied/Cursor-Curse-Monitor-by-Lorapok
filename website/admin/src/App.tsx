@@ -11,6 +11,8 @@ function App() {
         <div className="min-h-screen w-full flex flex-col">
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/dashboard/api-activity" element={<Navigate to="/dashboard/logs" replace />} />
+            <Route path="/dashboard/deploy" element={<Navigate to="/dashboard/deployments" replace />} />
             <Route
               path="/dashboard/*"
               element={

@@ -65,6 +65,9 @@ jobs:
       - name: Validate SEO artifacts
         run: npm run site:seo:validate
 
+      - name: Validate release metadata
+        run: npm run validate:release
+
       - name: Guard canonical Open VSX namespace
         run: |
           set -euo pipefail

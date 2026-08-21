@@ -107,6 +107,24 @@ jobs:
           echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
           echo "do_vsce=$DO_VSCE" >> "$GITHUB_OUTPUT"
 
+      - name: Ensure GitHub Release before marketplace publication
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.target_tag }}
+          name: Cursor Curse Monitor v${{ steps.config.outputs.version }}
+          files: "*.vsix"
+          generate_release_notes: true
+          prerelease: ${{ steps.config.outputs.pre_release == 'true' }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify GitHub Release asset
+        run: |
+          gh release view "${{ inputs.target_tag }}" --json assets --jq '.assets[].name' | grep -E '\.vsix$'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish to Open VSX
         if: steps.config.outputs.do_ovsx == 'true'
         run: |
@@ -156,16 +174,3 @@ jobs:
           fi
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-
-      - name: Ensure GitHub Release
-        continue-on-error: true
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ inputs.target_tag }}
-          name: Cursor Curse Monitor v${{ steps.config.outputs.version }}
-          files: "*.vsix"
-          generate_release_notes: true
-          prerelease: ${{ steps.config.outputs.pre_release == 'true' }}
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -315,7 +315,11 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   Promise.resolve(fetchRemoteVisitorStats()),
 ]);
 
-const version = github?.version ?? pkg.version;
+// The repository package is the release candidate. Live marketplace/release
+// versions are observations and must never silently replace repository truth.
+const version = pkg.version;
+const publishedReleaseVersion = github?.version ?? null;
+const releaseStatus = publishedReleaseVersion === version ? "published" : "candidate";
 const vsixName = github?.vsixName ?? `${NAME}-${version}.vsix`;
 const syncStatus = computeSyncStatus(ovsxCanonical?.version, ovsxDuplicate?.version, version);
 const deployTags = githubTagList.length > 0
@@ -352,6 +356,8 @@ const siteData = {
   description: pkg.description,
   version,
   packageVersion: pkg.version,
+  publishedReleaseVersion,
+  releaseStatus,
   syncStatus,
   ovsxPublisher: OVSX_NS,
   vscePublisher: VSCE_NS,
@@ -435,7 +441,7 @@ const siteData = {
     vsixCommand: `cursor --install-extension ${vsixName}`,
     releasePatch: "./scripts/release.sh patch",
     releaseMinor: "./scripts/release.sh minor",
-    releaseTag: `./scripts/release.sh ${version}`,
+    releaseTag: `./scripts/release.sh ${pkg.version}`,
   },
 };
 

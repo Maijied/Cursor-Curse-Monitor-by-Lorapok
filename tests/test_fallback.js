@@ -36,6 +36,7 @@ async function run() {
   db.close();
 
   process.env.CURSOR_DB_PATH = dbPath;
+  process.env.CURSOR_EDITOR_RUNNING = "0";
 
   const Module = require("module");
   const originalResolveFilename = Module._resolveFilename;
@@ -79,5 +80,14 @@ run()
       fs.unlinkSync(dbPath);
     } catch {
       // ignore
+    }
+    for (const f of fs.readdirSync(__dirname)) {
+      if (f.startsWith("mock.vscdb.backup-")) {
+        try {
+          fs.unlinkSync(path.join(__dirname, f));
+        } catch {
+          // ignore cleanup races
+        }
+      }
     }
   });

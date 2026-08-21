@@ -86,6 +86,9 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Run extension and browser regression tests
+        run: npm test
+
       - name: Extension unit tests (scan secrets)
         run: node tests/test_scan_secrets.js
 
@@ -196,6 +199,9 @@ jobs:
           FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
           ANALYTICS_STATS_URL: ${{ secrets.ANALYTICS_STATS_URL }}
 
+      - name: Validate release metadata
+        run: npm run validate:release
+
       - name: Install admin dependencies
         working-directory: website/admin
         run: npm ci
@@ -205,6 +211,10 @@ jobs:
         env:
           ADMIN_MASTER_EMAIL: ${{ secrets.ADMIN_MASTER_EMAIL }}
         run: npm test
+
+      - name: Lint admin panel
+        working-directory: website/admin
+        run: npm run lint
 
       - name: Build admin panel
         working-directory: website/admin
