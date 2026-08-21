@@ -187,7 +187,7 @@
     "browser-ext:build": "npm run build -w browser-extension",
     "browser-ext:test": "npm run test -w browser-extension",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package",
+    "package": "vsce package --no-dependencies",
     "validate:assets": "node scripts/validate-assets.mjs",
     "sync:icons": "node scripts/sync-icons.mjs",
     "prepackage": "npm run validate:assets && npm run sync:icons",
