@@ -12,5 +12,7 @@ assert.strictEqual(site.packageVersion, pkg.version);
 assert.strictEqual(seo.packageVersion, pkg.version);
 assert.strictEqual(site.install.releaseTag, `./scripts/release.sh ${pkg.version}`);
 assert.ok(["candidate", "published"].includes(site.releaseStatus));
-assert.notStrictEqual(site.syncStatus, "synced", "unpublished release candidates must not claim synced");
+if (site.releaseStatus !== "published") {
+  assert.notStrictEqual(site.syncStatus, "synced", "unpublished release candidates must not claim synced");
+}
 console.log("release-integrity test passed");
