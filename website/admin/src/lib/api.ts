@@ -128,14 +128,14 @@ export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
 
 export type DeployRequest = {
   target_tag: string;
-  publish_market: "Both" | "Open VSX" | "VS Code Marketplace";
+  publish_market: "Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
   release_channel: "Production" | "Beta (Pre-release)";
 };
 
 export type ReleaseRequest = {
   version_type: "patch" | "minor" | "major" | "custom";
   custom_version?: string;
-  publish_market: "Both" | "Open VSX" | "VS Code Marketplace";
+  publish_market: "Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
   release_channel: "Production" | "Beta (Pre-release)";
 };
 
