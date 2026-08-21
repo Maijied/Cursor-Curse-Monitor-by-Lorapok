@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T16:29:51.416Z",
+  "generatedAt": "2026-08-21T16:45:35.441Z",
   "source": "website/seo.yml",
   "siteBase": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
@@ -7,7 +7,7 @@
   "version": "0.5.14",
   "packageVersion": "0.5.14",
   "canonical": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
-  "syncStatus": "missing",
+  "syncStatus": "synced",
   "keywords": [
     "Cursor IDE",
     "usage monitor",
@@ -66,7 +66,7 @@
     "openVsxCanonical": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "openVsxDuplicate": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "vscode": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"
+    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v0.5.14"
   },
   "structuredData": {
     "@context": "https://schema.org",
@@ -82,7 +82,7 @@
           "priceCurrency": "USD"
         },
         "featureList": "Usage dashboard, security scanner, local insights, budget tracking",
-        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest/download/cursor-curse-monitor-by-lorapok-0.5.14.vsix",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v0.5.14/cursor-curse-monitor-by-lorapok-0.5.14.vsix",
         "softwareVersion": "0.5.14",
         "author": {
           "@type": "Person",
