@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="media/logo.svg" alt="Cursor Curse Monitor by Lorapok" width="128" />
+  <img src="media/icon.png" alt="Cursor Curse Monitor by Lorapok" width="128" />
 
   <h1>Cursor Curse Monitor by Lorapok</h1>
 
