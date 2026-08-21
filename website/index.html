@@ -423,13 +423,13 @@
           <h2>Built for every Cursor-compatible editor</h2>
           <p class="section-lead">IDE extension, browser guard, and Mission Control — polished visuals for the full Lorapok ecosystem.</p>
         </div>
-        <div class="gallery-filter-bar" role="tablist" aria-label="Filter gallery visuals">
-          <button type="button" class="gallery-filter-btn active" data-filter="all">All Visuals</button>
-          <button type="button" class="gallery-filter-btn" data-filter="ide">IDE & Budget</button>
-          <button type="button" class="gallery-filter-btn" data-filter="browser">Browser Guard</button>
-          <button type="button" class="gallery-filter-btn" data-filter="admin">Mission Control</button>
-          <button type="button" class="gallery-filter-btn" data-filter="oss">Open Source & Install</button>
-          <button type="button" class="gallery-filter-btn" data-filter="founder">Founder</button>
+        <div class="gallery-filter-bar" role="group" aria-label="Gallery filter options">
+          <button type="button" class="gallery-filter-btn active" data-filter="all" aria-pressed="true">All Visuals</button>
+          <button type="button" class="gallery-filter-btn" data-filter="ide" aria-pressed="false">IDE & Budget</button>
+          <button type="button" class="gallery-filter-btn" data-filter="browser" aria-pressed="false">Browser Guard</button>
+          <button type="button" class="gallery-filter-btn" data-filter="admin" aria-pressed="false">Mission Control</button>
+          <button type="button" class="gallery-filter-btn" data-filter="oss" aria-pressed="false">Open Source & Install</button>
+          <button type="button" class="gallery-filter-btn" data-filter="founder" aria-pressed="false">Founder</button>
         </div>
         <div class="gallery-masonry">
           <figure class="gallery-item wide" data-category="ide oss">

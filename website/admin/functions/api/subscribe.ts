@@ -46,6 +46,11 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: "Valid email is required" }, 400, CORS_HEADERS);
   }
 
+  // Health / Catalog diagnostic probe - return success without side effects
+  if (body.probe === true) {
+    return jsonResponse({ ok: true, probed: true, message: "Probe OK" }, 200, CORS_HEADERS);
+  }
+
   const subscribers = await readSubscribers(env);
   const alreadySubscribed = subscribers.includes(email);
   if (!alreadySubscribed) {
