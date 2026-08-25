@@ -24,6 +24,13 @@ if (!issuer || !secret) {
   process.exit(1);
 }
 
+if (!issuer.startsWith("user:")) {
+  console.error(
+    "::error::AMO_JWT_ISSUER must be a JWT issuer (user:…). Regenerate at https://addons.mozilla.org/developers/addon/api/key/"
+  );
+  process.exit(1);
+}
+
 if (!existsSync(join(root, "dist", "manifest.json"))) {
   console.error("::error::browser-extension/dist missing — run npm run browser-ext:build first");
   process.exit(1);

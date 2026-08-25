@@ -4,15 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (defaults to root package.json after sync)"
+        description: "Release version (e.g. 1.0.1). Defaults to root package.json base."
         required: false
         type: string
-  push:
-    branches: [main]
-    paths:
-      - "browser-extension/**"
-      - "scripts/sync-workspace-versions.mjs"
-      - "scripts/compute-version.mjs"
 
 permissions:
   contents: read
@@ -31,8 +25,17 @@ jobs:
 
       - run: npm ci
 
-      - name: Sync workspace versions
-        run: npm run version:sync
+      - name: Sync workspace versions (production)
+        env:
+          VERSION_CHANNEL: production
+          GITHUB_EVENT_NAME: workflow_dispatch
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [ -n "$VERSION" ]; then
+            npm run version:sync -- --version "$VERSION"
+          else
+            npm run version:sync -- --version "$(node -p "require('./package.json').version.split('-')[0]")"
+          fi
 
       - name: Build browser extension
         run: npm run browser-ext:build

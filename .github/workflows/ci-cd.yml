@@ -576,8 +576,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Resolve release version
+        id: release_version
+        env:
+          VERSION_INPUT: ${{ needs.release-prep.outputs.new_version }}
+          TARGET_TAG: ${{ inputs.target_tag }}
+        run: |
+          VERSION="$VERSION_INPUT"
+          if [ -z "$VERSION" ] && [ -n "$TARGET_TAG" ]; then
+            VERSION="${TARGET_TAG#v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            VERSION="$(node -p "require('./package.json').version.split('-')[0]")"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Sync workspace versions for marketplace build
-        run: npm run version:sync
+        run: npm run version:sync -- --version "${{ steps.release_version.outputs.version }}"
 
       - name: Build and Package Extension
         run: |
@@ -681,8 +696,13 @@ jobs:
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
           AMO_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-          RELEASE_VERSION: ${{ steps.config.outputs.version }}
-        run: node browser-extension/scripts/publish-amo.mjs
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
+        run: |
+          if [ -z "$AMO_JWT_ISSUER" ] || [ -z "$AMO_JWT_SECRET" ]; then
+            echo "::error::AMO_JWT_ISSUER and AMO_JWT_SECRET secrets are required for Firefox AMO publish"
+            exit 1
+          fi
+          node browser-extension/scripts/publish-amo.mjs
 
       - name: Stage Chrome zip for website
         if: steps.config.outputs.do_amo == 'true'
