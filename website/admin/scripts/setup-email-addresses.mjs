@@ -41,20 +41,32 @@ console.log("Enabling Email Routing for lorapok.tech…");
 run(["email", "routing", "enable", "lorapok.tech"], { allowFail: true });
 
 console.log(`Verifying destination ${opsInbox}…`);
-run(["email", "routing", "address", "create", opsInbox], { allowFail: true });
+run(["email", "routing", "addresses", "create", opsInbox], { allowFail: true });
 
 for (const address of ADDRESSES) {
+  const name = address.split("@")[0].replace(/\./g, "-");
   console.log(`Routing ${address} → ${opsInbox}`);
   run(
     [
       "email",
       "routing",
-      "rule",
+      "rules",
       "create",
-      `--zone=lorapok.tech`,
-      `--match=${address}`,
-      `--action=forward`,
-      `--destination=${opsInbox}`,
+      "lorapok.tech",
+      "--name",
+      name,
+      "--enabled",
+      "true",
+      "--match-type",
+      "literal",
+      "--match-field",
+      "to",
+      "--match-value",
+      address,
+      "--action-type",
+      "forward",
+      "--action-value",
+      opsInbox,
     ],
     { allowFail: true }
   );

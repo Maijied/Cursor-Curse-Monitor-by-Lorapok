@@ -25,18 +25,18 @@ describe("workflow-logs", () => {
     expect(result.logsHint).toBeTruthy();
   });
 
-  it("pickWorkflowRun avoids unrelated latest run fallback", () => {
+  it("pickWorkflowRun prefers in-progress ci-cd run after dispatch", () => {
     const dispatched = Date.parse("2026-08-18T01:30:00.000Z");
     const runs = [
       { workflow: "ci-cd.yml", createdAt: "2026-08-18T01:35:00.000Z", status: "completed" },
-      { workflow: "deployment.yml", createdAt: "2026-08-18T01:31:00.000Z", status: "in_progress" },
+      { workflow: "ci-cd.yml", createdAt: "2026-08-18T01:31:00.000Z", status: "in_progress" },
     ];
-    const match = pickWorkflowRun(runs, { workflowName: "deployment.yml", dispatchedAfter: dispatched });
-    expect(match?.workflow).toBe("deployment.yml");
+    const match = pickWorkflowRun(runs, { workflowName: "ci-cd.yml", dispatchedAfter: dispatched });
+    expect(match?.status).toBe("in_progress");
   });
 
-  it("pickWorkflowRun returns null when no workflow match", () => {
-    const runs = [{ workflow: "ci-cd.yml", createdAt: "2026-08-18T01:35:00.000Z", status: "completed" }];
-    expect(pickWorkflowRun(runs, { workflowName: "deployment.yml", dispatchedAfter: Date.now() })).toBeNull();
+  it("pickWorkflowRun returns null when no ci-cd match after dispatch", () => {
+    const runs = [{ workflow: "seo.yml", createdAt: "2026-08-18T01:35:00.000Z", status: "completed" }];
+    expect(pickWorkflowRun(runs, { workflowName: "ci-cd.yml", dispatchedAfter: Date.now() })).toBeNull();
   });
 });

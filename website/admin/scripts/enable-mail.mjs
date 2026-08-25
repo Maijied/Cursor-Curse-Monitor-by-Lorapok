@@ -3,7 +3,8 @@
  * One-time outbound mail setup for Mission Control (Cloudflare Pages).
  *
  * Prerequisites:
- * - CLOUDFLARE_API_TOKEN with Account → Email Sending + Pages Edit
+ * - CLOUDFLARE_API_TOKEN — wrangler auth (Pages Edit)
+ * - CLOUDFLARE_EMAIL_API_TOKEN — Account → Email Sending → Edit (Pages secret value)
  * - CLOUDFLARE_ACCOUNT_ID=f049faaf2f67549f5c58837479596a4a (Lorapok Facility)
  *
  * Usage:
@@ -17,10 +18,15 @@ import { fileURLToPath } from "node:url";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
-const token = process.env.CLOUDFLARE_API_TOKEN ?? "";
+const deployToken = process.env.CLOUDFLARE_API_TOKEN ?? "";
+const emailToken = (process.env.CLOUDFLARE_EMAIL_API_TOKEN ?? deployToken).trim();
 
-if (!token) {
-  console.error("Set CLOUDFLARE_API_TOKEN with Email Sending + Pages permissions.");
+if (!deployToken) {
+  console.error("Set CLOUDFLARE_API_TOKEN (Pages deploy / wrangler auth).");
+  process.exit(1);
+}
+if (!emailToken) {
+  console.error("Set CLOUDFLARE_EMAIL_API_TOKEN (Account → Email Sending → Edit).");
   process.exit(1);
 }
 
@@ -69,13 +75,13 @@ function run(args, { allowFail = false } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {
     cwd: adminDir,
     stdio: "inherit",
-    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
   });
   if (result.status !== 0 && !allowFail) process.exit(result.status ?? 1);
 }
 
-console.log("Checking token can access Email Sending API…");
-const tokenOk = await verifyEmailToken(token, accountId);
+console.log("Checking email token can access Email Sending API…");
+const tokenOk = await verifyEmailToken(emailToken, accountId);
 if (!tokenOk) {
   console.warn("Continuing to sync Pages secret, but sends will fail until token + domain onboarding are fixed.");
 }
@@ -89,8 +95,8 @@ const put = spawnSync(
   ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
   {
     cwd: adminDir,
-    input: token,
-    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+    input: emailToken,
+    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
     stdio: ["pipe", "inherit", "inherit"],
   }
 );

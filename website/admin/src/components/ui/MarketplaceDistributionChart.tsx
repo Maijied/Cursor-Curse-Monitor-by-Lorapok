@@ -49,7 +49,7 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
       {
         id: "firefox",
         label: "Firefox AMO (Add-on)",
-        count: data.browserExtension?.firefox?.published ? 50 : 0,
+        count: data.browserExtension?.firefox?.downloadCount ?? 0,
         color: "var(--color-warn)",
         version: data.browserExtension?.version ?? null,
         synced: Boolean(data.browserExtension?.firefox?.published),

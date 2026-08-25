@@ -32,8 +32,8 @@ for (const path of productionSources) {
   }
 }
 
-if (staged.some((path) => path === ".github/workflows/publish-tag.yml")) {
-  const workflow = readFileSync(".github/workflows/publish-tag.yml", "utf8");
+if (staged.some((path) => path === ".github/workflows/ci-cd.yml")) {
+  const workflow = readFileSync(".github/workflows/ci-cd.yml", "utf8");
   if (/Ensure GitHub Release[\s\S]{0,300}continue-on-error:\s*true/.test(workflow)) {
     fail("GitHub Release creation must not be allowed to fail silently");
   }

@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { computeDownloadTotals } from "./download-totals.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -235,7 +236,13 @@ async function vsceLatest() {
     for (const s of ext.statistics ?? []) {
       stats[s.statisticName] = s.value;
     }
-    const downloadCount = Math.round(stats.downloadCount ?? stats.install ?? 0);
+    const downloadCount = Math.round(
+      stats.install ??
+        stats.downloadCount ??
+        stats.averagedownloadcount ??
+        stats.trendingdaily?.downloadCount ??
+        0
+    );
     return {
       version,
       url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_NS}.${NAME}`,
@@ -338,18 +345,20 @@ const ovsx = ovsxCanonical ?? {
   installQuery: OVSX_EXT_ID,
 };
 
+const githubAllAssets = githubDownloads;
+
+const downloadTotals = computeDownloadTotals({
+  openVsxCanonical: ovsxCanonical,
+  openVsxDuplicate: ovsxDuplicate,
+  vscode,
+  githubAllAssets,
+  packageVersion: version,
+});
+
 const downloadBreakdown = {
-  openVsxCanonical: ovsxCanonical?.downloadCount ?? 0,
-  openVsxDuplicate: ovsxDuplicate?.downloadCount ?? 0,
-  vscodeMarketplace: vscode?.downloadCount ?? 0,
-  githubVsix: githubDownloads,
+  ...downloadTotals.breakdown,
   latestReleaseVsix: github?.vsixDownloadCount ?? 0,
 };
-
-const totalDownloads =
-  downloadBreakdown.openVsxCanonical +
-  downloadBreakdown.vscodeMarketplace +
-  downloadBreakdown.githubVsix;
 
 const siteData = {
   generatedAt: new Date().toISOString(),
@@ -369,9 +378,12 @@ const siteData = {
   repository: `https://github.com/${REPO}`,
   author: pkg.author,
   downloads: {
-    total: totalDownloads,
+    total: downloadTotals.displayTotal,
+    displayTotal: downloadTotals.displayTotal,
+    canonicalTotal: downloadTotals.canonicalTotal,
+    source: downloadTotals.source,
     breakdown: downloadBreakdown,
-    note: "Total excludes duplicate Open VSX namespace to avoid double-counting.",
+    note: "Public total uses canonical Open VSX unless canonical lags package version; duplicate namespace excluded from sum.",
   },
   visitors: {
     ...visitors,

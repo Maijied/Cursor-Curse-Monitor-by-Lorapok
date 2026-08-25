@@ -5,7 +5,8 @@ import { formatCount } from "../../lib/site-data";
 const ROWS: { key: keyof DownloadBreakdown; label: string; hint?: string }[] = [
   { key: "openVsxCanonical", label: "Open VSX (lorapok-labs)", hint: "Canonical listing" },
   { key: "vscodeMarketplace", label: "VS Code Marketplace" },
-  { key: "githubVsix", label: "GitHub release VSIX", hint: "All release assets" },
+  { key: "githubAllAssets", label: "GitHub releases", hint: "All release asset downloads" },
+  { key: "githubVsix", label: "GitHub (legacy key)", hint: "Same as GitHub releases" },
   { key: "latestReleaseVsix", label: "Latest release VSIX only" },
   { key: "openVsxDuplicate", label: "Open VSX duplicate", hint: "Excluded from total" },
 ];

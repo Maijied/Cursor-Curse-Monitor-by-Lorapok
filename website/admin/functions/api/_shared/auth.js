@@ -69,4 +69,11 @@ export function mapReleaseChannel(value) {
   return map[value] ?? null;
 }
 
+export function requireMasterAdmin(auth) {
+  if (!auth.isMaster) {
+    return { error: jsonResponse({ error: "Master admin only" }, 403) };
+  }
+  return null;
+}
+
 export { jsonResponse };

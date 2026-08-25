@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { AlertTriangle, ExternalLink, Package, Rocket, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Lock, Package, Rocket, Undo2 } from "lucide-react";
 import {
   fetchTags,
   triggerDeployment,
@@ -19,6 +19,8 @@ import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimePanel from "../ui/DeployRuntimePanel";
+import { auth } from "../../lib/firebase";
+import { isMasterAdmin } from "../../lib/admin-config";
 
 function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) {
   if (!siteData) return { tags: [] as string[], liveTag: null as string | null };
@@ -37,6 +39,7 @@ const BUMP_OPTIONS: { value: ReleaseBumpType; label: string }[] = [
 ];
 
 export default function Deployments() {
+  const isMaster = isMasterAdmin(auth.currentUser?.email);
   const { data: siteData } = useSiteData();
   const [mode, setMode] = useState<Mode>("release");
   const [tags, setTags] = useState<string[]>([]);
@@ -183,10 +186,10 @@ export default function Deployments() {
     setDeploying(false);
   };
 
-  const workflowName =
-    mode === "release" ? "ci-cd.yml" : mode === "rollback" ? "deployment.yml" : "publish-tag.yml";
+  const workflowName = "ci-cd.yml";
 
   const canSubmit =
+    isMaster &&
     !tagsError &&
     !deploying &&
     (mode === "release" ? !customMissing : Boolean(selectedTag) && !deployBlocked);
@@ -211,6 +214,13 @@ export default function Deployments() {
         title="Deploy & Release"
         description="New Release bumps version and publishes. Deploy re-publishes an existing tag. Rollback restores an older tag on main."
       />
+
+      {!isMaster ? (
+        <div className="glass-panel px-4 py-3 text-sm border border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] text-[var(--color-warn)] flex items-center gap-2">
+          <Lock className="w-4 h-4 shrink-0" />
+          Release, deploy, and rollback are restricted to the master admin account.
+        </div>
+      ) : null}
 
       <div className="glass-panel px-4 py-3 text-sm text-[var(--color-muted)] flex flex-wrap gap-x-4 gap-y-1">
         <span>
