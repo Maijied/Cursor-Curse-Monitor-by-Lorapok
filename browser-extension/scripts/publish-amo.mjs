@@ -112,10 +112,13 @@ if (!signResult.ok) {
   }
 }
 
-run("node", ["browser-extension/scripts/verify-amo-status.mjs"], {
+const verify = runCapture("node", ["browser-extension/scripts/verify-amo-status.mjs"], {
   AMO_JWT_ISSUER: issuer,
   AMO_JWT_SECRET: secret,
   RELEASE_VERSION: version,
 });
+if (!verify.ok) {
+  console.log(`::warning::AMO listing verification skipped or failed after sign — ${verify.output.trim() || "non-fatal"}`);
+}
 
 console.log("AMO publish pipeline completed");

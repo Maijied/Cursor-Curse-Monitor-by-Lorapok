@@ -210,7 +210,7 @@ export async function dispatchInfraWorkflow(env, body, successMessage) {
     WORKFLOW_ID,
     {
       action_type: ACTION_DEPLOY_INFRA,
-      publish_market: "Both",
+      publish_market: "Open VSX + Firefox AMO",
       release_channel: "Production",
       deploy_admin: deployAdmin ? "true" : "false",
       deploy_website: deployWebsite ? "true" : "false",

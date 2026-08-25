@@ -72,6 +72,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     const subscription = this.monitor.onDidUpdate(push);
     webviewView.onDidDispose(() => subscription.dispose());
 
+    const existing = this.monitor.getSnapshot();
+    if (existing) {
+      push(existing);
+    }
+    void this.monitor.refresh(true).then(push);
+
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
       if (message.type === "refresh") {
         await this.monitor.refresh();
@@ -167,6 +173,15 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       color: var(--text);
       font-size: 12px;
       line-height: 1.45;
+    }
+    .loading-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.02em;
     }
     .header {
       display: flex;
@@ -576,6 +591,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </style>
 </head>
 <body>
+  <div id="loadingState" class="loading-state">Loading dashboard…</div>
   <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
     <div class="cursor-missing-card">
       <p class="cursor-missing-eyebrow">No Cursor AI found</p>
@@ -876,6 +892,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
 
     function render(snapshot) {
+      const loading = document.getElementById('loadingState');
+      if (loading) loading.remove();
       const b = snapshot.budget;
       const usage = snapshot.usage;
       const errorBox = document.getElementById('errorBox');
@@ -1144,6 +1162,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       vscode.postMessage({ type: 'setBudget', value: value });
       document.getElementById('budgetEdit').classList.remove('open');
     });
+    refresh();
   </script>
 </body>
 </html>`;
