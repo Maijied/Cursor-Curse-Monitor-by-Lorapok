@@ -746,8 +746,11 @@ jobs:
             echo "::error::OVSX_PAT secret missing."
             exit 1
           fi
-          VSIX=$(ls -t *.vsix 2>/dev/null | head -n 1)
-          ovsx publish "$VSIX" -p "$OVSX_PAT"
+          FLAGS=()
+          if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
+            FLAGS+=(--pre-release)
+          fi
+          node scripts/publish-ovsx.mjs "${FLAGS[@]}"
 
       # ── Firefox AMO ────────────────────────────────────────────────────────
       - name: Publish to Firefox Add-ons (AMO)

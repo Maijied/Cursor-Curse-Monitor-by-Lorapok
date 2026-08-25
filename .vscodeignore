@@ -13,6 +13,7 @@ browser-extension/**
 packages/**
 .husky/**
 .cursor/**
+.kilo/**
 .secretlint*
 DEPLOYMENT.md
 AUTHORS.md
