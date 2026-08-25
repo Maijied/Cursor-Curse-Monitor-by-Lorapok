@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveExtensionVersion } from "./lib-version.mjs";
@@ -33,11 +32,12 @@ function rewriteHtmlPaths(html) {
 
 mkdirSync(join(dist, "icons"), { recursive: true });
 mkdirSync(join(dist, "background"), { recursive: true });
-const media = join(root, "..", "media");
-const iconSrc = join(media, "icon.png");
+const iconsDir = join(root, "icons");
+const iconSrc = join(root, "..", "media", "icon.png");
 for (const size of [16, 32, 48, 128]) {
+  const named = join(iconsDir, `icon-${size}.png`);
   const dest = join(dist, "icons", `icon-${size}.png`);
-  execFileSync("convert", [iconSrc, "-resize", `${size}x${size}`, dest]);
+  cpSync(existsSync(named) ? named : iconSrc, dest);
 }
 
 writeFileSync(
