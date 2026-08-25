@@ -82,6 +82,62 @@
 
 .larvae-trail { animation: larvae-trail 1.15s ease-in-out infinite; }
 
+/* ── Deploy pipeline: larvae crawls step-to-step ── */
+@keyframes pipeline-larvae-hop {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  35% { transform: translate(-50%, -5px) scale(1.04); }
+  70% { transform: translate(-50%, -2px) scale(1.01); }
+}
+
+@keyframes pipeline-step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(124, 92, 255, 0); }
+}
+
+@keyframes pipeline-progress-shimmer {
+  0% { opacity: 0.65; }
+  50% { opacity: 1; }
+  100% { opacity: 0.65; }
+}
+
+.deploy-pipeline-larvae {
+  transform: translateX(-50%);
+  transition: left 0.9s cubic-bezier(0.34, 1.25, 0.64, 1);
+  animation: pipeline-larvae-hop 1.35s ease-in-out infinite;
+  will-change: left, transform;
+}
+
+.deploy-pipeline-larvae-glow {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  width: 2.5rem;
+  height: 0.5rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(57, 255, 20, 0.35) 0%, transparent 70%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.deploy-pipeline-step-active {
+  animation: pipeline-step-pulse 2s ease-out infinite;
+}
+
+.deploy-pipeline-step-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  animation: pipeline-step-pulse 2s ease-out infinite;
+}
+
+.deploy-pipeline-progress {
+  transition: width 0.85s cubic-bezier(0.34, 1.1, 0.64, 1);
+  animation: pipeline-progress-shimmer 2.4s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-mesh,
   .animate-pulse-neon,
@@ -92,7 +148,15 @@
   .larvae-eye,
   .larvae-leg-left,
   .larvae-leg-right,
-  .larvae-trail {
+  .larvae-trail,
+  .deploy-pipeline-larvae,
+  .deploy-pipeline-step-active,
+  .deploy-pipeline-step-ring,
+  .deploy-pipeline-progress {
     animation: none !important;
+  }
+
+  .deploy-pipeline-larvae {
+    transition: none !important;
   }
 }

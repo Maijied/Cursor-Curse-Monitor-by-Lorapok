@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, ChevronRight, ExternalLink, Terminal } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, Terminal } from "lucide-react";
 import { fetchWorkflowRunLogs, fetchWorkflowRuns, type WorkflowRun, type WorkflowRunLogs } from "../../lib/api";
 import { pickWorkflowRun } from "../../lib/workflow-run-match";
 import Badge from "./Badge";
+import DeployPipelineSteps from "./DeployPipelineSteps";
 import Notification from "./Notification";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 
@@ -18,18 +19,6 @@ function runStatusTone(run: WorkflowRun): "synced" | "danger" | "neutral" {
   if (run.status === "completed" && run.conclusion === "success") return "synced";
   if (run.conclusion === "failure" || run.conclusion === "cancelled") return "danger";
   return "neutral";
-}
-
-function jobTone(conclusion: string | null | undefined, status: string): "synced" | "danger" | "neutral" {
-  if (conclusion === "failure" || conclusion === "cancelled") return "danger";
-  if (conclusion === "success") return "synced";
-  if (status === "in_progress" || status === "queued") return "neutral";
-  if (status === "completed") return "synced";
-  return "neutral";
-}
-
-function isBrowserJob(name: string): boolean {
-  return /firefox|chrome|amo|browser|web-ext/i.test(name);
 }
 
 export default function DeployRuntimePanel({
@@ -165,58 +154,7 @@ export default function DeployRuntimePanel({
         </div>
       )}
 
-      {jobs.length > 0 && (
-        <div className="overflow-x-auto pb-1">
-          <ol className="flex items-center gap-0 min-w-max">
-            {jobs.map((job, index) => {
-              const tone = jobTone(job.conclusion, job.status);
-              const activeStep = job.status === "in_progress" || job.status === "queued";
-              const browser = isBrowserJob(job.name);
-              const done = job.conclusion === "success";
-              return (
-                <li key={job.id} className="flex items-center">
-                  <div
-                    className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl border min-w-[7.5rem] max-w-[10rem] transition-all duration-300 ${
-                      activeStep
-                        ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] shadow-[0_0_20px_rgba(124,92,255,0.2)] animate-pulse"
-                        : browser
-                          ? "border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-warn)_6%,transparent)]"
-                          : "border-[var(--color-border)] bg-[var(--color-bg-base)]"
-                    }`}
-                  >
-                    <Badge variant={tone}>
-                      {done ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Check size={12} aria-hidden="true" />
-                          done
-                        </span>
-                      ) : (
-                        job.conclusion ?? job.status
-                      )}
-                    </Badge>
-                    <span className="text-[10px] text-center leading-tight text-[var(--color-muted)] line-clamp-2">
-                      {job.name}
-                    </span>
-                    {activeStep && (
-                      <span className="text-[10px] text-[var(--color-accent)]">running…</span>
-                    )}
-                  </div>
-                  {index < jobs.length - 1 && (
-                    <div className="flex items-center px-1 text-[var(--color-muted)]" aria-hidden="true">
-                      <span
-                        className={`inline-block w-6 border-t-2 ${
-                          done ? "border-[var(--color-neon)]" : "border-[var(--color-border)]"
-                        }`}
-                      />
-                      <ChevronRight size={14} className={activeStep ? "text-[var(--color-accent)]" : ""} />
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      )}
+      {jobs.length > 0 && <DeployPipelineSteps jobs={jobs} />}
 
       {logs?.logsHint && <Notification tone="warning" message={logs.logsHint} />}
 
