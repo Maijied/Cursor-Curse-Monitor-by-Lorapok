@@ -117,7 +117,7 @@ export default function Subscribers() {
   );
 
   if (loading) return <ShimmerSkeleton className="h-64" />;
-  if (error) return <ErrorState message={error} onRetry={() => void load()} />;
+  if (error) return <ErrorState message={error} />;
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
@@ -189,7 +189,12 @@ export default function Subscribers() {
           <Mail size={16} aria-hidden="true" />
           Use Mailbox → Compose to email this list, or export CSV for external campaigns.
         </div>
-        <DataTable columns={columns} rows={items} rowKey={(row, index) => `${row.email}-${index}`} />
+        <DataTable<SubscriberRecord>
+          columns={columns}
+          rows={items}
+          getRowKey={(row, index) => `${row.email}-${index}`}
+          emptyMessage="No subscribers yet."
+        />
       </Card>
     </div>
   );
