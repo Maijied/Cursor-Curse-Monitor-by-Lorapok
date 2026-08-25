@@ -16,6 +16,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Firefox AMO public URL** → `cursor-curse-monitor` (canonical listing slug)
 - AMO listing description converted to Extension Workshop Markdown
 - Marketing site gallery deduplicated — each product image appears once
+- **Firefox MV3 manifest** — `background.scripts` only (no `service_worker`), `strict_min_version` 142.0 for `background.type` + data collection permissions
+- **Mission Control Deployments** — clearer New Release vs Deploy vs Rollback instructions, client-side validation, and actionable GitHub dispatch errors
+- **Release version preview** — uses the higher of live git tag vs `package.json` (fixes wrong `v1.0.0` preview when live tag lagged)
+
+### Fixed
+
+- AMO listing metadata: categories, tags, support email, homepage, technical whiteboard, EULA text
+- `sync-amo-listing.mjs` — correct slug, icon upload, homepage/support sync
+- React 18 for browser extension build (reduces AMO `innerHTML` linter noise vs React 19)
 
 ## [1.0.1] - 2026-08-25
 

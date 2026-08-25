@@ -25,6 +25,25 @@ export function bumpVersion(baseTag: string | null, type: ReleaseBumpType, custo
   }
 }
 
+/** Prefer the higher of live git tag vs package.json for release previews. */
+export function effectiveVersionBase(liveTag: string | null, packageVersion: string | null): string | null {
+  const candidates: string[] = [];
+  if (liveTag) candidates.push(normalizeTag(liveTag));
+  if (packageVersion) candidates.push(normalizeTag(packageVersion));
+  if (!candidates.length) return null;
+  return candidates.sort(compareTags).at(-1) ?? null;
+}
+
+function compareTags(a: string, b: string): number {
+  const pa = a.replace(/^v/i, "").split("-")[0].split(".").map((n) => Number.parseInt(n, 10) || 0);
+  const pb = b.replace(/^v/i, "").split("-")[0].split(".").map((n) => Number.parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) {
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
 export function formatTagLabel(tag: string, liveTag: string | null): string {
   if (liveTag && tag === liveTag) return `${tag} (Live)`;
   return tag;

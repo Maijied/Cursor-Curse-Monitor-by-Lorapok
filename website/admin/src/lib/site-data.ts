@@ -110,7 +110,12 @@ export interface SiteData {
   };
   browserExtension?: {
     version: string | null;
-    firefox?: { url: string; published: boolean; downloadCount?: number };
+    firefox?: {
+      url: string;
+      published: boolean;
+      reviewStatus?: string;
+      downloadCount?: number;
+    };
     chrome?: { zipUrl: string | null; zipName?: string | null; webStorePublished: boolean };
   };
 }

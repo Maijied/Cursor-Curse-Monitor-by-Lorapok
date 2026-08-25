@@ -1,13 +1,13 @@
 {
   "categories": {
-    "firefox": ["web-development"]
+    "firefox": ["web-development", "privacy-security"]
   },
   "tags": ["security", "privacy"],
   "summary": {
     "en-US": "Live Cursor usage, budget tracker & local security scanner in your browser."
   },
   "description": {
-    "en-US": "**Cursor Curse Monitor by Lorapok** shows your Cursor AI usage, budget cap, billing cycle reset, and spend-over-time trend — right in your browser toolbar.\n\n- Animated budget gauge with threshold warnings\n- Auto & API usage meters\n- Local security scanner on token paste — warns if extra secrets appear\n- Connect automatically via cursor.com/dashboard or paste a token manually\n- Tokens stay on your device — never sent to Lorapok servers\n\n**Also available on:** [Open VSX](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok), [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok), [GitHub Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases), [Product website](https://cursor.lorapok.tech/).\n\nA product of [Lorapok Labs](https://lorapok.tech). Built for [Cursor](https://cursor.com) users."
+    "en-US": "**Cursor Curse Monitor by Lorapok** shows your Cursor AI usage, budget cap, billing cycle reset, and spend-over-time trend — right in your browser toolbar.\n\n### Key features\n\n- Animated budget gauge with threshold warnings\n- Auto & API usage meters\n- Local security scanner on token paste — warns if extra secrets appear\n- Connect automatically via [cursor.com/dashboard](https://cursor.com/dashboard) or paste a token manually\n- Tokens stay on your device — never sent to Lorapok servers\n\n### Technical details\n\n- **Permissions:** `storage`, `alarms`, `notifications`, and `cursor.com` / `api2.cursor.sh` hosts only\n- **Auth:** content script captures Bearer token from cursor.com; manual paste fallback in Options\n- **Data:** usage metrics read from Cursor API with your token; optional anonymous heartbeat is off by default\n- **License:** Mozilla Public License 2.0\n- **Privacy policy:** [cursor.lorapok.tech/privacy.html](https://cursor.lorapok.tech/privacy.html)\n- **Support:** [cursor.curse.help@lorapok.tech](mailto:cursor.curse.help@lorapok.tech)\n\n**Also available on:** [Open VSX](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok), [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok), [GitHub Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases), [Product website](https://cursor.lorapok.tech/).\n\nA product of [Lorapok Labs](https://lorapok.tech). Built for [Cursor](https://cursor.com) users."
   },
   "homepage": {
     "en-US": "https://cursor.lorapok.tech/"
@@ -19,6 +19,9 @@
     "en-US": "https://cursor.lorapok.tech/"
   },
   "developer_comments": {
-    "en-US": "Auth: content script on cursor.com captures Bearer token from api2.cursor.sh requests only. Manual token paste fallback in Options. No Lorapok server receives tokens. Test: sign into cursor.com/dashboard, open popup, verify usage loads."
+    "en-US": "How to test:\n1. Install the extension.\n2. Sign in at https://cursor.com/dashboard in the same browser profile.\n3. Open the toolbar popup — usage should load within one refresh.\n4. Alternatively: Options → paste access token manually.\n\nTechnical whiteboard:\n- MV3 background scripts (Firefox 142+), no remote code\n- Auth capture: cursor.com content script → api2.cursor.sh Bearer token only\n- Storage: browser.storage.local for settings and usage history\n- Notifications: local threshold warnings only\n- No Lorapok server receives tokens unless user opts into product email updates"
+  },
+  "eula": {
+    "en-US": "This add-on is licensed under the Mozilla Public License 2.0. By installing Cursor Curse Monitor by Lorapok you agree to use it in compliance with Mozilla's add-on policies and Lorapok Labs' privacy policy at https://cursor.lorapok.tech/privacy.html. The software is provided as-is without warranty. Lorapok Labs is not affiliated with Cursor or Anysphere."
   }
 }

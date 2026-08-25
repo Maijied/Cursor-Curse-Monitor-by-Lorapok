@@ -12,7 +12,9 @@ import { useSiteData } from "../../hooks/useSiteData";
 import {
   bumpVersion,
   defaultTagSelection,
+  effectiveVersionBase,
   formatTagLabel,
+  normalizeTag,
   type ReleaseBumpType,
 } from "../../lib/release-version";
 import PageHeader from "../layout/PageHeader";
@@ -116,7 +118,8 @@ export default function Deployments() {
   }, [channel, filteredTags, liveTag, selectedTag, suggestedTag]);
 
   const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
-  const previewTag = bumpVersion(liveTag ?? latestTag, bumpType, customVersion);
+  const versionBase = effectiveVersionBase(liveTag, siteData?.packageVersion ?? null);
+  const previewTag = bumpVersion(versionBase, bumpType, customVersion);
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
   const deployBlocked = mode === "deploy" && isLiveSelected;
   const customMissing = mode === "release" && bumpType === "custom" && !customVersion.trim();
@@ -124,6 +127,22 @@ export default function Deployments() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+
+    if (!isMaster) {
+      setMessage({
+        type: "error",
+        text: "Only the master admin can trigger releases. Sign in as mdshuvo40@gmail.com or contact the project owner.",
+      });
+      return;
+    }
+
+    if (tagsError && mode !== "infra") {
+      setMessage({
+        type: "error",
+        text: `Cannot dispatch: ${tagsError}. Refresh tags or check /api/tags and GITHUB_TOKEN on the server.`,
+      });
+      return;
+    }
 
     if (mode === "infra") {
       setDeploying(true);
@@ -144,7 +163,21 @@ export default function Deployments() {
 
     if (mode === "release") {
       if (customMissing) {
-        setMessage({ type: "error", text: "Enter a custom version (e.g. 0.6.0-beta.1)." });
+        setMessage({ type: "error", text: "Enter a custom version (e.g. 1.0.4-beta.1)." });
+        return;
+      }
+      if (!previewTag) {
+        setMessage({
+          type: "error",
+          text: "Could not compute the next version. Ensure package.json and live tags are loaded.",
+        });
+        return;
+      }
+      if (channel === "beta" && bumpType === "major") {
+        setMessage({
+          type: "error",
+          text: "Major releases should use the Production channel. Use Beta for pre-release patch/minor builds only.",
+        });
         return;
       }
       setDeploying(true);
@@ -164,7 +197,13 @@ export default function Deployments() {
         setRuntimeActive(true);
         setLastTargetTag(label);
       } catch (err: unknown) {
-        setMessage({ type: "error", text: err instanceof Error ? err.message : "Release failed" });
+        const text = err instanceof Error ? err.message : "Release failed";
+        setMessage({
+          type: "error",
+          text: text.includes("GITHUB_TOKEN")
+            ? text
+            : `${text} — If this persists, verify GITHUB_TOKEN on Cloudflare Pages and that workflow ci-cd.yml exists on main.`,
+        });
       }
       setDeploying(false);
       return;
@@ -243,6 +282,27 @@ export default function Deployments() {
         description="All production deploys run through Mission Control — marketplaces, admin panel, and website."
       />
 
+      <Card className="border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
+        <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">How to use this page</h3>
+        <ul className="text-sm text-[var(--color-muted)] space-y-2 list-disc pl-5">
+          <li>
+            <strong className="text-[var(--color-text)]">New Release</strong> — bump version on <code className="font-mono text-xs">main</code>, create a git tag, publish to selected marketplaces, and optionally deploy admin + website.
+          </li>
+          <li>
+            <strong className="text-[var(--color-text)]">Deploy</strong> — re-publish an <em>existing</em> git tag (pick a tag other than the live one). Use after a failed marketplace publish.
+          </li>
+          <li>
+            <strong className="text-[var(--color-text)]">Rollback</strong> — restore an older tag to <code className="font-mono text-xs">main</code> with an automatic patch bump, then publish. Use when a release fails in production.
+          </li>
+          <li>
+            <strong className="text-[var(--color-text)]">Infra</strong> — deploy Mission Control admin and/or marketing site only (no VSIX/AMO publish).
+          </li>
+        </ul>
+        <p className="text-xs text-[var(--color-warn)] mt-3">
+          Golden rule: if a marketplace publish fails, use <strong>Rollback</strong> or <strong>Deploy</strong> with a known-good tag — never leave main in a broken state.
+        </p>
+      </Card>
+
       {!isMaster ? (
         <div className="glass-panel px-4 py-3 text-sm border border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] text-[var(--color-warn)] flex items-center gap-2">
           <Lock className="w-4 h-4 shrink-0" />
@@ -272,12 +332,27 @@ export default function Deployments() {
             <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-bg-base)]">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <h4 className="font-medium text-[var(--color-text)]">Firefox (AMO)</h4>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-neon)_15%,transparent)] text-[var(--color-neon)]">
-                  Published
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full ${
+                    siteData.browserExtension.firefox?.published
+                      ? "bg-[color-mix(in_srgb,var(--color-neon)_15%,transparent)] text-[var(--color-neon)]"
+                      : siteData.browserExtension.firefox?.reviewStatus === "awaiting-review"
+                        ? "bg-[color-mix(in_srgb,var(--color-warn)_15%,transparent)] text-[var(--color-warn)]"
+                        : "bg-[color-mix(in_srgb,var(--color-muted)_15%,transparent)] text-[var(--color-muted)]"
+                  }`}
+                >
+                  {siteData.browserExtension.firefox?.published
+                    ? "Live on AMO"
+                    : siteData.browserExtension.firefox?.reviewStatus === "awaiting-review"
+                      ? "Awaiting review"
+                      : siteData.browserExtension.firefox?.reviewStatus ?? "Not listed"}
                 </span>
               </div>
               <p className="text-sm text-[var(--color-muted)] mb-3">
-                Version <span className="font-[family-name:var(--font-mono)]">{siteData.browserExtension.version ?? "—"}</span>
+                Version{" "}
+                <span className="font-[family-name:var(--font-mono)]">
+                  {siteData.browserExtension.firefox?.version ?? siteData.browserExtension.version ?? "—"}
+                </span>
                 {" · "}auto-signed on release via CI
               </p>
               <a
@@ -408,10 +483,13 @@ export default function Deployments() {
                 <p className="text-sm text-[var(--color-muted)]">
                   Will create{" "}
                   <strong className="text-[var(--color-accent-2)] font-[family-name:var(--font-mono)]">{previewTag}</strong>
-                  {liveTag ? (
+                  {versionBase ? (
                     <>
                       {" "}
-                      from live <span className="font-[family-name:var(--font-mono)]">{liveTag}</span>
+                      from base <span className="font-[family-name:var(--font-mono)]">{versionBase}</span>
+                      {liveTag && versionBase !== normalizeTag(liveTag) ? (
+                        <span className="text-[var(--color-warn)]"> (package.json ahead of live tag {liveTag})</span>
+                      ) : null}
                     </>
                   ) : null}
                 </p>
