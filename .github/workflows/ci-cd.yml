@@ -298,6 +298,7 @@ jobs:
     needs: [ci, browser-extension-ci, admin-ci]
     permissions:
       contents: write
+      pull-requests: write
     if: >-
       always()
       && needs.ci.result == 'success'
@@ -327,6 +328,7 @@ jobs:
         id: prepare
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/prepare-release-tag.mjs
 
   # ───────────────────────────────────────────────────────────────────────────
