@@ -32,12 +32,7 @@
     <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx-total" alt="Open VSX total downloads" />
   </p>
 
-  <p>
-    <a href="https://cursor.lorapok.tech/">
-      <img src="https://cursor-dev.lorapok.tech/api/stats/readme.svg" alt="Live community download chart — Open VSX, VS Code, GitHub, and LorapokLabs namespace" width="720" />
-    </a>
-  </p>
-  <p><sub>Download counts refresh from marketplace APIs · chart updates every few minutes · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
+  <p><sub>📊 <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">Live download chart</a> · counts refresh from marketplace APIs · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
 
 </div>
 
