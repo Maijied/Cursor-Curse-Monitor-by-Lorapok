@@ -159,6 +159,66 @@ function readBrowserExtensionVersion() {
   }
 }
 
+const AMO_SLUG = "cursor-curse-monitor";
+const AMO_PUBLIC_URL = `https://addons.mozilla.org/en-US/firefox/addon/${AMO_SLUG}/`;
+
+async function amoJwtToken() {
+  const issuer = process.env.AMO_JWT_ISSUER || process.env.AMO_API_KEY;
+  const secret = process.env.AMO_JWT_SECRET || process.env.AMO_API_SECRET;
+  if (!issuer || !secret) return null;
+  const crypto = await import("node:crypto");
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const now = Math.floor(Date.now() / 1000);
+  const payload = Buffer.from(
+    JSON.stringify({ iss: issuer, jti: `${now}-${Math.random()}`, iat: now, exp: now + 300 })
+  ).toString("base64url");
+  const sig = crypto.createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url");
+  return `${header}.${payload}.${sig}`;
+}
+
+async function fetchFirefoxAmo() {
+  const url = `https://addons.mozilla.org/api/v5/addons/addon/${AMO_SLUG}/`;
+  const token = await amoJwtToken();
+  const headers = { Accept: "application/json" };
+  if (token) headers.Authorization = `JWT ${token}`;
+
+  let data = null;
+  try {
+    const res = await fetch(url, { headers });
+    if (res.ok) data = await res.json();
+  } catch {
+    // fall through to defaults
+  }
+
+  const fallbackVersion = readBrowserExtensionVersion();
+  if (!data) {
+    return {
+      url: AMO_PUBLIC_URL,
+      published: false,
+      reviewStatus: "unknown",
+      version: fallbackVersion,
+    };
+  }
+
+  const fileStatus = data.current_version?.file?.status ?? data.current_version?.status ?? null;
+  const addonStatus = data.status ?? null;
+  const published = addonStatus === "public" && fileStatus === "public";
+  const reviewStatus =
+    fileStatus === "public"
+      ? "public"
+      : fileStatus === "awaiting-review" || fileStatus === "nominated"
+        ? "awaiting-review"
+        : fileStatus || addonStatus || "unknown";
+
+  return {
+    url: data.url || AMO_PUBLIC_URL,
+    published,
+    reviewStatus,
+    version: data.current_version?.version ?? fallbackVersion,
+    downloadCount: data.average_daily_users ?? undefined,
+  };
+}
+
 async function githubTags() {
   const data = await fetchJson(`https://api.github.com/repos/${REPO}/tags?per_page=30`);
   if (!Array.isArray(data)) return [];
@@ -312,7 +372,7 @@ async function githubDiscussionsAndIssues() {
   };
 }
 
-const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vscode, community, visitors] = await Promise.all([
+const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vscode, community, visitors, firefoxAmo] = await Promise.all([
   githubLatestRelease(),
   githubTags(),
   githubReleaseDownloadTotal(),
@@ -321,6 +381,7 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   vsceLatest(),
   githubDiscussionsAndIssues(),
   Promise.resolve(fetchRemoteVisitorStats()),
+  fetchFirefoxAmo(),
 ]);
 
 // The repository package is the release candidate. Live marketplace/release
@@ -439,11 +500,8 @@ const siteData = {
     chromeZipName: github?.chromeZipName ?? null,
   },
   browserExtension: {
-    version: readBrowserExtensionVersion() ?? version,
-    firefox: {
-      url: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
-      published: true,
-    },
+    version: firefoxAmo.version ?? readBrowserExtensionVersion() ?? version,
+    firefox: firefoxAmo,
     chrome: {
       zipUrl: github?.chromeZipUrl ?? null,
       zipName: github?.chromeZipName ?? null,

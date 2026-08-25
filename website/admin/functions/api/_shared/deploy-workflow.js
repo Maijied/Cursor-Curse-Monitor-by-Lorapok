@@ -11,7 +11,14 @@ const ACTION_FULL_RELEASE = "full-release - Bump version & publish all channels"
 async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields) {
   const githubToken = env.GITHUB_TOKEN;
   if (!githubToken) {
-    return jsonResponse({ error: "GitHub Token not configured on server" }, 500);
+    return jsonResponse(
+      {
+        error:
+          "GITHUB_TOKEN is not configured on Mission Control. Add it in Cloudflare Pages → Settings → Environment variables, then redeploy the admin panel.",
+        code: "missing_github_token",
+      },
+      500
+    );
   }
 
   const githubRes = await fetch(
@@ -29,8 +36,23 @@ async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields)
   );
 
   if (!githubRes.ok) {
-    console.error(`GitHub workflow dispatch failed (${workflowId})`, githubRes.status, await githubRes.text());
-    return jsonResponse({ error: "Failed to trigger deployment workflow" }, 502);
+    const errText = await githubRes.text();
+    let detail = errText;
+    try {
+      const parsed = JSON.parse(errText);
+      detail = parsed.message ?? errText;
+    } catch {
+      // keep raw text
+    }
+    console.error(`GitHub workflow dispatch failed (${workflowId})`, githubRes.status, errText);
+    return jsonResponse(
+      {
+        error: `GitHub workflow dispatch failed (${githubRes.status}): ${detail}`,
+        code: "github_dispatch_failed",
+        status: githubRes.status,
+      },
+      502
+    );
   }
 
   return jsonResponse({

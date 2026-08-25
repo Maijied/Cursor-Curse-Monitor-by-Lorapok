@@ -68,9 +68,9 @@ const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
 manifest.version = version;
 manifest.action.default_popup = "popup.html";
 manifest.options_ui = { page: "options.html", open_in_tab: true };
+// Firefox AMO: use background.scripts only (service_worker is ignored and triggers linter warnings).
 manifest.background = {
-  service_worker: "background/service-worker.js",
-  scripts: ["background/compat.js"],
+  scripts: ["background/service-worker.js"],
   type: "module",
 };
 manifest.content_scripts = [
@@ -81,6 +81,10 @@ manifest.content_scripts = [
     all_frames: true,
   },
 ];
+if (manifest.browser_specific_settings?.gecko) {
+  // background.type needs 112+; data_collection_permissions needs 140+ (142 Android).
+  manifest.browser_specific_settings.gecko.strict_min_version = "142.0";
+}
 
 writeFileSync(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
 console.log("postbuild: manifest.json + popup.html written");
