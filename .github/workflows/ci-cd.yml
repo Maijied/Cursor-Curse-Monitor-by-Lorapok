@@ -814,7 +814,18 @@ jobs:
             echo "::error::AMO_JWT_ISSUER and AMO_JWT_SECRET secrets are required for Firefox AMO publish"
             exit 1
           fi
-          node browser-extension/scripts/publish-amo.mjs
+          set +e
+          OUTPUT=$(node browser-extension/scripts/publish-amo.mjs 2>&1)
+          STATUS=$?
+          set -e
+          echo "$OUTPUT"
+          if [ "$STATUS" -ne 0 ]; then
+            if echo "$OUTPUT" | grep -qiE 'already exists|already published|Submission failed \(2\): Conflict'; then
+              echo "::warning::AMO version ${RELEASE_VERSION} is already published — treating as success (idempotent redeploy)"
+            else
+              exit "$STATUS"
+            fi
+          fi
 
       - name: Stage Chrome zip for website
         if: steps.config.outputs.do_amo == 'true'

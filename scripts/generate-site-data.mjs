@@ -167,8 +167,15 @@ async function fetchRemoteVisitorStats() {
 
 function readBrowserExtensionVersion() {
   try {
+    const manifestPath = join(root, "browser-extension", "dist", "manifest.json");
+    if (existsSync(manifestPath)) {
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+      if (manifest.version && manifest.version !== "0.0.0") return manifest.version;
+    }
     const extPkg = JSON.parse(readFileSync(join(root, "browser-extension", "package.json"), "utf8"));
-    return extPkg.version ?? null;
+    if (extPkg.version && extPkg.version !== "0.0.0") return extPkg.version;
+    const rootPkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    return rootPkg.version ?? null;
   } catch {
     return null;
   }
@@ -539,8 +546,17 @@ const siteData = {
     chromeZipName: github?.chromeZipName ?? null,
   },
   browserExtension: {
-    version: firefoxAmo.version ?? readBrowserExtensionVersion() ?? version,
-    firefox: firefoxAmo,
+    version:
+      firefoxAmo.version && firefoxAmo.version !== "0.0.0"
+        ? firefoxAmo.version
+        : readBrowserExtensionVersion() ?? version,
+    firefox: {
+      ...firefoxAmo,
+      version:
+        firefoxAmo.version && firefoxAmo.version !== "0.0.0"
+          ? firefoxAmo.version
+          : readBrowserExtensionVersion() ?? version,
+    },
     chrome: {
       zipUrl: github?.chromeZipUrl ?? null,
       zipName: github?.chromeZipName ?? null,
