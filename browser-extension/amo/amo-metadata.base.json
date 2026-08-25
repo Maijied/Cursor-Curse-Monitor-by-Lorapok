@@ -1,6 +1,8 @@
 {
-  "categories": ["developer-tools"],
-  "tags": ["cursor", "usage", "budget", "billing", "lorapok", "monitor", "security", "firefox"],
+  "categories": {
+    "firefox": ["web-development"]
+  },
+  "tags": ["security", "privacy"],
   "summary": {
     "en-US": "Live Cursor usage, budget tracker & local security scanner in your browser."
   },
@@ -10,7 +12,9 @@
   "homepage": {
     "en-US": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/"
   },
-  "support_email": "cursor.curse.help@lorapok.tech",
+  "support_email": {
+    "en-US": "cursor.curse.help@lorapok.tech"
+  },
   "support_url": {
     "en-US": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
   },

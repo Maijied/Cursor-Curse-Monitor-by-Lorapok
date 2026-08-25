@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-25T08:45:37.063Z",
+  "generatedAt": "2026-08-25T08:52:05.393Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "1.0.2",
-  "packageVersion": "1.0.2",
+  "version": "1.0.3",
+  "packageVersion": "1.0.3",
   "publishedReleaseVersion": "0.5.18",
   "releaseStatus": "candidate",
   "syncStatus": "duplicate-listing",
@@ -152,6 +152,6 @@
     "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-0.5.18.vsix",
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
-    "releaseTag": "./scripts/release.sh 1.0.2"
+    "releaseTag": "./scripts/release.sh 1.0.3"
   }
 }

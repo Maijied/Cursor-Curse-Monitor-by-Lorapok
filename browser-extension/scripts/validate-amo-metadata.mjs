@@ -27,4 +27,12 @@ if (!meta.summary["en-US"]?.length) {
   console.error("summary.en-US required");
   process.exit(1);
 }
+if (meta.support_email && typeof meta.support_email === "string") {
+  console.error("support_email must be { \"en-US\": \"email@...\" }");
+  process.exit(1);
+}
+if (meta.categories && !meta.categories.firefox && Array.isArray(meta.categories)) {
+  console.error("categories must be { firefox: [\"slug\"] }, not a flat array");
+  process.exit(1);
+}
 console.log("validate-amo-metadata: OK");
