@@ -1,4 +1,5 @@
-import { CheckCircle2, AlertCircle, Info, X, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 
 export type NotificationTone = "success" | "error" | "info" | "warning" | "loading";
 
@@ -10,7 +11,7 @@ type NotificationProps = {
   className?: string;
 };
 
-const toneStyles: Record<NotificationTone, { box: string; icon: typeof CheckCircle2; iconClass: string }> = {
+const toneStyles: Record<NotificationTone, { box: string; icon: typeof CheckCircle2 | null; iconClass: string }> = {
   success: {
     box: "bg-[color-mix(in_srgb,var(--color-ok)_10%,transparent)] border-[color-mix(in_srgb,var(--color-ok)_35%,transparent)]",
     icon: CheckCircle2,
@@ -33,8 +34,8 @@ const toneStyles: Record<NotificationTone, { box: string; icon: typeof CheckCirc
   },
   loading: {
     box: "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]",
-    icon: Loader2,
-    iconClass: "text-[var(--color-accent)] animate-spin",
+    icon: null,
+    iconClass: "",
   },
 };
 
@@ -47,7 +48,11 @@ export default function Notification({ tone, title, message, onDismiss, classNam
       role="status"
       className={`flex gap-3 p-4 rounded-xl border ${style.box} ${className}`}
     >
-      <Icon size={20} className={`shrink-0 mt-0.5 ${style.iconClass}`} aria-hidden="true" />
+      {tone === "loading" ? (
+        <LorapokLarvaeLoader size="sm" ariaLabel="Loading" className="shrink-0 mt-0.5" />
+      ) : Icon ? (
+        <Icon size={20} className={`shrink-0 mt-0.5 ${style.iconClass}`} aria-hidden="true" />
+      ) : null}
       <div className="flex-1 min-w-0">
         {title && <p className="font-semibold text-[var(--color-text)] mb-0.5">{title}</p>}
         <p className={`text-sm leading-relaxed ${title ? "text-[var(--color-muted)]" : "text-[var(--color-text)]"}`}>{message}</p>

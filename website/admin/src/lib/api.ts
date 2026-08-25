@@ -233,6 +233,7 @@ export type DiscussionResponse = {
 
 export type UsageStatsResponse = {
   optInUniques: {
+    activeNow: number;
     unique1h: number;
     unique24h: number;
     unique7d: number;

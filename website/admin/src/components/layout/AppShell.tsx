@@ -4,6 +4,8 @@ import { Menu } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import Sidebar from "./Sidebar";
 import OnlineStatus from "../ui/OnlineStatus";
+import ActiveUsersLive from "../ui/ActiveUsersLive";
+import { LarvaeLoaderPanel } from "../ui/LorapokLarvaeLoader";
 import Overview from "../pages/Overview";
 const MarketplaceHealth = lazy(() => import("../pages/MarketplaceHealth"));
 const Releases = lazy(() => import("../pages/Releases"));
@@ -73,13 +75,14 @@ export default function AppShell() {
             Mission Control
           </span>
           <OnlineStatus compact />
+          <ActiveUsersLive compact />
         </header>
 
         <div className="flex-1 relative min-w-0 min-h-0">
           <div className="app-shell-bg" aria-hidden="true" />
           <main className="app-scroll-pane">
             <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full min-w-0">
-              <Suspense fallback={<div className="min-h-64 animate-pulse rounded-xl bg-white/5" aria-label="Loading dashboard page" />}>
+              <Suspense fallback={<LarvaeLoaderPanel label="Loading page…" className="min-h-64 border-0 bg-transparent" />}>
                 <Routes>
                   <Route index element={<Overview />} />
                   <Route path="marketplace" element={<MarketplaceHealth />} />

@@ -4,7 +4,12 @@ import * as vscode from "vscode";
 import { DashboardSnapshot, formatPercent } from "./cursorApi";
 import { UsageMonitorService } from "./usageMonitor";
 import { generateNonce } from "./utils";
-import { subscribeForProductUpdates, getSubscribePromptViewState, snoozeSubscribePrompt } from "./updateSubscription";
+import { subscribeForProductUpdates, getSubscribePromptViewState, snoozeSubscribePrompt, declineSubscribePrompt } from "./updateSubscription";
+import {
+  SUPPORTED_IDE_WRAPPERS,
+  SUPPORTED_IDE_WRAPPERS_HEADLINE,
+  SUPPORTED_IDE_WRAPPERS_SUBLINE,
+} from "@lorapok/cursor-monitor-shared";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -104,6 +109,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         const state = await getSubscribePromptViewState(this.extensionContext);
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
       }
+      if (message.type === "declineSubscribe") {
+        await declineSubscribePrompt(this.extensionContext);
+        const state = await getSubscribePromptViewState(this.extensionContext);
+        webviewView.webview.postMessage({ type: "subscribeState", payload: state });
+      }
       if (message.type === "getSubscribeState") {
         const state = await getSubscribePromptViewState(this.extensionContext);
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
@@ -119,6 +129,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     nonce: string,
     iconUri: string
   ): string {
+    const esc = (value: string) =>
+      value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const supportedIdeNames = SUPPORTED_IDE_WRAPPERS.map((ide) => esc(ide.name)).join(", ");
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -427,8 +440,69 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     .footer-left a { color: var(--accent-2); text-decoration: none; font-weight: 600; font-size: 11px; }
     .footer-dot { opacity: 0.35; }
     .footer-right { color: var(--muted); font-weight: 600; font-size: 11px; }
+    .about-card {
+      margin-top: 8px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(124, 92, 255, 0.22);
+      background: rgba(124, 92, 255, 0.06);
+    }
+    .about-card h2 {
+      margin: 0 0 6px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+    }
+    .about-card p { margin: 0 0 8px; font-size: 11px; line-height: 1.5; color: var(--muted); }
+    .about-card strong { color: var(--text); }
+    .about-card ul { margin: 0 0 8px; padding-left: 16px; font-size: 11px; color: var(--muted); line-height: 1.45; }
     .subscribe-card { display: none; }
     .subscribe-card.visible { display: block; }
+    .subscribe-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(3, 5, 10, 0.72);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .subscribe-modal-overlay.visible { display: flex; }
+    .subscribe-modal-panel {
+      width: min(100%, 360px);
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(124,92,255,0.35);
+      background: linear-gradient(165deg, rgba(18,22,32,0.98), rgba(8,10,16,0.98));
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    }
+    .subscribe-consent {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 10px;
+      color: var(--muted);
+      margin: 8px 0 10px;
+    }
+    .subscribe-consent input { margin-top: 2px; }
+    .subscribe-btn-loading::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: subscribeSpin 0.75s linear infinite;
+      display: inline-block;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes subscribeSpin { to { transform: rotate(360deg); } }
     .subscribe-hero {
       display: flex;
       gap: 12px;
@@ -450,26 +524,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       line-height: 1.35;
     }
     .subscribe-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(124,92,255,0.35);
-      background: rgba(124,92,255,0.12);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #c4b5fd;
-      font-weight: 700;
-    }
     .cursor-missing-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      z-index: 50;
-      background: rgba(6, 8, 13, 0.82);
-      backdrop-filter: blur(6px);
+      z-index: 200;
+      background: rgba(3, 5, 10, 0.55);
+      backdrop-filter: blur(14px) saturate(1.1);
       padding: 24px 16px;
       align-items: center;
       justify-content: center;
@@ -477,11 +538,28 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
     .cursor-missing-overlay.visible { display: flex; }
     .cursor-missing-card {
-      max-width: 320px;
-      padding: 20px;
+      max-width: 360px;
+      padding: 24px;
       border-radius: 16px;
       border: 1px solid rgba(255,107,107,.35);
       background: rgba(17, 24, 39, 0.95);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    }
+    .cursor-missing-eyebrow {
+      margin: 0 0 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ff8a8a;
+    }
+    body.cursor-missing > *:not(.cursor-missing-overlay) {
+      filter: blur(8px) saturate(0.85);
+      pointer-events: none;
+      user-select: none;
+    }
+    body.cursor-missing .cursor-missing-overlay {
+      pointer-events: auto;
     }
     body.cursor-missing .actions button,
     body.cursor-missing .icon-btn,
@@ -500,10 +578,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 <body>
   <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
     <div class="cursor-missing-card">
-      <h2 style="margin:0 0 8px;font-size:16px;">Cursor not found</h2>
-      <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.5;">
-        Install or open Cursor, sign in once, then refresh. This dashboard stays read-only and will not write your database while Cursor is missing.
+      <p class="cursor-missing-eyebrow">No Cursor AI found</p>
+      <h2 style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
+      <p style="margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55;">
+        Install or open <strong>Cursor</strong> (or another supported VS Code–based AI IDE), sign in once, then refresh this dashboard.
       </p>
+      <p style="margin:0 0 14px;color:var(--muted);font-size:11px;line-height:1.5;">
+        Explore more Lorapok Labs tools at
+        <a href="https://lorapok.tech" target="_blank" rel="noopener" style="color:var(--accent-2);font-weight:600">lorapok.tech</a>.
+      </p>
+      <button type="button" class="primary" id="cursorMissingRefresh" style="width:100%;max-width:240px">Refresh after opening Cursor</button>
     </div>
   </div>
   <header class="header">
@@ -670,22 +754,28 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <button class="ghost" id="reindexBtn" style="margin-top:10px;width:100%">Reindex missing conversations</button>
   </section>
 
-  <section class="card subscribe-card" id="subscribeCard">
-    <p class="section-label">Release updates</p>
-    <div class="subscribe-hero">
-      <img src="${iconUri}" alt="" width="44" height="44" />
-      <div>
-        <p class="subscribe-title" id="subscribeTitle">Release updates</p>
-        <p class="muted" id="subscribeBody" style="margin:0;font-size:11px;line-height:1.45"></p>
+  <div class="subscribe-modal-overlay" id="subscribeModal" aria-hidden="true">
+    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle">
+      <div class="subscribe-hero">
+        <img src="${iconUri}" alt="" width="44" height="44" />
+        <div>
+          <p class="subscribe-title" id="subscribeTitle">Release updates</p>
+          <p class="muted" id="subscribeBody" style="margin:0;font-size:11px;line-height:1.45"></p>
+        </div>
       </div>
+      <input id="subscribeEmail" type="email" placeholder="you@example.com" style="width:100%;margin-bottom:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--text)" />
+      <label class="subscribe-consent" for="subscribeConsent">
+        <input type="checkbox" id="subscribeConsent" />
+        <span>I agree to receive product updates from Lorapok Labs.</span>
+      </label>
+      <div class="subscribe-actions">
+        <button class="primary" id="subscribeBtn" style="width:100%">Subscribe to updates</button>
+        <button class="ghost" id="subscribeLaterBtn" style="width:100%">Maybe later</button>
+        <button class="ghost" id="subscribeDeclineBtn" style="width:100%">No thanks</button>
+      </div>
+      <p class="muted" id="subscribeStatus" style="margin:8px 0 0;font-size:11px"></p>
     </div>
-    <input id="subscribeEmail" type="email" placeholder="you@example.com" style="width:100%;margin-bottom:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--text)" />
-    <div class="subscribe-actions">
-      <button class="primary" id="subscribeBtn" style="width:100%">Subscribe to updates</button>
-      <button class="ghost" id="subscribeLaterBtn" style="width:100%">Maybe later</button>
-    </div>
-    <p class="muted" id="subscribeStatus" style="margin:8px 0 0;font-size:11px"></p>
-  </section>
+  </div>
 
   <section class="card">
     <p class="section-label">Fallback</p>
@@ -697,6 +787,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="label">Auto-switched</span>
       <span class="value" id="autoSwitchText">No</span>
     </div>
+  </section>
+
+  <section class="card about-card">
+    <h2>About</h2>
+    <p><strong>${esc(SUPPORTED_IDE_WRAPPERS_HEADLINE)}</strong> — ${esc(SUPPORTED_IDE_WRAPPERS_SUBLINE)}</p>
+    <ul>
+      <li>Live quota, billing cycle, on-demand spend, and budget caps</li>
+      <li>Automatic Composer 2.5 (Fast off) fallback at 100%</li>
+      <li>Local workspace credential scanner — nothing leaves your machine</li>
+    </ul>
+    <p><strong>Supported IDEs:</strong> ${supportedIdeNames}. More tools at <a href="https://lorapok.tech" target="_blank" rel="noopener">lorapok.tech</a>.</p>
   </section>
 
   <div class="footer-msg">
@@ -945,6 +1046,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (event.data?.type === 'snapshot') render(event.data.payload);
       if (event.data?.type === 'subscribeResult') {
         var status = document.getElementById('subscribeStatus');
+        var btn = document.getElementById('subscribeBtn');
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('subscribe-btn-loading');
+        }
         if (status) {
           status.textContent = event.data.payload?.message || '';
           status.style.color = event.data.payload?.ok ? 'var(--ok)' : 'var(--danger)';
@@ -958,16 +1064,22 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     });
 
+    var subscribeModalTimer = null;
+    var subscribePromptReady = false;
+
     function applySubscribeState(state) {
-      var card = document.getElementById('subscribeCard');
-      if (!card) return;
+      var modal = document.getElementById('subscribeModal');
+      if (!modal) return;
       if (!state || !state.showPrompt) {
-        card.classList.remove('visible');
-        card.style.display = 'none';
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+        subscribePromptReady = false;
+        if (subscribeModalTimer) {
+          clearTimeout(subscribeModalTimer);
+          subscribeModalTimer = null;
+        }
         return;
       }
-      card.classList.add('visible');
-      card.style.display = 'block';
       var title = document.getElementById('subscribeTitle');
       var body = document.getElementById('subscribeBody');
       var btn = document.getElementById('subscribeBtn');
@@ -978,11 +1090,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         if (btn) btn.textContent = state.copy.cta;
         if (later) later.textContent = state.copy.later;
       }
+      if (!subscribePromptReady && !subscribeModalTimer) {
+        subscribeModalTimer = setTimeout(function() {
+          subscribePromptReady = true;
+          modal.classList.add('visible');
+          modal.setAttribute('aria-hidden', 'false');
+        }, 30000);
+      }
     }
 
     function refresh() { vscode.postMessage({ type: 'refresh' }); }
     document.getElementById('refreshBtn').addEventListener('click', refresh);
     document.getElementById('refreshBtn2').addEventListener('click', refresh);
+    var cursorMissingRefresh = document.getElementById('cursorMissingRefresh');
+    if (cursorMissingRefresh) cursorMissingRefresh.addEventListener('click', refresh);
     document.getElementById('fallbackBtn').addEventListener('click', function() {
       vscode.postMessage({ type: 'applyFallback' });
     });
@@ -991,10 +1112,27 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
     document.getElementById('subscribeBtn').addEventListener('click', function() {
       var email = document.getElementById('subscribeEmail').value || '';
+      var consent = document.getElementById('subscribeConsent');
+      var status = document.getElementById('subscribeStatus');
+      var btn = document.getElementById('subscribeBtn');
+      if (consent && !consent.checked) {
+        if (status) {
+          status.textContent = 'Please agree to receive product updates.';
+          status.style.color = 'var(--danger)';
+        }
+        return;
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('subscribe-btn-loading');
+      }
       vscode.postMessage({ type: 'subscribeUpdates', email: email });
     });
     document.getElementById('subscribeLaterBtn').addEventListener('click', function() {
       vscode.postMessage({ type: 'snoozeSubscribe' });
+    });
+    document.getElementById('subscribeDeclineBtn').addEventListener('click', function() {
+      vscode.postMessage({ type: 'declineSubscribe' });
     });
     vscode.postMessage({ type: 'getSubscribeState' });
     document.getElementById('editBudgetBtn').addEventListener('click', function() {

@@ -1,11 +1,21 @@
-export const SUBSCRIBE_SNOOZE_MIN_DAYS = 3;
-export const SUBSCRIBE_SNOOZE_MAX_DAYS = 7;
+export const SUBSCRIBE_PROMPT_DELAY_MS = 30_000;
+export const SUBSCRIBE_SNOOZE_ONE_DAY_MS = 24 * 60 * 60 * 1000;
+/** @deprecated Use snoozeUntilNextDayMs — kept for migration/tests */
+export const SUBSCRIBE_SNOOZE_MIN_DAYS = 1;
+export const SUBSCRIBE_SNOOZE_MAX_DAYS = 1;
+
+export const SUBSCRIBE_STORAGE_KEYS = {
+  email: "ccm-subscribe-email",
+  snoozeUntil: "ccm-subscribe-snooze-until",
+  declined: "ccm-subscribe-declined",
+} as const;
 
 export type SubscribePromptVariant = "first" | "reminder";
 
 export type SubscribePromptState = {
   subscribedEmail: string | null;
   snoozeUntilMs: number | null;
+  declined?: boolean;
   nowMs?: number;
 };
 
@@ -31,6 +41,7 @@ const REMINDER_COPY: SubscribePromptCopy = {
 };
 
 export function shouldShowSubscribePrompt(state: SubscribePromptState): boolean {
+  if (state.declined) return false;
   if (state.subscribedEmail) return false;
   if (!state.snoozeUntilMs) return true;
   const now = state.nowMs ?? Date.now();
@@ -47,11 +58,12 @@ export function getSubscribePromptCopy(variant: SubscribePromptVariant): Subscri
   return variant === "reminder" ? REMINDER_COPY : FIRST_COPY;
 }
 
-/** Random snooze between 3 and 7 days (inclusive). */
+/** Snooze until the next calendar day (24h). */
+export function snoozeUntilNextDayMs(nowMs = Date.now()): number {
+  return nowMs + SUBSCRIBE_SNOOZE_ONE_DAY_MS;
+}
+
+/** @deprecated Use snoozeUntilNextDayMs */
 export function randomSnoozeUntilMs(nowMs = Date.now()): number {
-  const dayMs = 24 * 60 * 60 * 1000;
-  const minMs = SUBSCRIBE_SNOOZE_MIN_DAYS * dayMs;
-  const maxMs = SUBSCRIBE_SNOOZE_MAX_DAYS * dayMs;
-  const extra = Math.floor(Math.random() * (maxMs - minMs + 1));
-  return nowMs + minMs + extra;
+  return snoozeUntilNextDayMs(nowMs);
 }

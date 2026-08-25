@@ -1,6 +1,12 @@
 # Mission Control — Admin Panel
 
+<div align="center">
+  <img src="../../media/logo-animated.svg" alt="Cursor Curse Monitor — animated Lorapok Larvae mascot" width="96" height="96" />
+</div>
+
 **Cursor Curse Monitor** operations dashboard for Lorapok Labs: marketplace sync, deployments, notices, community tools, live analytics, and SEO health.
+
+**Product scope:** the IDE extension supports **all major VS Code wrapper AI IDEs** (Cursor, Windsurf, VSCodium, Void, Gitpod, Trae, Kiro, and more via Open VSX / VS Code Marketplace). See `packages/shared/src/supportedIdeWrappers.ts` and the marketing site `#supported-ides` section.
 
 | | |
 |---|---|

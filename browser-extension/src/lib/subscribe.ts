@@ -1,5 +1,5 @@
 import { getOrCreateInstallId, getSettings, updateSettings } from "./storage";
-import { randomSnoozeUntilMs } from "@lorapok/cursor-monitor-shared";
+import { snoozeUntilNextDayMs } from "@lorapok/cursor-monitor-shared";
 
 const SUBSCRIBE_URL = "https://cursor-dev.lorapok.tech/api/subscribe";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,7 +36,7 @@ export async function subscribeForProductUpdates(
     if (!response.ok) {
       return { ok: false, message: data.error || "Could not subscribe right now." };
     }
-    await updateSettings({ subscribedEmail: normalized, subscribeSnoozeUntil: null });
+    await updateSettings({ subscribedEmail: normalized, subscribeSnoozeUntil: null, subscribeDeclined: false });
     return { ok: true, message: data.message || "You're subscribed to release updates." };
   } catch {
     return { ok: false, message: "Network error — try again later." };
@@ -44,5 +44,9 @@ export async function subscribeForProductUpdates(
 }
 
 export async function snoozeSubscribePrompt(): Promise<void> {
-  await updateSettings({ subscribeSnoozeUntil: randomSnoozeUntilMs() });
+  await updateSettings({ subscribeSnoozeUntil: snoozeUntilNextDayMs() });
+}
+
+export async function declineSubscribePrompt(): Promise<void> {
+  await updateSettings({ subscribeDeclined: true });
 }

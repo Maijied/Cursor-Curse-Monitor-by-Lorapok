@@ -6,6 +6,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+
+- **Universal VS Code wrapper IDE support** — shared `supportedIdeWrappers` list; bold messaging in README, marketing site (2nd section with IDE grid), IDE dashboard About panel, and browser extension Options
+- **Cursor-not-found blocked UI** — full blurred overlay with “No Cursor AI found”, refresh CTA, and [lorapok.tech](https://lorapok.tech) link in IDE dashboard and browser popup
+- **SEO refresh** — VS Code wrapper IDE keywords, updated meta descriptions, canonical JSON-LD download URLs via `generate-seo.mjs`
+
+### Fixed
+
+- Missing `SUBSCRIBE_PROMPT_DELAY_MS` import in `extension.ts` (compile error)
+- Orphaned CSS in `dashboardView.ts` that broke `.connected` badge styles
+- `syncStatus` override — release candidates no longer claim `synced` (uses `release-candidate` instead of misleading `dual-listing`)
+
+### Changed
+
+- Marketing hero and ecosystem copy emphasize Open VSX + VS Code Marketplace compatibility across all major AI IDEs
+
 ## [1.0.3] - 2026-08-25
 
 ### Added

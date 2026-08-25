@@ -2,6 +2,132 @@
  * Loads site-data.json and powers dynamic install UI + photo lightbox.
  * Supports both Open VSX and VS Code Marketplace data.
  */
+
+const SUBSCRIBE_KEYS = {
+  email: "ccm-subscribe-email",
+  snoozeUntil: "ccm-subscribe-snooze-until",
+  declined: "ccm-subscribe-declined",
+};
+const SUBSCRIBE_PROMPT_DELAY_MS = 30_000;
+const SUBSCRIBE_SNOOZE_ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+const IDE_COLORS = {
+  cursor: "#6C5CE7",
+  vscode: "#007ACC",
+  windsurf: "#00C896",
+  vscodium: "#2F80ED",
+  void: "#8B5CF6",
+  gitpod: "#FFAE33",
+  positron: "#447099",
+  trae: "#00D4AA",
+  kiro: "#FF9900",
+  qoder: "#1677FF",
+  pearai: "#F59E0B",
+  "code-server": "#1F2937",
+  theia: "#F7941E",
+  "azure-data-studio": "#0078D4",
+  coder: "#090B11",
+};
+
+function renderSupportedIdes(data) {
+  const grid = document.getElementById("supported-ides-grid");
+  if (!grid || !data?.supportedIdes?.ides?.length) return;
+
+  const title = document.getElementById("supported-ides-title");
+  const lead = document.getElementById("supported-ides-lead");
+  if (title && data.supportedIdes.headline) title.textContent = data.supportedIdes.headline;
+  if (lead && data.supportedIdes.subline) lead.textContent = data.supportedIdes.subline;
+
+  grid.replaceChildren();
+  for (const ide of data.supportedIdes.ides) {
+    const color = IDE_COLORS[ide.id] || "#7c5cff";
+    const initial = (ide.name || "?").charAt(0).toUpperCase();
+    const card = document.createElement(ide.website ? "a" : "article");
+    card.className = `ide-card${ide.featured ? " featured" : ""}`;
+    if (ide.website) {
+      card.href = ide.website;
+      card.target = "_blank";
+      card.rel = "noopener noreferrer";
+    }
+
+    const icon = document.createElement("div");
+    icon.className = "ide-icon";
+    icon.style.setProperty("--ide-color", color);
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = initial;
+
+    const name = document.createElement("p");
+    name.className = "ide-name";
+    name.textContent = ide.name;
+
+    const tagline = document.createElement("p");
+    tagline.className = "ide-tagline";
+    tagline.textContent = ide.tagline;
+
+    const market = document.createElement("p");
+    market.className = "ide-market";
+    market.textContent = ide.marketplaceLabel;
+
+    card.append(icon, name, tagline, market);
+    grid.append(card);
+  }
+}
+
+function getSubscribeSiteState() {
+  const declined = window.localStorage.getItem(SUBSCRIBE_KEYS.declined) === "1";
+  const subscribedEmail = window.localStorage.getItem(SUBSCRIBE_KEYS.email);
+  const snoozeRaw = window.localStorage.getItem(SUBSCRIBE_KEYS.snoozeUntil);
+  const snoozeUntilMs = snoozeRaw ? Number(snoozeRaw) : null;
+  return {
+    declined,
+    subscribedEmail: subscribedEmail || null,
+    snoozeUntilMs: Number.isFinite(snoozeUntilMs) ? snoozeUntilMs : null,
+  };
+}
+
+function shouldShowSubscribeModal(state = getSubscribeSiteState()) {
+  if (state.declined) return false;
+  if (state.subscribedEmail) return false;
+  if (!state.snoozeUntilMs) return true;
+  return Date.now() >= state.snoozeUntilMs;
+}
+
+function snoozeSubscribeModalOneDay() {
+  window.localStorage.setItem(
+    SUBSCRIBE_KEYS.snoozeUntil,
+    String(Date.now() + SUBSCRIBE_SNOOZE_ONE_DAY_MS)
+  );
+}
+
+function declineSubscribeModal() {
+  window.localStorage.setItem(SUBSCRIBE_KEYS.declined, "1");
+}
+
+function markSubscribedEmail(email) {
+  window.localStorage.setItem(SUBSCRIBE_KEYS.email, email);
+  window.localStorage.removeItem(SUBSCRIBE_KEYS.snoozeUntil);
+}
+
+function setSubscribeButtonLoading(button, loading) {
+  if (!button) return;
+  const loader = button.querySelector(".subscribe-btn-loader");
+  button.disabled = loading;
+  button.classList.toggle("is-loading", loading);
+  if (loader) loader.hidden = !loading;
+}
+
+async function submitSubscribeRequest({ email, subscribeUrl, source }) {
+  const response = await fetch(subscribeUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ email, source, consent: true }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || "Subscribe failed");
+  markSubscribedEmail(email);
+  return body;
+}
+
 (async function () {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -20,6 +146,7 @@
 
   // Register local interactions before any network request. A slow data or
   // notice request must never make image previews feel unresponsive.
+  initMobileNav();
   initEcosystemTabs();
   initLightbox();
 
@@ -71,6 +198,7 @@
     if (typeof window.renderHeroStats === "function") {
       window.renderHeroStats(data);
     }
+    renderSupportedIdes(data);
 
     // Core version data
     setText("[data-version]", data.version);
@@ -163,11 +291,13 @@
   // Keep remote notice loading independent from local image interactions.
   void initNotice();
   initSubscribe();
+  initSubscribeModal();
 
   function initSubscribe() {
     const form = $("#subscribe-form");
     const input = $("#subscribe-email");
     const message = $("#subscribe-message");
+    const submitBtn = $("#subscribe-form-submit");
     if (!form || !input || !message) return;
 
     const subscribeUrl = data?.social?.subscribe || "https://cursor-dev.lorapok.tech/api/subscribe";
@@ -192,22 +322,109 @@
       message.hidden = false;
       message.className = "subscribe-message pending";
       message.textContent = "Subscribing…";
+      setSubscribeButtonLoading(submitBtn, true);
 
       try {
-        const response = await fetch(subscribeUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ email, source: "website", consent: true }),
-        });
-        const body = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(body.error || "Subscribe failed");
+        const body = await submitSubscribeRequest({ email, subscribeUrl, source: "website" });
         message.className = "subscribe-message success";
         message.textContent = body.message || "You're subscribed!";
         form.reset();
+        closeSubscribeModal();
       } catch (err) {
         message.className = "subscribe-message error";
         message.textContent = err instanceof Error ? err.message : "Could not subscribe right now.";
+      } finally {
+        setSubscribeButtonLoading(submitBtn, false);
       }
+    });
+  }
+
+  function initSubscribeModal() {
+    const modal = $("#subscribe-modal");
+    if (!modal) return;
+
+    const form = $("#subscribe-modal-form");
+    const input = $("#subscribe-modal-email");
+    const message = $("#subscribe-modal-message");
+    const submitBtn = $("#subscribe-modal-submit");
+    const subscribeUrl = data?.social?.subscribe || "https://cursor-dev.lorapok.tech/api/subscribe";
+    let modalTimer = null;
+
+    const openModal = () => {
+      if (!shouldShowSubscribeModal()) return;
+      modal.hidden = false;
+      document.body.classList.add("subscribe-modal-open");
+      input?.focus();
+    };
+
+    const closeModal = () => {
+      modal.hidden = true;
+      document.body.classList.remove("subscribe-modal-open");
+    };
+
+    window.closeSubscribeModal = closeModal;
+
+    modal.querySelectorAll("[data-subscribe-close]").forEach((el) => {
+      el.addEventListener("click", closeModal);
+    });
+
+    modal.querySelector("[data-subscribe-later]")?.addEventListener("click", () => {
+      snoozeSubscribeModalOneDay();
+      closeModal();
+    });
+
+    modal.querySelector("[data-subscribe-decline]")?.addEventListener("click", () => {
+      declineSubscribeModal();
+      closeModal();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !modal.hidden) closeModal();
+    });
+
+    if (shouldShowSubscribeModal()) {
+      modalTimer = window.setTimeout(openModal, SUBSCRIBE_PROMPT_DELAY_MS);
+    }
+
+    if (!form || !input || !message) return;
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = String(input.value || "").trim().toLowerCase();
+      const consent = form.querySelector("#subscribe-modal-consent");
+      if (!email) {
+        message.hidden = false;
+        message.className = "subscribe-message error";
+        message.textContent = "Enter your email address.";
+        return;
+      }
+      if (consent && !consent.checked) {
+        message.hidden = false;
+        message.className = "subscribe-message error";
+        message.textContent = "Please agree to receive product updates.";
+        return;
+      }
+
+      message.hidden = false;
+      message.className = "subscribe-message pending";
+      message.textContent = "Subscribing…";
+      setSubscribeButtonLoading(submitBtn, true);
+
+      try {
+        const body = await submitSubscribeRequest({ email, subscribeUrl, source: "website-modal" });
+        message.className = "subscribe-message success";
+        message.textContent = body.message || "You're subscribed!";
+        window.setTimeout(closeModal, 1200);
+      } catch (err) {
+        message.className = "subscribe-message error";
+        message.textContent = err instanceof Error ? err.message : "Could not subscribe right now.";
+      } finally {
+        setSubscribeButtonLoading(submitBtn, false);
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (modalTimer) window.clearTimeout(modalTimer);
     });
   }
 
@@ -271,6 +488,38 @@
     }
   }
 })();
+
+/**
+ * Mobile hamburger menu — toggles `.nav-open` on `#nav-links`.
+ */
+function initMobileNav() {
+  const toggle = document.getElementById("nav-toggle");
+  const links = document.getElementById("nav-links");
+  if (!toggle || !links) return;
+
+  const setOpen = (open) => {
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    links.classList.toggle("nav-open", open);
+    document.body.classList.toggle("nav-menu-open", open);
+  };
+
+  toggle.addEventListener("click", () => {
+    setOpen(toggle.getAttribute("aria-expanded") !== "true");
+  });
+
+  links.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => setOpen(false));
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setOpen(false);
+  });
+
+  window.matchMedia("(min-width: 901px)").addEventListener("change", (event) => {
+    if (event.matches) setOpen(false);
+  });
+}
 
 /**
  * Initializes ecosystem tabs with accessible panel switching and automatic cycling.

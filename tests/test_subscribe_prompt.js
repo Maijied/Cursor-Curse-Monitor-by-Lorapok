@@ -21,10 +21,10 @@ assert.strictEqual(
 );
 
 const snooze = randomSnoozeUntilMs(now);
-const minMs = SUBSCRIBE_SNOOZE_MIN_DAYS * 86400000;
-const maxMs = SUBSCRIBE_SNOOZE_MAX_DAYS * 86400000;
-assert.ok(snooze >= now + minMs);
-assert.ok(snooze <= now + maxMs);
+const dayMs = 86400000;
+assert.strictEqual(snooze, now + dayMs);
+
+assert.strictEqual(shouldShowSubscribePrompt({ subscribedEmail: null, snoozeUntilMs: null, declined: true }), false);
 
 assert.ok(getSubscribePromptCopy("first").title.length > 10);
 assert.ok(getSubscribePromptCopy("reminder").later.toLowerCase().includes("later"));

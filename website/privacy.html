@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <!-- seo:begin -->
   <title>Privacy Policy — Cursor Curse Monitor by Lorapok</title>
   <meta name="description" content="Privacy policy for Cursor Curse Monitor. Usage data is visible only to the logged-in Cursor user on their own machine." />
@@ -38,10 +38,17 @@
           <span class="brand-by">by Lorapok Labs</span>
         </span>
       </a>
-      <div class="nav-links">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
         <a href="./">Home</a>
         <a href="./#features">Features</a>
         <a href="./#install">Install</a>
+        <a href="privacy.html" aria-current="page">Privacy</a>
+        <a href="terms.html">Terms</a>
       </div>
     </nav>
   </header>
@@ -95,10 +102,11 @@
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <p>MIT © Lorapok Labs · Not affiliated with Cursor / Anysphere</p>
+      <p>GPL-3.0 © Lorapok Labs · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a> · Not affiliated with Cursor / Anysphere</p>
       <p><a href="./">← Back to home</a> · <a href="sitemap.xml">Sitemap</a></p>
     </div>
   </footer>
   <script src="analytics.js" defer></script>
+  <script src="site.js" defer></script>
 </body>
 </html>

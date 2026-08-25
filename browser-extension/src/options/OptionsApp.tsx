@@ -13,6 +13,9 @@ import {
   getSubscribePromptCopy,
   shouldShowSubscribePrompt,
   subscribePromptVariant,
+  SUPPORTED_IDE_WRAPPERS,
+  SUPPORTED_IDE_WRAPPERS_HEADLINE,
+  SUPPORTED_IDE_WRAPPERS_SUBLINE,
 } from "@lorapok/cursor-monitor-shared";
 import { snoozeSubscribePrompt, subscribeForProductUpdates } from "../lib/subscribe";
 import { refreshProductNotice } from "../lib/productNotices";
@@ -46,6 +49,7 @@ export function OptionsApp() {
       const show = shouldShowSubscribePrompt({
         subscribedEmail: s.subscribedEmail,
         snoozeUntilMs: s.subscribeSnoozeUntil,
+        declined: s.subscribeDeclined,
       });
       setShowSubscribeSection(show);
       if (show) {
@@ -212,6 +216,28 @@ export function OptionsApp() {
           {saved && <span className="muted">Saved.</span>}
         </div>
       </form>
+
+      <section className="about-product" style={{ marginTop: 24 }}>
+        <h2 style={{ fontSize: "1rem", margin: "0 0 8px" }}>About this product</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          <strong>{SUPPORTED_IDE_WRAPPERS_HEADLINE}</strong> — {SUPPORTED_IDE_WRAPPERS_SUBLINE}
+        </p>
+        <ul className="about-features" style={{ margin: "12px 0", paddingLeft: 18, color: "var(--muted)", fontSize: "0.9rem" }}>
+          <li>Live Cursor usage quota, billing cycle, and on-demand spend</li>
+          <li>Personal budget cap with threshold warnings</li>
+          <li>Automatic Composer 2.5 (Fast off) fallback when limits are crossed</li>
+          <li>Local credential paste guard in the browser popup</li>
+          <li>Private — tokens and usage stay on your machine</li>
+        </ul>
+        <p className="muted" style={{ margin: "0 0 8px", fontSize: "0.85rem" }}>
+          <strong>Supported IDEs:</strong>{" "}
+          {SUPPORTED_IDE_WRAPPERS.map((ide) => ide.name).join(", ")}.
+        </p>
+        <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+          More Lorapok Labs tools:{" "}
+          <a href="https://lorapok.tech" target="_blank" rel="noopener noreferrer">lorapok.tech</a>
+        </p>
+      </section>
 
       <Footer />
     </div>

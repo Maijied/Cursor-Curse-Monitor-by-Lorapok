@@ -1,5 +1,9 @@
 # AMO listing assets
 
+<div align="center">
+  <img src="../../media/logo-animated.svg" alt="Cursor Curse Monitor — animated Lorapok Larvae mascot" width="96" height="96" />
+</div>
+
 Place screenshots here for automated Firefox Add-ons submission:
 
 - `screenshot-1280x800.png` — primary listing screenshot

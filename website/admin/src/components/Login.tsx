@@ -8,7 +8,8 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ExternalLink, Loader2, LogIn, Mail, Sparkles } from "lucide-react";
+import { CheckCircle2, ExternalLink, LogIn, Mail, Sparkles } from "lucide-react";
+import LorapokLarvaeLoader, { LarvaeLoaderPanel } from "./ui/LorapokLarvaeLoader";
 import {
   configureAuthPersistence,
   getRememberMePreference,
@@ -132,8 +133,8 @@ export default function Login() {
 
   if (authChecking) {
     return (
-      <div className="min-h-screen app-shell-bg flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-accent)]" />
+      <div className="min-h-screen app-shell-bg flex items-center justify-center p-8">
+        <LarvaeLoaderPanel label="Checking session…" className="min-h-0 border-0 bg-transparent" />
       </div>
     );
   }
@@ -206,7 +207,7 @@ export default function Login() {
                 disabled={loading || !confirmEmail.trim()}
                 className="w-full flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 shadow-md"
               >
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} aria-hidden="true" />}
+                {loading ? <LorapokLarvaeLoader size="sm" ariaLabel="Signing in" /> : <LogIn size={18} aria-hidden="true" />}
                 {loading ? "Signing in…" : "Complete Sign In"}
               </button>
             </form>
@@ -219,7 +220,7 @@ export default function Login() {
                 className="w-full flex items-center justify-center gap-2.5 bg-white text-[#0f172a] py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all mb-4 disabled:opacity-50 shadow-sm text-sm"
               >
                 {loading ? (
-                  <Loader2 size={18} className="animate-spin text-slate-600" />
+                  <LorapokLarvaeLoader size="sm" ariaLabel="Authenticating" />
                 ) : (
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path
@@ -282,7 +283,7 @@ export default function Login() {
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 shadow-md text-sm"
                 >
-                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} aria-hidden="true" />}
+                  {loading ? <LorapokLarvaeLoader size="sm" ariaLabel="Sending sign-in link" /> : <Mail size={16} aria-hidden="true" />}
                   {loading ? "Sending link…" : "Send Magic Sign-In Link"}
                 </button>
               </form>

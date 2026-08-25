@@ -7,6 +7,7 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import Modal from "../ui/Modal";
 import Notification, { type NotificationTone } from "../ui/Notification";
+import LorapokLarvaeLoader, { LarvaeLoaderOverlay } from "../ui/LorapokLarvaeLoader";
 import SecurityAlertModal from "../ui/SecurityAlertModal";
 import MailboxMessagePreview from "../mailbox/MailboxMessagePreview";
 import { formatMailboxAddress } from "../mailbox/mailbox-format";
@@ -224,7 +225,8 @@ export default function Mailbox() {
             onClick={handleTest}
             className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60"
           >
-            <Zap size={16} /> Test
+            {sending ? <LorapokLarvaeLoader size="xs" ariaLabel="Sending test email" /> : <Zap size={16} />}
+            {sending ? "Sending…" : "Test"}
           </button>
         </div>
       </div>
@@ -422,7 +424,9 @@ export default function Mailbox() {
           </p>
         }
       >
-        <form onSubmit={handleSend} className="space-y-4 max-w-3xl">
+        <div className="relative">
+          <LarvaeLoaderOverlay open={sending} label="Sending message…" />
+          <form onSubmit={handleSend} className="space-y-4 max-w-3xl">
           <label className="block text-sm">
             <span className="text-[var(--color-muted)]">Template</span>
             <select
@@ -471,9 +475,11 @@ export default function Mailbox() {
             disabled={sending}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60"
           >
-            <Send size={16} /> {sending ? "Sending…" : "Send message"}
+            {sending ? <LorapokLarvaeLoader size="xs" ariaLabel="Sending message" /> : <Send size={16} />}
+            {sending ? "Sending…" : "Send message"}
           </button>
-        </form>
+          </form>
+        </div>
       </Modal>
 
       <Modal
