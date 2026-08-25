@@ -441,7 +441,7 @@ const siteData = {
   browserExtension: {
     version: readBrowserExtensionVersion() ?? version,
     firefox: {
-      url: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+      url: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
       published: true,
     },
     chrome: {

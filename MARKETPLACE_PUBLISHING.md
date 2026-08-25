@@ -136,7 +136,9 @@ After publishing, verify the extension is available:
 
 - **Open VSX**: https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok
 - **VS Code Marketplace**: https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok
-- **Firefox AMO**: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/
+- **Firefox AMO**: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/
+
+AMO listing descriptions use [Extension Workshop Markdown](https://extensionworkshop.com/documentation/develop/create-an-appealing-listing/#make-use-of-markdown) in `browser-extension/amo/amo-metadata.base.json`.
 - **GitHub Releases**: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases
 - **Project Website**: https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/
 
@@ -166,6 +168,7 @@ The workflow handles this gracefully and will continue without error. Bump the v
 |---------|-------|
 | **VS Code Marketplace Publisher** | `LorapokLabs` |
 | **Open VSX Publisher** | `lorapok-labs` |
+| **Firefox AMO slug** | `cursor-curse-monitor` |
 | **Firefox Extension ID** | `cursor-curse-monitor@lorapok.tech` |
 | **Extension Name** | `cursor-curse-monitor-by-lorapok` |
 | **CI/CD Workflow** | `.github/workflows/ci-cd.yml` |

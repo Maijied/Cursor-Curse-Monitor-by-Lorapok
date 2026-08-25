@@ -27,6 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="stats-dashboard.css" />
   <!-- seo:jsonld -->
   <script type="application/ld+json">
   {
@@ -67,7 +68,7 @@
         "priceCurrency": "USD"
       },
       "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
-      "downloadUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+      "downloadUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
       "publisher": {
         "@type": "Organization",
         "name": "Lorapok Labs",
@@ -182,20 +183,47 @@
         </div>
       </div>
       <aside class="hero-visual">
-        <div class="hero-device">
-          <div class="hero-device-bar" aria-hidden="true">
-            <span></span><span></span><span></span>
-            <span class="hero-device-title">Cursor Curse Monitor</span>
-          </div>
-          <button type="button" class="hero-shot-btn lightbox-trigger" data-lightbox-group="hero" data-src="assets/marketing/hero-marketing.png" data-caption="Cursor Curse Monitor in Cursor IDE">
-            <img src="assets/marketing/hero-marketing.png" alt="Cursor Curse Monitor preview" class="hero-shot" />
-            <span class="zoom-hint">Click to enlarge</span>
-          </button>
-        </div>
-        <div class="hero-panel glass">
+        <div class="hero-stats-dashboard glass" id="hero-stats-dashboard" aria-label="Live community stats">
           <div class="panel-head">
             <span class="panel-live-dot" aria-hidden="true"></span>
-            Live preview
+            Live community stats
+          </div>
+          <div class="stats-grid">
+            <div class="stat-tile">
+              <span class="stat-tile-label">Downloads</span>
+              <strong class="stat-tile-value" data-hero-downloads>—</strong>
+              <div class="meter"><div class="meter-fill stat-meter" data-hero-downloads-bar style="width:0%"></div></div>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-tile-label">Website visits</span>
+              <strong class="stat-tile-value" data-hero-visits>—</strong>
+              <div class="meter"><div class="meter-fill stat-meter" data-hero-visits-bar style="width:0%"></div></div>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-tile-label">Engagement</span>
+              <strong class="stat-tile-value" data-hero-engagement>—</strong>
+              <div class="meter"><div class="meter-fill stat-meter" data-hero-engagement-bar style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="hero-ovsx-block">
+            <div class="hero-ovsx-combined">
+              <span>Open VSX combined</span>
+              <strong data-hero-ovsx-combined>—</strong>
+            </div>
+            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus duplicate downloads">
+              <div class="meter-fill canonical" data-hero-ovsx-canonical-bar style="width:0%"></div>
+              <div class="meter-fill duplicate" data-hero-ovsx-duplicate-bar style="width:0%"></div>
+            </div>
+            <div class="hero-ovsx-legend">
+              <span>Canonical <strong data-hero-ovsx-canonical>—</strong></span>
+              <span>Duplicate <strong data-hero-ovsx-duplicate>—</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-panel glass hero-session-demo">
+          <div class="panel-head">
+            <span class="panel-live-dot" aria-hidden="true"></span>
+            Your session preview
           </div>
           <div class="stat-row"><span>Included usage</span><strong>87%</strong></div>
           <div class="meter"><div class="meter-fill" style="width:87%"></div></div>
@@ -258,10 +286,9 @@
       </div>
       <div class="feature-grid">
         <article class="feature-card">
-          <button type="button" class="feature-img-btn lightbox-trigger" data-lightbox-group="features" data-src="assets/marketing/showcase-dashboard.png" data-caption="Live dashboard panel in Cursor IDE">
-            <img src="assets/marketing/showcase-dashboard.png" alt="Live dashboard panel in Cursor IDE" loading="lazy" />
-            <span class="zoom-hint">View full size</span>
-          </button>
+          <div class="feature-svg-visual" aria-hidden="true">
+            <img src="assets/monitor-dashboard.svg" alt="" width="120" height="120" />
+          </div>
           <div class="feature-body">
             <h3 class="feature-title">
               <img src="assets/monitor-dashboard.svg" alt="" width="24" height="24" />
@@ -297,10 +324,9 @@
           </div>
         </article>
         <article class="feature-card">
-          <button type="button" class="feature-img-btn lightbox-trigger" data-lightbox-group="features" data-src="assets/marketing/showcase-privacy.png" data-caption="Privacy-first local-only design">
-            <img src="assets/marketing/showcase-privacy.png" alt="Privacy-first local-only design" loading="lazy" />
-            <span class="zoom-hint">View full size</span>
-          </button>
+          <div class="feature-svg-visual" aria-hidden="true">
+            <img src="assets/security-shield.svg" alt="" width="120" height="120" />
+          </div>
           <div class="feature-body">
             <h3 class="feature-title">
               <img src="assets/security-shield.svg" alt="" width="24" height="24" />
@@ -429,95 +455,28 @@
     <section id="gallery" class="section gallery-section">
       <div class="container">
         <div class="section-head">
-          <p class="eyebrow">Product gallery</p>
-          <h2>Built for every Cursor-compatible editor</h2>
-          <p class="section-lead">IDE extension, browser guard, and Mission Control — polished visuals for the full Lorapok ecosystem.</p>
+          <p class="eyebrow">Snapshots</p>
+          <h2>Open source &amp; community</h2>
+          <p class="section-lead">Product screenshots live in the ecosystem tabs above — this gallery keeps unique community visuals only.</p>
         </div>
         <div class="gallery-filter-bar" role="group" aria-label="Gallery filter options">
-          <button type="button" class="gallery-filter-btn active" data-filter="all" aria-pressed="true">All Visuals</button>
-          <button type="button" class="gallery-filter-btn" data-filter="ide" aria-pressed="false">IDE & Budget</button>
-          <button type="button" class="gallery-filter-btn" data-filter="browser" aria-pressed="false">Browser Guard</button>
-          <button type="button" class="gallery-filter-btn" data-filter="admin" aria-pressed="false">Mission Control</button>
-          <button type="button" class="gallery-filter-btn" data-filter="oss" aria-pressed="false">Open Source & Install</button>
-          <button type="button" class="gallery-filter-btn" data-filter="founder" aria-pressed="false">Founder</button>
+          <button type="button" class="gallery-filter-btn active" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="gallery-filter-btn" data-filter="oss" aria-pressed="false">Open Source</button>
         </div>
         <div class="gallery-masonry">
-          <figure class="gallery-item wide" data-category="ide oss">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/hero-marketing.png" data-caption="Hero launch visual" aria-label="Hero launch visual — enlarge">
-              <img src="assets/marketing/hero-marketing.png" alt="Cursor Curse Monitor hero" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Hero launch visual</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="ide">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-dashboard.png" data-caption="Usage dashboard" aria-label="Usage dashboard — enlarge">
-              <img src="assets/marketing/showcase-dashboard.png" alt="Dashboard" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Usage dashboard</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="browser">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-browser-ext.png" data-caption="Browser extension" aria-label="Browser extension — enlarge">
-              <img src="assets/marketing/showcase-browser-ext.png" alt="Browser extension" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Browser extension</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="admin">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-admin.png" data-caption="Mission Control admin" aria-label="Mission Control admin — enlarge">
-              <img src="assets/marketing/showcase-admin.png" alt="Mission Control admin" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Mission Control</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="ide">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-fallback.png" data-caption="Model fallback" aria-label="Model fallback — enlarge">
-              <img src="assets/marketing/showcase-fallback.png" alt="Fallback" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Model fallback</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="ide">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-budget.png" data-caption="Budget tracking" aria-label="Budget tracking — enlarge">
-              <img src="assets/marketing/showcase-budget.png" alt="Budget" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Budget tracking</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="browser">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-privacy.png" data-caption="Local privacy" aria-label="Local privacy — enlarge">
-              <img src="assets/marketing/showcase-privacy.png" alt="Privacy" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Local privacy</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="oss">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-install.png" data-caption="Install guide" aria-label="Install guide — enlarge">
-              <img src="assets/marketing/showcase-install.png" alt="Install steps" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Install guide</figcaption>
-          </figure>
-          <figure class="gallery-item" data-category="oss">
+          <figure class="gallery-item wide" data-category="oss">
             <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/showcase-oss.png" data-caption="Lorapok Labs open source community" aria-label="Lorapok Labs product — enlarge">
               <img src="assets/marketing/showcase-oss.png" alt="Lorapok Labs product" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
             <figcaption>Open source community</figcaption>
           </figure>
-          <figure class="gallery-item" data-category="founder">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/founder-profile.png" data-caption="Mohammad Maizied Hasan Majumder · Founder & Principal Engineer @ Lorapok Labs" aria-label="Founder portrait — enlarge">
-              <img src="assets/marketing/founder-profile.png" alt="Mohammad Maizied Hasan Majumder · Founder" loading="lazy" decoding="async" />
-              <span class="zoom-hint">Click to enlarge</span>
-            </button>
-            <figcaption>Founder & Engineering</figcaption>
-          </figure>
           <figure class="gallery-item wide" data-category="oss">
-            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/og-social-card.png" data-caption="Social share card" aria-label="Social share card — enlarge">
-              <img src="assets/marketing/og-social-card.png" alt="Social card" loading="lazy" decoding="async" />
+            <button type="button" class="gallery-btn lightbox-trigger" data-lightbox-group="gallery" data-src="assets/marketing/github-social-preview.png" data-caption="GitHub social preview" aria-label="GitHub social preview — enlarge">
+              <img src="assets/marketing/github-social-preview.png" alt="GitHub social preview" loading="lazy" decoding="async" />
               <span class="zoom-hint">Click to enlarge</span>
             </button>
-            <figcaption>Social share card</figcaption>
+            <figcaption>GitHub social preview</figcaption>
           </figure>
         </div>
       </div>
@@ -608,41 +567,7 @@
         <p class="eyebrow">Live marketplace links</p>
         <h2>Available on Open VSX, VS Code, Firefox &amp; Chrome zip</h2>
       </div>
-      <div class="kpi-strip" id="kpi-strip" aria-label="Downloads and visits">
-        <div class="kpi-item">
-          <span class="kpi-label">Downloads (canonical)</span>
-          <strong class="kpi-value" data-downloads-total>—</strong>
-        </div>
-        <div class="kpi-item kpi-item-accent">
-          <span class="kpi-label">Open VSX combined</span>
-          <strong class="kpi-value" data-ovsx-combined>—</strong>
-          <span class="kpi-sub">Canonical <span data-ovsx-canonical>—</span> + duplicate <span data-ovsx-duplicate>—</span></span>
-        </div>
-        <div class="kpi-item">
-          <span class="kpi-label">Website visits</span>
-          <strong class="kpi-value" data-visits-total>—</strong>
-        </div>
-        <div class="kpi-item">
-          <span class="kpi-label">Engagement</span>
-          <strong class="kpi-value" data-engagement-total>—</strong>
-        </div>
-      </div>
-      <div class="download-breakdown" id="download-breakdown" aria-label="Open VSX download breakdown" hidden>
-        <div class="download-breakdown-head">
-          <h3>Open VSX download split</h3>
-          <p>Canonical listing (<code>lorapok-labs</code>) plus legacy duplicate namespace (<code>LorapokLabs</code>).</p>
-        </div>
-        <div class="download-bar" role="img" aria-label="Open VSX canonical vs duplicate downloads">
-          <span class="download-bar-canonical" data-ovsx-bar-canonical style="width:0%"></span>
-          <span class="download-bar-duplicate" data-ovsx-bar-duplicate style="width:0%"></span>
-        </div>
-        <div class="download-breakdown-legend">
-          <span><i class="swatch canonical"></i> Canonical <strong data-ovsx-canonical-legend>—</strong></span>
-          <span><i class="swatch duplicate"></i> Duplicate <strong data-ovsx-duplicate-legend>—</strong></span>
-          <span class="download-breakdown-total">Combined <strong data-ovsx-combined-legend>—</strong></span>
-        </div>
-        <a class="btn ghost small" data-href-ovsx-duplicate href="#" target="_blank" rel="noopener">View duplicate listing (deprecated) →</a>
-      </div>
+      <p class="marketplace-stats-note">Live download and visit meters are in the hero section above — synced from marketplace APIs.</p>
       <div class="marketplace-grid">
         <article class="install-card">
           <h3>🟢 Open VSX Registry</h3>
@@ -782,6 +707,7 @@
     </figure>
   </div>
 
+  <script src="stats-dashboard.js" defer></script>
   <script src="analytics.js" defer></script>
   <script src="site.js" defer></script>
 </body>

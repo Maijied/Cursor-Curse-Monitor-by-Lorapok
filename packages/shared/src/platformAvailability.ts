@@ -14,6 +14,9 @@ export interface PlatformLink {
 
 export const PRODUCT_HOMEPAGE = "https://cursor.lorapok.tech/";
 
+export const AMO_PUBLIC_SLUG = "cursor-curse-monitor";
+export const AMO_PUBLIC_URL = `https://addons.mozilla.org/en-US/firefox/addon/${AMO_PUBLIC_SLUG}/`;
+
 export const PLATFORM_LINKS = {
   openVsx: {
     id: "openVsx",
@@ -31,7 +34,7 @@ export const PLATFORM_LINKS = {
     id: "firefox",
     label: "Firefox Add-ons",
     shortLabel: "Firefox",
-    url: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+    url: AMO_PUBLIC_URL,
   },
   chrome: {
     id: "chrome",
@@ -85,10 +88,10 @@ export function formatAlsoAvailableOn(surface: ProductSurface): string {
   return `This app is also available on ${labels.join(", ")}, and ${last}.`;
 }
 
-/** HTML paragraph for AMO / rich marketplace descriptions. */
-export function formatAlsoAvailableHtml(surface: ProductSurface): string {
+/** Markdown paragraph for AMO listing (Extension Workshop markdown). */
+export function formatAlsoAvailableMarkdown(surface: ProductSurface): string {
   const links = alsoAvailablePlatforms(surface)
-    .map((p) => `<a href="${p.url}">${p.label}</a>`)
+    .map((p) => `[${p.label}](${p.url})`)
     .join(", ");
-  return `<p><strong>Also available on:</strong> ${links}.</p>`;
+  return `**Also available on:** ${links}.`;
 }

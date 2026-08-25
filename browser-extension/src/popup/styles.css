@@ -308,6 +308,69 @@ body {
   margin: 0;
 }
 
+.whats-new-card {
+  border: 1px solid rgba(124, 92, 255, 0.35);
+  background: linear-gradient(160deg, rgba(17, 24, 39, 0.98), rgba(12, 16, 24, 0.95));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.whats-new-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.whats-new-eyebrow {
+  margin: 0 0 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.whats-new-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.whats-new-body {
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c9d4e8;
+}
+
+.whats-new-body p,
+.whats-new-subhead {
+  margin: 0 0 8px;
+}
+
+.whats-new-subhead {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.whats-new-list {
+  margin: 0 0 10px 16px;
+  padding: 0;
+}
+
+.whats-new-list li {
+  margin-bottom: 4px;
+}
+
+.whats-new-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .ext-footer a {
   color: var(--accent-2);
   text-decoration: none;

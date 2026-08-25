@@ -23,7 +23,7 @@ code --install-extension LorapokLabs.cursor-curse-monitor-by-lorapok
 
 ### Firefox (recommended)
 
-Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/).
+Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/).
 
 ### Chrome (manual)
 

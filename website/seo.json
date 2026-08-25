@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T09:42:59.547Z",
+  "generatedAt": "2026-08-25T10:14:51.965Z",
   "source": "website/seo.yml",
   "siteBase": "https://cursor.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
@@ -106,7 +106,7 @@
           "priceCurrency": "USD"
         },
         "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
-        "downloadUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/",
+        "downloadUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
         "publisher": {
           "@type": "Organization",
           "name": "Lorapok Labs",

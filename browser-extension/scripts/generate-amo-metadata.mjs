@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveExtensionVersion } from "./lib-version.mjs";
+import { extractReleaseNotes } from "./lib-changelog.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = join(root, "..");
@@ -16,21 +17,6 @@ const base = JSON.parse(
 
 const versionArg = process.argv.find((a) => a.startsWith("--version="));
 const version = versionArg?.split("=")[1] || resolveExtensionVersion(root);
-
-function extractReleaseNotes(changelog, ver) {
-  const heading = `## [${ver}]`;
-  const alt = `## ${ver}`;
-  const idx = changelog.indexOf(heading) >= 0
-    ? changelog.indexOf(heading)
-    : changelog.indexOf(alt);
-  if (idx < 0) {
-    return `Version ${ver} — browser extension release.`;
-  }
-  const rest = changelog.slice(idx);
-  const next = rest.search(/\n## /);
-  const section = next > 0 ? rest.slice(0, next) : rest;
-  return section.replace(/^##[^\n]*\n?/, "").trim() || `Version ${ver}`;
-}
 
 const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8");
 const privacyUrl = "https://cursor.lorapok.tech/privacy.html";

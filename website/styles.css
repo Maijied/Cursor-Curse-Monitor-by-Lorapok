@@ -1455,6 +1455,16 @@ h1 {
   padding: 8px 14px;
   font-size: 0.82rem;
 }
+.marketplace-stats-note {
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(77, 159, 255, 0.18);
+  background: rgba(77, 159, 255, 0.06);
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
 
 .sr-only {
   position: absolute;

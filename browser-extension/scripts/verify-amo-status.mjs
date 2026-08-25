@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const slug = process.argv.find((a) => a.startsWith("--slug="))?.split("=")[1]
-  || "cursor-curse-monitor-by-lorapok";
+  || "cursor-curse-monitor";
 const issuer = process.env.AMO_JWT_ISSUER;
 const secret = process.env.AMO_JWT_SECRET;
 

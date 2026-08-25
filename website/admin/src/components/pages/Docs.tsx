@@ -9,7 +9,7 @@ const QUICK_LINKS = [
   { label: "Firebase Console", href: "https://console.firebase.google.com/project/cursor-curse-by-lorapok" },
   { label: "GitHub Actions", href: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions" },
   { label: "Open VSX", href: "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" },
-  { label: "Firefox AMO", href: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/" },
+  { label: "Firefox AMO", href: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/" },
   { label: "VS Code Marketplace", href: "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" },
 ];
 
