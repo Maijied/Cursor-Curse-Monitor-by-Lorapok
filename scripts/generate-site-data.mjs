@@ -70,9 +70,10 @@ function computeSyncStatus(canonicalVersion, duplicateVersion, targetVersion) {
   const target = normalizeVersion(targetVersion);
 
   if (!canonical) return "missing";
-  if (duplicate && compareSemver(duplicate, canonical) > 0) return "duplicate-listing";
   if (compareSemver(canonical, target) < 0) return "drift";
   if (compareSemver(canonical, target) > 0) return "ahead";
+  if (duplicate && compareSemver(duplicate, target) < 0) return "drift";
+  if (duplicate && compareSemver(duplicate, canonical) !== 0) return "dual-listing";
   return "synced";
 }
 
@@ -558,5 +559,7 @@ console.log(`  VS Code:          ${vscode?.version ?? "n/a"}`);
 console.log(`  GitHub:           ${github?.tag ?? "n/a"}`);
 
 if (syncStatus !== "synced") {
-  console.warn(`::warning::Marketplace sync status is "${syncStatus}" — run scripts/publish-ovsx.mjs to fix Open VSX canonical listing`);
+  console.warn(
+    `::warning::Marketplace sync status is "${syncStatus}" — run Sync Open VSX workflow (publishes both lorapok-labs and LorapokLabs listings)`
+  );
 }
