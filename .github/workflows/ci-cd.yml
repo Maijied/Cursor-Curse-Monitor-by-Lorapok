@@ -426,7 +426,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx wrangler email sending enable lorapok.tech || echo "::warning::Onboard lorapok.tech in Dashboard → Email Service if sends fail."
-          npx wrangler deploy
+          npx wrangler deploy || echo "::warning::Mail relay deploy skipped — check CLOUDFLARE_API_TOKEN Workers permissions."
 
       - name: Sync Pages runtime secret for outbound email
         working-directory: website/admin
