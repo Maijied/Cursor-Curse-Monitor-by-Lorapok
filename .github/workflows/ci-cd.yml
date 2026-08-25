@@ -290,10 +290,20 @@ jobs:
   admin-deploy:
     name: Deploy Admin Panel
     runs-on: ubuntu-latest
-    needs: admin-ci
+    needs: [admin-ci, release-prep, deploy]
     if: >-
-      github.event_name == 'workflow_dispatch'
+      always()
+      && needs.admin-ci.result == 'success'
+      && github.event_name == 'workflow_dispatch'
       && inputs.deploy_admin == true
+      && (
+        needs.release-prep.result == 'success' ||
+        needs.release-prep.result == 'skipped'
+      )
+      && (
+        needs.deploy.result == 'success' ||
+        needs.deploy.result == 'skipped'
+      )
     environment:
       name: admin-production
       url: https://cursor-dev.lorapok.tech
@@ -447,10 +457,15 @@ jobs:
   release-prep:
     name: Prepare & Tag Release
     runs-on: ubuntu-latest
+    needs: [ci, browser-extension-ci, admin-ci]
     permissions:
       contents: write
     if: >-
-      github.event_name == 'workflow_dispatch'
+      always()
+      && needs.ci.result == 'success'
+      && needs.browser-extension-ci.result == 'success'
+      && needs.admin-ci.result == 'success'
+      && github.event_name == 'workflow_dispatch'
       && (
         inputs.action_type == 'full-release - Bump version & publish all channels' ||
         inputs.action_type == 'rollback - Restore previous tag as a new version'
@@ -519,7 +534,12 @@ jobs:
                 exit 1
               fi
               NEW_VERSION="$CUSTOM_VERSION"
-              npm version --no-git-tag-version "$NEW_VERSION"
+              CURRENT=$(node -p "require('./package.json').version.split('-')[0]")
+              if [ "$NEW_VERSION" != "$CURRENT" ]; then
+                npm version --no-git-tag-version "$NEW_VERSION"
+              else
+                echo "Version already $NEW_VERSION — re-tagging without package.json bump"
+              fi
             elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
               node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
               CURRENT=$(node -p "require('./package.json').version")
@@ -535,11 +555,19 @@ jobs:
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add package.json package-lock.json
-            git commit -m "chore: release v$NEW_VERSION"
-            git tag "$TAG"
-            git push origin main
-            git push origin "$TAG"
+
+            if ! git diff --quiet package.json package-lock.json 2>/dev/null; then
+              git add package.json package-lock.json
+              git commit -m "chore: release v$NEW_VERSION"
+              git push origin main
+            fi
+
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "Tag $TAG already exists — skipping tag creation"
+            else
+              git tag "$TAG"
+              git push origin "$TAG"
+            fi
           fi
 
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
@@ -554,12 +582,22 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: [release-prep]
+    needs: [ci, browser-extension-ci, admin-ci, release-prep]
     if: >-
-      always() && github.event_name == 'workflow_dispatch' && (
+      always()
+      && needs.ci.result == 'success'
+      && needs.browser-extension-ci.result == 'success'
+      && needs.admin-ci.result == 'success'
+      && github.event_name == 'workflow_dispatch'
+      && (
         (needs.release-prep.result == 'success' && needs.release-prep.outputs.should_deploy == 'true') ||
-        inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces' ||
-        inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'
+        (
+          needs.release-prep.result == 'skipped'
+          && (
+            inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces' ||
+            inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'
+          )
+        )
       )
     steps:
       - name: Checkout target ref
@@ -735,10 +773,22 @@ jobs:
   # ───────────────────────────────────────────────────────────────────────────
   website:
     name: Deploy Marketing Website
-    needs: [ci]
+    needs: [ci, browser-extension-ci, admin-ci, release-prep, deploy]
     if: >-
-      github.event_name == 'workflow_dispatch' &&
-      inputs.deploy_website == true
+      always()
+      && needs.ci.result == 'success'
+      && needs.browser-extension-ci.result == 'success'
+      && needs.admin-ci.result == 'success'
+      && github.event_name == 'workflow_dispatch'
+      && inputs.deploy_website == true
+      && (
+        needs.release-prep.result == 'success' ||
+        needs.release-prep.result == 'skipped'
+      )
+      && (
+        needs.deploy.result == 'success' ||
+        needs.deploy.result == 'skipped'
+      )
     runs-on: ubuntu-latest
     environment:
       name: github-pages
