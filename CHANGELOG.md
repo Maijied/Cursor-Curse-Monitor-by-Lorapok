@@ -6,10 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+## [1.0.3] - 2026-08-25
+
 ### Added
 
 - **Animated live stats hero** on cursor.lorapok.tech — downloads, visits, engagement, and Open VSX split meters (no duplicate marketing screenshots)
 - **Browser extension What's New card** — professional changelog popup on each version bump
+- **Dynamic notice templates** — bug fix, feature, security, maintenance, and incident presets in Mission Control
+- **Mailbox compose templates** — invite, support response, warning, critical, and release-note presets
 
 ### Changed
 
@@ -26,6 +30,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sync-amo-listing.mjs` — correct slug, icon upload, homepage/support sync
 - React 18 for browser extension build (reduces AMO `innerHTML` linter noise vs React 19)
 - **Mission Control mailbox** — `ccm-mail-relay` Worker with `send_email` binding (Pages service binding); fixes 401 from REST-only mail transport
+- **Notice catalog upsert** — built-in notices merge into KV without "Notice not found" on enable
 
 ## [1.0.1] - 2026-08-25
 

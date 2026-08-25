@@ -62,11 +62,15 @@ const siteData = readSiteData();
 const version = siteData?.version ?? pkg.version;
 const generatedAt = new Date().toISOString();
 
+const firefoxPublished = Boolean(siteData?.browserExtension?.firefox?.published);
 const vars = {
   displayName: pkg.displayName ?? pkg.name,
   version: siteData?.version ?? pkg.version,
   vsixUrl: siteData?.github?.vsixUrl ?? `${SITE_BASE}/releases/latest`,
   packageVersion: pkg.version,
+  firefoxDownloadUrl: firefoxPublished
+    ? (siteData?.browserExtension?.firefox?.url ?? siteData?.productContext?.firefoxUrl)
+    : (siteData?.github?.releaseUrl ?? `${SITE_BASE}/`),
 };
 
 /**
@@ -165,7 +169,15 @@ function buildJsonLd() {
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     };
     if (item.featureList) node.featureList = item.featureList;
-    if (item.downloadUrl) node.downloadUrl = interpolate(item.downloadUrl, vars);
+    if (item.downloadUrl) {
+      const resolved = interpolate(item.downloadUrl, vars);
+      if (item.id === "browser_extension" && !firefoxPublished) {
+        // AMO listing not public yet — point structured data at GitHub Releases instead.
+        node.downloadUrl = siteData?.github?.releaseUrl ?? resolved;
+      } else {
+        node.downloadUrl = resolved;
+      }
+    }
     if (item.id === "ide_extension") {
       node.softwareVersion = version;
       node.author = {

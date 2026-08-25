@@ -23,7 +23,7 @@ code --install-extension LorapokLabs.cursor-curse-monitor-by-lorapok
 
 ### Firefox (recommended)
 
-Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/).
+Firefox AMO listing is pending review. Until it is live, download the browser extension zip from [GitHub Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest) and load it via `about:debugging` → This Firefox → Load Temporary Add-on.
 
 ### Chrome (manual)
 

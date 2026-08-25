@@ -7,15 +7,13 @@
   const $$ = (sel) => [...document.querySelectorAll(sel)];
   const NOTICE_URL = "https://cursor-dev.lorapok.tech/api/notice";
   const FALLBACK_NOTICE = {
-    enabled: true,
-    id: "rollback-recovery-fallback",
-    title: "Rollback and Recovery Notice",
-    shortMessage:
-      "We’re extremely sorry — an immediate rollback is in progress to restore stability. We’ll update you as soon as recovery is confirmed.",
-    message:
-      "We’re extremely sorry for the disruption. We have initiated an immediate rollback to restore the last stable version while we investigate the issue.",
-    severity: "warning",
-    dismissible: false,
+    enabled: false,
+    id: "site-data-fallback",
+    title: "Cursor Curse Monitor by Lorapok",
+    shortMessage: "Visit cursor.lorapok.tech for the latest release and install links.",
+    message: "Check cursor.lorapok.tech for release notes, support, and marketplace install links.",
+    severity: "info",
+    dismissible: true,
     feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
   };
@@ -94,8 +92,18 @@
     setHref("[data-href-release]", data.github.releaseUrl);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
-    setHref("[data-href-firefox]", data.browserExtension?.firefox?.url ?? "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/");
-    setText("[data-firefox-version]", data.browserExtension?.version ?? data.version ?? "—");
+    const firefoxPublished = Boolean(data.browserExtension?.firefox?.published);
+    const firefoxHref = firefoxPublished
+      ? (data.browserExtension?.firefox?.url ?? data.productContext?.firefoxUrl)
+      : (data.github?.releaseUrl ?? "#");
+    setHref("[data-href-firefox]", firefoxHref);
+    setText("[data-firefox-version]", data.browserExtension?.firefox?.version ?? data.browserExtension?.version ?? data.version ?? "—");
+    $$("[data-href-firefox]").forEach((el) => {
+      if (!firefoxPublished) {
+        el.setAttribute("aria-disabled", "true");
+        el.title = "Firefox AMO listing pending — use GitHub Release for now";
+      }
+    });
     setHref(
       "[data-href-chrome-zip]",
       data.browserExtension?.chrome?.zipUrl ?? data.github?.chromeZipUrl ?? data.github?.releaseUrl ?? "#"
@@ -207,17 +215,19 @@
     const dismiss = $("#dev-notice-dismiss");
     if (!banner || !content) return;
 
-    let notice = FALLBACK_NOTICE;
+    let notice = data?.notice?.enabled ? { ...FALLBACK_NOTICE, ...data.notice } : null;
     try {
       const response = await fetch(NOTICE_URL, { cache: "no-store" });
       if (response.ok) {
         const live = await response.json();
         if (live?.enabled && live.title && (live.shortMessage || live.message)) notice = live;
-        else if (!live?.enabled) return;
+        else notice = null;
       }
     } catch {
-      // Keep the recovery message visible when the admin API is unavailable.
+      // Keep site-data notice when admin API is unavailable.
     }
+
+    if (!notice?.enabled) return;
 
     const dismissedKey = `ccm-notice-dismissed:${notice.id || notice.title}`;
     if (notice.dismissible && window.localStorage.getItem(dismissedKey) === "1") return;

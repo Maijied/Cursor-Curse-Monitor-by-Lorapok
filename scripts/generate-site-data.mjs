@@ -7,6 +7,9 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { computeDownloadTotals } from "./download-totals.mjs";
+import { buildProductContext } from "./lib-product-context.mjs";
+import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
+import { buildMailTemplates } from "./mail-templates.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -421,6 +424,11 @@ const downloadBreakdown = {
   latestReleaseVsix: github?.vsixDownloadCount ?? 0,
 };
 
+const productContext = buildProductContext(pkg);
+const noticeTemplates = buildNoticeTemplates(productContext);
+const mailTemplates = buildMailTemplates(productContext);
+const defaultNotice = buildGeneratedCatalogNotice(productContext);
+
 const siteData = {
   generatedAt: new Date().toISOString(),
   displayName: pkg.displayName,
@@ -438,6 +446,22 @@ const siteData = {
   homepage: pkg.homepage,
   repository: `https://github.com/${REPO}`,
   author: pkg.author,
+  company: pkg.company ?? null,
+  productContext,
+  notice: defaultNotice,
+  noticeTemplates: noticeTemplates.map(({ templateId, label, category, severity, type }) => ({
+    templateId,
+    label,
+    category,
+    severity,
+    type,
+  })),
+  mailTemplates: mailTemplates.map(({ id, label, category, subject }) => ({
+    id,
+    label,
+    category,
+    subject,
+  })),
   downloads: {
     total: downloadTotals.displayTotal,
     displayTotal: downloadTotals.displayTotal,
@@ -479,7 +503,7 @@ const siteData = {
     deprecated: true,
   },
   vscode: vscode ?? {
-    version: null,
+    version: version,
     url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_NS}.${NAME}`,
     downloadCount: 0,
     installCount: 0,

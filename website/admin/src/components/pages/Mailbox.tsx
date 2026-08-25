@@ -13,10 +13,12 @@ import { formatMailboxAddress } from "../mailbox/mailbox-format";
 import { scanAdminText, type AdminSecurityFinding } from "../../lib/scanSecrets";
 import {
   fetchMailbox,
+  fetchMailTemplates,
   markMailboxRead,
   sendMailboxMessage,
   sendMailboxTest,
   type MailboxMessage,
+  type MailTemplate,
 } from "../../lib/api";
 import { auth } from "../../lib/firebase";
 
@@ -69,6 +71,8 @@ export default function Mailbox() {
   const [selected, setSelected] = useState<MailboxMessage | null>(null);
   const [previewExpanded, setPreviewExpanded] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [mailTemplates, setMailTemplates] = useState<MailTemplate[]>([]);
+  const [selectedMailTemplate, setSelectedMailTemplate] = useState("");
   const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
   const isWide = useMediaQuery("(min-width: 1280px)");
 
@@ -91,6 +95,12 @@ export default function Mailbox() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    fetchMailTemplates()
+      .then((data) => setMailTemplates(data.templates ?? []))
+      .catch(() => setMailTemplates([]));
+  }, []);
 
   const inputClass =
     "w-full min-w-0 px-3 py-2.5 text-sm bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-shadow";
@@ -412,6 +422,29 @@ export default function Mailbox() {
         }
       >
         <form onSubmit={handleSend} className="space-y-4 max-w-3xl">
+          <label className="block text-sm">
+            <span className="text-[var(--color-muted)]">Template</span>
+            <select
+              value={selectedMailTemplate}
+              onChange={(e) => {
+                const id = e.target.value;
+                setSelectedMailTemplate(id);
+                const template = mailTemplates.find((t) => t.id === id);
+                if (template) {
+                  setSubject(template.subject);
+                  setBody(template.text);
+                }
+              }}
+              className={`${inputClass} mt-1`}
+            >
+              <option value="">Choose a template…</option>
+              {mailTemplates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="block text-sm">
             <span className="text-[var(--color-muted)]">Recipient</span>
             <input type="email" value={to} onChange={(e) => setTo(e.target.value)} required placeholder="name@example.com" className={`${inputClass} mt-1`} />

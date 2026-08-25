@@ -3,6 +3,7 @@ import {
   DEFAULT_NOTICE,
   activeFromCatalog,
   ensureCatalogSeeded,
+  getNoticeTemplates,
   normalizeNotice,
   publicNoticeShape,
   setEnabled,
@@ -13,6 +14,11 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+
+  const url = new URL(request.url);
+  if (url.searchParams.get("templates") === "1") {
+    return jsonResponse({ templates: getNoticeTemplates() });
+  }
 
   try {
     const catalog = await ensureCatalogSeeded(env);

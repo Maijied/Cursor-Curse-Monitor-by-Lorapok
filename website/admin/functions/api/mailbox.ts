@@ -6,6 +6,7 @@ import {
   patchMailboxMessage,
 } from "./_shared/mailbox.js";
 import { buildComposeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
+import { getMailTemplates } from "./_shared/mail-templates.js";
 
 export async function onRequestGet(context) {
   const startedAt = Date.now();
@@ -14,6 +15,11 @@ export async function onRequestGet(context) {
   if (auth.error) return auth.error;
 
   const url = new URL(request.url);
+  if (url.searchParams.get("templates") === "1") {
+    const response = jsonResponse({ templates: getMailTemplates() });
+    return logAuthenticatedRequest(context, auth, response, startedAt);
+  }
+
   const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
   const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "25", 10) || 25));
 
