@@ -3,7 +3,7 @@ import type { DashboardSnapshot } from "@lorapok/cursor-monitor-shared";
 import { AnimatedGauge } from "../components/AnimatedGauge";
 import { SpendChart } from "../components/SpendChart";
 import { Footer } from "../components/Footer";
-import { SubscribePromo } from "../components/SubscribePromo";
+import { SubscribeModal } from "../components/SubscribeModal";
 import { WhatsNewCard } from "../components/WhatsNewCard";
 import { fetchSnapshot, onSnapshot, requestRefresh } from "../lib/messaging";
 import { getSettings, updateSettings } from "../lib/storage";
@@ -64,6 +64,7 @@ export function App() {
 
   const b = snapshot?.budget;
   const connected = Boolean(snapshot?.usage && !snapshot?.error);
+  const blocked = !connected;
   const spendPercent = b
     ? b.usdBudgetActive
       ? b.budgetPercentUsed
@@ -76,7 +77,32 @@ export function App() {
       : "—";
 
   return (
-    <div className="popup-root">
+    <div className={`popup-root${blocked ? " cursor-missing" : ""}`}>
+      {blocked && (
+        <div className="cursor-missing-overlay" role="alertdialog" aria-labelledby="cursor-missing-title">
+          <div className="cursor-missing-card">
+            <p className="cursor-missing-eyebrow">No Cursor AI found</p>
+            <h2 id="cursor-missing-title">Connect to Cursor first</h2>
+            <p className="muted">
+              Open <strong>cursor.com/dashboard</strong> while signed in, or paste your access token in Options.
+              Works with every major VS Code–based AI IDE when you install the desktop extension.
+            </p>
+            <p className="muted lorapok-cta">
+              Explore more Lorapok Labs tools at{" "}
+              <a href="https://lorapok.tech" target="_blank" rel="noopener noreferrer">lorapok.tech</a>
+            </p>
+            <div className="connect-actions">
+              <button type="button" className="btn primary" onClick={openCursor}>
+                Open cursor.com/dashboard
+              </button>
+              <button type="button" className="btn ghost" onClick={openOptions}>
+                Paste token manually
+              </button>
+            </div>
+            {snapshot?.error && <p className="error-text">{snapshot.error}</p>}
+          </div>
+        </div>
+      )}
       <header className="popup-header">
         <div>
           <p className="popup-eyebrow">Lorapok Labs</p>
@@ -93,24 +119,6 @@ export function App() {
       </header>
 
       {showWhatsNew && <WhatsNewCard onDismiss={() => void dismissWhatsNew()} />}
-
-      {!connected && (
-        <section className="card connect-card">
-          <p className="connect-title">Connect to Cursor</p>
-          <p className="muted">
-            Open the Cursor dashboard while signed in, or paste your access token in Options.
-          </p>
-          <div className="connect-actions">
-            <button type="button" className="btn primary" onClick={openCursor}>
-              Open cursor.com/dashboard
-            </button>
-            <button type="button" className="btn ghost" onClick={openOptions}>
-              Paste token manually
-            </button>
-          </div>
-          {snapshot?.error && <p className="error-text">{snapshot.error}</p>}
-        </section>
-      )}
 
       {connected && b && (
         <>
@@ -219,7 +227,7 @@ export function App() {
         </>
       )}
 
-      <SubscribePromo />
+      <SubscribeModal />
       <Footer />
     </div>
   );

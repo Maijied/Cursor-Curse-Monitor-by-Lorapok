@@ -4,6 +4,7 @@ import { auth, db } from "./firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { isMasterAdmin, MASTER_ADMIN } from "./admin-config";
+import { LarvaeLoaderPanel } from "../components/ui/LorapokLarvaeLoader";
 
 export { MASTER_ADMIN };
 
@@ -43,8 +44,8 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen mesh-bg flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)]" />
+      <div className="min-h-screen mesh-bg flex items-center justify-center p-8">
+        <LarvaeLoaderPanel label="Verifying access…" className="min-h-0 border-0 bg-transparent" />
       </div>
     );
   }

@@ -84,15 +84,26 @@ export default function Overview() {
           delayClass="stagger-2"
         />
         <KpiCard
-          label="Opt-in installs (24h)"
-          value={formatCount(usageStats?.optInUniques?.unique24h ?? 0)}
+          label="Active users (now)"
+          value={formatCount(usageStats?.optInUniques?.activeNow ?? 0)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              {usageLive ? "Live heartbeat" : "Polling"} · {formatCount(usageStats?.optInUniques?.uniqueAll ?? 0)} all-time
+              {usageLive ? "Live · last 5 min" : "Polling"} · {formatCount(usageStats?.optInUniques?.unique24h ?? 0)} in 24h
             </span>
           }
           icon={<Users className="text-[var(--color-accent)]" size={24} />}
           delayClass="stagger-3"
+        />
+        <KpiCard
+          label="Opt-in installs (all-time)"
+          value={formatCount(usageStats?.optInUniques?.uniqueAll ?? 0)}
+          sub={
+            <span className="text-xs text-[var(--color-muted)]">
+              {formatCount(usageStats?.optInUniques?.unique1h ?? 0)} in the last hour
+            </span>
+          }
+          icon={<Activity className="text-[var(--color-accent-2)]" size={24} />}
+          delayClass="stagger-4"
         />
         <KpiCard
           label="Open VSX (canonical)"
@@ -103,7 +114,7 @@ export default function Overview() {
             ) : undefined
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
-          delayClass="stagger-4"
+          delayClass="stagger-5"
         />
       </div>
 

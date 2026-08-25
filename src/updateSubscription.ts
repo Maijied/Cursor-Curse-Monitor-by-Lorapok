@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
 import {
   getSubscribePromptCopy,
-  randomSnoozeUntilMs,
+  snoozeUntilNextDayMs,
   shouldShowSubscribePrompt,
   subscribePromptVariant,
+  SUBSCRIBE_PROMPT_DELAY_MS,
   type SubscribePromptCopy,
 } from "@lorapok/cursor-monitor-shared";
 import { getOrCreateInstallId } from "./telemetry";
@@ -13,6 +14,7 @@ import { readCachedAccountEmail } from "./cursorAuth";
 const DEFAULT_SUBSCRIBE_URL = "https://cursor-dev.lorapok.tech/api/subscribe";
 const SUBSCRIBED_EMAIL_KEY = "productUpdatesSubscribedEmail";
 const SUBSCRIBE_SNOOZE_UNTIL_KEY = "productUpdatesSubscribeSnoozeUntil";
+const SUBSCRIBE_DECLINED_KEY = "productUpdatesSubscribeDeclined";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,10 +32,18 @@ export async function getSubscribeSnoozeUntil(context: vscode.ExtensionContext):
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+export async function getSubscribeDeclined(context: vscode.ExtensionContext): Promise<boolean> {
+  return Boolean(context.globalState.get<boolean>(SUBSCRIBE_DECLINED_KEY));
+}
+
 export async function snoozeSubscribePrompt(context: vscode.ExtensionContext): Promise<number> {
-  const until = randomSnoozeUntilMs();
+  const until = snoozeUntilNextDayMs();
   await context.globalState.update(SUBSCRIBE_SNOOZE_UNTIL_KEY, until);
   return until;
+}
+
+export async function declineSubscribePrompt(context: vscode.ExtensionContext): Promise<void> {
+  await context.globalState.update(SUBSCRIBE_DECLINED_KEY, true);
 }
 
 export async function getSubscribePromptViewState(context: vscode.ExtensionContext): Promise<{
@@ -43,7 +53,8 @@ export async function getSubscribePromptViewState(context: vscode.ExtensionConte
 }> {
   const subscribedEmail = await getSubscribedEmail(context);
   const snoozeUntilMs = await getSubscribeSnoozeUntil(context);
-  const showPrompt = shouldShowSubscribePrompt({ subscribedEmail, snoozeUntilMs });
+  const declined = await getSubscribeDeclined(context);
+  const showPrompt = shouldShowSubscribePrompt({ subscribedEmail, snoozeUntilMs, declined });
   if (!showPrompt) {
     return { showPrompt: false, subscribedEmail, copy: null };
   }
@@ -91,6 +102,7 @@ export async function subscribeForProductUpdates(
     }
     await context.globalState.update(SUBSCRIBED_EMAIL_KEY, normalized);
     await context.globalState.update(SUBSCRIBE_SNOOZE_UNTIL_KEY, undefined);
+    await context.globalState.update(SUBSCRIBE_DECLINED_KEY, undefined);
     return { ok: true, message: data.message || "You're subscribed to release updates." };
   } catch {
     return { ok: false, message: "Network error — try again later." };

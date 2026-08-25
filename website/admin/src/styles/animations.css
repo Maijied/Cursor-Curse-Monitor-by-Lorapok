@@ -38,11 +38,61 @@
   animation: shimmer 1.5s infinite;
 }
 
+@keyframes larvae-wiggle {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  25% { transform: rotate(3deg) translateY(-2px); }
+  50% { transform: rotate(5deg) translateY(0); }
+  75% { transform: rotate(-2deg) translateY(-1px); }
+}
+
+@keyframes larvae-segment-pulse {
+  0%, 100% { opacity: 0.82; }
+  50% { opacity: 1; }
+}
+
+@keyframes larvae-eye-glow {
+  0%, 100% { opacity: 0.75; filter: drop-shadow(0 0 2px #39ff14); }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px #39ff14); }
+}
+
+@keyframes larvae-leg-kick {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+
+@keyframes larvae-trail {
+  0%, 100% { opacity: 0.15; transform: scaleX(0.85); }
+  50% { opacity: 0.35; transform: scaleX(1); }
+}
+
+.larvae-loader-root {
+  animation: larvae-wiggle 1.15s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+.larvae-segment { animation: larvae-segment-pulse 1.35s ease-in-out infinite; }
+.larvae-segment-2 { animation-delay: 0.15s; }
+.larvae-segment-3 { animation-delay: 0.3s; }
+
+.larvae-eye { animation: larvae-eye-glow 1.6s ease-in-out infinite; }
+.larvae-eye-right { animation-delay: 0.2s; }
+
+.larvae-leg-left { transform-origin: 38px 88px; animation: larvae-leg-kick 0.55s ease-in-out infinite; }
+.larvae-leg-right { transform-origin: 58px 88px; animation: larvae-leg-kick 0.55s ease-in-out infinite reverse; }
+
+.larvae-trail { animation: larvae-trail 1.15s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-mesh,
   .animate-pulse-neon,
   .animate-fade-slide-up,
-  .shimmer {
+  .shimmer,
+  .larvae-loader-root,
+  .larvae-segment,
+  .larvae-eye,
+  .larvae-leg-left,
+  .larvae-leg-right,
+  .larvae-trail {
     animation: none !important;
   }
 }

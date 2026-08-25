@@ -3,6 +3,7 @@ import { LogOut, X } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../routes";
 import OnlineStatus from "../ui/OnlineStatus";
+import ActiveUsersLive from "../ui/ActiveUsersLive";
 import InstallAppButton from "../ui/InstallAppButton";
 import BackToWebsiteButton from "../ui/BackToWebsiteButton";
 
@@ -56,8 +57,9 @@ export default function Sidebar({
           </button>
         </div>
 
-        <div className="hidden md:flex px-6 py-3 border-b border-[var(--color-border)]">
+        <div className="hidden md:flex flex-col gap-2 px-6 py-3 border-b border-[var(--color-border)]">
           <OnlineStatus />
+          <ActiveUsersLive />
         </div>
 
         <nav className="p-4 space-y-1 overflow-y-auto flex-1" aria-label="Main navigation">

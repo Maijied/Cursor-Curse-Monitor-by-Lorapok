@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-08-25T12:11:07.551Z",
+  "generatedAt": "2026-08-25T13:18:15.448Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
   "version": "1.0.3",
   "packageVersion": "1.0.3",
   "publishedReleaseVersion": "feat/website-final-polish",
   "releaseStatus": "candidate",
-  "syncStatus": "dual-listing",
+  "syncStatus": "release-candidate",
   "ovsxPublisher": "lorapok-labs",
   "vscePublisher": "LorapokLabs",
   "extensionName": "cursor-curse-monitor-by-lorapok",
@@ -57,7 +57,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-08-25T12:11:07.551Z"
+    "updatedAt": "2026-08-25T13:18:15.448Z"
   },
   "noticeTemplates": [
     {
@@ -167,24 +167,24 @@
     }
   ],
   "downloads": {
-    "total": 3256,
-    "displayTotal": 3256,
-    "canonicalTotal": 3256,
+    "total": 3336,
+    "displayTotal": 3336,
+    "canonicalTotal": 3336,
     "source": "canonical",
     "breakdown": {
-      "openVsxCanonical": 3253,
-      "openVsxDuplicate": 1194,
-      "openVsxDisplay": 3253,
+      "openVsxCanonical": 3333,
+      "openVsxDuplicate": 1302,
+      "openVsxDisplay": 3333,
       "vscodeMarketplace": 0,
       "githubAllAssets": 3,
       "githubVsix": 3,
       "latestReleaseVsix": 0
     },
-    "openVsxCombined": 4447,
+    "openVsxCombined": 4635,
     "note": "Public total uses canonical Open VSX unless canonical lags package version; duplicate namespace excluded from sum."
   },
   "visitors": {
-    "websiteVisits": 94,
+    "websiteVisits": 95,
     "packageClicks": {
       "ovsx": 7,
       "vscode": 1,
@@ -192,22 +192,13 @@
       "vsix": 0,
       "openvsxDuplicate": 0
     },
-    "totalEngagement": 103,
-    "updatedAt": "2026-08-25T12:04:58.746Z",
+    "totalEngagement": 104,
+    "updatedAt": "2026-08-25T12:45:46.963Z",
     "source": "firestore"
   },
   "community": {
-    "discussionsEnabled": true,
-    "discussions": [
-      {
-        "title": "Welcome to Cursor-Curse-Monitor-by-Lorapok Discussions!",
-        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions/8",
-        "category": "Announcements",
-        "createdAt": "2026-08-17T00:15:00Z",
-        "comments": 0,
-        "answered": false
-      }
-    ],
+    "discussionsEnabled": false,
+    "discussions": [],
     "topics": [],
     "settingsUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/settings#features",
     "repoIssuesUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
@@ -220,7 +211,7 @@
     "version": "1.0.3",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 3253,
+    "downloadCount": 3333,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -229,7 +220,7 @@
     "version": "1.0.3",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 1194,
+    "downloadCount": 1302,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
@@ -305,5 +296,150 @@
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
     "releaseTag": "./scripts/release.sh 1.0.3"
+  },
+  "supportedIdes": {
+    "headline": "Works with every major VS Code–based AI IDE",
+    "subline": "Install from Open VSX or the VS Code Marketplace — the same extension runs in Cursor, Windsurf, VSCodium, and every VS Code wrapper IDE listed below.",
+    "ides": [
+      {
+        "id": "cursor",
+        "name": "Cursor",
+        "tagline": "AI-native code editor (primary target)",
+        "marketplace": "both",
+        "marketplaceLabel": "Open VSX · VS Code MP",
+        "website": "https://cursor.com",
+        "icon": "cursor",
+        "featured": true
+      },
+      {
+        "id": "vscode",
+        "name": "Visual Studio Code",
+        "tagline": "Microsoft's official editor",
+        "marketplace": "vscode-marketplace",
+        "marketplaceLabel": "VS Code Marketplace",
+        "website": "https://code.visualstudio.com",
+        "icon": "vscode",
+        "featured": true
+      },
+      {
+        "id": "windsurf",
+        "name": "Windsurf",
+        "tagline": "Codeium's VS Code–based AI IDE",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://codeium.com/windsurf",
+        "icon": "windsurf",
+        "featured": true
+      },
+      {
+        "id": "vscodium",
+        "name": "VSCodium",
+        "tagline": "Open-source VS Code build",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://vscodium.com",
+        "icon": "vscodium",
+        "featured": true
+      },
+      {
+        "id": "void",
+        "name": "Void",
+        "tagline": "Open-source AI code editor",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://voideditor.com",
+        "icon": "void"
+      },
+      {
+        "id": "gitpod",
+        "name": "Gitpod / Ona",
+        "tagline": "Cloud & desktop dev environments",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://www.gitpod.io",
+        "icon": "gitpod"
+      },
+      {
+        "id": "positron",
+        "name": "Positron",
+        "tagline": "Posit's data-science IDE",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://posit.co/products/ide/positron",
+        "icon": "positron"
+      },
+      {
+        "id": "trae",
+        "name": "Trae",
+        "tagline": "ByteDance AI IDE (VS Code fork)",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://www.trae.ai",
+        "icon": "trae"
+      },
+      {
+        "id": "kiro",
+        "name": "Kiro",
+        "tagline": "AWS agentic IDE (VS Code based)",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://kiro.dev",
+        "icon": "kiro"
+      },
+      {
+        "id": "qoder",
+        "name": "Qoder",
+        "tagline": "Alibaba AI coding IDE",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://qoder.com",
+        "icon": "qoder"
+      },
+      {
+        "id": "pearai",
+        "name": "PearAI",
+        "tagline": "Open AI editor fork",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://trypear.ai",
+        "icon": "pearai"
+      },
+      {
+        "id": "code-server",
+        "name": "code-server",
+        "tagline": "VS Code in the browser / remote",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://github.com/coder/code-server",
+        "icon": "code-server"
+      },
+      {
+        "id": "theia",
+        "name": "Eclipse Theia",
+        "tagline": "Extensible cloud & desktop IDE",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://theia-ide.org",
+        "icon": "theia"
+      },
+      {
+        "id": "azure-data-studio",
+        "name": "Azure Data Studio",
+        "tagline": "Microsoft data platform IDE",
+        "marketplace": "vscode-marketplace",
+        "marketplaceLabel": "VS Code Marketplace",
+        "website": "https://azure.microsoft.com/products/data-studio",
+        "icon": "azure-data-studio"
+      },
+      {
+        "id": "coder",
+        "name": "Coder",
+        "tagline": "Self-hosted dev workspaces",
+        "marketplace": "open-vsx",
+        "marketplaceLabel": "Open VSX",
+        "website": "https://coder.com",
+        "icon": "coder"
+      }
+    ]
   }
 }

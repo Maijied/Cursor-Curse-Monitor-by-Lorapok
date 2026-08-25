@@ -145,6 +145,7 @@ export function syncStatusLabel(status: string): string {
     case "duplicate-listing":
       return "Dual Open VSX listings";
     case "ahead": return "Ahead";
+    case "release-candidate": return "Release candidate";
     case "missing": return "Missing";
     default: return status;
   }

@@ -13,6 +13,7 @@ export default function DriftAlert({ data }: { data: SiteData }) {
     "duplicate-listing":
       `Both Open VSX namespaces are active — canonical lorapok-labs (${data.ovsx.version ?? "—"}) and LorapokLabs (${data.ovsxDuplicate?.version ?? "—"}). Run Sync Open VSX to align versions.`,
     ahead: `Open VSX canonical (${data.ovsx.version}) is ahead of package.json (${data.packageVersion}). Bump package version or verify release.`,
+    "release-candidate": `Package ${data.packageVersion} is a release candidate — marketplaces may show the version but GitHub release is not published yet.`,
     missing: "Canonical Open VSX listing is missing. Run scripts/publish-ovsx.mjs.",
   };
 

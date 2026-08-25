@@ -11,6 +11,7 @@ export interface ExtensionSettings {
   productNotices: boolean;
   subscribedEmail: string | null;
   subscribeSnoozeUntil: number | null;
+  subscribeDeclined: boolean;
   installId: string;
   lastPingDay: string | null;
   lastSeenVersion: string | null;
@@ -26,6 +27,7 @@ const DEFAULTS: ExtensionSettings = {
   productNotices: true,
   subscribedEmail: null,
   subscribeSnoozeUntil: null,
+  subscribeDeclined: false,
   installId: "",
   lastPingDay: null,
   lastSeenVersion: null,

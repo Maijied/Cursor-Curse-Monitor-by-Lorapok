@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Card from "./Card";
 import Badge from "./Badge";
 import { auth } from "../../lib/firebase";
@@ -17,7 +18,7 @@ type ServiceRow = {
 
 function StatusIcon({ status }: { status: ServiceStatus }) {
   if (status === "checking") {
-    return <Loader2 size={16} className="animate-spin text-[var(--color-muted)]" aria-hidden="true" />;
+    return <LorapokLarvaeLoader size="xs" ariaLabel="Checking service" className="!gap-0" />;
   }
   if (status === "connected") {
     return <CheckCircle2 size={16} className="text-[var(--color-ok)]" aria-hidden="true" />;

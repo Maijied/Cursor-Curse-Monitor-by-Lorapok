@@ -12,6 +12,7 @@ import { NotificationProvider } from "./notificationProvider";
 import { maybeShowProductNotice, refreshProductNotice } from "./productNotices";
 import { maybeSendAnonymousHeartbeat } from "./telemetry";
 import { subscribeForProductUpdates, maybeShowSubscribePrompt, snoozeSubscribePrompt, getSubscribePromptViewState } from "./updateSubscription";
+import { SUBSCRIBE_PROMPT_DELAY_MS } from "@lorapok/cursor-monitor-shared";
 import { readCachedAccountEmail } from "./cursorAuth";
 import { SecurityMonitorService } from "./securityMonitor";
 
@@ -101,7 +102,7 @@ export function activate(context: vscode.ExtensionContext): void {
   } else {
     setTimeout(() => {
       void maybeShowSubscribePrompt(context);
-    }, 4000);
+    }, SUBSCRIBE_PROMPT_DELAY_MS);
   }
 
   const statusBar = vscode.window.createStatusBarItem(

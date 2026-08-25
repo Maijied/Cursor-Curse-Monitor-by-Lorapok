@@ -1,11 +1,16 @@
 <div align="center">
 
-  <img src="media/icon.png" alt="Cursor Curse Monitor by Lorapok" width="128" />
+  <img src="media/logo-animated.svg" alt="Cursor Curse Monitor by Lorapok — animated Lorapok Larvae mascot" width="128" height="128" />
 
   <h1>Cursor Curse Monitor by Lorapok</h1>
 
   <p>
     <strong>Live Cursor usage dashboard for limits, budget, billing cycles, and free-fallback model switching.</strong>
+  </p>
+
+  <p>
+    <strong>Supports every major VS Code wrapper AI IDE</strong> — install from Open VSX or the VS Code Marketplace and run in
+    <strong>Cursor, Visual Studio Code, Windsurf, VSCodium, Void, Gitpod, Positron, Trae, Kiro, Qoder, PearAI, code-server, Eclipse Theia, Azure Data Studio, Coder</strong>, and any other VS Code–compatible host.
   </p>
 
   <p>
@@ -16,8 +21,8 @@
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci-cd.yml?branch=main&label=CI%2FCD" alt="CI/CD" /></a>
     <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/open-vsx/v/lorapok-labs/cursor-curse-monitor-by-lorapok?label=Open%20VSX" alt="Open VSX" /></a>
     <a href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/visual-studio-marketplace/v/LorapokLabs.cursor-curse-monitor-by-lorapok?label=VS%20Code%20Marketplace" alt="VS Code Marketplace" /></a>
-    <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
-    <img src="https://img.shields.io/badge/platform-Cursor%20%7C%20VS%20Code-6C5CE7" alt="Platform" />
+    <img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPL-3.0 License" />
+    <img src="https://img.shields.io/badge/platform-All%20VS%20Code%20AI%20IDEs-6C5CE7" alt="All VS Code AI IDEs" />
   </p>
 
   <p>
@@ -33,7 +38,11 @@
 
 **Cursor Curse Monitor by Lorapok** helps developers track Cursor AI usage in real time — included limits, remaining quota, billing cycle reset, on-demand spend, and automatic fallback to **Composer 2.5 (Fast off)** when limits are exceeded (free slow-pool mode).
 
+**This extension supports all VS Code wrapper–based AI IDEs** where Open VSX or the VS Code Marketplace is available — not just Cursor. One install works across Cursor, Windsurf, VSCodium, Void, Gitpod/Ona, Positron, Trae, Kiro, Qoder, PearAI, code-server, Eclipse Theia, Azure Data Studio, Coder, and Visual Studio Code itself.
+
 > *"Know your limits before they know you."* — Lorapok Labs
+
+More Lorapok Labs software: [lorapok.tech](https://lorapok.tech)
 
 ## Features
 
@@ -238,9 +247,13 @@ Requires GitHub secrets:
 
 ## License
 
-MIT © [Mohammad Maizied Hasan Majumder](https://github.com/Maijied) / [Lorapok Labs](https://lorapok.tech)
+GPL-3.0 © [Mohammad Maizied Hasan Majumder](https://github.com/Maijied) / [Lorapok Labs](https://lorapok.tech)
 
-See [LICENSE](LICENSE) for details.
+See [LICENSE](LICENSE) for details. Community standards are in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). Please be respectful in issues, discussions, and contributions.
 
 ## Disclaimer
 

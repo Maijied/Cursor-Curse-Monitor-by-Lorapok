@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execSync } from "node:child_process";
 import { computeDownloadTotals } from "./download-totals.mjs";
 import { buildProductContext } from "./lib-product-context.mjs";
 import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
@@ -22,6 +23,16 @@ const VSCE_NS = "LorapokLabs";
 const NAME = pkg.name;
 const OVSX_EXT_ID = `${OVSX_NS}.${NAME}`;
 const VSCE_EXT_ID = `${VSCE_NS}.${NAME}`;
+
+const sharedDist = join(root, "packages", "shared", "dist", "supportedIdeWrappers.js");
+if (!existsSync(sharedDist)) {
+  execSync("npm run build -w @lorapok/cursor-monitor-shared", { cwd: root, stdio: "inherit" });
+}
+const {
+  SUPPORTED_IDE_WRAPPERS,
+  SUPPORTED_IDE_WRAPPERS_HEADLINE,
+  SUPPORTED_IDE_WRAPPERS_SUBLINE,
+} = await import(`file://${sharedDist}`);
 
 async function fetchJson(url, retries = 3) {
   const headers = { Accept: "application/json" };
@@ -396,7 +407,7 @@ const releaseStatus = publishedReleaseVersion === version ? "published" : "candi
 const vsixName = github?.vsixName ?? `${NAME}-${version}.vsix`;
 let syncStatus = computeSyncStatus(ovsxCanonical?.version, ovsxDuplicate?.version, version);
 if (releaseStatus !== "published" && syncStatus === "synced") {
-  syncStatus = "dual-listing";
+  syncStatus = "release-candidate";
 }
 const deployTags = githubTagList.length > 0
   ? githubTagList
@@ -543,6 +554,11 @@ const siteData = {
     releasePatch: "./scripts/release.sh patch",
     releaseMinor: "./scripts/release.sh minor",
     releaseTag: `./scripts/release.sh ${pkg.version}`,
+  },
+  supportedIdes: {
+    headline: SUPPORTED_IDE_WRAPPERS_HEADLINE,
+    subline: SUPPORTED_IDE_WRAPPERS_SUBLINE,
+    ides: SUPPORTED_IDE_WRAPPERS,
   },
 };
 

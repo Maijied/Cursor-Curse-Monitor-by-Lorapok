@@ -4,6 +4,7 @@ import { fetchWorkflowRunLogs, fetchWorkflowRuns, type WorkflowRun, type Workflo
 import { pickWorkflowRun } from "../../lib/workflow-run-match";
 import Badge from "./Badge";
 import Notification from "./Notification";
+import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 
 type DeployRuntimePanelProps = {
   active: boolean;
@@ -136,7 +137,12 @@ export default function DeployRuntimePanel({
       {error && <Notification tone="error" message={error} />}
 
       {waiting && !run && (
-        <Notification tone="info" message={`Waiting for ${workflowName ?? "workflow"} run to appear…`} />
+        <div className="flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] p-4">
+          <LorapokLarvaeLoader size="sm" ariaLabel="Waiting for workflow" />
+          <p className="text-sm text-[var(--color-muted)]">
+            Waiting for {workflowName ?? "workflow"} run to appear…
+          </p>
+        </div>
       )}
 
       {run && (

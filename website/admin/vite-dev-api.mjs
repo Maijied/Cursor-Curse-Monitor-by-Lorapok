@@ -617,18 +617,21 @@ export function createDevApiMiddleware() {
     if (url === "/api/usage/stats" && req.method === "GET") {
       const records = [...devStore.usageInstalls.values()];
       const now = Date.now();
+      const cut5m = now - 5 * 60 * 1000;
       const cut1h = now - 60 * 60 * 1000;
       const cut24h = now - 24 * 60 * 60 * 1000;
       const cut7 = now - 7 * 86400000;
       const cut30 = now - 30 * 86400000;
       const byOs = {};
       const byHost = {};
+      let activeNow = 0;
       let unique1h = 0;
       let unique24h = 0;
       let unique7d = 0;
       let unique30d = 0;
       for (const r of records) {
         const seen = Date.parse(r.lastSeenAt || "") || 0;
+        if (seen >= cut5m) activeNow += 1;
         if (seen >= cut1h) unique1h += 1;
         if (seen >= cut24h) unique24h += 1;
         if (seen >= cut7) unique7d += 1;
@@ -645,7 +648,7 @@ export function createDevApiMiddleware() {
       } catch { /* ignore */ }
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({
-        optInUniques: { unique1h, unique24h, unique7d, unique30d, uniqueAll: records.length, byOs, byHost },
+        optInUniques: { activeNow, unique1h, unique24h, unique7d, unique30d, uniqueAll: records.length, byOs, byHost },
         marketplace,
         visitors,
         updatedAt: new Date().toISOString(),
