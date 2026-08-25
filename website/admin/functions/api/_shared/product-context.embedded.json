@@ -107,7 +107,7 @@
       "label": "Mailbox delivery test",
       "category": "test",
       "subject": "Cursor Curse Monitor — mailbox test",
-      "text": "This is a live delivery test from Mission Control at 2026-08-25T13:51:48.323Z.\n\nIf you received this, outbound mail from cursor.monitor@lorapok.tech is working.",
+      "text": "This is a live delivery test from Mission Control at 2026-08-25T17:40:09.265Z.\n\nIf you received this, outbound mail from cursor.monitor@lorapok.tech is working.",
       "variables": [
         "email"
       ]
@@ -128,7 +128,7 @@
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-25T13:51:48.322Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "templateId": "bugfix-patch",
@@ -144,7 +144,7 @@
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-25T13:51:48.322Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "templateId": "security-advisory",
@@ -160,7 +160,7 @@
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-25T13:51:48.323Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "templateId": "maintenance-window",
@@ -176,7 +176,7 @@
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-25T13:51:48.323Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "templateId": "conversation-recovery",
@@ -193,7 +193,7 @@
       "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
-      "updatedAt": "2026-08-25T13:51:48.323Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "templateId": "rollback-incident",
@@ -210,7 +210,7 @@
       "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
-      "updatedAt": "2026-08-25T13:51:48.323Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "templateId": "platform-availability",
@@ -226,7 +226,7 @@
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-25T13:51:48.323Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     }
   ],
   "builtinNotices": [
@@ -242,7 +242,7 @@
       "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "dismissible": true,
-      "updatedAt": "2026-08-25T13:51:48.322Z"
+      "updatedAt": "2026-08-25T17:40:09.264Z"
     },
     {
       "id": "conversation-recovery-v0515",
@@ -256,7 +256,7 @@
       "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "dismissible": true,
-      "updatedAt": "2026-08-25T13:51:48.322Z"
+      "updatedAt": "2026-08-25T17:40:09.263Z"
     },
     {
       "id": "rollback-recovery-notice",
@@ -270,7 +270,7 @@
       "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
       "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
       "dismissible": false,
-      "updatedAt": "2026-08-25T13:51:48.322Z"
+      "updatedAt": "2026-08-25T17:40:09.263Z"
     }
   ],
   "generatedDevNotice": {
@@ -285,7 +285,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-08-25T13:51:48.322Z"
+    "updatedAt": "2026-08-25T17:40:09.264Z"
   },
   "conversationRecoveryNotice": {
     "id": "conversation-recovery-v0515",
@@ -299,7 +299,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-08-25T13:51:48.322Z"
+    "updatedAt": "2026-08-25T17:40:09.263Z"
   },
   "rollbackNotice": {
     "id": "rollback-recovery-notice",
@@ -313,6 +313,6 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": false,
-    "updatedAt": "2026-08-25T13:51:48.322Z"
+    "updatedAt": "2026-08-25T17:40:09.263Z"
   }
 }

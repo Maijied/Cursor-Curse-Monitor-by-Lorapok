@@ -167,7 +167,7 @@
         "cursorCurseMonitor.anonymousUsageStats": {
           "type": "boolean",
           "default": false,
-          "description": "Opt-in anonymous usage heartbeat. Sends a once-per-day ping with a random install ID, OS, and host editor (Cursor/VS Code) only. Off by default. No paths, tokens, emails, or workspace names are sent."
+          "description": "Opt-in anonymous usage heartbeat. Sends a ping every ~4 minutes while the editor is open (random install ID, OS, and host editor only). Off by default. No paths, tokens, emails, or workspace names are sent."
         },
         "cursorCurseMonitor.productNotices": {
           "type": "boolean",

@@ -86,6 +86,9 @@ browser.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "poll-usage") {
     void runRefresh();
   }
+  if (alarm.name === "usage-heartbeat") {
+    void sendUsageHeartbeat();
+  }
 });
 
 async function scheduleAlarm(): Promise<void> {
@@ -98,6 +101,7 @@ async function scheduleAlarm(): Promise<void> {
 browser.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.settings) {
     void scheduleAlarm();
+    void scheduleHeartbeatAlarm();
     void runRefresh();
   }
 });
@@ -108,14 +112,15 @@ browser.tabs.onUpdated.addListener(() => {
 });
 
 void scheduleAlarm();
+void scheduleHeartbeatAlarm();
 void runRefresh();
 
-// Heartbeat (opt-in)
-void (async () => {
+  const HEARTBEAT_MINUTES = 4;
+
+async function sendUsageHeartbeat(): Promise<void> {
   const settings = await getSettings();
   if (!settings.anonymousUsageStats) return;
-  const day = new Date().toISOString().slice(0, 10);
-  if (settings.lastPingDay === day) return;
+
   const installId = await getOrCreateInstallId();
   try {
     const res = await fetch("https://cursor-dev.lorapok.tech/api/usage/ping", {
@@ -129,9 +134,17 @@ void (async () => {
       }),
     });
     if (res.ok) {
-      await updateSettings({ lastPingDay: day });
+      await updateSettings({ lastPingDay: new Date().toISOString().slice(0, 10) });
     }
   } catch {
     /* ignore */
   }
-})();
+}
+
+async function scheduleHeartbeatAlarm(): Promise<void> {
+  const settings = await getSettings();
+  await browser.alarms.clear("usage-heartbeat");
+  if (!settings.anonymousUsageStats) return;
+  await browser.alarms.create("usage-heartbeat", { periodInMinutes: HEARTBEAT_MINUTES });
+  void sendUsageHeartbeat();
+}

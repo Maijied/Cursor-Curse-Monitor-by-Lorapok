@@ -73,6 +73,14 @@ export default function Overview() {
         <KpiCard
           label="Total Downloads"
           value={formatCount(downloads?.total ?? 0)}
+          sub={
+            <span className="text-xs text-[var(--color-muted)]">
+              Canonical Open VSX + VS Code + GitHub
+              {downloads?.openVsxCombined != null
+                ? ` · Open VSX total ${formatCount(downloads.openVsxCombined)}`
+                : ""}
+            </span>
+          }
           icon={<Download className="text-[var(--color-neon)]" size={24} />}
           delayClass="stagger-1"
         />
@@ -109,9 +117,10 @@ export default function Overview() {
           label="Open VSX (canonical)"
           value={data.ovsx.version ?? "—"}
           sub={
-            data.ovsx.downloadCount != null ? (
-              <span className="text-xs text-[var(--color-muted)]">{formatCount(data.ovsx.downloadCount)} downloads</span>
-            ) : undefined
+            <span className="text-xs text-[var(--color-muted)]">
+              {data.ovsx.downloadCount != null ? `${formatCount(data.ovsx.downloadCount)} canonical` : "—"}
+              {downloads?.openVsxCombined != null ? ` · ${formatCount(downloads.openVsxCombined)} total` : ""}
+            </span>
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
           delayClass="stagger-5"
@@ -153,6 +162,7 @@ export default function Overview() {
             <DownloadBreakdownPanel
               total={downloads.total}
               breakdown={downloads.breakdown}
+              openVsxCombined={downloads.openVsxCombined}
               note={downloads.note}
             />
           </div>
@@ -216,7 +226,7 @@ export default function Overview() {
                     ]
                   : []),
                 {
-                  name: "Open VSX duplicate",
+                  name: "Open VSX (LorapokLabs)",
                   version: data.ovsxDuplicate?.version ?? "—",
                   downloads: data.ovsxDuplicate?.downloadCount,
                   ok: false,
@@ -231,7 +241,7 @@ export default function Overview() {
                   </td>
                   <td className="py-3">
                     {"warn" in row && row.warn ? (
-                      <Badge variant="warn">Deprecate listing</Badge>
+                      <Badge variant="warn">Legacy listing</Badge>
                     ) : row.ok ? (
                       <Badge variant="synced" pulse>Synced</Badge>
                     ) : (

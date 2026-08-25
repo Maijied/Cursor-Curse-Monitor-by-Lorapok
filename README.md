@@ -27,8 +27,17 @@
 
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
-    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases"><img src="https://img.shields.io/github/downloads/Maijied/Cursor-Curse-Monitor-by-Lorapok/total?label=Downloads" alt="Downloads" /></a>
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json" alt="Total downloads (live)" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx" alt="Open VSX canonical downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx-total" alt="Open VSX total downloads" />
   </p>
+
+  <p>
+    <a href="https://cursor.lorapok.tech/">
+      <img src="https://cursor-dev.lorapok.tech/api/stats/readme.svg" alt="Live community download chart — Open VSX, VS Code, GitHub, and LorapokLabs namespace" width="720" />
+    </a>
+  </p>
+  <p><sub>Download counts refresh from marketplace APIs · chart updates every few minutes · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
 
 </div>
 

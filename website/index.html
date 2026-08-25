@@ -44,7 +44,7 @@
         "priceCurrency": "USD"
       },
       "featureList": "Usage dashboard, security scanner, local insights, budget tracking, universal VS Code wrapper AI IDE support",
-      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/feat/website-final-polish/cursor-curse-monitor-by-lorapok-1.0.3.vsix",
+      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.8/cursor-curse-monitor-by-lorapok-1.0.8.vsix",
       "softwareVersion": "1.0.3",
       "author": {
         "@type": "Person",
@@ -68,7 +68,7 @@
         "priceCurrency": "USD"
       },
       "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
-      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/feat/website-final-polish",
+      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.8",
       "publisher": {
         "@type": "Organization",
         "name": "Lorapok Labs",
@@ -208,16 +208,16 @@
           </div>
           <div class="hero-ovsx-block">
             <div class="hero-ovsx-combined">
-              <span>Open VSX combined</span>
+              <span>Open VSX total</span>
               <strong data-hero-ovsx-combined>—</strong>
             </div>
-            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus duplicate downloads">
+            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus LorapokLabs namespace downloads">
               <div class="meter-fill canonical" data-hero-ovsx-canonical-bar style="width:0%"></div>
-              <div class="meter-fill duplicate" data-hero-ovsx-duplicate-bar style="width:0%"></div>
+              <div class="meter-fill legacy" data-hero-ovsx-duplicate-bar style="width:0%"></div>
             </div>
             <div class="hero-ovsx-legend">
               <span>Canonical <strong data-hero-ovsx-canonical>—</strong></span>
-              <span>Duplicate <strong data-hero-ovsx-duplicate>—</strong></span>
+              <span>LorapokLabs <strong data-hero-ovsx-duplicate>—</strong></span>
             </div>
           </div>
         </div>
@@ -541,6 +541,43 @@
           </button>
         </article>
       </div>
+
+      <div class="offline-browser-section">
+        <div class="section-head">
+          <p class="eyebrow">Offline / sideload</p>
+          <h3>Install the browser extension without a store</h3>
+          <p class="section-lead">Use these steps when AMO review is pending, Chrome Web Store is unavailable, or you need an air-gapped install from the GitHub Release assets.</p>
+        </div>
+        <div class="offline-install-grid">
+          <article class="install-card offline-card">
+            <span class="install-label">Firefox · offline</span>
+            <h3>Load from GitHub Release (.xpi)</h3>
+            <ol class="install-steps">
+              <li>Download <code data-firefox-xpi-name>cursor-curse-monitor.xpi</code> from the <a data-href-github-release href="#" target="_blank" rel="noopener">latest GitHub Release</a> (or use the direct link below).</li>
+              <li>Open <code>about:debugging#/runtime/this-firefox</code> in Firefox.</li>
+              <li>Click <strong>Load Temporary Add-on…</strong> and select the <code>.xpi</code> file.</li>
+              <li>Pin the toolbar icon — usage syncs after you sign in on <code>cursor.com/dashboard</code>.</li>
+            </ol>
+            <p class="muted-note">Temporary loads reset when Firefox restarts. For a permanent install, use <a data-href-firefox href="#" target="_blank" rel="noopener">Firefox Add-ons (AMO)</a> once published.</p>
+            <div class="offline-actions">
+              <a class="btn primary block" data-href-firefox-xpi href="#" download>Download Firefox .xpi</a>
+              <a class="btn secondary block" data-href-firefox href="#" target="_blank" rel="noopener">Install from AMO →</a>
+            </div>
+          </article>
+          <article class="install-card offline-card">
+            <span class="install-label">Chrome · offline</span>
+            <h3>Load unpacked from zip</h3>
+            <ol class="install-steps">
+              <li>Download the <strong>Chrome zip</strong> from the <a data-href-github-release href="#" target="_blank" rel="noopener">latest GitHub Release</a>.</li>
+              <li>Unzip to a folder (e.g. <code>~/Extensions/cursor-curse-monitor</code>).</li>
+              <li>Open <code>chrome://extensions</code> (or Edge → <code>edge://extensions</code>).</li>
+              <li>Enable <strong>Developer mode</strong>, then <strong>Load unpacked</strong> and select the extracted folder.</li>
+            </ol>
+            <p class="muted-note">Chrome does not distribute this build via the Web Store — sideload only. Re-load after each browser update if Chrome disables unpacked extensions.</p>
+            <a class="btn primary block" data-href-chrome-zip href="#" download>Download Chrome zip</a>
+          </article>
+        </div>
+      </div>
     </section>
 
     <section id="release" class="section release-section">
@@ -587,7 +624,7 @@
           <p>For <strong>Cursor, VSCodium, Windsurf</strong> and all Open VSX-compatible editors</p>
           <p><strong>Status:</strong> <span id="ovsx-live-status">Checking…</span></p>
           <p><strong>Version:</strong> <span data-ovsx-version>—</span></p>
-          <p><strong>Downloads:</strong> <span data-ovsx-canonical>—</span> canonical · <span data-ovsx-duplicate>—</span> duplicate</p>
+          <p><strong>Downloads:</strong> <span data-ovsx-canonical>—</span> canonical · <span data-ovsx-duplicate>—</span> LorapokLabs namespace</p>
           <a class="btn primary block" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">View on Open VSX →</a>
         </article>
         <article class="install-card">
