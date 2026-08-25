@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * On push to main: bump package.json to max(live)+patch, commit, tag, and push.
- * No-ops when the recommended tag already exists and package.json matches.
+ * Falls back to a PR when branch protection blocks direct pushes to main.
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -24,9 +24,27 @@ function run(cmd, args, { capture = false } = {}) {
   });
 }
 
+function runCapture(cmd, args) {
+  if (dryRun) {
+    console.log(`[dry-run] ${cmd} ${args.join(" ")}`);
+    return { ok: true, output: "" };
+  }
+  try {
+    const output = execFileSync(cmd, args, {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["inherit", "pipe", "pipe"],
+    });
+    return { ok: true, output: output ?? "" };
+  } catch (error) {
+    const output = [error?.stdout, error?.stderr, error?.message].filter(Boolean).join("\n");
+    return { ok: false, output };
+  }
+}
+
 function tagExists(tag) {
   try {
-    execFileSync("git", ["rev-parse", `--verify`, `refs/tags/${tag}`], {
+    execFileSync("git", ["rev-parse", "--verify", `refs/tags/${tag}`], {
       cwd: root,
       stdio: "pipe",
     });
@@ -36,9 +54,64 @@ function tagExists(tag) {
   }
 }
 
+function remoteTagExists(tag) {
+  const result = runCapture("git", ["ls-remote", "--tags", "origin", tag]);
+  return result.ok && result.output.includes(tag);
+}
+
 function writeOutput(key, value) {
   if (!process.env.GITHUB_OUTPUT) return;
   appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
+}
+
+function pushTag(tag) {
+  const result = runCapture("git", ["push", "origin", tag]);
+  if (result.ok) return;
+  if (/already exists|rejected|denied/i.test(result.output)) {
+    console.log(`::warning::Tag ${tag} push skipped — ${result.output.trim()}`);
+    return;
+  }
+  console.error(`::error::Failed to push tag ${tag}\n${result.output}`);
+  process.exit(1);
+}
+
+function pushMainWithPrFallback(version, tag) {
+  const direct = runCapture("git", ["push", "origin", "main"]);
+  if (direct.ok) {
+    console.log("Pushed version bump directly to main");
+    writeOutput("pr_required", "false");
+    return;
+  }
+
+  console.log("::warning::Direct push to main blocked — opening release PR");
+  const branch = `chore/release-v${version}`;
+  run("git", ["checkout", "-B", branch]);
+  const branchPush = runCapture("git", ["push", "origin", branch, "--force"]);
+  if (!branchPush.ok) {
+    console.error(`::error::Failed to push release branch\n${branchPush.output}`);
+    process.exit(1);
+  }
+
+  const pr = runCapture("gh", [
+    "pr",
+    "create",
+    "--base",
+    "main",
+    "--head",
+    branch,
+    "--title",
+    `chore: release v${version}`,
+    "--body",
+    `Automated release preparation from CI (highest live version + 1 ${bumpType}).\n\nMerge this PR to land \`${tag}\` on main, then publish from Mission Control → Deploy.`,
+  ]);
+  if (!pr.ok && !/already exists|pull request/i.test(pr.output)) {
+    console.error(`::error::Failed to open release PR\n${pr.output}`);
+    process.exit(1);
+  }
+  if (!pr.ok) {
+    console.log("::notice::Release PR already exists or was updated");
+  }
+  writeOutput("pr_required", "true");
 }
 
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -55,12 +128,12 @@ if (!recommended || !tag) {
   process.exit(1);
 }
 
-const exists = tagExists(tag);
-if (current === recommended && exists) {
+if (current === recommended && (tagExists(tag) || remoteTagExists(tag))) {
   console.log(`::notice::Release ${tag} already prepared — skipping tag workflow`);
   writeOutput("tag", tag);
   writeOutput("prepared", "false");
   writeOutput("skipped", "true");
+  writeOutput("pr_required", "false");
   process.exit(0);
 }
 
@@ -76,16 +149,14 @@ if (current !== recommended) {
   run("git", ["commit", "-m", `chore: release v${recommended}`]);
 }
 
-if (!exists) {
+if (!tagExists(tag)) {
   console.log(`Creating tag ${tag}`);
   run("git", ["tag", tag]);
 }
 
 if (!dryRun) {
-  run("git", ["push", "origin", "main"]);
-  if (!exists) {
-    run("git", ["push", "origin", tag]);
-  }
+  pushTag(tag);
+  pushMainWithPrFallback(recommended, tag);
 }
 
 console.log(`::notice::Prepared release ${tag} (max live v${plan.maxAllVersion} + ${bumpType})`);
