@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { localizedValue } from "./lib-localized.mjs";
 
 const slug = process.argv.find((a) => a.startsWith("--slug="))?.split("=")[1]
   || "cursor-curse-monitor";
@@ -49,7 +50,7 @@ if (!res.ok) {
 
 const data = await res.json();
 const current = data.current_version?.version;
-console.log(`AMO addon: ${data.name?.["en-US"] || slug}`);
+console.log(`AMO addon: ${localizedValue(data.name, slug)}`);
 console.log(`Listed version: ${current || "pending"} (expected ${expectedVersion})`);
 if (data.url) {
   console.log(`Public URL: ${data.url}`);

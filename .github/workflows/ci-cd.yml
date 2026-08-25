@@ -69,11 +69,12 @@ on:
         required: true
         type: choice
         options:
+          - "Open VSX + Firefox AMO"
           - Both
           - VS Code Marketplace
           - Open VSX
           - Firefox AMO
-        default: Both
+        default: "Open VSX + Firefox AMO"
       release_channel:
         description: "Release Channel"
         required: true
@@ -754,6 +755,16 @@ jobs:
           ref: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref }}
           fetch-depth: 0
 
+      - name: Sync publish scripts from main
+        run: |
+          git fetch origin main --depth=1
+          for path in \
+            browser-extension/scripts/verify-amo-status.mjs \
+            browser-extension/scripts/lib-localized.mjs \
+            browser-extension/scripts/publish-amo.mjs; do
+            git show "origin/main:${path}" > "${path}"
+          done
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -830,6 +841,8 @@ jobs:
 
           if [[ "$ACTION" == "sync-open-vsx"* ]]; then
             DO_OVSX="true"
+          elif [[ "$TARGET" == "Open VSX + Firefox AMO" ]]; then
+            DO_OVSX="true"; DO_AMO="true"
           elif [[ -z "$TARGET" || "$TARGET" == "Both" ]]; then
             DO_OVSX="true"; DO_VSCE="true"; DO_AMO="true"
           elif [[ "$TARGET" == "Open VSX" ]]; then

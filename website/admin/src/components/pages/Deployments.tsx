@@ -43,7 +43,9 @@ export default function Deployments() {
   const [lastTargetTag, setLastTargetTag] = useState("");
   const [channel, setChannel] = useState<"beta" | "production">("production");
   const [selectedTag, setSelectedTag] = useState("");
-  const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO">("Both");
+  const [market, setMarket] = useState<
+    "Both" | "Open VSX + Firefox AMO" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO"
+  >("Open VSX + Firefox AMO");
   const [deployAdmin, setDeployAdmin] = useState(false);
   const [deployWebsite, setDeployWebsite] = useState(true);
 
@@ -556,6 +558,7 @@ export default function Deployments() {
               onChange={(e) => setMarket(e.target.value as typeof market)}
               className={inputClass}
             >
+              <option value="Open VSX + Firefox AMO">Open VSX + Firefox AMO (default — no VS Code)</option>
               <option value="Both">All Marketplaces (VS Code + Open VSX + Firefox AMO)</option>
               <option value="VS Code Marketplace">VS Code Marketplace</option>
               <option value="Open VSX">Open VSX (canonical lorapok-labs)</option>

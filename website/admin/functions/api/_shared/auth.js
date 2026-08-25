@@ -49,6 +49,8 @@ export async function verifyAdminRequest(request, env) {
 export function mapPublishMarket(value) {
   const map = {
     both: "Both",
+    "open-vsx-firefox": "Open VSX + Firefox AMO",
+    "open-vsx-amo": "Open VSX + Firefox AMO",
     "open-vsx": "Open VSX",
     openvsx: "Open VSX",
     "vscode-marketplace": "VS Code Marketplace",
@@ -56,6 +58,7 @@ export function mapPublishMarket(value) {
     "firefox-amo": "Firefox AMO",
     "firefox": "Firefox AMO",
     Both: "Both",
+    "Open VSX + Firefox AMO": "Open VSX + Firefox AMO",
     "Open VSX": "Open VSX",
     "VS Code Marketplace": "VS Code Marketplace",
     "Firefox AMO": "Firefox AMO",

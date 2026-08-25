@@ -137,7 +137,7 @@ export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
 
 export type DeployRequest = {
   target_tag: string;
-  publish_market: "Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
+  publish_market: "Both" | "Open VSX + Firefox AMO" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
   release_channel: "Production" | "Beta (Pre-release)";
   deploy_admin?: boolean;
   deploy_website?: boolean;
@@ -151,7 +151,7 @@ export type InfraDeployRequest = {
 export type ReleaseRequest = {
   version_type: "patch" | "minor" | "major" | "custom";
   custom_version?: string;
-  publish_market: "Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
+  publish_market: "Both" | "Open VSX + Firefox AMO" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
   release_channel: "Production" | "Beta (Pre-release)";
   deploy_admin?: boolean;
   deploy_website?: boolean;
