@@ -80,5 +80,13 @@ manifest.content_scripts = [
   },
 ];
 
+const chromeManifest = structuredClone(manifest);
+chromeManifest.background = {
+  service_worker: "background/service-worker.js",
+  type: "module",
+};
+if (chromeManifest.background.scripts) delete chromeManifest.background.scripts;
+
 writeFileSync(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
+writeFileSync(join(dist, "manifest.chrome.json"), JSON.stringify(chromeManifest, null, 2));
 console.log("postbuild: manifest.json + popup.html written");

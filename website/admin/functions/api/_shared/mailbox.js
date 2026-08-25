@@ -11,7 +11,7 @@ const MAX_MESSAGES = 500;
  * @property {string} text
  * @property {string} [html]
  * @property {"sent" | "failed" | "queued" | "received"} status
- * @property {"subscribe" | "invite" | "compose" | "test" | "notice" | "system"} category
+ * @property {"subscribe" | "invite" | "compose" | "support" | "test" | "notice" | "system"} category
  * @property {string} ts
  * @property {string} [sentBy]
  * @property {string} [error]

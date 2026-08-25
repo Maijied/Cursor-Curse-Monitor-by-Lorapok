@@ -53,6 +53,7 @@ export function mergeBuiltinNotices(items) {
           severity: builtin.severity,
           feedbackUrl: builtin.feedbackUrl,
           collaborateUrl: builtin.collaborateUrl,
+          updatedAt: builtin.updatedAt ?? new Date().toISOString(),
         };
         changed = true;
       }
