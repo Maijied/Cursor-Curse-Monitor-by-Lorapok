@@ -129,19 +129,14 @@ export default function Deployments() {
     }
   }, [channel, filteredTags, liveTag, selectedTag, suggestedTag]);
 
-  const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
-  const versionBase = effectiveVersionBase(liveTag, siteData?.packageVersion ?? null);
-  const previewTag = bumpVersion(versionBase, bumpType, customVersion);
-  const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
-  const deployBlocked = mode === "deploy" && isLiveSelected;
-  const customMissing = mode === "release" && bumpType === "custom" && !customVersion.trim();
-
   const runVersionCheck = useCallback(async () => {
     setVersionPlanLoading(true);
     setVersionPlanError(null);
     try {
-      const bump = mode === "release" && bumpType !== "custom" ? bumpType : "patch";
-      const plan = await fetchVersionPlan(bump);
+      const planMode = mode === "rollback" ? "rollback" : "release";
+      const bump =
+        mode === "release" && bumpType !== "custom" ? bumpType : ("patch" as const);
+      const plan = await fetchVersionPlan(bump, planMode);
       setVersionPlan(plan);
     } catch (err: unknown) {
       setVersionPlan(null);
@@ -150,6 +145,33 @@ export default function Deployments() {
       setVersionPlanLoading(false);
     }
   }, [bumpType, mode]);
+
+  useEffect(() => {
+    if (isMaster) void runVersionCheck();
+  }, [isMaster, runVersionCheck]);
+
+  const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
+  const versionBase = effectiveVersionBase(liveTag, siteData?.packageVersion ?? null);
+  const liveMaxBase = versionPlan?.maxAllVersion ? `v${versionPlan.maxAllVersion}` : versionBase;
+  const previewTag =
+    mode === "rollback"
+      ? versionPlan?.recommendedTag ?? null
+      : bumpType === "custom"
+        ? bumpVersion(null, "custom", customVersion)
+        : versionPlan?.recommendedTag && versionPlan.bumpType === bumpType
+          ? versionPlan.recommendedTag
+          : bumpVersion(liveMaxBase ?? versionBase, bumpType, customVersion);
+  const deployTargetTag = versionPlan?.recommendedTag ?? null;
+  const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
+  const deployBlocked = mode === "deploy" && isLiveSelected;
+  const customMissing = mode === "release" && bumpType === "custom" && !customVersion.trim();
+
+  useEffect(() => {
+    if (!deployTargetTag || mode !== "deploy") return;
+    if (filteredTags.includes(deployTargetTag)) {
+      setSelectedTag(deployTargetTag);
+    }
+  }, [deployTargetTag, filteredTags, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -523,10 +545,27 @@ export default function Deployments() {
       {mode === "rollback" && (
         <div className="glass-panel p-4 border-[color-mix(in_srgb,var(--color-warn)_30%,transparent)] flex gap-3 text-sm text-[var(--color-warn)]">
           <AlertTriangle size={20} className="shrink-0 mt-0.5" aria-hidden="true" />
-          <p>
-            Rollback restores the selected tag on main and publishes a new patch version. Verify the tag is known-good
-            before triggering.
-          </p>
+          <div>
+            <p>
+              Rollback restores the selected tag on main and publishes a new rollback release. Verify the tag is
+              known-good before triggering.
+            </p>
+            {versionPlan?.recommendedTag ? (
+              <p className="mt-2 text-[var(--color-text)]">
+                Next rollback tag:{" "}
+                <strong className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">
+                  {versionPlan.recommendedTag}
+                </strong>
+                {versionPlan.maxAllVersion ? (
+                  <span className="text-[var(--color-muted)]">
+                    {" "}
+                    (highest live v{versionPlan.maxAllVersion} → next v
+                    {versionPlan.maxAllVersion.split(".").slice(0, 2).join(".")}.R#)
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
+          </div>
         </div>
       )}
 

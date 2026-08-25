@@ -1,6 +1,14 @@
 const MIN_PUBLISH_TAG = [0, 5, 5];
 
 function tagParts(tag) {
+  const rollback = String(tag).match(/^v?(\d+)\.(\d+)\.R(\d+)$/i);
+  if (rollback) {
+    return [
+      Number.parseInt(rollback[1], 10) || 0,
+      Number.parseInt(rollback[2], 10) || 0,
+      Number.parseInt(rollback[3], 10) || 0,
+    ];
+  }
   return String(tag)
     .replace(/^v/i, "")
     .split("-")[0]
@@ -9,6 +17,7 @@ function tagParts(tag) {
 }
 
 function isPublishableTag(tag) {
+  if (/^v?\d+\.\d+\.R\d+$/i.test(String(tag))) return true;
   const [major, minor, patch] = tagParts(tag);
   const [minMajor, minMinor, minPatch] = MIN_PUBLISH_TAG;
   if (major !== minMajor) return major > minMajor;

@@ -71,8 +71,13 @@ export async function fetchMarketplaceSync() {
   return apiGet<MarketplaceSync>("/marketplace/sync");
 }
 
-export async function fetchVersionPlan(bump: "patch" | "minor" | "major" = "patch") {
-  return apiGet<VersionPlan>(`/version/plan?bump=${encodeURIComponent(bump)}`);
+export async function fetchVersionPlan(
+  bump: "patch" | "minor" | "major" = "patch",
+  mode: "release" | "rollback" = "release",
+) {
+  return apiGet<VersionPlan>(
+    `/version/plan?bump=${encodeURIComponent(bump)}&mode=${encodeURIComponent(mode)}`,
+  );
 }
 
 export async function fetchDiscussionsApi() {
@@ -193,18 +198,23 @@ export type VersionPlanReason = {
   id: string;
   label: string;
   liveVersion: string | null;
-  status: "missing" | "behind" | "synced" | "ahead" | "unknown";
+  status: "missing" | "behind" | "synced" | "ahead" | "unknown" | "info";
   reason: string;
 };
 
 export type VersionPlan = MarketplaceSync & {
-  bumpType: "patch" | "minor" | "major";
+  bumpType: "patch" | "minor" | "major" | "rollback";
+  planMode?: "release" | "rollback";
   packageVersion: string | null;
   maxLiveVersion: string | null;
+  maxAllVersion: string | null;
   recommendedVersion: string | null;
   recommendedTag: string | null;
   needsBump: boolean;
   needsPublish: boolean;
+  shouldCreateTag: boolean;
+  shouldBumpPackage: boolean;
+  tagAlreadyExists: boolean;
   allSynced: boolean;
   summary: string;
   reasons: VersionPlanReason[];

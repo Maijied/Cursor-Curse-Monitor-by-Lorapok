@@ -515,6 +515,22 @@ jobs:
         with:
           node-version: 22
 
+      - name: Resolve live version plan (max across all channels)
+        id: live_plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PLAN=$(node scripts/compute-next-release-version.mjs --json --bump patch)
+          echo "$PLAN" | node -e "
+            const plan = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+            const out = process.env.GITHUB_OUTPUT;
+            const fs = require('fs');
+            const append = (k, v) => fs.appendFileSync(out, k + '=' + v + '\n');
+            append('max_all_version', plan.maxAllVersion ?? '');
+            append('recommended_version', plan.recommendedVersion ?? '');
+            append('recommended_tag', plan.recommendedTag ?? '');
+          "
+
       - name: Calculate Release Version
         id: version_calc
         env:
@@ -523,6 +539,9 @@ jobs:
           VERSION_TYPE: ${{ inputs.version_type }}
           CUSTOM_VERSION: ${{ inputs.custom_version }}
           RELEASE_CHANNEL: ${{ inputs.release_channel }}
+          LIVE_MAX_VERSION: ${{ steps.live_plan.outputs.max_all_version }}
+          LIVE_RECOMMENDED_VERSION: ${{ steps.live_plan.outputs.recommended_version }}
+          LIVE_RECOMMENDED_TAG: ${{ steps.live_plan.outputs.recommended_tag }}
         run: |
           if [[ "$ACTION" == "rollback"* ]]; then
             if [ -z "$TARGET_TAG" ]; then
@@ -539,20 +558,30 @@ jobs:
             git restore --source="$TARGET_TAG" --worktree --staged -- . ':!.github'
             git restore --source=HEAD --worktree --staged -- .github/
 
-            # Bump patch higher than current main
-            CURRENT_MAIN_VER=$(node -p "require('./package.json').version.split('-')[0]")
-            node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version='$CURRENT_MAIN_VER'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
-            npm version patch --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-            TAG="v$NEW_VERSION"
+            # Rollback tag: v{major}.{minor}.R{n} from highest live version across all channels
+            EXISTING_TAGS="$(git tag -l)"
+            ROLLBACK_PLAN=$(EXISTING_TAGS="$EXISTING_TAGS" node scripts/compute-next-release-version.mjs --json --rollback)
+            NEW_VERSION=$(echo "$ROLLBACK_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
+            TAG=$(echo "$ROLLBACK_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedTag||'')")
+            MAX_LIVE=$(echo "$ROLLBACK_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
+            if [ -z "$NEW_VERSION" ] || [ -z "$TAG" ]; then
+              echo "::error::Could not resolve rollback version from live marketplace data."
+              exit 1
+            fi
+            echo "Rollback from $TARGET_TAG → $TAG (highest live was v${MAX_LIVE})"
+            npm version --no-git-tag-version "$NEW_VERSION"
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -A
-            git commit -m "chore: rollback to $TARGET_TAG (released as v$NEW_VERSION)"
-            git tag "$TAG"
+            git commit -m "chore: rollback to $TARGET_TAG (released as $TAG)"
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "Tag $TAG already exists — skipping tag creation"
+            else
+              git tag "$TAG"
+              git push origin "$TAG"
+            fi
             git push origin main
-            git push origin "$TAG"
           else
             BUMP_TYPE=$(echo "$VERSION_TYPE" | awk '{print $1}')
             CHANNEL="$RELEASE_CHANNEL"
@@ -575,9 +604,21 @@ jobs:
               npm version $BUMP_TYPE --no-git-tag-version --preid=beta
               NEW_VERSION=$(node -p "require('./package.json').version")
             else
-              node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
-              npm version $BUMP_TYPE --no-git-tag-version
-              NEW_VERSION=$(node -p "require('./package.json').version")
+              # Production: target = highest live version across all marketplaces + bump
+              LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
+              NEW_VERSION=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
+              MAX_LIVE=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
+              if [ -z "$NEW_VERSION" ]; then
+                echo "::error::Could not resolve next version from live marketplace data."
+                exit 1
+              fi
+              echo "Live max across all channels: v${MAX_LIVE} → release target v${NEW_VERSION}"
+              CURRENT=$(node -p "require('./package.json').version.split('-')[0]")
+              if [ "$NEW_VERSION" != "$CURRENT" ]; then
+                npm version --no-git-tag-version "$NEW_VERSION"
+              else
+                echo "package.json already at v$NEW_VERSION"
+              fi
             fi
 
             TAG="v$NEW_VERSION"
