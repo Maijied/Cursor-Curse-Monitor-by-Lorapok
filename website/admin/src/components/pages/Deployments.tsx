@@ -60,6 +60,13 @@ export default function Deployments() {
   const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO">("Both");
   const [deployAdmin, setDeployAdmin] = useState(true);
   const [deployWebsite, setDeployWebsite] = useState(true);
+
+  useEffect(() => {
+    if (mode === "release") {
+      setDeployAdmin(true);
+      setDeployWebsite(false);
+    }
+  }, [mode]);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
   const [dispatchedAfter, setDispatchedAfter] = useState(0);
@@ -192,7 +199,10 @@ export default function Deployments() {
       try {
         await triggerRelease(payload);
         const label = previewTag ?? "next version";
-        setMessage({ type: "success", text: `Release triggered — will create ${label} (${market}).` });
+        setMessage({
+          type: "success",
+          text: `Release prepared — ${label} tagged on main and Mission Control is updating. Switch to Deploy and publish ${label} to marketplaces.`,
+        });
         setDispatchedAfter(Date.now());
         setRuntimeActive(true);
         setLastTargetTag(label);
@@ -286,10 +296,10 @@ export default function Deployments() {
         <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">How to use this page</h3>
         <ul className="text-sm text-[var(--color-muted)] space-y-2 list-disc pl-5">
           <li>
-            <strong className="text-[var(--color-text)]">New Release</strong> — bump version on <code className="font-mono text-xs">main</code>, create a git tag, publish to selected marketplaces, and optionally deploy admin + website.
+            <strong className="text-[var(--color-text)]">New Release</strong> — bump <code className="font-mono text-xs">package.json</code>, create a git tag on <code className="font-mono text-xs">main</code>, and deploy Mission Control. Does <em>not</em> publish to marketplaces yet.
           </li>
           <li>
-            <strong className="text-[var(--color-text)]">Deploy</strong> — re-publish an <em>existing</em> git tag (pick a tag other than the live one). Use after a failed marketplace publish.
+            <strong className="text-[var(--color-text)]">Deploy</strong> — publish an existing git tag to marketplaces and refresh the marketing site (step 2 after New Release).
           </li>
           <li>
             <strong className="text-[var(--color-text)]">Rollback</strong> — restore an older tag to <code className="font-mono text-xs">main</code> with an automatic patch bump, then publish. Use when a release fails in production.
@@ -412,6 +422,12 @@ export default function Deployments() {
         ))}
       </div>
 
+      {mode === "release" && (
+        <div className="glass-panel p-4 text-sm text-[var(--color-muted)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
+          After this completes, open <strong className="text-[var(--color-text)]">Deploy</strong>, select the new tag, choose marketplaces, enable marketing site, and trigger publish.
+        </div>
+      )}
+
       {mode === "rollback" && (
         <div className="glass-panel p-4 border-[color-mix(in_srgb,var(--color-warn)_30%,transparent)] flex gap-3 text-sm text-[var(--color-warn)]">
           <AlertTriangle size={20} className="shrink-0 mt-0.5" aria-hidden="true" />
@@ -511,7 +527,7 @@ export default function Deployments() {
             </div>
           )}
 
-          {mode !== "infra" ? (
+          {mode !== "infra" && mode !== "release" ? (
           <div>
             <label htmlFor="target-market" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
               Publish Market
@@ -573,6 +589,7 @@ export default function Deployments() {
                 />
                 Mission Control admin (cursor-dev.lorapok.tech)
               </label>
+              {mode !== "release" ? (
               <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
                 <input
                   type="checkbox"
@@ -581,7 +598,13 @@ export default function Deployments() {
                 />
                 Marketing site (cursor.lorapok.tech)
               </label>
+              ) : null}
             </div>
+            {mode === "release" ? (
+              <p className="text-xs text-[var(--color-muted)] mt-2">
+                Marketing site updates when you publish from the Deploy tab.
+              </p>
+            ) : null}
           </fieldset>
 
           <button

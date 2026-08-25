@@ -265,7 +265,7 @@ async function triggerRelease(body) {
       body: JSON.stringify({
         ref: "main",
         inputs: {
-          action_type: "full-release - Bump version & publish all channels",
+          action_type: "full-release - Bump version, tag & update Mission Control",
           version_type: versionTypeInput,
           custom_version: customVersion,
           publish_market: publishMarket,

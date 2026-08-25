@@ -10,7 +10,10 @@ name: CI/CD
 #   4. Admin Mission Control Continuous Deployment (Cloudflare Pages)
 #   5. Multi-Channel Extension Deployment (VS Code Marketplace, Open VSX, Firefox AMO, Chrome ZIP)
 #   6. Marketing Website Deployment (GitHub Pages)
-#   7. Automated Version Bumping, Rollback & Tag Publishing
+#   Release flow (Mission Control):
+#     1. full-release  → Prepare & Tag Release → Deploy Admin Panel (no marketplaces)
+#     2. publish-tag   → Deploy to Marketplaces → Deploy Marketing Website (from Deploy tab)
+#     3. deploy-infra  → Admin and/or website only
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -35,13 +38,13 @@ on:
         required: true
         type: choice
         options:
-          - "full-release - Bump version & publish all channels"
+          - "full-release - Bump version, tag & update Mission Control"
           - "publish-tag - Publish existing git tag to marketplaces"
           - "rollback - Restore previous tag as a new version"
           - "sync-open-vsx - Fast sync to Open VSX canonical namespace"
           - "deploy-infra - Deploy Mission Control admin & marketing site"
           - "seo-refresh - Refresh site data, sitemap & SEO manifest"
-        default: "full-release - Bump version & publish all channels"
+        default: "full-release - Bump version, tag & update Mission Control"
       version_type:
         description: "Release Type (for full-release)"
         required: false
@@ -300,6 +303,10 @@ jobs:
       && (
         startsWith(inputs.action_type, 'deploy-infra')
         || (
+          startsWith(inputs.action_type, 'full-release')
+          && needs.release-prep.result == 'success'
+        )
+        || (
           (
             needs.release-prep.result == 'success' ||
             needs.release-prep.result == 'skipped'
@@ -489,7 +496,7 @@ jobs:
       && needs.admin-ci.result == 'success'
       && github.event_name == 'workflow_dispatch'
       && (
-        inputs.action_type == 'full-release - Bump version & publish all channels' ||
+        startsWith(inputs.action_type, 'full-release') ||
         inputs.action_type == 'rollback - Restore previous tag as a new version'
       )
     outputs:
@@ -612,6 +619,7 @@ jobs:
       && needs.admin-ci.result == 'success'
       && github.event_name == 'workflow_dispatch'
       && !startsWith(inputs.action_type, 'deploy-infra')
+      && !startsWith(inputs.action_type, 'full-release')
       && (
         (needs.release-prep.result == 'success' && needs.release-prep.outputs.should_deploy == 'true') ||
         (
@@ -837,18 +845,10 @@ jobs:
       && needs.admin-ci.result == 'success'
       && github.event_name == 'workflow_dispatch'
       && inputs.deploy_website == true
+      && !startsWith(inputs.action_type, 'full-release')
       && (
         startsWith(inputs.action_type, 'deploy-infra')
-        || (
-          (
-            needs.release-prep.result == 'success' ||
-            needs.release-prep.result == 'skipped'
-          )
-          && (
-            needs.deploy.result == 'success' ||
-            needs.deploy.result == 'skipped'
-          )
-        )
+        || needs.deploy.result == 'success'
       )
     runs-on: ubuntu-latest
     environment:
