@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="media/logo-animated.svg" alt="Cursor Curse Monitor by Lorapok — animated Lorapok Larvae mascot" width="128" height="128" />
+  <img src="media/logo.png" alt="Cursor Curse Monitor by Lorapok — Lorapok Larvae mascot" width="128" height="128" />
 
   <h1>Cursor Curse Monitor by Lorapok</h1>
 
