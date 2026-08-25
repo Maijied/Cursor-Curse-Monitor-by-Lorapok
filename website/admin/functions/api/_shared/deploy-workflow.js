@@ -6,7 +6,7 @@ const WORKFLOW_ID = "ci-cd.yml";
 const ACTION_PUBLISH_TAG = "publish-tag - Publish existing git tag to marketplaces";
 const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
 const ACTION_DEPLOY_INFRA = "deploy-infra - Deploy Mission Control admin & marketing site";
-const ACTION_FULL_RELEASE = "full-release - Bump version & publish all channels";
+const ACTION_FULL_RELEASE = "full-release - Bump version, tag & update Mission Control";
 
 async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields) {
   const githubToken = env.GITHUB_TOKEN;
