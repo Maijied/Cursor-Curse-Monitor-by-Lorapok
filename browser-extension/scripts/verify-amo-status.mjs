@@ -19,6 +19,7 @@ if (!issuer || !secret) {
 const pkg = JSON.parse(
   readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8")
 );
+const expectedVersion = process.env.RELEASE_VERSION || pkg.version;
 
 const jwtHeader = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
 const now = Math.floor(Date.now() / 1000);
@@ -45,7 +46,7 @@ if (!res.ok) {
 const data = await res.json();
 const current = data.current_version?.version;
 console.log(`AMO addon: ${data.name?.en-US || slug}`);
-console.log(`Listed version: ${current || "pending"} (package ${pkg.version})`);
+console.log(`Listed version: ${current || "pending"} (expected ${expectedVersion})`);
 if (data.url) {
   console.log(`Public URL: ${data.url}`);
 }

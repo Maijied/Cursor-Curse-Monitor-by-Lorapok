@@ -67,6 +67,7 @@ on:
           - Both
           - VS Code Marketplace
           - Open VSX
+          - Firefox AMO
         default: Both
       release_channel:
         description: "Release Channel"
@@ -675,18 +676,13 @@ jobs:
       # ── Firefox AMO ────────────────────────────────────────────────────────
       - name: Publish to Firefox Add-ons (AMO)
         if: steps.config.outputs.do_amo == 'true'
-        run: |
-          mkdir -p browser-extension/artifacts/firefox
-          npx web-ext@8 sign \
-            --source-dir browser-extension/dist \
-            --artifacts-dir browser-extension/artifacts/firefox \
-            --channel listed \
-            --amo-metadata browser-extension/amo/amo-metadata.generated.json \
-            --api-key "$AMO_JWT_ISSUER" \
-            --api-secret "$AMO_JWT_SECRET" || echo "::warning::AMO signing skipped or pending review."
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          AMO_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          RELEASE_VERSION: ${{ steps.config.outputs.version }}
+        run: node browser-extension/scripts/publish-amo.mjs
 
       - name: Stage Chrome zip for website
         if: steps.config.outputs.do_amo == 'true'
@@ -696,7 +692,10 @@ jobs:
 
       # ── GitHub Release ────────────────────────────────────────────────────
       - name: Create GitHub Release
-        if: steps.config.outputs.do_vsce == 'true' || steps.config.outputs.do_ovsx == 'true'
+        if: >-
+          steps.config.outputs.do_vsce == 'true' ||
+          steps.config.outputs.do_ovsx == 'true' ||
+          steps.config.outputs.do_amo == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref_name }}

@@ -223,6 +223,7 @@
     "version:compute": "node scripts/compute-version.mjs",
     "version:sync": "node scripts/sync-workspace-versions.mjs",
     "version:check": "node scripts/sync-workspace-versions.mjs --check",
+    "amo:secrets": "node scripts/sync-amo-github-secrets.mjs",
     "test:downloads": "node --test scripts/download-totals.test.mjs",
     "test:versioning": "node --test scripts/sync-workspace-versions.test.mjs",
     "security:scan": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",

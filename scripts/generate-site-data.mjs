@@ -466,7 +466,7 @@ console.log(`Wrote ${out}`);
 console.log(`Wrote ${visitorOut}`);
 console.log(`  Version:          ${version}`);
 console.log(`  Sync status:      ${syncStatus}`);
-console.log(`  Total downloads:  ${totalDownloads.toLocaleString()}`);
+console.log(`  Total downloads:  ${downloadTotals.displayTotal.toLocaleString()}`);
 console.log(`  Website visits:   ${visitors.websiteVisits ?? 0}`);
 console.log(`  Open VSX:         ${ovsxCanonical?.version ?? "n/a"} (${OVSX_NS})`);
 console.log(`  Open VSX dup:     ${ovsxDuplicate?.version ?? "n/a"} (${OVSX_DUPLICATE_NS})`);

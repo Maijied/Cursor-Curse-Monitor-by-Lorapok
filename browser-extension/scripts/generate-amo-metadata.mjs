@@ -6,16 +6,16 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveExtensionVersion } from "./lib-version.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = join(root, "..");
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const base = JSON.parse(
   readFileSync(join(root, "amo", "amo-metadata.base.json"), "utf8")
 );
 
 const versionArg = process.argv.find((a) => a.startsWith("--version="));
-const version = versionArg?.split("=")[1] || pkg.version;
+const version = versionArg?.split("=")[1] || resolveExtensionVersion(root);
 
 function extractReleaseNotes(changelog, ver) {
   const heading = `## [${ver}]`;
