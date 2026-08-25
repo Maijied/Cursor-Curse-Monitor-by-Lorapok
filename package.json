@@ -5,7 +5,7 @@
     "browser-extension"
   ],
   "displayName": "Cursor Curse Monitor by Lorapok",
-  "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
+  "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
   "version": "1.0.3",
   "publisher": "LorapokLabs",
   "license": "UNLICENSED",
@@ -35,7 +35,7 @@
     "type": "git",
     "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok.git"
   },
-  "homepage": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/",
+  "homepage": "https://cursor.lorapok.tech/",
   "bugs": {
     "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
   },

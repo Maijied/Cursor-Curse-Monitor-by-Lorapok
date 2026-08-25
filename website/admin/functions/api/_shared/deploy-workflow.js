@@ -5,6 +5,7 @@ const MIN_PUBLISH_TAG = "v0.5.5";
 const WORKFLOW_ID = "ci-cd.yml";
 const ACTION_PUBLISH_TAG = "publish-tag - Publish existing git tag to marketplaces";
 const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
+const ACTION_DEPLOY_INFRA = "deploy-infra - Deploy Mission Control admin & marketing site";
 const ACTION_FULL_RELEASE = "full-release - Bump version & publish all channels";
 
 async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields) {
@@ -93,6 +94,9 @@ export async function dispatchPublishWorkflow(env, body, successMessage) {
     );
   }
 
+  const deployAdmin = body.deploy_admin === true || body.deploy_admin === "true";
+  const deployWebsite = body.deploy_website === true || body.deploy_website === "true";
+
   return dispatchWorkflow(
     env,
     WORKFLOW_ID,
@@ -101,6 +105,8 @@ export async function dispatchPublishWorkflow(env, body, successMessage) {
       target_tag: targetTag,
       publish_market: publishMarket,
       release_channel: releaseChannel,
+      deploy_admin: deployAdmin ? "true" : "false",
+      deploy_website: deployWebsite ? "true" : "false",
     },
     successMessage,
     { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel }
@@ -170,6 +176,35 @@ const VERSION_TYPE_INPUTS = {
 };
 
 /**
+ * Infra-only deploy — Mission Control admin (Cloudflare) + marketing site. No marketplaces.
+ * @param {Record<string, unknown>} env
+ * @param {string} successMessage
+ */
+export async function dispatchInfraWorkflow(env, body, successMessage) {
+  const deployAdmin = bodyFlag(body, "deploy_admin", true);
+  const deployWebsite = bodyFlag(body, "deploy_website", true);
+  return dispatchWorkflow(
+    env,
+    WORKFLOW_ID,
+    {
+      action_type: ACTION_DEPLOY_INFRA,
+      publish_market: "Both",
+      release_channel: "Production",
+      deploy_admin: deployAdmin ? "true" : "false",
+      deploy_website: deployWebsite ? "true" : "false",
+    },
+    successMessage,
+    { deploy_admin: deployAdmin, deploy_website: deployWebsite }
+  );
+}
+
+function bodyFlag(body, key, defaultValue) {
+  if (!body || body[key] === undefined) return defaultValue;
+  if (body[key] === false || body[key] === "false") return false;
+  return true;
+}
+
+/**
  * New release — bump package.json, create tag, publish via ci-cd.yml.
  * @param {Record<string, unknown>} env
  * @param {Record<string, unknown>} body
@@ -195,8 +230,8 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
     return jsonResponse({ error: "custom_version is required for custom releases" }, 400);
   }
 
-  const deployAdmin = body.deploy_admin !== false && body.deploy_admin !== "false";
-  const deployWebsite = body.deploy_website !== false && body.deploy_website !== "false";
+  const deployAdmin = bodyFlag(body, "deploy_admin", true);
+  const deployWebsite = bodyFlag(body, "deploy_website", true);
 
   const response = await dispatchWorkflow(
     env,

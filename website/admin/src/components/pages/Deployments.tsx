@@ -1,8 +1,9 @@
 import { useCallback, useState, useEffect } from "react";
-import { AlertTriangle, ExternalLink, Lock, Package, Rocket, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Lock, Package, Rocket, Server, Undo2 } from "lucide-react";
 import {
   fetchTags,
   triggerDeployment,
+  triggerInfraDeploy,
   triggerRelease,
   triggerRollback,
   type ReleaseRequest,
@@ -29,7 +30,7 @@ function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) 
   return { tags: [liveTag], liveTag };
 }
 
-type Mode = "release" | "deploy" | "rollback";
+type Mode = "release" | "deploy" | "rollback" | "infra";
 
 const BUMP_OPTIONS: { value: ReleaseBumpType; label: string }[] = [
   { value: "patch", label: "Patch — bug fix or small update" },
@@ -55,6 +56,8 @@ export default function Deployments() {
   const [bumpType, setBumpType] = useState<ReleaseBumpType>("patch");
   const [customVersion, setCustomVersion] = useState("");
   const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO">("Both");
+  const [deployAdmin, setDeployAdmin] = useState(true);
+  const [deployWebsite, setDeployWebsite] = useState(true);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
   const [dispatchedAfter, setDispatchedAfter] = useState(0);
@@ -122,6 +125,23 @@ export default function Deployments() {
     e.preventDefault();
     setMessage(null);
 
+    if (mode === "infra") {
+      setDeploying(true);
+      try {
+        await triggerInfraDeploy({ deploy_admin: deployAdmin, deploy_website: deployWebsite });
+        setMessage({
+          type: "success",
+          text: `Infra deploy triggered — admin: ${deployAdmin ? "yes" : "no"}, website: ${deployWebsite ? "yes" : "no"}.`,
+        });
+        setRuntimeActive(true);
+        setDispatchedAfter(Date.now());
+      } catch (err: unknown) {
+        setMessage({ type: "error", text: err instanceof Error ? err.message : "Infra deploy failed" });
+      }
+      setDeploying(false);
+      return;
+    }
+
     if (mode === "release") {
       if (customMissing) {
         setMessage({ type: "error", text: "Enter a custom version (e.g. 0.6.0-beta.1)." });
@@ -133,6 +153,8 @@ export default function Deployments() {
         custom_version: bumpType === "custom" ? customVersion.trim() : undefined,
         publish_market: market,
         release_channel: releaseChannel,
+        deploy_admin: deployAdmin,
+        deploy_website: deployWebsite,
       };
       try {
         await triggerRelease(payload);
@@ -165,6 +187,8 @@ export default function Deployments() {
       target_tag: selectedTag,
       publish_market: market,
       release_channel: releaseChannel,
+      deploy_admin: deployAdmin,
+      deploy_website: deployWebsite,
     };
     try {
       if (mode === "rollback") {
@@ -192,7 +216,11 @@ export default function Deployments() {
     isMaster &&
     !tagsError &&
     !deploying &&
-    (mode === "release" ? !customMissing : Boolean(selectedTag) && !deployBlocked);
+    (mode === "infra"
+      ? deployAdmin || deployWebsite
+      : mode === "release"
+        ? !customMissing
+        : Boolean(selectedTag) && !deployBlocked);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -212,7 +240,7 @@ export default function Deployments() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Release"
-        description="New Release bumps version and publishes. Deploy re-publishes an existing tag. Rollback restores an older tag on main."
+        description="All production deploys run through Mission Control — marketplaces, admin panel, and website."
       />
 
       {!isMaster ? (
@@ -287,6 +315,7 @@ export default function Deployments() {
       <div className="flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
         {(
           [
+            { value: "infra" as const, label: "Infra", icon: Server },
             { value: "release" as const, label: "New Release", icon: Package },
             { value: "deploy" as const, label: "Deploy", icon: Rocket },
             { value: "rollback" as const, label: "Rollback", icon: Undo2 },
@@ -404,6 +433,7 @@ export default function Deployments() {
             </div>
           )}
 
+          {mode !== "infra" ? (
           <div>
             <label htmlFor="target-market" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
               Publish Market
@@ -420,7 +450,13 @@ export default function Deployments() {
               <option value="Firefox AMO">Firefox Add-ons (AMO)</option>
             </select>
           </div>
+          ) : (
+            <p className="text-sm text-[var(--color-muted)]">
+              Deploy Mission Control admin panel (Cloudflare) and/or marketing site — no marketplace publish.
+            </p>
+          )}
 
+          {mode !== "infra" ? (
           <fieldset>
             <legend className="block text-sm font-medium mb-3 text-[var(--color-muted)]">Release Channel</legend>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -446,6 +482,29 @@ export default function Deployments() {
               ))}
             </div>
           </fieldset>
+          ) : null}
+
+          <fieldset>
+            <legend className="block text-sm font-medium mb-3 text-[var(--color-muted)]">Deploy targets</legend>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                <input
+                  type="checkbox"
+                  checked={deployAdmin}
+                  onChange={(e) => setDeployAdmin(e.target.checked)}
+                />
+                Mission Control admin (cursor-dev.lorapok.tech)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                <input
+                  type="checkbox"
+                  checked={deployWebsite}
+                  onChange={(e) => setDeployWebsite(e.target.checked)}
+                />
+                Marketing site (cursor.lorapok.tech)
+              </label>
+            </div>
+          </fieldset>
 
           <button
             type="submit"
@@ -458,6 +517,8 @@ export default function Deployments() {
               <Undo2 size={20} aria-hidden="true" />
             ) : mode === "release" ? (
               <Package size={20} aria-hidden="true" />
+            ) : mode === "infra" ? (
+              <Server size={20} aria-hidden="true" />
             ) : (
               <Rocket size={20} aria-hidden="true" />
             )}
@@ -467,7 +528,9 @@ export default function Deployments() {
                 ? "Trigger Rollback"
                 : mode === "release"
                   ? "Trigger New Release"
-                  : "Trigger Deployment"}
+                  : mode === "infra"
+                    ? "Deploy Infra"
+                    : "Trigger Deployment"}
           </button>
         </form>
 

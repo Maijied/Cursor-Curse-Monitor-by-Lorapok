@@ -39,6 +39,7 @@ on:
           - "publish-tag - Publish existing git tag to marketplaces"
           - "rollback - Restore previous tag as a new version"
           - "sync-open-vsx - Fast sync to Open VSX canonical namespace"
+          - "deploy-infra - Deploy Mission Control admin & marketing site"
           - "seo-refresh - Refresh site data, sitemap & SEO manifest"
         default: "full-release - Bump version & publish all channels"
       version_type:
@@ -297,12 +298,17 @@ jobs:
       && github.event_name == 'workflow_dispatch'
       && inputs.deploy_admin == true
       && (
-        needs.release-prep.result == 'success' ||
-        needs.release-prep.result == 'skipped'
-      )
-      && (
-        needs.deploy.result == 'success' ||
-        needs.deploy.result == 'skipped'
+        startsWith(inputs.action_type, 'deploy-infra')
+        || (
+          (
+            needs.release-prep.result == 'success' ||
+            needs.release-prep.result == 'skipped'
+          )
+          && (
+            needs.deploy.result == 'success' ||
+            needs.deploy.result == 'skipped'
+          )
+        )
       )
     environment:
       name: admin-production
@@ -589,6 +595,7 @@ jobs:
       && needs.browser-extension-ci.result == 'success'
       && needs.admin-ci.result == 'success'
       && github.event_name == 'workflow_dispatch'
+      && !startsWith(inputs.action_type, 'deploy-infra')
       && (
         (needs.release-prep.result == 'success' && needs.release-prep.outputs.should_deploy == 'true') ||
         (
@@ -782,12 +789,17 @@ jobs:
       && github.event_name == 'workflow_dispatch'
       && inputs.deploy_website == true
       && (
-        needs.release-prep.result == 'success' ||
-        needs.release-prep.result == 'skipped'
-      )
-      && (
-        needs.deploy.result == 'success' ||
-        needs.deploy.result == 'skipped'
+        startsWith(inputs.action_type, 'deploy-infra')
+        || (
+          (
+            needs.release-prep.result == 'success' ||
+            needs.release-prep.result == 'skipped'
+          )
+          && (
+            needs.deploy.result == 'success' ||
+            needs.deploy.result == 'skipped'
+          )
+        )
       )
     runs-on: ubuntu-latest
     environment:

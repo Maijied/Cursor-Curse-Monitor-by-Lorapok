@@ -48,6 +48,28 @@
     setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
     setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
 
+    const canonicalDl = data.downloads?.breakdown?.openVsxCanonical ?? data.ovsx?.downloadCount ?? 0;
+    const duplicateDl = data.downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0;
+    const combinedDl = data.downloads?.openVsxCombined ?? canonicalDl + duplicateDl;
+    setText("[data-ovsx-canonical]", fmt(canonicalDl));
+    setText("[data-ovsx-duplicate]", fmt(duplicateDl));
+    setText("[data-ovsx-combined]", fmt(combinedDl));
+    setText("[data-ovsx-canonical-legend]", fmt(canonicalDl));
+    setText("[data-ovsx-duplicate-legend]", fmt(duplicateDl));
+    setText("[data-ovsx-combined-legend]", fmt(combinedDl));
+    setHref("[data-href-ovsx-duplicate]", data.ovsxDuplicate?.url ?? "#");
+
+    const breakdownEl = $("#download-breakdown");
+    if (breakdownEl && combinedDl > 0) {
+      breakdownEl.hidden = false;
+      const canonicalPct = Math.round((canonicalDl / combinedDl) * 100);
+      const duplicatePct = 100 - canonicalPct;
+      const barCanonical = document.querySelector("[data-ovsx-bar-canonical]");
+      const barDuplicate = document.querySelector("[data-ovsx-bar-duplicate]");
+      if (barCanonical instanceof HTMLElement) barCanonical.style.width = `${canonicalPct}%`;
+      if (barDuplicate instanceof HTMLElement) barDuplicate.style.width = `${duplicatePct}%`;
+    }
+
     // Core version data
     setText("[data-version]", data.version);
     setText("[data-package-version]", data.packageVersion);

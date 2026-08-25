@@ -1,8 +1,7 @@
 const SITE_BASE =
   typeof process !== "undefined" && process.env?.SITE_BASE_URL
     ? process.env.SITE_BASE_URL.replace(/\/$/, "")
-    : "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok";
-
+    : "https://cursor.lorapok.tech";
 /** @type {Record<string, { logoUrl: string; accentColor: string; badgeLabel: string; barGradient: string }>} */
 export const MAIL_BRANDING = {
   subscribe: {

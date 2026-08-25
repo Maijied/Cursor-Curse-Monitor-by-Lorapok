@@ -220,6 +220,21 @@ const VERSION_TYPE_INPUTS = {
   custom: "custom - Specify exact version below",
 };
 
+async function triggerInfraDeploy(body = {}) {
+  const deployAdmin = body.deploy_admin !== false && body.deploy_admin !== "false";
+  const deployWebsite = body.deploy_website !== false && body.deploy_website !== "false";
+  return dispatchCiCdWorkflow(
+    {
+      action_type: "deploy-infra - Deploy Mission Control admin & marketing site",
+      publish_market: "Both",
+      release_channel: "Production",
+      deploy_admin: deployAdmin ? "true" : "false",
+      deploy_website: deployWebsite ? "true" : "false",
+    },
+    "Infra deploy triggered"
+  );
+}
+
 async function triggerRelease(body) {
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
   const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
@@ -254,6 +269,8 @@ async function triggerRelease(body) {
           custom_version: customVersion,
           publish_market: publishMarket,
           release_channel: releaseChannel,
+          deploy_admin: body.deploy_admin === false || body.deploy_admin === "false" ? "false" : "true",
+          deploy_website: body.deploy_website === false || body.deploy_website === "false" ? "false" : "true",
         },
       }),
     }
@@ -798,6 +815,27 @@ export function createDevApiMiddleware() {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
         }
+      });
+      return;
+    }
+
+    if (url === "/api/deploy-infra" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        triggerInfraDeploy(JSON.parse(body || "{}"))
+          .then((result) => {
+            logDevActivity(req, 200);
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result));
+          })
+          .catch((err) => {
+            const code = err.message.includes("GITHUB_TOKEN") ? 500 : 502;
+            logDevActivity(req, code);
+            res.statusCode = code;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: err.message }));
+          });
       });
       return;
     }

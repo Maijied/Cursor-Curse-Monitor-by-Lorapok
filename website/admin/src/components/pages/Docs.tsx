@@ -330,7 +330,7 @@ npx vsce publish -p $VSCE_PAT # VS Code Marketplace`}
           </li>
           <li>
             <strong>Project website</strong> —{" "}
-            <a href="https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/" className="text-[var(--color-accent-2)] hover:underline" target="_blank" rel="noopener noreferrer">
+            <a href="https://cursor.lorapok.tech/" className="text-[var(--color-accent-2)] hover:underline" target="_blank" rel="noopener noreferrer">
               GitHub Pages
             </a>
           </li>

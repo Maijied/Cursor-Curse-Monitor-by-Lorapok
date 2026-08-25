@@ -7,16 +7,16 @@
     "en-US": "Live Cursor usage, budget tracker & local security scanner in your browser."
   },
   "description": {
-    "en-US": "<p><strong>Cursor Curse Monitor by Lorapok</strong> shows your Cursor AI usage, budget cap, billing cycle reset, and spend-over-time trend — right in your browser toolbar.</p><ul><li>Animated budget gauge with threshold warnings</li><li>Auto &amp; API usage meters</li><li>Local security scanner on token paste — warns if extra secrets appear</li><li>Connect automatically via cursor.com/dashboard or paste a token manually</li><li>Tokens stay on your device — never sent to Lorapok servers</li></ul><p>A product of <a href=\"https://lorapok.tech\">Lorapok Labs</a>. Built for <a href=\"https://cursor.com\">Cursor</a> users.</p>"
+    "en-US": "<p><strong>Cursor Curse Monitor by Lorapok</strong> shows your Cursor AI usage, budget cap, billing cycle reset, and spend-over-time trend — right in your browser toolbar.</p><ul><li>Animated budget gauge with threshold warnings</li><li>Auto &amp; API usage meters</li><li>Local security scanner on token paste — warns if extra secrets appear</li><li>Connect automatically via cursor.com/dashboard or paste a token manually</li><li>Tokens stay on your device — never sent to Lorapok servers</li></ul><p><strong>Also available on:</strong> <a href=\"https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok\">Open VSX</a>, <a href=\"https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok\">VS Code Marketplace</a>, <a href=\"https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases\">GitHub Releases</a>, <a href=\"https://cursor.lorapok.tech/\">Product website</a>.</p><p>A product of <a href=\"https://lorapok.tech\">Lorapok Labs</a>. Built for <a href=\"https://cursor.com\">Cursor</a> users.</p>"
   },
   "homepage": {
-    "en-US": "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/"
+    "en-US": "https://cursor.lorapok.tech/"
   },
   "support_email": {
     "en-US": "cursor.curse.help@lorapok.tech"
   },
   "support_url": {
-    "en-US": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
+    "en-US": "https://cursor.lorapok.tech/"
   },
   "developer_comments": {
     "en-US": "Auth: content script on cursor.com captures Bearer token from api2.cursor.sh requests only. Manual token paste fallback in Options. No Lorapok server receives tokens. Test: sign into cursor.com/dashboard, open popup, verify usage loads."

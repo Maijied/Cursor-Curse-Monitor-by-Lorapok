@@ -1,5 +1,5 @@
 const DEFAULT_SITE_DATA_URL =
-  "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json";
+  "https://cursor.lorapok.tech/site-data.json";
 
 export async function fetchSiteData(env) {
   const url = env.SITE_DATA_URL ?? DEFAULT_SITE_DATA_URL;

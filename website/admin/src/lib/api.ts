@@ -130,6 +130,13 @@ export type DeployRequest = {
   target_tag: string;
   publish_market: "Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
   release_channel: "Production" | "Beta (Pre-release)";
+  deploy_admin?: boolean;
+  deploy_website?: boolean;
+};
+
+export type InfraDeployRequest = {
+  deploy_admin?: boolean;
+  deploy_website?: boolean;
 };
 
 export type ReleaseRequest = {
@@ -137,6 +144,8 @@ export type ReleaseRequest = {
   custom_version?: string;
   publish_market: "Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";
   release_channel: "Production" | "Beta (Pre-release)";
+  deploy_admin?: boolean;
+  deploy_website?: boolean;
 };
 
 export type Release = {
@@ -267,6 +276,24 @@ export async function syncAdminAccess(payload: { email: string; action: "add" | 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Admin sync failed");
   return data;
+}
+
+export async function triggerInfraDeploy(payload: InfraDeployRequest = {}) {
+  const res = await fetch(`${API_BASE}/deploy-infra`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Infra deployment trigger failed");
+  }
+
+  return res.json();
 }
 
 export async function triggerDeployment(payload: DeployRequest) {

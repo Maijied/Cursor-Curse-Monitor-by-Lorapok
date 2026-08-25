@@ -296,6 +296,18 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.ext-footer-crosslink {
+  margin: 0 0 8px;
+  padding: 0 8px;
+  line-height: 1.45;
+  color: #9fb0cc;
+  font-size: 10px;
+}
+
+.ext-footer-meta {
+  margin: 0;
+}
+
 .ext-footer a {
   color: var(--accent-2);
   text-decoration: none;

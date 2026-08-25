@@ -27,6 +27,6 @@ export async function onRequestGet(context) {
     adminPublicUrl: env.ADMIN_PUBLIC_URL ?? "https://cursor-dev.lorapok.tech",
     siteDataUrl:
       env.SITE_DATA_URL ??
-      "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json",
+      "https://cursor.lorapok.tech/site-data.json",
   });
 }

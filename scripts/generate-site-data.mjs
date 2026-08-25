@@ -383,6 +383,8 @@ const siteData = {
     canonicalTotal: downloadTotals.canonicalTotal,
     source: downloadTotals.source,
     breakdown: downloadBreakdown,
+    openVsxCombined:
+      (downloadBreakdown.openVsxCanonical ?? 0) + (downloadBreakdown.openVsxDuplicate ?? 0),
     note: "Public total uses canonical Open VSX unless canonical lags package version; duplicate namespace excluded from sum.",
   },
   visitors: {

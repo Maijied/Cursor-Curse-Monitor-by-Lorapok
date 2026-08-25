@@ -33,8 +33,7 @@ function extractReleaseNotes(changelog, ver) {
 }
 
 const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8");
-const privacyUrl =
-  "https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/privacy.html";
+const privacyUrl = "https://cursor.lorapok.tech/privacy.html";
 
 const metadata = {
   ...base,

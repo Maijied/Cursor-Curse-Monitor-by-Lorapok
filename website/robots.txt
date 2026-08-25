@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/sitemap.xml
+Sitemap: https://cursor.lorapok.tech/sitemap.xml

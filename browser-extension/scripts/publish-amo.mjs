@@ -72,6 +72,8 @@ try {
     "browser-extension/artifacts/firefox",
     "--channel",
     "listed",
+    "--approval-timeout",
+    "0",
     "--amo-metadata",
     "browser-extension/amo/amo-metadata.generated.json",
     "--api-key",

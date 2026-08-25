@@ -59,6 +59,8 @@ Open the **Cursor Curse Monitor** panel in the activity bar after install to see
 
 ## Installation
 
+> **Also available on:** [Open VSX](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok) · [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok) · [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/) · [Chrome zip](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest) · [Product site](https://cursor.lorapok.tech/)
+
 ### From Open VSX (Cursor Marketplace) — Recommended for Cursor
 
 1. Open **Extensions** in Cursor
