@@ -1,4 +1,4 @@
-import { GITHUB_REPO } from "./auth.js";
+import { GITHUB_REPO } from "./repo-constants.js";
 
 async function fetchJson(url, options = {}) {
   const res = await fetch(url, { headers: { Accept: "application/json" }, ...options });

@@ -1,8 +1,9 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getAllowedAdminEmails, getMasterEmail } from "./admins.js";
+import { GITHUB_REPO } from "./repo-constants.js";
 
 const DEFAULT_PROJECT_ID = "cursor-curse-by-lorapok";
-export const GITHUB_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
+export { GITHUB_REPO };
 
 function jsonResponse(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
