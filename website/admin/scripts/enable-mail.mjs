@@ -25,6 +25,21 @@ if (!token) {
 }
 
 async function verifyEmailToken(token, accountId) {
+  const listRes = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/domains`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (listRes.status === 401 || listRes.status === 403) {
+    console.error(
+      "CLOUDFLARE_API_TOKEN cannot access Email Sending (401/403).\n" +
+        "Create a dedicated token: My Profile → API Tokens → Create Token\n" +
+        "  Permissions: Account → Email Sending → Edit\n" +
+        "Then: export CLOUDFLARE_API_TOKEN=<that-token> && node scripts/enable-mail.mjs\n" +
+        "And:  gh secret set CLOUDFLARE_EMAIL_API_TOKEN"
+    );
+    return false;
+  }
+
   const res = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`,
     {
@@ -35,7 +50,7 @@ async function verifyEmailToken(token, accountId) {
       },
       body: JSON.stringify({
         to: "verify@example.com",
-        from: { address: "cursor-contact@lorapok.tech", name: "CCM Verify" },
+        from: { address: "cursor.monitor@lorapok.tech", name: "CCM Verify" },
         subject: "token probe",
         text: "probe",
       }),
@@ -43,10 +58,7 @@ async function verifyEmailToken(token, accountId) {
   );
   const body = await res.json().catch(() => ({}));
   if (res.status === 401 || res.status === 403) {
-    console.error(
-      "CLOUDFLARE_API_TOKEN cannot send mail (401/403). Create a token with Account → Email Sending → Send, " +
-        "or onboard lorapok.tech in Cloudflare Dashboard → Email Service → Email Sending."
-    );
+    console.error("Send API rejected token (401/403). Use Email Sending → Edit permission.");
     console.error(JSON.stringify(body.errors ?? body).slice(0, 300));
     return false;
   }
