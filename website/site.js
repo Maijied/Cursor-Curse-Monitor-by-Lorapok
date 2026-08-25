@@ -95,13 +95,16 @@
     const firefoxPublished = Boolean(data.browserExtension?.firefox?.published);
     const firefoxHref = firefoxPublished
       ? (data.browserExtension?.firefox?.url ?? data.productContext?.firefoxUrl)
-      : (data.github?.releaseUrl ?? "#");
+      : (data.github?.releaseUrl ?? data.github?.vsixUrl ?? "#");
     setHref("[data-href-firefox]", firefoxHref);
-    setText("[data-firefox-version]", data.browserExtension?.firefox?.version ?? data.browserExtension?.version ?? data.version ?? "—");
+    const firefoxVersionLabel = firefoxPublished
+      ? (data.browserExtension?.firefox?.version ?? data.browserExtension?.version ?? data.version ?? "—")
+      : `pending AMO · v${data.version ?? data.packageVersion ?? "—"} on GitHub`;
+    setText("[data-firefox-version]", firefoxVersionLabel);
     $$("[data-href-firefox]").forEach((el) => {
       if (!firefoxPublished) {
-        el.setAttribute("aria-disabled", "true");
-        el.title = "Firefox AMO listing pending — use GitHub Release for now";
+        el.title = "Firefox AMO listing pending — install from GitHub Release";
+        el.classList.add("platform-pending");
       }
     });
     setHref(

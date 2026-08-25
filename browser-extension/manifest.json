@@ -22,7 +22,7 @@
     "open_in_tab": true
   },
   "background": {
-    "scripts": ["src/background/service-worker.ts"],
+    "service_worker": "src/background/service-worker.ts",
     "type": "module"
   },
   "permissions": ["storage", "alarms", "notifications"],

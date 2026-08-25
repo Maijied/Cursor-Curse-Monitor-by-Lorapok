@@ -654,7 +654,12 @@ export async function fetchMailbox(
   }>(`/mailbox?${params.toString()}`);
 }
 
-export async function sendMailboxMessage(payload: { to: string; subject: string; text: string }) {
+export async function sendMailboxMessage(payload: {
+  to: string;
+  subject: string;
+  text: string;
+  category?: string;
+}) {
   const res = await fetch(`${API_BASE}/mailbox`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await authHeaders()) },

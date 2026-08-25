@@ -8,6 +8,21 @@ import {
 import { buildComposeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
 import { getMailTemplates } from "./_shared/mail-templates.js";
 
+const COMPOSE_CATEGORIES = new Set([
+  "compose",
+  "invite",
+  "subscribe",
+  "support",
+  "notice",
+  "test",
+  "system",
+]);
+
+function normalizeComposeCategory(value) {
+  const key = String(value ?? "compose").toLowerCase();
+  return COMPOSE_CATEGORIES.has(key) ? key : "compose";
+}
+
 export async function onRequestGet(context) {
   const startedAt = Date.now();
   const { request, env } = context;
@@ -120,7 +135,7 @@ export async function onRequestPost(context) {
     subject,
     html: buildComposeHtml({ subject, body: text }),
     text,
-    category: "compose",
+    category: normalizeComposeCategory(body.category),
     sentBy: auth.email,
   });
 

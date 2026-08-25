@@ -1,19 +1,23 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { buildProductContext } from "../../../../../scripts/lib-product-context.mjs";
+import embedded from "./product-context.embedded.json" with { type: "json" };
 import {
   buildBuiltinNotices,
   buildGeneratedCatalogNotice,
   buildNoticeTemplates,
 } from "../../../../../scripts/notice-templates.mjs";
 
-const rootPkg = JSON.parse(
-  readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../package.json"), "utf8")
-);
-
-const ctx = buildProductContext(rootPkg);
-const builtins = buildBuiltinNotices(rootPkg);
+const ctx = embedded.ctx;
+const builtins = buildBuiltinNotices({
+  version: embedded.version,
+  displayName: embedded.displayName,
+  homepage: ctx.homepage,
+  company: {
+    adminUrl: ctx.adminUrl,
+    supportEmail: ctx.supportEmail,
+    productEmail: ctx.productEmail,
+    website: ctx.website,
+  },
+  repository: { url: `https://github.com/${ctx.repo}` },
+});
 
 export const GENERATED_DEV_NOTICE = buildGeneratedCatalogNotice(ctx);
 
@@ -46,4 +50,4 @@ export function getNoticeTemplates() {
   return buildNoticeTemplates(ctx);
 }
 
-export { buildProductContext, ctx as productContext };
+export { ctx as productContext };

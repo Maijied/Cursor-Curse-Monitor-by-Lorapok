@@ -210,7 +210,7 @@ async function fetchFirefoxAmo() {
   const reviewStatus =
     fileStatus === "public"
       ? "public"
-      : fileStatus === "awaiting-review" || fileStatus === "nominated"
+      : fileStatus === "awaiting-review" || fileStatus === "nominated" || fileStatus === "unreviewed"
         ? "awaiting-review"
         : fileStatus || addonStatus || "unknown";
 
@@ -219,7 +219,7 @@ async function fetchFirefoxAmo() {
     published,
     reviewStatus,
     version: data.current_version?.version ?? fallbackVersion,
-    downloadCount: data.average_daily_users ?? undefined,
+    averageDailyUsers: data.average_daily_users ?? undefined,
   };
 }
 

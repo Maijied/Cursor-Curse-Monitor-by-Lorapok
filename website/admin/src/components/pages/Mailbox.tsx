@@ -73,6 +73,7 @@ export default function Mailbox() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [mailTemplates, setMailTemplates] = useState<MailTemplate[]>([]);
   const [selectedMailTemplate, setSelectedMailTemplate] = useState("");
+  const [composeCategory, setComposeCategory] = useState("compose");
   const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
   const isWide = useMediaQuery("(min-width: 1280px)");
 
@@ -115,7 +116,7 @@ export default function Mailbox() {
     setSending(true);
     setNotice(null);
     try {
-      const res = await sendMailboxMessage({ to, subject, text: body });
+      const res = await sendMailboxMessage({ to, subject, text: body, category: composeCategory });
       setNotice({
         tone: res.ok ? "success" : "error",
         title: res.ok ? "Message sent" : "Send failed",
@@ -433,6 +434,7 @@ export default function Mailbox() {
                 if (template) {
                   setSubject(template.subject);
                   setBody(template.text);
+                  setComposeCategory(template.category ?? "compose");
                 }
               }}
               className={`${inputClass} mt-1`}

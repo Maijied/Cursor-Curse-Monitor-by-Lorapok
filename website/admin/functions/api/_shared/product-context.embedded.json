@@ -1,0 +1,21 @@
+{
+  "version": "1.0.3",
+  "displayName": "Cursor Curse Monitor by Lorapok",
+  "ctx": {
+    "version": "1.0.3",
+    "displayName": "Cursor Curse Monitor by Lorapok",
+    "homepage": "https://cursor.lorapok.tech",
+    "adminUrl": "https://cursor-dev.lorapok.tech",
+    "supportEmail": "cursor.curse.help@lorapok.tech",
+    "productEmail": "cursor.monitor@lorapok.tech",
+    "website": "https://lorapok.tech",
+    "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+    "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.3",
+    "latestReleaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest",
+    "firefoxUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
+    "ovsxUrl": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
+    "vscodeUrl": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
+    "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok"
+  }
+}

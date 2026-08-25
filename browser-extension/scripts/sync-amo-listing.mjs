@@ -81,6 +81,7 @@ const payload = {
   developer_comments: base.developer_comments,
   categories: base.categories,
   tags: base.tags,
+  eula: base.eula,
 };
 
 const data = await patchJson(payload);
@@ -100,6 +101,9 @@ if (existsSync(iconPath)) {
   console.log("Uploading icon:", iconPath);
   await patchIcon(iconPath);
   console.log("Icon upload submitted (AMO may resize asynchronously)");
+} else if (iconArg) {
+  console.error(`Icon not found at ${iconPath} (explicit --icon requested)`);
+  process.exit(1);
 } else {
   console.warn("Icon not found at", iconPath, "— run npm run build -w browser-extension first");
 }
