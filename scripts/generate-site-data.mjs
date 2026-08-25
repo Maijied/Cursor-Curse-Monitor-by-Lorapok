@@ -394,7 +394,10 @@ const version = pkg.version;
 const publishedReleaseVersion = github?.version ?? null;
 const releaseStatus = publishedReleaseVersion === version ? "published" : "candidate";
 const vsixName = github?.vsixName ?? `${NAME}-${version}.vsix`;
-const syncStatus = computeSyncStatus(ovsxCanonical?.version, ovsxDuplicate?.version, version);
+let syncStatus = computeSyncStatus(ovsxCanonical?.version, ovsxDuplicate?.version, version);
+if (releaseStatus !== "published" && syncStatus === "synced") {
+  syncStatus = "dual-listing";
+}
 const deployTags = githubTagList.length > 0
   ? githubTagList
   : github?.tag

@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-08-25T12:09:25.347Z",
+  "generatedAt": "2026-08-25T12:11:07.551Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
   "version": "1.0.3",
   "packageVersion": "1.0.3",
   "publishedReleaseVersion": "feat/website-final-polish",
   "releaseStatus": "candidate",
-  "syncStatus": "synced",
+  "syncStatus": "dual-listing",
   "ovsxPublisher": "lorapok-labs",
   "vscePublisher": "LorapokLabs",
   "extensionName": "cursor-curse-monitor-by-lorapok",
@@ -57,7 +57,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-08-25T12:09:25.347Z"
+    "updatedAt": "2026-08-25T12:11:07.551Z"
   },
   "noticeTemplates": [
     {
