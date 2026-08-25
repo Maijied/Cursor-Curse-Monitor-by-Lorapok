@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveExtensionVersion } from "./lib-version.mjs";
+import { applyFirefoxManifestOverrides } from "./lib-firefox-manifest.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -64,15 +65,12 @@ if (!existsSync(join(dist, "popup.html")) && popupSrc) {
   writeFileSync(join(dist, "popup.html"), rewriteHtmlPaths(readFileSync(popupSrc, "utf8")));
 }
 
-const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
+const manifest = applyFirefoxManifestOverrides(
+  JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"))
+);
 manifest.version = version;
 manifest.action.default_popup = "popup.html";
 manifest.options_ui = { page: "options.html", open_in_tab: true };
-// Firefox AMO: use background.scripts only (service_worker is ignored and triggers linter warnings).
-manifest.background = {
-  scripts: ["background/service-worker.js"],
-  type: "module",
-};
 manifest.content_scripts = [
   {
     matches: ["https://cursor.com/*", "https://*.cursor.com/*"],
@@ -81,10 +79,6 @@ manifest.content_scripts = [
     all_frames: true,
   },
 ];
-if (manifest.browser_specific_settings?.gecko) {
-  // background.type needs 112+; data_collection_permissions needs 140+ (142 Android).
-  manifest.browser_specific_settings.gecko.strict_min_version = "142.0";
-}
 
 writeFileSync(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
 console.log("postbuild: manifest.json + popup.html written");
