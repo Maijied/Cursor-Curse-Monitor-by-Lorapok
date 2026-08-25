@@ -961,11 +961,32 @@ export function createDevApiMiddleware() {
         try {
           const parsed = JSON.parse(body || "{}");
           const id = String(parsed.id ?? "");
-          const index = devStore.notices.findIndex((n) => n.id === id);
-          if (index < 0) {
+          let index = devStore.notices.findIndex((n) => n.id === id);
+          if (index < 0 && typeof parsed.enabled === "boolean" && Object.keys(parsed).every((k) => ["id", "enabled"].includes(k))) {
             res.statusCode = 404;
             res.end(JSON.stringify({ error: "Notice not found" }));
             return;
+          }
+          if (index < 0) {
+            const notice = {
+              id,
+              source: parsed.source ?? "admin",
+              enabled: Boolean(parsed.enabled),
+              type: String(parsed.type ?? "development").trim() || "development",
+              title: String(parsed.title ?? "").trim(),
+              message: String(parsed.message ?? "").trim(),
+              shortMessage: String(parsed.shortMessage ?? "").trim(),
+              severity: String(parsed.severity ?? "info").trim() || "info",
+              feedbackUrl: String(parsed.feedbackUrl ?? "").trim(),
+              collaborateUrl: String(parsed.collaborateUrl ?? "").trim(),
+              updatedAt: new Date().toISOString(),
+              dismissible: parsed.dismissible !== false,
+            };
+            if (notice.enabled) {
+              devStore.notices = devStore.notices.map((n) => ({ ...n, enabled: false }));
+            }
+            devStore.notices.unshift(notice);
+            index = 0;
           }
           if (typeof parsed.enabled === "boolean" && Object.keys(parsed).every((k) => ["id", "enabled"].includes(k))) {
             devStore.notices = devStore.notices.map((n) => ({

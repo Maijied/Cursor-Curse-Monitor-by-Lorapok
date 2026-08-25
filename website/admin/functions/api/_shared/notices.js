@@ -68,6 +68,21 @@ export const ROLLBACK_NOTICE = {
   dismissible: false,
 };
 
+/** Built-in notices that must always exist in the catalog (merged on every read). */
+export const BUILTIN_NOTICES = [GENERATED_DEV_NOTICE, CONVERSATION_RECOVERY_NOTICE];
+
+export function mergeBuiltinNotices(items) {
+  const next = [...items];
+  let changed = false;
+  for (const builtin of BUILTIN_NOTICES) {
+    if (!next.some((n) => n.id === builtin.id)) {
+      next.push({ ...builtin });
+      changed = true;
+    }
+  }
+  return { items: next, changed };
+}
+
 export function normalizeNotice(body, extras = {}) {
   return {
     enabled: Boolean(body.enabled),
@@ -138,34 +153,34 @@ export async function writeCatalog(env, catalog) {
 
 export async function ensureCatalogSeeded(env) {
   const catalog = await readCatalog(env);
-  if (catalog.seeded) return catalog;
+  let items = [...catalog.items];
+  const { items: mergedItems, changed: builtinsAdded } = mergeBuiltinNotices(items);
+  items = mergedItems;
+  let changed = builtinsAdded || !catalog.seeded;
 
-  const items = [...catalog.items];
-  const hasGenerated = items.some((n) => n.id === GENERATED_DEV_NOTICE.id);
-  if (!hasGenerated) {
-    items.push({ ...GENERATED_DEV_NOTICE });
-  }
-  const hasRecovery = items.some((n) => n.id === CONVERSATION_RECOVERY_NOTICE.id);
-  if (!hasRecovery) {
-    items.push({ ...CONVERSATION_RECOVERY_NOTICE });
-  }
-
-  try {
-    const raw = await env.ADMIN_KV?.get?.(ACTIVE_KEY);
-    if (raw) {
-      const active = JSON.parse(raw);
-      if (active?.title && !items.some((n) => n.title === active.title && n.source === "admin")) {
-        items.push(
-          normalizeNotice(active, {
-            id: active.id || crypto.randomUUID(),
-            source: "admin",
-            updatedAt: active.updatedAt || new Date().toISOString(),
-          })
-        );
+  if (!catalog.seeded) {
+    try {
+      const raw = await env.ADMIN_KV?.get?.(ACTIVE_KEY);
+      if (raw) {
+        const active = JSON.parse(raw);
+        if (active?.title && !items.some((n) => n.title === active.title && n.source === "admin")) {
+          items.push(
+            normalizeNotice(active, {
+              id: active.id || crypto.randomUUID(),
+              source: "admin",
+              updatedAt: active.updatedAt || new Date().toISOString(),
+            })
+          );
+          changed = true;
+        }
       }
+    } catch {
+      // ignore migrate failures
     }
-  } catch {
-    // ignore migrate failures
+  }
+
+  if (!changed) {
+    return { ...catalog, items };
   }
 
   const next = { seeded: true, items };

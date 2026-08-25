@@ -70,6 +70,35 @@ describe("notice catalog APIs", () => {
     expect(catalog.active).toBeNull();
   });
 
+  it("upserts a built-in notice by id when it is missing from the catalog", async () => {
+    const id = "conversation-recovery-v0515";
+    const deleted = await fetch(`${base}/api/notices?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    expect(deleted.ok).toBe(true);
+
+    const res = await fetch(`${base}/api/notices`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        source: "release",
+        enabled: true,
+        title: "Recover Missing Agent Conversations",
+        shortMessage: "Get back chats lost after a worktree switch.",
+        message: "Rebuild indexes from saved transcripts.",
+        severity: "info",
+        feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+        collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+        dismissible: true,
+      }),
+    });
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.notice.id).toBe(id);
+    expect(data.notice.enabled).toBe(true);
+  });
+
   it("creates, enables, and deletes admin notices", async () => {
     const created = await fetch(`${base}/api/notices`, {
       method: "POST",
