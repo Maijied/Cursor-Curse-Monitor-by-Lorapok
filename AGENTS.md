@@ -16,19 +16,32 @@ before you start.
 - **Marketing website (`website/`)** — static site deployed to GitHub Pages.
 - **Admin SPA (`website/admin/`)** — Mission Control on Cloudflare Pages.
 
-### Browser extension — build / test
+### Browser extension — build / test / publish
 
 ```bash
+npm run version:sync
 npm run build -w @lorapok/cursor-monitor-shared
 npm run browser-ext:test
 npm run browser-ext:build
 npm run build:chrome -w browser-extension   # zip artifact
-node browser-extension/scripts/generate-amo-metadata.mjs
+node browser-extension/scripts/publish-amo.mjs   # AMO sign (needs AMO_JWT_* env)
 ```
 
 - Popup/options UI must include footer: Lorapok Labs (`https://lorapok.tech`) +
   Cursor (`https://cursor.com`) on every page.
 - Shared API logic lives in `packages/shared/` (`@lorapok/cursor-monitor-shared`).
+- AMO pipeline: `generate-amo-metadata.mjs` → `validate-amo-metadata.mjs` → `web-ext sign` → `verify-amo-status.mjs` (all orchestrated by `publish-amo.mjs`).
+
+### Global agent skills
+
+Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `~/.claude/skills`):
+
+- `loragent-amo-publish` — Firefox AMO CI and local publish
+- `loragent-dynamic-versioning` — root-base version sync
+- `loragent-cloudflare-mail-master` — branded mail templates
+- `secure-cred-vault` — credential vault operations
+
+Re-sync: `~/.local/bin/sync-global-agent-stack`
 
 ### IDE extension (root) — build / test / package
 

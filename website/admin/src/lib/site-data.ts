@@ -2,6 +2,7 @@ export interface DownloadBreakdown {
   openVsxCanonical: number;
   openVsxDuplicate: number;
   vscodeMarketplace: number;
+  githubAllAssets: number;
   githubVsix: number;
   latestReleaseVsix: number;
 }
@@ -109,7 +110,7 @@ export interface SiteData {
   };
   browserExtension?: {
     version: string | null;
-    firefox?: { url: string; published: boolean };
+    firefox?: { url: string; published: boolean; downloadCount?: number };
     chrome?: { zipUrl: string | null; zipName?: string | null; webStorePublished: boolean };
   };
 }

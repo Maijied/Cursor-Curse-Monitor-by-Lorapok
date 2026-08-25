@@ -9,35 +9,46 @@ All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.y
 | Trigger | Jobs | What it does |
 |---------|------|-------------|
 | **PR to `main`** | `ci` | Compile, validate assets, package VSIX |
-| **Push to `main`** | `ci` → `admin-ci` → `admin-deploy`* → `website` | Extension CI, admin build/deploy, marketing site |
-| **Manual dispatch** | `release-bump` → `deploy` → `website` | Auto-bumps version, commits/tags, conditionally publishes to marketplaces, deploys website |
-| **Tag `v*` push** | `deploy` → `website` | Publishes existing tag to marketplaces, creates GitHub Release, deploys website |
+| **Push to `main`** | `ci` → `admin-ci` → `website` | Extension CI, admin build, marketing site — **no marketplace publish** |
+| **Manual dispatch** | `release-bump` → `deploy` → `website` | Version bump, commit/tag, publish to selected marketplaces, deploy website |
+| **Deploy existing tag** | `deploy` | Re-publish a prior tag without rewriting `main` |
+| **Rollback** | `rollback` | Restore prior tag as new patch release |
+
+**Master admin only:** Mission Control deploy/release/rollback APIs require `ADMIN_MASTER_EMAIL`. Admin and website production deploy jobs are `workflow_dispatch`-only.
 
 **Manual QA:** see [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) before tagging a stable release.
 
-### 1. Continuous Integration (Dynamic Per-Commit Builds)
+### Dynamic versioning
+
+Root `package.json` holds the production base version. Workspace packages (`browser-extension`, `packages/shared`) use `0.0.0` in git; CI and local builds run `npm run version:sync` to resolve the real semver before packaging.
+
+```bash
+npm run version:check   # verify sync state
+npm run version:sync    # write resolved versions
+```
+
+### 1. Continuous Integration
 
 Every push to `main` automatically:
-1. Builds and validates the extension.
-2. Dynamically generates a version using the commit hash (e.g., `0.5.2-beta.a1b2c3d`).
-3. Packages the VSIX and saves it as a **workflow artifact**.
-4. Deploys the project website to ensure documentation is always up to date.
+1. Builds and validates the extension and admin panel.
+2. Regenerates `site-data.json` / `seo.json`.
+3. Deploys the marketing website to GitHub Pages.
 
-> **Note:** Pushes to `main` do **NOT** automatically publish to the public marketplaces.
+> **Note:** Pushes to `main` do **NOT** automatically publish to public marketplaces.
 
 ### 2. Manual Releases (Marketplace Publishing)
 
-To actually publish a new version (Beta or Production) to the marketplaces:
+To publish a new version (Beta or Production):
 
-1. Go to **Actions → CI/CD → Run workflow**
+1. Go to **Mission Control → Deployments** (master admin) or **Actions → CI/CD → Run workflow**
 2. Configure the release:
-   - **Publish Market**: `Both`, `VS Code Marketplace`, or `Open VSX`
+   - **Publish Market**: `Both`, `VS Code Marketplace`, `Open VSX`, or `Firefox AMO`
    - **Release Channel**: `Production` or `Beta (Pre-release)`
    - **Version Bump Type**: `patch`, `minor`, `major`, `prepatch`, `preminor`, `prerelease`, or `custom`
    - **Custom Version**: (Only if you selected `custom` above)
 3. Click **Run workflow**
 
-The workflow will automatically bump `package.json`, commit, tag, and publish to the selected marketplaces with the appropriate flags (e.g., `--pre-release` for Beta).
+The workflow bumps root `package.json`, runs `version:sync`, builds, tags, and publishes to the selected marketplaces.
 
 ---
 
@@ -51,6 +62,8 @@ In **Settings → Secrets and variables → Actions**, add:
 |--------|----------|-------------|
 | `OVSX_PAT` | Yes (Open VSX) | Open VSX access token from [open-vsx.org](https://open-vsx.org) |
 | `VSCE_PAT` | Yes (VS Code) | Azure DevOps PAT for [VS Code Marketplace](https://marketplace.visualstudio.com/) |
+| `AMO_JWT_ISSUER` | Yes (Firefox) | Firefox Add-ons API JWT issuer |
+| `AMO_JWT_SECRET` | Yes (Firefox) | Firefox Add-ons API JWT secret |
 
 ### 2. VS Code Marketplace Publisher
 

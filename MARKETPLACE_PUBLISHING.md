@@ -1,6 +1,6 @@
 # Marketplace Publishing Guide
 
-This guide explains how to publish the Cursor Curse Monitor extension to the VS Code Marketplace and Open VSX Registry using the unified CI/CD workflow.
+This guide explains how to publish the Cursor Curse Monitor extension to the VS Code Marketplace, Open VSX Registry, and Firefox AMO using the unified CI/CD workflow.
 
 ## Prerequisites
 
@@ -22,6 +22,11 @@ This guide explains how to publish the Cursor Curse Monitor extension to the VS 
 4. Create publisher with name: `lorapok-labs`
 5. Display name: `Lorapok Labs`
 6. Add description and website
+
+#### Firefox Add-ons (AMO)
+1. Go to [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/)
+2. Create or claim the add-on listing for extension ID `cursor-curse-monitor@lorapok.tech`
+3. Generate API credentials (JWT issuer + secret)
 
 ### 2. Generate Access Tokens
 
@@ -45,6 +50,12 @@ This guide explains how to publish the Cursor Curse Monitor extension to the VS 
 7. Click **Generate**
 8. **Copy the token immediately** — you won't see it again!
 
+#### Firefox AMO (AMO_JWT_ISSUER / AMO_JWT_SECRET)
+1. Go to [Firefox Add-ons Developer Hub → API credentials](https://addons.mozilla.org/developers/addon/api/key/)
+2. Generate JWT credentials
+3. Store in credential vault as `firefox/jwt_issuer` and `firefox/jwt_secret`
+4. Sync to GitHub: `CRED_PASSPHRASE=… npm run amo:secrets`
+
 ### 3. Add GitHub Secrets
 
 1. Go to your GitHub repository: `Maijied/Cursor-Curse-Monitor-by-Lorapok`
@@ -56,46 +67,51 @@ This guide explains how to publish the Cursor Curse Monitor extension to the VS 
 |-------------|-------|-------------|
 | `VSCE_PAT` | Your VS Code Marketplace token | For publishing to VS Code Marketplace |
 | `OVSX_PAT` | Your Open VSX token | For publishing to Open VSX Registry |
+| `AMO_JWT_ISSUER` | Firefox JWT issuer | For `web-ext sign` (browser extension) |
+| `AMO_JWT_SECRET` | Firefox JWT secret | For `web-ext sign` (browser extension) |
 
 ## Deployment Methods
 
-### Method 1: Auto-Patch on Push (Default)
+### Method 1: Mission Control (recommended)
 
-Every push to `main` automatically:
-1. Bumps the patch version
-2. Creates a git tag
-3. Publishes to both marketplaces
-4. Creates a GitHub Release with VSIX
-5. Updates the project website
+1. Sign in to [Mission Control](https://cursor-dev.lorapok.tech) as **master admin**
+2. Go to **Deployments → Release**
+3. Choose publish market (`Both`, `Open VSX`, `VS Code Marketplace`, or `Firefox AMO`)
+4. Select version bump and release channel
+5. Submit — runtime logs stream in the panel
 
-Simply push your changes:
-```bash
-git push origin main
-```
-
-### Method 2: Manual Major/Minor Release via GitHub Actions
+### Method 2: GitHub Actions workflow_dispatch
 
 1. Go to **Actions** tab in your GitHub repository
 2. Select **CI/CD** workflow
 3. Click **Run workflow**
 4. Configure options:
-   - **Version bump type**: `major`, `minor`, or `patch`
-   - **Custom version**: Leave empty for auto-bump, or specify a version
-   - **Create GitHub Release**: Check to create a release (default: true)
+   - **Action type**: `release`
+   - **Publish market**: `Both`, `Open VSX`, `VS Code Marketplace`, or `Firefox AMO`
+   - **Version bump type**: `patch`, `minor`, `major`, or `custom`
+   - **Release channel**: `Production` or `Beta (Pre-release)`
 5. Click **Run workflow**
 
-### Method 3: Tag-Based Release (via release script)
+### Method 3: Deploy existing tag
 
-```bash
-./scripts/release.sh patch   # bump patch, tag, push
-./scripts/release.sh minor   # bump minor, tag, push
-./scripts/release.sh         # tag current version, push
-```
+Re-publish a prior release without bumping `main`:
 
-### Method 4: Local Manual Publishing
+1. Mission Control **Deployments → Deploy** or workflow_dispatch with `action_type` = `publish-tag`
+2. Set `target_tag` (e.g. `v1.0.1`)
+3. Choose publish market
+
+### Method 4: Standalone Firefox publish
+
+For AMO-only signing without a full release:
+
+1. **Actions → Publish Firefox Extension → Run workflow**
+2. Optionally set `version` input
+
+### Method 5: Local Manual Publishing
 
 #### Publish to VS Code Marketplace
 ```bash
+npm run version:sync
 npm run compile
 npm run package
 npx vsce publish -p YOUR_VSCE_PAT
@@ -103,7 +119,15 @@ npx vsce publish -p YOUR_VSCE_PAT
 
 #### Publish to Open VSX
 ```bash
+npm run version:sync
 npm run publish:ovsx -- -p YOUR_OVSX_PAT
+```
+
+#### Publish to Firefox AMO
+```bash
+npm run version:sync
+npm run browser-ext:build
+node browser-extension/scripts/publish-amo.mjs
 ```
 
 ## Verification
@@ -112,6 +136,7 @@ After publishing, verify the extension is available:
 
 - **Open VSX**: https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok
 - **VS Code Marketplace**: https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok
+- **Firefox AMO**: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/
 - **GitHub Releases**: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases
 - **Project Website**: https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/
 
@@ -128,14 +153,12 @@ If the publisher name is already taken on either marketplace:
 - Verify the secret name matches exactly in GitHub Secrets
 
 ### Version Already Published
-The workflow handles this gracefully and will continue without error. If you need to republish:
-1. Bump the version (auto-patch does this automatically)
-2. Push to `main` or trigger manually
+The workflow handles this gracefully and will continue without error. Bump the version and trigger a new release.
 
-### Auto-Patch Creating Too Many Releases
-This is by design — every push creates a release. To batch changes:
-- Use feature branches and merge via PR
-- Only merge to `main` when ready to release
+### AMO sign fails
+- Verify `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` in GitHub secrets
+- Ensure `generate-amo-metadata.mjs` ran before `web-ext sign`
+- Check extension ID in `browser_specific_settings.gecko.id`
 
 ## Current Configuration
 
@@ -143,7 +166,9 @@ This is by design — every push creates a release. To batch changes:
 |---------|-------|
 | **VS Code Marketplace Publisher** | `LorapokLabs` |
 | **Open VSX Publisher** | `lorapok-labs` |
+| **Firefox Extension ID** | `cursor-curse-monitor@lorapok.tech` |
 | **Extension Name** | `cursor-curse-monitor-by-lorapok` |
 | **CI/CD Workflow** | `.github/workflows/ci-cd.yml` |
-| **Auto-patch** | Enabled (push to `main`) |
-| **Manual bump** | `workflow_dispatch` |
+| **Firefox Workflow** | `.github/workflows/publish-firefox.yml` |
+| **Auto-publish on push** | Disabled — manual dispatch only |
+| **Production base version** | Root `package.json` (dynamic `version:sync` at build) |

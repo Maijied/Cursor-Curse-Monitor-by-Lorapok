@@ -27,10 +27,24 @@ Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs 
 
 ## Current stable release
 
-- **Version:** v0.5.9
+- **Version:** v1.0.1
 - **Publisher:** Lorapok Labs (`LorapokLabs`)
-- **Contact:** cursor-contact@lorapok.tech
+- **Product email:** cursor.monitor@lorapok.tech
+- **Help email:** cursor.curse.help@lorapok.tech
 
 ## Lorapok Labs
 
 CCM is developed and operated by [Lorapok Labs](https://lorapok.tech). Mission Control provides marketplace sync, deployment dispatch, development notices, analytics, mailbox, and system logs.
+
+## Agent skills (global)
+
+Lorapok agent skills are installed globally on developer machines:
+
+| Skill | Purpose |
+|-------|---------|
+| `loragent-amo-publish` | Firefox AMO signing and CI pipeline |
+| `loragent-dynamic-versioning` | Root-base version sync at build time |
+| `loragent-cloudflare-mail-master` | Branded outbound mail templates |
+| `secure-cred-vault` | Credential vault → GitHub secrets sync |
+
+Re-sync: `~/.local/bin/sync-global-agent-stack`
