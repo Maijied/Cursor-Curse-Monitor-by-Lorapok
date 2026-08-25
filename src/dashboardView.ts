@@ -72,15 +72,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     const subscription = this.monitor.onDidUpdate(push);
     webviewView.onDidDispose(() => subscription.dispose());
 
-    const existing = this.monitor.getSnapshot();
-    if (existing) {
-      push(existing);
-    }
-    void this.monitor.refresh(true).then(push);
-
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
       if (message.type === "refresh") {
-        await this.monitor.refresh();
+        push(await this.monitor.refresh());
+        return;
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
         if (!Number.isFinite(message.value) || message.value < 0 || message.value > 100000) {
@@ -89,11 +84,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await vscode.workspace
           .getConfiguration("cursorCurseMonitor")
           .update("customBudgetLimit", message.value, vscode.ConfigurationTarget.Global);
-        await this.monitor.refresh();
+        push(await this.monitor.refresh(true));
+        return;
       }
       if (message.type === "applyFallback") {
         await vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
-        await this.monitor.refresh();
+        push(await this.monitor.refresh(true));
+        return;
       }
       if (message.type === "reindexConversations") {
         await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
@@ -1174,6 +1171,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       vscode.postMessage({ type: 'setBudget', value: value });
       document.getElementById('budgetEdit').classList.remove('open');
     });
+    var snapshotReceived = false;
+    window.addEventListener('message', function(event) {
+      if (event.data?.type === 'snapshot') snapshotReceived = true;
+    }, { capture: true });
+    setTimeout(function() {
+      if (!snapshotReceived) {
+        var loading = document.getElementById('loadingState');
+        if (loading) {
+          loading.textContent = 'Still loading… tap Refresh or reopen the panel.';
+          loading.style.cursor = 'pointer';
+          loading.addEventListener('click', refresh);
+        }
+      }
+    }, 8000);
     refresh();
   </script>
 </body>
