@@ -46,6 +46,19 @@ function appDataRoot(host: EditorHost): { darwin: string; win32: string; linux: 
   };
 }
 
+/** Directory containing state.vscdb and conversation-search.db. */
+export function getCursorGlobalStorageDir(host?: EditorHost): string {
+  return path.dirname(getCursorGlobalStoragePath(host));
+}
+
+/** Conversation search index used by Agents Window Ctrl+K. */
+export function getConversationSearchDbPath(host?: EditorHost): string {
+  if (process.env.CCM_REINDEX_SEARCH_DB) {
+    return process.env.CCM_REINDEX_SEARCH_DB;
+  }
+  return path.join(getCursorGlobalStorageDir(host), "conversation-search.db");
+}
+
 /** Resolve Cursor or VS Code globalStorage state.vscdb for the current host. */
 export function getCursorGlobalStoragePath(host?: EditorHost): string {
   if (process.env.CURSOR_DB_PATH) {
@@ -104,7 +117,7 @@ function loadSqlite(): SqliteModule {
   }
 }
 
-function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: string } {
+export function validateDatabaseIntegrity(dbPath: string): { valid: boolean; reason?: string } {
   try {
     if (!fs.existsSync(dbPath)) {
       return { valid: false, reason: "Database file does not exist" };

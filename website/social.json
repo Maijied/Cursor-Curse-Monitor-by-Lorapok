@@ -16,7 +16,8 @@
     "portfolio": "https://maijied.github.io/Maijied"
   },
   "contact": {
-    "email": "cursor-contact@lorapok.tech",
+    "email": "cursor.curse.help@lorapok.tech",
+    "productEmail": "cursor.monitor@lorapok.tech",
     "fallbackEmail": "lorapokdev@gmail.com"
   },
   "api": {

@@ -8,6 +8,9 @@ export interface ExtensionSettings {
   warnAtPercent: number;
   pollIntervalMinutes: number;
   anonymousUsageStats: boolean;
+  productNotices: boolean;
+  subscribedEmail: string | null;
+  subscribeSnoozeUntil: number | null;
   installId: string;
   lastPingDay: string | null;
 }
@@ -19,6 +22,9 @@ const DEFAULTS: ExtensionSettings = {
   warnAtPercent: 80,
   pollIntervalMinutes: 5,
   anonymousUsageStats: false,
+  productNotices: true,
+  subscribedEmail: null,
+  subscribeSnoozeUntil: null,
   installId: "",
   lastPingDay: null,
 };

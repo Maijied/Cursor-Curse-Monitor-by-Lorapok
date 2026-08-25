@@ -124,6 +124,54 @@
 
   // Keep remote notice loading independent from local image interactions.
   void initNotice();
+  initSubscribe();
+
+  function initSubscribe() {
+    const form = $("#subscribe-form");
+    const input = $("#subscribe-email");
+    const message = $("#subscribe-message");
+    if (!form || !input || !message) return;
+
+    const subscribeUrl = data?.social?.subscribe || "https://cursor-dev.lorapok.tech/api/subscribe";
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = String(input.value || "").trim().toLowerCase();
+      const consent = form.querySelector("#subscribe-consent");
+      if (!email) {
+        message.hidden = false;
+        message.className = "subscribe-message error";
+        message.textContent = "Enter your email address.";
+        return;
+      }
+      if (consent && !consent.checked) {
+        message.hidden = false;
+        message.className = "subscribe-message error";
+        message.textContent = "Please agree to receive product updates.";
+        return;
+      }
+
+      message.hidden = false;
+      message.className = "subscribe-message pending";
+      message.textContent = "Subscribing…";
+
+      try {
+        const response = await fetch(subscribeUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ email, source: "website", consent: true }),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.error || "Subscribe failed");
+        message.className = "subscribe-message success";
+        message.textContent = body.message || "You're subscribed!";
+        form.reset();
+      } catch (err) {
+        message.className = "subscribe-message error";
+        message.textContent = err instanceof Error ? err.message : "Could not subscribe right now.";
+      }
+    });
+  }
 
   async function initNotice() {
     const banner = $("#dev-notice-banner");

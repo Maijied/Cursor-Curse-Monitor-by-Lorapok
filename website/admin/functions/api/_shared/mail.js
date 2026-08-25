@@ -1,7 +1,14 @@
 import { recordMailboxMessage } from "./mailbox.js";
 import { logSystemEvent } from "./system-log.js";
+import {
+  MAIL_HELP,
+  MAIL_MONITOR,
+  MAIL_OPS_COPY,
+  defaultMailBcc,
+  resolveMailFrom,
+} from "./mail-addresses.js";
 
-const FROM_EMAIL = "cursor-contact@lorapok.tech";
+const FROM_EMAIL = MAIL_MONITOR;
 const FROM_NAME = "Cursor Curse Monitor";
 const DEFAULT_ADMIN_URL = "https://cursor-dev.lorapok.tech";
 
@@ -24,7 +31,7 @@ function statPill(label, value) {
   </td>`;
 }
 
-function emailShell(title, bodyHtml, { preheader = "" } = {}) {
+function emailShell(title, bodyHtml, { preheader = "", fromEmail = FROM_EMAIL, fromName = FROM_NAME } = {}) {
   const safePreheader = escapeHtml(preheader || title);
   return `<!DOCTYPE html>
 <html lang="en">
@@ -75,8 +82,8 @@ function emailShell(title, bodyHtml, { preheader = "" } = {}) {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid rgba(148,163,184,0.16);padding-top:18px;">
                 <tr>
                   <td style="color:#64748b;font-size:12px;line-height:1.55;">
-                    <strong style="color:#94a3b8;">${FROM_NAME}</strong><br />
-                    ${FROM_EMAIL} · Lorapok Labs product mail
+                    <strong style="color:#94a3b8;">${escapeHtml(fromName)}</strong><br />
+                    ${escapeHtml(fromEmail)} · Lorapok Labs product mail
                   </td>
                 </tr>
               </table>
@@ -201,18 +208,20 @@ export function getMailTransportStatus(env) {
   };
 }
 
-async function sendViaCloudflareBinding(env, { to, subject, html, text }) {
+async function sendViaCloudflareBinding(env, { to, subject, html, text, from, bcc, replyTo }) {
   await env.EMAIL.send({
     to,
-    from: { email: FROM_EMAIL, name: FROM_NAME },
+    from: { email: from.email, name: from.name },
     subject,
     html,
     text,
+    ...(bcc?.length ? { bcc } : {}),
+    ...(replyTo ? { replyTo: { email: replyTo } } : {}),
   });
   return { sent: true, transport: "cloudflare-binding" };
 }
 
-async function sendViaCloudflareRest(env, { to, subject, html, text }) {
+async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, replyTo }) {
   const { accountId, token } = readCloudflareMailCredentials(env);
   if (!accountId || !token) {
     return { sent: false, reason: "Cloudflare Email REST credentials missing" };
@@ -228,11 +237,12 @@ async function sendViaCloudflareRest(env, { to, subject, html, text }) {
       },
       body: JSON.stringify({
         to,
-        from: { address: FROM_EMAIL, name: FROM_NAME },
+        from: { address: from.email, name: from.name },
         subject,
         html,
         text,
-        reply_to: FROM_EMAIL,
+        reply_to: replyTo ?? from.email,
+        ...(bcc?.length ? { bcc } : {}),
       }),
     }
   );
@@ -269,7 +279,7 @@ async function sendViaCloudflareRest(env, { to, subject, html, text }) {
   return { sent: true, transport: "cloudflare-rest" };
 }
 
-async function sendViaResend(env, { to, subject, html, text }) {
+async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo }) {
   const resendKey = typeof env.RESEND_API_KEY === "string" ? env.RESEND_API_KEY.trim() : "";
   if (!resendKey) {
     return { sent: false, reason: "RESEND_API_KEY not configured" };
@@ -282,12 +292,13 @@ async function sendViaResend(env, { to, subject, html, text }) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: `${from.name} <${from.email}>`,
       to: [to],
       subject,
       html,
       text,
-      reply_to: FROM_EMAIL,
+      reply_to: replyTo ?? from.email,
+      ...(bcc?.length ? { bcc } : {}),
     }),
   });
 
@@ -304,9 +315,22 @@ async function sendViaResend(env, { to, subject, html, text }) {
  * @param {{ to: string; subject: string; html: string; text?: string; category?: string; sentBy?: string | null }} opts
  * @returns {Promise<{ sent: boolean; transport?: string; reason?: string; mailboxId?: string }>}
  */
-export async function sendMail(env, { to, subject, html, text, category = "system", sentBy = null }) {
+export async function sendMail(
+  env,
+  { to, subject, html, text, category = "system", sentBy = null, from: fromOverride = null, bcc: bccOverride = null }
+) {
   const textBody = text ?? subject;
-  const payload = { to, subject, html, text: textBody };
+  const from = fromOverride ?? resolveMailFrom(category);
+  const bcc = bccOverride ?? defaultMailBcc();
+  const payload = {
+    to,
+    subject,
+    html,
+    text: textBody,
+    from,
+    bcc,
+    replyTo: from.replyTo ?? from.email,
+  };
 
   let result = /** @type {{ sent: boolean; transport?: string; reason?: string }} */ ({ sent: false });
 
@@ -355,7 +379,7 @@ export async function sendMail(env, { to, subject, html, text, category = "syste
   try {
     const recorded = await recordMailboxMessage(env, {
       direction: "outbound",
-      from: FROM_EMAIL,
+      from: from.email,
       to,
       subject,
       text: textBody,
@@ -365,6 +389,7 @@ export async function sendMail(env, { to, subject, html, text, category = "syste
       sentBy,
       error: result.sent ? null : result.reason,
       read: false,
+      meta: { bcc, copyTo: MAIL_OPS_COPY },
     });
     mailboxId = recorded.id;
   } catch (err) {

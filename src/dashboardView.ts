@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { DashboardSnapshot, formatPercent } from "./cursorApi";
 import { UsageMonitorService } from "./usageMonitor";
 import { generateNonce } from "./utils";
+import { subscribeForProductUpdates, getSubscribePromptViewState, snoozeSubscribePrompt } from "./updateSubscription";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -14,7 +15,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly monitor: UsageMonitorService,
     private readonly extensionUri: vscode.Uri,
-    private readonly extensionVersion: string
+    private readonly extensionVersion: string,
+    private readonly extensionContext: vscode.ExtensionContext
   ) {}
 
   private getMediaSvg(filename: string): string {
@@ -46,12 +48,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
 
     const nonce = generateNonce();
+    const iconUri = webviewView.webview
+      .asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "media", "icon.png"))
+      .toString();
     webviewView.webview.html = this.getHtml(
       this.logoSvgCache,
       this.usageMeterSvgCache,
       webviewView.webview.cspSource,
       this.extensionVersion,
-      nonce
+      nonce,
+      iconUri
     );
 
     const push = (snapshot: DashboardSnapshot) => {
@@ -61,7 +67,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     const subscription = this.monitor.onDidUpdate(push);
     webviewView.onDidDispose(() => subscription.dispose());
 
-    webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number }) => {
+    webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
       if (message.type === "refresh") {
         await this.monitor.refresh();
       }
@@ -78,6 +84,30 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
         await this.monitor.refresh();
       }
+      if (message.type === "reindexConversations") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
+      }
+      if (message.type === "subscribeUpdates" && typeof message.email === "string") {
+        const result = await subscribeForProductUpdates(
+          this.extensionContext,
+          message.email,
+          "extension-dashboard"
+        );
+        const state = await getSubscribePromptViewState(this.extensionContext);
+        webviewView.webview.postMessage({
+          type: "subscribeResult",
+          payload: { ...result, state },
+        });
+      }
+      if (message.type === "snoozeSubscribe") {
+        await snoozeSubscribePrompt(this.extensionContext);
+        const state = await getSubscribePromptViewState(this.extensionContext);
+        webviewView.webview.postMessage({ type: "subscribeState", payload: state });
+      }
+      if (message.type === "getSubscribeState") {
+        const state = await getSubscribePromptViewState(this.extensionContext);
+        webviewView.webview.postMessage({ type: "subscribeState", payload: state });
+      }
     });
   }
 
@@ -86,7 +116,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     usageMeterSvg: string,
     cspSource: string,
     extensionVersion: string,
-    nonce: string
+    nonce: string,
+    iconUri: string
   ): string {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -392,9 +423,46 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       margin-top: 10px;
       font-size: 11px;
     }
-    .footer-left { display: flex; align-items: center; gap: 6px; color: var(--muted); }
-    .footer-left a { color: var(--accent-2); text-decoration: none; font-weight: 600; }
-    .footer-right { color: var(--muted); font-weight: 600; }
+    .footer-left { display: flex; align-items: center; gap: 6px; color: var(--muted); flex-wrap: wrap; }
+    .footer-left a { color: var(--accent-2); text-decoration: none; font-weight: 600; font-size: 11px; }
+    .footer-dot { opacity: 0.35; }
+    .footer-right { color: var(--muted); font-weight: 600; font-size: 11px; }
+    .subscribe-card { display: none; }
+    .subscribe-card.visible { display: block; }
+    .subscribe-hero {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .subscribe-hero img {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(124,92,255,0.35);
+      flex-shrink: 0;
+    }
+    .subscribe-title {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .subscribe-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(124,92,255,0.35);
+      background: rgba(124,92,255,0.12);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #c4b5fd;
+      font-weight: 700;
+    }
     .cursor-missing-overlay {
       display: none;
       position: fixed;
@@ -591,6 +659,35 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </section>
 
   <section class="card">
+    <p class="section-label">Data recovery</p>
+    <p class="muted" style="margin:0 0 10px;font-size:11px;line-height:1.45">
+      Restore missing agent chats to search and the IDE sidebar when worktree or workspace changes orphaned your conversation history. Existing chats are preserved; only missing transcripts are indexed.
+    </p>
+    <div class="row" style="margin-top:0">
+      <span class="label">Conversation repair</span>
+      <span class="value">Aug 10+ transcripts</span>
+    </div>
+    <button class="ghost" id="reindexBtn" style="margin-top:10px;width:100%">Reindex missing conversations</button>
+  </section>
+
+  <section class="card subscribe-card" id="subscribeCard">
+    <p class="section-label">Release updates</p>
+    <div class="subscribe-hero">
+      <img src="${iconUri}" alt="" width="44" height="44" />
+      <div>
+        <p class="subscribe-title" id="subscribeTitle">Release updates</p>
+        <p class="muted" id="subscribeBody" style="margin:0;font-size:11px;line-height:1.45"></p>
+      </div>
+    </div>
+    <input id="subscribeEmail" type="email" placeholder="you@example.com" style="width:100%;margin-bottom:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--text)" />
+    <div class="subscribe-actions">
+      <button class="primary" id="subscribeBtn" style="width:100%">Subscribe to updates</button>
+      <button class="ghost" id="subscribeLaterBtn" style="width:100%">Maybe later</button>
+    </div>
+    <p class="muted" id="subscribeStatus" style="margin:8px 0 0;font-size:11px"></p>
+  </section>
+
+  <section class="card">
     <p class="section-label">Fallback</p>
     <div class="row" style="margin-top:0">
       <span class="label">Fallback model</span>
@@ -616,6 +713,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="footer-left">
       <span>A product of</span>
       <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>
+      <span class="footer-dot">·</span>
+      <a href="mailto:cursor.curse.help@lorapok.tech">Help</a>
+      <span class="footer-dot">·</span>
+      <a href="mailto:cursor.monitor@lorapok.tech">Updates</a>
     </div>
     <div class="footer-right">v${extensionVersion}</div>
   </footer>
@@ -842,7 +943,42 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
     window.addEventListener('message', function(event) {
       if (event.data?.type === 'snapshot') render(event.data.payload);
+      if (event.data?.type === 'subscribeResult') {
+        var status = document.getElementById('subscribeStatus');
+        if (status) {
+          status.textContent = event.data.payload?.message || '';
+          status.style.color = event.data.payload?.ok ? 'var(--ok)' : 'var(--danger)';
+        }
+        if (event.data.payload?.ok && event.data.payload?.state) {
+          applySubscribeState(event.data.payload.state);
+        }
+      }
+      if (event.data?.type === 'subscribeState') {
+        applySubscribeState(event.data.payload);
+      }
     });
+
+    function applySubscribeState(state) {
+      var card = document.getElementById('subscribeCard');
+      if (!card) return;
+      if (!state || !state.showPrompt) {
+        card.classList.remove('visible');
+        card.style.display = 'none';
+        return;
+      }
+      card.classList.add('visible');
+      card.style.display = 'block';
+      var title = document.getElementById('subscribeTitle');
+      var body = document.getElementById('subscribeBody');
+      var btn = document.getElementById('subscribeBtn');
+      var later = document.getElementById('subscribeLaterBtn');
+      if (state.copy) {
+        if (title) title.textContent = state.copy.title;
+        if (body) body.textContent = state.copy.body;
+        if (btn) btn.textContent = state.copy.cta;
+        if (later) later.textContent = state.copy.later;
+      }
+    }
 
     function refresh() { vscode.postMessage({ type: 'refresh' }); }
     document.getElementById('refreshBtn').addEventListener('click', refresh);
@@ -850,6 +986,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     document.getElementById('fallbackBtn').addEventListener('click', function() {
       vscode.postMessage({ type: 'applyFallback' });
     });
+    document.getElementById('reindexBtn').addEventListener('click', function() {
+      vscode.postMessage({ type: 'reindexConversations' });
+    });
+    document.getElementById('subscribeBtn').addEventListener('click', function() {
+      var email = document.getElementById('subscribeEmail').value || '';
+      vscode.postMessage({ type: 'subscribeUpdates', email: email });
+    });
+    document.getElementById('subscribeLaterBtn').addEventListener('click', function() {
+      vscode.postMessage({ type: 'snoozeSubscribe' });
+    });
+    vscode.postMessage({ type: 'getSubscribeState' });
     document.getElementById('editBudgetBtn').addEventListener('click', function() {
       document.getElementById('budgetEdit').classList.toggle('open');
     });

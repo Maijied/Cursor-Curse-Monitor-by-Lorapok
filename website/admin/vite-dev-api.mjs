@@ -1,7 +1,9 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { GENERATED_DEV_NOTICE } from "./functions/api/_shared/notices.js";
+import { CONVERSATION_RECOVERY_NOTICE, GENERATED_DEV_NOTICE } from "./functions/api/_shared/notices.js";
+import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
+import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 
@@ -15,7 +17,7 @@ const adminEmailsPath = resolve(adminDataDir, "admin-emails.json");
 
 const devStore = {
   notice: { ...GENERATED_DEV_NOTICE },
-  notices: [{ ...GENERATED_DEV_NOTICE }],
+  notices: [{ ...GENERATED_DEV_NOTICE }, { ...CONVERSATION_RECOVERY_NOTICE }],
   subscribers: [],
   activity: [],
   mailbox: [],
@@ -30,9 +32,23 @@ const devStore = {
   },
 };
 
+const devKv = {
+  get: async (key) => {
+    if (key === "subscribers") {
+      return JSON.stringify(devStore.subscribers);
+    }
+    return null;
+  },
+  put: async (key, value) => {
+    if (key === "subscribers") {
+      devStore.subscribers = JSON.parse(value);
+    }
+  },
+};
+
 export function resetDevStore() {
   devStore.notice = { ...GENERATED_DEV_NOTICE };
-  devStore.notices = [{ ...GENERATED_DEV_NOTICE }];
+  devStore.notices = [{ ...GENERATED_DEV_NOTICE }, { ...CONVERSATION_RECOVERY_NOTICE }];
 }
 
 function logDevActivity(req, status, email = "dev@local") {
@@ -949,6 +965,49 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/subscribers" && req.method === "GET") {
+      readSubscribers(devKv)
+        .then((items) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ items, stats: subscriberStats(items) }));
+        })
+        .catch((error) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: error.message || "Failed to load subscribers" }));
+        });
+      return;
+    }
+
+    if (url === "/api/subscribers/broadcast" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const result = await broadcastToSubscribers(
+            { ADMIN_KV: devKv },
+            {
+              title: parsed.title,
+              message: parsed.message ?? parsed.shortMessage,
+              severity: parsed.severity,
+              feedbackUrl: parsed.feedbackUrl,
+              sentBy: "dev@local",
+            }
+          );
+          res.statusCode = result.error ? 400 : 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(result));
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: error.message || "Broadcast failed" }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/subscribe" && req.method === "POST") {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });
@@ -963,11 +1022,29 @@ export function createDevApiMiddleware() {
             res.end(JSON.stringify({ error: "Valid email is required" }));
             return;
           }
-          if (!devStore.subscribers.includes(email)) devStore.subscribers.push(email);
+          if (parsed.consent !== true && parsed.consent !== "true") {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.end(JSON.stringify({ error: "Consent is required to subscribe" }));
+            return;
+          }
+          const upsert = await upsertSubscriber(devKv, {
+            email,
+            source: String(parsed.source ?? "website"),
+            installId: parsed.installId ?? null,
+          });
+          if (!upsert.ok) {
+            res.statusCode = 503;
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.end(JSON.stringify({ error: upsert.error || "Subscribe failed" }));
+            return;
+          }
           const mailEntry = {
             id: crypto.randomUUID(),
             direction: "outbound",
-            from: "cursor-contact@lorapok.tech",
+            from: "cursor.monitor@lorapok.tech",
             to: email,
             subject: "Subscribed to Cursor Curse Monitor updates",
             text: `Thanks for subscribing, ${email}.`,
@@ -1125,7 +1202,7 @@ export function createDevApiMiddleware() {
           const entry = {
             id: crypto.randomUUID(),
             direction: "outbound",
-            from: "cursor-contact@lorapok.tech",
+            from: "cursor.monitor@lorapok.tech",
             to,
             subject,
             text,

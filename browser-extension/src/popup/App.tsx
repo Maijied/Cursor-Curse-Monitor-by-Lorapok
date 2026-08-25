@@ -3,6 +3,7 @@ import type { DashboardSnapshot } from "@lorapok/cursor-monitor-shared";
 import { AnimatedGauge } from "../components/AnimatedGauge";
 import { SpendChart } from "../components/SpendChart";
 import { Footer } from "../components/Footer";
+import { SubscribePromo } from "../components/SubscribePromo";
 import { fetchSnapshot, onSnapshot, requestRefresh } from "../lib/messaging";
 import { updateSettings } from "../lib/storage";
 import browser from "webextension-polyfill";
@@ -60,7 +61,10 @@ export function App() {
   return (
     <div className="popup-root">
       <header className="popup-header">
-        <h1>Budget Tracker</h1>
+        <div>
+          <p className="popup-eyebrow">Lorapok Labs</p>
+          <h1>Cursor Curse Monitor</h1>
+        </div>
         <div className="header-actions">
           <button type="button" className="icon-btn" onClick={openOptions} aria-label="Settings">
             ⚙
@@ -196,6 +200,7 @@ export function App() {
         </>
       )}
 
+      <SubscribePromo />
       <Footer />
     </div>
   );

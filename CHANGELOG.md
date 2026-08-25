@@ -6,6 +6,42 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+## [0.5.17] - 2026-08-25
+
+### Added
+
+- Smart subscribe prompts — hidden when already subscribed; shown for new users in dashboard, welcome toast, browser popup, and options
+- **Maybe later** snoozes subscribe prompts for a random 3–7 days, then returns with reminder copy and product icon
+- Shared `@lorapok/cursor-monitor-shared` helpers: `shouldShowSubscribePrompt`, `randomSnoozeUntilMs`, first vs reminder copy
+
+## [0.5.16] - 2026-08-25
+
+### Added
+
+- Professional mail identities: `cursor.monitor@lorapok.tech` (product) and `cursor.curse.help@lorapok.tech` (support)
+- Ops BCC copy to `lorapokdev@gmail.com` on every outbound send; messages logged in Mission Control Mailbox
+- **Email all subscribers** on Notices and Subscribers admin pages (`POST /api/subscribers/broadcast`)
+- `scripts/setup-email-addresses.mjs` for Cloudflare Email Sending + Routing setup
+
+### Changed
+
+- Extension and browser add-on footers link Help and Updates mailto addresses
+- Dashboard footer shows Help / Updates contact links
+- Marketing site contact links updated to new addresses
+
+## [0.5.15] - 2026-08-25
+
+### Added
+
+- **Conversation recovery** — `Reindex Missing Conversations` command rebuilds `conversation-search.db` and IDE sidebar entries from on-disk `agent-transcripts` (Aug 10 onward) without deleting existing chats
+- Dashboard **Data recovery** card with one-click reindex and reload guidance
+- Admin catalog preset **Recover Missing Agent Conversations** notice for the marketing-site top banner (enable from Mission Control → Notices)
+- Automatic DB backups before each reindex (`*.bak-pre-ccm-reindex`)
+
+### Fixed
+
+- Safer discovery of orphaned chats after worktree switches, branch changes, or workspace path mismatches
+
 ## [0.5.7] - 2026-08-14
 
 ### Fixed

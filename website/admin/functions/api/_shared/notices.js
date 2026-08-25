@@ -32,6 +32,24 @@ export const GENERATED_DEV_NOTICE = {
   dismissible: true,
 };
 
+/** Public notice for conversation / worktree recovery in v0.5.15+. */
+export const CONVERSATION_RECOVERY_NOTICE = {
+  id: "conversation-recovery-v0515",
+  source: "release",
+  enabled: false,
+  type: "feature",
+  severity: "info",
+  title: "Recover Missing Agent Conversations",
+  message:
+    "If your IDE sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, update to Cursor Curse Monitor v0.5.15 and run Reindex Missing Conversations from the dashboard. The tool rebuilds search and sidebar indexes from on-disk agent transcripts without deleting your existing data.",
+  shortMessage:
+    "Get back chats lost after a worktree switch — v0.5.15 rebuilds your conversation list safely from saved transcripts.",
+  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+  updatedAt: "2026-08-25T00:00:00.000Z",
+  dismissible: true,
+};
+
 /** Public incident notice activated automatically after a successful rollback dispatch. */
 export const ROLLBACK_NOTICE = {
   id: "rollback-recovery-notice",
@@ -127,6 +145,10 @@ export async function ensureCatalogSeeded(env) {
   if (!hasGenerated) {
     items.push({ ...GENERATED_DEV_NOTICE });
   }
+  const hasRecovery = items.some((n) => n.id === CONVERSATION_RECOVERY_NOTICE.id);
+  if (!hasRecovery) {
+    items.push({ ...CONVERSATION_RECOVERY_NOTICE });
+  }
 
   try {
     const raw = await env.ADMIN_KV?.get?.(ACTIVE_KEY);
@@ -149,6 +171,18 @@ export async function ensureCatalogSeeded(env) {
   const next = { seeded: true, items };
   await writeCatalog(env, next);
   return next;
+}
+
+/** Make the recovery notice public for a new release. */
+export async function activateConversationRecoveryNotice(env) {
+  const catalog = await ensureCatalogSeeded(env);
+  const notice = { ...CONVERSATION_RECOVERY_NOTICE, updatedAt: new Date().toISOString(), enabled: true };
+  const items = [notice, ...catalog.items.filter((item) => item.id !== notice.id)].map((item) => ({
+    ...item,
+    enabled: item.id === notice.id,
+  }));
+  await writeCatalog(env, { ...catalog, items });
+  return publicNoticeShape(notice);
 }
 
 /** Make the recovery notice public after a rollback workflow has been accepted. */

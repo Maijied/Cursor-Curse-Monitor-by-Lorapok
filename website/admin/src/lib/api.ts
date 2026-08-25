@@ -448,15 +448,54 @@ export async function clearNotice() {
   return data;
 }
 
-export async function subscribeEmail(email: string) {
+export async function subscribeEmail(email: string, source = "admin") {
   const res = await fetch(`${API_BASE}/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, source, consent: true }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Subscribe failed");
   return data;
+}
+
+export type SubscriberRecord = {
+  email: string;
+  subscribedAt: string;
+  source: string;
+  installId: string | null;
+  consentVersion: string;
+};
+
+export async function fetchSubscribers() {
+  return apiGet<{ items: SubscriberRecord[]; stats: { total: number; withInstallId: number; bySource: Record<string, number> } }>(
+    "/subscribers"
+  );
+}
+
+export async function broadcastToSubscribers(payload: {
+  title: string;
+  message: string;
+  shortMessage?: string;
+  severity?: string;
+  feedbackUrl?: string;
+}) {
+  const res = await fetch(`${API_BASE}/subscribers/broadcast`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && res.status !== 207) {
+    throw new Error(data.error || data.message || "Broadcast failed");
+  }
+  return data as {
+    ok: boolean;
+    sent: number;
+    failed: number;
+    total: number;
+    message?: string;
+  };
 }
 
 export type LogEntry = {

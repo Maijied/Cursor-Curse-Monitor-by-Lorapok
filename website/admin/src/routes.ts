@@ -1,6 +1,7 @@
 import {
   Activity,
   BookOpen,
+  Contact,
   FileBarChart,
   LayoutDashboard,
   Megaphone,
@@ -32,6 +33,7 @@ export const APP_ROUTES: AppRoute[] = [
   { path: "/dashboard/activity", label: "Activity", icon: Activity },
   { path: "/dashboard/logs", label: "Logs", icon: ScrollText },
   { path: "/dashboard/mailbox", label: "Mailbox", icon: Mail },
+  { path: "/dashboard/subscribers", label: "Subscribers", icon: Contact },
   { path: "/dashboard/api-explorer", label: "API Explorer", icon: Terminal },
   { path: "/dashboard/reports", label: "Reports", icon: FileBarChart },
   { path: "/dashboard/discussions", label: "Community", icon: MessageSquare },
