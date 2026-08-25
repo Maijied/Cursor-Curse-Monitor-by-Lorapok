@@ -1,4 +1,4 @@
-import { Check, Circle, Github, Globe, Loader2, Minus, Package, X } from "lucide-react";
+import { Check, Circle, Globe, Loader2, Minus, Package, Tag, X } from "lucide-react";
 import {
   countMarketplaceProgress,
   extractMarketplaceTargets,
@@ -14,7 +14,7 @@ type MarketplaceDeployBreakdownProps = {
 };
 
 function TargetIcon({ id }: { id: string }) {
-  if (id === "github-release") return <Github size={16} aria-hidden="true" />;
+  if (id === "github-release") return <Tag size={16} aria-hidden="true" />;
   if (id.startsWith("ovsx")) return <Globe size={16} aria-hidden="true" />;
   if (id === "amo") {
     return (
