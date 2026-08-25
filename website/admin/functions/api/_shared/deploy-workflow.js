@@ -1,5 +1,5 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
-import { activateRollbackNotice } from "./notices.js";
+import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
 
 const MIN_PUBLISH_TAG = "v0.5.5";
 
@@ -189,7 +189,7 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
     return jsonResponse({ error: "custom_version is required for custom releases" }, 400);
   }
 
-  return dispatchWorkflow(
+  const response = await dispatchWorkflow(
     env,
     "ci-cd.yml",
     {
@@ -206,4 +206,28 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
       release_channel: releaseChannel,
     }
   );
+
+  if (!response.ok) return response;
+
+  const activateRecovery =
+    body.activate_recovery_notice === true ||
+    body.activate_recovery_notice === "true" ||
+    body.feature_notice === "conversation-recovery";
+
+  if (!activateRecovery) return response;
+
+  try {
+    const payload = await response.json();
+    const notice = await activateConversationRecoveryNotice(env);
+    return jsonResponse({ ...payload, notice }, response.status);
+  } catch (error) {
+    console.error("Release dispatched but conversation recovery notice could not be activated", error);
+    return jsonResponse(
+      {
+        error:
+          "Release was dispatched, but the conversation recovery notice could not be activated. Enable it manually from Mission Control → Notices.",
+      },
+      502
+    );
+  }
 }

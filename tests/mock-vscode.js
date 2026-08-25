@@ -3,6 +3,7 @@ const configChangeListeners = new Set();
 const notifications = [];
 const executedCommands = [];
 const registeredCommands = new Map();
+const workspacePath = process.env.TEST_WORKSPACE_PATH;
 
 const mockVscode = {
   _reset() {
@@ -41,6 +42,9 @@ const mockVscode = {
     return [...executedCommands];
   },
   workspace: {
+    workspaceFolders: workspacePath
+      ? [{ uri: { fsPath: workspacePath } }]
+      : undefined,
     getConfiguration: (section) => ({
       get: (key, fallback) => {
         if (section && customConfig[section] && customConfig[section][key] !== undefined) {

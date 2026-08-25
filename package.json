@@ -6,7 +6,7 @@
   ],
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product.",
-  "version": "0.5.14",
+  "version": "0.5.17",
   "publisher": "LorapokLabs",
   "license": "UNLICENSED",
   "icon": "media/icon.png",
@@ -25,7 +25,9 @@
   "company": {
     "name": "Lorapok Labs",
     "email": "lorapokdev@gmail.com",
-    "supportEmail": "cursor-contact@lorapok.tech",
+    "supportEmail": "cursor.curse.help@lorapok.tech",
+    "productEmail": "cursor.monitor@lorapok.tech",
+    "opsEmail": "lorapokdev@gmail.com",
     "website": "https://lorapok.tech",
     "adminUrl": "https://cursor-dev.lorapok.tech"
   },
@@ -88,6 +90,11 @@
       {
         "command": "cursorCurseMonitor.scanClipboard",
         "title": "Cursor Curse Monitor: Scan Clipboard for Secrets",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.reindexConversations",
+        "title": "Cursor Curse Monitor: Reindex Missing Conversations",
         "category": "Cursor Curse Monitor"
       }
     ],
@@ -162,6 +169,21 @@
           "default": false,
           "description": "Opt-in anonymous usage heartbeat. Sends a once-per-day ping with a random install ID, OS, and host editor (Cursor/VS Code) only. Off by default. No paths, tokens, emails, or workspace names are sent."
         },
+        "cursorCurseMonitor.productNotices": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Lorapok product notices inside Cursor (releases, features, recovery tips). Polls the public notice API a few times per day."
+        },
+        "cursorCurseMonitor.productNoticeUrl": {
+          "type": "string",
+          "default": "https://cursor-dev.lorapok.tech/api/notice",
+          "description": "URL for remote product notices shown in the extension."
+        },
+        "cursorCurseMonitor.subscribeUrl": {
+          "type": "string",
+          "default": "https://cursor-dev.lorapok.tech/api/subscribe",
+          "description": "URL used when you opt in to release update emails from the dashboard."
+        },
         "cursorCurseMonitor.securityScanEnabled": {
           "type": "boolean",
           "default": true,
@@ -181,7 +203,7 @@
     }
   },
   "scripts": {
-    "test": "node --test tests/test_api_metrics.test.js tests/test_security_scanner_suite.test.js tests/test_local_store_edge_cases.test.js tests/test_usage_monitor_lifecycle.test.js && node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && node tests/test_release_integrity.js && npm run browser-ext:test",
+    "test": "node --test tests/test_api_metrics.test.js tests/test_security_scanner_suite.test.js tests/test_local_store_edge_cases.test.js tests/test_usage_monitor_lifecycle.test.js && node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && node tests/test_release_integrity.js && node tests/test_reindex_conversations.js && node tests/test_subscribe_prompt.js && npm run browser-ext:test",
     "vscode:prepublish": "npm run compile",
     "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./",
     "browser-ext:build": "npm run build -w browser-extension",

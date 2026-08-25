@@ -1,8 +1,6 @@
 import { jsonResponse } from "./_shared/auth.js";
 import { buildSubscribeHtml, sendMail } from "./_shared/mail.js";
-
-const SUBSCRIBERS_KEY = "subscribers";
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { CONSENT_VERSION, normalizeEmail, upsertSubscriber } from "./_shared/subscribers.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -10,23 +8,11 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-async function readSubscribers(env) {
-  if (!env.ADMIN_KV?.get) return [];
-  try {
-    const raw = await env.ADMIN_KV.get(SUBSCRIBERS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map((e) => String(e).toLowerCase()) : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeSubscribers(env, emails) {
-  if (!env.ADMIN_KV?.put) return false;
-  const unique = [...new Set(emails.map((e) => String(e).toLowerCase()).filter(Boolean))].sort();
-  await env.ADMIN_KV.put(SUBSCRIBERS_KEY, JSON.stringify(unique));
-  return true;
+function normalizeInstallId(value: unknown): string | null {
+  const id = String(value ?? "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+    ? id.toLowerCase()
+    : null;
 }
 
 export async function onRequestPost(context) {
@@ -39,28 +25,30 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
   }
 
-  const email = String(body.email ?? "")
-    .trim()
-    .toLowerCase();
-  if (!email || !EMAIL_RE.test(email)) {
+  const email = normalizeEmail(body.email);
+  if (!email) {
     return jsonResponse({ error: "Valid email is required" }, 400, CORS_HEADERS);
   }
 
-  // Health / Catalog diagnostic probe - return success without side effects
   if (body.probe === true) {
     return jsonResponse({ ok: true, probed: true, message: "Probe OK" }, 200, CORS_HEADERS);
   }
 
-  const subscribers = await readSubscribers(env);
-  const alreadySubscribed = subscribers.includes(email);
-  if (!alreadySubscribed) {
-    subscribers.push(email);
-    const stored = await writeSubscribers(env, subscribers);
-    if (!stored) {
-      return jsonResponse({ error: "Subscriber storage unavailable" }, 503, CORS_HEADERS);
-    }
+  if (body.consent !== true && body.consent !== "true") {
+    return jsonResponse({ error: "Consent is required to subscribe" }, 400, CORS_HEADERS);
   }
 
+  const upsert = await upsertSubscriber(env.ADMIN_KV, {
+    email,
+    source: String(body.source ?? "website").trim() || "website",
+    installId: normalizeInstallId(body.installId ?? body.install_id),
+    consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
+  });
+  if (!upsert.ok) {
+    return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
+  }
+
+  const alreadySubscribed = Boolean(upsert.alreadySubscribed);
   const mailResult = await sendMail(env, {
     to: email,
     subject: "Subscribed to Cursor Curse Monitor updates",

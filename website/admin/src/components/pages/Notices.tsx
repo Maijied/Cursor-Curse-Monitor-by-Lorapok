@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, Megaphone, Plus, Power, Save, Trash2 } from "lucide-react";
+import { Eye, Megaphone, Plus, Power, Save, Send, Trash2 } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -7,7 +7,7 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DataTable, { type DataTableColumn } from "../ui/DataTable";
 import Notification from "../ui/Notification";
-import { createNotice, deleteNotice, fetchNotices, updateNotice } from "../../lib/api";
+import { createNotice, deleteNotice, fetchNotices, updateNotice, broadcastToSubscribers } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;
@@ -25,6 +25,23 @@ const EMPTY: DevNotice = {
   dismissible: true,
   id: undefined,
   source: "admin",
+};
+
+const CONVERSATION_RECOVERY_TEMPLATE: DevNotice = {
+  id: "conversation-recovery-v0515",
+  source: "release",
+  enabled: false,
+  type: "feature",
+  severity: "info",
+  title: "Recover Missing Agent Conversations",
+  message:
+    "If your IDE sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, update to Cursor Curse Monitor v0.5.15 and run Reindex Missing Conversations from the dashboard. The tool rebuilds search and sidebar indexes from on-disk agent transcripts without deleting your existing data.",
+  shortMessage:
+    "Get back chats lost after a worktree switch — v0.5.15 rebuilds your conversation list safely from saved transcripts.",
+  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+  updatedAt: new Date().toISOString(),
+  dismissible: true,
 };
 
 function noticeKey(row: DevNotice, index: number) {
@@ -71,6 +88,14 @@ export default function Notices() {
     setMessage(null);
   };
 
+  const loadRecoveryTemplate = () => {
+    setForm({ ...CONVERSATION_RECOVERY_TEMPLATE, updatedAt: new Date().toISOString() });
+    setMessage({
+      type: "success",
+      text: "Loaded the v0.5.15 conversation recovery notice. Save & enable to show it on the marketing banner.",
+    });
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -84,6 +109,32 @@ export default function Notices() {
       setMessage({ type: "success", text: form.id ? "Notice updated and enabled." : "Notice saved and enabled." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
+    }
+    setSaving(false);
+  };
+
+  const handleEmailSubscribers = async () => {
+    if (!form.title?.trim() || !form.message?.trim()) {
+      setMessage({ type: "error", text: "Add a title and full message before emailing subscribers." });
+      return;
+    }
+    if (!window.confirm(`Email "${form.title}" to all subscribers from cursor.monitor@lorapok.tech?`)) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const result = await broadcastToSubscribers({
+        title: form.title,
+        message: form.message,
+        shortMessage: form.shortMessage,
+        severity: form.severity,
+        feedbackUrl: form.feedbackUrl,
+      });
+      setMessage({
+        type: result.failed ? "error" : "success",
+        text: result.message || `Emailed ${result.sent} subscriber(s).`,
+      });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Broadcast failed" });
     }
     setSaving(false);
   };
@@ -270,16 +321,26 @@ export default function Notices() {
           <h3 className="text-lg font-semibold text-[var(--color-text)]">
             {editing ? "Edit notice" : "New notice"}
           </h3>
-          {editing && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={resetForm}
-              className="inline-flex items-center gap-2 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
+              onClick={loadRecoveryTemplate}
+              className="inline-flex items-center gap-2 text-sm text-[var(--color-accent)] hover:text-[var(--color-text)]"
             >
-              <Plus size={16} aria-hidden="true" />
-              New notice
+              <Megaphone size={16} aria-hidden="true" />
+              Use recovery notice (v0.5.15)
             </button>
-          )}
+            {editing && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="inline-flex items-center gap-2 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
+              >
+                <Plus size={16} aria-hidden="true" />
+                New notice
+              </button>
+            )}
+          </div>
         </div>
         <form onSubmit={handleSave} className="space-y-5">
           <div>
@@ -378,6 +439,15 @@ export default function Notices() {
             >
               <Eye size={18} aria-hidden="true" />
               {showPreview ? "Hide preview" : "Preview"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleEmailSubscribers()}
+              disabled={saving}
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[var(--color-accent)]/40 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors disabled:opacity-50"
+            >
+              <Send size={18} aria-hidden="true" />
+              Email all subscribers
             </button>
             <button
               type="submit"

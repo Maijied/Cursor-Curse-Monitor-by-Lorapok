@@ -10,9 +10,9 @@ export function Footer() {
         Lorapok Labs
       </a>
       <span className="sep">·</span>
-      <a href="https://cursor.com" target="_blank" rel="noopener noreferrer">
-        Cursor
-      </a>
+      <a href="mailto:cursor.curse.help@lorapok.tech">Help</a>
+      <span className="sep">·</span>
+      <a href="mailto:cursor.monitor@lorapok.tech">Updates</a>
       <span className="version">v{__EXTENSION_VERSION__}</span>
     </footer>
   );

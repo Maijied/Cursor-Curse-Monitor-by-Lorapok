@@ -40,6 +40,7 @@ describe("notice catalog APIs", () => {
     const data = await res.json();
     expect(res.ok).toBe(true);
     expect(data.items.some((n) => n.id === "generated-dev-notice")).toBe(true);
+    expect(data.items.some((n) => n.id === "conversation-recovery-v0515")).toBe(true);
     expect(data.active?.id).toBe("generated-dev-notice");
     expect(data.active?.enabled).toBe(true);
   });

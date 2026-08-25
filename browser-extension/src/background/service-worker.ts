@@ -1,6 +1,7 @@
 import browser from "webextension-polyfill";
 import { MESSAGE_TYPES } from "../lib/messaging";
 import { refreshSnapshot } from "../lib/monitor";
+import { maybeShowProductNotice } from "../lib/productNotices";
 import { getOrCreateInstallId, getSnapshot, getSettings, updateSettings } from "../lib/storage";
 
 declare const __EXTENSION_VERSION__: string;
@@ -51,6 +52,8 @@ async function runRefresh(): Promise<void> {
   const snapshot = await refreshSnapshot();
   updateBadge(snapshot);
   await maybeNotify(snapshot);
+  const settings = await getSettings();
+  await maybeShowProductNotice(settings.productNotices);
   void browser.runtime.sendMessage({
     type: MESSAGE_TYPES.SNAPSHOT,
     payload: snapshot,

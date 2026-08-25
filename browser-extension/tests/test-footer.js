@@ -13,7 +13,8 @@ const footerPath = join(
 const src = readFileSync(footerPath, "utf8");
 
 assert(src.includes("lorapok.tech"), "Footer must link Lorapok Labs");
-assert(src.includes("cursor.com"), "Footer must link Cursor");
+assert(src.includes("cursor.curse.help@lorapok.tech"), "Footer must link help email");
+assert(src.includes("cursor.monitor@lorapok.tech"), "Footer must link updates email");
 assert(src.includes("product of"), "Footer must include product attribution");
 
 console.log("test_footer.js: OK");

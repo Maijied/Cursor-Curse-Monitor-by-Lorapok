@@ -47,11 +47,19 @@ body {
 }
 
 .popup-header h1 {
+  margin: 2px 0 0;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.popup-eyebrow {
   margin: 0;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent-2);
   font-weight: 700;
 }
 
@@ -258,6 +266,26 @@ body {
 .error-text { color: var(--danger); font-size: 12px; margin-top: 8px; }
 
 .ide-callout .link-btn { display: inline-block; margin-top: 8px; }
+
+.subscribe-promo {
+  border-color: rgba(124,92,255,0.35);
+  background: linear-gradient(145deg, rgba(124,92,255,0.12), rgba(17,24,39,0.9));
+}
+.subscribe-promo-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.subscribe-promo-icon { border-radius: 10px; border: 1px solid rgba(124,92,255,0.35); }
+.subscribe-promo-title { margin: 0 0 4px; font-size: 13px; font-weight: 700; line-height: 1.35; }
+.subscribe-promo-input {
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-hover);
+  color: var(--text);
+  font-family: var(--font);
+}
+.subscribe-promo-consent { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: var(--muted); }
+.subscribe-promo-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 
 .ext-footer {
   margin-top: auto;

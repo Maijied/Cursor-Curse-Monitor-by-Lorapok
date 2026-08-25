@@ -9,6 +9,13 @@ import {
   saveToken,
   updateSettings,
 } from "../lib/storage";
+import {
+  getSubscribePromptCopy,
+  shouldShowSubscribePrompt,
+  subscribePromptVariant,
+} from "@lorapok/cursor-monitor-shared";
+import { snoozeSubscribePrompt, subscribeForProductUpdates } from "../lib/subscribe";
+import { refreshProductNotice } from "../lib/productNotices";
 import { requestRefresh } from "../lib/messaging";
 import "../popup/styles.css";
 
@@ -18,6 +25,12 @@ export function OptionsApp() {
   const [threshold, setThreshold] = useState("80");
   const [poll, setPoll] = useState("5");
   const [telemetry, setTelemetry] = useState(false);
+  const [productNotices, setProductNotices] = useState(true);
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribeConsent, setSubscribeConsent] = useState(false);
+  const [subscribeMessage, setSubscribeMessage] = useState("");
+  const [showSubscribeSection, setShowSubscribeSection] = useState(true);
+  const [subscribeCopy, setSubscribeCopy] = useState({ title: "", body: "", cta: "", later: "" });
   const [saved, setSaved] = useState(false);
   const [securityFindings, setSecurityFindings] = useState<SecurityFinding[]>([]);
 
@@ -28,6 +41,20 @@ export function OptionsApp() {
       setThreshold(String(s.warnAtPercent));
       setPoll(String(s.pollIntervalMinutes));
       setTelemetry(s.anonymousUsageStats);
+      setProductNotices(s.productNotices);
+      setSubscribeEmail(s.subscribedEmail ?? s.email ?? "");
+      const show = shouldShowSubscribePrompt({
+        subscribedEmail: s.subscribedEmail,
+        snoozeUntilMs: s.subscribeSnoozeUntil,
+      });
+      setShowSubscribeSection(show);
+      if (show) {
+        const variant = subscribePromptVariant({
+          subscribedEmail: s.subscribedEmail,
+          snoozeUntilMs: s.subscribeSnoozeUntil,
+        });
+        setSubscribeCopy(getSubscribePromptCopy(variant));
+      }
     });
   }, []);
 
@@ -49,10 +76,31 @@ export function OptionsApp() {
       warnAtPercent: Number(threshold) || 80,
       pollIntervalMinutes: Number(poll) || 5,
       anonymousUsageStats: telemetry,
+      productNotices,
     });
     await requestRefresh();
+    void refreshProductNotice(productNotices);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const subscribe = async () => {
+    if (!subscribeConsent) {
+      setSubscribeMessage("Please agree to receive product updates.");
+      return;
+    }
+    const result = await subscribeForProductUpdates(subscribeEmail, "browser-addon-options");
+    setSubscribeMessage(result.message);
+    if (result.ok) {
+      await updateSettings({ subscribedEmail: subscribeEmail.trim().toLowerCase() });
+      setShowSubscribeSection(false);
+    }
+  };
+
+  const snoozeSubscribe = async () => {
+    await snoozeSubscribePrompt();
+    setShowSubscribeSection(false);
+    setSubscribeMessage("We'll remind you in a few days.");
   };
 
   const disconnect = async () => {
@@ -103,6 +151,58 @@ export function OptionsApp() {
           />{" "}
           Opt-in anonymous usage heartbeat (no tokens or emails sent)
         </label>
+
+        <label>
+          <input
+            type="checkbox"
+            checked={productNotices}
+            onChange={(e) => setProductNotices(e.target.checked)}
+          />{" "}
+          Show Lorapok product notices (releases &amp; features)
+        </label>
+
+        <hr style={{ border: "none", borderTop: "1px solid rgba(148,163,184,0.2)", margin: "16px 0" }} />
+        {showSubscribeSection ? (
+          <>
+            <h2 style={{ fontSize: "1rem", margin: "0 0 8px" }}>{subscribeCopy.title || "Release update emails"}</h2>
+            <p className="muted" style={{ marginTop: 0 }}>
+              {subscribeCopy.body ||
+                "Marketplaces do not share installer emails. Opt in here if you want release notes in your inbox."}
+            </p>
+            <label htmlFor="subscribe-email">Email</label>
+            <input
+              id="subscribe-email"
+              type="email"
+              value={subscribeEmail}
+              onChange={(e) => setSubscribeEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+            <label>
+              <input
+                type="checkbox"
+                checked={subscribeConsent}
+                onChange={(e) => setSubscribeConsent(e.target.checked)}
+              />{" "}
+              I agree to receive product updates from Lorapok Labs
+            </label>
+            <div className="options-actions">
+              <button type="button" className="btn primary" onClick={() => void subscribe()}>
+                {subscribeCopy.cta || "Subscribe to updates"}
+              </button>
+              <button type="button" className="btn ghost" onClick={() => void snoozeSubscribe()}>
+                {subscribeCopy.later || "Maybe later"}
+              </button>
+              {subscribeMessage && <span className="muted">{subscribeMessage}</span>}
+            </div>
+          </>
+        ) : (
+          subscribeEmail && (
+            <p className="muted" style={{ margin: 0 }}>
+              Subscribed as <strong>{subscribeEmail}</strong>. Manage preferences from your inbox.
+            </p>
+          )
+        )}
 
         <div className="options-actions">
           <button type="submit" className="btn primary">Save settings</button>
