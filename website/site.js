@@ -70,6 +70,10 @@
       if (barDuplicate instanceof HTMLElement) barDuplicate.style.width = `${duplicatePct}%`;
     }
 
+    if (typeof window.renderHeroStats === "function") {
+      window.renderHeroStats(data);
+    }
+
     // Core version data
     setText("[data-version]", data.version);
     setText("[data-package-version]", data.packageVersion);
@@ -90,7 +94,8 @@
     setHref("[data-href-release]", data.github.releaseUrl);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
-    setHref("[data-href-firefox]", data.browserExtension?.firefox?.url ?? "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/");
+    setHref("[data-href-firefox]", data.browserExtension?.firefox?.url ?? "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/");
+    setText("[data-firefox-version]", data.browserExtension?.version ?? data.version ?? "—");
     setHref(
       "[data-href-chrome-zip]",
       data.browserExtension?.chrome?.zipUrl ?? data.github?.chromeZipUrl ?? data.github?.releaseUrl ?? "#"

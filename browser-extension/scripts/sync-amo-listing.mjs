@@ -9,7 +9,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const slug = "cursor-curse-monitor-by-lorapo";
+const slug = "cursor-curse-monitor";
 const issuer = process.env.AMO_JWT_ISSUER || process.env.AMO_API_KEY;
 const secret = process.env.AMO_JWT_SECRET || process.env.AMO_API_SECRET;
 
@@ -93,4 +93,4 @@ if (iconArg) {
   console.log("Icon upload submitted (resizing may be async on AMO)");
 }
 
-console.log("Done — verify at https://addons.mozilla.org/en-US/developers/addon/cursor-curse-monitor-by-lorapo/edit");
+console.log("Done — verify at https://addons.mozilla.org/en-US/developers/addon/cursor-curse-monitor/edit");

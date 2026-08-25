@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
+import { readReleaseNotes } from "./scripts/lib-changelog.mjs";
 
 function readExtensionVersion(): string {
   const localPkg = JSON.parse(
@@ -17,6 +18,7 @@ function readExtensionVersion(): string {
 }
 
 const extensionVersion = readExtensionVersion();
+const releaseNotes = readReleaseNotes(extensionVersion);
 
 export default defineConfig({
   base: "./",
@@ -31,6 +33,7 @@ export default defineConfig({
   },
   define: {
     __EXTENSION_VERSION__: JSON.stringify(extensionVersion),
+    __RELEASE_NOTES__: JSON.stringify(releaseNotes),
   },
   build: {
     outDir: "dist",

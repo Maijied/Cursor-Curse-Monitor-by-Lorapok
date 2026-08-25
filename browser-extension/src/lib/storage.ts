@@ -13,6 +13,7 @@ export interface ExtensionSettings {
   subscribeSnoozeUntil: number | null;
   installId: string;
   lastPingDay: string | null;
+  lastSeenVersion: string | null;
 }
 
 const DEFAULTS: ExtensionSettings = {
@@ -27,6 +28,7 @@ const DEFAULTS: ExtensionSettings = {
   subscribeSnoozeUntil: null,
   installId: "",
   lastPingDay: null,
+  lastSeenVersion: null,
 };
 
 const SETTINGS_KEY = "settings";

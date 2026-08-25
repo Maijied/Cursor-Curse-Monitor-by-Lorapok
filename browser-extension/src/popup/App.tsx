@@ -4,8 +4,9 @@ import { AnimatedGauge } from "../components/AnimatedGauge";
 import { SpendChart } from "../components/SpendChart";
 import { Footer } from "../components/Footer";
 import { SubscribePromo } from "../components/SubscribePromo";
+import { WhatsNewCard } from "../components/WhatsNewCard";
 import { fetchSnapshot, onSnapshot, requestRefresh } from "../lib/messaging";
-import { updateSettings } from "../lib/storage";
+import { getSettings, updateSettings } from "../lib/storage";
 import browser from "webextension-polyfill";
 
 function money(n: number): string {
@@ -15,15 +16,31 @@ function money(n: number): string {
   }).format(n || 0);
 }
 
+declare const __EXTENSION_VERSION__: string;
+
 export function App() {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState("");
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   useEffect(() => {
     void fetchSnapshot().then(setSnapshot);
     return onSnapshot(setSnapshot);
   }, []);
+
+  useEffect(() => {
+    void getSettings().then((settings) => {
+      if (settings.lastSeenVersion !== __EXTENSION_VERSION__) {
+        setShowWhatsNew(true);
+      }
+    });
+  }, []);
+
+  const dismissWhatsNew = async () => {
+    await updateSettings({ lastSeenVersion: __EXTENSION_VERSION__ });
+    setShowWhatsNew(false);
+  };
 
   const refresh = useCallback(() => {
     void requestRefresh().then((s) => s && setSnapshot(s));
@@ -74,6 +91,8 @@ export function App() {
           </button>
         </div>
       </header>
+
+      {showWhatsNew && <WhatsNewCard onDismiss={() => void dismissWhatsNew()} />}
 
       {!connected && (
         <section className="card connect-card">

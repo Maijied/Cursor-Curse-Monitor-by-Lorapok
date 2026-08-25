@@ -22,7 +22,7 @@ Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs 
 | GitHub repository | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok |
 | Open VSX | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
 | VS Code Marketplace | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
-| Firefox Add-ons (browser) | https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/ |
+| Firefox Add-ons (browser) | https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/ |
 | Chrome zip (browser, direct) | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest |
 
 ## Current stable release

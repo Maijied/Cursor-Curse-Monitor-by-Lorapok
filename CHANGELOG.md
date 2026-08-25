@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+
+- **Animated live stats hero** on cursor.lorapok.tech — downloads, visits, engagement, and Open VSX split meters (no duplicate marketing screenshots)
+- **Browser extension What's New card** — professional changelog popup on each version bump
+
+### Changed
+
+- **Firefox AMO public URL** → `cursor-curse-monitor` (canonical listing slug)
+- AMO listing description converted to Extension Workshop Markdown
+- Marketing site gallery deduplicated — each product image appears once
+
 ## [1.0.1] - 2026-08-25
 
 ### Added
