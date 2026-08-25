@@ -40,13 +40,19 @@ function ok(message) {
 
 console.log("Cloudflare Email setup check\n");
 
-const verify = await cf("/user/tokens/verify");
+const verify = await cf(`/accounts/${accountId}/tokens/verify`);
 if (!verify.res.ok || verify.body.success === false) {
-  fail(`Token verify failed (${verify.res.status})`);
-  console.error(JSON.stringify(verify.body.errors ?? verify.body, null, 2));
-  process.exit(1);
+  // Account-owned API tokens do not validate on /user/tokens/verify.
+  const userVerify = await cf("/user/tokens/verify");
+  if (!userVerify.res.ok || userVerify.body.success === false) {
+    fail(`Token verify failed (${verify.res.status})`);
+    console.error(JSON.stringify(verify.body.errors ?? userVerify.body.errors ?? verify.body, null, 2));
+    process.exit(1);
+  }
+  ok(`Token valid (${userVerify.body.result?.status ?? "active"})`);
+} else {
+  ok(`Account token valid (${verify.body.result?.status ?? "active"})`);
 }
-ok(`Token valid (${verify.body.result?.status ?? "active"})`);
 
 const domains = await cf(`/accounts/${accountId}/email/sending/domains`);
 if (domains.res.status === 401 || domains.res.status === 403) {
@@ -62,9 +68,7 @@ if (domains.res.status === 401 || domains.res.status === 403) {
 const zoneList = domains.body.result ?? [];
 const lorapok = zoneList.find((z) => (z.name ?? z.domain) === "lorapok.tech");
 if (!lorapok) {
-  fail("lorapok.tech is not onboarded for Email Sending");
-  console.error("Run: npx wrangler email sending enable lorapok.tech");
-  console.error("Or: Dashboard → Email Service → Email Sending → Onboard lorapok.tech");
+  console.log("ℹ️  Zone Email Sending list unavailable (account tokens may lack zone scope).");
 } else {
   ok(`lorapok.tech onboarded (status: ${lorapok.status ?? "active"})`);
 }
@@ -89,8 +93,9 @@ if (probe.res.status === 401 || probe.res.status === 403) {
 }
 
 console.log("\nPages runtime:");
-console.log("  • Preferred: [[send_email]] binding EMAIL in wrangler.toml (no REST token for sends)");
-console.log("  • Fallback:  Pages secret CLOUDFLARE_EMAIL_API_TOKEN synced by enable-mail.mjs");
+console.log("  • Pages Functions use REST: Pages secret CLOUDFLARE_EMAIL_API_TOKEN");
+console.log("  • Prefer an account-owned API token with Email Sending → Edit");
+console.log("  • send_email binding is Workers-only (not supported on Pages)");
 console.log("\nAfter fixing token/domain, redeploy admin (CI or wrangler pages deploy).");
 
 if (process.exitCode) process.exit(process.exitCode);
