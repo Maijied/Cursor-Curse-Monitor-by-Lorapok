@@ -8,6 +8,7 @@ import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveExtensionVersion } from "./lib-version.mjs";
+import { isAmoVersionAlreadyPublished } from "./lib-amo-publish.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = join(root, "..");
@@ -56,34 +57,59 @@ function run(cmd, args, extraEnv = {}) {
   });
 }
 
+function runCapture(cmd, args, extraEnv = {}) {
+  try {
+    const stdout = execFileSync(cmd, args, {
+      encoding: "utf8",
+      cwd: repoRoot,
+      env: { ...process.env, ...extraEnv },
+    });
+    if (stdout) process.stdout.write(stdout);
+    return { ok: true, output: stdout ?? "" };
+  } catch (error) {
+    const output = [
+      error?.stdout,
+      error?.stderr,
+      error?.message,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    if (output) process.stderr.write(output.endsWith("\n") ? output : `${output}\n`);
+    return { ok: false, output };
+  }
+}
 console.log(`Publishing Firefox AMO build for version ${version}`);
 run("node", ["browser-extension/scripts/generate-amo-metadata.mjs", `--version=${version}`]);
 run("node", ["browser-extension/scripts/validate-amo-metadata.mjs"]);
 
 mkdirSync(join(root, "artifacts/firefox"), { recursive: true });
 
-try {
-  run("npx", [
-    "web-ext@8",
-    "sign",
-    "--source-dir",
-    "browser-extension/dist",
-    "--artifacts-dir",
-    "browser-extension/artifacts/firefox",
-    "--channel",
-    "listed",
-    "--approval-timeout",
-    "0",
-    "--amo-metadata",
-    "browser-extension/amo/amo-metadata.generated.json",
-    "--api-key",
-    issuer,
-    "--api-secret",
-    secret,
-  ]);
-} catch (error) {
-  console.error("::error::web-ext sign failed — check AMO credentials and listing metadata");
-  throw error;
+const signResult = runCapture("npx", [
+  "web-ext@8",
+  "sign",
+  "--source-dir",
+  "browser-extension/dist",
+  "--artifacts-dir",
+  "browser-extension/artifacts/firefox",
+  "--channel",
+  "listed",
+  "--approval-timeout",
+  "0",
+  "--amo-metadata",
+  "browser-extension/amo/amo-metadata.generated.json",
+  "--api-key",
+  issuer,
+  "--api-secret",
+  secret,
+]);
+
+if (!signResult.ok) {
+  if (isAmoVersionAlreadyPublished(signResult.output)) {
+    console.log(`::warning::AMO version ${version} is already published — skipping web-ext sign`);
+  } else {
+    console.error("::error::web-ext sign failed — check AMO credentials and listing metadata");
+    process.exit(1);
+  }
 }
 
 run("node", ["browser-extension/scripts/verify-amo-status.mjs"], {
