@@ -59,10 +59,26 @@ export async function onRequestPut(context) {
     if (!id) return jsonResponse({ error: "id is required" }, 400);
 
     const catalog = await ensureCatalogSeeded(env);
-    const index = catalog.items.findIndex((n) => n.id === id);
-    if (index < 0) return jsonResponse({ error: "Notice not found" }, 404);
-
     let items = [...catalog.items];
+    const index = items.findIndex((n) => n.id === id);
+
+    if (index < 0) {
+      const notice = normalizeNotice(
+        { ...body, id },
+        { id, source: body.source ?? "admin" }
+      );
+      if (notice.enabled) {
+        items = items.map((n) => ({ ...n, enabled: false }));
+      }
+      items = [notice, ...items];
+      await writeCatalog(env, { ...catalog, items });
+      return jsonResponse({
+        ok: true,
+        notice: publicNoticeShape(notice),
+        items: items.map(publicNoticeShape),
+      });
+    }
+
     if (typeof body.enabled === "boolean" && Object.keys(body).every((k) => ["id", "enabled"].includes(k))) {
       items = setEnabled(items, id, body.enabled);
     } else {
