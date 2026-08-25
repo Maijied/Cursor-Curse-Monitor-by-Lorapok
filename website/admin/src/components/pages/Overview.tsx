@@ -20,7 +20,7 @@ import { syncStatusLabel, formatCount } from "../../lib/site-data";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
   if (status === "synced") return "synced";
-  if (status === "drift" || status === "duplicate-listing") return "warn";
+  if (status === "drift" || status === "duplicate-listing" || status === "dual-listing") return "warn";
   if (status === "missing") return "danger";
   return "neutral";
 }
