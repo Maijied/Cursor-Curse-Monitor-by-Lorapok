@@ -7,6 +7,7 @@ import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
+import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -1422,6 +1423,26 @@ export function createDevApiMiddleware() {
         .then((data) => {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify(data));
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/version/plan" && req.method === "GET") {
+      const bumpType = new URL(req.url ?? "", "http://localhost").searchParams.get("bump") ?? "patch";
+      fetchMarketplaceSync()
+        .then((sync) => {
+          const plan = buildVersionPlan({
+            packageVersion: sync.packageVersion,
+            channels: sync.channels,
+            bumpType: ["patch", "minor", "major"].includes(bumpType) ? bumpType : "patch",
+          });
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ checkedAt: new Date().toISOString(), bumpType, channels: sync.channels, ...plan }));
         })
         .catch((err) => {
           res.statusCode = 502;

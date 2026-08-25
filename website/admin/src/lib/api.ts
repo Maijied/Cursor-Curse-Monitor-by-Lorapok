@@ -71,6 +71,10 @@ export async function fetchMarketplaceSync() {
   return apiGet<MarketplaceSync>("/marketplace/sync");
 }
 
+export async function fetchVersionPlan(bump: "patch" | "minor" | "major" = "patch") {
+  return apiGet<VersionPlan>(`/version/plan?bump=${encodeURIComponent(bump)}`);
+}
+
 export async function fetchDiscussionsApi() {
   return apiGet<DiscussionResponse>("/discussions");
 }
@@ -183,6 +187,27 @@ export type MarketplaceSync = {
     warn?: boolean;
   }>;
   checkedAt: string;
+};
+
+export type VersionPlanReason = {
+  id: string;
+  label: string;
+  liveVersion: string | null;
+  status: "missing" | "behind" | "synced" | "ahead" | "unknown";
+  reason: string;
+};
+
+export type VersionPlan = MarketplaceSync & {
+  bumpType: "patch" | "minor" | "major";
+  packageVersion: string | null;
+  maxLiveVersion: string | null;
+  recommendedVersion: string | null;
+  recommendedTag: string | null;
+  needsBump: boolean;
+  needsPublish: boolean;
+  allSynced: boolean;
+  summary: string;
+  reasons: VersionPlanReason[];
 };
 
 export type DiscussionCategory = {

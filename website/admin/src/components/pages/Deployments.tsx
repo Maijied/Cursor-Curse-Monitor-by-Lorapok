@@ -1,12 +1,14 @@
 import { useCallback, useState, useEffect } from "react";
-import { AlertTriangle, ExternalLink, Lock, Package, Rocket, Server, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Lock, Package, RefreshCw, Rocket, Server, Undo2 } from "lucide-react";
 import {
   fetchTags,
+  fetchVersionPlan,
   triggerDeployment,
   triggerInfraDeploy,
   triggerRelease,
   triggerRollback,
   type ReleaseRequest,
+  type VersionPlan,
 } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
@@ -72,6 +74,9 @@ export default function Deployments() {
   const [dispatchedAfter, setDispatchedAfter] = useState(0);
   const [displayLiveTag, setDisplayLiveTag] = useState<string | null>(null);
   const [displayPkgVersion, setDisplayPkgVersion] = useState<string | null>(null);
+  const [versionPlan, setVersionPlan] = useState<VersionPlan | null>(null);
+  const [versionPlanLoading, setVersionPlanLoading] = useState(false);
+  const [versionPlanError, setVersionPlanError] = useState<string | null>(null);
 
   const loadTags = useCallback(() => {
     fetchTags()
@@ -130,6 +135,21 @@ export default function Deployments() {
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
   const deployBlocked = mode === "deploy" && isLiveSelected;
   const customMissing = mode === "release" && bumpType === "custom" && !customVersion.trim();
+
+  const runVersionCheck = useCallback(async () => {
+    setVersionPlanLoading(true);
+    setVersionPlanError(null);
+    try {
+      const bump = mode === "release" && bumpType !== "custom" ? bumpType : "patch";
+      const plan = await fetchVersionPlan(bump);
+      setVersionPlan(plan);
+    } catch (err: unknown) {
+      setVersionPlan(null);
+      setVersionPlanError(err instanceof Error ? err.message : "Version check failed");
+    } finally {
+      setVersionPlanLoading(false);
+    }
+  }, [bumpType, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -334,6 +354,78 @@ export default function Deployments() {
           package.json: <strong className="text-[var(--color-text)] font-[family-name:var(--font-mono)]">v{pkgVersion}</strong>
         </span>
       </div>
+
+      <Card className="border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 className="text-base font-semibold text-[var(--color-text)]">Check &amp; update version</h3>
+            <p className="text-sm text-[var(--color-muted)] mt-1">
+              Queries live GitHub, Open VSX, VS Code Marketplace, and Firefox AMO, then recommends the next semver for all platforms.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void runVersionCheck()}
+            disabled={versionPlanLoading || !isMaster}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={versionPlanLoading ? "animate-spin" : ""} aria-hidden="true" />
+            {versionPlanLoading ? "Checking live…" : "Check & update"}
+          </button>
+        </div>
+        {versionPlanError ? (
+          <p className="text-sm text-[var(--color-danger)]">{versionPlanError}</p>
+        ) : null}
+        {versionPlan ? (
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--color-text)]">
+              <strong>{versionPlan.summary}</strong>
+              {versionPlan.recommendedTag ? (
+                <>
+                  {" "}
+                  Recommended:{" "}
+                  <span className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">
+                    {versionPlan.recommendedTag}
+                  </span>
+                </>
+              ) : null}
+            </p>
+            <ul className="space-y-2">
+              {versionPlan.reasons.map((item) => (
+                <li
+                  key={item.id}
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] px-3 py-2 text-sm"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <span className="font-medium text-[var(--color-text)]">{item.label}</span>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        item.status === "synced"
+                          ? "bg-[color-mix(in_srgb,var(--color-neon)_15%,transparent)] text-[var(--color-neon)]"
+                          : item.status === "behind" || item.status === "missing"
+                            ? "bg-[color-mix(in_srgb,var(--color-warn)_15%,transparent)] text-[var(--color-warn)]"
+                            : "bg-[color-mix(in_srgb,var(--color-muted)_15%,transparent)] text-[var(--color-muted)]"
+                      }`}
+                    >
+                      {item.liveVersion ? `v${item.liveVersion}` : "—"} · {item.status}
+                    </span>
+                  </div>
+                  <p className="text-[var(--color-muted)]">{item.reason}</p>
+                </li>
+              ))}
+            </ul>
+            {versionPlan.checkedAt ? (
+              <p className="text-xs text-[var(--color-muted)]">
+                Checked {new Date(versionPlan.checkedAt).toLocaleString()}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--color-muted)]">
+            Run a live check before New Release or Deploy to see why a version bump or marketplace publish is needed.
+          </p>
+        )}
+      </Card>
 
       {siteData?.browserExtension && (
         <Card>
