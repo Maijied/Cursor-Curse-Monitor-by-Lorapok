@@ -4,6 +4,7 @@ import { fetchWorkflowRunLogs, fetchWorkflowRuns, type WorkflowRun, type Workflo
 import { pickWorkflowRun } from "../../lib/workflow-run-match";
 import Badge from "./Badge";
 import DeployPipelineSteps from "./DeployPipelineSteps";
+import MarketplaceDeployBreakdown from "./MarketplaceDeployBreakdown";
 import Notification from "./Notification";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 
@@ -155,6 +156,8 @@ export default function DeployRuntimePanel({
       )}
 
       {jobs.length > 0 && <DeployPipelineSteps jobs={jobs} />}
+
+      {jobs.length > 0 && <MarketplaceDeployBreakdown jobs={jobs} targetTag={targetTag} />}
 
       {logs?.logsHint && <Notification tone="warning" message={logs.logsHint} />}
 
