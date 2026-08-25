@@ -14,14 +14,21 @@ id = "8a29ab111ed0488297e12725072e9a10"
 preview_id = "1555368c415e40a7b7e591784f1dc22c"
 
 # Pages Functions use REST mail (CLOUDFLARE_EMAIL_API_TOKEN). send_email binding is Workers-only.
+# Mission Control calls ccm-mail-relay via service binding (preferred — no REST token needed).
+
+[[services]]
+binding = "MAIL_RELAY"
+service = "ccm-mail-relay"
 
 [vars]
 ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
- imaeg
+SITE_DATA_URL = "https://cursor.lorapok.tech/site-data.json"
+ADMIN_PUBLIC_URL = "https://cursor-dev.lorapok.tech"
 CLOUDFLARE_ACCOUNT_ID = "f049faaf2f67549f5c58837479596a4a"
 
 # Outbound mail (Pages Functions):
-# 1. npx wrangler email sending enable lorapok.tech
-# 2. Pages secret CLOUDFLARE_EMAIL_API_TOKEN (CI syncs from CLOUDFLARE_API_TOKEN on deploy)
-# Fallback: RESEND_API_KEY with verified cursor-contact@lorapok.tech
+# 1. Deploy ccm-mail-relay worker (send_email binding) — preferred path via [[services]] above
+# 2. npx wrangler email sending enable lorapok.tech
+# 3. Optional REST fallback: Pages secret CLOUDFLARE_EMAIL_API_TOKEN (Email Sending → Edit)
+# 4. Optional Resend fallback: RESEND_API_KEY

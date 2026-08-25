@@ -184,16 +184,20 @@ export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
 function readCloudflareMailCredentials(env) {
   const accountId =
     typeof env.CLOUDFLARE_ACCOUNT_ID === "string" ? env.CLOUDFLARE_ACCOUNT_ID.trim() : "";
-  const token =
-    (typeof env.CLOUDFLARE_EMAIL_API_TOKEN === "string" ? env.CLOUDFLARE_EMAIL_API_TOKEN : "") ||
-    (typeof env.CLOUDFLARE_API_TOKEN === "string" ? env.CLOUDFLARE_API_TOKEN : "");
-  return { accountId, token: token.trim() };
+  const dedicated =
+    typeof env.CLOUDFLARE_EMAIL_API_TOKEN === "string" ? env.CLOUDFLARE_EMAIL_API_TOKEN.trim() : "";
+  const token = dedicated;
+  return { accountId, token };
 }
 
 /**
  * @param {Record<string, unknown>} env
  */
 export function getMailTransportStatus(env) {
+  if (env.MAIL_RELAY?.fetch) {
+    return { configured: true, transport: "cloudflare-relay" };
+  }
+
   if (env.EMAIL?.send) {
     return { configured: true, transport: "cloudflare-binding" };
   }
@@ -211,8 +215,33 @@ export function getMailTransportStatus(env) {
     configured: false,
     transport: "none",
     hint:
-      "Set CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_EMAIL_API_TOKEN (Pages secret), or RESEND_API_KEY. Enable Email Sending for lorapok.tech.",
+      "Deploy ccm-mail-relay worker (CI does this automatically), or set CLOUDFLARE_EMAIL_API_TOKEN with Email Sending permission, or RESEND_API_KEY.",
   };
+}
+
+async function sendViaMailRelay(env, { to, subject, html, text, from, bcc, replyTo }) {
+  const relay = env.MAIL_RELAY;
+  if (!relay?.fetch) {
+    return { sent: false, reason: "MAIL_RELAY service binding not configured" };
+  }
+
+  const res = await relay.fetch(
+    new Request("https://internal/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to, from, subject, html, text, bcc, replyTo }),
+    })
+  );
+
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok || payload.sent === false) {
+    return {
+      sent: false,
+      reason: payload.reason ?? `Mail relay HTTP ${res.status}`,
+    };
+  }
+
+  return { sent: true, transport: payload.transport ?? "cloudflare-relay" };
 }
 
 async function sendViaCloudflareBinding(env, { to, subject, html, text, from, bcc, replyTo }) {
@@ -278,7 +307,7 @@ async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, 
 
     const authDiagnostic =
       res.status === 401
-        ? " (Verify CLOUDFLARE_EMAIL_API_TOKEN has 'Account.Email Sending: Edit' permission and domain 'lorapok.tech' is onboarded)"
+        ? " (REST token rejected — redeploy admin so ccm-mail-relay service binding is active, or set CLOUDFLARE_EMAIL_API_TOKEN with Email Sending → Edit)"
         : sendingDisabled
           ? " (Email Sending is disabled — upgrade to Workers Paid in Cloudflare → Email Service → Email Sending, then onboard lorapok.tech)"
           : res.status === 403
@@ -349,7 +378,19 @@ export async function sendMail(
 
   let result = /** @type {{ sent: boolean; transport?: string; reason?: string }} */ ({ sent: false });
 
-  if (env.EMAIL?.send) {
+  if (env.MAIL_RELAY?.fetch) {
+    try {
+      result = await sendViaMailRelay(env, payload);
+    } catch (err) {
+      console.error("MAIL_RELAY failed", err);
+      result = {
+        sent: false,
+        reason: err instanceof Error ? err.message : "Mail relay failed",
+      };
+    }
+  }
+
+  if (!result.sent && env.EMAIL?.send) {
     try {
       result = await sendViaCloudflareBinding(env, payload);
     } catch (err) {
@@ -359,14 +400,18 @@ export async function sendMail(
         reason: err instanceof Error ? err.message : "EMAIL binding failed",
       };
     }
-  } else {
+  }
+
+  if (!result.sent) {
     try {
       const cf = await sendViaCloudflareRest(env, payload);
       if (cf.sent) result = cf;
-      else result = cf;
+      else if (!result.reason) result = cf;
     } catch (err) {
       console.error("Cloudflare Email REST error", err);
-      result = { sent: false, reason: err instanceof Error ? err.message : "Cloudflare Email REST failed" };
+      if (!result.reason) {
+        result = { sent: false, reason: err instanceof Error ? err.message : "Cloudflare Email REST failed" };
+      }
     }
 
     if (!result.sent) {

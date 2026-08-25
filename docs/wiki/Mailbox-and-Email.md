@@ -4,9 +4,17 @@ Outbound mail uses branded HTML templates per category. Product mail sends from 
 
 ## Transport priority
 
-1. Cloudflare `EMAIL` binding (Workers)
-2. Cloudflare Email REST API (`CLOUDFLARE_EMAIL_API_TOKEN`)
-3. Resend fallback (`RESEND_API_KEY`)
+1. **`ccm-mail-relay` Worker** (Pages service binding → `send_email`) — preferred; no REST API token
+2. Cloudflare `EMAIL` binding (Workers only)
+3. Cloudflare Email REST API (`CLOUDFLARE_EMAIL_API_TOKEN`)
+4. Resend fallback (`RESEND_API_KEY`)
+
+## Production setup
+
+1. Onboard `lorapok.tech` in Cloudflare **Email → Email Sending**
+2. Deploy relay worker: `node website/admin/scripts/enable-mail.mjs` (or CI on admin deploy)
+3. Optional REST fallback: Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` with **Email Sending → Edit**
+4. Use **Mailbox → Send branded test email** to verify
 
 ## Message categories
 
@@ -26,12 +34,6 @@ All templates use the **CCM / Lorapok Labs** dark theme with animated gradient h
 - **Read modal** — click any row to preview HTML (iframe) and plain text
 - **Compose** — send branded HTML mail to any recipient
 - **Test** — verify transport with a delivery confirmation email
-
-## Production setup
-
-1. Onboard `lorapok.tech` in Cloudflare **Email → Email Sending**
-2. Set Pages secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_EMAIL_API_TOKEN`
-3. Use **Mailbox → Send branded test email** to verify
 
 ## Scripts
 
