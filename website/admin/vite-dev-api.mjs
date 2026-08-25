@@ -1011,7 +1011,7 @@ export function createDevApiMiddleware() {
     if (url === "/api/subscribe" && req.method === "POST") {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
+      req.on("end", async () => {
         try {
           const parsed = JSON.parse(body || "{}");
           const email = String(parsed.email ?? "").trim().toLowerCase();
