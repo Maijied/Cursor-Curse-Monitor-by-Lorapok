@@ -9,7 +9,7 @@
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
 const token = (process.env.CLOUDFLARE_EMAIL_API_TOKEN ?? process.env.CLOUDFLARE_API_TOKEN ?? "").trim();
 const fromAddress = process.env.CCM_MAIL_PROBE_FROM ?? "cursor.monitor@lorapok.tech";
-const probeTo = process.env.CCM_MAIL_PROBE_TO ?? "mdshuvo40@gmail.com";
+const probeTo = process.env.CCM_MAIL_PROBE_TO ?? "lorapokdev@gmail.com";
 
 if (!token) {
   console.error("Set CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) with Email Sending → Edit.");
@@ -83,8 +83,16 @@ const probe = await cf(`/accounts/${accountId}/email/sending/send`, {
   }),
 });
 
-if (probe.res.status === 401 || probe.res.status === 403) {
-  fail(`Send probe unauthorized (${probe.res.status})`);
+  if (probe.res.status === 401 || probe.res.status === 403) {
+    const sendingDisabled = probe.body.errors?.some((e) => e.code === 10203);
+    if (sendingDisabled) {
+      fail("Send probe blocked: Email Sending disabled on account");
+      console.error(
+        "Enable Workers Paid, then Cloudflare → Email Service → Email Sending → onboard lorapok.tech"
+      );
+    } else {
+      fail(`Send probe unauthorized (${probe.res.status})`);
+    }
 } else if (!probe.res.ok || probe.body.success === false) {
   const err = probe.body.errors?.map((e) => e.message).join("; ") || JSON.stringify(probe.body).slice(0, 200);
   fail(`Send probe failed (${probe.res.status}): ${err}`);

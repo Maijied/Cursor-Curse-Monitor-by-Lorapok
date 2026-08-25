@@ -144,31 +144,27 @@ The extension takes multiple precautions when writing to the Cursor state databa
 
 ## CI/CD
 
-All CI/CD is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-cd.yml)):
+All CI/CD is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-cd.yml)). **Marketplace publishing is manual** — pushes to `main` run CI and update the website; releases are triggered from Mission Control or GitHub Actions.
 
 | Trigger | What happens |
 |---------|-------------|
 | **PR to `main`** | Build, compile, validate, package — no deploy |
-| **Push to `main`** | Auto-patch bump → deploy to both marketplaces → update website |
-| **Manual dispatch** | Major/minor/patch bump → deploy → update website |
-| **Tag `v*`** | Deploy to both marketplaces → update website |
+| **Push to `main`** | Extension CI, admin CI, marketing site deploy |
+| **Manual dispatch** | Version bump → tag → publish to selected marketplaces (Open VSX, VS Code, Firefox AMO, or Both) |
+| **Deploy existing tag** | Re-publish a prior tag without rewriting `main` |
+| **Rollback** | Restore a previous tag as a new patch release |
 
-### Auto-patch (default)
+### Releases (master admin only)
 
-Every push to `main` automatically:
-1. Bumps the patch version (e.g., `0.5.0` → `0.5.1`)
-2. Creates and pushes a git tag
-3. Publishes to Open VSX + VS Code Marketplace
-4. Creates a GitHub Release with VSIX
-5. Updates the project website
+Production releases are dispatched from **[Mission Control](https://cursor-dev.lorapok.tech)** (Deployments) or **Actions → CI/CD → Run workflow**. Only the master admin account can trigger deploy, release, and rollback APIs.
 
-### Major/Minor releases
+1. Choose **Release Channel** (Production or Beta)
+2. Choose **Publish Market** (`Both`, `Open VSX`, `VS Code Marketplace`, or `Firefox AMO`)
+3. Select version bump type or custom version
 
-For breaking or feature releases, use GitHub Actions:
-1. Go to **Actions → CI/CD → Run workflow**
-2. Select `major` or `minor`
-3. Optionally set a custom version
-4. Run
+### Dynamic versioning
+
+Root `package.json` holds the **production base version** (e.g. `1.0.1`). Workspace packages (`browser-extension`, `packages/shared`) stay at `0.0.0` in git; `npm run version:sync` resolves the real semver at build time.
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for full setup details.
 
@@ -194,11 +190,12 @@ Press **F5** in Cursor/VS Code to launch the Extension Development Host.
 
 ## Publishing
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for full CI/CD setup.
+See [DEPLOYMENT.md](DEPLOYMENT.md) and [MARKETPLACE_PUBLISHING.md](MARKETPLACE_PUBLISHING.md) for full CI/CD setup.
 
 Requires GitHub secrets:
 - `OVSX_PAT` — Open VSX access token
 - `VSCE_PAT` — VS Code Marketplace personal access token
+- `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` — Firefox Add-ons API (browser extension)
 
 ## Marketplace Links
 
@@ -206,7 +203,9 @@ Requires GitHub secrets:
 |-------------|-----|
 | **Open VSX** (Cursor) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
 | **VS Code Marketplace** | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
+| **Firefox Add-ons** (browser) | https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/ |
 | **GitHub Releases** | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
+| **Mission Control** (admin) | https://cursor-dev.lorapok.tech |
 | **Project Website** | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |
 
 ## Author

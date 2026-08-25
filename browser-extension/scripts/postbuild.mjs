@@ -2,10 +2,11 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveExtensionVersion } from "./lib-version.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const version = resolveExtensionVersion(root);
 
 function findHtml(name) {
   const walk = (d) => {
@@ -56,7 +57,7 @@ if (!existsSync(join(dist, "popup.html")) && popupSrc) {
 }
 
 const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
-manifest.version = pkg.version;
+manifest.version = version;
 manifest.action.default_popup = "popup.html";
 manifest.options_ui = { page: "options.html", open_in_tab: true };
 manifest.background = { service_worker: "background/service-worker.js", type: "module" };

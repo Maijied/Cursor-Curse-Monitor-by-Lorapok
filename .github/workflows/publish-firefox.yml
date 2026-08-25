@@ -1,0 +1,45 @@
+name: Publish Firefox Extension (AMO)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (defaults to root package.json after sync)"
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - "browser-extension/**"
+      - "scripts/sync-workspace-versions.mjs"
+      - "scripts/compute-version.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  amo:
+    name: Sign & Submit to AMO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Sync workspace versions
+        run: npm run version:sync
+
+      - name: Build browser extension
+        run: npm run browser-ext:build
+
+      - name: Publish to AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: node browser-extension/scripts/publish-amo.mjs

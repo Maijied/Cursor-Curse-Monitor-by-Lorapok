@@ -6,6 +6,32 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+## [1.0.1] - 2026-08-25
+
+### Added
+
+- **v1.0.1 production release** — mail branding, deploy fixes, dynamic versioning, CI lockdown
+- Branded email templates per category (product, help, notice) with dedicated logos under `website/assets/mail/`
+- **Firefox AMO publish pipeline** — `publish-amo.mjs`, standalone `publish-firefox.yml`, Mission Control `Firefox AMO` market
+- **Dynamic versioning** — root `package.json` holds production base; `version:sync` resolves workspace semver at build time
+- Download totals from all GitHub release assets (`githubAllAssets`) with admin breakdown panel
+- Global agent skills: `loragent-amo-publish`, `loragent-dynamic-versioning`, `loragent-cloudflare-mail-master`
+- `scripts/sync-amo-github-secrets.mjs` — vault → GitHub AMO secrets sync
+
+### Changed
+
+- Mission Control deploy/release/rollback APIs restricted to **master admin** only
+- Admin and website deploy jobs are `workflow_dispatch`-only (no auto-deploy on tag push alone)
+- Deploy and rollback workflows route through `ci-cd.yml` (fixes 404 on removed workflows)
+- Contact email unified to `cursor.curse.help@lorapok.tech` across site, add-on, and docs
+- Marketing site KPI strip, gallery, and founder section polish
+
+### Fixed
+
+- `generate-site-data.mjs` download total logging and VSCE live stats
+- AMO metadata generation before `web-ext sign` in CI (generated file is gitignored)
+- `web-ext sign` errors no longer swallowed in CI
+
 ## [0.5.18] - 2026-08-25
 
 ### Fixed

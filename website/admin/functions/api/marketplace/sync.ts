@@ -1,10 +1,41 @@
 import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
 import { fetchSiteData, packageVersionFromSiteData } from "../_shared/site-data.js";
 
-async function fetchJson(url) {
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+async function fetchJson(url, options = {}) {
+  const res = await fetch(url, { headers: { Accept: "application/json" }, ...options });
   if (!res.ok) return null;
   return res.json();
+}
+
+async function fetchVsceStats(extensionId) {
+  const body = {
+    filters: [{ criteria: [{ filterType: 7, value: extensionId }], pageSize: 1, pageNumber: 1 }],
+    flags: 0x1 | 0x2 | 0x10,
+  };
+  try {
+    const res = await fetch("https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json;api-version=6.1-preview.1",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const ext = json?.results?.[0]?.extensions?.[0];
+    if (!ext) return null;
+    const stats = {};
+    for (const s of ext.statistics ?? []) {
+      stats[s.statisticName] = s.value;
+    }
+    return {
+      version: ext.versions?.[0]?.version ?? null,
+      downloadCount: Math.round(stats.install ?? stats.downloadCount ?? stats.averagedownloadcount ?? 0),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function onRequestGet(context) {
@@ -21,14 +52,17 @@ export async function onRequestGet(context) {
 
   const name = siteData.extensionName ?? "cursor-curse-monitor-by-lorapok";
   const target = packageVersionFromSiteData(siteData);
+  const vsceId = siteData.vsceExtensionId ?? `LorapokLabs.${name}`;
 
-  const [ovsxCanonical, ovsxDuplicate, githubRelease] = await Promise.all([
+  const [ovsxCanonical, ovsxDuplicate, githubRelease, vsceLive] = await Promise.all([
     fetchJson(`https://open-vsx.org/api/lorapok-labs/${name}`),
     fetchJson(`https://open-vsx.org/api/LorapokLabs/${name}`),
     fetchJson(`https://api.github.com/repos/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest`),
+    fetchVsceStats(vsceId),
   ]);
 
-  const vscodeVersion = siteData.vscode?.version ?? null;
+  const vscodeVersion = vsceLive?.version ?? siteData.vscode?.version ?? null;
+  const vscodeDownloads = vsceLive?.downloadCount ?? siteData.vscode?.downloadCount ?? 0;
 
   const channels = [
     {
@@ -56,7 +90,7 @@ export async function onRequestGet(context) {
       id: "vscode",
       label: "VS Code Marketplace",
       version: vscodeVersion,
-      downloadCount: siteData.vscode?.downloadCount ?? 0,
+      downloadCount: vscodeDownloads,
       synced: vscodeVersion === target,
     },
     {

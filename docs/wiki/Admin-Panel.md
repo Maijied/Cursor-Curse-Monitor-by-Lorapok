@@ -8,17 +8,38 @@ Mission Control is the Lorapok Labs operations dashboard at **https://cursor-dev
 - Only allowlisted admin emails can access `/dashboard/*`
 - Master admin is configured via `ADMIN_MASTER_EMAIL`
 
+## Master admin privileges
+
+Only the **master admin** can trigger:
+
+- **Release** — bump version, tag, publish to marketplaces
+- **Deploy** — re-publish an existing git tag
+- **Rollback** — restore a prior tag as a new patch release
+
+Non-master admins can view deployment history and runtime logs but cannot submit dispatch forms.
+
 ## Modules
 
 | Module | Purpose |
 |--------|---------|
-| **Overview** | Health, marketplace sync, KPIs |
+| **Overview** | Health, marketplace sync, KPIs, download breakdown |
 | **Deployments** | Trigger publish or rollback workflows with live runtime log preview |
 | **Notices** | Enable/disable development notices on the marketing site |
 | **Mailbox** | Outbound mail log, branded HTML templates, compose & test |
 | **Logs** | API activity, mail events, system events |
 | **Team** | Admin allowlist management |
 | **Docs** | In-app architecture reference |
+
+## Publish markets
+
+When dispatching a release or deploy, choose the target marketplace:
+
+| Market | Destination |
+|--------|-------------|
+| `Both` | Open VSX + VS Code Marketplace |
+| `Open VSX` | Canonical `lorapok-labs` listing |
+| `VS Code Marketplace` | `LorapokLabs` publisher |
+| `Firefox AMO` | Browser extension via `web-ext sign` |
 
 ## Local development
 

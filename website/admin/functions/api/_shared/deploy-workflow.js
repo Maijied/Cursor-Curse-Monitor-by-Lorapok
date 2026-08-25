@@ -2,6 +2,10 @@ import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
 
 const MIN_PUBLISH_TAG = "v0.5.5";
+const WORKFLOW_ID = "ci-cd.yml";
+const ACTION_PUBLISH_TAG = "publish-tag - Publish existing git tag to marketplaces";
+const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
+const ACTION_FULL_RELEASE = "full-release - Bump version & publish all channels";
 
 async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields) {
   const githubToken = env.GITHUB_TOKEN;
@@ -91,8 +95,9 @@ export async function dispatchPublishWorkflow(env, body, successMessage) {
 
   return dispatchWorkflow(
     env,
-    "publish-tag.yml",
+    WORKFLOW_ID,
     {
+      action_type: ACTION_PUBLISH_TAG,
       target_tag: targetTag,
       publish_market: publishMarket,
       release_channel: releaseChannel,
@@ -124,8 +129,9 @@ export async function dispatchRollbackWorkflow(env, body, successMessage) {
 
   const response = await dispatchWorkflow(
     env,
-    "deployment.yml",
+    WORKFLOW_ID,
     {
+      action_type: ACTION_ROLLBACK,
       target_tag: targetTag,
       publish_market: publishMarket,
       release_channel: releaseChannel,
@@ -189,14 +195,20 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
     return jsonResponse({ error: "custom_version is required for custom releases" }, 400);
   }
 
+  const deployAdmin = body.deploy_admin !== false && body.deploy_admin !== "false";
+  const deployWebsite = body.deploy_website !== false && body.deploy_website !== "false";
+
   const response = await dispatchWorkflow(
     env,
-    "ci-cd.yml",
+    WORKFLOW_ID,
     {
+      action_type: ACTION_FULL_RELEASE,
       version_type: versionTypeInput,
       custom_version: customVersion,
       publish_market: publishMarket,
       release_channel: releaseChannel,
+      deploy_admin: deployAdmin ? "true" : "false",
+      deploy_website: deployWebsite ? "true" : "false",
     },
     successMessage,
     {

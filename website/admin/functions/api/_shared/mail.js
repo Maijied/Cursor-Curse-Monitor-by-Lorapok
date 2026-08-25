@@ -1,5 +1,6 @@
 import { recordMailboxMessage } from "./mailbox.js";
 import { logSystemEvent } from "./system-log.js";
+import { resolveMailBranding } from "./mail-branding.js";
 import {
   MAIL_HELP,
   MAIL_MONITOR,
@@ -31,7 +32,8 @@ function statPill(label, value) {
   </td>`;
 }
 
-function emailShell(title, bodyHtml, { preheader = "", fromEmail = FROM_EMAIL, fromName = FROM_NAME } = {}) {
+function emailShell(title, bodyHtml, { preheader = "", fromEmail = FROM_EMAIL, fromName = FROM_NAME, category = "system", severity } = {}) {
+  const branding = resolveMailBranding(category, { severity });
   const safePreheader = escapeHtml(preheader || title);
   return `<!DOCTYPE html>
 <html lang="en">
@@ -54,18 +56,19 @@ function emailShell(title, bodyHtml, { preheader = "", fromEmail = FROM_EMAIL, f
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:580px;background:rgba(12,16,24,0.96);border:1px solid rgba(124,92,255,0.28);border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.55);">
           <tr>
-            <td class="ccm-bar" style="height:5px;background:linear-gradient(90deg,#7c5cff,#4d9fff,#34d399,#7c5cff);background-size:300% 100%;"></td>
+            <td class="ccm-bar" style="height:5px;background:${branding.barGradient};background-size:300% 100%;"></td>
           </tr>
           <tr>
             <td style="padding:26px 28px 10px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td>
+                    <img src="${escapeHtml(branding.logoUrl)}" alt="Cursor Curse Monitor" width="48" height="48" style="display:block;border-radius:12px;margin-bottom:12px;" />
                     <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#a5b4fc;font-weight:700;">Lorapok Labs</p>
                     <p style="margin:0;font-size:13px;color:#64748b;">Cursor Curse Monitor · Mission Control</p>
                   </td>
                   <td align="right" style="vertical-align:top;">
-                    <span class="ccm-glow" style="display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(77,159,255,0.45);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#4d9fff;font-weight:700;">CCM</span>
+                    <span class="ccm-glow" style="display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid ${branding.accentColor}88;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:${branding.accentColor};font-weight:700;">${escapeHtml(branding.badgeLabel)}</span>
                   </td>
                 </tr>
               </table>
@@ -115,7 +118,7 @@ export function buildInviteHtml({ inviteUrl, invitedBy }) {
     </tr></table>
     ${ctaButton("Open admin dashboard", inviteUrl)}
   `;
-  return emailShell("Admin invitation", body, { preheader: "Your Mission Control access is ready." });
+  return emailShell("Admin invitation", body, { preheader: "Your Mission Control access is ready.", category: "invite" });
 }
 
 export function buildSubscribeHtml({ email }) {
@@ -128,7 +131,7 @@ export function buildSubscribeHtml({ email }) {
     </tr></table>
     <p style="margin:0;color:#94a3b8;">Reply to this email any time to unsubscribe.</p>
   `;
-  return emailShell("You're subscribed", body, { preheader: "Thanks for subscribing to CCM updates." });
+  return emailShell("You're subscribed", body, { preheader: "Thanks for subscribing to CCM updates.", category: "subscribe" });
 }
 
 export function buildTestHtml({ email, adminUrl }) {
@@ -142,7 +145,7 @@ export function buildTestHtml({ email, adminUrl }) {
     <p style="margin:0 0 18px;color:#94a3b8;">If you received this message, outbound mail from <code style="color:#c7d2fe;">${FROM_EMAIL}</code> is configured correctly.</p>
     ${ctaButton("Open Mission Control", adminUrl)}
   `;
-  return emailShell("Mailbox test — delivery confirmed", body, { preheader: "CCM outbound mail is working." });
+  return emailShell("Mailbox test — delivery confirmed", body, { preheader: "CCM outbound mail is working.", category: "test" });
 }
 
 export function buildComposeHtml({ subject, body }) {
@@ -151,7 +154,7 @@ export function buildComposeHtml({ subject, body }) {
     <p style="margin:0 0 14px;color:#94a3b8;">Message from Lorapok Labs Mission Control:</p>
     <div style="padding:16px 18px;border-radius:12px;background:rgba(17,24,39,0.85);border:1px solid rgba(124,92,255,0.22);white-space:pre-wrap;color:#e2e8f0;">${safeBody}</div>
   `;
-  return emailShell(subject, content, { preheader: body.slice(0, 120) });
+  return emailShell(subject, content, { preheader: body.slice(0, 120), category: "compose" });
 }
 
 export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
@@ -171,7 +174,11 @@ export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
     <p style="margin:0 0 22px;white-space:pre-wrap;">${safeMessage}</p>
     ${feedbackLink}
   `;
-  return emailShell(title || "Development notice", body, { preheader: message?.slice(0, 120) ?? safeTitle });
+  return emailShell(title || "Development notice", body, {
+    preheader: message?.slice(0, 120) ?? safeTitle,
+    category: "notice",
+    severity,
+  });
 }
 
 function readCloudflareMailCredentials(env) {
@@ -253,6 +260,10 @@ async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, 
       ? payload.errors.map((e) => e.message || e.code).join("; ")
       : "";
 
+    const sendingDisabled = Array.isArray(payload.errors)
+      ? payload.errors.some((e) => e.code === 10203)
+      : false;
+
     // If Resend API key is configured as a fallback, attempt sending via Resend
     if (typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim()) {
       const fallbackResult = await sendViaResend(env, { to, subject, html, text });
@@ -268,7 +279,11 @@ async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, 
     const authDiagnostic =
       res.status === 401
         ? " (Verify CLOUDFLARE_EMAIL_API_TOKEN has 'Account.Email Sending: Edit' permission and domain 'lorapok.tech' is onboarded)"
-        : "";
+        : sendingDisabled
+          ? " (Email Sending is disabled — upgrade to Workers Paid in Cloudflare → Email Service → Email Sending, then onboard lorapok.tech)"
+          : res.status === 403
+            ? " (Token may lack Email Sending permission)"
+            : "";
 
     return {
       sent: false,

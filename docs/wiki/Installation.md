@@ -19,6 +19,18 @@ code --install-extension LorapokLabs.cursor-curse-monitor-by-lorapok
 1. Download the latest `.vsix` from [Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases).
 2. In Cursor/VS Code: **Extensions → … → Install from VSIX**.
 
+## Browser extension (Firefox / Chrome)
+
+### Firefox (recommended)
+
+Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor-by-lorapok/).
+
+### Chrome (manual)
+
+1. Download `cursor-curse-monitor-chrome-{version}.zip` from [Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest).
+2. Extract the folder.
+3. Open `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the extracted folder.
+
 ## Requirements
 
 - Cursor IDE or VS Code 1.85+

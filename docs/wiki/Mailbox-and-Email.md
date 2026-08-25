@@ -1,6 +1,6 @@
 # Mailbox and Email
 
-Outbound mail is sent from **cursor-contact@lorapok.tech** via Cloudflare Email Sending (Lorapok Labs domain).
+Outbound mail uses branded HTML templates per category. Product mail sends from **cursor.monitor@lorapok.tech**; help and support replies use **cursor.curse.help@lorapok.tech**. Transport is via Cloudflare Email Sending (Lorapok Labs domain).
 
 ## Transport priority
 
@@ -10,15 +10,15 @@ Outbound mail is sent from **cursor-contact@lorapok.tech** via Cloudflare Email 
 
 ## Message categories
 
-| Category | Template | Trigger |
-|----------|----------|---------|
-| `subscribe` | Branded welcome | Website subscribe form |
-| `invite` | Admin invitation | Team invite |
-| `notice` | Severity-styled notice | Dev notice broadcast |
-| `compose` | Mission Control message | Admin compose |
-| `test` | Delivery confirmation | Mailbox test button |
+| Category | Template | Logo asset | Trigger |
+|----------|----------|------------|---------|
+| `subscribe` | Branded welcome | `logo-product.png` | Website subscribe form |
+| `invite` | Admin invitation | `logo-product.png` | Team invite |
+| `notice` | Severity-styled notice | `logo-notice.png` | Dev notice broadcast |
+| `compose` | Mission Control message | `logo-product.png` | Admin compose |
+| `test` | Delivery confirmation | `logo-help.png` | Mailbox test button |
 
-All templates use the **CCM / Lorapok Labs** dark theme with animated gradient header bar, stat pills, and CTA buttons.
+All templates use the **CCM / Lorapok Labs** dark theme with animated gradient header bar, stat pills, and CTA buttons. Template logic lives in `website/admin/functions/api/_shared/mail-branding.js` and `mail.js`.
 
 ## Mission Control mailbox UI
 

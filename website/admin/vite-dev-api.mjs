@@ -88,9 +88,12 @@ function mapPublishMarket(value) {
     openvsx: "Open VSX",
     "vscode-marketplace": "VS Code Marketplace",
     vscode: "VS Code Marketplace",
+    "firefox-amo": "Firefox AMO",
+    "firefox": "Firefox AMO",
     Both: "Both",
     "Open VSX": "Open VSX",
     "VS Code Marketplace": "VS Code Marketplace",
+    "Firefox AMO": "Firefox AMO",
   };
   return map[value] ?? null;
 }
@@ -103,6 +106,45 @@ function mapReleaseChannel(value) {
     Production: "Production",
   };
   return map[value] ?? null;
+}
+
+async function dispatchCiCdWorkflow(inputs, successMessage) {
+  const targetTag = inputs.target_tag;
+  const publishMarket = inputs.publish_market;
+  const releaseChannel = inputs.release_channel;
+  if (inputs.action_type?.includes("publish-tag") || inputs.action_type?.includes("rollback")) {
+    if (!targetTag) throw new Error("target_tag is required");
+  }
+  if (!publishMarket) throw new Error("Invalid publish_market");
+  if (!releaseChannel) throw new Error("Invalid release_channel");
+
+  const githubToken = loadGithubToken();
+  if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
+
+  const githubRes = await fetch(
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/ci-cd.yml/dispatches`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${githubToken}`,
+        "User-Agent": "cursor-usage-monitor-dev",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({ ref: "main", inputs }),
+    }
+  );
+
+  if (!githubRes.ok) {
+    throw new Error(`Failed to trigger ci-cd.yml (${githubRes.status})`);
+  }
+
+  return {
+    success: true,
+    message: successMessage,
+    workflow: "ci-cd.yml",
+    ...inputs,
+  };
 }
 
 async function dispatchGithubWorkflow(workflowId, body, successMessage) {
@@ -148,11 +190,27 @@ async function dispatchGithubWorkflow(workflowId, body, successMessage) {
 }
 
 async function triggerDeployment(body) {
-  return dispatchGithubWorkflow("publish-tag.yml", body, "Deployment triggered successfully");
+  return dispatchCiCdWorkflow(
+    {
+      action_type: "publish-tag - Publish existing git tag to marketplaces",
+      target_tag: body.target_tag ?? body.tag,
+      publish_market: mapPublishMarket(body.publish_market ?? body.market),
+      release_channel: mapReleaseChannel(body.release_channel ?? body.channel),
+    },
+    "Deployment triggered successfully"
+  );
 }
 
 async function triggerRollback(body) {
-  return dispatchGithubWorkflow("deployment.yml", body, "Rollback triggered");
+  return dispatchCiCdWorkflow(
+    {
+      action_type: "rollback - Restore previous tag as a new version",
+      target_tag: body.target_tag ?? body.tag,
+      publish_market: mapPublishMarket(body.publish_market ?? body.market),
+      release_channel: mapReleaseChannel(body.release_channel ?? body.channel),
+    },
+    "Rollback triggered"
+  );
 }
 
 const VERSION_TYPE_INPUTS = {
@@ -191,6 +249,7 @@ async function triggerRelease(body) {
       body: JSON.stringify({
         ref: "main",
         inputs: {
+          action_type: "full-release - Bump version & publish all channels",
           version_type: versionTypeInput,
           custom_version: customVersion,
           publish_market: publishMarket,

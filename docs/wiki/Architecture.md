@@ -49,8 +49,14 @@ flowchart LR
 - Hybrid auth: content script on `cursor.com` captures Bearer token from `api2.cursor.sh` requests, or manual paste in Options
 - Animated Budget Tracker popup; mandatory Lorapok Labs + Cursor footer
 - **Security scanner** on Options paste — warns when extra secrets appear alongside an intentional Cursor token
-- Firefox: auto-published to AMO via `web-ext sign` + generated metadata
+- Firefox: auto-published to AMO via `publish-amo.mjs` (`web-ext sign` + generated metadata)
 - Chrome: direct-download zip (not Chrome Web Store)
+
+## Versioning
+
+- Root `package.json` holds the production base semver
+- Workspace packages use `0.0.0` in git; `npm run version:sync` resolves versions at build time
+- CI and Mission Control releases run `version:sync` before packaging
 
 ## Security scanner (shared)
 

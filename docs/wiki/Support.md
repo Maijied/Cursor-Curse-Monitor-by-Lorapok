@@ -2,8 +2,10 @@
 
 ## Contact
 
-- **Product email:** cursor-contact@lorapok.tech
+- **Product email:** cursor.monitor@lorapok.tech
+- **Help email:** cursor.curse.help@lorapok.tech
 - **Lorapok Labs:** https://lorapok.tech
+- **Mission Control:** https://cursor-dev.lorapok.tech
 - **GitHub Issues:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues
 - **Discussions:** GitHub Discussions (linked from marketing site)
 

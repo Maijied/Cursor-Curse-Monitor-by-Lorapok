@@ -3,9 +3,20 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 
-const pkg = JSON.parse(
-  readFileSync(resolve(__dirname, "package.json"), "utf8")
-) as { version: string };
+function readExtensionVersion(): string {
+  const localPkg = JSON.parse(
+    readFileSync(resolve(__dirname, "package.json"), "utf8")
+  ) as { version: string };
+  if (localPkg.version && localPkg.version !== "0.0.0") {
+    return localPkg.version;
+  }
+  const rootPkg = JSON.parse(
+    readFileSync(resolve(__dirname, "../package.json"), "utf8")
+  ) as { version: string };
+  return rootPkg.version;
+}
+
+const extensionVersion = readExtensionVersion();
 
 export default defineConfig({
   base: "./",
@@ -19,7 +30,7 @@ export default defineConfig({
     },
   },
   define: {
-    __EXTENSION_VERSION__: JSON.stringify(pkg.version),
+    __EXTENSION_VERSION__: JSON.stringify(extensionVersion),
   },
   build: {
     outDir: "dist",

@@ -44,7 +44,7 @@
     const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toLocaleString());
 
     // KPI strip (downloads + engagement)
-    setText("[data-downloads-total]", fmt(data.downloads?.total));
+    setText("[data-downloads-total]", fmt(data.downloads?.displayTotal ?? data.downloads?.total));
     setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
     setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
 

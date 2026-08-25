@@ -1,6 +1,6 @@
 {
   "name": "browser-extension",
-  "version": "0.5.9",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "build:firefox": "npm run build",
     "build:chrome": "npm run build && node scripts/zip-chrome.mjs",
     "amo:metadata": "node scripts/generate-amo-metadata.mjs",
+    "amo:publish": "node scripts/publish-amo.mjs",
     "test": "node tests/test-shared.js && node tests/test-footer.js && node tests/test-auth-capture.js && node tests/test-security-scan.cjs",
     "lint": "tsc --noEmit -p ./"
   },

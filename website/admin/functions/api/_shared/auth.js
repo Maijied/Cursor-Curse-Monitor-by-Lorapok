@@ -52,9 +52,12 @@ export function mapPublishMarket(value) {
     openvsx: "Open VSX",
     "vscode-marketplace": "VS Code Marketplace",
     vscode: "VS Code Marketplace",
+    "firefox-amo": "Firefox AMO",
+    "firefox": "Firefox AMO",
     Both: "Both",
     "Open VSX": "Open VSX",
     "VS Code Marketplace": "VS Code Marketplace",
+    "Firefox AMO": "Firefox AMO",
   };
   return map[value] ?? null;
 }
@@ -67,6 +70,13 @@ export function mapReleaseChannel(value) {
     Production: "Production",
   };
   return map[value] ?? null;
+}
+
+export function requireMasterAdmin(auth) {
+  if (!auth.isMaster) {
+    return { error: jsonResponse({ error: "Master admin only" }, 403) };
+  }
+  return null;
 }
 
 export { jsonResponse };

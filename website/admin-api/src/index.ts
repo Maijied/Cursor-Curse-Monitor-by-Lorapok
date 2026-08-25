@@ -82,8 +82,8 @@ async function handleDeploy(request: Request, env: Env) {
       });
     }
 
-    // 3. Trigger GitHub Actions `deployment.yml` workflow
-    const ghRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/deployment.yml/dispatches`, {
+    // 3. Trigger GitHub Actions ci-cd.yml rollback workflow
+    const ghRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/ci-cd.yml/dispatches`, {
       method: "POST",
       headers: {
         "Accept": "application/vnd.github.v3+json",
@@ -94,9 +94,10 @@ async function handleDeploy(request: Request, env: Env) {
       body: JSON.stringify({
         ref: branch,
         inputs: {
+          action_type: "rollback - Restore previous tag as a new version",
           target_tag: tag,
           release_channel: channel,
-          market: market || "open-vsx"
+          publish_market: market === "vscode" ? "VS Code Marketplace" : market === "both" ? "Both" : "Open VSX",
         }
       })
     });
