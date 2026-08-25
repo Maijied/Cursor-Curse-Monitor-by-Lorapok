@@ -218,8 +218,17 @@ async function submitSubscribeRequest({ email, subscribeUrl, source }) {
 
     // GitHub links
     setHref("[data-href-release]", data.github.releaseUrl);
+    setHref("[data-href-github-release]", data.github.releaseUrl ?? data.repository);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
+    setHref(
+      "[data-href-firefox-xpi]",
+      data.browserExtension?.firefox?.xpiUrl ?? data.github?.firefoxXpiUrl ?? data.github?.releaseUrl ?? "#"
+    );
+    setText(
+      "[data-firefox-xpi-name]",
+      data.browserExtension?.firefox?.xpiName ?? data.github?.firefoxXpiName ?? "cursor-curse-monitor.xpi"
+    );
     const firefoxPublished = Boolean(data.browserExtension?.firefox?.published);
     const firefoxHref = firefoxPublished
       ? (data.browserExtension?.firefox?.url ?? data.productContext?.firefoxUrl)

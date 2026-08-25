@@ -36,7 +36,7 @@ export function buildSyncChannels(data: SiteData): SyncChannel[] {
     },
     {
       id: "ovsx-duplicate",
-      label: "Open VSX duplicate",
+      label: "Open VSX (LorapokLabs)",
       version: data.ovsxDuplicate?.version ?? null,
       downloadCount: data.ovsxDuplicate?.downloadCount ?? null,
       synced: false,

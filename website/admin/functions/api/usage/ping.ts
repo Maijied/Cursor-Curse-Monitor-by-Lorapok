@@ -26,7 +26,7 @@ function normalizeOs(value) {
 
 function normalizeHost(value) {
   const host = String(value ?? "").trim().toLowerCase();
-  if (host === "cursor" || host === "vscode") return host;
+  if (host === "cursor" || host === "vscode" || host === "browser") return host;
   return "unknown";
 }
 

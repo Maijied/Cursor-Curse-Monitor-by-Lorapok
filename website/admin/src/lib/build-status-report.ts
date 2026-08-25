@@ -71,7 +71,7 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
 
   if (data.ovsxDuplicate?.version) {
     marketplaceRows.push({
-      label: "Open VSX duplicate listing",
+      label: "Open VSX (LorapokLabs)",
       value: data.ovsxDuplicate.version,
       status: "warn",
     });

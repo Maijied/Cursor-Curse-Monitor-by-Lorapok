@@ -253,6 +253,7 @@ async function githubLatestRelease() {
   const tag = data.tag_name.replace(/^v/, "");
   const vsix = (data.assets ?? []).find((a) => a.name?.endsWith(".vsix"));
   const chromeZip = (data.assets ?? []).find((a) => /chrome.*\.zip$/i.test(a.name ?? ""));
+  const firefoxXpi = (data.assets ?? []).find((a) => a.name?.endsWith(".xpi"));
   return {
     tag: data.tag_name,
     version: tag,
@@ -262,6 +263,8 @@ async function githubLatestRelease() {
     vsixDownloadCount: vsix?.download_count ?? 0,
     chromeZipUrl: chromeZip?.browser_download_url ?? null,
     chromeZipName: chromeZip?.name ?? null,
+    firefoxXpiUrl: firefoxXpi?.browser_download_url ?? null,
+    firefoxXpiName: firefoxXpi?.name ?? null,
     publishedAt: data.published_at,
   };
 }
@@ -492,7 +495,7 @@ const siteData = {
     breakdown: downloadBreakdown,
     openVsxCombined:
       (downloadBreakdown.openVsxCanonical ?? 0) + (downloadBreakdown.openVsxDuplicate ?? 0),
-    note: "Public total uses canonical Open VSX unless canonical lags package version; duplicate namespace excluded from sum.",
+    note: "Public total counts canonical Open VSX + VS Code + GitHub. LorapokLabs namespace is shown separately and excluded from the total.",
   },
   visitors: {
     ...visitors,
@@ -544,6 +547,8 @@ const siteData = {
     publishedAt: github?.publishedAt ?? null,
     chromeZipUrl: github?.chromeZipUrl ?? null,
     chromeZipName: github?.chromeZipName ?? null,
+    firefoxXpiUrl: github?.firefoxXpiUrl ?? null,
+    firefoxXpiName: github?.firefoxXpiName ?? null,
   },
   browserExtension: {
     version:
@@ -556,6 +561,8 @@ const siteData = {
         firefoxAmo.version && firefoxAmo.version !== "0.0.0"
           ? firefoxAmo.version
           : readBrowserExtensionVersion() ?? version,
+      xpiUrl: github?.firefoxXpiUrl ?? null,
+      xpiName: github?.firefoxXpiName ?? null,
     },
     chrome: {
       zipUrl: github?.chromeZipUrl ?? null,
@@ -582,6 +589,7 @@ const out = join(root, "website", "site-data.json");
 writeFileSync(out, JSON.stringify(siteData, null, 2) + "\n");
 const visitorOut = join(root, "website", "visitor-stats.json");
 writeFileSync(visitorOut, JSON.stringify(siteData.visitors, null, 2) + "\n");
+execSync("node scripts/generate-readme-stats.mjs", { cwd: root, stdio: "inherit" });
 console.log(`Wrote ${out}`);
 console.log(`Wrote ${visitorOut}`);
 console.log(`  Version:          ${version}`);

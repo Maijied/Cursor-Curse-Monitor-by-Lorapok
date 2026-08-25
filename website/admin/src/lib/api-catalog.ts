@@ -30,6 +30,8 @@ export const API_CATALOG: ApiCatalogEntry[] = [
     description: "Email all subscribers (notice template)",
   },
   { id: "analytics-stats", path: "/analytics/stats", method: "GET", auth: "public", description: "Website visits + package clicks", safeProbe: true },
+  { id: "stats-readme-svg", path: "/stats/readme.svg", method: "GET", auth: "public", description: "Live README download chart (SVG)", safeProbe: true },
+  { id: "stats-badge", path: "/stats/badge.json", method: "GET", auth: "public", description: "Shields.io badge JSON for README downloads", safeProbe: true },
   { id: "community-config", path: "/community/config", method: "GET", auth: "public", description: "Community discussions config", safeProbe: true },
   { id: "discussions", path: "/discussions", method: "GET", auth: "admin", description: "GitHub Discussions feed", safeProbe: true },
   { id: "admins", path: "/admins", method: "GET", auth: "admin", description: "Allowed admin emails (master only)", safeProbe: true },

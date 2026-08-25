@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T13:18:15.730Z",
+  "generatedAt": "2026-08-25T17:40:08.934Z",
   "source": "website/seo.yml",
   "siteBase": "https://cursor.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
@@ -7,7 +7,7 @@
   "version": "1.0.3",
   "packageVersion": "1.0.3",
   "canonical": "https://cursor.lorapok.tech/",
-  "syncStatus": "release-candidate",
+  "syncStatus": "ahead",
   "keywords": [
     "Cursor IDE",
     "Windsurf IDE",
@@ -75,7 +75,7 @@
     "openVsxCanonical": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "openVsxDuplicate": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "vscode": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/feat/website-final-polish"
+    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.8"
   },
   "structuredData": {
     "@context": "https://schema.org",
@@ -91,7 +91,7 @@
           "priceCurrency": "USD"
         },
         "featureList": "Usage dashboard, security scanner, local insights, budget tracking, universal VS Code wrapper AI IDE support",
-        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/feat/website-final-polish/cursor-curse-monitor-by-lorapok-1.0.3.vsix",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.8/cursor-curse-monitor-by-lorapok-1.0.8.vsix",
         "softwareVersion": "1.0.3",
         "author": {
           "@type": "Person",
@@ -115,7 +115,7 @@
           "priceCurrency": "USD"
         },
         "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
-        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/feat/website-final-polish",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.8",
         "publisher": {
           "@type": "Organization",
           "name": "Lorapok Labs",

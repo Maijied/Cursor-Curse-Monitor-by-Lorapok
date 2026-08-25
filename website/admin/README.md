@@ -76,7 +76,7 @@ flowchart LR
 | `POST /api/deploy` | Admin | Re-publish an existing tag |
 | `POST /api/rollback` | Admin | Roll back to a prior tag |
 | `GET /api/tags` | Admin | Publishable tags with live/suggested labels |
-| `GET /api/analytics/stats` | Admin | Visitor + engagement totals |
+| `GET /api/analytics/stats` | Public | Visitor + engagement totals (stub on Pages; Firestore in admin UI) |
 | `POST /api/analytics/visit` | Public | Marketing site beacon |
 | `GET /api/discussions` | Admin | GitHub Discussions feed |
 | `POST /api/discussions` | Admin | Create discussion replies |

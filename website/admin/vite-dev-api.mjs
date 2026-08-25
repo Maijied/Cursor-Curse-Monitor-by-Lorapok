@@ -8,6 +8,7 @@ import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broad
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
+import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -537,7 +538,7 @@ async function fetchMarketplaceSync() {
   const channels = [
     { id: "github", label: "GitHub Release", version: githubRelease?.tag_name?.replace(/^v/, "") ?? null, synced: githubRelease?.tag_name?.replace(/^v/, "") === target },
     { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", version: ovsxCanonical?.version ?? siteData.openVsx?.version ?? null, downloadCount: ovsxCanonical?.downloadCount ?? 0, synced: (ovsxCanonical?.version ?? siteData.openVsx?.version) === target },
-    { id: "ovsx-duplicate", label: "Open VSX duplicate", version: ovsxDuplicate?.version ?? null, downloadCount: ovsxDuplicate?.downloadCount ?? 0, synced: false, warn: true },
+    { id: "ovsx-duplicate", label: "Open VSX (LorapokLabs)", version: ovsxDuplicate?.version ?? null, downloadCount: ovsxDuplicate?.downloadCount ?? 0, synced: false, warn: true },
     { id: "vscode", label: "VS Code Marketplace", version: vscodeVersion, downloadCount: siteData.vscode?.downloadCount ?? 0, synced: vscodeVersion === target },
     { id: "package", label: "package.json", version: target, synced: true },
   ];
@@ -604,7 +605,7 @@ export function createDevApiMiddleware() {
           devStore.usageInstalls.set(installId, {
             installId,
             os: String(parsed.os ?? "unknown").slice(0, 32),
-            host: ["cursor", "vscode"].includes(String(parsed.host)) ? parsed.host : "unknown",
+            host: ["cursor", "vscode", "browser"].includes(String(parsed.host)) ? parsed.host : "unknown",
             version: String(parsed.version ?? "unknown").slice(0, 32),
             lastSeenAt: now,
             firstSeenAt: prev?.firstSeenAt ?? now,
@@ -615,6 +616,37 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
+      return;
+    }
+
+    if (url === "/api/stats/readme.svg" && req.method === "GET") {
+      try {
+        const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        const stats = buildReadmeStatsFromSiteData(siteData);
+        res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+        res.setHeader("Cache-Control", "public, max-age=300");
+        res.end(renderReadmeStatsSvg(stats));
+      } catch (err) {
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+        res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="80"><text x="12" y="40" fill="#fff">stats unavailable</text></svg>`);
+      }
+      return;
+    }
+
+    if (url.startsWith("/api/stats/badge.json") && req.method === "GET") {
+      const kind = new URL(req.url ?? "", "http://localhost").searchParams.get("kind") ?? "total";
+      try {
+        const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        const stats = buildReadmeStatsFromSiteData(siteData);
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "public, max-age=300");
+        res.end(JSON.stringify(renderShieldsBadge(stats, kind)));
+      } catch {
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ schemaVersion: 1, label: "downloads", message: "unavailable", color: "lightgrey" }));
+      }
       return;
     }
 

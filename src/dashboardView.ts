@@ -175,10 +175,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       line-height: 1.45;
     }
     .loading-state {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 180px;
+      min-height: 100%;
+      background: var(--bg);
       color: var(--muted);
       font-size: 13px;
       letter-spacing: 0.02em;
@@ -951,6 +955,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         (local.cycleAccepted || 0) + ' lines';
 
       if (!usage || !b) {
+        const usageBig = document.getElementById('usageBig');
+        const usageSub = document.getElementById('usageSub');
+        if (usageBig) usageBig.textContent = '—';
+        if (usageSub) {
+          usageSub.textContent = snapshot.error
+            ? 'Sign in to Cursor and refresh'
+            : 'Waiting for usage data…';
+        }
         renderSpark(snapshot.history || [], 80);
         return;
       }

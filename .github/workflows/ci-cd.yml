@@ -431,9 +431,17 @@ jobs:
           if npx wrangler deploy; then
             echo "deployed=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::Mail relay deploy skipped — check CLOUDFLARE_API_TOKEN Workers permissions."
+            echo "::warning::Mail relay deploy failed — will keep MAIL_RELAY binding if ccm-mail-relay already exists."
             echo "deployed=false" >> "$GITHUB_OUTPUT"
-          fi || echo "::warning::Mail relay deploy skipped — check CLOUDFLARE_API_TOKEN Workers permissions."
+          fi
+          RELAY_HTTP=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/ccm-mail-relay" || echo "000")
+          if [ "$RELAY_HTTP" = "200" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Sync Pages runtime secret for outbound email
         working-directory: website/admin
@@ -463,7 +471,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ "${{ steps.mail_relay.outputs.deployed }}" != "true" ]; then
+          if [ "${{ steps.mail_relay.outputs.deployed }}" != "true" ] && [ "${{ steps.mail_relay.outputs.exists }}" != "true" ]; then
             node <<'NODE'
           import { readFileSync, writeFileSync } from "node:fs";
           const path = "wrangler.toml";
@@ -475,6 +483,8 @@ jobs:
           writeFileSync(path, withoutServices);
           NODE
             echo "::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable."
+          elif [ "${{ steps.mail_relay.outputs.exists }}" = "true" ]; then
+            echo "::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is already deployed on this account."
           fi
           npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main --commit-dirty=true
 
@@ -526,6 +536,7 @@ jobs:
             website/seo.json
             website/site-data.json
             website/visitor-stats.json
+            website/readme-stats.svg
           retention-days: 14
 
       - name: Commit and publish refreshed SEO artifacts (with branch rule PR fallback)
@@ -535,7 +546,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json
+          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json website/readme-stats.svg
           if git diff --staged --quiet; then
             echo "No SEO artifact changes to commit."
             exit 0

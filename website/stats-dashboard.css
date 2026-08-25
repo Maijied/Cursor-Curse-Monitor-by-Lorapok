@@ -112,6 +112,7 @@
   background: linear-gradient(90deg, #4d9fff, #7c5cff);
 }
 
+.hero-ovsx-split-bar .meter-fill.legacy,
 .hero-ovsx-split-bar .meter-fill.duplicate {
   background: linear-gradient(90deg, #f59e0b, #fbbf24);
 }
