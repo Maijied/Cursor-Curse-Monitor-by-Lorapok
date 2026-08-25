@@ -77,18 +77,31 @@ function evaluateSync(canonical, duplicate) {
     failed = true;
   }
 
-  if (canonical != null && duplicate != null && compareSemver(duplicate, canonical) > 0) {
+  if (duplicate != null && compareSemver(duplicate, TARGET_VERSION) < 0) {
     console.error(
-      `::error::Duplicate listing ${OVSX_DUPLICATE} (${duplicate}) is ahead of canonical ` +
-        `${OVSX_CANONICAL} (${canonical}). Stop publishing bare ovsx publish; use publish-ovsx.mjs only.`
+      `::error::Duplicate listing ${OVSX_DUPLICATE} (${duplicate}) is behind package.json (${TARGET_VERSION}). ` +
+        `Publish the LorapokLabs VSIX to Open VSX as well (both listings are active).`
     );
     failed = true;
   }
 
-  if (duplicate != null && canonical != null) {
+  if (
+    canonical != null &&
+    duplicate != null &&
+    compareSemver(canonical, duplicate) !== 0
+  ) {
     console.warn(
-      `::warning::Duplicate Open VSX namespace ${OVSX_DUPLICATE} still exists at v${duplicate}. ` +
-        `Request deprecation from Open VSX/Eclipse Foundation.`
+      `::warning::Open VSX version mismatch — canonical ${OVSX_CANONICAL}=${canonical}, ` +
+        `duplicate ${OVSX_DUPLICATE}=${duplicate}. Both listings are kept for existing users.`
+    );
+    if (compareSemver(canonical, TARGET_VERSION) < 0 || compareSemver(duplicate, TARGET_VERSION) < 0) {
+      failed = true;
+    }
+  }
+
+  if (duplicate != null && canonical != null && compareSemver(duplicate, TARGET_VERSION) >= 0) {
+    console.log(
+      `Dual Open VSX listings active: ${OVSX_CANONICAL} (${canonical}) and ${OVSX_DUPLICATE} (${duplicate}).`
     );
   }
 

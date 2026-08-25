@@ -752,6 +752,36 @@ jobs:
           fi
           node scripts/publish-ovsx.mjs "${FLAGS[@]}"
 
+      - name: Publish to Open VSX (LorapokLabs duplicate — keep for existing installs)
+        if: steps.config.outputs.do_ovsx == 'true'
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::error::OVSX_PAT secret missing."
+            exit 1
+          fi
+          VSIX=$(ls -t *.vsix 2>/dev/null | head -n 1)
+          if [ -z "$VSIX" ]; then
+            echo "::error::No LorapokLabs VSIX found for duplicate Open VSX publish."
+            exit 1
+          fi
+          FLAGS=()
+          if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
+            FLAGS+=(--pre-release)
+          fi
+          set +e
+          OUTPUT=$(ovsx publish "$VSIX" -p "$OVSX_PAT" "${FLAGS[@]}" 2>&1)
+          STATUS=$?
+          set -e
+          echo "$OUTPUT"
+          if [ "$STATUS" -ne 0 ] && ! echo "$OUTPUT" | grep -qi 'already published'; then
+            exit "$STATUS"
+          fi
+          if echo "$OUTPUT" | grep -qi 'already published'; then
+            echo "::warning::LorapokLabs duplicate listing already has this version — OK"
+          fi
+
       # ── Firefox AMO ────────────────────────────────────────────────────────
       - name: Publish to Firefox Add-ons (AMO)
         if: steps.config.outputs.do_amo == 'true'

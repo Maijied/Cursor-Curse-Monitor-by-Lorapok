@@ -141,7 +141,9 @@ export function syncStatusLabel(status: string): string {
   switch (status) {
     case "synced": return "Synced";
     case "drift": return "Drift";
-    case "duplicate-listing": return "Duplicate listing";
+    case "dual-listing":
+    case "duplicate-listing":
+      return "Dual Open VSX listings";
     case "ahead": return "Ahead";
     case "missing": return "Missing";
     default: return status;

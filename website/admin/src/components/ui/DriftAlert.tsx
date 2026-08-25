@@ -7,8 +7,11 @@ export default function DriftAlert({ data }: { data: SiteData }) {
   if (data.syncStatus === "synced") return null;
 
   const messages: Record<string, string> = {
-    drift: `Open VSX canonical (${data.ovsx.version ?? "missing"}) is behind package.json (${data.packageVersion}). Run Sync Open VSX workflow.`,
-    "duplicate-listing": `Duplicate namespace LorapokLabs may be ahead of canonical lorapok-labs. Publish only via publish-ovsx.mjs.`,
+    drift: `One or more Open VSX listings are behind package.json (${data.packageVersion}). Run Sync Open VSX workflow.`,
+    "dual-listing":
+      `Both Open VSX namespaces are active — canonical lorapok-labs (${data.ovsx.version ?? "—"}) and LorapokLabs (${data.ovsxDuplicate?.version ?? "—"}). Versions should match after publish.`,
+    "duplicate-listing":
+      `Both Open VSX namespaces are active — canonical lorapok-labs (${data.ovsx.version ?? "—"}) and LorapokLabs (${data.ovsxDuplicate?.version ?? "—"}). Run Sync Open VSX to align versions.`,
     ahead: `Open VSX canonical (${data.ovsx.version}) is ahead of package.json (${data.packageVersion}). Bump package version or verify release.`,
     missing: "Canonical Open VSX listing is missing. Run scripts/publish-ovsx.mjs.",
   };
