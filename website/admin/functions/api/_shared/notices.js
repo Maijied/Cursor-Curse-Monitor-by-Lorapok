@@ -1,3 +1,11 @@
+import {
+  BUILTIN_NOTICES,
+  CONVERSATION_RECOVERY_NOTICE,
+  GENERATED_DEV_NOTICE,
+  ROLLBACK_NOTICE,
+  getNoticeTemplates,
+} from "./notice-catalog.js";
+
 const CATALOG_KEY = "notice:catalog";
 const ACTIVE_KEY = "notice:active";
 
@@ -14,70 +22,40 @@ export const DEFAULT_NOTICE = {
   type: "development",
 };
 
-/** Generated marketing-site notice from generate-site-data.mjs — imported into the admin catalog once. */
-export const GENERATED_DEV_NOTICE = {
-  id: "generated-dev-notice",
-  source: "generated",
-  enabled: true,
-  type: "development",
-  severity: "warning",
-  title: "Active Development Notice",
-  message:
-    "Cursor Curse Monitor is still in active development. Some users may experience conflicts with their Cursor database — we are deeply sorry, especially to Lorapok Labs members and everyone affected. A stable release is targeted soon (expected by tomorrow). Thank you for your support — your feedback helps us improve. Interested in collaborating on Lorapok Labs projects? You're welcome to reach out.",
-  shortMessage:
-    "Still in development — some users may see Cursor database conflicts. Stable release coming soon. We apologize to everyone affected.",
-  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-  updatedAt: "2026-08-15T00:00:00.000Z",
-  dismissible: true,
-};
-
-/** Public notice for conversation / worktree recovery in v0.5.15+. */
-export const CONVERSATION_RECOVERY_NOTICE = {
-  id: "conversation-recovery-v0515",
-  source: "release",
-  enabled: false,
-  type: "feature",
-  severity: "info",
-  title: "Recover Missing Agent Conversations",
-  message:
-    "If your IDE sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, update to Cursor Curse Monitor v0.5.15 and run Reindex Missing Conversations from the dashboard. The tool rebuilds search and sidebar indexes from on-disk agent transcripts without deleting your existing data.",
-  shortMessage:
-    "Get back chats lost after a worktree switch — v0.5.15 rebuilds your conversation list safely from saved transcripts.",
-  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-  updatedAt: "2026-08-25T00:00:00.000Z",
-  dismissible: true,
-};
-
-/** Public incident notice activated automatically after a successful rollback dispatch. */
-export const ROLLBACK_NOTICE = {
-  id: "rollback-recovery-notice",
-  source: "rollback",
-  enabled: true,
-  type: "incident",
-  severity: "warning",
-  title: "Rollback and Recovery Notice",
-  message:
-    "We’re extremely sorry for the disruption. We have initiated an immediate rollback to restore the last stable version while we investigate the issue. Please avoid retrying the affected action for now. We’ll post an update as soon as recovery is confirmed.",
-  shortMessage:
-    "We’re extremely sorry — an immediate rollback is in progress to restore stability. We’ll update you as soon as recovery is confirmed.",
-  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-  updatedAt: null,
-  dismissible: false,
-};
-
-/** Built-in notices that must always exist in the catalog (merged on every read). */
-export const BUILTIN_NOTICES = [GENERATED_DEV_NOTICE, CONVERSATION_RECOVERY_NOTICE];
+export { GENERATED_DEV_NOTICE, CONVERSATION_RECOVERY_NOTICE, ROLLBACK_NOTICE, getNoticeTemplates };
 
 export function mergeBuiltinNotices(items) {
   const next = [...items];
   let changed = false;
   for (const builtin of BUILTIN_NOTICES) {
-    if (!next.some((n) => n.id === builtin.id)) {
+    const index = next.findIndex((n) => n.id === builtin.id);
+    if (index < 0) {
       next.push({ ...builtin });
       changed = true;
+      continue;
+    }
+    if (builtin.source === "generated" && next[index].source === "generated") {
+      const refreshFields = [
+        "title",
+        "message",
+        "shortMessage",
+        "severity",
+        "feedbackUrl",
+        "collaborateUrl",
+      ];
+      const differs = refreshFields.some((field) => next[index][field] !== builtin[field]);
+      if (differs) {
+        next[index] = {
+          ...next[index],
+          title: builtin.title,
+          message: builtin.message,
+          shortMessage: builtin.shortMessage,
+          severity: builtin.severity,
+          feedbackUrl: builtin.feedbackUrl,
+          collaborateUrl: builtin.collaborateUrl,
+        };
+        changed = true;
+      }
     }
   }
   return { items: next, changed };

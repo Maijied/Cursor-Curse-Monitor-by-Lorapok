@@ -46,6 +46,30 @@ export const MAIL_BRANDING = {
     badgeLabel: "Support",
     barGradient: "linear-gradient(90deg,#2dd4bf,#4d9fff,#7c5cff,#2dd4bf)",
   },
+  bugfix: {
+    logoUrl: `${SITE_BASE}/assets/mail/logo-notice.png`,
+    accentColor: "#4d9fff",
+    badgeLabel: "Bug fix",
+    barGradient: "linear-gradient(90deg,#4d9fff,#7c5cff,#34d399,#4d9fff)",
+  },
+  feature: {
+    logoUrl: `${SITE_BASE}/assets/mail/logo-product.png`,
+    accentColor: "#34d399",
+    badgeLabel: "New",
+    barGradient: "linear-gradient(90deg,#34d399,#4d9fff,#7c5cff,#34d399)",
+  },
+  response: {
+    logoUrl: `${SITE_BASE}/assets/mail/logo-help.png`,
+    accentColor: "#2dd4bf",
+    badgeLabel: "Reply",
+    barGradient: "linear-gradient(90deg,#2dd4bf,#4d9fff,#7c5cff,#2dd4bf)",
+  },
+  warning: {
+    logoUrl: `${SITE_BASE}/assets/mail/logo-notice.png`,
+    accentColor: "#fbbf24",
+    badgeLabel: "Warning",
+    barGradient: "linear-gradient(90deg,#fbbf24,#ff6b6b,#7c5cff,#fbbf24)",
+  },
   system: {
     logoUrl: `${SITE_BASE}/assets/mail/logo-product.png`,
     accentColor: "#7c5cff",

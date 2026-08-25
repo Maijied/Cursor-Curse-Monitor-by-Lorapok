@@ -74,6 +74,22 @@ export interface SiteData {
   packageVersion: string;
   syncStatus: "synced" | "drift" | "duplicate-listing" | "ahead" | "missing" | string;
   notice?: DevNotice;
+  noticeTemplates?: Array<{ templateId: string; label: string; category: string; severity: string; type: string }>;
+  mailTemplates?: Array<{ id: string; label: string; category: string; subject: string }>;
+  productContext?: {
+    version: string;
+    homepage: string;
+    supportEmail: string;
+    productEmail: string;
+    releaseUrl: string;
+  };
+  company?: {
+    name: string;
+    supportEmail?: string;
+    productEmail?: string;
+    website?: string;
+    adminUrl?: string;
+  };
   stableFallback?: StableFallbackInfo;
   downloads?: {
     total: number;
@@ -114,6 +130,7 @@ export interface SiteData {
       url: string;
       published: boolean;
       reviewStatus?: string;
+      version?: string | null;
       downloadCount?: number;
     };
     chrome?: { zipUrl: string | null; zipName?: string | null; webStorePublished: boolean };

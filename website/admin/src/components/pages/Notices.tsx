@@ -7,7 +7,7 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DataTable, { type DataTableColumn } from "../ui/DataTable";
 import Notification from "../ui/Notification";
-import { createNotice, deleteNotice, fetchNotices, updateNotice, broadcastToSubscribers } from "../../lib/api";
+import { createNotice, deleteNotice, fetchNotices, fetchNoticeTemplates, updateNotice, broadcastToSubscribers, type NoticeTemplate } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;
@@ -15,34 +15,28 @@ const SEVERITIES = ["info", "warning", "critical"] as const;
 const EMPTY: DevNotice = {
   enabled: false,
   type: "development",
-  severity: "warning",
+  severity: "info",
   title: "",
   message: "",
   shortMessage: "",
-  feedbackUrl: "",
-  collaborateUrl: "",
+  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
   updatedAt: new Date().toISOString(),
   dismissible: true,
   id: undefined,
   source: "admin",
 };
 
-const CONVERSATION_RECOVERY_TEMPLATE: DevNotice = {
-  id: "conversation-recovery-v0515",
-  source: "release",
-  enabled: false,
-  type: "feature",
-  severity: "info",
-  title: "Recover Missing Agent Conversations",
-  message:
-    "If your IDE sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, update to Cursor Curse Monitor v0.5.15 and run Reindex Missing Conversations from the dashboard. The tool rebuilds search and sidebar indexes from on-disk agent transcripts without deleting your existing data.",
-  shortMessage:
-    "Get back chats lost after a worktree switch — v0.5.15 rebuilds your conversation list safely from saved transcripts.",
-  feedbackUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-  collaborateUrl: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-  updatedAt: new Date().toISOString(),
-  dismissible: true,
-};
+function applyTemplate(form: DevNotice, template: NoticeTemplate): DevNotice {
+  return {
+    ...form,
+    ...template,
+    enabled: false,
+    id: template.id ?? undefined,
+    source: template.source ?? "admin",
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 function noticeKey(row: DevNotice, index: number) {
   return row.id || `${row.title}-${row.updatedAt}-${index}`;
@@ -57,6 +51,8 @@ export default function Notices() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [templates, setTemplates] = useState<NoticeTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
 
   const applyCatalog = useCallback((nextItems: DevNotice[], preferredId?: string | null) => {
     setItems(nextItems);
@@ -74,6 +70,9 @@ export default function Notices() {
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
+    fetchNoticeTemplates()
+      .then((data) => setTemplates(data.templates ?? []))
+      .catch(() => setTemplates([]));
   }, [applyCatalog]);
 
   const inputClass =
@@ -88,12 +87,12 @@ export default function Notices() {
     setMessage(null);
   };
 
-  const loadRecoveryTemplate = () => {
-    setForm({ ...CONVERSATION_RECOVERY_TEMPLATE, updatedAt: new Date().toISOString() });
-    setMessage({
-      type: "success",
-      text: "Loaded the v0.5.15 conversation recovery notice. Save & enable to show it on the marketing banner.",
-    });
+  const loadTemplate = (templateId: string) => {
+    const template = templates.find((t) => t.templateId === templateId);
+    if (!template) return;
+    setForm(applyTemplate(form, template));
+    setSelectedTemplate(templateId);
+    setMessage({ type: "success", text: `Loaded “${template.label}”. Review and Save & enable when ready.` });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -322,14 +321,22 @@ export default function Notices() {
             {editing ? "Edit notice" : "New notice"}
           </h3>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={loadRecoveryTemplate}
-              className="inline-flex items-center gap-2 text-sm text-[var(--color-accent)] hover:text-[var(--color-text)]"
+            <select
+              value={selectedTemplate}
+              onChange={(e) => {
+                const id = e.target.value;
+                setSelectedTemplate(id);
+                if (id) loadTemplate(id);
+              }}
+              className="text-sm bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)]"
             >
-              <Megaphone size={16} aria-hidden="true" />
-              Use recovery notice (v0.5.15)
-            </button>
+              <option value="">Load template…</option>
+              {templates.map((t) => (
+                <option key={t.templateId} value={t.templateId}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
             {editing && (
               <button
                 type="button"

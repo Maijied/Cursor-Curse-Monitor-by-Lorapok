@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CONVERSATION_RECOVERY_NOTICE, GENERATED_DEV_NOTICE } from "./functions/api/_shared/notices.js";
+import { getMailTemplates } from "./functions/api/_shared/mail-templates.js";
+import { GENERATED_DEV_NOTICE, buildBuiltinNotices, getNoticeTemplates } from "./functions/api/_shared/notice-catalog.js";
 import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
@@ -17,7 +18,7 @@ const adminEmailsPath = resolve(adminDataDir, "admin-emails.json");
 
 const devStore = {
   notice: { ...GENERATED_DEV_NOTICE },
-  notices: [{ ...GENERATED_DEV_NOTICE }, { ...CONVERSATION_RECOVERY_NOTICE }],
+  notices: buildBuiltinNotices(),
   subscribers: [],
   activity: [],
   mailbox: [],
@@ -48,7 +49,7 @@ const devKv = {
 
 export function resetDevStore() {
   devStore.notice = { ...GENERATED_DEV_NOTICE };
-  devStore.notices = [{ ...GENERATED_DEV_NOTICE }, { ...CONVERSATION_RECOVERY_NOTICE }];
+  devStore.notices = buildBuiltinNotices();
 }
 
 function logDevActivity(req, status, email = "dev@local") {
@@ -913,6 +914,10 @@ export function createDevApiMiddleware() {
 
     if (url === "/api/notices" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
+      if (new URL(req.url ?? "/", "http://localhost").searchParams.get("templates") === "1") {
+        res.end(JSON.stringify({ templates: getNoticeTemplates() }));
+        return;
+      }
       const active = devStore.notices.find((n) => n.enabled) ?? null;
       res.end(JSON.stringify({ items: devStore.notices, active }));
       return;
@@ -1271,6 +1276,11 @@ export function createDevApiMiddleware() {
     }
 
     if (url.startsWith("/api/mailbox") && req.method === "GET") {
+      if (new URL(req.url ?? "/", "http://localhost").searchParams.get("templates") === "1") {
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ templates: getMailTemplates() }));
+        return;
+      }
       const query = new URL(req.url ?? "", "http://localhost");
       const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
       const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));

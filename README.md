@@ -59,7 +59,7 @@ Open the **Cursor Curse Monitor** panel in the activity bar after install to see
 
 ## Installation
 
-> **Also available on:** [Open VSX](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok) · [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok) · [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/) · [Chrome zip](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest) · [Product site](https://cursor.lorapok.tech/)
+> **Also available on:** [Open VSX](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok) · [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok) · Firefox AMO *(coming soon — use [GitHub Release](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest) meanwhile)* · [Chrome zip](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest) · [Product site](https://cursor.lorapok.tech/)
 
 The [marketing site](https://cursor.lorapok.tech/) hero uses **animated live download and visit meters** synced from marketplace APIs — product screenshots appear once in the ecosystem tabs, not duplicated across the page.
 
@@ -207,7 +207,7 @@ Requires GitHub secrets:
 |-------------|-----|
 | **Open VSX** (Cursor) | https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok |
 | **VS Code Marketplace** | https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok |
-| **Firefox Add-ons** (browser) | https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/ |
+| **Firefox Add-ons** (browser) | AMO listing pending — install from [GitHub Releases](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest) until published |
 | **GitHub Releases** | https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases |
 | **Mission Control** (admin) | https://cursor-dev.lorapok.tech |
 | **Project Website** | https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/ |

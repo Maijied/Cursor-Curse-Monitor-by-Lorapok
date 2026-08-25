@@ -81,4 +81,4 @@ structuredData:
       applicationCategory: BrowserApplication
       operatingSystem: Firefox, Chrome
       featureList: Budget tracker popup, credential paste guard, cursor.com token capture
-      downloadUrl: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/
+      downloadUrl: "{firefoxDownloadUrl}"

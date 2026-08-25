@@ -413,6 +413,26 @@ export async function fetchNotices() {
   return apiGet<{ items: DevNotice[]; active: DevNotice | null }>("/notices");
 }
 
+export type NoticeTemplate = DevNotice & { templateId: string; label: string; category: string };
+
+export async function fetchNoticeTemplates() {
+  return apiGet<{ templates: NoticeTemplate[] }>("/notices?templates=1");
+}
+
+export type MailTemplate = {
+  id: string;
+  label: string;
+  category: string;
+  subject: string;
+  text: string;
+  severity?: string;
+  variables?: string[];
+};
+
+export async function fetchMailTemplates() {
+  return apiGet<{ templates: MailTemplate[] }>("/mailbox?templates=1");
+}
+
 export async function createNotice(payload: NoticePayload & { enabled?: boolean }) {
   const res = await fetch(`${API_BASE}/notices`, {
     method: "POST",

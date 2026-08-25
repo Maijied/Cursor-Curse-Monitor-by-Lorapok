@@ -41,16 +41,37 @@ describe("notice catalog APIs", () => {
     expect(res.ok).toBe(true);
     expect(data.items.some((n) => n.id === "generated-dev-notice")).toBe(true);
     expect(data.items.some((n) => n.id === "conversation-recovery-v0515")).toBe(true);
-    expect(data.active?.id).toBe("generated-dev-notice");
-    expect(data.active?.enabled).toBe(true);
+    expect(data.active).toBeNull();
+  });
+
+  it("exposes dynamic notice templates", async () => {
+    const res = await fetch(`${base}/api/notices?templates=1`);
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.templates.some((t) => t.templateId === "feature-release")).toBe(true);
+    expect(data.templates.some((t) => t.templateId === "bugfix-patch")).toBe(true);
+  });
+
+  it("returns disabled when no notice is enabled on public GET /api/notice", async () => {
+    const res = await fetch(`${base}/api/notice`);
+    const notice = await res.json();
+    expect(res.ok).toBe(true);
+    expect(notice.enabled).toBe(false);
   });
 
   it("returns the enabled catalog item from public GET /api/notice", async () => {
+    const enable = await fetch(`${base}/api/notices`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: "generated-dev-notice", enabled: true, title: "Test live notice", shortMessage: "Hi", message: "Body", severity: "info" }),
+    });
+    expect(enable.ok).toBe(true);
+
     const res = await fetch(`${base}/api/notice`);
     const notice = await res.json();
     expect(res.ok).toBe(true);
     expect(notice.enabled).toBe(true);
-    expect(notice.title).toBe("Active Development Notice");
+    expect(notice.title).toBe("Test live notice");
   });
 
   it("hides the public banner when the generated notice is disabled", async () => {
@@ -132,8 +153,14 @@ describe("notice catalog APIs", () => {
 describe("website live-notice fallback", () => {
   it("does not use site-data when the live API is reachable and disabled", () => {
     const siteDataNotice = { enabled: true, title: "Active Development Notice" };
-    const live = { reachable: true, notice: null };
-    const notice = live.reachable ? live.notice : siteDataNotice;
+    const live = { reachable: true, notice: { enabled: false } };
+    const notice = live.reachable
+      ? live.notice?.enabled
+        ? live.notice
+        : null
+      : siteDataNotice?.enabled
+        ? siteDataNotice
+        : null;
     expect(notice).toBeNull();
   });
 
