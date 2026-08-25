@@ -131,7 +131,13 @@ export default function Mailbox() {
       setNotice({
         tone: res.ok ? "success" : "error",
         title: res.ok ? "Test email sent" : "Test failed",
-        message: res.message ?? (res.ok ? `Check inbox for ${testTo}` : res.reason ?? "Transport error"),
+        message:
+          res.message ??
+          (res.ok
+            ? `Check inbox for ${testTo}`
+            : res.reason?.includes("401")
+              ? `${res.reason} — Redeploy Mission Control so the ccm-mail-relay worker is bound, or run: node website/admin/scripts/enable-mail.mjs`
+              : res.reason ?? "Transport error"),
       });
       load();
     } catch (err: unknown) {

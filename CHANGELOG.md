@@ -25,6 +25,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - AMO listing metadata: categories, tags, support email, homepage, technical whiteboard, EULA text
 - `sync-amo-listing.mjs` — correct slug, icon upload, homepage/support sync
 - React 18 for browser extension build (reduces AMO `innerHTML` linter noise vs React 19)
+- **Mission Control mailbox** — `ccm-mail-relay` Worker with `send_email` binding (Pages service binding); fixes 401 from REST-only mail transport
 
 ## [1.0.1] - 2026-08-25
 

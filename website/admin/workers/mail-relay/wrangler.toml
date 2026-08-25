@@ -1,0 +1,8 @@
+name = "ccm-mail-relay"
+main = "src/index.js"
+compatibility_date = "2024-08-14"
+account_id = "f049faaf2f67549f5c58837479596a4a"
+
+# Workers binding — no REST API token required for outbound mail.
+[[send_email]]
+name = "EMAIL"

@@ -71,9 +71,9 @@ async function verifyEmailToken(token, accountId) {
   return true;
 }
 
-function run(args, { allowFail = false } = {}) {
+function run(args, { allowFail = false, cwd = adminDir } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {
-    cwd: adminDir,
+    cwd,
     stdio: "inherit",
     env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
   });
@@ -89,7 +89,10 @@ if (!tokenOk) {
 console.log("Enabling Email Sending for lorapok.tech…");
 run(["email", "sending", "enable", "lorapok.tech"], { allowFail: true });
 
-console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret…");
+console.log("Deploying ccm-mail-relay worker (send_email binding)…");
+run(["deploy"], { cwd: resolve(adminDir, "workers/mail-relay"), allowFail: false });
+
+console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback)…");
 const put = spawnSync(
   "npx",
   ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
