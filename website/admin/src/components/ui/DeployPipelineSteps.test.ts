@@ -26,6 +26,15 @@ describe("DeployPipelineSteps helpers", () => {
     expect(getPipelineActiveIndex(jobs)).toBe(2);
   });
 
+  it("skips over completed skipped jobs", () => {
+    const jobs = [
+      { id: 1, name: "A", status: "completed", conclusion: "success" },
+      { id: 2, name: "SEO", status: "completed", conclusion: "skipped" },
+      { id: 3, name: "C", status: "in_progress", conclusion: null },
+    ];
+    expect(getPipelineActiveIndex(jobs)).toBe(2);
+  });
+
   it("rests larvae on last step when all succeed", () => {
     const jobs = [
       { id: 1, name: "A", status: "completed", conclusion: "success" },

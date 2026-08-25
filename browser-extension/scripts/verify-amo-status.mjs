@@ -49,7 +49,7 @@ if (!res.ok) {
 
 const data = await res.json();
 const current = data.current_version?.version;
-console.log(`AMO addon: ${data.name?.en-US || slug}`);
+console.log(`AMO addon: ${data.name?.["en-US"] || slug}`);
 console.log(`Listed version: ${current || "pending"} (expected ${expectedVersion})`);
 if (data.url) {
   console.log(`Public URL: ${data.url}`);
