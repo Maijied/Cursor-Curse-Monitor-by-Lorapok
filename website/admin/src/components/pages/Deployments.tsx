@@ -1,23 +1,16 @@
 import { useCallback, useState, useEffect } from "react";
-import { AlertTriangle, ExternalLink, Lock, Package, RefreshCw, Rocket, Server, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, Undo2 } from "lucide-react";
 import {
   fetchTags,
   fetchVersionPlan,
   triggerDeployment,
   triggerInfraDeploy,
-  triggerRelease,
   triggerRollback,
-  type ReleaseRequest,
-  type VersionPlan,
 } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
-  bumpVersion,
   defaultTagSelection,
-  effectiveVersionBase,
   formatTagLabel,
-  normalizeTag,
-  type ReleaseBumpType,
 } from "../../lib/release-version";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
@@ -34,19 +27,12 @@ function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) 
   return { tags: [liveTag], liveTag };
 }
 
-type Mode = "release" | "deploy" | "rollback" | "infra";
-
-const BUMP_OPTIONS: { value: ReleaseBumpType; label: string }[] = [
-  { value: "patch", label: "Patch — bug fix or small update" },
-  { value: "minor", label: "Minor — new feature" },
-  { value: "major", label: "Major — breaking change" },
-  { value: "custom", label: "Custom version" },
-];
+type Mode = "deploy" | "rollback" | "infra";
 
 export default function Deployments() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
   const { data: siteData } = useSiteData();
-  const [mode, setMode] = useState<Mode>("release");
+  const [mode, setMode] = useState<Mode>("deploy");
   const [tags, setTags] = useState<string[]>([]);
   const [liveTag, setLiveTag] = useState<string | null>(null);
   const [latestTag, setLatestTag] = useState<string | null>(null);
@@ -57,16 +43,14 @@ export default function Deployments() {
   const [lastTargetTag, setLastTargetTag] = useState("");
   const [channel, setChannel] = useState<"beta" | "production">("production");
   const [selectedTag, setSelectedTag] = useState("");
-  const [bumpType, setBumpType] = useState<ReleaseBumpType>("patch");
-  const [customVersion, setCustomVersion] = useState("");
   const [market, setMarket] = useState<"Both" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO">("Both");
-  const [deployAdmin, setDeployAdmin] = useState(true);
+  const [deployAdmin, setDeployAdmin] = useState(false);
   const [deployWebsite, setDeployWebsite] = useState(true);
 
   useEffect(() => {
-    if (mode === "release") {
-      setDeployAdmin(true);
-      setDeployWebsite(false);
+    if (mode === "deploy") {
+      setDeployAdmin(false);
+      setDeployWebsite(true);
     }
   }, [mode]);
   const [tagsError, setTagsError] = useState<string | null>(null);
@@ -74,7 +58,7 @@ export default function Deployments() {
   const [dispatchedAfter, setDispatchedAfter] = useState(0);
   const [displayLiveTag, setDisplayLiveTag] = useState<string | null>(null);
   const [displayPkgVersion, setDisplayPkgVersion] = useState<string | null>(null);
-  const [versionPlan, setVersionPlan] = useState<VersionPlan | null>(null);
+  const [versionPlan, setVersionPlan] = useState<Awaited<ReturnType<typeof fetchVersionPlan>> | null>(null);
   const [versionPlanLoading, setVersionPlanLoading] = useState(false);
   const [versionPlanError, setVersionPlanError] = useState<string | null>(null);
 
@@ -134,9 +118,7 @@ export default function Deployments() {
     setVersionPlanError(null);
     try {
       const planMode = mode === "rollback" ? "rollback" : "release";
-      const bump =
-        mode === "release" && bumpType !== "custom" ? bumpType : ("patch" as const);
-      const plan = await fetchVersionPlan(bump, planMode);
+      const plan = await fetchVersionPlan("patch", planMode);
       setVersionPlan(plan);
     } catch (err: unknown) {
       setVersionPlan(null);
@@ -144,30 +126,20 @@ export default function Deployments() {
     } finally {
       setVersionPlanLoading(false);
     }
-  }, [bumpType, mode]);
+  }, [mode]);
 
   useEffect(() => {
     if (isMaster) void runVersionCheck();
   }, [isMaster, runVersionCheck]);
 
   const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
-  const versionBase = effectiveVersionBase(liveTag, siteData?.packageVersion ?? null);
-  const liveMaxBase = versionPlan?.maxAllVersion ? `v${versionPlan.maxAllVersion}` : versionBase;
-  const previewTag =
-    mode === "rollback"
-      ? versionPlan?.recommendedTag ?? null
-      : bumpType === "custom"
-        ? bumpVersion(null, "custom", customVersion)
-        : versionPlan?.recommendedTag && versionPlan.bumpType === bumpType
-          ? versionPlan.recommendedTag
-          : bumpVersion(liveMaxBase ?? versionBase, bumpType, customVersion);
+  const preparedTag = versionPlan?.recommendedTag ?? suggestedTag ?? latestTag;
   const deployTargetTag = versionPlan?.recommendedTag ?? null;
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
   const deployBlocked = mode === "deploy" && isLiveSelected;
-  const customMissing = mode === "release" && bumpType === "custom" && !customVersion.trim();
 
   useEffect(() => {
-    if (!deployTargetTag || mode !== "deploy") return;
+    if (mode !== "deploy" || !deployTargetTag) return;
     if (filteredTags.includes(deployTargetTag)) {
       setSelectedTag(deployTargetTag);
     }
@@ -210,57 +182,6 @@ export default function Deployments() {
       return;
     }
 
-    if (mode === "release") {
-      if (customMissing) {
-        setMessage({ type: "error", text: "Enter a custom version (e.g. 1.0.4-beta.1)." });
-        return;
-      }
-      if (!previewTag) {
-        setMessage({
-          type: "error",
-          text: "Could not compute the next version. Ensure package.json and live tags are loaded.",
-        });
-        return;
-      }
-      if (channel === "beta" && bumpType === "major") {
-        setMessage({
-          type: "error",
-          text: "Major releases should use the Production channel. Use Beta for pre-release patch/minor builds only.",
-        });
-        return;
-      }
-      setDeploying(true);
-      const payload: ReleaseRequest = {
-        version_type: bumpType,
-        custom_version: bumpType === "custom" ? customVersion.trim() : undefined,
-        publish_market: market,
-        release_channel: releaseChannel,
-        deploy_admin: deployAdmin,
-        deploy_website: deployWebsite,
-      };
-      try {
-        await triggerRelease(payload);
-        const label = previewTag ?? "next version";
-        setMessage({
-          type: "success",
-          text: `Release prepared — ${label} tagged on main and Mission Control is updating. Switch to Deploy and publish ${label} to marketplaces.`,
-        });
-        setDispatchedAfter(Date.now());
-        setRuntimeActive(true);
-        setLastTargetTag(label);
-      } catch (err: unknown) {
-        const text = err instanceof Error ? err.message : "Release failed";
-        setMessage({
-          type: "error",
-          text: text.includes("GITHUB_TOKEN")
-            ? text
-            : `${text} — If this persists, verify GITHUB_TOKEN on Cloudflare Pages and that workflow ci-cd.yml exists on main.`,
-        });
-      }
-      setDeploying(false);
-      return;
-    }
-
     if (!selectedTag || !tags.includes(selectedTag)) {
       setMessage({ type: "error", text: "Choose a valid tag from the list." });
       return;
@@ -268,7 +189,7 @@ export default function Deployments() {
     if (deployBlocked) {
       setMessage({
         type: "error",
-        text: `${selectedTag} is already live. Use New Release for the next version, or pick another tag.`,
+        text: `${selectedTag} is already live. Pick the prepared tag ${preparedTag ?? "(see version check above)"} or another unpublished tag.`,
       });
       return;
     }
@@ -309,9 +230,7 @@ export default function Deployments() {
     !deploying &&
     (mode === "infra"
       ? deployAdmin || deployWebsite
-      : mode === "release"
-        ? !customMissing
-        : Boolean(selectedTag) && !deployBlocked);
+      : Boolean(selectedTag) && !deployBlocked);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -331,23 +250,28 @@ export default function Deployments() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Release"
-        description="All production deploys run through Mission Control — marketplaces, admin panel, and website."
+        description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces."
       />
 
       <Card className="border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
-        <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">How to use this page</h3>
+        <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">How it works</h3>
         <ul className="text-sm text-[var(--color-muted)] space-y-2 list-disc pl-5">
           <li>
-            <strong className="text-[var(--color-text)]">New Release</strong> — bump <code className="font-mono text-xs">package.json</code>, create a git tag on <code className="font-mono text-xs">main</code>, and deploy Mission Control. Does <em>not</em> publish to marketplaces yet.
+            <strong className="text-[var(--color-text)]">Push to main</strong> — CI checks every platform version, bumps{" "}
+            <code className="font-mono text-xs">package.json</code>, creates the next git tag (max live + 1 patch), and
+            refreshes Mission Control.
           </li>
           <li>
-            <strong className="text-[var(--color-text)]">Deploy</strong> — publish an existing git tag to marketplaces and refresh the marketing site (step 2 after New Release).
+            <strong className="text-[var(--color-text)]">Deploy</strong> — choose a prepared tag and publish to VS Code,
+            Open VSX, Firefox AMO, and the marketing site.
           </li>
           <li>
-            <strong className="text-[var(--color-text)]">Rollback</strong> — restore an older tag to <code className="font-mono text-xs">main</code> with an automatic patch bump, then publish. Use when a release fails in production.
+            <strong className="text-[var(--color-text)]">Rollback</strong> — restore an older tag as{" "}
+            <code className="font-mono text-xs">v{"{major}.{minor}.Rn"}</code>, then publish.
           </li>
           <li>
-            <strong className="text-[var(--color-text)]">Infra</strong> — deploy Mission Control admin and/or marketing site only (no VSIX/AMO publish).
+            <strong className="text-[var(--color-text)]">Infra</strong> — redeploy Mission Control and/or the marketing
+            site only (no marketplace publish).
           </li>
         </ul>
         <p className="text-xs text-[var(--color-warn)] mt-3">
@@ -365,12 +289,12 @@ export default function Deployments() {
       <div className="glass-panel px-4 py-3 text-sm text-[var(--color-muted)] flex flex-wrap gap-x-4 gap-y-1">
         <span>
           Live: <strong className="text-[var(--color-text)]">{shownLiveTag ?? "unknown"}</strong>
-          {runtimeActive && previewTag && mode === "release" ? (
-            <span className="text-[var(--color-warn)]"> (pending {previewTag})</span>
-          ) : null}
         </span>
         <span>
-          Latest tag: <strong className="text-[var(--color-text)]">{latestTag ?? "—"}</strong>
+          Prepared tag:{" "}
+          <strong className="text-[var(--color-text)] font-[family-name:var(--font-mono)]">
+            {preparedTag ?? "—"}
+          </strong>
         </span>
         <span>
           package.json: <strong className="text-[var(--color-text)] font-[family-name:var(--font-mono)]">v{pkgVersion}</strong>
@@ -380,9 +304,10 @@ export default function Deployments() {
       <Card className="border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-text)]">Check &amp; update version</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text)]">Live platform versions</h3>
             <p className="text-sm text-[var(--color-muted)] mt-1">
-              Queries live GitHub, Open VSX, VS Code Marketplace, and Firefox AMO, then recommends the next semver for all platforms.
+              Queried on load from GitHub, Open VSX, VS Code Marketplace, and Firefox AMO. Deploy target = highest live +
+              1 patch.
             </p>
           </div>
           <button
@@ -392,7 +317,7 @@ export default function Deployments() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50"
           >
             <RefreshCw size={16} className={versionPlanLoading ? "animate-spin" : ""} aria-hidden="true" />
-            {versionPlanLoading ? "Checking live…" : "Check & update"}
+            {versionPlanLoading ? "Refreshing…" : "Refresh"}
           </button>
         </div>
         {versionPlanError ? (
@@ -444,7 +369,8 @@ export default function Deployments() {
           </div>
         ) : (
           <p className="text-sm text-[var(--color-muted)]">
-            Run a live check before New Release or Deploy to see why a version bump or marketplace publish is needed.
+            Live versions load automatically when you open this page. Push to <code className="font-mono text-xs">main</code>{" "}
+            to prepare the next git tag.
           </p>
         )}
       </Card>
@@ -514,10 +440,9 @@ export default function Deployments() {
       <div className="flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
         {(
           [
-            { value: "infra" as const, label: "Infra", icon: Server },
-            { value: "release" as const, label: "New Release", icon: Package },
             { value: "deploy" as const, label: "Deploy", icon: Rocket },
             { value: "rollback" as const, label: "Rollback", icon: Undo2 },
+            { value: "infra" as const, label: "Infra", icon: Server },
           ] as const
         ).map(({ value, label, icon: Icon }) => (
           <button
@@ -536,9 +461,16 @@ export default function Deployments() {
         ))}
       </div>
 
-      {mode === "release" && (
+      {mode === "deploy" && (
         <div className="glass-panel p-4 text-sm text-[var(--color-muted)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
-          After this completes, open <strong className="text-[var(--color-text)]">Deploy</strong>, select the new tag, choose marketplaces, enable marketing site, and trigger publish.
+          Tags are prepared automatically when code is pushed to <strong className="text-[var(--color-text)]">main</strong>.
+          {preparedTag ? (
+            <>
+              {" "}
+              Suggested deploy:{" "}
+              <strong className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">{preparedTag}</strong>
+            </>
+          ) : null}
         </div>
       )}
 
@@ -571,14 +503,8 @@ export default function Deployments() {
 
       {mode === "deploy" && isLiveSelected && (
         <div className="glass-panel p-4 border-[color-mix(in_srgb,var(--color-warn)_30%,transparent)] text-sm text-[var(--color-warn)]">
-          {liveTag} is already live on marketplaces. Use <strong>New Release</strong> for the next version, or pick an
-          older tag to re-publish.
-        </div>
-      )}
-
-      {mode === "release" && !suggestedTag && liveTag && (
-        <div className="glass-panel p-4 text-sm text-[var(--color-muted)]">
-          No newer git tag exists yet — a new release will bump from live <strong className="text-[var(--color-text)]">{liveTag}</strong>.
+          {liveTag} is already live on marketplaces. Pick the prepared tag{" "}
+          <strong className="text-[var(--color-text)]">{preparedTag ?? "above"}</strong> or another unpublished tag.
         </div>
       )}
 
@@ -592,73 +518,34 @@ export default function Deployments() {
 
       <Card className="mt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {mode === "release" ? (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="bump-type" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
-                  Release type
-                </label>
-                <select
-                  id="bump-type"
-                  value={bumpType}
-                  onChange={(e) => setBumpType(e.target.value as ReleaseBumpType)}
-                  className={inputClass}
-                >
-                  {BUMP_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {bumpType === "custom" && (
-                <div>
-                  <label htmlFor="custom-version" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
-                    Custom version
-                  </label>
-                  <input
-                    id="custom-version"
-                    type="text"
-                    value={customVersion}
-                    onChange={(e) => setCustomVersion(e.target.value)}
-                    placeholder="e.g. 0.6.0-beta.1"
-                    className={inputClass}
-                  />
-                </div>
-              )}
-              {previewTag && (
-                <p className="text-sm text-[var(--color-muted)]">
-                  Will create{" "}
-                  <strong className="text-[var(--color-accent-2)] font-[family-name:var(--font-mono)]">{previewTag}</strong>
-                  {versionBase ? (
-                    <>
-                      {" "}
-                      from base <span className="font-[family-name:var(--font-mono)]">{versionBase}</span>
-                      {liveTag && versionBase !== normalizeTag(liveTag) ? (
-                        <span className="text-[var(--color-warn)]"> (package.json ahead of live tag {liveTag})</span>
-                      ) : null}
-                    </>
-                  ) : null}
-                </p>
-              )}
-            </div>
-          ) : (
+          {mode !== "infra" ? (
             <div>
               <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
-                {mode === "rollback" ? "Rollback to tag" : "Target tag (must exist on GitHub)"}
+                {mode === "rollback" ? "Rollback to tag (source)" : "Deploy tag"}
               </label>
               <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass}>
                 {filteredTags.length === 0 && <option value="">No tags in list</option>}
                 {filteredTags.map((t) => (
                   <option key={t} value={t}>
                     {formatTagLabel(t, liveTag)}
+                    {t === preparedTag ? " (prepared)" : ""}
                   </option>
                 ))}
               </select>
+              {mode === "deploy" && preparedTag ? (
+                <p className="mt-2 text-xs text-[var(--color-muted)]">
+                  Prepared on last push to main:{" "}
+                  <span className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">{preparedTag}</span>
+                </p>
+              ) : null}
             </div>
+          ) : (
+            <p className="text-sm text-[var(--color-muted)]">
+              Redeploy Mission Control admin panel (Cloudflare) and/or marketing site — no marketplace publish.
+            </p>
           )}
 
-          {mode !== "infra" && mode !== "release" ? (
+          {mode !== "infra" ? (
           <div>
             <label htmlFor="target-market" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
               Publish Market
@@ -675,11 +562,7 @@ export default function Deployments() {
               <option value="Firefox AMO">Firefox Add-ons (AMO)</option>
             </select>
           </div>
-          ) : (
-            <p className="text-sm text-[var(--color-muted)]">
-              Deploy Mission Control admin panel (Cloudflare) and/or marketing site — no marketplace publish.
-            </p>
-          )}
+          ) : null}
 
           {mode !== "infra" ? (
           <fieldset>
@@ -712,15 +595,16 @@ export default function Deployments() {
           <fieldset>
             <legend className="block text-sm font-medium mb-3 text-[var(--color-muted)]">Deploy targets</legend>
             <div className="flex flex-col sm:flex-row gap-4">
-              <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
-                <input
-                  type="checkbox"
-                  checked={deployAdmin}
-                  onChange={(e) => setDeployAdmin(e.target.checked)}
-                />
-                Mission Control admin (cursor-dev.lorapok.tech)
-              </label>
-              {mode !== "release" ? (
+              {mode === "infra" ? (
+                <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                  <input
+                    type="checkbox"
+                    checked={deployAdmin}
+                    onChange={(e) => setDeployAdmin(e.target.checked)}
+                  />
+                  Mission Control admin (cursor-dev.lorapok.tech)
+                </label>
+              ) : null}
               <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
                 <input
                   type="checkbox"
@@ -729,11 +613,10 @@ export default function Deployments() {
                 />
                 Marketing site (cursor.lorapok.tech)
               </label>
-              ) : null}
             </div>
-            {mode === "release" ? (
+            {mode === "deploy" ? (
               <p className="text-xs text-[var(--color-muted)] mt-2">
-                Marketing site updates when you publish from the Deploy tab.
+                Mission Control refreshes automatically on every push to main.
               </p>
             ) : null}
           </fieldset>
@@ -747,8 +630,6 @@ export default function Deployments() {
           >
             {mode === "rollback" ? (
               <Undo2 size={20} aria-hidden="true" />
-            ) : mode === "release" ? (
-              <Package size={20} aria-hidden="true" />
             ) : mode === "infra" ? (
               <Server size={20} aria-hidden="true" />
             ) : (
@@ -758,11 +639,9 @@ export default function Deployments() {
               ? "Triggering…"
               : mode === "rollback"
                 ? "Trigger Rollback"
-                : mode === "release"
-                  ? "Trigger New Release"
-                  : mode === "infra"
-                    ? "Deploy Infra"
-                    : "Trigger Deployment"}
+                : mode === "infra"
+                  ? "Deploy Infra"
+                  : "Publish to Marketplaces"}
           </button>
         </form>
 

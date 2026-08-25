@@ -11,9 +11,10 @@ name: CI/CD
 #   5. Multi-Channel Extension Deployment (VS Code Marketplace, Open VSX, Firefox AMO, Chrome ZIP)
 #   6. Marketing Website Deployment (GitHub Pages)
 #   Release flow (Mission Control):
-#     1. full-release  → Prepare & Tag Release → Deploy Admin Panel (no marketplaces)
-#     2. publish-tag   → Deploy to Marketplaces → Deploy Marketing Website (from Deploy tab)
-#     3. deploy-infra  → Admin and/or website only
+#     • push to main     → CI prepares next git tag (max live + patch) + deploys Mission Control
+#     • publish-tag      → Admin picks tag → Deploy to Marketplaces (+ optional website)
+#     • deploy-infra     → Admin and/or website only
+#     • rollback         → Restore older tag as v{major}.{minor}.Rn
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -289,31 +290,84 @@ jobs:
         run: test -f dist/site-data.json && test -f dist/seo.json
 
   # ───────────────────────────────────────────────────────────────────────────
+  # 3b. AUTO-PREPARE RELEASE TAG ON PUSH TO MAIN
+  # ───────────────────────────────────────────────────────────────────────────
+  prepare-tag-on-push:
+    name: Prepare Release Tag (push to main)
+    runs-on: ubuntu-latest
+    needs: [ci, browser-extension-ci, admin-ci]
+    permissions:
+      contents: write
+    if: >-
+      always()
+      && needs.ci.result == 'success'
+      && needs.browser-extension-ci.result == 'success'
+      && needs.admin-ci.result == 'success'
+      && github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && !contains(github.event.head_commit.message, 'chore: release')
+      && !contains(github.event.head_commit.message, 'chore(seo):')
+      && !contains(github.event.head_commit.message, 'chore: rollback')
+    outputs:
+      tag: ${{ steps.prepare.outputs.tag }}
+      prepared: ${{ steps.prepare.outputs.prepared }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare git tag from live marketplace max
+        id: prepare
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/prepare-release-tag.mjs
+
+  # ───────────────────────────────────────────────────────────────────────────
   # 4. ADMIN PANEL DEPLOY (Cloudflare Pages)
   # ───────────────────────────────────────────────────────────────────────────
   admin-deploy:
     name: Deploy Admin Panel
     runs-on: ubuntu-latest
-    needs: [admin-ci, release-prep, deploy]
+    needs: [admin-ci, release-prep, deploy, prepare-tag-on-push]
     if: >-
       always()
       && needs.admin-ci.result == 'success'
-      && github.event_name == 'workflow_dispatch'
-      && inputs.deploy_admin == true
       && (
-        startsWith(inputs.action_type, 'deploy-infra')
-        || (
-          startsWith(inputs.action_type, 'full-release')
-          && needs.release-prep.result == 'success'
+        (
+          github.event_name == 'workflow_dispatch'
+          && inputs.deploy_admin == true
+          && (
+            startsWith(inputs.action_type, 'deploy-infra')
+            || (
+              startsWith(inputs.action_type, 'full-release')
+              && needs.release-prep.result == 'success'
+            )
+            || (
+              (
+                needs.release-prep.result == 'success' ||
+                needs.release-prep.result == 'skipped'
+              )
+              && (
+                needs.deploy.result == 'success' ||
+                needs.deploy.result == 'skipped'
+              )
+            )
+          )
         )
         || (
-          (
-            needs.release-prep.result == 'success' ||
-            needs.release-prep.result == 'skipped'
-          )
+          github.event_name == 'push'
+          && github.ref == 'refs/heads/main'
+          && !contains(github.event.head_commit.message, 'chore(seo):')
           && (
-            needs.deploy.result == 'success' ||
-            needs.deploy.result == 'skipped'
+            needs.prepare-tag-on-push.result == 'success' ||
+            needs.prepare-tag-on-push.result == 'skipped'
           )
         )
       )
