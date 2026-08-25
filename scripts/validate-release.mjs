@@ -42,6 +42,18 @@ if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(pkg.version)) {
   fail(`package.json version is not valid semver: ${pkg.version}`);
 }
 
+const workspacePlaceholder = "0.0.0";
+for (const rel of ["browser-extension/package.json", "packages/shared/package.json"]) {
+  const wsPath = join(root, rel);
+  if (!existsSync(wsPath)) continue;
+  const ws = JSON.parse(readFileSync(wsPath, "utf8"));
+  if (ws.version !== workspacePlaceholder) {
+    fail(
+      `${rel} version is "${ws.version}" — keep ${workspacePlaceholder} in git and run npm run version:sync at build time`
+    );
+  }
+}
+
 const site = readJson(sitePath, "website/site-data.json");
 const seo = readJson(seoPath, "website/seo.json");
 const indexHtml = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : "";
