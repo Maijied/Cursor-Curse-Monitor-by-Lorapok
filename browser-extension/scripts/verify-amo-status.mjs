@@ -39,6 +39,10 @@ const res = await fetch(url, {
 });
 
 if (!res.ok) {
+  if (res.status === 404) {
+    console.log(`AMO addon slug "${slug}" not found yet — first web-ext sign will create the listing`);
+    process.exit(0);
+  }
   console.error(`AMO verification failed: HTTP ${res.status} for ${slug}`);
   process.exit(1);
 }

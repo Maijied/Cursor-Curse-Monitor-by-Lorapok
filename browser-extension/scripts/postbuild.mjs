@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveExtensionVersion } from "./lib-version.mjs";
@@ -31,11 +32,18 @@ function rewriteHtmlPaths(html) {
 }
 
 mkdirSync(join(dist, "icons"), { recursive: true });
+mkdirSync(join(dist, "background"), { recursive: true });
 const media = join(root, "..", "media");
-cpSync(join(media, "icon.png"), join(dist, "icons", "icon-16.png"));
-cpSync(join(media, "icon.png"), join(dist, "icons", "icon-32.png"));
-cpSync(join(media, "icon.png"), join(dist, "icons", "icon-48.png"));
-cpSync(join(media, "icon.png"), join(dist, "icons", "icon-128.png"));
+const iconSrc = join(media, "icon.png");
+for (const size of [16, 32, 48, 128]) {
+  const dest = join(dist, "icons", `icon-${size}.png`);
+  execFileSync("convert", [iconSrc, "-resize", `${size}x${size}`, dest]);
+}
+
+writeFileSync(
+  join(dist, "background", "compat.js"),
+  readFileSync(join(root, "src", "background", "compat.js"), "utf8")
+);
 
 const popupSrc = findHtml("index.html");
 const allHtml = readdirSync(dist, { recursive: true })
@@ -60,7 +68,11 @@ const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
 manifest.version = version;
 manifest.action.default_popup = "popup.html";
 manifest.options_ui = { page: "options.html", open_in_tab: true };
-manifest.background = { service_worker: "background/service-worker.js", type: "module" };
+manifest.background = {
+  service_worker: "background/service-worker.js",
+  scripts: ["background/compat.js"],
+  type: "module",
+};
 manifest.content_scripts = [
   {
     matches: ["https://cursor.com/*", "https://*.cursor.com/*"],
