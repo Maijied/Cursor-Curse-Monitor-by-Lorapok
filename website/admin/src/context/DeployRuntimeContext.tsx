@@ -236,6 +236,16 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
       const target = e.target as HTMLElement | null;
       const link = target?.closest("a[href]") as HTMLAnchorElement | null;
       if (!link || link.target === "_blank" || link.href.startsWith("mailto:")) return;
+      if (
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey ||
+        link.hasAttribute("download")
+      ) {
+        return;
+      }
       const url = new URL(link.href, window.location.origin);
       if (url.origin !== window.location.origin) return;
       if (url.pathname.includes("/deployments")) return;

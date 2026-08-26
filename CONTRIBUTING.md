@@ -19,14 +19,14 @@ Press **F5** in Cursor to launch the Extension Development Host.
 2. Create a feature branch: `git checkout -b feat/your-feature`
 3. Make focused changes with clear commit messages
 4. Run `npm run compile` before submitting
-5. Open a PR against `main` with a description of what changed and why
-6. Review the [Code of Conduct](CODE_OF_CONDUCT.md) and this guide before opening the PR
+5. Review the [Code of Conduct](CODE_OF_CONDUCT.md) and this guide before opening the PR
+6. Open a PR against `main` with a description of what changed and why
 
 Merged contributors are credited in [README.md](README.md#contributors) and [AUTHORS.md](AUTHORS.md).
 
 ## Secrets and integrations
 
-Never commit credentials. Firefox AMO JWT credentials sync from the encrypted cred vault via `CRED_PASSPHRASE=… npm run amo:secrets`.
+Never commit credentials. Firefox AMO JWT credentials sync from the encrypted cred vault via `npm run amo:secrets`. The script prompts for the passphrase interactively to avoid storing it in shell history. If you must pass it inline, prefix with a space (` CRED_PASSPHRASE=… npm run amo:secrets`) so most shells skip history, or use `read -rs CRED_PASSPHRASE && export CRED_PASSPHRASE`.
 
 ## Reporting issues
 

@@ -158,11 +158,11 @@ export default function Deployments() {
   const formLocked = deploying || inProgress;
 
   const beginRuntimeSession = useCallback(
-    (targetTag: string, modeLabel: string) => {
+    (targetTag: string, modeLabel: string, dispatchedAfter: number) => {
       startSession({
         workflowName,
         targetTag,
-        dispatchedAfter: Date.now(),
+        dispatchedAfter,
         channel: releaseChannel,
         market: mode === "infra" ? "Infra only" : market,
         modeLabel,
@@ -193,13 +193,14 @@ export default function Deployments() {
 
     if (mode === "infra") {
       setDeploying(true);
+      const dispatchedAfter = Date.now();
       try {
         await triggerInfraDeploy({ deploy_admin: deployAdmin, deploy_website: deployWebsite });
         setMessage({
           type: "success",
           text: `Infra deploy triggered — admin: ${deployAdmin ? "yes" : "no"}, website: ${deployWebsite ? "yes" : "no"}.`,
         });
-        beginRuntimeSession("infra", "Infra deploy");
+        beginRuntimeSession("infra", "Infra deploy", dispatchedAfter);
       } catch (err: unknown) {
         setMessage({ type: "error", text: err instanceof Error ? err.message : "Infra deploy failed" });
       }
@@ -220,6 +221,7 @@ export default function Deployments() {
     }
 
     setDeploying(true);
+    const dispatchedAfter = Date.now();
     const payload = {
       target_tag: selectedTag,
       publish_market: market,
@@ -231,11 +233,11 @@ export default function Deployments() {
       if (mode === "rollback") {
         await triggerRollback(payload);
         setMessage({ type: "success", text: `Rollback triggered for ${selectedTag} (${market}).` });
-        beginRuntimeSession(selectedTag, "Rollback");
+        beginRuntimeSession(selectedTag, "Rollback", dispatchedAfter);
       } else {
         await triggerDeployment(payload);
         setMessage({ type: "success", text: `Deployment triggered for ${selectedTag} (${market}).` });
-        beginRuntimeSession(selectedTag, "Deploy");
+        beginRuntimeSession(selectedTag, "Deploy", dispatchedAfter);
       }
     } catch (err: unknown) {
       setMessage({
