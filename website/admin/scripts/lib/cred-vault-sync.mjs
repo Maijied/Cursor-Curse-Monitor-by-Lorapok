@@ -9,12 +9,13 @@ const DEFAULT_PASS_FILE =
   process.env.CRED_VAULT_PASSPHRASE_FILE ??
   "/mnt/NewVolume/Personal_Projects/cred/VAULT_PASSPHRASE_READ_ONCE.txt";
 
-function readPassphrase() {
+function readPassphraseCandidates() {
   try {
     const raw = readFileSync(DEFAULT_PASS_FILE, "utf8").trim();
-    return raw.split(/\r?\n/)[0]?.trim() ?? "";
+    const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    return [...new Set([lines[0], raw, lines.at(-1), ...lines.filter((l) => !l.includes(" ") && l.length >= 8)].filter(Boolean))];
   } catch {
-    return "";
+    return [];
   }
 }
 
@@ -81,12 +82,20 @@ function gpgEncrypt(passphrase, data, vaultFile = DEFAULT_VAULT) {
 
 /** @param {{ apiToken: string; emailToken?: string; accountId: string }} opts */
 export function syncCursorCloudflareSecrets({ apiToken, emailToken, accountId }) {
-  const passphrase = readPassphrase();
-  if (!passphrase) {
+  const candidates = readPassphraseCandidates();
+  if (!candidates.length) {
     return { vaultUpdated: false, reason: "passphrase file missing" };
   }
 
-  const vault = gpgDecrypt(passphrase);
+  let vault = null;
+  let passphrase = "";
+  for (const candidate of candidates) {
+    vault = gpgDecrypt(candidate);
+    if (vault) {
+      passphrase = candidate;
+      break;
+    }
+  }
   if (!vault) {
     return { vaultUpdated: false, reason: "vault decrypt failed" };
   }
