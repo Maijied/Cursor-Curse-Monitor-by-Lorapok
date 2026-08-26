@@ -221,6 +221,9 @@ jobs:
       - name: Build Chrome zip
         run: npm run build:chrome -w browser-extension
 
+      - name: Build Firefox zip
+        run: npm run build:firefox:zip -w browser-extension
+
       - name: Upload browser extension artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -228,6 +231,7 @@ jobs:
           path: |
             browser-extension/dist/
             browser-extension/artifacts/chrome/*.zip
+            browser-extension/artifacts/firefox/*.zip
           retention-days: 14
           if-no-files-found: error
 

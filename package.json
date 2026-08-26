@@ -207,6 +207,8 @@
     "vscode:prepublish": "npm run compile && node scripts/stage-shared-for-vsix.mjs",
     "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./",
     "browser-ext:build": "npm run version:sync && npm run build -w browser-extension",
+    "browser-ext:zip:firefox": "npm run version:sync && npm run build:firefox:zip -w browser-extension",
+    "browser-ext:zip:chrome": "npm run version:sync && npm run build:chrome -w browser-extension",
     "browser-ext:test": "npm run test -w browser-extension",
     "watch": "tsc -watch -p ./",
     "package": "vsce package --no-dependencies && node scripts/validate-vsix-contents.mjs",
