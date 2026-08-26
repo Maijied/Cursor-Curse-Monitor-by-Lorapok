@@ -51,7 +51,6 @@ export async function fetchHealth() {
     adminPublicUrl?: string;
     githubTokenConfigured?: boolean;
     discordConfigured?: boolean;
-    discordEnabled?: boolean;
   }>("/health", false);
 }
 
@@ -136,15 +135,8 @@ export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
 }
 
 export type DiscordConfig = {
-  enabled: boolean;
   configured: boolean;
   webhookPreview: string | null;
-  events: {
-    started: boolean;
-    completed: boolean;
-    failed: boolean;
-    pushed: boolean;
-  };
   updatedAt: string | null;
   updatedBy: string | null;
 };
@@ -153,11 +145,7 @@ export async function fetchDiscordConfigApi() {
   return apiGet<{ ok: boolean; config: DiscordConfig }>("/integrations/discord/config");
 }
 
-export async function putDiscordConfigApi(payload: {
-  enabled?: boolean;
-  webhookUrl?: string;
-  events?: Partial<DiscordConfig["events"]>;
-}) {
+export async function putDiscordConfigApi(payload: { webhookUrl: string }) {
   const res = await fetch(`${API_BASE}/integrations/discord/config`, {
     method: "PUT",
     headers: {
@@ -167,31 +155,17 @@ export async function putDiscordConfigApi(payload: {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to save Discord settings");
+  if (!res.ok) throw new Error(data.error || "Failed to save Discord webhook");
   return data as { ok: boolean; config: DiscordConfig };
-}
-
-export async function testDiscordWebhookApi() {
-  const res = await fetch(`${API_BASE}/integrations/discord/test`, {
-    method: "POST",
-    headers: await authHeaders(),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Discord test failed");
-  return data as { ok: boolean; message: string };
 }
 
 export async function notifyDiscordDeploymentApi(payload: {
   actionType?: string;
   tag?: string;
-  version?: string;
   channel?: string;
   market?: string;
   conclusion?: string;
   runUrl?: string;
-  branch?: string;
-  summary?: string;
-  duration?: string;
   jobs?: Array<{ name: string; status?: string; conclusion?: string }>;
 }) {
   const res = await fetch(`${API_BASE}/integrations/discord/deployment`, {
@@ -204,7 +178,7 @@ export async function notifyDiscordDeploymentApi(payload: {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok && !data.skipped) throw new Error(data.error || "Discord notification failed");
-  return data as { ok: boolean; skipped?: boolean; reason?: string };
+  return data as { ok: boolean; skipped?: boolean };
 }
 
 export type DeployRequest = {

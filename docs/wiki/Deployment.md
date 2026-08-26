@@ -64,20 +64,7 @@ Sync from vault: `CRED_PASSPHRASE=… npm run amo:secrets`
 
 ## Discord deployment webhooks
 
-Mission Control can post richly formatted embeds to Discord when deploys start and when CI finishes. Configure the webhook URL in **Settings → Discord deployment webhooks**, or sync from the cred vault:
-
-| Target | Vault entry `565087` key | Destination |
-|--------|--------------------------|-------------|
-| Webhook URL | `webhook_url` | KV `integrations:discord` (enabled) |
-| CI callback secret | `deploy_notify_secret` | GitHub `DEPLOY_NOTIFY_SECRET` + Pages `DEPLOY_NOTIFY_SECRET` |
-
-Sync from vault:
-
-```bash
-CRED_PASSPHRASE=… npm run discord:secrets
-```
-
-The `notify-discord` job in `ci-cd.yml` posts pipeline summaries to Mission Control, which forwards them to Discord when notifications are enabled.
+Paste your Discord channel webhook URL in **Mission Control → Settings → Discord**. Deployment start and completion updates are posted automatically when you deploy from Mission Control.
 
 ## Minimum publish tag
 

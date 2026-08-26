@@ -33,7 +33,7 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up max-w-3xl">
-      <PageHeader title="Settings" description="Theme, integrations, connected services, API health, and environment info." />
+      <PageHeader title="Settings" description="Theme, Discord, connected services, and API health." />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>

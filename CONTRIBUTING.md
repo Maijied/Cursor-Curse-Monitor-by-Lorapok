@@ -26,14 +26,7 @@ Merged contributors are credited in [README.md](README.md#contributors) and [AUT
 
 ## Secrets and integrations
 
-Never commit credentials. Operational secrets live in the encrypted cred vault and are synced to GitHub / Cloudflare with the repo scripts:
-
-| Script | Purpose |
-|--------|---------|
-| `npm run amo:secrets` | Firefox AMO JWT → GitHub |
-| `npm run discord:secrets` | Discord webhook + `DEPLOY_NOTIFY_SECRET` (vault `565087`) → GitHub, Pages, KV |
-
-Requires `CRED_PASSPHRASE` and the `cred` CLI or GPG vault file on your machine.
+Never commit credentials. Firefox AMO JWT credentials sync from the encrypted cred vault via `CRED_PASSPHRASE=… npm run amo:secrets`.
 
 ## Reporting issues
 

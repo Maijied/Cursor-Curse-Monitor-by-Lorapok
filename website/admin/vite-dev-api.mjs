@@ -10,7 +10,6 @@ import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
 import {
-  DEFAULT_DISCORD_CONFIG,
   isValidDiscordWebhookUrl,
   sanitizeDiscordConfigForClient,
 } from "./functions/api/_shared/discord-config.js";
@@ -40,9 +39,7 @@ const devStore = {
     updatedBy: null,
   },
   discordConfig: {
-    enabled: false,
     webhookUrl: "",
-    events: { started: true, completed: true, failed: true, pushed: true },
     updatedAt: null,
     updatedBy: null,
   },
@@ -730,26 +727,14 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
-          const current = devStore.discordConfig;
-          let webhookUrl = current.webhookUrl;
-          if (typeof parsed.webhookUrl === "string") {
-            const trimmed = parsed.webhookUrl.trim();
-            if (trimmed && !isValidDiscordWebhookUrl(trimmed)) {
-              res.statusCode = 400;
-              res.end(JSON.stringify({ error: "Invalid Discord webhook URL" }));
-              return;
-            }
-            webhookUrl = trimmed;
+          const webhookUrl = String(parsed.webhookUrl ?? "").trim();
+          if (!isValidDiscordWebhookUrl(webhookUrl)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Invalid Discord webhook URL" }));
+            return;
           }
           devStore.discordConfig = {
-            ...current,
-            enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : current.enabled,
             webhookUrl,
-            events: {
-              ...DEFAULT_DISCORD_CONFIG.events,
-              ...(current.events ?? {}),
-              ...(parsed.events ?? {}),
-            },
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
           };
@@ -760,34 +745,6 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
-      return;
-    }
-
-    if (url === "/api/integrations/discord/test" && req.method === "POST") {
-      notifyDiscordDeployment({ ADMIN_KV: devKv }, {
-        phase: "test",
-        actionType: "test",
-        triggeredBy: "dev@local",
-        summary: "Dev server test message from Mission Control.",
-      })
-        .then((result) => {
-          res.setHeader("Content-Type", "application/json");
-          if (!result.ok && !result.skipped) {
-            res.statusCode = 502;
-            res.end(JSON.stringify({ error: result.error ?? "Discord test failed" }));
-            return;
-          }
-          if (result.skipped) {
-            res.statusCode = 400;
-            res.end(JSON.stringify({ error: "Discord notifications are disabled or webhook missing" }));
-            return;
-          }
-          res.end(JSON.stringify({ ok: true, message: "Test message sent to Discord." }));
-        })
-        .catch((err) => {
-          res.statusCode = 500;
-          res.end(JSON.stringify({ error: err.message || "Discord test failed" }));
-        });
       return;
     }
 
