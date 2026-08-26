@@ -7,6 +7,9 @@ import {
 } from "./mail-credentials.mjs";
 
 assert.throws(() => requireEmailToken({}), /CLOUDFLARE_EMAIL_API_TOKEN/);
+assert.doesNotThrow(() =>
+  requireEmailToken({ GITHUB_ACTIONS: "true" }, { allowMissingInCi: true })
+);
 assert.throws(() => requireDeployToken({}), /CLOUDFLARE_API_TOKEN/);
 
 const creds = resolveMailCredentials({

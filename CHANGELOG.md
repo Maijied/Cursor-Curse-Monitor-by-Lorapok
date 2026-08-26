@@ -17,7 +17,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mission Control mobile deploy UX** — safe-area padding, dynamic viewport height, larvae on deploy button, and scroll-to-pipeline so mobile users see the full form and runtime panel
 - **IDE dashboard stuck on loading** — register the webview message handler before assigning HTML (fixes a race on Windows, macOS, and Linux), retry the `ready` handshake, cached snapshot delivery on visibility, and `retainContextWhenHidden`
 - **Cross-platform editor storage paths** — resolve Windsurf, VSCodium, and other VS Code–fork data folders on darwin, win32, and linux instead of always assuming Cursor
-- **Mailbox transport (loragent-cloudflare-mail-master)** — enforce credential split: `CLOUDFLARE_EMAIL_API_TOKEN` required for REST (never fall back to deploy token); shared `mail-credentials.mjs`; `repair-mail.mjs` builds before Pages deploy; `enable-mail.mjs` uses email token for domain onboarding
+- **Mailbox transport (loragent-cloudflare-mail-master)** — enforce credential split; CI admin-deploy calls `enable-mail.mjs` + `verify-mail-transport.mjs` on every `main` push (same as `repair-mail.mjs` without manual cred)
 - Missing `SUBSCRIBE_PROMPT_DELAY_MS` import in `extension.ts` (compile error)
 - Orphaned CSS in `dashboardView.ts` that broke `.connected` badge styles
 - `syncStatus` override — release candidates no longer claim `synced` (uses `release-candidate` instead of misleading `dual-listing`)

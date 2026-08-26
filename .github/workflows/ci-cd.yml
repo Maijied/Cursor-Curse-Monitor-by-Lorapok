@@ -420,78 +420,24 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy mail relay worker
-        id: mail_relay
-        working-directory: website/admin/workers/mail-relay
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          npx wrangler email sending enable lorapok.tech || echo "::warning::Onboard lorapok.tech in Dashboard → Email Service if sends fail."
-          if npx wrangler deploy; then
-            echo "deployed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::Mail relay deploy failed — will keep MAIL_RELAY binding if ccm-mail-relay already exists."
-            echo "deployed=false" >> "$GITHUB_OUTPUT"
-          fi
-          RELAY_HTTP=$(curl -sS -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/ccm-mail-relay" || echo "000")
-          if [ "$RELAY_HTTP" = "200" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Sync Pages runtime secret for outbound email
-        id: mail_rest
+      - name: Setup outbound mail (enable-mail.mjs — same as repair-mail step 1)
+        id: mail_setup
         working-directory: website/admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          MAIL_TOKEN="${CLOUDFLARE_EMAIL_API_TOKEN:-}"
-          if [ -z "$MAIL_TOKEN" ]; then
-            echo "::warning::CLOUDFLARE_EMAIL_API_TOKEN not set — Mission Control uses ccm-mail-relay service binding instead."
-            echo "rest_ok=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          PROBE=$(curl -sS -o /tmp/mail-probe.json -w "%{http_code}" \
-            -H "Authorization: Bearer $MAIL_TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/email/sending/domains")
-          if [ "$PROBE" = "401" ] || [ "$PROBE" = "403" ]; then
-            echo "::warning::CLOUDFLARE_EMAIL_API_TOKEN lacks Email Sending permission (HTTP $PROBE). Skipping REST secret sync — relay worker handles mail."
-            echo "rest_ok=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          printf '%s' "$MAIL_TOKEN" | npx wrangler pages secret put CLOUDFLARE_EMAIL_API_TOKEN --project-name=cursor-monitor-admin
-          echo "rest_ok=true" >> "$GITHUB_OUTPUT"
+        run: node scripts/enable-mail.mjs
 
       - name: Verify outbound mail transport before Pages deploy
+        id: mail_verify
         if: always()
-        run: |
-          RELAY_READY=false
-          if [ "${{ steps.mail_relay.outputs.deployed }}" = "true" ] || [ "${{ steps.mail_relay.outputs.exists }}" = "true" ]; then
-            RELAY_READY=true
-          fi
-          REST_OK=false
-          if [ "${{ steps.mail_rest.outputs.rest_ok }}" = "true" ]; then
-            REST_OK=true
-          fi
-          if [ "$RELAY_READY" = "true" ]; then
-            echo "::notice::Outbound mail: ccm-mail-relay is available (preferred transport)."
-            exit 0
-          fi
-          if [ "$REST_OK" = "true" ]; then
-            echo "::warning::Deploying without MAIL_RELAY — REST fallback is configured."
-            exit 0
-          fi
-          echo "::error::Outbound mail is not configured: ccm-mail-relay is missing and CLOUDFLARE_EMAIL_API_TOKEN is absent or lacks Email Sending permission."
-          echo "Fix locally: node website/admin/scripts/enable-mail.mjs"
-          echo "Or set GitHub secret CLOUDFLARE_EMAIL_API_TOKEN (Account → Email Sending → Edit)."
-          exit 1
+        working-directory: website/admin
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/verify-mail-transport.mjs
 
       - name: Deploy to Cloudflare Pages
         working-directory: website/admin
@@ -499,7 +445,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ "${{ steps.mail_relay.outputs.deployed }}" != "true" ] && [ "${{ steps.mail_relay.outputs.exists }}" != "true" ]; then
+          if [ "${{ steps.mail_setup.outputs.relay_deployed }}" != "true" ] && [ "${{ steps.mail_setup.outputs.relay_exists }}" != "true" ]; then
             node <<'NODE'
           import { readFileSync, writeFileSync } from "node:fs";
           const path = "wrangler.toml";
@@ -511,7 +457,7 @@ jobs:
           writeFileSync(path, withoutServices);
           NODE
             echo "::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable."
-          elif [ "${{ steps.mail_relay.outputs.exists }}" = "true" ]; then
+          elif [ "${{ steps.mail_setup.outputs.relay_exists }}" = "true" ]; then
             echo "::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is already deployed on this account."
           fi
           npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main --commit-dirty=true
