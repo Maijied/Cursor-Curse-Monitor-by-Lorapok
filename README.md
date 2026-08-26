@@ -237,6 +237,16 @@ Requires GitHub secrets:
 | **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) |
 | **GitHub** | [@Maijied](https://github.com/Maijied) |
 
+## Contributors
+
+Thanks to everyone who has improved the project through pull requests:
+
+| Contributor | Contribution |
+|-------------|--------------|
+| [**Andrew Ryder**](https://github.com/andrewtryder) | File-backed SQLite auth reads (fixes large `state.vscdb` crashes), configurable status bar usage source (`plan` / `autoApi` / `both`) — [PR #1](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/1) |
+
+See also [AUTHORS.md](AUTHORS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) if you would like to contribute.
+
 ### Lorapok Labs
 
 | | |
