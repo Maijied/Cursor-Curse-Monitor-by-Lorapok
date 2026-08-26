@@ -6,8 +6,8 @@ import {
   triggerDeployment,
   triggerInfraDeploy,
   triggerRollback,
-  notifyDiscordDeploymentApi,
 } from "../../lib/api";
+import { useDeployRuntime } from "../../context/DeployRuntimeContext";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
   defaultTagSelection,
@@ -17,7 +17,7 @@ import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
-import DeployRuntimePanel from "../ui/DeployRuntimePanel";
+import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
 
@@ -32,6 +32,7 @@ type Mode = "deploy" | "rollback" | "infra";
 
 export default function Deployments() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { inProgress, startSession, registerOnDeployComplete } = useDeployRuntime();
   const { data: siteData } = useSiteData();
   const [mode, setMode] = useState<Mode>("deploy");
   const [tags, setTags] = useState<string[]>([]);
@@ -40,8 +41,6 @@ export default function Deployments() {
   const [suggestedTag, setSuggestedTag] = useState<string | null>(null);
   const [deploying, setDeploying] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [runtimeActive, setRuntimeActive] = useState(false);
-  const [lastTargetTag, setLastTargetTag] = useState("");
   const [channel, setChannel] = useState<"beta" | "production">("production");
   const [selectedTag, setSelectedTag] = useState("");
   const [market, setMarket] = useState<
@@ -58,7 +57,6 @@ export default function Deployments() {
   }, [mode]);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
-  const [dispatchedAfter, setDispatchedAfter] = useState(0);
   const [displayLiveTag, setDisplayLiveTag] = useState<string | null>(null);
   const [displayPkgVersion, setDisplayPkgVersion] = useState<string | null>(null);
   const [versionPlan, setVersionPlan] = useState<Awaited<ReturnType<typeof fetchVersionPlan>> | null>(null);
@@ -99,11 +97,16 @@ export default function Deployments() {
   }, [loadTags]);
 
   useEffect(() => {
-    if (!runtimeActive && liveTag) {
+    if (!inProgress && liveTag) {
       setDisplayLiveTag(liveTag);
       setDisplayPkgVersion(siteData?.packageVersion ?? null);
     }
-  }, [liveTag, runtimeActive, siteData?.packageVersion]);
+  }, [liveTag, inProgress, siteData?.packageVersion]);
+
+  useEffect(() => {
+    registerOnDeployComplete(() => loadTags());
+    return () => registerOnDeployComplete(null);
+  }, [loadTags, registerOnDeployComplete]);
 
   const filteredTags = tags.filter((t) => {
     if (channel === "production") return !/beta|alpha|rc/i.test(t);
@@ -148,6 +151,23 @@ export default function Deployments() {
     }
   }, [deployTargetTag, filteredTags, mode]);
 
+  const workflowName = "ci-cd.yml";
+  const formLocked = deploying || inProgress;
+
+  const beginRuntimeSession = useCallback(
+    (targetTag: string, modeLabel: string) => {
+      startSession({
+        workflowName,
+        targetTag,
+        dispatchedAfter: Date.now(),
+        channel: releaseChannel,
+        market: mode === "infra" ? "Infra only" : market,
+        modeLabel,
+      });
+    },
+    [startSession, releaseChannel, market, mode]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
@@ -176,8 +196,7 @@ export default function Deployments() {
           type: "success",
           text: `Infra deploy triggered — admin: ${deployAdmin ? "yes" : "no"}, website: ${deployWebsite ? "yes" : "no"}.`,
         });
-        setRuntimeActive(true);
-        setDispatchedAfter(Date.now());
+        beginRuntimeSession("infra", "Infra deploy");
       } catch (err: unknown) {
         setMessage({ type: "error", text: err instanceof Error ? err.message : "Infra deploy failed" });
       }
@@ -209,13 +228,12 @@ export default function Deployments() {
       if (mode === "rollback") {
         await triggerRollback(payload);
         setMessage({ type: "success", text: `Rollback triggered for ${selectedTag} (${market}).` });
+        beginRuntimeSession(selectedTag, "Rollback");
       } else {
         await triggerDeployment(payload);
         setMessage({ type: "success", text: `Deployment triggered for ${selectedTag} (${market}).` });
+        beginRuntimeSession(selectedTag, "Deploy");
       }
-      setRuntimeActive(true);
-      setLastTargetTag(selectedTag);
-      setDispatchedAfter(Date.now());
     } catch (err: unknown) {
       setMessage({
         type: "error",
@@ -225,12 +243,10 @@ export default function Deployments() {
     setDeploying(false);
   };
 
-  const workflowName = "ci-cd.yml";
-
   const canSubmit =
     isMaster &&
     !tagsError &&
-    !deploying &&
+    !formLocked &&
     (mode === "infra"
       ? deployAdmin || deployWebsite
       : Boolean(selectedTag) && !deployBlocked);
@@ -240,27 +256,6 @@ export default function Deployments() {
 
   const pkgVersion = displayPkgVersion ?? siteData?.packageVersion ?? "—";
   const shownLiveTag = displayLiveTag ?? liveTag;
-
-  const handleRuntimeComplete = useCallback(
-    ({ success, run, jobs }: {
-      success: boolean;
-      run: { url?: string; conclusion?: string | null } | null;
-      jobs?: Array<{ name: string; status?: string; conclusion?: string | null }>;
-    }) => {
-      setRuntimeActive(false);
-      if (success) loadTags();
-      notifyDiscordDeploymentApi({
-        actionType: workflowName,
-        tag: lastTargetTag || undefined,
-        channel: channel === "production" ? "Production" : "Beta (Pre-release)",
-        market,
-        conclusion: success ? "success" : run?.conclusion ?? "failure",
-        runUrl: run?.url,
-        jobs,
-      }).catch(() => {});
-    },
-    [loadTags, workflowName, lastTargetTag, channel, market]
-  );
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
@@ -453,7 +448,7 @@ export default function Deployments() {
         </Card>
       )}
 
-      <div className="flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
+      <div className={`flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] ${formLocked ? "opacity-60 pointer-events-none" : ""}`}>
         {(
           [
             { value: "deploy" as const, label: "Deploy", icon: Rocket },
@@ -533,13 +528,13 @@ export default function Deployments() {
       )}
 
       <Card className="mt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={`space-y-6 ${formLocked ? "opacity-70" : ""}`}>
           {mode !== "infra" ? (
             <div>
               <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
                 {mode === "rollback" ? "Rollback to tag (source)" : "Deploy tag"}
               </label>
-              <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass}>
+              <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass} disabled={formLocked}>
                 {filteredTags.length === 0 && <option value="">No tags in list</option>}
                 {filteredTags.map((t) => (
                   <option key={t} value={t}>
@@ -570,6 +565,7 @@ export default function Deployments() {
               id="target-market"
               value={market}
               onChange={(e) => setMarket(e.target.value as typeof market)}
+              disabled={formLocked}
               className={inputClass}
             >
               <option value="Open VSX + Firefox AMO">Open VSX + Firefox AMO (default — no VS Code)</option>
@@ -600,6 +596,7 @@ export default function Deployments() {
                     value={value}
                     checked={channel === value}
                     onChange={() => setChannel(value)}
+                    disabled={formLocked}
                     className="sr-only"
                   />
                   <span className="font-semibold capitalize">{value === "beta" ? "Beta (Pre-release)" : "Production"}</span>
@@ -618,6 +615,7 @@ export default function Deployments() {
                     type="checkbox"
                     checked={deployAdmin}
                     onChange={(e) => setDeployAdmin(e.target.checked)}
+                    disabled={formLocked}
                   />
                   Mission Control admin (cursor-dev.lorapok.tech)
                 </label>
@@ -627,6 +625,7 @@ export default function Deployments() {
                   type="checkbox"
                   checked={deployWebsite}
                   onChange={(e) => setDeployWebsite(e.target.checked)}
+                  disabled={formLocked}
                 />
                 Marketing site (cursor.lorapok.tech)
               </label>
@@ -652,8 +651,8 @@ export default function Deployments() {
             ) : (
               <Rocket size={20} aria-hidden="true" />
             )}
-            {deploying
-              ? "Triggering…"
+            {deploying || inProgress
+              ? "Deployment running…"
               : mode === "rollback"
                 ? "Trigger Rollback"
                 : mode === "infra"
@@ -672,13 +671,13 @@ export default function Deployments() {
           />
         )}
 
-        <DeployRuntimePanel
-          active={runtimeActive}
-          workflowName={workflowName}
-          targetTag={lastTargetTag}
-          dispatchedAfter={dispatchedAfter}
-          onComplete={handleRuntimeComplete}
-        />
+        {inProgress && (
+          <p className="mt-4 text-sm text-[var(--color-muted)]">
+            Deployment in progress — form locked until CI finishes. Use the larvae button if you navigate away.
+          </p>
+        )}
+
+        <DeployRuntimeInlineSlot />
       </Card>
     </div>
   );

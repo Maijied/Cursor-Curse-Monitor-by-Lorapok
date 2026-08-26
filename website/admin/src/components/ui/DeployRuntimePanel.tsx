@@ -13,6 +13,12 @@ type DeployRuntimePanelProps = {
   workflowName?: string;
   targetTag?: string;
   dispatchedAfter?: number;
+  /** When true, poll state is supplied by DeployRuntimeContext (no internal polling). */
+  embedded?: boolean;
+  run?: WorkflowRun | null;
+  logs?: WorkflowRunLogs | null;
+  pollError?: string | null;
+  waiting?: boolean;
   onComplete?: (result: {
     success: boolean;
     run: WorkflowRun | null;
@@ -31,6 +37,11 @@ export default function DeployRuntimePanel({
   workflowName,
   targetTag,
   dispatchedAfter = 0,
+  embedded = false,
+  run: externalRun,
+  logs: externalLogs,
+  pollError: externalError,
+  waiting: externalWaiting,
   onComplete,
 }: DeployRuntimePanelProps) {
   const [run, setRun] = useState<WorkflowRun | null>(null);
@@ -41,27 +52,32 @@ export default function DeployRuntimePanel({
   const logRef = useRef<HTMLPreElement>(null);
   const completedRef = useRef(false);
 
+  const displayRun = embedded ? externalRun ?? null : run;
+  const displayLogs = embedded ? externalLogs ?? null : logs;
+  const displayError = embedded ? externalError ?? null : error;
+  const displayWaiting = embedded ? Boolean(externalWaiting) : waiting;
+
   useEffect(() => {
     completedRef.current = false;
   }, [dispatchedAfter, workflowName]);
 
   useEffect(() => {
     if (!active) {
-      setRun(null);
-      setLogs(null);
-      setError(null);
-      setWaiting(false);
+      if (!embedded) {
+        setRun(null);
+        setLogs(null);
+        setError(null);
+        setWaiting(false);
+      }
       setLogsOpen(false);
       completedRef.current = false;
       return;
     }
     setLogsOpen(false);
-  }, [active, dispatchedAfter, workflowName]);
+  }, [active, dispatchedAfter, workflowName, embedded]);
 
   useEffect(() => {
-    if (!active) {
-      return;
-    }
+    if (!active || embedded) return;
 
     let cancelled = false;
     const startedAt = Date.now();
@@ -111,27 +127,27 @@ export default function DeployRuntimePanel({
     return () => {
       cancelled = true;
     };
-  }, [active, workflowName, dispatchedAfter, onComplete]);
+  }, [active, workflowName, dispatchedAfter, onComplete, embedded]);
 
   useEffect(() => {
     if (logRef.current && logsOpen) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [logs?.text, logsOpen]);
+  }, [displayLogs?.text, logsOpen]);
 
   if (!active) return null;
 
-  const jobs = logs?.jobs ?? [];
+  const jobs = displayLogs?.jobs ?? [];
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className={`space-y-4 ${embedded ? "" : "mt-6"}`}>
       <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
         <Terminal size={18} className="text-[var(--color-accent)]" />
         Deployment runtime
         {targetTag && <span className="text-[var(--color-muted)] font-normal">· {targetTag}</span>}
       </div>
 
-      {error && <Notification tone="error" message={error} />}
+      {displayError && <Notification tone="error" message={displayError} />}
 
-      {waiting && !run && (
+      {displayWaiting && !displayRun && (
         <div className="flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] p-4">
           <LorapokLarvaeLoader size="sm" ariaLabel="Waiting for workflow" />
           <p className="text-sm text-[var(--color-muted)]">
@@ -140,17 +156,15 @@ export default function DeployRuntimePanel({
         </div>
       )}
 
-      {run && (
-        <div
-          className="flex flex-wrap items-center gap-3 text-sm animate-fade-slide-up"
-        >
-          <Badge variant={runStatusTone(run)}>
-            {run.status}
-            {run.conclusion ? ` · ${run.conclusion}` : ""}
+      {displayRun && (
+        <div className="flex flex-wrap items-center gap-3 text-sm animate-fade-slide-up">
+          <Badge variant={runStatusTone(displayRun)}>
+            {displayRun.status}
+            {displayRun.conclusion ? ` · ${displayRun.conclusion}` : ""}
           </Badge>
-          <span className="text-[var(--color-muted)]">{run.workflow}</span>
+          <span className="text-[var(--color-muted)]">{displayRun.workflow}</span>
           <a
-            href={run.url}
+            href={displayRun.url}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-[var(--color-accent-2)] hover:underline"
@@ -164,7 +178,7 @@ export default function DeployRuntimePanel({
 
       {jobs.length > 0 && <MarketplaceDeployBreakdown jobs={jobs} targetTag={targetTag} />}
 
-      {logs?.logsHint && <Notification tone="warning" message={logs.logsHint} />}
+      {displayLogs?.logsHint && <Notification tone="warning" message={displayLogs.logsHint} />}
 
       <div className="rounded-xl border border-[var(--color-border)] overflow-hidden">
         <button
@@ -181,10 +195,9 @@ export default function DeployRuntimePanel({
         {logsOpen && (
           <pre
             ref={logRef}
-            key="console"
             className="max-h-72 overflow-auto border-t border-[var(--color-border)] bg-[#05070c] p-4 text-xs font-[family-name:var(--font-mono)] text-[#c8d6e5] leading-relaxed whitespace-pre-wrap animate-fade-slide-up"
           >
-            {logs?.text?.trim() || "Waiting for GitHub Actions to start…"}
+            {displayLogs?.text?.trim() || "Waiting for GitHub Actions to start…"}
           </pre>
         )}
       </div>
