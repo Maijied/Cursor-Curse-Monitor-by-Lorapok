@@ -89,4 +89,4 @@ if (chromeManifest.background.scripts) delete chromeManifest.background.scripts;
 
 writeFileSync(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
 writeFileSync(join(dist, "manifest.chrome.json"), JSON.stringify(chromeManifest, null, 2));
-console.log("postbuild: manifest.json + popup.html written");
+console.log(`postbuild: manifest.json v${version} + popup.html written`);
