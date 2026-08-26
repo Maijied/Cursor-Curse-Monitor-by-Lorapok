@@ -173,6 +173,7 @@ export function App() {
                   min={0}
                   step={1}
                   placeholder="USD cap (0 = plan only)"
+                  aria-label="Custom budget cap in USD"
                   value={budgetInput}
                   onChange={(e) => setBudgetInput(e.target.value)}
                 />

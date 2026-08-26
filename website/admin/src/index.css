@@ -68,3 +68,13 @@ body {
     radial-gradient(ellipse 60% 40% at 0% 100%, rgba(77, 159, 255, 0.08), transparent 50%),
     var(--color-bg-base);
 }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}

@@ -246,6 +246,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       font-size: 14px;
     }
     .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+    .icon-btn:focus-visible,
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .fill, .meter-fill, .logo-wrap { transition: none !important; }
+      .subscribe-btn-loading::after { animation: none !important; }
+    }
     .connected {
       display: inline-flex;
       align-items: center;
@@ -602,10 +613,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
   <button type="button" id="loadingState" class="loading-state" disabled aria-live="polite">Loading dashboard…</button>
-  <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
+  <div id="cursorMissingOverlay" class="cursor-missing-overlay" role="alertdialog" aria-modal="true" aria-labelledby="cursorMissingTitle" aria-live="polite">
     <div class="cursor-missing-card">
       <p class="cursor-missing-eyebrow">No Cursor AI found</p>
-      <h2 style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
+      <h2 id="cursorMissingTitle" style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
       <p style="margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55;">
         Install or open <strong>Cursor</strong> (or another supported VS Code–based AI IDE), sign in once, then refresh this dashboard.
       </p>
@@ -624,7 +635,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="connected" id="connBadge">Connected</span>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="refreshBtn" title="Refresh">↻</button>
+      <button type="button" class="icon-btn" id="refreshBtn" title="Refresh" aria-label="Refresh dashboard">↻</button>
     </div>
   </header>
 
@@ -638,9 +649,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       </p>
       <span id="statusPill" class="pill ok">OK</span>
     </div>
-    <div class="usage-big" id="usageBig">—%</div>
+    <div class="usage-big" id="usageBig" aria-live="polite">—%</div>
     <div class="usage-sub" id="usageSub">of included quota used</div>
-    <div class="bar">
+    <div class="bar" role="progressbar" aria-label="Included quota usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="usageBarTrack">
       <div class="bar-threshold" id="thresholdLine" style="left:80%"></div>
       <div class="fill" id="usageBar"></div>
     </div>
@@ -659,11 +670,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="dual-meters">
       <div class="meter-row">
         <div class="meter-head"><span>Auto</span><strong id="autoPct">—%</strong></div>
-        <div class="meter-track"><div class="meter-fill" id="autoBar"></div></div>
+        <div class="meter-track" role="progressbar" aria-label="Auto usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="autoBarTrack"><div class="meter-fill" id="autoBar"></div></div>
       </div>
       <div class="meter-row">
         <div class="meter-head"><span>API</span><strong id="apiPct">—%</strong></div>
-        <div class="meter-track"><div class="meter-fill" id="apiBar"></div></div>
+        <div class="meter-track" role="progressbar" aria-label="API usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="apiBarTrack"><div class="meter-fill" id="apiBar"></div></div>
       </div>
     </div>
   </section>
@@ -682,7 +693,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           <path d="M 14 70 A 56 56 0 0 1 126 70" fill="none" stroke="#252b38" stroke-width="10" stroke-linecap="round"/>
           <path id="gaugeArc" d="M 14 70 A 56 56 0 0 1 126 70" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
         </svg>
-        <div class="gauge-center">
+        <div class="gauge-center" aria-live="polite">
           <div class="gauge-pct" id="gaugePct">0%</div>
           <div class="gauge-lbl" id="gaugeLbl">quota</div>
         </div>
@@ -781,7 +792,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </section>
 
   <div class="subscribe-modal-overlay" id="subscribeModal" aria-hidden="true">
-    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle">
+    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle" aria-describedby="subscribeBody" tabindex="-1" id="subscribePanel">
       <div class="subscribe-hero">
         <img src="${iconUri}" alt="" width="44" height="44" />
         <div>
@@ -827,12 +838,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </section>
 
   <div class="footer-msg">
-    <span>🛡️</span>
+    <span class="footer-shield" aria-hidden="true">◆</span>
     <span id="footerMsg">You're in control. We'll notify you before you reach your cap.</span>
   </div>
 
   <div class="actions">
-    <button class="primary" id="refreshBtn2">Refresh now</button>
+    <button type="button" class="ghost" id="refreshBtn2" aria-label="Refresh dashboard data">Refresh data</button>
     <button class="ghost" id="fallbackBtn">Apply free fallback model</button>
   </div>
 
@@ -899,6 +910,36 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         '<line x1="' + pad + '" y1="' + threshY.toFixed(1) + '" x2="' + (w - pad) + '" y2="' + threshY.toFixed(1) +
         '" stroke="#f5b942" stroke-dasharray="4 4" stroke-width="1" opacity="0.7"></line>' +
         '<path d="' + d + '" fill="none" stroke="#5b9dff" stroke-width="2"></path>';
+    }
+
+    function setProgressTrack(track, value) {
+      if (!track) return;
+      var v = Math.max(0, Math.min(100, Math.round(value)));
+      track.setAttribute('aria-valuenow', String(v));
+    }
+
+    function trapSubscribeFocus(modal) {
+      var panel = document.getElementById('subscribePanel');
+      if (!panel) return;
+      var focusable = panel.querySelectorAll('button, input, [href], [tabindex]:not([tabindex="-1"])');
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (first) first.focus();
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          vscode.postMessage({ type: 'snoozeSubscribe' });
+          return;
+        }
+        if (e.key !== 'Tab' || !focusable.length) return;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          if (last) last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          if (first) first.focus();
+        }
+      }
+      modal.addEventListener('keydown', onKey);
     }
 
     function render(snapshot) {
@@ -982,6 +1023,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const usageBar = document.getElementById('usageBar');
       usageBar.style.width = Math.min(100, hero) + '%';
       usageBar.className = 'fill' + fillClass(hero, threshold, snapshot.limitExceeded);
+      setProgressTrack(document.getElementById('usageBarTrack'), hero);
 
       const statusPill = document.getElementById('statusPill');
       if (snapshot.limitExceeded) {
@@ -1013,6 +1055,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       apiBar.style.width = Math.min(100, b.apiPercentUsed) + '%';
       autoBar.className = 'meter-fill' + fillClass(b.autoPercentUsed, threshold, snapshot.limitExceeded);
       apiBar.className = 'meter-fill' + fillClass(b.apiPercentUsed, threshold, snapshot.limitExceeded);
+      setProgressTrack(document.getElementById('autoBarTrack'), b.autoPercentUsed);
+      setProgressTrack(document.getElementById('apiBarTrack'), b.apiPercentUsed);
 
       const gaugeValue = b.usdBudgetActive ? b.budgetPercentUsed : hero;
       setGauge(gaugeValue);
@@ -1131,6 +1175,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           subscribePromptReady = true;
           modal.classList.add('visible');
           modal.setAttribute('aria-hidden', 'false');
+          trapSubscribeFocus(modal);
         }, 30000);
       }
     }

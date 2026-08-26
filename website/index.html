@@ -256,12 +256,12 @@
       <p class="section-lead">One product family — usage in Cursor, credential protection in the browser, and ops in the admin panel.</p>
     </div>
     <div class="ecosystem-tabs" role="tablist" aria-label="Product surfaces">
-      <button type="button" class="ecosystem-tab active" role="tab" aria-selected="true" data-ecosystem-tab="ide">IDE Extension</button>
-      <button type="button" class="ecosystem-tab" role="tab" aria-selected="false" data-ecosystem-tab="browser">Browser Extension</button>
-      <button type="button" class="ecosystem-tab" role="tab" aria-selected="false" data-ecosystem-tab="admin">Mission Control</button>
+      <button type="button" class="ecosystem-tab active" role="tab" id="ecosystem-tab-ide" aria-selected="true" aria-controls="ecosystem-panel-ide" data-ecosystem-tab="ide">IDE Extension</button>
+      <button type="button" class="ecosystem-tab" role="tab" id="ecosystem-tab-browser" aria-selected="false" aria-controls="ecosystem-panel-browser" data-ecosystem-tab="browser">Browser Extension</button>
+      <button type="button" class="ecosystem-tab" role="tab" id="ecosystem-tab-admin" aria-selected="false" aria-controls="ecosystem-panel-admin" data-ecosystem-tab="admin">Mission Control</button>
     </div>
     <div class="ecosystem-stage">
-      <article class="ecosystem-panel active" data-ecosystem-panel="ide">
+      <article class="ecosystem-panel active" id="ecosystem-panel-ide" role="tabpanel" aria-labelledby="ecosystem-tab-ide" data-ecosystem-panel="ide">
         <div class="ecosystem-copy">
           <h3>Live usage inside your AI IDE</h3>
           <p><strong>One extension for all VS Code wrapper IDEs.</strong> Quota meters, billing cycle, budget caps, Composer 2.5 fallback, and local credential scanning — works in Cursor, Windsurf, VSCodium, Void, Gitpod, Trae, Kiro, and every Open VSX / VS Code Marketplace host.</p>
@@ -270,7 +270,7 @@
           <img src="assets/marketing/showcase-dashboard.png" alt="Cursor IDE usage dashboard" loading="lazy" decoding="async" />
         </button>
       </article>
-      <article class="ecosystem-panel" data-ecosystem-panel="browser" hidden>
+      <article class="ecosystem-panel" id="ecosystem-panel-browser" role="tabpanel" aria-labelledby="ecosystem-tab-browser" data-ecosystem-panel="browser" hidden>
         <div class="ecosystem-copy">
           <h3>Firefox &amp; Chrome browser extension</h3>
           <p>Budget tracker popup, paste guard, and cursor.com token capture — no store lock-in for Chrome.</p>
@@ -279,7 +279,7 @@
           <img src="assets/marketing/showcase-browser-ext.png" alt="Browser extension popup" loading="lazy" decoding="async" />
         </button>
       </article>
-      <article class="ecosystem-panel" data-ecosystem-panel="admin" hidden>
+      <article class="ecosystem-panel" id="ecosystem-panel-admin" role="tabpanel" aria-labelledby="ecosystem-tab-admin" data-ecosystem-panel="admin" hidden>
         <div class="ecosystem-copy">
           <h3>Admin Mission Control</h3>
           <p>Mailbox, deployments, marketplace sync, notices, and SEO — operated from cursor-dev.lorapok.tech.</p>

@@ -543,12 +543,13 @@ body {
 }
 
 .security-modal {
-  background: #25262b;
-  border: 1px solid #373a40;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   width: 100%;
   max-width: 400px;
   color: var(--text);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
 }
 
 .security-head {
@@ -556,7 +557,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  border-bottom: 1px solid #373a40;
+  border-bottom: 1px solid var(--border);
 }
 
 .security-head h2 { margin: 0; font-size: 14px; }
@@ -579,7 +580,7 @@ body {
 
 .security-table-wrap {
   margin: 0 14px 12px;
-  border: 1px solid #373a40;
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -593,7 +594,7 @@ body {
 .security-table-wrap th {
   text-align: left;
   padding: 6px 8px;
-  background: #2c2e33;
+  background: var(--surface-hover);
   color: var(--muted);
   font-size: 9px;
   text-transform: uppercase;
@@ -657,3 +658,36 @@ body {
 .options-form textarea { min-height: 80px; resize: vertical; }
 
 .options-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popup-loading-spinner {
+    animation: none;
+  }
+  .gauge-svg *,
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

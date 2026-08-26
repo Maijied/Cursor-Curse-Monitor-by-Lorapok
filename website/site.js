@@ -128,6 +128,36 @@ async function submitSubscribeRequest({ email, subscribeUrl, source }) {
   return body;
 }
 
+/**
+ * Sync JSON-LD softwareVersion and downloadUrl with live site-data.
+ */
+function updateStructuredDataVersion(data) {
+  const version = data.packageVersion || data.version;
+  if (!version) return;
+  document.querySelectorAll('script[type="application/ld+json"]').forEach((node) => {
+    try {
+      const json = JSON.parse(node.textContent || "");
+      const graph = json["@graph"];
+      if (!Array.isArray(graph)) return;
+      let changed = false;
+      for (const item of graph) {
+        if (item["@type"] !== "SoftwareApplication") continue;
+        if (version && item.softwareVersion !== version) {
+          item.softwareVersion = version;
+          changed = true;
+        }
+        if (data.github?.vsixUrl && item.downloadUrl !== data.github.vsixUrl) {
+          item.downloadUrl = data.github.vsixUrl;
+          changed = true;
+        }
+      }
+      if (changed) node.textContent = JSON.stringify(json);
+    } catch {
+      // ignore malformed JSON-LD
+    }
+  });
+}
+
 (async function () {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -203,6 +233,7 @@ async function submitSubscribeRequest({ email, subscribeUrl, source }) {
     // Core version data
     setText("[data-version]", data.version);
     setText("[data-package-version]", data.packageVersion);
+    updateStructuredDataVersion(data);
     setText("[data-extension-id]", data.ovsxExtensionId ?? data.extensionId);
     setText("[data-github-tag]", data.github.releaseTag);
     setText("[data-vsix-name]", data.github.vsixName);
@@ -543,6 +574,7 @@ function initEcosystemTabs() {
       const on = tab.dataset.ecosystemTab === id;
       tab.classList.toggle("active", on);
       tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
     });
     panels.forEach((panel) => {
       const on = panel.dataset.ecosystemPanel === id;
@@ -552,20 +584,39 @@ function initEcosystemTabs() {
   };
 
   let rotationActive = true;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  tabs.forEach((tab) => {
+  tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
       rotationActive = false;
       activate(tab.dataset.ecosystemTab || "ide");
     });
+    tab.addEventListener("keydown", (event) => {
+      const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      rotationActive = false;
+      let next = index;
+      if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+      if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+      if (event.key === "Home") next = 0;
+      if (event.key === "End") next = tabs.length - 1;
+      tabs[next].focus();
+      activate(tabs[next].dataset.ecosystemTab || "ide");
+    });
+  });
+
+  tabs.forEach((tab, index) => {
+    tab.tabIndex = index === 0 ? 0 : -1;
   });
 
   let i = 0;
   const ids = tabs.map((t) => t.dataset.ecosystemTab).filter(Boolean);
   setInterval(() => {
-    if (document.hidden || !ids.length || !rotationActive) return;
+    if (document.hidden || !ids.length || !rotationActive || prefersReducedMotion) return;
     i = (i + 1) % ids.length;
     activate(ids[i]);
+    tabs[i]?.focus();
   }, 8000);
 }
 
