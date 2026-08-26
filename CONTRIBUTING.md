@@ -20,8 +20,20 @@ Press **F5** in Cursor to launch the Extension Development Host.
 3. Make focused changes with clear commit messages
 4. Run `npm run compile` before submitting
 5. Open a PR against `main` with a description of what changed and why
+6. Review the [Code of Conduct](CODE_OF_CONDUCT.md) and this guide before opening the PR
 
 Merged contributors are credited in [README.md](README.md#contributors) and [AUTHORS.md](AUTHORS.md).
+
+## Secrets and integrations
+
+Never commit credentials. Operational secrets live in the encrypted cred vault and are synced to GitHub / Cloudflare with the repo scripts:
+
+| Script | Purpose |
+|--------|---------|
+| `npm run amo:secrets` | Firefox AMO JWT → GitHub |
+| `npm run discord:secrets` | Discord webhook + `DEPLOY_NOTIFY_SECRET` (vault `565087`) → GitHub, Pages, KV |
+
+Requires `CRED_PASSPHRASE` and the `cred` CLI or GPG vault file on your machine.
 
 ## Reporting issues
 
