@@ -1,10 +1,10 @@
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import {
   isValidDiscordWebhookUrl,
   readDiscordConfig,
   sanitizeDiscordConfigForClient,
   writeDiscordConfig,
-} from "../_shared/discord-config.js";
+} from "../../_shared/discord-config.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;

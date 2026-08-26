@@ -17,7 +17,8 @@ export async function onRequestPost(context) {
       env,
       body,
       "Mission Control infra deploy triggered (admin + website)",
-      { triggeredBy: auth.email }
+      { triggeredBy: auth.email },
+      context
     );
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
