@@ -28,6 +28,7 @@ const {
 const {
   formatStatusBarText,
   formatStatusBarTooltip,
+  serializeWebviewBootSnapshot,
 } = require("../src/dashboardView.ts");
 
 const {
@@ -279,4 +280,25 @@ test("dashboardView: formatStatusBarText and formatStatusBarTooltip output corre
   assert.ok(tooltip.includes("Plan: 20%"));
   assert.ok(tooltip.includes("Auto: 20.5%"));
   assert.ok(tooltip.includes("API: 15.3%"));
+});
+
+test("dashboardView: serializeWebviewBootSnapshot escapes HTML and serializes null", () => {
+  assert.equal(serializeWebviewBootSnapshot(undefined), "null");
+  const encoded = serializeWebviewBootSnapshot({
+    fetchedAt: "2026-08-27T00:00:00.000Z",
+    email: "a<b>&c",
+    usage: null,
+    profile: null,
+    fallbackApplied: false,
+    limitExceeded: false,
+    customBudgetLimit: 0,
+    onDemandSpendUsd: 0,
+    budget: null,
+    features: ["Auto <script>"],
+  });
+  assert.equal(encoded.includes("<"), false);
+  assert.equal(encoded.includes(">"), false);
+  assert.ok(encoded.includes("\\u003c"));
+  assert.ok(encoded.includes("\\u003e"));
+  assert.ok(encoded.includes("\\u0026"));
 });

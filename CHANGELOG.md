@@ -8,13 +8,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Universal VS Code wrapper IDE support** — shared `supportedIdeWrappers` list; bold messaging in README, marketing site (2nd section with IDE grid), IDE dashboard About panel, and browser extension Options
+- **Six-card feature showcase grid** on cursor.lorapok.tech — PNG lightbox cards for dashboard, budget, fallback, privacy, safe DB writes, and security scanner
+- **Animated IDE constellation** on cursor.lorapok.tech — original geometric marks (not letter tiles), staggered reveal, squash/stretch hover, reduced-motion path
 - **Cursor-not-found blocked UI** — full blurred overlay with “No Cursor AI found”, refresh CTA, and [lorapok.tech](https://lorapok.tech) link in IDE dashboard and browser popup
 - **SEO refresh** — VS Code wrapper IDE keywords, updated meta descriptions, canonical JSON-LD download URLs via `generate-seo.mjs`
 
 ### Fixed
 
 - **Mission Control mobile deploy UX** — safe-area padding, dynamic viewport height, larvae on deploy button, and scroll-to-pipeline so mobile users see the full form and runtime panel
+- **IDE dashboard blank in VS Code** — full-screen loading overlay hid the shell until a `postMessage` snapshot arrived; boot the last snapshot in HTML, gate host messages until `ready`, and keep the dashboard chrome visible while usage loads
+- **Activity bar icon** — replace the animated multi-color SVG (often rendered as a green sliver) with a simple `currentColor` silhouette
 - **IDE dashboard stuck on loading** — register the webview message handler before assigning HTML (fixes a race on Windows, macOS, and Linux), retry the `ready` handshake, cached snapshot delivery on visibility, and `retainContextWhenHidden`
 - **Cross-platform editor storage paths** — resolve Windsurf, VSCodium, and other VS Code–fork data folders on darwin, win32, and linux instead of always assuming Cursor
 - **Mailbox transport (loragent-cloudflare-mail-master)** — enforce credential split; CI admin-deploy calls `enable-mail.mjs` + `verify-mail-transport.mjs` on every `main` push (same as `repair-mail.mjs` without manual cred)
@@ -25,6 +28,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Marketing hero and ecosystem copy emphasize Open VSX + VS Code Marketplace compatibility across all major AI IDEs
+- **Homepage accessibility** — dev-notice marquee pause control, ecosystem tab rotation pause/play, `<main>` landmark, reduced-motion scroll behavior
+- **Hero intro polish** — editorial kicker, inline platform row, softer live indicators
 
 ## [1.0.3] - 2026-08-25
 

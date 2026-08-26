@@ -57,11 +57,21 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       .asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "media", "icon.png"))
       .toString();
 
+    let viewReady = false;
+    let latestSnapshot = this.monitor.getSnapshot();
+
     const push = (snapshot: DashboardSnapshot) => {
+      latestSnapshot = snapshot;
+      if (!viewReady) {
+        return;
+      }
       void webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
     };
 
     const deliverSnapshot = async (force = false) => {
+      if (latestSnapshot) {
+        push(latestSnapshot);
+      }
       const cached = this.monitor.getSnapshot();
       if (cached) {
         push(cached);
@@ -80,12 +90,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     webviewView.onDidDispose(() => subscription.dispose());
 
     webviewView.onDidChangeVisibility(() => {
-      if (!webviewView.visible) {
+      if (!webviewView.visible || !viewReady) {
         return;
       }
-      const cached = this.monitor.getSnapshot();
-      if (cached) {
-        push(cached);
+      if (latestSnapshot) {
+        push(latestSnapshot);
       }
     });
 
@@ -93,6 +102,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     // Linux the inline script can post `ready` synchronously when html is set.
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
       if (message.type === "ready") {
+        viewReady = true;
         await deliverSnapshot(false);
         return;
       }
@@ -146,18 +156,15 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     });
 
-    const cached = this.monitor.getSnapshot();
-    if (cached) {
-      push(cached);
-    }
-
+    viewReady = false;
     webviewView.webview.html = this.getHtml(
       this.logoSvgCache,
       this.usageMeterSvgCache,
       webviewView.webview.cspSource,
       this.extensionVersion,
       nonce,
-      iconUri
+      iconUri,
+      serializeWebviewBootSnapshot(latestSnapshot)
     );
   }
 
@@ -167,7 +174,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     cspSource: string,
     extensionVersion: string,
     nonce: string,
-    iconUri: string
+    iconUri: string,
+    bootJson: string
   ): string {
     const esc = (value: string) =>
       value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -209,21 +217,18 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       line-height: 1.45;
     }
     .loading-state {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100%;
       width: 100%;
-      margin: 0;
-      padding: 0;
-      border: none;
-      background: var(--bg);
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
       color: var(--muted);
       font: inherit;
-      font-size: 13px;
+      font-size: 12px;
       letter-spacing: 0.02em;
       cursor: default;
     }
@@ -898,6 +903,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
+    const bootSnapshot = ${bootJson};
+
+    function dismissLoading() {
+      var loading = document.getElementById('loadingState');
+      if (loading) loading.remove();
+    }
 
     function signalReady() {
       vscode.postMessage({ type: 'ready' });
@@ -1277,17 +1288,21 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       vscode.postMessage({ type: 'setBudget', value: value });
       document.getElementById('budgetEdit').classList.remove('open');
     });
-    var snapshotReceived = false;
+    if (bootSnapshot) {
+      try { render(bootSnapshot); } catch (e) { dismissLoading(); }
+    } else {
+      dismissLoading();
+    }
+    var snapshotReceived = Boolean(bootSnapshot);
     window.addEventListener('message', function(event) {
       if (event.data?.type === 'snapshot') snapshotReceived = true;
     }, { capture: true });
     setTimeout(function() {
       if (!snapshotReceived) {
-        var loading = document.getElementById('loadingState');
-        if (loading) {
-          loading.textContent = 'Still loading… tap Refresh or reopen the panel.';
-          loading.disabled = false;
-          loading.addEventListener('click', refresh);
+        var errorBox = document.getElementById('errorBox');
+        if (errorBox && errorBox.style.display === 'none') {
+          errorBox.style.display = 'block';
+          errorBox.textContent = 'Still waiting for usage data. Tap Refresh or reopen the panel.';
         }
       }
     }, 8000);
@@ -1295,6 +1310,18 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 </body>
 </html>`;
   }
+}
+
+export function serializeWebviewBootSnapshot(snapshot: DashboardSnapshot | undefined): string {
+  if (!snapshot) {
+    return "null";
+  }
+  return JSON.stringify(snapshot)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 export type StatusBarUsageSource = "plan" | "autoApi" | "both";
