@@ -120,6 +120,11 @@ export function OptionsApp() {
         <SecurityAlertModal
           findings={securityFindings}
           onDismiss={() => setSecurityFindings([])}
+          onReview={() => {
+            setSecurityFindings([]);
+            document.getElementById("token")?.focus();
+            document.getElementById("token")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
         />
       )}
       <h1>Cursor Curse Monitor — Settings</h1>

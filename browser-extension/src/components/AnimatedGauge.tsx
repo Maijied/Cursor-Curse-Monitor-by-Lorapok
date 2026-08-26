@@ -16,11 +16,18 @@ export function AnimatedGauge({
   thresholdReached,
 }: AnimatedGaugeProps) {
   const [animated, setAnimated] = useState(0);
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
+    const target = Math.max(0, Math.min(100, percent));
+    if (reducedMotion) {
+      setAnimated(target);
+      return;
+    }
     const start = performance.now();
     const duration = 800;
-    const target = Math.max(0, Math.min(100, percent));
     let frame: number;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
@@ -30,7 +37,7 @@ export function AnimatedGauge({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [percent]);
+  }, [percent, reducedMotion]);
 
   const angle = -90 + (animated / 100) * 180;
   const arcLen = (animated / 100) * 157;
@@ -81,9 +88,12 @@ export function AnimatedGauge({
           <circle cx="100" cy="100" r="6" fill="#4d9fff" />
         </g>
       </svg>
-      <div className="gauge-center">
+      <div className="gauge-center" aria-live="polite">
         <div className="gauge-label">{spendLabel}</div>
         <div className="gauge-value">{spendValue}</div>
+        <span className="sr-only">
+          {Math.round(percent)}% of budget used. Threshold at {threshold}%.
+        </span>
         {thresholdReached && (
           <div className="gauge-pill warn">⚠ {Math.round(percent)}% of budget</div>
         )}
