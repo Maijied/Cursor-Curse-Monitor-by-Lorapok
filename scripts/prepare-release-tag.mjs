@@ -181,7 +181,19 @@ if (!dryRun) {
 if (current !== recommended) {
   console.log(`Bumping package.json ${current} → ${recommended}`);
   run("npm", ["version", "--no-git-tag-version", recommended]);
-  run("git", ["add", "package.json", "package-lock.json"]);
+  run("node", ["scripts/generate-site-data.mjs"]);
+  run("node", ["scripts/generate-seo.mjs"]);
+  run("git", [
+    "add",
+    "package.json",
+    "package-lock.json",
+    "website/site-data.json",
+    "website/seo.json",
+    "website/sitemap.xml",
+    "website/robots.txt",
+    "website/visitor-stats.json",
+    "website/readme-stats.svg",
+  ]);
   run("git", ["commit", "-m", `chore: release v${recommended}`]);
 }
 
