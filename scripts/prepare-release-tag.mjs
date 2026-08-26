@@ -4,7 +4,7 @@
  * Falls back to a PR when branch protection blocks direct pushes to main.
  */
 import { execFileSync } from "node:child_process";
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -68,6 +68,7 @@ function writeOutput(key, value) {
 function syncReleaseArtifactVersions(version) {
   const sitePath = join(root, "website/site-data.json");
   const seoPath = join(root, "website/seo.json");
+  const indexPath = join(root, "website/index.html");
   const site = JSON.parse(readFileSync(sitePath, "utf8"));
   site.version = version;
   site.packageVersion = version;
@@ -79,7 +80,21 @@ function syncReleaseArtifactVersions(version) {
   const seo = JSON.parse(readFileSync(seoPath, "utf8"));
   seo.version = version;
   seo.packageVersion = version;
+  if (seo.structuredData?.softwareApplication && typeof seo.structuredData.softwareApplication === "object") {
+    seo.structuredData.softwareApplication.softwareVersion = version;
+  }
   writeFileSync(seoPath, `${JSON.stringify(seo, null, 2)}\n`, "utf8");
+
+  if (existsSync(indexPath)) {
+    const indexHtml = readFileSync(indexPath, "utf8");
+    const updated = indexHtml.replace(
+      /"softwareVersion"\s*:\s*"[^"]+"/g,
+      `"softwareVersion": "${version}"`,
+    );
+    if (updated !== indexHtml) {
+      writeFileSync(indexPath, updated, "utf8");
+    }
+  }
 }
 
 function pushTag(tag) {
@@ -207,7 +222,7 @@ if (current !== recommended) {
   console.log(`Bumping package.json ${current} → ${recommended}`);
   run("npm", ["version", "--no-git-tag-version", recommended]);
   syncReleaseArtifactVersions(recommended);
-  run("git", ["add", "package.json", "package-lock.json", "website/site-data.json", "website/seo.json"]);
+  run("git", ["add", "package.json", "package-lock.json", "website/site-data.json", "website/seo.json", "website/index.html"]);
   run("git", ["commit", "-m", `chore: release v${recommended}`]);
 }
 
