@@ -136,13 +136,23 @@ export default function Settings() {
               <div className="flex justify-between items-center">
                 <dt className="text-[var(--color-muted)]">Mailbox transport</dt>
                 <dd>
-                  <Badge variant={health.mailConfigured ? "synced" : "warn"}>
+                  <Badge
+                    variant={
+                      !health.mailConfigured
+                        ? "warn"
+                        : health.mailRelayBound
+                          ? "synced"
+                          : health.mailTransport === "cloudflare-rest"
+                            ? "warn"
+                            : "synced"
+                    }
+                  >
                     {health.mailConfigured ? health.mailTransport ?? "configured" : "Not configured"}
                   </Badge>
                 </dd>
               </div>
             )}
-            {health.mailHint && !health.mailConfigured && (
+            {health.mailHint && (health.mailConfigured ? health.mailTransport === "cloudflare-rest" && !health.mailRelayBound : true) && (
               <p className="text-xs text-[var(--color-muted)] pt-1">{health.mailHint}</p>
             )}
             {health.siteDataUrl && (

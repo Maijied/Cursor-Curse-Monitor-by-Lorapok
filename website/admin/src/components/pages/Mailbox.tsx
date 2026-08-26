@@ -200,9 +200,22 @@ export default function Mailbox() {
           <span className="text-xs uppercase tracking-wider text-[var(--color-muted)]">Transport</span>
           {transport ? (
             <>
-              <Badge variant={transport.configured ? "synced" : "danger"}>
+              <Badge
+                variant={
+                  !transport.configured
+                    ? "danger"
+                    : transport.transport === "cloudflare-relay"
+                      ? "synced"
+                      : transport.transport === "cloudflare-rest"
+                        ? "warn"
+                        : "synced"
+                }
+              >
                 {transport.configured ? transport.transport : "not configured"}
               </Badge>
+              {transport.configured && transport.transport === "cloudflare-rest" && transport.hint && (
+                <span className="text-xs text-[var(--color-warn)] max-w-xl">{transport.hint}</span>
+              )}
               {!transport.configured && transport.hint && (
                 <span className="text-xs text-[var(--color-muted)] max-w-xl">{transport.hint}</span>
               )}
