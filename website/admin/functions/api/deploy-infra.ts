@@ -16,7 +16,8 @@ export async function onRequestPost(context) {
     const response = await dispatchInfraWorkflow(
       env,
       body,
-      "Mission Control infra deploy triggered (admin + website)"
+      "Mission Control infra deploy triggered (admin + website)",
+      { triggeredBy: auth.email }
     );
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {

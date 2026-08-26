@@ -13,7 +13,11 @@ type DeployRuntimePanelProps = {
   workflowName?: string;
   targetTag?: string;
   dispatchedAfter?: number;
-  onComplete?: (result: { success: boolean; run: WorkflowRun | null }) => void;
+  onComplete?: (result: {
+    success: boolean;
+    run: WorkflowRun | null;
+    jobs?: WorkflowRunLogs["jobs"];
+  }) => void;
 };
 
 function runStatusTone(run: WorkflowRun): "synced" | "danger" | "neutral" {
@@ -82,6 +86,7 @@ export default function DeployRuntimePanel({
             onComplete?.({
               success: match.conclusion === "success",
               run: match,
+              jobs: logData?.jobs ?? [],
             });
           }
         } else {
