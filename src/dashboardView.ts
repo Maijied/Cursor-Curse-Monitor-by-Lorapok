@@ -102,6 +102,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     // Linux the inline script can post `ready` synchronously when html is set.
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
       if (message.type === "ready") {
+        if (viewReady) {
+          return;
+        }
         viewReady = true;
         await deliverSnapshot(false);
         return;
