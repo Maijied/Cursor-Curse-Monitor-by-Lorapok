@@ -21,6 +21,8 @@ Press **F5** in Cursor to launch the Extension Development Host.
 4. Run `npm run compile` before submitting
 5. Open a PR against `main` with a description of what changed and why
 
+Merged contributors are credited in [README.md](README.md#contributors) and [AUTHORS.md](AUTHORS.md).
+
 ## Reporting issues
 
 Use [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues) and include:
