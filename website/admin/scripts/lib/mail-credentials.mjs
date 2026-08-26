@@ -64,14 +64,16 @@ export async function relayWorkerExists(deployToken, accountId) {
 }
 
 /**
- * Probe whether CLOUDFLARE_API_TOKEN can call account-scoped Cloudflare APIs.
+ * Probe whether CLOUDFLARE_API_TOKEN is active (without requiring Account read).
  * @returns {Promise<{ ok: boolean; status: number }>}
  */
-export async function probeDeployToken(deployToken, accountId) {
-  const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}`, {
-    headers: { Authorization: `Bearer ${deployToken}` },
+export async function probeDeployToken(deployToken, _accountId) {
+  const res = await fetch("https://api.cloudflare.com/client/v4/user/tokens/verify", {
+    headers: { Authorization: `Bearer ${deployToken}`, "Content-Type": "application/json" },
   });
-  return { ok: res.ok, status: res.status };
+  const body = await res.json().catch(() => ({}));
+  const active = body?.result?.status === "active";
+  return { ok: res.ok && active, status: res.status };
 }
 
 /**

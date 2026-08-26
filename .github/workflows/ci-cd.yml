@@ -444,23 +444,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ "${{ steps.mail_setup.outputs.relay_deployed }}" != "true" ] && [ "${{ steps.mail_setup.outputs.relay_exists }}" != "true" ] && [ "${{ steps.mail_verify.outputs.relay_exists }}" != "true" ]; then
-            node <<'NODE'
-          import { readFileSync, writeFileSync } from "node:fs";
-          const path = "wrangler.toml";
-          const text = readFileSync(path, "utf8");
-          const withoutServices = text.replace(
-            /\n# Mission Control calls ccm-mail-relay[\s\S]*?\[\[services\]\]\nbinding = "MAIL_RELAY"\nservice = "ccm-mail-relay"\n/,
-            "\n",
-          );
-          writeFileSync(path, withoutServices);
-          NODE
-            echo "::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable."
-          elif [ "${{ steps.mail_setup.outputs.relay_exists }}" = "true" ] || [ "${{ steps.mail_verify.outputs.relay_exists }}" = "true" ]; then
-            echo "::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is already deployed on this account."
-          fi
-          npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main --commit-dirty=true
+          MAIL_RELAY_DEPLOYED: ${{ steps.mail_setup.outputs.relay_deployed }}
+          MAIL_RELAY_EXISTS_SETUP: ${{ steps.mail_setup.outputs.relay_exists }}
+          MAIL_RELAY_EXISTS_VERIFY: ${{ steps.mail_verify.outputs.relay_exists }}
+        run: node scripts/deploy-pages-ci.mjs
 
   # ───────────────────────────────────────────────────────────────────────────
   # 5. SEO AUDIT, REFRESH & PROTECTED BRANCH PR CREATION
