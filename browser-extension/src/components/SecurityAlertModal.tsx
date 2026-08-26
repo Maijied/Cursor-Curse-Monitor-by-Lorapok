@@ -16,9 +16,10 @@ function kindLabel(kind: SecurityFinding["kind"]): string {
 interface Props {
   findings: SecurityFinding[];
   onDismiss: () => void;
+  onReview?: () => void;
 }
 
-export function SecurityAlertModal({ findings, onDismiss }: Props) {
+export function SecurityAlertModal({ findings, onDismiss, onReview }: Props) {
   if (!findings.length) return null;
 
   return (
@@ -57,7 +58,7 @@ export function SecurityAlertModal({ findings, onDismiss }: Props) {
           <button type="button" className="btn ghost" onClick={onDismiss}>
             Dismiss
           </button>
-          <button type="button" className="btn danger" onClick={onDismiss}>
+          <button type="button" className="btn danger" onClick={onReview ?? onDismiss}>
             Review finding
           </button>
         </div>

@@ -2209,6 +2209,10 @@ body.lightbox-open { overflow: hidden; }
   color: var(--text);
   border-color: rgba(124, 92, 255, 0.45);
 }
+.ecosystem-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .ecosystem-tab.active {
   color: var(--text);
   border-color: rgba(124, 92, 255, 0.65);
