@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Mission Control mobile deploy UX** — safe-area padding, dynamic viewport height, larvae on deploy button, and scroll-to-pipeline so mobile users see the full form and runtime panel
 - **IDE dashboard stuck on loading** — webview `ready` handshake, cached snapshot delivery on visibility, and `retainContextWhenHidden` so all users see usage data instead of a blank panel
 - Missing `SUBSCRIBE_PROMPT_DELAY_MS` import in `extension.ts` (compile error)
 - Orphaned CSS in `dashboardView.ts` that broke `.connected` badge styles

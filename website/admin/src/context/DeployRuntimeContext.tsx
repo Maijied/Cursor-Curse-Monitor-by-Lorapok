@@ -116,7 +116,7 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     setStatusModalOpen(false);
     setTabReturnNotice(false);
     window.requestAnimationFrame(() => {
-      inlineAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      inlineAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     });
   }, []);
 

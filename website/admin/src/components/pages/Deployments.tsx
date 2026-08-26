@@ -18,6 +18,7 @@ import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
+import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
 
@@ -649,7 +650,9 @@ export default function Deployments() {
               mode === "rollback" ? "bg-[var(--color-warn)]" : "bg-[var(--color-accent)]"
             }`}
           >
-            {mode === "rollback" ? (
+            {deploying || inProgress ? (
+              <LorapokLarvaeLoader size="sm" ariaLabel="Deployment in progress" className="!gap-0" />
+            ) : mode === "rollback" ? (
               <Undo2 size={20} aria-hidden="true" />
             ) : mode === "infra" ? (
               <Server size={20} aria-hidden="true" />
@@ -665,6 +668,18 @@ export default function Deployments() {
                   : "Publish to Marketplaces"}
           </button>
         </form>
+
+        {deploying && !inProgress ? (
+          <div
+            className="mt-6 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] p-4"
+            aria-live="polite"
+          >
+            <LorapokLarvaeLoader size="sm" ariaLabel="Dispatching workflow" />
+            <p className="text-sm text-[var(--color-muted)]">
+              Dispatching {workflowName} on GitHub… Larvae will crawl the pipeline once the run starts.
+            </p>
+          </div>
+        ) : null}
 
         {message && (
           <Notification

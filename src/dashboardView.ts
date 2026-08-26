@@ -113,12 +113,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await vscode.workspace
           .getConfiguration("cursorCurseMonitor")
           .update("customBudgetLimit", message.value, vscode.ConfigurationTarget.Global);
-        push(await this.monitor.refresh(true));
+        await deliverSnapshot(true);
         return;
       }
       if (message.type === "applyFallback") {
         await vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
-        push(await this.monitor.refresh(true));
+        await deliverSnapshot(true);
         return;
       }
       if (message.type === "reindexConversations") {

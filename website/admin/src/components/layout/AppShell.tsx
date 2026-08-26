@@ -51,7 +51,7 @@ export default function AppShell() {
 
   return (
     <DeployRuntimeProvider>
-    <div className="flex h-screen w-full overflow-hidden text-[var(--color-text)]">
+    <div className="flex h-dvh min-h-0 w-full overflow-hidden text-[var(--color-text)]">
       {mobileOpen && (
         <button
           type="button"
@@ -83,7 +83,7 @@ export default function AppShell() {
         <div className="flex-1 relative min-w-0 min-h-0">
           <div className="app-shell-bg" aria-hidden="true" />
           <main className="app-scroll-pane">
-            <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full min-w-0">
+            <div className="p-4 sm:p-6 md:p-8 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] max-w-7xl mx-auto w-full min-w-0">
               <Suspense fallback={<LarvaeLoaderPanel label="Loading page…" className="min-h-64 border-0 bg-transparent" />}>
                 <Routes>
                   <Route index element={<Overview />} />
