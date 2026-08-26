@@ -3,19 +3,6 @@ const CONFIG_KEY = "integrations:discord";
 const DISCORD_WEBHOOK_RE =
   /^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[\w-]+$/;
 
-export const DEFAULT_DISCORD_CONFIG = {
-  enabled: false,
-  webhookUrl: "",
-  events: {
-    started: true,
-    completed: true,
-    failed: true,
-    pushed: true,
-  },
-  updatedAt: null,
-  updatedBy: null,
-};
-
 /** @param {string} url */
 export function isValidDiscordWebhookUrl(url) {
   if (!url || typeof url !== "string") return false;
@@ -37,27 +24,26 @@ export function maskWebhookUrl(url) {
 
 /**
  * @param {Record<string, unknown>} env
- * @returns {Promise<typeof DEFAULT_DISCORD_CONFIG>}
  */
 export async function readDiscordConfig(env) {
-  if (!env?.ADMIN_KV?.get) return { ...DEFAULT_DISCORD_CONFIG };
+  if (!env?.ADMIN_KV?.get) return { webhookUrl: "", updatedAt: null, updatedBy: null };
   try {
     const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-    if (!raw) return { ...DEFAULT_DISCORD_CONFIG };
+    if (!raw) return { webhookUrl: "", updatedAt: null, updatedBy: null };
     const parsed = JSON.parse(raw);
     return {
-      ...DEFAULT_DISCORD_CONFIG,
-      ...parsed,
-      events: { ...DEFAULT_DISCORD_CONFIG.events, ...(parsed.events ?? {}) },
+      webhookUrl: String(parsed.webhookUrl ?? ""),
+      updatedAt: parsed.updatedAt ?? null,
+      updatedBy: parsed.updatedBy ?? null,
     };
   } catch {
-    return { ...DEFAULT_DISCORD_CONFIG };
+    return { webhookUrl: "", updatedAt: null, updatedBy: null };
   }
 }
 
 /**
  * @param {Record<string, unknown>} env
- * @param {typeof DEFAULT_DISCORD_CONFIG} config
+ * @param {{ webhookUrl: string; updatedAt: string; updatedBy: string }} config
  */
 export async function writeDiscordConfig(env, config) {
   if (!env?.ADMIN_KV?.put) {
@@ -67,13 +53,14 @@ export async function writeDiscordConfig(env, config) {
 }
 
 /**
- * @param {typeof DEFAULT_DISCORD_CONFIG} config
+ * @param {{ webhookUrl: string; updatedAt?: string | null; updatedBy?: string | null }} config
  */
 export function sanitizeDiscordConfigForClient(config) {
-  const { webhookUrl, ...rest } = config;
+  const { webhookUrl, updatedAt, updatedBy } = config;
   return {
-    ...rest,
     configured: Boolean(webhookUrl && isValidDiscordWebhookUrl(webhookUrl)),
     webhookPreview: webhookUrl ? maskWebhookUrl(webhookUrl) : null,
+    updatedAt: updatedAt ?? null,
+    updatedBy: updatedBy ?? null,
   };
 }

@@ -6,6 +6,7 @@ import {
   triggerDeployment,
   triggerInfraDeploy,
   triggerRollback,
+  notifyDiscordDeploymentApi,
 } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
@@ -241,11 +242,24 @@ export default function Deployments() {
   const shownLiveTag = displayLiveTag ?? liveTag;
 
   const handleRuntimeComplete = useCallback(
-    ({ success }: { success: boolean }) => {
+    ({ success, run, jobs }: {
+      success: boolean;
+      run: { url?: string; conclusion?: string | null } | null;
+      jobs?: Array<{ name: string; status?: string; conclusion?: string | null }>;
+    }) => {
       setRuntimeActive(false);
       if (success) loadTags();
+      notifyDiscordDeploymentApi({
+        actionType: workflowName,
+        tag: lastTargetTag || undefined,
+        channel: channel === "production" ? "Production" : "Beta (Pre-release)",
+        market,
+        conclusion: success ? "success" : run?.conclusion ?? "failure",
+        runUrl: run?.url,
+        jobs,
+      }).catch(() => {});
     },
-    [loadTags]
+    [loadTags, workflowName, lastTargetTag, channel, market]
   );
 
   return (

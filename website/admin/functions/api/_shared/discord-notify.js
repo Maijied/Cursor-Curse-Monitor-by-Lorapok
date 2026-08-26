@@ -6,7 +6,6 @@ const COLORS = {
   success: 0x57f287,
   failure: 0xed4245,
   cancelled: 0xfee75c,
-  test: 0x9b59b6,
 };
 
 const ACTION_LABELS = {
@@ -14,8 +13,6 @@ const ACTION_LABELS = {
   "publish-tag": "Publish tag",
   rollback: "Rollback",
   "deploy-infra": "Infra deploy",
-  "push-main": "Push to main",
-  "seo-refresh": "SEO refresh",
 };
 
 function formatActionType(actionType) {
@@ -39,15 +36,6 @@ function jobIcon(job) {
   return "⏳";
 }
 
-function formatDuration(ms) {
-  if (!ms || ms < 0) return null;
-  const totalSeconds = Math.round(ms / 1000);
-  if (totalSeconds < 60) return `${totalSeconds}s`;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return seconds ? `${minutes}m ${seconds}s` : `${minutes}m`;
-}
-
 /**
  * @param {Record<string, unknown>} payload
  */
@@ -61,9 +49,6 @@ export function buildDeploymentEmbed(payload) {
   if (phase === "started") {
     title = "🚀 Deployment started";
     color = COLORS.started;
-  } else if (phase === "test") {
-    title = "🔔 Mission Control test";
-    color = COLORS.test;
   } else if (conclusion === "success") {
     title = "✅ Deployment succeeded";
     color = COLORS.success;
@@ -76,35 +61,13 @@ export function buildDeploymentEmbed(payload) {
   }
 
   /** @type {Array<{ name: string; value: string; inline?: boolean }>} */
-  const fields = [];
-
-  fields.push({ name: "Action", value: actionLabel, inline: true });
+  const fields = [{ name: "Action", value: actionLabel, inline: true }];
 
   const version = payload.tag ?? payload.version;
-  if (version) {
-    fields.push({ name: "Version", value: `\`${version}\``, inline: true });
-  }
-  if (payload.channel) {
-    fields.push({ name: "Channel", value: String(payload.channel), inline: true });
-  }
-  if (payload.market) {
-    fields.push({ name: "Marketplaces", value: String(payload.market), inline: true });
-  }
-  if (payload.triggeredBy) {
-    fields.push({ name: "Triggered by", value: String(payload.triggeredBy), inline: true });
-  }
-  if (payload.branch) {
-    fields.push({ name: "Branch", value: `\`${payload.branch}\``, inline: true });
-  }
-
-  const duration =
-    payload.duration ??
-    (payload.startedAt && payload.completedAt
-      ? formatDuration(new Date(String(payload.completedAt)).getTime() - new Date(String(payload.startedAt)).getTime())
-      : null);
-  if (duration) {
-    fields.push({ name: "Duration", value: String(duration), inline: true });
-  }
+  if (version) fields.push({ name: "Version", value: `\`${version}\``, inline: true });
+  if (payload.channel) fields.push({ name: "Channel", value: String(payload.channel), inline: true });
+  if (payload.market) fields.push({ name: "Marketplaces", value: String(payload.market), inline: true });
+  if (payload.triggeredBy) fields.push({ name: "Triggered by", value: String(payload.triggeredBy), inline: true });
 
   if (Array.isArray(payload.jobs) && payload.jobs.length > 0) {
     const lines = payload.jobs
@@ -114,11 +77,7 @@ export function buildDeploymentEmbed(payload) {
         return `${jobIcon(job)} **${name}** — ${state}`;
       })
       .join("\n");
-    fields.push({
-      name: "Pipeline",
-      value: lines.slice(0, 1024),
-      inline: false,
-    });
+    fields.push({ name: "Pipeline", value: lines.slice(0, 1024), inline: false });
   }
 
   /** @type {Record<string, unknown>} */
@@ -130,12 +89,8 @@ export function buildDeploymentEmbed(payload) {
     footer: { text: "Lorapok Mission Control" },
   };
 
-  if (payload.summary) {
-    embed.description = String(payload.summary).slice(0, 4096);
-  }
-  if (payload.runUrl) {
-    embed.url = String(payload.runUrl);
-  }
+  if (payload.summary) embed.description = String(payload.summary).slice(0, 4096);
+  if (payload.runUrl) embed.url = String(payload.runUrl);
 
   return embed;
 }
@@ -168,37 +123,14 @@ export async function sendDiscordWebhook(webhookUrl, payload) {
   return { ok: true, status: res.status };
 }
 
-function shouldNotify(config, payload) {
-  if (!config.enabled || !config.webhookUrl) {
-    return { notify: false, reason: "disabled" };
-  }
-
-  const phase = String(payload.phase ?? "completed");
-  const events = config.events ?? {};
-
-  if (phase === "test") return { notify: true };
-  if (phase === "started") return { notify: Boolean(events.started) };
-
-  if (phase === "completed") {
-    const conclusion = String(payload.conclusion ?? "");
-    const isPush = String(payload.actionType ?? "").includes("push-main");
-    if (isPush && events.pushed === false) return { notify: false, reason: "push_disabled" };
-    if (conclusion === "success") return { notify: Boolean(events.completed) };
-    return { notify: Boolean(events.failed) };
-  }
-
-  return { notify: true };
-}
-
 /**
  * @param {Record<string, unknown>} env
  * @param {Record<string, unknown>} payload
  */
 export async function notifyDiscordDeployment(env, payload) {
   const config = await readDiscordConfig(env);
-  const gate = shouldNotify(config, payload);
-  if (!gate.notify) {
-    return { ok: false, skipped: true, reason: gate.reason ?? "filtered" };
+  if (!config.webhookUrl) {
+    return { ok: false, skipped: true, reason: "no_webhook" };
   }
 
   const result = await sendDiscordWebhook(config.webhookUrl, payload);
@@ -209,11 +141,7 @@ export async function notifyDiscordDeployment(env, payload) {
     message: result.ok
       ? `Discord ${payload.phase ?? "deployment"} notification sent`
       : `Discord notification failed: ${result.error}`,
-    meta: {
-      phase: payload.phase,
-      actionType: payload.actionType,
-      conclusion: payload.conclusion ?? null,
-    },
+    meta: { phase: payload.phase, actionType: payload.actionType, conclusion: payload.conclusion ?? null },
     email: payload.triggeredBy ? String(payload.triggeredBy) : null,
   });
 

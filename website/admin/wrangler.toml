@@ -32,4 +32,3 @@ CLOUDFLARE_ACCOUNT_ID = "f049faaf2f67549f5c58837479596a4a"
 # 2. npx wrangler email sending enable lorapok.tech
 # 3. Optional REST fallback: Pages secret CLOUDFLARE_EMAIL_API_TOKEN (Email Sending → Edit)
 # 4. Optional Resend fallback: RESEND_API_KEY
-# 5. Discord CI callback: DEPLOY_NOTIFY_SECRET (same value in GitHub Actions secrets)

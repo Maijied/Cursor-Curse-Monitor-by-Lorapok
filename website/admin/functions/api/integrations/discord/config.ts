@@ -1,6 +1,5 @@
 import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
 import {
-  DEFAULT_DISCORD_CONFIG,
   isValidDiscordWebhookUrl,
   readDiscordConfig,
   sanitizeDiscordConfigForClient,
@@ -31,31 +30,17 @@ export async function onRequestPut(context) {
     return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
-  const current = await readDiscordConfig(env);
-
-  let webhookUrl = current.webhookUrl;
-  if (typeof body.webhookUrl === "string") {
-    const trimmed = body.webhookUrl.trim();
-    if (trimmed && !isValidDiscordWebhookUrl(trimmed)) {
-      return jsonResponse({ error: "Invalid Discord webhook URL" }, 400);
-    }
-    webhookUrl = trimmed;
+  if (typeof body.webhookUrl !== "string") {
+    return jsonResponse({ error: "webhookUrl is required" }, 400);
   }
 
-  const events = { ...DEFAULT_DISCORD_CONFIG.events, ...(current.events ?? {}) };
-  if (body.events && typeof body.events === "object") {
-    for (const key of ["started", "completed", "failed", "pushed"]) {
-      if (typeof body.events[key] === "boolean") {
-        events[key] = body.events[key];
-      }
-    }
+  const webhookUrl = body.webhookUrl.trim();
+  if (!isValidDiscordWebhookUrl(webhookUrl)) {
+    return jsonResponse({ error: "Invalid Discord webhook URL" }, 400);
   }
 
   const next = {
-    ...current,
-    enabled: typeof body.enabled === "boolean" ? body.enabled : current.enabled,
     webhookUrl,
-    events,
     updatedAt: new Date().toISOString(),
     updatedBy: auth.email,
   };

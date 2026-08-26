@@ -13,10 +13,7 @@ function listen(handler) {
   return new Promise((resolve) => {
     server.listen(0, "127.0.0.1", () => {
       const { port } = server.address();
-      resolve({
-        server,
-        url: `http://127.0.0.1:${port}`,
-      });
+      resolve({ server, url: `http://127.0.0.1:${port}` });
     });
   });
 }
@@ -41,28 +38,24 @@ describe("discord integration APIs", () => {
     expect(isValidDiscordWebhookUrl("https://example.com/hook")).toBe(false);
   });
 
-  it("returns default discord config", async () => {
+  it("returns empty discord config by default", async () => {
     const res = await fetch(`${base}/api/integrations/discord/config`);
     const data = await res.json();
     expect(res.ok).toBe(true);
-    expect(data.config.enabled).toBe(false);
     expect(data.config.configured).toBe(false);
   });
 
-  it("saves discord config and masks webhook URL", async () => {
+  it("saves a discord webhook URL", async () => {
     const save = await fetch(`${base}/api/integrations/discord/config`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        enabled: true,
-        webhookUrl: "https://discord.com/api/webhooks/123456789/abcdefghijklmnop",
-        events: { started: true, completed: false },
+        webhookUrl: "https://discord.com/api/webhooks/565087/abcdefghijklmnop",
       }),
     });
     const saved = await save.json();
     expect(save.ok).toBe(true);
     expect(saved.config.configured).toBe(true);
-    expect(saved.config.webhookPreview).toContain("123456789");
-    expect(saved.config.events.completed).toBe(false);
+    expect(saved.config.webhookPreview).toContain("565087");
   });
 });

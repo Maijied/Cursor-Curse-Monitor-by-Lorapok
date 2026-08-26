@@ -27,7 +27,6 @@ export async function onRequestGet(context) {
     mailTransport: mail.transport,
     mailHint: mail.hint,
     discordConfigured: discordConfig.configured,
-    discordEnabled: discordConfig.enabled,
     adminPublicUrl: env.ADMIN_PUBLIC_URL ?? "https://cursor-dev.lorapok.tech",
     siteDataUrl:
       env.SITE_DATA_URL ??
