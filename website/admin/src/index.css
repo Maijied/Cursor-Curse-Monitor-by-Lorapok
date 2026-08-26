@@ -53,6 +53,7 @@ body {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
 
 .glass-panel {
