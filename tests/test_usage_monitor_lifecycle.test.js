@@ -223,9 +223,18 @@ test("usage monitor: forced refresh after in-flight completes picks up updated c
   vscode._setConfig("cursorCurseMonitor", { customBudgetLimit: 10, warnAtPercent: 80 });
 
   let fetchCallCount = 0;
+  let firstCallResolve;
+  const firstCallDeferred = new Promise((resolve) => {
+    firstCallResolve = resolve;
+  });
+  let firstCallStarted = false;
+
   global.fetch = async (url) => {
     fetchCallCount++;
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    if (fetchCallCount <= 2 && !firstCallStarted) {
+      firstCallStarted = true;
+      await firstCallDeferred;
+    }
     if (url.includes("/usage-summary")) {
       return { ok: true, json: async () => createSampleUsage() };
     }
@@ -240,13 +249,99 @@ test("usage monitor: forced refresh after in-flight completes picks up updated c
 
   try {
     const inFlight = service.refresh(true);
+    // Yield one event-loop turn to allow first refresh to start
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.strictEqual(fetchCallCount, 1, "Only first fetch should have started");
+
     vscode._setConfig("cursorCurseMonitor", { customBudgetLimit: 99 });
-    const afterMutation = await service.refresh(true);
+    const afterMutation = service.refresh(true);
+
+    // Resolve the deferred promise to allow first refresh to complete
+    firstCallResolve();
+
     const first = await inFlight;
+    const second = await afterMutation;
 
     assert.strictEqual(first.customBudgetLimit, 10);
-    assert.strictEqual(afterMutation.customBudgetLimit, 99);
+    assert.strictEqual(second.customBudgetLimit, 99);
     assert.strictEqual(fetchCallCount, 4);
+  } finally {
+    global.fetch = originalFetch;
+    service.dispose();
+    try {
+      if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+    } catch {}
+  }
+});
+
+test("usage monitor: two concurrent forced refresh callers coalesce on one active refresh", async () => {
+  const originalFetch = global.fetch;
+  const dbPath = path.join(__dirname, `mock-monitor-concurrent-force-${Date.now()}.vscdb`);
+
+  if (!setupMockDb(dbPath)) {
+    return;
+  }
+
+  process.env.CURSOR_DB_PATH = dbPath;
+  vscode._reset();
+
+  let fetchCallCount = 0;
+  let activeRefreshResolve;
+  const activeRefreshDeferred = new Promise((resolve) => {
+    activeRefreshResolve = resolve;
+  });
+  let activeRefreshStarted = false;
+
+  global.fetch = async (url) => {
+    fetchCallCount++;
+    if (!activeRefreshStarted) {
+      activeRefreshStarted = true;
+      await activeRefreshDeferred;
+    }
+    if (url.includes("/usage-summary")) {
+      return { ok: true, json: async () => createSampleUsage() };
+    }
+    if (url.includes("/full_stripe_profile")) {
+      return { ok: true, json: async () => createSampleProfile() };
+    }
+    return { ok: false, status: 404 };
+  };
+
+  const context = createMockContext();
+  const service = new UsageMonitorService(context);
+
+  try {
+    // Start initial refresh that will block
+    const initialRefresh = service.refresh(true);
+
+    // Yield to allow initial refresh to start
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.strictEqual(fetchCallCount, 1, "Initial refresh should have started first fetch");
+
+    // Now call refresh(true) twice concurrently while the first is still in-flight
+    const forcedCaller1 = service.refresh(true);
+    const forcedCaller2 = service.refresh(true);
+
+    // Yield one event-loop turn
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // Assert that no additional fetches have started yet (forced callers are waiting)
+    assert.strictEqual(fetchCallCount, 1, "Only the initial fetch should have started");
+
+    // Resolve the deferred response to allow active refresh to complete
+    activeRefreshResolve();
+
+    // Wait for all refreshes to complete
+    const [result1, result2, result3] = await Promise.all([initialRefresh, forcedCaller1, forcedCaller2]);
+
+    // All should receive valid snapshots
+    assert.ok(result1.fetchedAt);
+    assert.ok(result2.fetchedAt);
+    assert.ok(result3.fetchedAt);
+
+    // The two forced callers should have coalesced into a single additional refresh
+    // Total: 2 fetches for initial + 2 fetches for the single serialized forced refresh = 4
+    assert.strictEqual(fetchCallCount, 4, "Should have exactly 4 fetches (2 initial + 2 serialized forced)");
   } finally {
     global.fetch = originalFetch;
     service.dispose();

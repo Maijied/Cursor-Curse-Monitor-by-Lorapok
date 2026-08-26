@@ -75,19 +75,28 @@ export class UsageMonitorService implements vscode.Disposable {
       if (!force) {
         return this.refreshInFlight;
       }
+      // Forced refresh: wait for current refresh to complete, then serialize the forced replacement
       try {
         await this.refreshInFlight;
       } catch {
         // Prior refresh failed; still run a fresh forced refresh below.
       }
+      // After awaiting, check if another forced caller already started a new refresh
+      if (this.refreshInFlight) {
+        return this.refreshInFlight;
+      }
     }
-    this.refreshInFlight = this.doRefresh();
+    const promise = this.doRefresh();
+    this.refreshInFlight = promise;
     try {
-      const result = await this.refreshInFlight;
+      const result = await promise;
       this.lastRefreshTime = Date.now();
       return result;
     } finally {
-      this.refreshInFlight = null;
+      // Only clear refreshInFlight if this promise still owns it
+      if (this.refreshInFlight === promise) {
+        this.refreshInFlight = null;
+      }
     }
   }
 
