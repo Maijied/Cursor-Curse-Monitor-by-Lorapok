@@ -50,11 +50,17 @@ export function setGithubActionsOutput(name, value) {
 }
 
 export async function relayWorkerExists(deployToken, accountId) {
-  const res = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ccm-mail-relay`,
-    { headers: { Authorization: `Bearer ${deployToken}` } }
-  );
-  return res.status === 200;
+  const headers = { Authorization: `Bearer ${deployToken}` };
+  const paths = [
+    `accounts/${accountId}/workers/services/ccm-mail-relay`,
+    `accounts/${accountId}/workers/scripts/ccm-mail-relay`,
+  ];
+  for (const path of paths) {
+    const res = await fetch(`https://api.cloudflare.com/client/v4/${path}`, { headers });
+    if (res.status === 200) return true;
+    if (res.status === 401 || res.status === 403) return false;
+  }
+  return false;
 }
 
 /**

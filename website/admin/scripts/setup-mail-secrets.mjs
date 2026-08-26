@@ -32,7 +32,10 @@ async function createMailToken(oauth) {
   const names = new Set([
     "Email Sending Send",
     "Email Sending Write",
+    "Workers Scripts Edit",
+    "Workers Scripts Read",
     "Pages Write",
+    "Account Settings Read",
   ]);
   const groups = pgJson.result.filter((g) => names.has(g.name));
   if (!groups.length) {
@@ -126,12 +129,16 @@ function pagesSecretPut(token) {
 
 const oauth = wranglerOAuth();
 let mailToken;
+let deployToken;
+
 try {
-  mailToken = await createMailToken(oauth);
-  console.log("Created dedicated API token");
+  deployToken = await createMailToken(oauth);
+  mailToken = deployToken;
+  console.log("Created dedicated API token (Workers + Pages + Email Sending)");
 } catch (e) {
-  console.warn(`API token create failed (${e.message}); using OAuth token for Pages/GitHub`);
+  console.warn(`API token create failed (${e.message}); using OAuth token for secrets`);
   mailToken = oauth;
+  deployToken = oauth;
 }
 
 const probeResult = await probe(mailToken);
@@ -140,10 +147,34 @@ if (!probeResult.success && probeResult.status !== 200) {
   process.exit(1);
 }
 
+function ghDeploySecretSet(token) {
+  const r = spawnSync(
+    "gh",
+    ["secret", "set", "CLOUDFLARE_API_TOKEN", "--env", "admin-production"],
+    { input: token, encoding: "utf8" }
+  );
+  if (r.status !== 0) {
+    throw new Error(`gh secret set CLOUDFLARE_API_TOKEN failed: ${r.stderr}`);
+  }
+}
+
 ghSecretSet(mailToken);
 console.log("GitHub secret CLOUDFLARE_EMAIL_API_TOKEN set (admin-production)");
 
 pagesSecretPut(mailToken);
 console.log("Pages secret CLOUDFLARE_EMAIL_API_TOKEN synced");
+
+const deployProbe = await fetch(
+  `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/services/ccm-mail-relay`,
+  { headers: { Authorization: `Bearer ${deployToken}` } }
+);
+if (deployProbe.status === 401 || deployProbe.status === 403) {
+  console.warn(
+    "Deploy token cannot read Workers API — add Account → Workers Scripts → Edit to CLOUDFLARE_API_TOKEN or re-run after cred vault sync."
+  );
+} else {
+  ghDeploySecretSet(deployToken);
+  console.log("GitHub secret CLOUDFLARE_API_TOKEN set (admin-production)");
+}
 
 console.log("Done.");
