@@ -4,7 +4,7 @@
  * Falls back to a PR when branch protection blocks direct pushes to main.
  */
 import { execFileSync } from "node:child_process";
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -64,6 +64,39 @@ function writeOutput(key, value) {
   appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
 }
 
+/** Keep committed site artifacts aligned with package.json without npm ci or live API calls. */
+function syncReleaseArtifactVersions(version) {
+  const sitePath = join(root, "website/site-data.json");
+  const seoPath = join(root, "website/seo.json");
+  const indexPath = join(root, "website/index.html");
+  const site = JSON.parse(readFileSync(sitePath, "utf8"));
+  site.version = version;
+  site.packageVersion = version;
+  if (site.install && typeof site.install === "object") {
+    site.install.releaseTag = `./scripts/release.sh ${version}`;
+  }
+  writeFileSync(sitePath, `${JSON.stringify(site, null, 2)}\n`, "utf8");
+
+  const seo = JSON.parse(readFileSync(seoPath, "utf8"));
+  seo.version = version;
+  seo.packageVersion = version;
+  if (seo.structuredData?.softwareApplication && typeof seo.structuredData.softwareApplication === "object") {
+    seo.structuredData.softwareApplication.softwareVersion = version;
+  }
+  writeFileSync(seoPath, `${JSON.stringify(seo, null, 2)}\n`, "utf8");
+
+  if (existsSync(indexPath)) {
+    const indexHtml = readFileSync(indexPath, "utf8");
+    const updated = indexHtml.replace(
+      /"softwareVersion"\s*:\s*"[^"]+"/g,
+      `"softwareVersion": "${version}"`,
+    );
+    if (updated !== indexHtml) {
+      writeFileSync(indexPath, updated, "utf8");
+    }
+  }
+}
+
 function pushTag(tag) {
   const result = runCapture("git", ["push", "origin", tag]);
   if (result.ok) return;
@@ -85,11 +118,49 @@ function pushMainWithPrFallback(version, tag) {
 
   console.log("::warning::Direct push to main blocked — opening release PR");
   const branch = `chore/release-v${version}`;
+
+  run("git", ["fetch", "origin", "main"]);
+  const headBehindMain = runCapture("git", ["rev-list", "--count", `HEAD..origin/main`]);
+  const behindCount = headBehindMain.ok ? Number.parseInt(headBehindMain.output.trim(), 10) || 0 : 0;
+  if (behindCount > 0) {
+    console.log(`Rebasing release branch onto origin/main (${behindCount} commit(s) behind)`);
+    const rebase = runCapture("git", ["rebase", "origin/main"]);
+    if (!rebase.ok) {
+      console.error(`::error::Failed to rebase release branch onto main\n${rebase.output}`);
+      process.exit(1);
+    }
+  }
+
   run("git", ["checkout", "-B", branch]);
-  const branchPush = runCapture("git", ["push", "origin", branch, "--force"]);
+  const branchPush = runCapture("git", ["push", "origin", branch, "--force-with-lease"]);
   if (!branchPush.ok) {
     console.error(`::error::Failed to push release branch\n${branchPush.output}`);
     process.exit(1);
+  }
+
+  const existingPr = runCapture("gh", [
+    "pr",
+    "list",
+    "--head",
+    branch,
+    "--state",
+    "open",
+    "--json",
+    "number,url",
+    "--jq",
+    ".[0]",
+  ]);
+  if (existingPr.ok && existingPr.output.trim()) {
+    try {
+      const prInfo = JSON.parse(existingPr.output.trim());
+      if (prInfo?.number) {
+        console.log(`::notice::Release PR already open: ${prInfo.url}`);
+        writeOutput("pr_required", "true");
+        return;
+      }
+    } catch {
+      // fall through to create
+    }
   }
 
   const pr = runCapture("gh", [
@@ -104,13 +175,18 @@ function pushMainWithPrFallback(version, tag) {
     "--body",
     `Automated release preparation from CI (highest live version + 1 ${bumpType}).\n\nMerge this PR to land \`${tag}\` on main, then publish from Mission Control → Deploy.`,
   ]);
-  if (!pr.ok && !/already exists|pull request/i.test(pr.output)) {
+  if (!pr.ok) {
+    if (/not permitted to create or approve pull requests/i.test(pr.output)) {
+      console.log(
+        `::warning::Could not open release PR automatically — enable workflow PR creation in repo settings or open one manually from ${branch}`,
+      );
+      writeOutput("pr_required", "true");
+      return;
+    }
     console.error(`::error::Failed to open release PR\n${pr.output}`);
     process.exit(1);
   }
-  if (!pr.ok) {
-    console.log("::notice::Release PR already exists or was updated");
-  }
+  console.log(pr.output.trim());
   writeOutput("pr_required", "true");
 }
 
@@ -145,7 +221,8 @@ if (!dryRun) {
 if (current !== recommended) {
   console.log(`Bumping package.json ${current} → ${recommended}`);
   run("npm", ["version", "--no-git-tag-version", recommended]);
-  run("git", ["add", "package.json", "package-lock.json"]);
+  syncReleaseArtifactVersions(recommended);
+  run("git", ["add", "package.json", "package-lock.json", "website/site-data.json", "website/seo.json", "website/index.html"]);
   run("git", ["commit", "-m", `chore: release v${recommended}`]);
 }
 
