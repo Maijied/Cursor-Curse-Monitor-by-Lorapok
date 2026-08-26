@@ -161,6 +161,13 @@ function pushMainWithPrFallback(version, tag) {
     `Automated release preparation from CI (highest live version + 1 ${bumpType}).\n\nMerge this PR to land \`${tag}\` on main, then publish from Mission Control → Deploy.`,
   ]);
   if (!pr.ok) {
+    if (/not permitted to create or approve pull requests/i.test(pr.output)) {
+      console.log(
+        `::warning::Could not open release PR automatically — enable workflow PR creation in repo settings or open one manually from ${branch}`
+      );
+      writeOutput("pr_required", "true");
+      return;
+    }
     console.error(`::error::Failed to open release PR\n${pr.output}`);
     process.exit(1);
   }
