@@ -181,12 +181,12 @@ export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
   });
 }
 
+/** REST sends on Pages use CLOUDFLARE_EMAIL_API_TOKEN only — never CLOUDFLARE_API_TOKEN (deploy). */
 function readCloudflareMailCredentials(env) {
   const accountId =
     typeof env.CLOUDFLARE_ACCOUNT_ID === "string" ? env.CLOUDFLARE_ACCOUNT_ID.trim() : "";
-  const dedicated =
+  const token =
     typeof env.CLOUDFLARE_EMAIL_API_TOKEN === "string" ? env.CLOUDFLARE_EMAIL_API_TOKEN.trim() : "";
-  const token = dedicated;
   return { accountId, token };
 }
 
@@ -229,7 +229,7 @@ export function getMailTransportStatus(env) {
       restConfigured: true,
       resendConfigured,
       hint:
-        "MAIL_RELAY is not bound — sends use REST. If you see 401 errors, redeploy admin after running website/admin/scripts/enable-mail.mjs.",
+        "MAIL_RELAY is not bound — Pages REST fallback is active. Sync CLOUDFLARE_EMAIL_API_TOKEN (Email Sending → Edit), never the deploy token. Run: node website/admin/scripts/repair-mail.mjs",
     };
   }
 
