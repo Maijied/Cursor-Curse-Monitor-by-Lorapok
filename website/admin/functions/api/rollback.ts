@@ -2,6 +2,12 @@ import { jsonResponse, verifyAdminRequest, requireMasterAdmin } from "./_shared/
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { dispatchRollbackWorkflow } from "./_shared/deploy-workflow.js";
 
+/**
+ * Handles an authenticated master-admin request to trigger a rollback workflow.
+ *
+ * @param context - Request context containing the request, environment, and workflow metadata
+ * @returns The authenticated response for the rollback request
+ */
 export async function onRequestPost(context) {
   const startedAt = Date.now();
   const { request, env } = context;

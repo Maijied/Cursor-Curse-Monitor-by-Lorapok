@@ -2,6 +2,12 @@ import { jsonResponse, verifyAdminRequest, requireMasterAdmin } from "./_shared/
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { dispatchInfraWorkflow } from "./_shared/deploy-workflow.js";
 
+/**
+ * Handles authenticated infrastructure deployment requests for master administrators.
+ *
+ * @param context - The request context containing the incoming request and environment.
+ * @returns An HTTP response indicating authorization, deployment, or server errors.
+ */
 export async function onRequestPost(context) {
   const startedAt = Date.now();
   const { request, env } = context;

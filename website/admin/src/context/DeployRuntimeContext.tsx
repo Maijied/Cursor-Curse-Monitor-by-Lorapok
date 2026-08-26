@@ -35,18 +35,34 @@ type DeployRuntimeContextValue = {
 
 const DeployRuntimeContext = createContext<DeployRuntimeContextValue | null>(null);
 
+/**
+ * Retrieves the deployment runtime context.
+ *
+ * @returns The deployment runtime context.
+ * @throws If called outside a `DeployRuntimeProvider`.
+ */
 export function useDeployRuntime() {
   const ctx = useContext(DeployRuntimeContext);
   if (!ctx) throw new Error("useDeployRuntime must be used within DeployRuntimeProvider");
   return ctx;
 }
 
+/**
+ * Retrieves the deployment runtime context when available.
+ *
+ * @returns The deployment runtime context, or `undefined` when used outside a `DeployRuntimeProvider`.
+ */
 export function useDeployRuntimeOptional() {
   return useContext(DeployRuntimeContext);
 }
 
 type ProviderProps = { children: ReactNode };
 
+/**
+ * Provides deployment state, workflow progress, and session controls to descendant components.
+ *
+ * While a deployment is active, maintains workflow polling and displays status and navigation-warning UI.
+ */
 export function DeployRuntimeProvider({ children }: ProviderProps) {
   const location = useLocation();
   const navigate = useNavigate();

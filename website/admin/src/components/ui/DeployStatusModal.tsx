@@ -14,6 +14,11 @@ type DeployStatusModalProps = {
   waiting: boolean;
 };
 
+/**
+ * Displays the deployment workflow status for an active session.
+ *
+ * @returns The deployment status modal, or `null` when no deployment session exists.
+ */
 export default function DeployStatusModal({
   open,
   onClose,

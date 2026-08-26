@@ -26,12 +26,28 @@ type DeployRuntimePanelProps = {
   }) => void;
 };
 
+/**
+ * Determines the visual status tone for a workflow run.
+ *
+ * @param run - The workflow run to classify
+ * @returns `synced` for successful completed runs, `danger` for failed or cancelled runs, and `neutral` otherwise
+ */
 function runStatusTone(run: WorkflowRun): "synced" | "danger" | "neutral" {
   if (run.status === "completed" && run.conclusion === "success") return "synced";
   if (run.conclusion === "failure" || run.conclusion === "cancelled") return "danger";
   return "neutral";
 }
 
+/**
+ * Displays deployment workflow status, pipeline details, warnings, and expandable console output.
+ *
+ * @param active - Whether the panel is visible and its workflow status is tracked
+ * @param workflowName - Workflow to monitor
+ * @param dispatchedAfter - Timestamp used to identify the relevant workflow run
+ * @param embedded - Whether to use externally supplied workflow data instead of polling
+ * @param onComplete - Callback invoked when the workflow completes
+ * @returns The deployment runtime panel, or `null` when inactive
+ */
 export default function DeployRuntimePanel({
   active,
   workflowName,

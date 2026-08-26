@@ -8,12 +8,18 @@ const DEFAULT_WORKFLOW = "ci-cd.yml";
 const POLL_MS = 5000;
 const TIMEOUT_MS = 15 * 60 * 1000;
 
+/**
+ * Delays execution for the specified duration.
+ * @param {number} ms - The delay duration in milliseconds.
+ * @returns {Promise<void>} A promise that resolves after the delay.
+ */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * @param {Record<string, unknown>} env
+ * Fetches recent non-pull-request workflow runs with normalized metadata.
+ * @returns {Promise<Array<Object>>} The workflow runs, or an empty array when the request is unsuccessful.
  */
 async function fetchWorkflowRuns(env) {
   const res = await githubFetch(
@@ -34,8 +40,9 @@ async function fetchWorkflowRuns(env) {
 }
 
 /**
- * @param {Record<string, unknown>} env
- * @param {number | string} runId
+ * Retrieves the jobs for a GitHub Actions workflow run.
+ * @param {number|string} runId - The workflow run identifier.
+ * @returns {Array<{name: string, status: string, conclusion: string|null}>} The workflow jobs sorted by execution status, or an empty array when the request fails.
  */
 async function fetchRunJobs(env, runId) {
   const jobsRes = await githubFetch(`/repos/${GITHUB_REPO}/actions/runs/${runId}/jobs?per_page=30`, env);
@@ -51,8 +58,8 @@ async function fetchRunJobs(env, runId) {
 }
 
 /**
- * Poll GitHub until the dispatched workflow completes, then post a Discord completion webhook.
- * @param {Record<string, unknown>} env
+ * Monitors the dispatched workflow until it completes, then sends a Discord completion notification.
+ * @param {Record<string, unknown>} env - Environment configuration used to access GitHub and Discord.
  * @param {{
  *   actionType: string;
  *   tag?: string | null;
@@ -61,7 +68,7 @@ async function fetchRunJobs(env, runId) {
  *   triggeredBy?: string | null;
  *   dispatchedAt?: number;
  *   workflowName?: string;
- * }} watch
+ * }} watch - Deployment metadata and workflow selection criteria.
  */
 export async function watchDiscordDeploymentCompletion(env, watch) {
   const startedAt = Date.now();
@@ -102,9 +109,10 @@ export async function watchDiscordDeploymentCompletion(env, watch) {
 }
 
 /**
- * @param {{ waitUntil?: (promise: Promise<unknown>) => void } | null | undefined} context
- * @param {Record<string, unknown>} env
- * @param {Parameters<typeof watchDiscordDeploymentCompletion>[1]} watch
+ * Schedule monitoring for a Discord deployment completion.
+ * @param {{ waitUntil?: (promise: Promise<unknown>) => void } | null | undefined} context - Optional execution context used to keep the monitoring task alive.
+ * @param {Record<string, unknown>} env - Runtime environment configuration.
+ * @param {Parameters<typeof watchDiscordDeploymentCompletion>[1]} watch - Deployment watch configuration.
  */
 export function scheduleDiscordDeploymentCompletionWatch(context, env, watch) {
   if (!watch?.actionType) return;

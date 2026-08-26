@@ -7,6 +7,13 @@ type DeployLeaveWarningModalProps = {
   onLeave: () => void;
 };
 
+/**
+ * Displays a warning when leaving a page during an active deployment.
+ *
+ * @param open - Whether the warning modal is visible
+ * @param onStay - Called when the user closes the modal or chooses to keep watching
+ * @param onLeave - Called when the user chooses to leave the page
+ */
 export default function DeployLeaveWarningModal({ open, onStay, onLeave }: DeployLeaveWarningModalProps) {
   return (
     <Modal

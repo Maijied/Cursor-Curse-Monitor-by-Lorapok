@@ -6,6 +6,12 @@ import {
   writeDiscordConfig,
 } from "../../_shared/discord-config.js";
 
+/**
+ * Retrieves the Discord configuration for an authenticated administrator.
+ *
+ * @param context - The request context containing the incoming request and environment bindings
+ * @returns A response containing the sanitized Discord configuration or an authentication error response
+ */
 export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
@@ -15,6 +21,11 @@ export async function onRequestGet(context) {
   return jsonResponse({ ok: true, config: sanitizeDiscordConfigForClient(config) });
 }
 
+/**
+ * Updates the Discord webhook configuration for an authenticated master admin.
+ *
+ * @returns A JSON response containing the saved configuration, or an error response for authentication, authorization, validation, or persistence failures.
+ */
 export async function onRequestPut(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
