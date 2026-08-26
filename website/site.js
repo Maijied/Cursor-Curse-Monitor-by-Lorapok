@@ -23,10 +23,10 @@ const IDE_COLORS = {
   kiro: "#FF9900",
   qoder: "#1677FF",
   pearai: "#F59E0B",
-  "code-server": "#1F2937",
+  "code-server": "#4B5568",
   theia: "#F7941E",
   "azure-data-studio": "#0078D4",
-  coder: "#090B11",
+  coder: "#4C5A73",
 };
 
 function renderSupportedIdes(data) {
@@ -39,11 +39,16 @@ function renderSupportedIdes(data) {
   if (lead && data.supportedIdes.subline) lead.textContent = data.supportedIdes.subline;
 
   grid.replaceChildren();
-  for (const ide of data.supportedIdes.ides) {
+  const ides = data.supportedIdes.ides;
+  for (let i = 0; i < ides.length; i++) {
+    const ide = ides[i];
     const color = IDE_COLORS[ide.id] || "#7c5cff";
     const initial = (ide.name || "?").charAt(0).toUpperCase();
+    const slug = ide.icon || ide.id;
     const card = document.createElement(ide.website ? "a" : "article");
     card.className = `ide-card${ide.featured ? " featured" : ""}`;
+    card.style.setProperty("--ide-color", color);
+    card.style.setProperty("--ide-stagger-ms", `${Math.min(i * 32, 500)}ms`);
     if (ide.website) {
       card.href = ide.website;
       card.target = "_blank";
@@ -52,9 +57,20 @@ function renderSupportedIdes(data) {
 
     const icon = document.createElement("div");
     icon.className = "ide-icon";
-    icon.style.setProperty("--ide-color", color);
     icon.setAttribute("aria-hidden", "true");
-    icon.textContent = initial;
+    if (ide.id === "cursor") icon.classList.add("ide-icon-watching");
+
+    const mark = document.createElement("img");
+    mark.className = "ide-icon-mark";
+    mark.src = `assets/ides/${encodeURIComponent(slug)}.svg`;
+    mark.alt = "";
+    mark.decoding = "async";
+    mark.addEventListener("error", () => {
+      mark.remove();
+      icon.textContent = initial;
+      icon.classList.add("ide-icon-fallback");
+    }, { once: true });
+    icon.append(mark);
 
     const name = document.createElement("p");
     name.className = "ide-name";
@@ -71,6 +87,31 @@ function renderSupportedIdes(data) {
     card.append(icon, name, tagline, market);
     grid.append(card);
   }
+  revealSupportedIdes(grid);
+}
+
+function revealSupportedIdes(grid) {
+  const cards = [...grid.querySelectorAll(".ide-card")];
+  const show = () => {
+    grid.classList.add("ides-visible");
+    for (const card of cards) card.classList.remove("ide-card-unseen");
+  };
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced || typeof IntersectionObserver !== "function") {
+    show();
+    return;
+  }
+  for (const card of cards) card.classList.add("ide-card-unseen");
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        show();
+        io.disconnect();
+      }
+    },
+    { threshold: 0.18, rootMargin: "0px 0px -8% 0px" }
+  );
+  io.observe(grid);
 }
 
 function getSubscribeSiteState() {
@@ -473,6 +514,7 @@ function updateStructuredDataVersion(data) {
     const content = $("#dev-notice-content");
     const duplicate = $(".dev-notice-duplicate");
     const dismiss = $("#dev-notice-dismiss");
+    const pause = $("#dev-notice-pause");
     if (!banner || !content) return;
 
     let notice = data?.notice?.enabled ? { ...FALLBACK_NOTICE, ...data.notice } : null;
@@ -491,6 +533,8 @@ function updateStructuredDataVersion(data) {
 
     const dismissedKey = `ccm-notice-dismissed:${notice.id || notice.title}`;
     if (notice.dismissible && window.localStorage.getItem(dismissedKey) === "1") return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const buildContent = () => {
       const fragment = document.createDocumentFragment();
@@ -516,9 +560,23 @@ function updateStructuredDataVersion(data) {
     };
 
     content.replaceChildren(buildContent());
-    if (duplicate) duplicate.replaceChildren(buildContent());
+    if (duplicate) {
+      duplicate.replaceChildren(buildContent());
+      duplicate.inert = true;
+    }
     banner.hidden = false;
     banner.setAttribute("aria-label", notice.title);
+
+    if (pause && !reducedMotion) {
+      pause.hidden = false;
+      pause.addEventListener("click", () => {
+        const paused = banner.classList.toggle("is-paused");
+        pause.setAttribute("aria-pressed", paused ? "true" : "false");
+        pause.setAttribute("aria-label", paused ? "Resume announcement scroll" : "Pause announcement scroll");
+        pause.textContent = paused ? "Play" : "Pause";
+      });
+    }
+
     if (dismiss) {
       dismiss.hidden = !notice.dismissible;
       dismiss.addEventListener("click", () => {
@@ -567,6 +625,7 @@ function initMobileNav() {
 function initEcosystemTabs() {
   const tabs = [...document.querySelectorAll("[data-ecosystem-tab]")];
   const panels = [...document.querySelectorAll("[data-ecosystem-panel]")];
+  const pauseBtn = document.getElementById("ecosystem-rotation-pause");
   if (!tabs.length || !panels.length) return;
 
   const activate = (id) => {
@@ -584,18 +643,40 @@ function initEcosystemTabs() {
   };
 
   let rotationActive = true;
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const stopRotation = () => {
+    rotationActive = false;
+  };
+
+  const setPaused = (paused) => {
+    rotationActive = !paused;
+    if (!pauseBtn) return;
+    pauseBtn.setAttribute("aria-pressed", paused ? "true" : "false");
+    pauseBtn.setAttribute("aria-label", paused ? "Resume automatic tab rotation" : "Pause automatic tab rotation");
+    pauseBtn.textContent = paused ? "Play" : "Pause";
+  };
+
+  if (pauseBtn && !prefersReducedMotion.matches) {
+    pauseBtn.addEventListener("click", () => {
+      setPaused(rotationActive);
+    });
+  } else if (pauseBtn) {
+    pauseBtn.hidden = true;
+    stopRotation();
+  }
 
   tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
-      rotationActive = false;
+      stopRotation();
+      if (pauseBtn) setPaused(true);
       activate(tab.dataset.ecosystemTab || "ide");
     });
     tab.addEventListener("keydown", (event) => {
       const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
       if (!keys.includes(event.key)) return;
       event.preventDefault();
-      rotationActive = false;
+      stopRotation();
+      if (pauseBtn) setPaused(true);
       let next = index;
       if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
       if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
@@ -610,13 +691,20 @@ function initEcosystemTabs() {
     tab.tabIndex = index === 0 ? 0 : -1;
   });
 
+  const ecosystemRoot = tabs[0]?.closest(".ecosystem-section");
+  if (ecosystemRoot) {
+    ecosystemRoot.addEventListener("focusin", () => {
+      stopRotation();
+      if (pauseBtn) setPaused(true);
+    });
+  }
+
   let i = 0;
   const ids = tabs.map((t) => t.dataset.ecosystemTab).filter(Boolean);
   setInterval(() => {
-    if (document.hidden || !ids.length || !rotationActive || prefersReducedMotion) return;
+    if (document.hidden || !ids.length || !rotationActive || prefersReducedMotion.matches) return;
     i = (i + 1) % ids.length;
     activate(ids[i]);
-    tabs[i]?.focus();
   }, 8000);
 }
 
@@ -664,12 +752,14 @@ function initLightbox() {
     caption.textContent = btn.dataset.caption || alt;
     counter.textContent = `${index + 1} / ${triggers.length}`;
     lightbox.hidden = false;
+    lightbox.setAttribute("aria-hidden", "false");
     document.body.classList.add("lightbox-open");
     lightbox.querySelector(".lightbox-close")?.focus();
   };
 
   const close = () => {
     lightbox.hidden = true;
+    lightbox.setAttribute("aria-hidden", "true");
     document.body.classList.remove("lightbox-open");
     img.classList.remove("is-loaded");
     img.removeAttribute("src");
