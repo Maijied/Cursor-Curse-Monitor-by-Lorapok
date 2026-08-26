@@ -35,12 +35,38 @@ All templates use the **CCM / Lorapok Labs** dark theme with animated gradient h
 - **Compose** — send branded HTML mail to any recipient
 - **Test** — verify transport with a delivery confirmation email
 
+## Credential split (required)
+
+| Variable | Purpose |
+|----------|---------|
+| `CLOUDFLARE_API_TOKEN` | Pages/Workers **deploy** only (wrangler) |
+| `CLOUDFLARE_EMAIL_API_TOKEN` | Email Sending **REST** only (Pages secret) |
+
+Never sync the deploy token as `CLOUDFLARE_EMAIL_API_TOKEN`. Load from secure cred vault:
+
+```bash
+export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"
+export CLOUDFLARE_EMAIL_API_TOKEN="$(cred get cursor cloudflare_email_api_token)"
+export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"
+```
+
 ## Scripts
 
 ```bash
+node website/admin/scripts/verify-mail-setup.mjs   # probe email token
+node website/admin/scripts/enable-mail.mjs         # relay worker + Pages secret
+node website/admin/scripts/repair-mail.mjs         # full fix: enable + build + deploy + verify
 node website/admin/scripts/probe-mail-token.mjs
 node website/admin/scripts/setup-mail-secrets.mjs
-node website/admin/scripts/enable-mail.mjs
 ```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| HTTP 401 on send | `CLOUDFLARE_EMAIL_API_TOKEN` needs Email Sending → Edit; redeploy Pages after `wrangler pages secret put` |
+| Code 10203 | Enable Email Sending on account; onboard `lorapok.tech` in dashboard |
+| `cloudflare-rest` in health, 401 | `MAIL_RELAY` missing — run `repair-mail.mjs` |
+| Mail works locally, fails in prod | Redeploy Pages after secret sync |
 
 [← Home](Home) · [Admin Panel](Admin-Panel)

@@ -2,25 +2,42 @@
 /**
  * Diagnose Cloudflare Email Sending for Mission Control.
  *
- *   export CLOUDFLARE_API_TOKEN=...   # needs Account → Email Sending → Edit
+ * Uses CLOUDFLARE_EMAIL_API_TOKEN only (loragent-cloudflare-mail-master).
+ * Deploy token is not valid for REST sends.
+ *
+ *   export CLOUDFLARE_EMAIL_API_TOKEN="$(cred get cursor cloudflare_email_api_token)"
  *   export CLOUDFLARE_ACCOUNT_ID=f049faaf2f67549f5c58837479596a4a
  *   node scripts/verify-mail-setup.mjs
  */
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
-const token = (process.env.CLOUDFLARE_EMAIL_API_TOKEN ?? process.env.CLOUDFLARE_API_TOKEN ?? "").trim();
+import {
+  probeEmailSendingToken,
+  requireEmailToken,
+} from "./lib/mail-credentials.mjs";
+
 const fromAddress = process.env.CCM_MAIL_PROBE_FROM ?? "cursor.monitor@lorapok.tech";
 const probeTo = process.env.CCM_MAIL_PROBE_TO ?? "lorapokdev@gmail.com";
 
-if (!token) {
-  console.error("Set CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) with Email Sending → Edit.");
+let emailToken;
+let accountId;
+try {
+  ({ emailToken, accountId } = requireEmailToken());
+} catch (err) {
+  console.error(err instanceof Error ? err.message : err);
   process.exit(1);
+}
+
+if (process.env.CLOUDFLARE_API_TOKEN && !process.env.CLOUDFLARE_EMAIL_API_TOKEN) {
+  console.warn(
+    "Note: CLOUDFLARE_API_TOKEN is set but CLOUDFLARE_EMAIL_API_TOKEN is not.\n" +
+      "Pages REST sends require the dedicated email token — deploy token must not be synced as the Pages secret.\n"
+  );
 }
 
 async function cf(path, init = {}) {
   const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${emailToken}`,
       "Content-Type": "application/json",
       ...(init.headers ?? {}),
     },
@@ -42,26 +59,23 @@ console.log("Cloudflare Email setup check\n");
 
 const verify = await cf(`/accounts/${accountId}/tokens/verify`);
 if (!verify.res.ok || verify.body.success === false) {
-  // Account-owned API tokens do not validate on /user/tokens/verify.
   const userVerify = await cf("/user/tokens/verify");
   if (!userVerify.res.ok || userVerify.body.success === false) {
     fail(`Token verify failed (${verify.res.status})`);
     console.error(JSON.stringify(verify.body.errors ?? userVerify.body.errors ?? verify.body, null, 2));
     process.exit(1);
   }
-  ok(`Token valid (${userVerify.body.result?.status ?? "active"})`);
+  ok(`Email token valid (${userVerify.body.result?.status ?? "active"})`);
 } else {
-  ok(`Account token valid (${verify.body.result?.status ?? "active"})`);
+  ok(`Account email token valid (${verify.body.result?.status ?? "active"})`);
 }
 
-const domains = await cf(`/accounts/${accountId}/email/sending/domains`);
-if (domains.res.status === 401 || domains.res.status === 403) {
-  fail(`Email Sending API unauthorized (${domains.res.status})`);
-  console.error(
-    "Create an API token with Account → Email Sending → Edit (not just Workers/Pages deploy)."
-  );
-  console.error("Then: gh secret set CLOUDFLARE_EMAIL_API_TOKEN");
-  console.error("And:  node scripts/enable-mail.mjs");
+const domains = await probeEmailSendingToken(emailToken, accountId);
+if (domains.status === 401 || domains.status === 403) {
+  fail(`Email Sending API unauthorized (${domains.status})`);
+  console.error("CLOUDFLARE_EMAIL_API_TOKEN needs Account → Email Sending → Edit.");
+  console.error("gh secret set CLOUDFLARE_EMAIL_API_TOKEN");
+  console.error("node scripts/enable-mail.mjs");
   process.exit(1);
 }
 
@@ -83,16 +97,14 @@ const probe = await cf(`/accounts/${accountId}/email/sending/send`, {
   }),
 });
 
-  if (probe.res.status === 401 || probe.res.status === 403) {
-    const sendingDisabled = probe.body.errors?.some((e) => e.code === 10203);
-    if (sendingDisabled) {
-      fail("Send probe blocked: Email Sending disabled on account");
-      console.error(
-        "Enable Workers Paid, then Cloudflare → Email Service → Email Sending → onboard lorapok.tech"
-      );
-    } else {
-      fail(`Send probe unauthorized (${probe.res.status})`);
-    }
+if (probe.res.status === 401 || probe.res.status === 403) {
+  const sendingDisabled = probe.body.errors?.some((e) => e.code === 10203);
+  if (sendingDisabled) {
+    fail("Send probe blocked: Email Sending disabled on account (10203)");
+    console.error("Enable Workers Paid, then Cloudflare → Email Service → Email Sending → onboard lorapok.tech");
+  } else {
+    fail(`Send probe unauthorized (${probe.res.status})`);
+  }
 } else if (!probe.res.ok || probe.body.success === false) {
   const err = probe.body.errors?.map((e) => e.message).join("; ") || JSON.stringify(probe.body).slice(0, 200);
   fail(`Send probe failed (${probe.res.status}): ${err}`);
@@ -100,10 +112,9 @@ const probe = await cf(`/accounts/${accountId}/email/sending/send`, {
   ok(`Send probe accepted for ${fromAddress} → ${probeTo}`);
 }
 
-console.log("\nPages runtime:");
-console.log("  • Pages Functions use REST: Pages secret CLOUDFLARE_EMAIL_API_TOKEN");
-console.log("  • Prefer an account-owned API token with Email Sending → Edit");
-console.log("  • send_email binding is Workers-only (not supported on Pages)");
-console.log("\nAfter fixing token/domain, redeploy admin (CI or wrangler pages deploy).");
+console.log("\nPages runtime (loragent-cloudflare-mail-master):");
+console.log("  • Pages Functions: REST + CLOUDFLARE_EMAIL_API_TOKEN secret (no send_email on Pages)");
+console.log("  • Preferred: MAIL_RELAY → ccm-mail-relay Worker (send_email binding)");
+console.log("  • After secret sync: redeploy Pages (repair-mail.mjs or CI admin-deploy)");
 
 if (process.exitCode) process.exit(process.exitCode);
