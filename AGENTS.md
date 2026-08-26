@@ -43,6 +43,29 @@ Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `
 
 Re-sync: `~/.local/bin/sync-global-agent-stack`
 
+### Project design skills ([Composio top design skills](https://composio.dev/content/top-design-skills))
+
+Installed under `.cursor/skills/` (mirrored in `.agents/skills/`). **Committed to git** — not gitignored. Cursor loads them from the project automatically.
+
+| Source | Skill(s) | When to use |
+|--------|----------|-------------|
+| Anthropic | `frontend-design`, `webapp-testing` | Distinctive UI (bans Inter/Roboto); browser-based UI testing |
+| pbakaus | `impeccable` | Brand vs product modes; `/typeset`, `/colorize`, `/bolder`, anti-pattern detection |
+| OpenAI curated | `figma-implement-design` | Figma → code with design-system fidelity |
+| OpenAI curated | `playwright`, `playwright-interactive`, `screenshot` | Visual verification loop in real browser |
+| Composio | `theme-factory` | Reusable theme tokens / palettes |
+| Julian Oczkowski | `julian-design-flow`, `julian-grill-me`, `julian-design-brief`, … | Full spec-first design workflow (8 skills, `julian-*` prefix) |
+| Owl-Listener | 63 skills (`handoff-spec`, `design-critique`, `user-persona`, …) | Research, systems, strategy, UI, interaction, design ops |
+| coleam00 | `excalidraw-diagram` | Shareable `.excalidraw` architecture/flow diagrams |
+| AccessLint | `accessibility-*` + `shared/` | WCAG scans, fixes, diffs (needs `accesslint` MCP below) |
+| Composio | `composio-automation` | Connect agent to GitHub, Slack, Notion, Figma via Composio CLI |
+
+**MCP:** `accesslint` in `.cursor/mcp.json` — enable in Cursor Settings → MCP after pull.
+
+**OpenAI `frontend-skill`:** bundled with Codex (not in public `openai/skills`); use `frontend-design` + `julian-frontend-design` here.
+
+**Examples:** `/julian-design-flow` (or “run the design process pack”), “implement this Figma frame”, “run impeccable detect on `website/admin`”, “audit accessibility on the marketing site”.
+
 ### IDE extension (root) — build / test / package
 
 Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
