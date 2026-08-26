@@ -93,9 +93,9 @@ if (hasEmailToken) {
     );
   }
 
-  console.log("Onboarding lorapok.tech for Email Sending (email token, not deploy token)…");
+  console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
   runWrangler(["email", "sending", "enable", "lorapok.tech"], {
-    token: emailToken,
+    token: deployToken,
     allowFail: true,
   });
 }
