@@ -43,28 +43,39 @@ Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `
 
 Re-sync: `~/.local/bin/sync-global-agent-stack`
 
-### Project design skills ([Composio top design skills](https://composio.dev/content/top-design-skills))
+### Project design skills (version-controlled, not gitignored)
 
-Installed under `.cursor/skills/` (mirrored in `.agents/skills/`). **Committed to git** — not gitignored. Cursor loads them from the project automatically.
+Installed under `.cursor/skills/` (mirrored in `.agents/skills/`). **Committed to git** — see the note at the bottom of `.gitignore`. Reload Cursor after pull to load skills.
 
-| Source | Skill(s) | When to use |
-|--------|----------|-------------|
-| Anthropic | `frontend-design`, `webapp-testing` | Distinctive UI (bans Inter/Roboto); browser-based UI testing |
-| pbakaus | `impeccable` | Brand vs product modes; `/typeset`, `/colorize`, `/bolder`, anti-pattern detection |
-| OpenAI curated | `figma-implement-design` | Figma → code with design-system fidelity |
-| OpenAI curated | `playwright`, `playwright-interactive`, `screenshot` | Visual verification loop in real browser |
-| Composio | `theme-factory` | Reusable theme tokens / palettes |
-| Julian Oczkowski | `julian-design-flow`, `julian-grill-me`, `julian-design-brief`, … | Full spec-first design workflow (8 skills, `julian-*` prefix) |
-| Owl-Listener | 63 skills (`handoff-spec`, `design-critique`, `user-persona`, …) | Research, systems, strategy, UI, interaction, design ops |
-| coleam00 | `excalidraw-diagram` | Shareable `.excalidraw` architecture/flow diagrams |
-| AccessLint | `accessibility-*` + `shared/` | WCAG scans, fixes, diffs (needs `accesslint` MCP below) |
-| Composio | `composio-automation` | Connect agent to GitHub, Slack, Notion, Figma via Composio CLI |
+#### [Snyk UI/UX engineers](https://snyk.io/articles/top-claude-skills-ui-ux-engineers/)
 
-**MCP:** `accesslint` in `.cursor/mcp.json` — enable in Cursor Settings → MCP after pull.
+| Skill | Use when |
+|-------|----------|
+| `frontend-design` | Distinctive UI (bans generic AI templates) |
+| `web-design-guidelines` | Audit UI for 100+ web interface rules |
+| `react-best-practices` | React/Next.js performance (waterfalls, bundle size) |
+| `composition-patterns` | Compound components, fewer boolean props |
+| `ui-ux-pro-max` (+ `design`, `design-system`, `ui-styling`, `brand`, …) | Design intelligence DB + local `scripts/search.py` |
+| `bencium-innovative-ux-designer` / `bencium-controlled-ux-designer` | Creative vs systematic UX reference |
+| `react-native-skills` | React Native / Expo mobile UI patterns |
+| `accessibility-*` | AccessLint WCAG workflow (needs `accesslint` MCP) |
 
-**OpenAI `frontend-skill`:** bundled with Codex (not in public `openai/skills`); use `frontend-design` + `julian-frontend-design` here.
+#### [Composio top design skills](https://composio.dev/content/top-design-skills)
 
-**Examples:** `/julian-design-flow` (or “run the design process pack”), “implement this Figma frame”, “run impeccable detect on `website/admin`”, “audit accessibility on the marketing site”.
+| Skill | Use when |
+|-------|----------|
+| `impeccable` | Brand vs product modes; anti-pattern detection |
+| `figma-implement-design` | Figma → code with design-system fidelity |
+| `playwright`, `playwright-interactive`, `screenshot`, `webapp-testing` | Browser visual verification |
+| `theme-factory` | Reusable theme tokens / palettes |
+| `julian-*` (8 skills) | Spec-first design workflow (`julian-design-flow`, …) |
+| Owl-Listener (63 skills) | Research, handoff, design ops (`handoff-spec`, …) |
+| `excalidraw-diagram` | Shareable `.excalidraw` diagrams |
+| `composio-automation` | GitHub, Slack, Notion, Figma via Composio CLI |
+
+**MCP:** `accesslint` in `.cursor/mcp.json` — enable in Cursor Settings → MCP.
+
+**Examples:** “Review `website/admin` with web-design-guidelines”, “run impeccable detect”, “julian-design-flow for admin redesign”, “accessibility-scan on marketing site”.
 
 ### IDE extension (root) — build / test / package
 
