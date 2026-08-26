@@ -1,3 +1,4 @@
+import "./registerShared";
 import * as vscode from "vscode";
 import { applyComposerFallbackModel } from "./cursorAuth";
 import { reindexMissingConversations } from "./conversationReindex";

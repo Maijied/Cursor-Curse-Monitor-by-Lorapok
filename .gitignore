@@ -1,5 +1,6 @@
 node_modules/
 dist/
+vendor/cursor-monitor-shared/
 *.vsix
 *.wasm
 .DS_Store
