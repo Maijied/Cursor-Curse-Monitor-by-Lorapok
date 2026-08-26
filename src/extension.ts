@@ -144,7 +144,7 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar,
     vscode.window.registerWebviewViewProvider(
       DashboardViewProvider.viewType,
-      new DashboardViewProvider(monitor, context.extensionUri, context.extension.packageJSON.version ?? "0.0.0", context)
+      new DashboardViewProvider(monitor, context.extensionUri, extensionVersion, context)
     ),
     vscode.commands.registerCommand("cursorCurseMonitor.openDashboard", async () => {
       await vscode.commands.executeCommand(

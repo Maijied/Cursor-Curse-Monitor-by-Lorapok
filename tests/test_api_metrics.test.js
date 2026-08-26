@@ -28,6 +28,7 @@ const {
 const {
   formatStatusBarText,
   formatStatusBarTooltip,
+  serializeWebviewBootSnapshot,
 } = require("../src/dashboardView.ts");
 
 const {
@@ -279,4 +280,27 @@ test("dashboardView: formatStatusBarText and formatStatusBarTooltip output corre
   assert.ok(tooltip.includes("Plan: 20%"));
   assert.ok(tooltip.includes("Auto: 20.5%"));
   assert.ok(tooltip.includes("API: 15.3%"));
+});
+
+test("dashboardView: serializeWebviewBootSnapshot escapes HTML for all platforms", () => {
+  assert.strictEqual(serializeWebviewBootSnapshot(undefined), "null");
+
+  const serialized = serializeWebviewBootSnapshot({
+    fetchedAt: "2026-08-27T00:00:00.000Z",
+    email: "user<script>@example.com",
+    error: "Token & path <unsafe>",
+    cursorMissing: false,
+    limitExceeded: false,
+    fallbackApplied: false,
+    customBudgetLimit: 0,
+    onDemandSpendUsd: 0,
+    features: [],
+    history: [],
+    local: {},
+  });
+
+  assert.ok(!serialized.includes("<script>"), "must not embed raw HTML");
+  assert.ok(serialized.includes("\\u003c"), "angle brackets escaped");
+  assert.ok(serialized.includes("\\u0026"), "ampersands escaped");
+  assert.doesNotThrow(() => JSON.parse(serialized.replace(/\\u003c/g, "<").replace(/\\u003e/g, ">").replace(/\\u0026/g, "&")));
 });

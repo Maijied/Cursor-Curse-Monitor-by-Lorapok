@@ -56,31 +56,73 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     const iconUri = webviewView.webview
       .asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "media", "icon.png"))
       .toString();
-    webviewView.webview.html = this.getHtml(
-      this.logoSvgCache,
-      this.usageMeterSvgCache,
-      webviewView.webview.cspSource,
-      this.extensionVersion,
-      nonce,
-      iconUri
-    );
+
+    let viewReady = false;
+    let latestSnapshot = this.monitor.getSnapshot();
 
     const push = (snapshot: DashboardSnapshot) => {
-      webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
+      latestSnapshot = snapshot;
+      if (!viewReady) {
+        return;
+      }
+      void webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
+    };
+
+    const deliverSnapshot = async (force = false) => {
+      if (latestSnapshot) {
+        push(latestSnapshot);
+      }
+      const cached = this.monitor.getSnapshot();
+      if (cached) {
+        push(cached);
+      }
+      try {
+        push(await this.monitor.refresh(force));
+      } catch {
+        const fallback = this.monitor.getSnapshot();
+        if (fallback) {
+          push(fallback);
+        }
+      }
     };
 
     const subscription = this.monitor.onDidUpdate(push);
-    webviewView.onDidDispose(() => subscription.dispose());
+    const readyFallback = setTimeout(() => {
+      if (viewReady) {
+        return;
+      }
+      viewReady = true;
+      void deliverSnapshot(false);
+    }, 2000);
 
-    const existing = this.monitor.getSnapshot();
-    if (existing) {
-      push(existing);
-    }
-    void this.monitor.refresh(true).then(push);
+    webviewView.onDidDispose(() => {
+      clearTimeout(readyFallback);
+      subscription.dispose();
+    });
 
+    webviewView.onDidChangeVisibility(() => {
+      if (!webviewView.visible || !viewReady) {
+        return;
+      }
+      if (latestSnapshot) {
+        push(latestSnapshot);
+      }
+    });
+
+    // Register the message handler before assigning html — on Windows, macOS, and
+    // Linux the inline script can post `ready` synchronously when html is set.
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
+      if (message.type === "ready") {
+        if (viewReady) {
+          return;
+        }
+        viewReady = true;
+        await deliverSnapshot(false);
+        return;
+      }
       if (message.type === "refresh") {
-        await this.monitor.refresh();
+        await deliverSnapshot(false);
+        return;
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
         if (!Number.isFinite(message.value) || message.value < 0 || message.value > 100000) {
@@ -89,11 +131,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await vscode.workspace
           .getConfiguration("cursorCurseMonitor")
           .update("customBudgetLimit", message.value, vscode.ConfigurationTarget.Global);
-        await this.monitor.refresh();
+        await deliverSnapshot(true);
+        return;
       }
       if (message.type === "applyFallback") {
         await vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
-        await this.monitor.refresh();
+        await deliverSnapshot(true);
+        return;
       }
       if (message.type === "reindexConversations") {
         await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
@@ -125,6 +169,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
       }
     });
+
+    viewReady = false;
+    webviewView.webview.html = this.getHtml(
+      this.logoSvgCache,
+      this.usageMeterSvgCache,
+      webviewView.webview.cspSource,
+      this.extensionVersion,
+      nonce,
+      iconUri,
+      serializeWebviewBootSnapshot(latestSnapshot)
+    );
   }
 
   private getHtml(
@@ -133,7 +188,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     cspSource: string,
     extensionVersion: string,
     nonce: string,
-    iconUri: string
+    iconUri: string,
+    bootJson: string
   ): string {
     const esc = (value: string) =>
       value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -178,10 +234,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 180px;
+      width: 100%;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
       color: var(--muted);
-      font-size: 13px;
+      font: inherit;
+      font-size: 12px;
       letter-spacing: 0.02em;
+      cursor: default;
+    }
+    .loading-state:not(:disabled) {
+      cursor: pointer;
     }
     .header {
       display: flex;
@@ -236,6 +302,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       font-size: 14px;
     }
     .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+    .icon-btn:focus-visible,
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .fill, .meter-fill, .logo-wrap { transition: none !important; }
+      .subscribe-btn-loading::after { animation: none !important; }
+    }
     .connected {
       display: inline-flex;
       align-items: center;
@@ -591,11 +668,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </style>
 </head>
 <body>
-  <div id="loadingState" class="loading-state">Loading dashboard…</div>
-  <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
+  <button type="button" id="loadingState" class="loading-state" disabled aria-live="polite">Loading dashboard…</button>
+  <div id="cursorMissingOverlay" class="cursor-missing-overlay" role="alertdialog" aria-modal="true" aria-labelledby="cursorMissingTitle" aria-live="polite">
     <div class="cursor-missing-card">
       <p class="cursor-missing-eyebrow">No Cursor AI found</p>
-      <h2 style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
+      <h2 id="cursorMissingTitle" style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
       <p style="margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55;">
         Install or open <strong>Cursor</strong> (or another supported VS Code–based AI IDE), sign in once, then refresh this dashboard.
       </p>
@@ -614,7 +691,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="connected" id="connBadge">Connected</span>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="refreshBtn" title="Refresh">↻</button>
+      <button type="button" class="icon-btn" id="refreshBtn" title="Refresh" aria-label="Refresh dashboard">↻</button>
     </div>
   </header>
 
@@ -628,9 +705,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       </p>
       <span id="statusPill" class="pill ok">OK</span>
     </div>
-    <div class="usage-big" id="usageBig">—%</div>
+    <div class="usage-big" id="usageBig" aria-live="polite">—%</div>
     <div class="usage-sub" id="usageSub">of included quota used</div>
-    <div class="bar">
+    <div class="bar" role="progressbar" aria-label="Included quota usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="usageBarTrack">
       <div class="bar-threshold" id="thresholdLine" style="left:80%"></div>
       <div class="fill" id="usageBar"></div>
     </div>
@@ -649,11 +726,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="dual-meters">
       <div class="meter-row">
         <div class="meter-head"><span>Auto</span><strong id="autoPct">—%</strong></div>
-        <div class="meter-track"><div class="meter-fill" id="autoBar"></div></div>
+        <div class="meter-track" role="progressbar" aria-label="Auto usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="autoBarTrack"><div class="meter-fill" id="autoBar"></div></div>
       </div>
       <div class="meter-row">
         <div class="meter-head"><span>API</span><strong id="apiPct">—%</strong></div>
-        <div class="meter-track"><div class="meter-fill" id="apiBar"></div></div>
+        <div class="meter-track" role="progressbar" aria-label="API usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="apiBarTrack"><div class="meter-fill" id="apiBar"></div></div>
       </div>
     </div>
   </section>
@@ -672,7 +749,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           <path d="M 14 70 A 56 56 0 0 1 126 70" fill="none" stroke="#252b38" stroke-width="10" stroke-linecap="round"/>
           <path id="gaugeArc" d="M 14 70 A 56 56 0 0 1 126 70" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
         </svg>
-        <div class="gauge-center">
+        <div class="gauge-center" aria-live="polite">
           <div class="gauge-pct" id="gaugePct">0%</div>
           <div class="gauge-lbl" id="gaugeLbl">quota</div>
         </div>
@@ -771,7 +848,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </section>
 
   <div class="subscribe-modal-overlay" id="subscribeModal" aria-hidden="true">
-    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle">
+    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle" aria-describedby="subscribeBody" tabindex="-1" id="subscribePanel">
       <div class="subscribe-hero">
         <img src="${iconUri}" alt="" width="44" height="44" />
         <div>
@@ -817,12 +894,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </section>
 
   <div class="footer-msg">
-    <span>🛡️</span>
+    <span class="footer-shield" aria-hidden="true">◆</span>
     <span id="footerMsg">You're in control. We'll notify you before you reach your cap.</span>
   </div>
 
   <div class="actions">
-    <button class="primary" id="refreshBtn2">Refresh now</button>
+    <button type="button" class="ghost" id="refreshBtn2" aria-label="Refresh dashboard data">Refresh data</button>
     <button class="ghost" id="fallbackBtn">Apply free fallback model</button>
   </div>
 
@@ -835,11 +912,97 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="footer-dot">·</span>
       <a href="mailto:cursor.monitor@lorapok.tech">Updates</a>
     </div>
-    <div class="footer-right">v${extensionVersion}</div>
+    <div class="footer-right">v${esc(extensionVersion)}</div>
   </footer>
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
+    const bootSnapshot = ${bootJson};
+
+    function dismissLoading() {
+      var loading = document.getElementById('loadingState');
+      if (loading) loading.remove();
+    }
+
+    function signalReady() {
+      vscode.postMessage({ type: 'ready' });
+    }
+
+    var subscribeModalTimer = null;
+    var subscribePromptReady = false;
+    var snapshotReceived = Boolean(bootSnapshot);
+
+    function applySubscribeState(state) {
+      var modal = document.getElementById('subscribeModal');
+      if (!modal) return;
+      if (!state || !state.showPrompt) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+        subscribePromptReady = false;
+        if (subscribeModalTimer) {
+          clearTimeout(subscribeModalTimer);
+          subscribeModalTimer = null;
+        }
+        return;
+      }
+      var title = document.getElementById('subscribeTitle');
+      var body = document.getElementById('subscribeBody');
+      var btn = document.getElementById('subscribeBtn');
+      var later = document.getElementById('subscribeLaterBtn');
+      if (state.copy) {
+        if (title) title.textContent = state.copy.title;
+        if (body) body.textContent = state.copy.body;
+        if (btn) btn.textContent = state.copy.cta;
+        if (later) later.textContent = state.copy.later;
+      }
+      if (!subscribePromptReady && !subscribeModalTimer) {
+        subscribeModalTimer = setTimeout(function() {
+          subscribePromptReady = true;
+          modal.classList.add('visible');
+          modal.setAttribute('aria-hidden', 'false');
+          trapSubscribeFocus(modal);
+        }, 30000);
+      }
+    }
+
+    // Register before ready signals — on some hosts the extension answers synchronously.
+    window.addEventListener('message', function(event) {
+      if (event.data?.type === 'snapshot') {
+        snapshotReceived = true;
+        render(event.data.payload);
+      }
+      if (event.data?.type === 'subscribeResult') {
+        var status = document.getElementById('subscribeStatus');
+        var btn = document.getElementById('subscribeBtn');
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('subscribe-btn-loading');
+        }
+        if (status) {
+          status.textContent = event.data.payload?.message || '';
+          status.style.color = event.data.payload?.ok ? 'var(--ok)' : 'var(--danger)';
+        }
+        if (event.data.payload?.ok && event.data.payload?.state) {
+          applySubscribeState(event.data.payload.state);
+        }
+      }
+      if (event.data?.type === 'subscribeState') {
+        applySubscribeState(event.data.payload);
+      }
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', signalReady);
+    } else {
+      signalReady();
+    }
+    setTimeout(signalReady, 100);
+    setTimeout(signalReady, 500);
+
+    function onClick(id, handler) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', handler);
+    }
 
     function money(n) {
       return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n || 0);
@@ -889,6 +1052,36 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         '<line x1="' + pad + '" y1="' + threshY.toFixed(1) + '" x2="' + (w - pad) + '" y2="' + threshY.toFixed(1) +
         '" stroke="#f5b942" stroke-dasharray="4 4" stroke-width="1" opacity="0.7"></line>' +
         '<path d="' + d + '" fill="none" stroke="#5b9dff" stroke-width="2"></path>';
+    }
+
+    function setProgressTrack(track, value) {
+      if (!track) return;
+      var v = Math.max(0, Math.min(100, Math.round(value)));
+      track.setAttribute('aria-valuenow', String(v));
+    }
+
+    function trapSubscribeFocus(modal) {
+      var panel = document.getElementById('subscribePanel');
+      if (!panel) return;
+      var focusable = panel.querySelectorAll('button, input, [href], [tabindex]:not([tabindex="-1"])');
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (first) first.focus();
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          vscode.postMessage({ type: 'snoozeSubscribe' });
+          return;
+        }
+        if (e.key !== 'Tab' || !focusable.length) return;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          if (last) last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          if (first) first.focus();
+        }
+      }
+      modal.addEventListener('keydown', onKey);
     }
 
     function render(snapshot) {
@@ -951,6 +1144,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         (local.cycleAccepted || 0) + ' lines';
 
       if (!usage || !b) {
+        const usageBig = document.getElementById('usageBig');
+        const usageSub = document.getElementById('usageSub');
+        if (usageBig) usageBig.textContent = '—';
+        if (usageSub) {
+          usageSub.textContent = snapshot.error
+            ? 'Sign in to Cursor and refresh'
+            : 'Waiting for usage data…';
+        }
         renderSpark(snapshot.history || [], 80);
         return;
       }
@@ -964,6 +1165,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const usageBar = document.getElementById('usageBar');
       usageBar.style.width = Math.min(100, hero) + '%';
       usageBar.className = 'fill' + fillClass(hero, threshold, snapshot.limitExceeded);
+      setProgressTrack(document.getElementById('usageBarTrack'), hero);
 
       const statusPill = document.getElementById('statusPill');
       if (snapshot.limitExceeded) {
@@ -995,6 +1197,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       apiBar.style.width = Math.min(100, b.apiPercentUsed) + '%';
       autoBar.className = 'meter-fill' + fillClass(b.autoPercentUsed, threshold, snapshot.limitExceeded);
       apiBar.className = 'meter-fill' + fillClass(b.apiPercentUsed, threshold, snapshot.limitExceeded);
+      setProgressTrack(document.getElementById('autoBarTrack'), b.autoPercentUsed);
+      setProgressTrack(document.getElementById('apiBarTrack'), b.apiPercentUsed);
 
       const gaugeValue = b.usdBudgetActive ? b.budgetPercentUsed : hero;
       setGauge(gaugeValue);
@@ -1060,75 +1264,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
-    window.addEventListener('message', function(event) {
-      if (event.data?.type === 'snapshot') render(event.data.payload);
-      if (event.data?.type === 'subscribeResult') {
-        var status = document.getElementById('subscribeStatus');
-        var btn = document.getElementById('subscribeBtn');
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('subscribe-btn-loading');
-        }
-        if (status) {
-          status.textContent = event.data.payload?.message || '';
-          status.style.color = event.data.payload?.ok ? 'var(--ok)' : 'var(--danger)';
-        }
-        if (event.data.payload?.ok && event.data.payload?.state) {
-          applySubscribeState(event.data.payload.state);
-        }
-      }
-      if (event.data?.type === 'subscribeState') {
-        applySubscribeState(event.data.payload);
-      }
-    });
-
-    var subscribeModalTimer = null;
-    var subscribePromptReady = false;
-
-    function applySubscribeState(state) {
-      var modal = document.getElementById('subscribeModal');
-      if (!modal) return;
-      if (!state || !state.showPrompt) {
-        modal.classList.remove('visible');
-        modal.setAttribute('aria-hidden', 'true');
-        subscribePromptReady = false;
-        if (subscribeModalTimer) {
-          clearTimeout(subscribeModalTimer);
-          subscribeModalTimer = null;
-        }
-        return;
-      }
-      var title = document.getElementById('subscribeTitle');
-      var body = document.getElementById('subscribeBody');
-      var btn = document.getElementById('subscribeBtn');
-      var later = document.getElementById('subscribeLaterBtn');
-      if (state.copy) {
-        if (title) title.textContent = state.copy.title;
-        if (body) body.textContent = state.copy.body;
-        if (btn) btn.textContent = state.copy.cta;
-        if (later) later.textContent = state.copy.later;
-      }
-      if (!subscribePromptReady && !subscribeModalTimer) {
-        subscribeModalTimer = setTimeout(function() {
-          subscribePromptReady = true;
-          modal.classList.add('visible');
-          modal.setAttribute('aria-hidden', 'false');
-        }, 30000);
-      }
-    }
-
     function refresh() { vscode.postMessage({ type: 'refresh' }); }
-    document.getElementById('refreshBtn').addEventListener('click', refresh);
-    document.getElementById('refreshBtn2').addEventListener('click', refresh);
-    var cursorMissingRefresh = document.getElementById('cursorMissingRefresh');
-    if (cursorMissingRefresh) cursorMissingRefresh.addEventListener('click', refresh);
-    document.getElementById('fallbackBtn').addEventListener('click', function() {
+    onClick('refreshBtn', refresh);
+    onClick('refreshBtn2', refresh);
+    onClick('cursorMissingRefresh', refresh);
+    onClick('fallbackBtn', function() {
       vscode.postMessage({ type: 'applyFallback' });
     });
-    document.getElementById('reindexBtn').addEventListener('click', function() {
+    onClick('reindexBtn', function() {
       vscode.postMessage({ type: 'reindexConversations' });
     });
-    document.getElementById('subscribeBtn').addEventListener('click', function() {
+    onClick('subscribeBtn', function() {
       var email = document.getElementById('subscribeEmail').value || '';
       var consent = document.getElementById('subscribeConsent');
       var status = document.getElementById('subscribeStatus');
@@ -1146,27 +1292,58 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       vscode.postMessage({ type: 'subscribeUpdates', email: email });
     });
-    document.getElementById('subscribeLaterBtn').addEventListener('click', function() {
+    onClick('subscribeLaterBtn', function() {
       vscode.postMessage({ type: 'snoozeSubscribe' });
     });
-    document.getElementById('subscribeDeclineBtn').addEventListener('click', function() {
+    onClick('subscribeDeclineBtn', function() {
       vscode.postMessage({ type: 'declineSubscribe' });
     });
     vscode.postMessage({ type: 'getSubscribeState' });
-    document.getElementById('editBudgetBtn').addEventListener('click', function() {
+    onClick('editBudgetBtn', function() {
       document.getElementById('budgetEdit').classList.toggle('open');
     });
-    document.getElementById('saveBudgetBtn').addEventListener('click', function() {
+    onClick('saveBudgetBtn', function() {
       var value = Number(document.getElementById('budgetInput').value || 0);
       if (!Number.isFinite(value) || value < 0) return;
       vscode.postMessage({ type: 'setBudget', value: value });
       document.getElementById('budgetEdit').classList.remove('open');
     });
-    refresh();
+    if (bootSnapshot) {
+      try { render(bootSnapshot); } catch (e) { dismissLoading(); }
+    } else {
+      dismissLoading();
+    }
+    setTimeout(function() {
+      if (!snapshotReceived) {
+        var errorBox = document.getElementById('errorBox');
+        var loading = document.getElementById('loadingState');
+        if (loading) {
+          loading.disabled = false;
+          loading.textContent = 'Still loading… click to refresh';
+          loading.addEventListener('click', refresh);
+        }
+        if (errorBox && errorBox.style.display === 'none') {
+          errorBox.style.display = 'block';
+          errorBox.textContent = 'Still waiting for usage data. Tap Refresh or reopen the panel.';
+        }
+      }
+    }, 8000);
   </script>
 </body>
 </html>`;
   }
+}
+
+export function serializeWebviewBootSnapshot(snapshot: DashboardSnapshot | undefined): string {
+  if (!snapshot) {
+    return "null";
+  }
+  return JSON.stringify(snapshot)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 export type StatusBarUsageSource = "plan" | "autoApi" | "both";
