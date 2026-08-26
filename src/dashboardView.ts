@@ -66,15 +66,44 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     );
 
     const push = (snapshot: DashboardSnapshot) => {
-      webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
+      void webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
+    };
+
+    const deliverSnapshot = async (force = false) => {
+      const cached = this.monitor.getSnapshot();
+      if (cached) {
+        push(cached);
+      }
+      try {
+        push(await this.monitor.refresh(force));
+      } catch {
+        const fallback = this.monitor.getSnapshot();
+        if (fallback) {
+          push(fallback);
+        }
+      }
     };
 
     const subscription = this.monitor.onDidUpdate(push);
     webviewView.onDidDispose(() => subscription.dispose());
 
+    webviewView.onDidChangeVisibility(() => {
+      if (!webviewView.visible) {
+        return;
+      }
+      const cached = this.monitor.getSnapshot();
+      if (cached) {
+        push(cached);
+      }
+    });
+
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
+      if (message.type === "ready") {
+        await deliverSnapshot(false);
+        return;
+      }
       if (message.type === "refresh") {
-        push(await this.monitor.refresh());
+        await deliverSnapshot(false);
         return;
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
@@ -861,6 +890,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
+    vscode.postMessage({ type: 'ready' });
+
+    function onClick(id, handler) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', handler);
+    }
 
     function money(n) {
       return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n || 0);
@@ -1181,17 +1216,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
 
     function refresh() { vscode.postMessage({ type: 'refresh' }); }
-    document.getElementById('refreshBtn').addEventListener('click', refresh);
-    document.getElementById('refreshBtn2').addEventListener('click', refresh);
-    var cursorMissingRefresh = document.getElementById('cursorMissingRefresh');
-    if (cursorMissingRefresh) cursorMissingRefresh.addEventListener('click', refresh);
-    document.getElementById('fallbackBtn').addEventListener('click', function() {
+    onClick('refreshBtn', refresh);
+    onClick('refreshBtn2', refresh);
+    onClick('cursorMissingRefresh', refresh);
+    onClick('fallbackBtn', function() {
       vscode.postMessage({ type: 'applyFallback' });
     });
-    document.getElementById('reindexBtn').addEventListener('click', function() {
+    onClick('reindexBtn', function() {
       vscode.postMessage({ type: 'reindexConversations' });
     });
-    document.getElementById('subscribeBtn').addEventListener('click', function() {
+    onClick('subscribeBtn', function() {
       var email = document.getElementById('subscribeEmail').value || '';
       var consent = document.getElementById('subscribeConsent');
       var status = document.getElementById('subscribeStatus');
@@ -1209,17 +1243,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       vscode.postMessage({ type: 'subscribeUpdates', email: email });
     });
-    document.getElementById('subscribeLaterBtn').addEventListener('click', function() {
+    onClick('subscribeLaterBtn', function() {
       vscode.postMessage({ type: 'snoozeSubscribe' });
     });
-    document.getElementById('subscribeDeclineBtn').addEventListener('click', function() {
+    onClick('subscribeDeclineBtn', function() {
       vscode.postMessage({ type: 'declineSubscribe' });
     });
     vscode.postMessage({ type: 'getSubscribeState' });
-    document.getElementById('editBudgetBtn').addEventListener('click', function() {
+    onClick('editBudgetBtn', function() {
       document.getElementById('budgetEdit').classList.toggle('open');
     });
-    document.getElementById('saveBudgetBtn').addEventListener('click', function() {
+    onClick('saveBudgetBtn', function() {
       var value = Number(document.getElementById('budgetInput').value || 0);
       if (!Number.isFinite(value) || value < 0) return;
       vscode.postMessage({ type: 'setBudget', value: value });
@@ -1239,7 +1273,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         }
       }
     }, 8000);
-    refresh();
   </script>
 </body>
 </html>`;
