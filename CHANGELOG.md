@@ -17,6 +17,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mission Control mobile deploy UX** — safe-area padding, dynamic viewport height, larvae on deploy button, and scroll-to-pipeline so mobile users see the full form and runtime panel
 - **IDE dashboard stuck on loading** — register the webview message handler before assigning HTML (fixes a race on Windows, macOS, and Linux), retry the `ready` handshake, cached snapshot delivery on visibility, and `retainContextWhenHidden`
 - **Cross-platform editor storage paths** — resolve Windsurf, VSCodium, and other VS Code–fork data folders on darwin, win32, and linux instead of always assuming Cursor
+- **Mailbox transport diagnostics** — health and Mission Control UI warn when `MAIL_RELAY` is missing and sends fall back to REST (common 401 source); CI blocks admin deploy when neither relay nor valid Email Sending token is available
 - Missing `SUBSCRIBE_PROMPT_DELAY_MS` import in `extension.ts` (compile error)
 - Orphaned CSS in `dashboardView.ts` that broke `.connected` badge styles
 - `syncStatus` override — release candidates no longer claim `synced` (uses `release-candidate` instead of misleading `dual-listing`)

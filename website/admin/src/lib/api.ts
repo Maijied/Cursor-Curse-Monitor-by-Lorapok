@@ -52,6 +52,9 @@ export async function fetchHealth() {
     firebaseProject?: string;
     mailConfigured?: boolean;
     mailTransport?: string;
+    mailRelayBound?: boolean;
+    mailRestConfigured?: boolean;
+    mailResendConfigured?: boolean;
     mailHint?: string;
     adminPublicUrl?: string;
     githubTokenConfigured?: boolean;

@@ -194,26 +194,61 @@ function readCloudflareMailCredentials(env) {
  * @param {Record<string, unknown>} env
  */
 export function getMailTransportStatus(env) {
-  if (env.MAIL_RELAY?.fetch) {
-    return { configured: true, transport: "cloudflare-relay" };
-  }
-
-  if (env.EMAIL?.send) {
-    return { configured: true, transport: "cloudflare-binding" };
-  }
-
+  const relayBound = Boolean(env.MAIL_RELAY?.fetch);
+  const bindingPresent = Boolean(env.EMAIL?.send);
   const { accountId, token } = readCloudflareMailCredentials(env);
-  if (accountId && token) {
-    return { configured: true, transport: "cloudflare-rest" };
+  const restConfigured = Boolean(accountId && token);
+  const resendConfigured =
+    typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim().length > 0;
+
+  if (relayBound) {
+    return {
+      configured: true,
+      transport: "cloudflare-relay",
+      relayBound: true,
+      restConfigured,
+      resendConfigured,
+    };
   }
 
-  if (typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim()) {
-    return { configured: true, transport: "resend" };
+  if (bindingPresent) {
+    return {
+      configured: true,
+      transport: "cloudflare-binding",
+      relayBound: false,
+      restConfigured,
+      resendConfigured,
+    };
+  }
+
+  if (restConfigured) {
+    return {
+      configured: true,
+      transport: "cloudflare-rest",
+      relayBound: false,
+      restConfigured: true,
+      resendConfigured,
+      hint:
+        "MAIL_RELAY is not bound — sends use REST. If you see 401 errors, redeploy admin after running website/admin/scripts/enable-mail.mjs.",
+    };
+  }
+
+  if (resendConfigured) {
+    return {
+      configured: true,
+      transport: "resend",
+      relayBound: false,
+      restConfigured: false,
+      resendConfigured: true,
+    };
   }
 
   return {
     configured: false,
     transport: "none",
+    relayBound: false,
+    restConfigured: false,
+    resendConfigured: false,
     hint:
       "Deploy ccm-mail-relay worker (CI does this automatically), or set CLOUDFLARE_EMAIL_API_TOKEN with Email Sending permission, or RESEND_API_KEY.",
   };
