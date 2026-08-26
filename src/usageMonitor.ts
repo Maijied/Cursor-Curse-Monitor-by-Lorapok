@@ -118,7 +118,7 @@ export class UsageMonitorService implements vscode.Disposable {
       budget: null,
       features: [],
       host: detectEditorHost(vscode.env.appName),
-      cursorMissing: !cursorDbExists(),
+      cursorMissing: !cursorDbExists(undefined, vscode.env.appName),
       local: emptyLocalInsights(),
       history: this.loadHistory(),
     };

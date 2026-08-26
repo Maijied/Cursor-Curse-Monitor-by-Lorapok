@@ -51,7 +51,7 @@ export default function AppShell() {
 
   return (
     <DeployRuntimeProvider>
-    <div className="flex h-dvh min-h-0 w-full overflow-hidden text-[var(--color-text)]">
+    <div className="flex h-screen h-dvh min-h-0 w-full overflow-hidden text-[var(--color-text)]">
       {mobileOpen && (
         <button
           type="button"
