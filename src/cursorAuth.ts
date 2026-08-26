@@ -67,16 +67,16 @@ function resolveProductForPath(host?: EditorHost, appName?: string): string {
 }
 
 /** Directory containing state.vscdb and conversation-search.db. */
-export function getCursorGlobalStorageDir(host?: EditorHost): string {
-  return path.dirname(getCursorGlobalStoragePath(host));
+export function getCursorGlobalStorageDir(host?: EditorHost, appName?: string): string {
+  return path.dirname(getCursorGlobalStoragePath(host, appName));
 }
 
 /** Conversation search index used by Agents Window Ctrl+K. */
-export function getConversationSearchDbPath(host?: EditorHost): string {
+export function getConversationSearchDbPath(host?: EditorHost, appName?: string): string {
   if (process.env.CCM_REINDEX_SEARCH_DB) {
     return process.env.CCM_REINDEX_SEARCH_DB;
   }
-  return path.join(getCursorGlobalStorageDir(host), "conversation-search.db");
+  return path.join(getCursorGlobalStorageDir(host, appName), "conversation-search.db");
 }
 
 /** Resolve Cursor or VS Code globalStorage state.vscdb for the current host. */
