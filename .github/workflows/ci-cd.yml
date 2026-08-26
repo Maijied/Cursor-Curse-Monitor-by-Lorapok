@@ -420,42 +420,14 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy mail relay worker
-        id: mail_relay
-        working-directory: website/admin/workers/mail-relay
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          npx wrangler email sending enable lorapok.tech || echo "::warning::Onboard lorapok.tech in Dashboard → Email Service if sends fail."
-          if npx wrangler deploy; then
-            echo "deployed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::Mail relay deploy skipped — check CLOUDFLARE_API_TOKEN Workers permissions."
-            echo "deployed=false" >> "$GITHUB_OUTPUT"
-          fi || echo "::warning::Mail relay deploy skipped — check CLOUDFLARE_API_TOKEN Workers permissions."
-
-      - name: Sync Pages runtime secret for outbound email
+      - name: Setup and verify outbound mail (main push)
+        id: mail_setup
         working-directory: website/admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          MAIL_TOKEN="${CLOUDFLARE_EMAIL_API_TOKEN:-}"
-          if [ -z "$MAIL_TOKEN" ]; then
-            echo "::warning::CLOUDFLARE_EMAIL_API_TOKEN not set — Mission Control uses ccm-mail-relay service binding instead."
-            exit 0
-          fi
-          PROBE=$(curl -sS -o /tmp/mail-probe.json -w "%{http_code}" \
-            -H "Authorization: Bearer $MAIL_TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/email/sending/domains")
-          if [ "$PROBE" = "401" ] || [ "$PROBE" = "403" ]; then
-            echo "::warning::CLOUDFLARE_EMAIL_API_TOKEN lacks Email Sending permission (HTTP $PROBE). Skipping REST secret sync — relay worker handles mail."
-            exit 0
-          fi
-          printf '%s' "$MAIL_TOKEN" | npx wrangler pages secret put CLOUDFLARE_EMAIL_API_TOKEN --project-name=cursor-monitor-admin
+        run: node scripts/sync-mail-on-main.mjs --ci
 
       - name: Deploy to Cloudflare Pages
         working-directory: website/admin
@@ -463,7 +435,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ "${{ steps.mail_relay.outputs.deployed }}" != "true" ]; then
+          if [ "${{ steps.mail_setup.outputs.relay_deployed }}" != "true" ] && [ "${{ steps.mail_setup.outputs.relay_exists }}" != "true" ]; then
             node <<'NODE'
           import { readFileSync, writeFileSync } from "node:fs";
           const path = "wrangler.toml";
@@ -475,6 +447,8 @@ jobs:
           writeFileSync(path, withoutServices);
           NODE
             echo "::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable."
+          elif [ "${{ steps.mail_setup.outputs.relay_exists }}" = "true" ]; then
+            echo "::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is already deployed on this account."
           fi
           npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main --commit-dirty=true
 

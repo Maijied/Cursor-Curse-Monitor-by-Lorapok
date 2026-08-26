@@ -13,7 +13,9 @@
     "test": "vitest run",
     "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=cursor-monitor-admin",
     "site:data": "node ../../scripts/generate-site-data.mjs",
-    "verify:marketplace": "node ../../scripts/verify-marketplace-sync.mjs --strict"
+    "verify:marketplace": "node ../../scripts/verify-marketplace-sync.mjs --strict",
+    "mail:sync-on-main": "node scripts/sync-mail-on-main.mjs",
+    "mail:sync-vault": "node scripts/sync-mail-on-main.mjs --vault"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
