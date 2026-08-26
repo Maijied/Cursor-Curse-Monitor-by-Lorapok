@@ -771,7 +771,16 @@ export function createDevApiMiddleware() {
           })
             .then((result) => {
               res.setHeader("Content-Type", "application/json");
-              res.end(JSON.stringify({ ok: true, skipped: result.skipped ?? false, reason: result.reason }));
+              if (!result.ok && !result.skipped) {
+                res.statusCode = 502;
+                res.end(JSON.stringify({ error: result.error || "Discord notification failed" }));
+                return;
+              }
+              res.end(JSON.stringify({
+                ok: result.ok,
+                skipped: result.skipped ?? false,
+                reason: result.reason,
+              }));
             })
             .catch((err) => {
               res.statusCode = 500;
