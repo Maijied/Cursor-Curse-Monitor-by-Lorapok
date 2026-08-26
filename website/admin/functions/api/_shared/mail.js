@@ -2,6 +2,17 @@ import { recordMailboxMessage } from "./mailbox.js";
 import { logSystemEvent } from "./system-log.js";
 import { resolveMailBranding } from "./mail-branding.js";
 import {
+  coerceMailDisplayName,
+  normalizeMailFromInput,
+  toRestFrom,
+  toRestRecipients,
+  toRestReplyTo,
+  toWorkerFrom,
+  toWorkerRecipient,
+  toWorkerRecipients,
+  toWorkerReplyTo,
+} from "./mail-normalize.js";
+import {
   MAIL_HELP,
   MAIL_MONITOR,
   MAIL_OPS_COPY,
@@ -245,14 +256,17 @@ async function sendViaMailRelay(env, { to, subject, html, text, from, bcc, reply
 }
 
 async function sendViaCloudflareBinding(env, { to, subject, html, text, from, bcc, replyTo }) {
+  const normalizedFrom = normalizeMailFromInput(from);
   await env.EMAIL.send({
-    to,
-    from: { email: from.email, name: from.name },
+    to: toWorkerRecipient(to),
+    from: toWorkerFrom(normalizedFrom),
     subject,
     html,
     text,
-    ...(bcc?.length ? { bcc } : {}),
-    ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+    ...(bcc?.length ? { bcc: toWorkerRecipients(bcc) } : {}),
+    ...(replyTo || normalizedFrom.replyTo
+      ? { replyTo: toWorkerReplyTo(replyTo, normalizedFrom.replyTo) }
+      : {}),
   });
   return { sent: true, transport: "cloudflare-binding" };
 }
@@ -272,13 +286,13 @@ async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to,
-        from: { address: from.email, name: from.name },
+        to: toRestRecipients(to),
+        from: toRestFrom(from),
         subject,
         html,
         text,
-        reply_to: replyTo ?? from.email,
-        ...(bcc?.length ? { bcc } : {}),
+        reply_to: toRestReplyTo(replyTo, from.replyTo ?? from.email),
+        ...(bcc?.length ? { bcc: toRestRecipients(bcc) } : {}),
       }),
     }
   );
@@ -336,7 +350,7 @@ async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `${from.name} <${from.email}>`,
+      from: `${coerceMailDisplayName(from.name, "Cursor Curse Monitor")} <${from.email}>`,
       to: [to],
       subject,
       html,
@@ -364,7 +378,7 @@ export async function sendMail(
   { to, subject, html, text, category = "system", sentBy = null, from: fromOverride = null, bcc: bccOverride = null }
 ) {
   const textBody = text ?? subject;
-  const from = fromOverride ?? resolveMailFrom(category);
+  const from = normalizeMailFromInput(fromOverride ?? resolveMailFrom(category));
   const bcc = bccOverride ?? defaultMailBcc();
   const payload = {
     to,

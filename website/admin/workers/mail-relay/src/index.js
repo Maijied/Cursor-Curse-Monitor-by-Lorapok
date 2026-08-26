@@ -2,6 +2,14 @@
  * Internal mail relay for Mission Control (Pages Functions → Worker send_email binding).
  * Invoked only via Pages service binding — not exposed on the public internet.
  */
+import {
+  normalizeMailFromInput,
+  toWorkerFrom,
+  toWorkerRecipient,
+  toWorkerRecipients,
+  toWorkerReplyTo,
+} from "../../../functions/api/_shared/mail-normalize.js";
+
 export default {
   /**
    * @param {Request} request
@@ -20,7 +28,7 @@ export default {
     }
 
     const { to, from, subject, html, text, bcc, replyTo } = body ?? {};
-    if (!to || !from?.email || !subject) {
+    if (!to || (!from?.email && !from?.address) || !subject) {
       return Response.json({ error: "to, from.email, and subject are required" }, { status: 400 });
     }
 
@@ -32,14 +40,17 @@ export default {
     }
 
     try {
+      const normalizedFrom = normalizeMailFromInput(from);
       await env.EMAIL.send({
-        to,
-        from: { email: from.email, name: from.name ?? "" },
+        to: toWorkerRecipient(to),
+        from: toWorkerFrom(normalizedFrom),
         subject,
         html: html ?? `<p>${subject}</p>`,
         text: text ?? subject,
-        ...(Array.isArray(bcc) && bcc.length ? { bcc } : {}),
-        ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+        ...(Array.isArray(bcc) && bcc.length ? { bcc: toWorkerRecipients(bcc) } : {}),
+        ...(replyTo || normalizedFrom.replyTo
+          ? { replyTo: toWorkerReplyTo(replyTo, normalizedFrom.replyTo) }
+          : {}),
       });
       return Response.json({ sent: true, transport: "cloudflare-relay" });
     } catch (err) {

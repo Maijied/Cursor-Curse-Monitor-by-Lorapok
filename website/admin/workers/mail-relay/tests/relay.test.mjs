@@ -31,6 +31,23 @@ assert.deepEqual(await ok.json(), { sent: true, transport: "cloudflare-relay" })
 assert.equal(sent.length, 1);
 assert.equal(sent[0].to, "user@example.com");
 
+const okNullName = await worker.fetch(
+  new Request("https://internal/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: "sub@example.com",
+      from: { email: "cursor.monitor@lorapok.tech", name: null },
+      subject: "subscribe",
+      html: "<p>hi</p>",
+      text: "hi",
+    }),
+  }),
+  env
+);
+assert.equal(okNullName.status, 200);
+assert.equal(typeof sent.at(-1).from.name, "string");
+
 const bad = await worker.fetch(new Request("https://internal/send", { method: "GET" }), env);
 assert.equal(bad.status, 405);
 
