@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, Undo2 } from "lucide-react";
 import {
   fetchTags,
@@ -17,6 +17,7 @@ import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimePanel from "../ui/DeployRuntimePanel";
+import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
 
@@ -63,6 +64,15 @@ export default function Deployments() {
   const [versionPlan, setVersionPlan] = useState<Awaited<ReturnType<typeof fetchVersionPlan>> | null>(null);
   const [versionPlanLoading, setVersionPlanLoading] = useState(false);
   const [versionPlanError, setVersionPlanError] = useState<string | null>(null);
+  const deployFeedbackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!deploying && !runtimeActive) return;
+    const frame = window.requestAnimationFrame(() => {
+      deployFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [deploying, runtimeActive]);
 
   const loadTags = useCallback(() => {
     fetchTags()
@@ -631,7 +641,9 @@ export default function Deployments() {
               mode === "rollback" ? "bg-[var(--color-warn)]" : "bg-[var(--color-accent)]"
             }`}
           >
-            {mode === "rollback" ? (
+            {deploying ? (
+              <LorapokLarvaeLoader size="sm" ariaLabel="Triggering deployment" className="!gap-0" />
+            ) : mode === "rollback" ? (
               <Undo2 size={20} aria-hidden="true" />
             ) : mode === "infra" ? (
               <Server size={20} aria-hidden="true" />
@@ -648,23 +660,37 @@ export default function Deployments() {
           </button>
         </form>
 
+        <div ref={deployFeedbackRef} className="scroll-mt-6 mt-6 space-y-6">
+          {deploying ? (
+            <div
+              className="flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] p-4"
+              aria-live="polite"
+            >
+              <LorapokLarvaeLoader size="sm" ariaLabel="Dispatching workflow" />
+              <p className="text-sm text-[var(--color-muted)]">
+                Dispatching {workflowName} on GitHub… Larvae will crawl the pipeline once the run starts.
+              </p>
+            </div>
+          ) : null}
+
         {message && (
           <Notification
             tone={message.type === "success" ? "success" : "error"}
             title={message.type === "success" ? "Workflow dispatched" : "Dispatch failed"}
             message={message.text}
             onDismiss={() => setMessage(null)}
-            className="mt-6"
+            className="mt-0"
           />
         )}
 
-        <DeployRuntimePanel
-          active={runtimeActive}
-          workflowName={workflowName}
-          targetTag={lastTargetTag}
-          dispatchedAfter={dispatchedAfter}
-          onComplete={handleRuntimeComplete}
-        />
+          <DeployRuntimePanel
+            active={runtimeActive}
+            workflowName={workflowName}
+            targetTag={lastTargetTag}
+            dispatchedAfter={dispatchedAfter}
+            onComplete={handleRuntimeComplete}
+          />
+        </div>
       </Card>
     </div>
   );

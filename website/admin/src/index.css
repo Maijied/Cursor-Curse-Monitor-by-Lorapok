@@ -53,6 +53,8 @@ body {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+  /* Mobile browsers + standalone PWA: keep bottom actions above home indicator / URL bar */
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
 
 .glass-panel {
