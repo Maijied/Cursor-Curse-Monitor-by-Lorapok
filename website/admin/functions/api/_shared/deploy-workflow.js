@@ -1,5 +1,6 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
+import { notifyDiscordDeployment } from "./discord-notify.js";
 
 const MIN_PUBLISH_TAG = "v0.5.5";
 const WORKFLOW_ID = "ci-cd.yml";
@@ -8,7 +9,7 @@ const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
 const ACTION_DEPLOY_INFRA = "deploy-infra - Deploy Mission Control admin & marketing site";
 const ACTION_FULL_RELEASE = "full-release - Bump version, tag & update Mission Control";
 
-async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields) {
+async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields, notifyContext) {
   const githubToken = env.GITHUB_TOKEN;
   if (!githubToken) {
     return jsonResponse(
@@ -53,6 +54,22 @@ async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields)
       },
       502
     );
+  }
+
+  if (notifyContext) {
+    notifyDiscordDeployment(env, {
+      phase: "started",
+      actionType: inputs.action_type,
+      tag: inputs.target_tag ?? notifyContext.tag ?? null,
+      channel: inputs.release_channel ?? null,
+      market: inputs.publish_market ?? null,
+      triggeredBy: notifyContext.triggeredBy ?? null,
+      branch: "main",
+      summary: successMessage,
+      runUrl: notifyContext.runUrl ?? null,
+    }).catch((error) => {
+      console.error("Discord started notification failed", error);
+    });
   }
 
   return jsonResponse({
@@ -102,7 +119,7 @@ function tagAtLeast(tag, minimum) {
  * @param {Record<string, unknown>} body
  * @param {string} successMessage
  */
-export async function dispatchPublishWorkflow(env, body, successMessage) {
+export async function dispatchPublishWorkflow(env, body, successMessage, notifyContext) {
   const parsed = parseInputs(body);
   if (parsed.error) return parsed.error;
 
@@ -131,7 +148,8 @@ export async function dispatchPublishWorkflow(env, body, successMessage) {
       deploy_website: deployWebsite ? "true" : "false",
     },
     successMessage,
-    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel }
+    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
+    notifyContext
   );
 }
 
@@ -141,7 +159,7 @@ export async function dispatchPublishWorkflow(env, body, successMessage) {
  * @param {Record<string, unknown>} body
  * @param {string} successMessage
  */
-export async function dispatchRollbackWorkflow(env, body, successMessage) {
+export async function dispatchRollbackWorkflow(env, body, successMessage, notifyContext) {
   const parsed = parseInputs(body);
   if (parsed.error) return parsed.error;
 
@@ -165,7 +183,8 @@ export async function dispatchRollbackWorkflow(env, body, successMessage) {
       release_channel: releaseChannel,
     },
     successMessage,
-    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel }
+    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
+    notifyContext
   );
 
   if (!response.ok) return response;
@@ -202,7 +221,7 @@ const VERSION_TYPE_INPUTS = {
  * @param {Record<string, unknown>} env
  * @param {string} successMessage
  */
-export async function dispatchInfraWorkflow(env, body, successMessage) {
+export async function dispatchInfraWorkflow(env, body, successMessage, notifyContext) {
   const deployAdmin = bodyFlag(body, "deploy_admin", true);
   const deployWebsite = bodyFlag(body, "deploy_website", true);
   return dispatchWorkflow(
@@ -216,7 +235,8 @@ export async function dispatchInfraWorkflow(env, body, successMessage) {
       deploy_website: deployWebsite ? "true" : "false",
     },
     successMessage,
-    { deploy_admin: deployAdmin, deploy_website: deployWebsite }
+    { deploy_admin: deployAdmin, deploy_website: deployWebsite },
+    notifyContext
   );
 }
 
@@ -232,7 +252,7 @@ function bodyFlag(body, key, defaultValue) {
  * @param {Record<string, unknown>} body
  * @param {string} successMessage
  */
-export async function dispatchReleaseWorkflow(env, body, successMessage) {
+export async function dispatchReleaseWorkflow(env, body, successMessage, notifyContext) {
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
   const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
   const bumpKey = String(body.version_type ?? body.bump_type ?? "patch");
@@ -273,7 +293,8 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
       custom_version: customVersion,
       publish_market: publishMarket,
       release_channel: releaseChannel,
-    }
+    },
+    notifyContext
   );
 
   if (!response.ok) return response;

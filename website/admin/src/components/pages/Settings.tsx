@@ -3,6 +3,7 @@ import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
+import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
@@ -32,7 +33,7 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up max-w-3xl">
-      <PageHeader title="Settings" description="Theme, connected services, API health, and environment info." />
+      <PageHeader title="Settings" description="Theme, integrations, connected services, API health, and environment info." />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>
@@ -55,6 +56,8 @@ export default function Settings() {
       </Card>
 
       <ConnectedServicesCard />
+
+      <DiscordIntegrationsCard />
 
       <Card>
         <h3 className="font-semibold mb-4">Environment</h3>

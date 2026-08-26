@@ -9,6 +9,12 @@ import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publi
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
+import {
+  DEFAULT_DISCORD_CONFIG,
+  isValidDiscordWebhookUrl,
+  sanitizeDiscordConfigForClient,
+} from "./functions/api/_shared/discord-config.js";
+import { notifyDiscordDeployment } from "./functions/api/_shared/discord-notify.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -33,6 +39,13 @@ const devStore = {
     updatedAt: null,
     updatedBy: null,
   },
+  discordConfig: {
+    enabled: false,
+    webhookUrl: "",
+    events: { started: true, completed: true, failed: true, pushed: true },
+    updatedAt: null,
+    updatedBy: null,
+  },
 };
 
 const devKv = {
@@ -40,11 +53,17 @@ const devKv = {
     if (key === "subscribers") {
       return JSON.stringify(devStore.subscribers);
     }
+    if (key === "integrations:discord") {
+      return JSON.stringify(devStore.discordConfig);
+    }
     return null;
   },
   put: async (key, value) => {
     if (key === "subscribers") {
       devStore.subscribers = JSON.parse(value);
+    }
+    if (key === "integrations:discord") {
+      devStore.discordConfig = JSON.parse(value);
     }
   },
 };
@@ -696,6 +715,112 @@ export function createDevApiMiddleware() {
       res.setHeader("Content-Type", "application/json");
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.end(JSON.stringify(devStore.communityConfig));
+      return;
+    }
+
+    if (url === "/api/integrations/discord/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+      return;
+    }
+
+    if (url === "/api/integrations/discord/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = devStore.discordConfig;
+          let webhookUrl = current.webhookUrl;
+          if (typeof parsed.webhookUrl === "string") {
+            const trimmed = parsed.webhookUrl.trim();
+            if (trimmed && !isValidDiscordWebhookUrl(trimmed)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid Discord webhook URL" }));
+              return;
+            }
+            webhookUrl = trimmed;
+          }
+          devStore.discordConfig = {
+            ...current,
+            enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : current.enabled,
+            webhookUrl,
+            events: {
+              ...DEFAULT_DISCORD_CONFIG.events,
+              ...(current.events ?? {}),
+              ...(parsed.events ?? {}),
+            },
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          };
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/discord/test" && req.method === "POST") {
+      notifyDiscordDeployment({ ADMIN_KV: devKv }, {
+        phase: "test",
+        actionType: "test",
+        triggeredBy: "dev@local",
+        summary: "Dev server test message from Mission Control.",
+      })
+        .then((result) => {
+          res.setHeader("Content-Type", "application/json");
+          if (!result.ok && !result.skipped) {
+            res.statusCode = 502;
+            res.end(JSON.stringify({ error: result.error ?? "Discord test failed" }));
+            return;
+          }
+          if (result.skipped) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Discord notifications are disabled or webhook missing" }));
+            return;
+          }
+          res.end(JSON.stringify({ ok: true, message: "Test message sent to Discord." }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message || "Discord test failed" }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/discord/deployment" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          notifyDiscordDeployment({ ADMIN_KV: devKv }, {
+            phase: "completed",
+            actionType: parsed.actionType ?? "deployment",
+            tag: parsed.tag,
+            channel: parsed.channel,
+            market: parsed.market,
+            conclusion: parsed.conclusion ?? "success",
+            runUrl: parsed.runUrl,
+            triggeredBy: parsed.triggeredBy ?? "dev@local",
+            jobs: parsed.jobs ?? [],
+          })
+            .then((result) => {
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ ok: true, skipped: result.skipped ?? false, reason: result.reason }));
+            })
+            .catch((err) => {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message || "Discord notification failed" }));
+            });
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
       return;
     }
 

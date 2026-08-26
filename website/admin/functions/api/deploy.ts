@@ -13,7 +13,9 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const response = await dispatchPublishWorkflow(env, body, "Deployment triggered successfully");
+    const response = await dispatchPublishWorkflow(env, body, "Deployment triggered successfully", {
+      triggeredBy: auth.email,
+    });
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Deploy handler error", err);
