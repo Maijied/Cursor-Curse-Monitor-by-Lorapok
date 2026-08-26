@@ -6,28 +6,32 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { probeDeployToken } from "./lib/mail-credentials.mjs";
+import { pickDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const accountId = (process.env.CLOUDFLARE_ACCOUNT_ID ?? "").trim();
-const deployToken = (process.env.CLOUDFLARE_API_TOKEN ?? "").trim();
+const { accountId } = resolveMailCredentials();
 const relayDeployed = process.env.MAIL_RELAY_DEPLOYED === "true";
 const relayExists =
   process.env.MAIL_RELAY_EXISTS_SETUP === "true" ||
   process.env.MAIL_RELAY_EXISTS_VERIFY === "true";
 
-if (!deployToken || !accountId) {
-  console.error("::error::CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required.");
+if (!accountId) {
+  console.error("::error::CLOUDFLARE_ACCOUNT_ID is required.");
   process.exit(1);
 }
 
-const probe = await probeDeployToken(deployToken, accountId);
-if (!probe.ok) {
-  console.error(
-    `::error::CLOUDFLARE_API_TOKEN is not active (HTTP ${probe.status}). ` +
-      "Refresh GitHub admin-production secrets: gh secret set CLOUDFLARE_API_TOKEN --env admin-production"
-  );
+const { token: deployToken, probe } = await pickDeployToken();
+if (!deployToken) {
+  console.error("::error::CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) is required.");
   process.exit(1);
+}
+
+if (probe.ok) {
+  console.log(`::notice::Using deploy token (${probe.via ?? "probe"} HTTP ${probe.status}).`);
+} else {
+  console.warn(
+    `::warning::Deploy token probe failed (HTTP ${probe.status}); attempting wrangler Pages deploy anyway.`
+  );
 }
 
 const wranglerToml = resolve(adminDir, "wrangler.toml");

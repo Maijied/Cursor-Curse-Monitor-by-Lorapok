@@ -4,6 +4,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { syncCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
+import { probeDeployToken } from "./lib/mail-credentials.mjs";
 import { createMailToken, probe } from "./lib/mail-token-factory.mjs";
 
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
@@ -57,10 +58,20 @@ console.log(JSON.stringify({ probe: { status: probeResult.status, success: probe
 if (!probeResult.success && probeResult.status !== 200) process.exit(1);
 
 ghSecret("CLOUDFLARE_EMAIL_API_TOKEN", token);
-ghSecret("CLOUDFLARE_API_TOKEN", token);
 pagesSecret(token, token);
-console.log("GitHub admin-production secrets synced");
+console.log("GitHub CLOUDFLARE_EMAIL_API_TOKEN synced");
 console.log("Pages CLOUDFLARE_EMAIL_API_TOKEN synced");
+
+const deployProbe = await probeDeployToken(token, accountId);
+if (deployProbe.ok) {
+  ghSecret("CLOUDFLARE_API_TOKEN", token);
+  console.log(`GitHub CLOUDFLARE_API_TOKEN synced (${deployProbe.via ?? "probe"})`);
+} else {
+  console.warn(
+    `Skipping CLOUDFLARE_API_TOKEN sync (deploy probe HTTP ${deployProbe.status}). ` +
+      "Create a Pages Write API token in Cloudflare dashboard, then re-run this script."
+  );
+}
 
 const vaultResult = syncCursorCloudflareSecrets({
   apiToken: token,

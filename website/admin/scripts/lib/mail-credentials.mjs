@@ -63,17 +63,57 @@ export async function relayWorkerExists(deployToken, accountId) {
   return false;
 }
 
+const PAGES_PROJECT = "cursor-monitor-admin";
+
 /**
- * Probe whether CLOUDFLARE_API_TOKEN is active (without requiring Account read).
- * @returns {Promise<{ ok: boolean; status: number }>}
+ * Probe whether a token can deploy to Cloudflare Pages / Workers.
+ * Wrangler OAuth tokens often fail /user/tokens/verify but still work for Pages API.
+ * @returns {Promise<{ ok: boolean; status: number; via?: string }>}
  */
-export async function probeDeployToken(deployToken, _accountId) {
-  const res = await fetch("https://api.cloudflare.com/client/v4/user/tokens/verify", {
+export async function probeDeployToken(deployToken, accountId) {
+  if (!deployToken) return { ok: false, status: 0 };
+
+  const verifyRes = await fetch("https://api.cloudflare.com/client/v4/user/tokens/verify", {
     headers: { Authorization: `Bearer ${deployToken}`, "Content-Type": "application/json" },
   });
-  const body = await res.json().catch(() => ({}));
-  const active = body?.result?.status === "active";
-  return { ok: res.ok && active, status: res.status };
+  const verifyBody = await verifyRes.json().catch(() => ({}));
+  if (verifyRes.ok && verifyBody?.result?.status === "active") {
+    return { ok: true, status: verifyRes.status, via: "verify" };
+  }
+
+  if (accountId) {
+    const pagesRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${PAGES_PROJECT}`,
+      { headers: { Authorization: `Bearer ${deployToken}` } }
+    );
+    if (pagesRes.status !== 401 && pagesRes.status !== 403) {
+      return { ok: true, status: pagesRes.status, via: "pages" };
+    }
+
+    const workersRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`,
+      { headers: { Authorization: `Bearer ${deployToken}` } }
+    );
+    if (workersRes.status !== 401 && workersRes.status !== 403) {
+      return { ok: true, status: workersRes.status, via: "workers" };
+    }
+  }
+
+  return { ok: false, status: verifyRes.status || 401 };
+}
+
+/**
+ * Pick the first token that passes {@link probeDeployToken}.
+ * @returns {Promise<{ token: string; probe: Awaited<ReturnType<typeof probeDeployToken>> }>}
+ */
+export async function pickDeployToken(env = process.env) {
+  const { accountId, deployToken, emailToken } = resolveMailCredentials(env);
+  const candidates = [...new Set([deployToken, emailToken].filter(Boolean))];
+  for (const token of candidates) {
+    const probe = await probeDeployToken(token, accountId);
+    if (probe.ok) return { token, probe };
+  }
+  return { token: deployToken, probe: await probeDeployToken(deployToken, accountId) };
 }
 
 /**

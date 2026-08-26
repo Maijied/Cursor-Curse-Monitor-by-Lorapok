@@ -4,6 +4,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { syncCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
+import { probeDeployToken } from "./lib/mail-credentials.mjs";
 import { createMailToken, probe } from "./lib/mail-token-factory.mjs";
 
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
@@ -95,17 +96,15 @@ console.log("GitHub secret CLOUDFLARE_EMAIL_API_TOKEN set (admin-production)");
 pagesSecretPut(mailToken);
 console.log("Pages secret CLOUDFLARE_EMAIL_API_TOKEN synced");
 
-const deployProbe = await fetch(
-  `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/services/ccm-mail-relay`,
-  { headers: { Authorization: `Bearer ${deployToken}` } }
-);
-if (deployProbe.status === 401 || deployProbe.status === 403) {
-  console.warn(
-    "Deploy token cannot read Workers API — add Account → Workers Scripts → Edit to CLOUDFLARE_API_TOKEN or re-run after cred vault sync."
-  );
-} else {
+const deployProbe = await probeDeployToken(deployToken, accountId);
+if (deployProbe.ok) {
   ghDeploySecretSet(deployToken);
-  console.log("GitHub secret CLOUDFLARE_API_TOKEN set (admin-production)");
+  console.log(`GitHub secret CLOUDFLARE_API_TOKEN set (admin-production, ${deployProbe.via ?? "probe"})`);
+} else {
+  console.warn(
+    `Skipping CLOUDFLARE_API_TOKEN sync (deploy probe HTTP ${deployProbe.status}). ` +
+      "Add Account → Cloudflare Pages → Edit to a dedicated API token, then re-run."
+  );
 }
 
 const vaultResult = syncCursorCloudflareSecrets({
