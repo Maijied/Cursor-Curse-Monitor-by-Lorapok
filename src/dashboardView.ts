@@ -179,10 +179,19 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       align-items: center;
       justify-content: center;
       min-height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
       background: var(--bg);
       color: var(--muted);
+      font: inherit;
       font-size: 13px;
       letter-spacing: 0.02em;
+      cursor: default;
+    }
+    .loading-state:not(:disabled) {
+      cursor: pointer;
     }
     .header {
       display: flex;
@@ -592,7 +601,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </style>
 </head>
 <body>
-  <div id="loadingState" class="loading-state">Loading dashboard…</div>
+  <button type="button" id="loadingState" class="loading-state" disabled aria-live="polite">Loading dashboard…</button>
   <div id="cursorMissingOverlay" class="cursor-missing-overlay" aria-live="polite">
     <div class="cursor-missing-card">
       <p class="cursor-missing-eyebrow">No Cursor AI found</p>
@@ -1180,7 +1189,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         var loading = document.getElementById('loadingState');
         if (loading) {
           loading.textContent = 'Still loading… tap Refresh or reopen the panel.';
-          loading.style.cursor = 'pointer';
+          loading.disabled = false;
           loading.addEventListener('click', refresh);
         }
       }

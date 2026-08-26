@@ -72,7 +72,14 @@ export class UsageMonitorService implements vscode.Disposable {
       return this.lastSnapshot;
     }
     if (this.refreshInFlight) {
-      return this.refreshInFlight;
+      if (!force) {
+        return this.refreshInFlight;
+      }
+      try {
+        await this.refreshInFlight;
+      } catch {
+        // Prior refresh failed; still run a fresh forced refresh below.
+      }
     }
     this.refreshInFlight = this.doRefresh();
     try {

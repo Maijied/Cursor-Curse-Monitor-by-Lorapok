@@ -210,6 +210,52 @@ test("usage monitor: in-flight request sharing deduplicates concurrent refresh c
   }
 });
 
+test("usage monitor: forced refresh after in-flight completes picks up updated config", async () => {
+  const originalFetch = global.fetch;
+  const dbPath = path.join(__dirname, `mock-monitor-force-after-inflight-${Date.now()}.vscdb`);
+
+  if (!setupMockDb(dbPath)) {
+    return;
+  }
+
+  process.env.CURSOR_DB_PATH = dbPath;
+  vscode._reset();
+  vscode._setConfig("cursorCurseMonitor", { customBudgetLimit: 10, warnAtPercent: 80 });
+
+  let fetchCallCount = 0;
+  global.fetch = async (url) => {
+    fetchCallCount++;
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    if (url.includes("/usage-summary")) {
+      return { ok: true, json: async () => createSampleUsage() };
+    }
+    if (url.includes("/full_stripe_profile")) {
+      return { ok: true, json: async () => createSampleProfile() };
+    }
+    return { ok: false, status: 404 };
+  };
+
+  const context = createMockContext();
+  const service = new UsageMonitorService(context);
+
+  try {
+    const inFlight = service.refresh(true);
+    vscode._setConfig("cursorCurseMonitor", { customBudgetLimit: 99 });
+    const afterMutation = await service.refresh(true);
+    const first = await inFlight;
+
+    assert.strictEqual(first.customBudgetLimit, 10);
+    assert.strictEqual(afterMutation.customBudgetLimit, 99);
+    assert.strictEqual(fetchCallCount, 4);
+  } finally {
+    global.fetch = originalFetch;
+    service.dispose();
+    try {
+      if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+    } catch {}
+  }
+});
+
 test("usage monitor: listener dispatch, subscription lifecycle, and immediate replay", async () => {
   const originalFetch = global.fetch;
   const dbPath = path.join(__dirname, `mock-monitor-listener-${Date.now()}.vscdb`);
