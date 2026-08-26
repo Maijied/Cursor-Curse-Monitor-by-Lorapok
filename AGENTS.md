@@ -43,7 +43,26 @@ Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `
 
 Re-sync: `~/.local/bin/sync-global-agent-stack`
 
-### IDE extension (root) — build / test / package
+### Project UI/UX skills (from [Snyk UI/UX skills article](https://snyk.io/articles/top-claude-skills-ui-ux-engineers/))
+
+Installed under `.cursor/skills/` (mirrored in `.agents/skills/`). Cursor loads them automatically from the project; ask in natural language or invoke slash commands where noted.
+
+| Skill | Use when |
+|-------|----------|
+| `frontend-design` | Distinctive landing pages, marketing UI, bold aesthetics (not generic AI templates) |
+| `web-design-guidelines` | Audit UI for accessibility/UX best practices (`/web-design-guidelines <glob>`) |
+| `react-best-practices` | React/Next.js performance review (waterfalls, bundle size, re-renders) |
+| `composition-patterns` | Refactor boolean-prop components to compound/explicit variants |
+| `ui-ux-pro-max` | Design systems: palettes, typography, stack-specific UI guidance (runs local `scripts/search.py`) |
+| `bencium-innovative-ux-designer` | Creative UX flows with motion/accessibility references |
+| `bencium-controlled-ux-designer` | Consistent, systematic UX for internal tools |
+| `accessibility-*` | AccessLint: scan, inspect, audit, fix, diff WCAG issues (needs `accesslint` MCP in `.cursor/mcp.json`) |
+| `react-native-skills` | React Native / Expo list performance and mobile UI patterns |
+
+**MCP:** `accesslint` (`npx -y @accesslint/mcp@latest`) — contrast checks, live DOM audits, rule explanations. Enable in Cursor Settings → MCP after pulling this branch.
+
+**Examples:** “Review `website/admin/src` for accessibility”, “Optimize admin dashboard React re-renders”, “Design a dark-mode stats card for the marketing site”.
+
 
 Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 `package`). Notes:
