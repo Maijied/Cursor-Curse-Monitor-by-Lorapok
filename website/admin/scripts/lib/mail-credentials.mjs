@@ -64,6 +64,17 @@ export async function relayWorkerExists(deployToken, accountId) {
 }
 
 /**
+ * Probe whether CLOUDFLARE_API_TOKEN can call account-scoped Cloudflare APIs.
+ * @returns {Promise<{ ok: boolean; status: number }>}
+ */
+export async function probeDeployToken(deployToken, accountId) {
+  const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}`, {
+    headers: { Authorization: `Bearer ${deployToken}` },
+  });
+  return { ok: res.ok, status: res.status };
+}
+
+/**
  * Probe Email Sending API with the dedicated email token.
  * @returns {Promise<{ ok: boolean; status: number; body: unknown }>}
  */

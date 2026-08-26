@@ -420,14 +420,24 @@ jobs:
             exit 1
           fi
 
-      - name: Setup and verify outbound mail (main push)
+      - name: Setup outbound mail (enable-mail.mjs)
         id: mail_setup
         working-directory: website/admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node scripts/sync-mail-on-main.mjs --ci
+        run: node scripts/enable-mail.mjs
+
+      - name: Verify outbound mail transport before Pages deploy
+        id: mail_verify
+        if: steps.mail_setup.outcome == 'success'
+        working-directory: website/admin
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/verify-mail-transport.mjs
 
       - name: Deploy to Cloudflare Pages
         working-directory: website/admin
@@ -435,7 +445,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ "${{ steps.mail_setup.outputs.relay_deployed }}" != "true" ] && [ "${{ steps.mail_setup.outputs.relay_exists }}" != "true" ]; then
+          if [ "${{ steps.mail_setup.outputs.relay_deployed }}" != "true" ] && [ "${{ steps.mail_setup.outputs.relay_exists }}" != "true" ] && [ "${{ steps.mail_verify.outputs.relay_exists }}" != "true" ]; then
             node <<'NODE'
           import { readFileSync, writeFileSync } from "node:fs";
           const path = "wrangler.toml";
@@ -447,7 +457,7 @@ jobs:
           writeFileSync(path, withoutServices);
           NODE
             echo "::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable."
-          elif [ "${{ steps.mail_setup.outputs.relay_exists }}" = "true" ]; then
+          elif [ "${{ steps.mail_setup.outputs.relay_exists }}" = "true" ] || [ "${{ steps.mail_verify.outputs.relay_exists }}" = "true" ]; then
             echo "::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is already deployed on this account."
           fi
           npx wrangler pages deploy dist --project-name=cursor-monitor-admin --branch=main --commit-dirty=true

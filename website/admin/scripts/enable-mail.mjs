@@ -19,6 +19,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  probeDeployToken,
   probeEmailSendingToken,
   relayWorkerExists,
   requireDeployToken,
@@ -82,49 +83,77 @@ function runWrangler(args, { cwd = adminDir, token = deployToken, allowFail = fa
   return result.status === 0;
 }
 
+const deployProbe = await probeDeployToken(deployToken, accountId);
+const deployTokenOk = deployProbe.ok;
+if (!deployTokenOk) {
+  const msg = `CLOUDFLARE_API_TOKEN rejected (HTTP ${deployProbe.status})`;
+  if (inCi) {
+    console.warn(`::warning::CI: ${msg} — skipping wrangler mail setup; admin deploy will continue.`);
+  } else {
+    console.warn(msg);
+  }
+}
+
+let relayDeployed = false;
+let relayExists = false;
 let restSynced = false;
 
 if (hasEmailToken) {
   console.log("Checking CLOUDFLARE_EMAIL_API_TOKEN (Email Sending → Edit)…");
   const tokenOk = await verifyEmailToken(emailToken, accountId);
-  if (!tokenOk) {
+  if (tokenOk) {
+    restSynced = true;
+  } else {
     console.warn(
       "Email token probe failed — REST fallback will not work until token + domain are fixed."
     );
   }
-
-  console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
-  runWrangler(["email", "sending", "enable", "lorapok.tech"], {
-    token: deployToken,
-    allowFail: true,
-  });
 }
 
-console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
-const relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
-if (!relayDeployed) {
-  console.warn(
-    "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
-      "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
-  );
-}
+if (deployTokenOk) {
+  if (hasEmailToken) {
+    console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
+    runWrangler(["email", "sending", "enable", "lorapok.tech"], {
+      token: deployToken,
+      allowFail: true,
+    });
+  }
 
-const relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
+  console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
+  relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
+  if (!relayDeployed) {
+    console.warn(
+      "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
+        "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
+    );
+  }
 
-if (hasEmailToken) {
-  console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
-  const put = spawnSync(
-    "npx",
-    ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
-    {
-      cwd: adminDir,
-      input: emailToken,
-      env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
-      stdio: ["pipe", "inherit", "inherit"],
+  relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
+
+  if (hasEmailToken && restSynced) {
+    console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
+    const put = spawnSync(
+      "npx",
+      ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
+      {
+        cwd: adminDir,
+        input: emailToken,
+        env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
+        stdio: ["pipe", "inherit", "inherit"],
+      }
+    );
+    if (put.status !== 0) {
+      if (inCi) {
+        console.warn(
+          "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
+        );
+      } else {
+        process.exit(put.status ?? 1);
+      }
     }
-  );
-  if (put.status !== 0) process.exit(put.status ?? 1);
-  restSynced = true;
+  }
+} else if (relayExists === false && inCi) {
+  console.warn("::warning::CI: cannot confirm ccm-mail-relay while deploy token is invalid.");
 }
 
 setGithubActionsOutput("relay_deployed", relayDeployed ? "true" : "false");
@@ -133,7 +162,7 @@ setGithubActionsOutput("rest_ok", restSynced ? "true" : "false");
 
 console.log("\nDone.");
 if (inCi) {
-  console.log("CI will verify transport, then deploy Pages (activates MAIL_RELAY binding).");
+  console.log("CI will verify transport, then deploy Pages (activates MAIL_RELAY binding when available).");
 } else {
   console.log("  • Next: node scripts/repair-mail.mjs (build + Pages deploy) or wait for CI on main");
   console.log("  • Verify: node scripts/verify-mail-setup.mjs && Mailbox → Send test email");

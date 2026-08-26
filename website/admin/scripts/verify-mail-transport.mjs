@@ -4,6 +4,7 @@
  * Used by admin-deploy job (same checks as repair-mail step 4, without Pages deploy).
  */
 import {
+  probeDeployToken,
   probeEmailSendingToken,
   relayWorkerExists,
   requireDeployToken,
@@ -11,6 +12,7 @@ import {
   setGithubActionsOutput,
 } from "./lib/mail-credentials.mjs";
 
+const inCi = process.env.GITHUB_ACTIONS === "true";
 const { deployToken, accountId, emailToken } = resolveMailCredentials();
 
 try {
@@ -20,7 +22,15 @@ try {
   process.exit(1);
 }
 
-const relayExists = await relayWorkerExists(deployToken, accountId);
+const deployProbe = await probeDeployToken(deployToken, accountId);
+let relayExists = false;
+if (deployProbe.ok) {
+  relayExists = await relayWorkerExists(deployToken, accountId);
+} else if (inCi) {
+  console.warn(
+    `::warning::CI: cannot verify ccm-mail-relay (deploy token HTTP ${deployProbe.status}) — checking REST fallback only.`
+  );
+}
 let restOk = false;
 
 if (emailToken) {
@@ -62,4 +72,8 @@ console.error(
   '  gh secret set CLOUDFLARE_EMAIL_API_TOKEN --env admin-production --body "$(cred get cursor cloudflare_email_api_token)"'
 );
 console.error("Or locally: node website/admin/scripts/repair-mail.mjs");
+if (inCi) {
+  console.warn("::warning::CI: continuing admin Pages deploy without verified outbound mail.");
+  process.exit(0);
+}
 process.exit(1);
