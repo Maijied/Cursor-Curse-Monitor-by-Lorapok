@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const response = await dispatchRollbackWorkflow(env, body, "Rollback triggered", {
       triggeredBy: auth.email,
-    });
+    }, context);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Rollback handler error", err);

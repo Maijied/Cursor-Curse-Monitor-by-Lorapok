@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const response = await dispatchReleaseWorkflow(env, body, "Release workflow triggered successfully", {
       triggeredBy: auth.email,
-    });
+    }, context);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Release handler error", err);

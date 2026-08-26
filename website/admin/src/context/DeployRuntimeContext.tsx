@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { WorkflowRun, WorkflowRunLogs } from "../lib/api";
-import { notifyDiscordDeploymentApi } from "../lib/api";
 import DeployFloatingStatusButton from "../components/ui/DeployFloatingStatusButton";
 import DeployLeaveWarningModal from "../components/ui/DeployLeaveWarningModal";
 import DeployStatusModal from "../components/ui/DeployStatusModal";
@@ -105,24 +104,19 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     });
   }, []);
 
-  const finishSession = useCallback(
-    (success: boolean, finishedRun: WorkflowRun | null, jobs: WorkflowRunLogs["jobs"]) => {
-      if (!session) return;
-      notifyDiscordDeploymentApi({
-        actionType: session.workflowName,
-        tag: session.targetTag || undefined,
-        channel: session.channel,
-        market: session.market,
-        conclusion: success ? "success" : finishedRun?.conclusion ?? "failure",
-        runUrl: finishedRun?.url,
-        jobs: jobs.map((j) => ({ name: j.name, status: j.status, conclusion: j.conclusion ?? undefined })),
-      }).catch(() => {});
-      onCompleteRef.current?.();
-      setSession(null);
-      setStatusModalOpen(false);
-    },
-    [session]
-  );
+  const finishSession = useCallback(() => {
+    if (!session) return;
+    onCompleteRef.current?.();
+    setSession(null);
+    setStatusModalOpen(false);
+  }, [session]);
+
+  const abandonSession = useCallback((message: string) => {
+    setPollError(message);
+    onCompleteRef.current?.();
+    setSession(null);
+    setStatusModalOpen(false);
+  }, []);
 
   const openStatusModal = useCallback(() => setStatusModalOpen(true), []);
   const closeStatusModal = useCallback(() => setStatusModalOpen(false), []);
@@ -133,8 +127,17 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
 
     let cancelled = false;
     const startedAt = Date.now();
+    const pollTimeoutMs = 15 * 60 * 1000;
 
     const poll = async () => {
+      if (cancelled) return;
+
+      const elapsed = Date.now() - startedAt;
+      if (elapsed >= pollTimeoutMs) {
+        abandonSession("Workflow status polling timed out. Check GitHub Actions for the latest run.");
+        return;
+      }
+
       try {
         const { fetchWorkflowRuns, fetchWorkflowRunLogs } = await import("../lib/api");
         const { pickWorkflowRun } = await import("../lib/workflow-run-match");
@@ -155,22 +158,24 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
 
           if (match.status === "completed" && !completedRef.current) {
             completedRef.current = true;
-            finishSession(match.conclusion === "success", match, logData?.jobs ?? []);
+            finishSession();
+            return;
           }
         } else {
           setWaiting(true);
           setPollError(null);
         }
 
-        const finished = match?.status === "completed";
-        const shouldPoll = Date.now() - startedAt < 15 * 60 * 1000;
-        if (shouldPoll && !cancelled && !finished) {
+        if (!cancelled && match?.status !== "completed") {
           window.setTimeout(poll, 4000);
         }
       } catch (err: unknown) {
-        if (!cancelled) setPollError(err instanceof Error ? err.message : "Failed to load workflow status");
-        if (!cancelled && Date.now() - startedAt < 15 * 60 * 1000) {
+        if (cancelled) return;
+        setPollError(err instanceof Error ? err.message : "Failed to load workflow status");
+        if (Date.now() - startedAt < pollTimeoutMs) {
           window.setTimeout(poll, 8000);
+        } else {
+          abandonSession("Workflow status polling timed out. Check GitHub Actions for the latest run.");
         }
       }
     };
@@ -179,7 +184,7 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [session, finishSession]);
+  }, [session, finishSession, abandonSession]);
 
   // Warn when closing the browser tab mid-deploy.
   useEffect(() => {
