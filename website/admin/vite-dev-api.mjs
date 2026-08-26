@@ -566,6 +566,10 @@ async function fetchMarketplaceSync() {
   };
 }
 
+/**
+ * Create development-mode HTTP middleware for API routes, analytics, usage tracking, integrations, administration, deployments, notifications, and release data.
+ * @return {Function} Middleware that handles recognized API requests and delegates unrecognized requests to the next handler.
+ */
 export function createDevApiMiddleware() {
   return (req, res, next) => {
     const url = req.url?.split("?")[0] ?? "";

@@ -10,6 +10,17 @@ const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
 const ACTION_DEPLOY_INFRA = "deploy-infra - Deploy Mission Control admin & marketing site";
 const ACTION_FULL_RELEASE = "full-release - Bump version, tag & update Mission Control";
 
+/**
+ * Dispatch a GitHub Actions workflow on the main branch.
+ * @param {object} env - Environment variables containing the GitHub token.
+ * @param {string} workflowId - GitHub Actions workflow identifier.
+ * @param {object} inputs - Inputs passed to the workflow.
+ * @param {string} successMessage - Message included in the successful response.
+ * @param {object} fields - Additional fields included in the successful response.
+ * @param {object} [notifyContext] - Context for deployment notifications.
+ * @param {object} [pagesContext] - Context used to schedule completion monitoring.
+ * @return {Response} A success response or an error response when dispatch fails.
+ */
 async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields, notifyContext, pagesContext) {
   const githubToken = env.GITHUB_TOKEN;
   if (!githubToken) {
@@ -125,10 +136,13 @@ function tagAtLeast(tag, minimum) {
 }
 
 /**
- * Forward publish — existing tag, no main rewrite.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} body
- * @param {string} successMessage
+ * Dispatches a marketplace publish workflow for an existing tag.
+ * @param {Record<string, unknown>} env - Runtime environment containing workflow configuration and credentials.
+ * @param {Record<string, unknown>} body - Request data containing the target tag, market, release channel, and deployment flags.
+ * @param {string} successMessage - Message included in a successful response.
+ * @param {Record<string, unknown>} [notifyContext] - Optional context for deployment notifications.
+ * @param {Record<string, unknown>} [pagesContext] - Optional context for completion monitoring.
+ * @return {Promise<Response>} The workflow dispatch response.
  */
 export async function dispatchPublishWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const parsed = parseInputs(body);
@@ -166,10 +180,11 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
 }
 
 /**
- * Rollback — restore a prior tag to main and publish a bumped patch release.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} body
- * @param {string} successMessage
+ * Dispatch a rollback workflow and activate the public recovery notice.
+ * @param {Record<string, unknown>} body - Contains the target tag, publishing market, and release channel.
+ * @param {Record<string, unknown>} notifyContext - Optional context for deployment notifications.
+ * @param {Record<string, unknown>} pagesContext - Optional context for Pages deployment monitoring.
+ * @returns {Response} The workflow dispatch or error response.
  */
 export async function dispatchRollbackWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const parsed = parseInputs(body);
@@ -230,9 +245,12 @@ const VERSION_TYPE_INPUTS = {
 };
 
 /**
- * Infra-only deploy — Mission Control admin (Cloudflare) + marketing site. No marketplaces.
- * @param {Record<string, unknown>} env
- * @param {string} successMessage
+ * Dispatch an infrastructure-only deployment workflow for the admin and marketing sites.
+ * @param {Record<string, unknown>} env - The deployment environment configuration.
+ * @param {Record<string, unknown>} body - Deployment options, including site deployment flags.
+ * @param {string} successMessage - The message returned when dispatch succeeds.
+ * @param {unknown} notifyContext - Optional notification context.
+ * @param {unknown} pagesContext - Optional Pages deployment context.
  */
 export async function dispatchInfraWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const deployAdmin = bodyFlag(body, "deploy_admin", true);
@@ -261,10 +279,10 @@ function bodyFlag(body, key, defaultValue) {
 }
 
 /**
- * New release — bump package.json, create tag, publish via ci-cd.yml.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} body
- * @param {string} successMessage
+ * Dispatch a full release workflow using the requested version, market, and release channel.
+ * @param {Record<string, unknown>} body - Release settings, including version and deployment options.
+ * @param {string} successMessage - Message included in the successful response.
+ * @returns {Response} The workflow dispatch response, or an error response for invalid settings or notice activation failure.
  */
 export async function dispatchReleaseWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);

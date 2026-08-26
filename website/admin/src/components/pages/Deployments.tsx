@@ -30,6 +30,9 @@ function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) 
 
 type Mode = "deploy" | "rollback" | "infra";
 
+/**
+ * Renders the interface for deploying releases, rolling back to known-good tags, or redeploying infrastructure.
+ */
 export default function Deployments() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
   const { inProgress, startSession, registerOnDeployComplete } = useDeployRuntime();

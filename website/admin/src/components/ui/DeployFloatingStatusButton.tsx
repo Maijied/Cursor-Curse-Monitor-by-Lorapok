@@ -17,6 +17,15 @@ const STATUS_LABEL: Record<DeployPollStatus, string> = {
   failure: "Failed",
 };
 
+/**
+ * Displays a floating button for opening deployment status details.
+ *
+ * @param status - The current deployment status.
+ * @param modeLabel - The deployment mode displayed by the button.
+ * @param targetTag - An optional target identifier displayed with the status.
+ * @param hiddenOnDeploymentsPage - Whether to hide the button on the deployments page.
+ * @returns The deployment status button, or `null` when it should be hidden.
+ */
 export default function DeployFloatingStatusButton({
   status,
   modeLabel,

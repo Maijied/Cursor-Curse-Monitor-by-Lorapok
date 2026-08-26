@@ -2,7 +2,11 @@ import { useCallback } from "react";
 import { useDeployRuntime } from "../../context/DeployRuntimeContext";
 import DeployRuntimePanel from "./DeployRuntimePanel";
 
-/** Inline deployment animation slot on the Deployments page. */
+/**
+ * Renders the inline deployment runtime panel for an active deployment.
+ *
+ * @returns The deployment panel, or an aria-hidden anchor when the panel is unavailable or a status modal is open.
+ */
 export default function DeployRuntimeInlineSlot() {
   const {
     session,

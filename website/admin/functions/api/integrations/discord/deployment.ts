@@ -1,6 +1,12 @@
 import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import { notifyDiscordDeployment } from "../../_shared/discord-notify.js";
 
+/**
+ * Handles deployment-completion notifications for the Discord integration.
+ *
+ * @param context - The request context containing the incoming request and environment bindings.
+ * @returns A response indicating authorization, JSON parsing, notification, or delivery status.
+ */
 export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);

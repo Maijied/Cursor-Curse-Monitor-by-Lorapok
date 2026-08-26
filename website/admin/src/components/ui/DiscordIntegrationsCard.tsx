@@ -7,6 +7,9 @@ import { auth } from "../../lib/firebase";
 import { fetchDiscordConfigApi, putDiscordConfigApi, type DiscordConfig } from "../../lib/api";
 import { isMasterAdmin } from "../../lib/admin-config";
 
+/**
+ * Displays the Discord webhook configuration and allows master admins to update it.
+ */
 export default function DiscordIntegrationsCard() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
   const [loading, setLoading] = useState(true);

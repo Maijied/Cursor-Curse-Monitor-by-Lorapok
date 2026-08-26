@@ -15,6 +15,11 @@ const ACTION_LABELS = {
   "deploy-infra": "Infra deploy",
 };
 
+/**
+ * Formats a deployment action identifier as a human-readable label.
+ * @param {*} actionType - The action identifier or descriptive action string.
+ * @returns {string} The matching display label, the leading action text, or `"Deployment"` when no action is provided.
+ */
 function formatActionType(actionType) {
   if (!actionType) return "Deployment";
   const raw = String(actionType);
@@ -27,6 +32,11 @@ function formatActionType(actionType) {
   return raw.split(" - ")[0] ?? raw;
 }
 
+/**
+ * Selects an emoji representing a job's conclusion or current status.
+ * @param {Object} job - The job whose outcome determines the emoji.
+ * @returns {string} The emoji for success, skipped, cancelled, failure, or an in-progress state.
+ */
 function jobIcon(job) {
   const conclusion = job.conclusion ?? job.status;
   if (conclusion === "success") return "✅";
@@ -37,7 +47,9 @@ function jobIcon(job) {
 }
 
 /**
- * @param {Record<string, unknown>} payload
+ * Build a Discord embed describing a deployment and its pipeline status.
+ * @param {Record<string, unknown>} payload - Deployment details, including its phase, outcome, metadata, and jobs.
+ * @returns {Record<string, unknown>} The formatted Discord deployment embed.
  */
 export function buildDeploymentEmbed(payload) {
   const phase = String(payload.phase ?? "completed");
@@ -96,8 +108,10 @@ export function buildDeploymentEmbed(payload) {
 }
 
 /**
- * @param {string} webhookUrl
- * @param {Record<string, unknown>} payload
+ * Sends a deployment notification to a Discord webhook.
+ * @param {string} webhookUrl - The Discord webhook URL.
+ * @param {Record<string, unknown>} payload - Deployment data used to build the notification embed.
+ * @return {{ok: boolean, status: number, error?: string}} The delivery status and, when applicable, a truncated error message.
  */
 export async function sendDiscordWebhook(webhookUrl, payload) {
   const embed = buildDeploymentEmbed(payload);
@@ -124,8 +138,9 @@ export async function sendDiscordWebhook(webhookUrl, payload) {
 }
 
 /**
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} payload
+ * Sends a deployment notification to the configured Discord webhook and records the outcome.
+ * @param {Record<string, unknown>} payload - Deployment details used to build the notification.
+ * @return {Promise<{ok: boolean, skipped?: boolean, reason?: string, status?: number, error?: string}>} The notification result, including skip or failure details when applicable.
  */
 export async function notifyDiscordDeployment(env, payload) {
   const config = await readDiscordConfig(env);

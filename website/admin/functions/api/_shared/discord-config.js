@@ -3,7 +3,11 @@ const CONFIG_KEY = "integrations:discord";
 const DISCORD_WEBHOOK_RE =
   /^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[\w-]+$/;
 
-/** @param {string} url */
+/**
+ * Determines whether a value is a valid Discord webhook URL.
+ * @param {string} url - The value to validate.
+ * @return {boolean} `true` if the value is a valid Discord webhook URL, `false` otherwise.
+ */
 export function isValidDiscordWebhookUrl(url) {
   if (!url || typeof url !== "string") return false;
   try {
@@ -13,7 +17,11 @@ export function isValidDiscordWebhookUrl(url) {
   }
 }
 
-/** @param {string} url */
+/**
+ * Creates a privacy-safe preview of a Discord webhook URL.
+ * @param {string} url - The Discord webhook URL to mask.
+ * @return {string|null} The webhook ID and final four token characters, `configured` for unrecognized non-empty values, or `null` for empty input.
+ */
 export function maskWebhookUrl(url) {
   if (!url) return null;
   const match = String(url).match(/\/webhooks\/(\d+)\/([\w-]+)$/);
@@ -23,7 +31,8 @@ export function maskWebhookUrl(url) {
 }
 
 /**
- * @param {Record<string, unknown>} env
+ * Read the Discord configuration from KV storage.
+ * @returns {Promise<{webhookUrl: string, updatedAt: unknown, updatedBy: unknown}>} The normalized Discord configuration, or empty defaults when unavailable or invalid.
  */
 export async function readDiscordConfig(env) {
   if (!env?.ADMIN_KV?.get) return { webhookUrl: "", updatedAt: null, updatedBy: null };
@@ -42,8 +51,9 @@ export async function readDiscordConfig(env) {
 }
 
 /**
- * @param {Record<string, unknown>} env
- * @param {{ webhookUrl: string; updatedAt: string; updatedBy: string }} config
+ * Store the Discord configuration in administrative key-value storage.
+ * @param {Record<string, unknown>} env - The environment containing the administrative KV binding.
+ * @param {{ webhookUrl: string; updatedAt: string; updatedBy: string }} config - The Discord configuration to store.
  */
 export async function writeDiscordConfig(env, config) {
   if (!env?.ADMIN_KV?.put) {
@@ -53,7 +63,9 @@ export async function writeDiscordConfig(env, config) {
 }
 
 /**
- * @param {{ webhookUrl: string; updatedAt?: string | null; updatedBy?: string | null }} config
+ * Creates a client-safe Discord configuration summary.
+ * @param {{ webhookUrl: string; updatedAt?: string | null; updatedBy?: string | null }} config - The Discord webhook configuration and update metadata.
+ * @return {{ configured: boolean; webhookPreview: string | null; updatedAt: string | null; updatedBy: string | null }} The configuration status, masked webhook preview, and normalized update metadata.
  */
 export function sanitizeDiscordConfigForClient(config) {
   const { webhookUrl, updatedAt, updatedBy } = config;

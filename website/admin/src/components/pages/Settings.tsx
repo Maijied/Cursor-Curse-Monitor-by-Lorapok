@@ -8,6 +8,9 @@ import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
 
+/**
+ * Renders the application settings page with theme controls, integrations, environment details, and API health information.
+ */
 export default function Settings() {
   const { data: siteData } = useSiteData();
   const [health, setHealth] = useState<

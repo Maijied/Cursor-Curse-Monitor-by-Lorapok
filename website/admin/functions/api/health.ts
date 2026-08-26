@@ -3,6 +3,12 @@ import { githubFetch } from "./_shared/github.js";
 import { getMailTransportStatus } from "./_shared/mail.js";
 import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
 
+/**
+ * Reports service health, configuration status, and endpoint URLs.
+ *
+ * @param context - The request context containing environment bindings.
+ * @returns A JSON response with health checks and sanitized service configuration.
+ */
 export async function onRequestGet(context) {
   const { env } = context;
   const checks = { github: false, timestamp: new Date().toISOString() };
