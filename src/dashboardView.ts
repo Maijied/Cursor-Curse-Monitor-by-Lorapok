@@ -56,14 +56,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     const iconUri = webviewView.webview
       .asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "media", "icon.png"))
       .toString();
-    webviewView.webview.html = this.getHtml(
-      this.logoSvgCache,
-      this.usageMeterSvgCache,
-      webviewView.webview.cspSource,
-      this.extensionVersion,
-      nonce,
-      iconUri
-    );
 
     const push = (snapshot: DashboardSnapshot) => {
       void webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
@@ -97,6 +89,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     });
 
+    // Register the message handler before assigning html — on Windows, macOS, and
+    // Linux the inline script can post `ready` synchronously when html is set.
     webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
       if (message.type === "ready") {
         await deliverSnapshot(false);
@@ -151,6 +145,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
       }
     });
+
+    const cached = this.monitor.getSnapshot();
+    if (cached) {
+      push(cached);
+    }
+
+    webviewView.webview.html = this.getHtml(
+      this.logoSvgCache,
+      this.usageMeterSvgCache,
+      webviewView.webview.cspSource,
+      this.extensionVersion,
+      nonce,
+      iconUri
+    );
   }
 
   private getHtml(
@@ -890,7 +898,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
-    vscode.postMessage({ type: 'ready' });
+
+    function signalReady() {
+      vscode.postMessage({ type: 'ready' });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', signalReady);
+    } else {
+      signalReady();
+    }
+    setTimeout(signalReady, 100);
+    setTimeout(signalReady, 500);
 
     function onClick(id, handler) {
       var el = document.getElementById(id);
