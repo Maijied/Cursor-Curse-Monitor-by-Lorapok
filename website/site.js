@@ -729,6 +729,7 @@ function initLightbox() {
   };
 
   let index = 0;
+  let lastTrigger = null;
 
   const show = (i, group = activeGroup) => {
     activeGroup = group;
@@ -751,6 +752,7 @@ function initLightbox() {
     img.alt = alt;
     caption.textContent = btn.dataset.caption || alt;
     counter.textContent = `${index + 1} / ${triggers.length}`;
+    lastTrigger = btn;
     lightbox.hidden = false;
     lightbox.setAttribute("aria-hidden", "false");
     document.body.classList.add("lightbox-open");
@@ -758,11 +760,16 @@ function initLightbox() {
   };
 
   const close = () => {
+    const restore = lastTrigger;
+    lastTrigger = null;
     lightbox.hidden = true;
     lightbox.setAttribute("aria-hidden", "true");
     document.body.classList.remove("lightbox-open");
     img.classList.remove("is-loaded");
     img.removeAttribute("src");
+    if (restore?.isConnected) {
+      restore.focus();
+    }
   };
 
   document.addEventListener("click", (e) => {
