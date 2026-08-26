@@ -7,7 +7,8 @@
  * 3. wrangler pages deploy — activate MAIL_RELAY service binding
  * 4. verify-mail-setup.mjs — probe REST token (optional sanity check)
  *
- * Credentials via secure cred vault (never paste tokens in chat):
+ * CI/CD: every push to `main` runs `enable-mail.mjs` + Pages deploy in admin-deploy job.
+ * Use this script only for manual repair when CI is blocked or secrets need re-sync.
  *   export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"
  *   export CLOUDFLARE_EMAIL_API_TOKEN="$(cred get cursor cloudflare_email_api_token)"
  *   export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"

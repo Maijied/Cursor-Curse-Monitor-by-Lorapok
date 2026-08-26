@@ -12,9 +12,26 @@ Outbound mail uses branded HTML templates per category. Product mail sends from 
 ## Production setup
 
 1. Onboard `lorapok.tech` in Cloudflare **Email → Email Sending**
-2. Deploy relay worker: `node website/admin/scripts/enable-mail.mjs` (or CI on admin deploy)
-3. Optional REST fallback: Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` with **Email Sending → Edit**
-4. Use **Mailbox → Send branded test email** to verify
+2. **One-time** sync cred vault → GitHub `admin-production` environment secrets:
+
+```bash
+gh secret set CLOUDFLARE_EMAIL_API_TOKEN --env admin-production \
+  --body "$(cred get cursor cloudflare_email_api_token)"
+# CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID should already be set for admin-deploy
+```
+
+3. **CI/CD (automatic on merge to `main`)** — `admin-deploy` job runs:
+   - `enable-mail.mjs` (relay worker + Pages email secret)
+   - `verify-mail-transport.mjs` (fail closed if neither relay nor REST)
+   - `wrangler pages deploy` (activates `MAIL_RELAY` binding)
+
+4. Manual repair only when CI is down or you need an immediate fix:
+
+```bash
+node website/admin/scripts/repair-mail.mjs   # same steps as CI, locally
+```
+
+5. Use **Mailbox → Send branded test email** to verify
 
 ## Message categories
 

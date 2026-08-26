@@ -7,6 +7,8 @@
  * Never fall back from email token to deploy token for outbound mail.
  */
 
+import { appendFileSync } from "node:fs";
+
 const DEFAULT_ACCOUNT_ID = "f049faaf2f67549f5c58837479596a4a";
 
 export function resolveMailCredentials(env = process.env) {
@@ -27,14 +29,32 @@ export function requireDeployToken(env = process.env) {
   return { deployToken, accountId };
 }
 
-export function requireEmailToken(env = process.env) {
+export function requireEmailToken(env = process.env, { allowMissingInCi = false } = {}) {
   const { emailToken, accountId } = resolveMailCredentials(env);
   if (!emailToken) {
+    if (allowMissingInCi && env.GITHUB_ACTIONS === "true") {
+      return { emailToken: "", accountId };
+    }
     throw new Error(
       "Set CLOUDFLARE_EMAIL_API_TOKEN (Account → Email Sending → Edit). Never use CLOUDFLARE_API_TOKEN for mail sends. Load via: export CLOUDFLARE_EMAIL_API_TOKEN=\"$(cred get cursor cloudflare_email_api_token)\""
     );
   }
   return { emailToken, accountId };
+}
+
+/** @param {string} name @param {string} value */
+export function setGithubActionsOutput(name, value) {
+  const file = process.env.GITHUB_OUTPUT;
+  if (!file) return;
+  appendFileSync(file, `${name}=${value}\n`);
+}
+
+export async function relayWorkerExists(deployToken, accountId) {
+  const res = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ccm-mail-relay`,
+    { headers: { Authorization: `Bearer ${deployToken}` } }
+  );
+  return res.status === 200;
 }
 
 /**
