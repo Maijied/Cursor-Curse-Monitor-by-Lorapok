@@ -17,7 +17,12 @@ import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
-import { COMMUNITY_DOWNLOADS_NOTE, formatDownloadCount, getVerifiedDownloadTotal, resolveVsCodeDownloadCount } from "../../lib/download-stats";
+import {
+  COMMUNITY_DOWNLOADS_NOTE,
+  formatDownloadCount,
+  getVerifiedChannelCount,
+  getVerifiedDownloadTotal,
+} from "../../lib/download-stats";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
   if (status === "synced") return "synced";
@@ -56,6 +61,7 @@ export default function Overview() {
   const downloads = data.downloads;
   const verifiedTotal = getVerifiedDownloadTotal(data);
   const openVsxCombined = downloads?.verified ? downloads.openVsxCombined ?? null : null;
+  const canonicalOpenVsx = getVerifiedChannelCount(data, "openVsxCanonical");
 
   return (
     <div className="space-y-8">
@@ -124,7 +130,7 @@ export default function Overview() {
           sub={
             <span className="text-xs text-[var(--color-muted)]">
               {data.ovsx.version ?? "—"}
-              {data.ovsx.downloadCount != null ? ` · ${formatDownloadCount(data.ovsx.downloadCount)} canonical` : ""}
+              {canonicalOpenVsx != null ? ` · ${formatDownloadCount(canonicalOpenVsx)} canonical` : ""}
             </span>
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
@@ -200,19 +206,19 @@ export default function Overview() {
                 {
                   name: "GitHub Releases",
                   version: data.github.releaseTag,
-                  downloads: data.github.totalReleaseDownloads ?? downloads?.breakdown?.githubAllAssets,
+                  downloads: getVerifiedChannelCount(data, "githubAllAssets"),
                   ok: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
                 },
                 {
                   name: "Open VSX (canonical)",
                   version: data.ovsx.version ?? "—",
-                  downloads: downloads?.breakdown?.openVsxCanonical ?? data.ovsx.downloadCount,
+                  downloads: getVerifiedChannelCount(data, "openVsxCanonical"),
                   ok: data.ovsx.version === data.packageVersion,
                 },
                 {
                   name: "VS Code Marketplace",
                   version: data.vscode.version ?? "—",
-                  downloads: resolveVsCodeDownloadCount(data),
+                  downloads: getVerifiedChannelCount(data, "vscodeMarketplace"),
                   ok: data.vscode.version === data.packageVersion,
                 },
                 ...(data.browserExtension
@@ -234,7 +240,7 @@ export default function Overview() {
                 {
                   name: "Open VSX (LorapokLabs)",
                   version: data.ovsxDuplicate?.version ?? "—",
-                  downloads: downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount,
+                  downloads: getVerifiedChannelCount(data, "openVsxDuplicate"),
                   ok: false,
                   warn: true,
                 },

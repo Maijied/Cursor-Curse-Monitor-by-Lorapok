@@ -1,6 +1,21 @@
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const assert = require("assert");
+
+// The search index is an fts5 virtual table. Some Node builds ship node:sqlite
+// without the fts5 extension compiled in, so probe before assuming support.
+function hasFts5(DatabaseSync) {
+  const probe = new DatabaseSync(":memory:");
+  try {
+    probe.exec("CREATE VIRTUAL TABLE fts5_probe USING fts5(a);");
+    return true;
+  } catch {
+    return false;
+  } finally {
+    probe.close();
+  }
+}
 
 async function run() {
   let DatabaseSync;
@@ -11,7 +26,12 @@ async function run() {
     return;
   }
 
-  const tempDir = fs.mkdtempSync(path.join(__dirname, "reindex-"));
+  if (!hasFts5(DatabaseSync)) {
+    console.log("Skipping reindex test: node:sqlite in this Node runtime lacks the fts5 extension");
+    return;
+  }
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ccm-reindex-"));
   const workspacePath = path.join(tempDir, "demo-workspace");
   const stateDbPath = path.join(tempDir, "state.vscdb");
   const searchDbPath = path.join(tempDir, "conversation-search.db");
@@ -89,10 +109,21 @@ async function run() {
   verifySearch.close();
 
   assert.ok(row, "expected conversation in search db");
+
+  Module._resolveFilename = originalResolveFilename;
+  fs.rmSync(tempDir, { recursive: true, force: true });
   console.log("reindex-conversations test passed");
 }
 
-run().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+run()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => {
+    for (const leftover of fs.readdirSync(__dirname)) {
+      if (leftover.startsWith("reindex-")) {
+        fs.rmSync(path.join(__dirname, leftover), { recursive: true, force: true });
+      }
+    }
+  });

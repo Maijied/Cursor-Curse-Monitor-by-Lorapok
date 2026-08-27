@@ -1,5 +1,5 @@
 import type { SiteData } from "./site-data";
-import { resolveVsCodeDownloadCount } from "./download-stats";
+import { getVerifiedChannelCount } from "./download-stats";
 
 export type SyncChannel = {
   id: string;
@@ -18,28 +18,28 @@ export function buildSyncChannels(data: SiteData): SyncChannel[] {
       id: "github",
       label: "GitHub",
       version: data.github.releaseTag.replace(/^v/, "") || null,
-      downloadCount: data.github.totalReleaseDownloads ?? data.github.vsixDownloadCount ?? null,
+      downloadCount: getVerifiedChannelCount(data, "githubAllAssets"),
       synced: data.github.releaseTag.replace(/^v/, "") === pkg,
     },
     {
       id: "ovsx",
       label: "Open VSX",
       version: data.ovsx.version,
-      downloadCount: data.ovsx.downloadCount ?? null,
+      downloadCount: getVerifiedChannelCount(data, "openVsxCanonical"),
       synced: data.ovsx.version === pkg,
     },
     {
       id: "vscode",
       label: "VS Code",
       version: data.vscode.version,
-      downloadCount: resolveVsCodeDownloadCount(data),
+      downloadCount: getVerifiedChannelCount(data, "vscodeMarketplace"),
       synced: data.vscode.version === pkg,
     },
     {
       id: "ovsx-duplicate",
       label: "Open VSX (LorapokLabs)",
       version: data.ovsxDuplicate?.version ?? null,
-      downloadCount: data.ovsxDuplicate?.downloadCount ?? null,
+      downloadCount: getVerifiedChannelCount(data, "openVsxDuplicate"),
       synced: false,
       warn: true,
     },

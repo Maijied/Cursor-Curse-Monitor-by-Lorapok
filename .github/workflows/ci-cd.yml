@@ -530,6 +530,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json website/readme-stats.svg website/stats/badge.json website/stats/badge-openvsx.json website/stats/badge-openvsx-total.json website/stats/badge-vscode.json
+          # generate-seo.mjs also rewrites the <head> meta and JSON-LD blocks in
+          # these pages; without them the committed structured data keeps
+          # advertising whatever release was current when they were last touched.
+          git add website/index.html website/privacy.html website/terms.html website/404.html
           if git diff --staged --quiet; then
             echo "No SEO artifact changes to commit."
             exit 0
