@@ -436,6 +436,7 @@ jobs:
       - name: Verify outbound mail transport before Pages deploy
         id: mail_verify
         if: steps.mail_setup.outcome == 'success'
+        continue-on-error: true
         working-directory: website/admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

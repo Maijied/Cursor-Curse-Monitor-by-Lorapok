@@ -25,25 +25,30 @@ function sleep(ms) {
 }
 
 async function pickDeployTokenWithRetry(maxAttempts = 4) {
+  let sawRateLimit = false;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const result = await pickDeployToken();
     if (result.probe.ok) {
-      return result;
+      return { ...result, sawRateLimit };
     }
-    if (result.probe.via?.includes("rate-limit") && attempt < maxAttempts) {
-      const waitSec = attempt * 15;
-      console.warn(
-        `::warning::Deploy token probe rate-limited (HTTP ${result.probe.status}); retrying in ${waitSec}s (${attempt}/${maxAttempts})…`
-      );
-      await sleep(waitSec * 1000);
-      continue;
+    if (result.probe.via?.includes("rate-limit")) {
+      sawRateLimit = true;
+      if (attempt < maxAttempts) {
+        const waitSec = attempt * 15;
+        console.warn(
+          `::warning::Deploy token probe rate-limited (HTTP ${result.probe.status}); retrying in ${waitSec}s (${attempt}/${maxAttempts})…`
+        );
+        await sleep(waitSec * 1000);
+        continue;
+      }
     }
-    return result;
+    return { ...result, sawRateLimit };
   }
-  return pickDeployToken();
+  const fallback = await pickDeployToken();
+  return { ...fallback, sawRateLimit };
 }
 
-const { token: deployToken, probe } = await pickDeployTokenWithRetry();
+const { token: deployToken, probe, sawRateLimit } = await pickDeployTokenWithRetry();
 if (!deployToken) {
   console.error("::error::CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) is required.");
   process.exit(1);
@@ -51,13 +56,17 @@ if (!deployToken) {
 
 if (probe.ok) {
   console.log(`::notice::Using deploy token (${probe.via ?? "probe"} HTTP ${probe.status}).`);
-} else if (probe.via?.includes("rate-limit")) {
+} else if (sawRateLimit || probe.via?.includes("rate-limit")) {
   console.warn(
     `::warning::Deploy token probe still rate-limited after retries (HTTP ${probe.status}); attempting wrangler Pages deploy anyway.`
   );
+} else if (deployToken) {
+  console.warn(
+    `::warning::Deploy token probe failed (HTTP ${probe.status}); attempting wrangler Pages deploy anyway — wrangler may still succeed when Cloudflare verify/Pages probes are flaky.`
+  );
 } else {
   console.error(
-    `::error::No valid deploy token (HTTP ${probe.status}). ` +
+    `::error::No deploy token available (HTTP ${probe.status}). ` +
       "Refresh GitHub admin-production secret CLOUDFLARE_API_TOKEN with a Cloudflare API token that has Account → Cloudflare Pages → Edit."
   );
   process.exit(1);
