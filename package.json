@@ -6,7 +6,7 @@
   ],
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
-  "version": "1.0.26",
+  "version": "1.0.29",
   "publisher": "LorapokLabs",
   "license": "GPL-3.0-or-later",
   "icon": "media/icon.png",
