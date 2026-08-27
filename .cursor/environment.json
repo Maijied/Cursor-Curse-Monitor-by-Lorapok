@@ -1,0 +1,10 @@
+{
+  "name": "Cursor Curse Monitor",
+  "install": "npm ci && npm ci --prefix website/admin && node scripts/sync-global-agent-stack.mjs",
+  "terminals": [
+    {
+      "name": "admin-dev",
+      "command": "cd website/admin && npm run dev"
+    }
+  ]
+}
