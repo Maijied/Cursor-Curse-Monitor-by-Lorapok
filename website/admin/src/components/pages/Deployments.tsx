@@ -18,6 +18,7 @@ import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
+import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
@@ -267,8 +268,10 @@ export default function Deployments() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Release"
-        description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces."
+        description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces. Discord gets started and completed status when the hook is set."
       />
+
+      <DiscordIntegrationsCard />
 
       <Card className="border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
         <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">How it works</h3>
@@ -287,8 +290,8 @@ export default function Deployments() {
             <code className="font-mono text-xs">v{"{major}.{minor}.Rn"}</code>, then publish.
           </li>
           <li>
-            <strong className="text-[var(--color-text)]">Infra</strong> — redeploy Mission Control and/or the marketing
-            site only (no marketplace publish).
+            <strong className="text-[var(--color-text)]">Discord hook</strong> — paste a channel webhook at the top of
+            this page to receive started and completed deploy status in Discord.
           </li>
         </ul>
         <p className="text-xs text-[var(--color-warn)] mt-3">

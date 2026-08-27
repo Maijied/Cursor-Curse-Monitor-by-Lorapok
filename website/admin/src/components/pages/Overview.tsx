@@ -17,7 +17,7 @@ import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
-import { COMMUNITY_DOWNLOADS_NOTE, formatDownloadCount, resolveVsCodeDownloadCount } from "../../lib/download-stats";
+import { COMMUNITY_DOWNLOADS_NOTE, formatDownloadCount, getVerifiedDownloadTotal, resolveVsCodeDownloadCount } from "../../lib/download-stats";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
   if (status === "synced") return "synced";
@@ -54,6 +54,8 @@ export default function Overview() {
 
   const syncVariant = syncBadgeVariant(data.syncStatus);
   const downloads = data.downloads;
+  const verifiedTotal = getVerifiedDownloadTotal(data);
+  const openVsxCombined = downloads?.verified ? downloads.openVsxCombined ?? null : null;
 
   return (
     <div className="space-y-8">
@@ -73,14 +75,14 @@ export default function Overview() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <KpiCard
           label="Total Downloads"
-          value={formatDownloadCount(downloads?.verified ? (downloads?.total ?? null) : null)}
+          value={formatDownloadCount(verifiedTotal)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              {downloads?.verified
+              {verifiedTotal != null
                 ? `Open VSX (both namespaces) + VS Code + GitHub`
                 : "Live marketplace stats unavailable"}
-              {downloads?.verified && downloads?.openVsxCombined != null
-                ? ` · Open VSX total ${formatDownloadCount(downloads.openVsxCombined)}`
+              {openVsxCombined != null
+                ? ` · Open VSX total ${formatDownloadCount(openVsxCombined)}`
                 : ""}
             </span>
           }
@@ -117,12 +119,12 @@ export default function Overview() {
           delayClass="stagger-4"
         />
         <KpiCard
-          label="Open VSX (canonical)"
-          value={data.ovsx.version ?? "—"}
+          label="Open VSX (combined)"
+          value={formatDownloadCount(openVsxCombined)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              {data.ovsx.downloadCount != null ? `${formatCount(data.ovsx.downloadCount)} canonical` : "—"}
-              {downloads?.openVsxCombined != null ? ` · ${formatCount(downloads.openVsxCombined)} total` : ""}
+              {data.ovsx.version ?? "—"}
+              {data.ovsx.downloadCount != null ? ` · ${formatDownloadCount(data.ovsx.downloadCount)} canonical` : ""}
             </span>
           }
           icon={<Store className="text-[var(--color-neon)]" size={24} />}
@@ -163,10 +165,10 @@ export default function Overview() {
         {downloads && (
           <div className="lg:col-span-2">
             <DownloadBreakdownPanel
-              total={downloads.total}
+              total={verifiedTotal}
               verified={downloads.verified}
               breakdown={downloads.breakdown}
-              openVsxCombined={downloads.openVsxCombined}
+              openVsxCombined={openVsxCombined}
               note={downloads.note ?? COMMUNITY_DOWNLOADS_NOTE}
             />
           </div>
@@ -198,13 +200,13 @@ export default function Overview() {
                 {
                   name: "GitHub Releases",
                   version: data.github.releaseTag,
-                  downloads: data.github.totalReleaseDownloads,
+                  downloads: data.github.totalReleaseDownloads ?? downloads?.breakdown?.githubAllAssets,
                   ok: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
                 },
                 {
                   name: "Open VSX (canonical)",
                   version: data.ovsx.version ?? "—",
-                  downloads: data.ovsx.downloadCount,
+                  downloads: downloads?.breakdown?.openVsxCanonical ?? data.ovsx.downloadCount,
                   ok: data.ovsx.version === data.packageVersion,
                 },
                 {
@@ -232,7 +234,7 @@ export default function Overview() {
                 {
                   name: "Open VSX (LorapokLabs)",
                   version: data.ovsxDuplicate?.version ?? "—",
-                  downloads: data.ovsxDuplicate?.downloadCount,
+                  downloads: downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount,
                   ok: false,
                   warn: true,
                 },
@@ -241,7 +243,7 @@ export default function Overview() {
                   <td className="py-3 pr-4 text-[var(--color-text)] font-medium">{row.name}</td>
                   <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">{row.version}</td>
                   <td className="py-3 pr-4 font-[family-name:var(--font-mono)]">
-                    {row.downloads != null ? formatCount(row.downloads) : "—"}
+                    {row.downloads != null ? formatDownloadCount(row.downloads) : "—"}
                   </td>
                   <td className="py-3">
                     {"warn" in row && row.warn ? (

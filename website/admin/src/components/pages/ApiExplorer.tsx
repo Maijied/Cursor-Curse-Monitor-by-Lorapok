@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
-import { API_CATALOG, type ApiCatalogEntry } from "../../lib/api-catalog";
+import { API_CATALOG, API_CATALOG_GROUPS, type ApiCatalogEntry } from "../../lib/api-catalog";
 import { probeApiEndpoint, type ApiProbeResult } from "../../lib/api";
 
 type ProbeState = ApiProbeResult & { loading?: boolean; error?: string };
@@ -107,81 +107,90 @@ export default function ApiExplorer() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {API_CATALOG.map((entry) => {
-          const state = results[entry.id];
-          const isOpen = expanded === entry.id;
-          return (
-            <Card key={entry.id} className="h-full min-h-[11rem] flex flex-col">
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className={`font-[family-name:var(--font-mono)] text-sm font-semibold ${methodColor(entry.method)}`}>
-                      {entry.method}
-                    </span>
-                    <code className="text-xs font-[family-name:var(--font-mono)] text-[var(--color-text)] break-all">
-                      {entry.path}
-                    </code>
-                  </div>
-                  <p className="text-sm text-[var(--color-muted)]">{entry.description}</p>
-                </div>
-                <span className="shrink-0">
-                  <Badge variant={entry.auth === "admin" ? "warn" : "neutral"}>{entry.auth}</Badge>
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 mt-auto pt-3 border-t border-[var(--color-border)]">
-                {state?.loading ? (
-                  <span className="text-sm text-[var(--color-muted)]">Testing…</span>
-                ) : state ? (
-                  <>
-                    <Badge variant={state.error ? "danger" : statusVariant(state.status)}>
-                      {state.error ? "Error" : state.status || "—"}
-                    </Badge>
-                    {state.latencyMs > 0 && (
-                      <span className="text-xs font-[family-name:var(--font-mono)] text-[var(--color-muted)]">
-                        {state.latencyMs}ms
+      {API_CATALOG_GROUPS.map((group) => {
+        const entries = API_CATALOG.filter((entry) => entry.group === group);
+        if (entries.length === 0) return null;
+        return (
+          <section key={group} className="space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted)]">{group}</h3>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {entries.map((entry) => {
+                const state = results[entry.id];
+                const isOpen = expanded === entry.id;
+                return (
+                  <Card key={entry.id} className="h-full min-h-[11rem] flex flex-col">
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className={`font-[family-name:var(--font-mono)] text-sm font-semibold ${methodColor(entry.method)}`}>
+                            {entry.method}
+                          </span>
+                          <code className="text-xs font-[family-name:var(--font-mono)] text-[var(--color-text)] break-all">
+                            {entry.path}
+                          </code>
+                        </div>
+                        <p className="text-sm text-[var(--color-muted)]">{entry.description}</p>
+                      </div>
+                      <span className="shrink-0">
+                        <Badge variant={entry.auth === "admin" ? "warn" : "neutral"}>{entry.auth}</Badge>
                       </span>
-                    )}
-                    {state.error && (
-                      <span className="text-xs text-[var(--color-danger)] truncate">{state.error}</span>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-sm text-[var(--color-muted)]">Not tested</span>
-                )}
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto">
-                  <button
-                    type="button"
-                    onClick={() => runProbe(entry)}
-                    className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 rounded-lg text-xs font-semibold border border-[var(--color-border)] hover:bg-white/5"
-                  >
-                    <Play size={14} aria-hidden="true" />
-                    Run
-                  </button>
-                  {state?.body && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded(isOpen ? null : entry.id)}
-                      className="inline-flex items-center justify-center gap-1 min-h-11 px-4 rounded-lg text-xs border border-[var(--color-border)] hover:bg-white/5"
-                      aria-expanded={isOpen}
-                    >
-                      {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      Response
-                    </button>
-                  )}
-                </div>
-              </div>
+                    </div>
 
-              {isOpen && state?.body && (
-                <pre className="mt-4 p-3 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border)] text-xs font-[family-name:var(--font-mono)] text-[var(--color-text)] overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap">
-                  {state.body}
-                </pre>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+                    <div className="flex flex-wrap items-center gap-3 mt-auto pt-3 border-t border-[var(--color-border)]">
+                      {state?.loading ? (
+                        <span className="text-sm text-[var(--color-muted)]">Testing…</span>
+                      ) : state ? (
+                        <>
+                          <Badge variant={state.error ? "danger" : statusVariant(state.status)}>
+                            {state.error ? "Error" : state.status || "—"}
+                          </Badge>
+                          {state.latencyMs > 0 && (
+                            <span className="text-xs font-[family-name:var(--font-mono)] text-[var(--color-muted)]">
+                              {state.latencyMs}ms
+                            </span>
+                          )}
+                          {state.error && (
+                            <span className="text-xs text-[var(--color-danger)] truncate">{state.error}</span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-sm text-[var(--color-muted)]">Not tested</span>
+                      )}
+                      <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto">
+                        <button
+                          type="button"
+                          onClick={() => runProbe(entry)}
+                          className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 rounded-lg text-xs font-semibold border border-[var(--color-border)] hover:bg-white/5"
+                        >
+                          <Play size={14} aria-hidden="true" />
+                          Run
+                        </button>
+                        {state?.body && (
+                          <button
+                            type="button"
+                            onClick={() => setExpanded(isOpen ? null : entry.id)}
+                            className="inline-flex items-center justify-center gap-1 min-h-11 px-4 rounded-lg text-xs border border-[var(--color-border)] hover:bg-white/5"
+                            aria-expanded={isOpen}
+                          >
+                            {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            Response
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {isOpen && state?.body && (
+                      <pre className="mt-4 p-3 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border)] text-xs font-[family-name:var(--font-mono)] text-[var(--color-text)] overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap">
+                        {state.body}
+                      </pre>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

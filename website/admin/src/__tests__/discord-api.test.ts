@@ -58,4 +58,23 @@ describe("discord integration APIs", () => {
     expect(saved.config.configured).toBe(true);
     expect(saved.config.webhookPreview).toContain("565087");
   });
+
+  it("skips deployment status when no webhook is saved", async () => {
+    const res = await fetch(`${base}/api/integrations/discord/deployment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actionType: "deployment-status-test", conclusion: "success" }),
+    });
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.skipped).toBe(true);
+  });
+
+  it("serves live site-data for dashboard totals", async () => {
+    const res = await fetch(`${base}/api/site-data`);
+    expect(res.ok).toBe(true);
+    const data = await res.json();
+    expect(data.downloads?.verified).toBe(true);
+    expect(typeof data.downloads?.total).toBe("number");
+  });
 });

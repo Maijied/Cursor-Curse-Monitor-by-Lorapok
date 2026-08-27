@@ -68,6 +68,11 @@ const devKv = {
 export function resetDevStore() {
   devStore.notice = { ...GENERATED_DEV_NOTICE };
   devStore.notices = buildBuiltinNotices();
+  devStore.discordConfig = {
+    webhookUrl: "",
+    updatedAt: null,
+    updatedBy: null,
+  };
 }
 
 function logDevActivity(req, status, email = "dev@local") {
@@ -719,6 +724,20 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/site-data" && req.method === "GET") {
+      try {
+        const site = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "public, max-age=60");
+        res.end(JSON.stringify(site));
+      } catch (err) {
+        res.statusCode = 502;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "site-data unavailable" }));
+      }
+      return;
+    }
+
     if (url === "/api/integrations/discord/config" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
@@ -900,6 +919,7 @@ export function createDevApiMiddleware() {
             adminKvConfigured: true,
             mailConfigured: true,
             mailTransport: "dev-simulated",
+            discordConfigured: Boolean(devStore.discordConfig.webhookUrl),
             siteDataUrl: "/site-data.json",
           }));
         })
@@ -914,6 +934,7 @@ export function createDevApiMiddleware() {
             adminKvConfigured: true,
             mailConfigured: true,
             mailTransport: "dev-simulated",
+            discordConfigured: Boolean(devStore.discordConfig.webhookUrl),
             siteDataUrl: "/site-data.json",
           }));
         });

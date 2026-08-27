@@ -1,5 +1,6 @@
 import type { SiteData, VisitorStats } from "./site-data";
 import { formatCount, syncStatusLabel } from "./site-data";
+import { formatDownloadCount, getVerifiedDownloadTotal } from "./download-stats";
 
 export interface StatusReportRow {
   label: string;
@@ -80,37 +81,37 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
   const downloadRows: StatusReportRow[] = [
     {
       label: "Total downloads (verified live)",
-      value: formatCount(downloads?.verified ? (downloads?.total ?? 0) : 0),
+      value: formatDownloadCount(getVerifiedDownloadTotal(data)),
       status: downloads?.verified ? "ok" : "warn",
     },
     {
       label: "Open VSX combined",
-      value: formatCount(downloads?.openVsxCombined ?? 0),
+      value: formatDownloadCount(downloads?.verified ? downloads.openVsxCombined ?? null : null),
       status: "neutral",
     },
     {
       label: "Open VSX canonical",
-      value: formatCount(breakdown?.openVsxCanonical ?? 0),
+      value: formatDownloadCount(downloads?.verified ? breakdown?.openVsxCanonical ?? null : null),
       status: "neutral",
     },
     {
       label: "Open VSX (LorapokLabs)",
-      value: formatCount(breakdown?.openVsxDuplicate ?? 0),
+      value: formatDownloadCount(downloads?.verified ? breakdown?.openVsxDuplicate ?? null : null),
       status: "neutral",
     },
     {
       label: "VS Code Marketplace",
-      value: formatCount(breakdown?.vscodeMarketplace ?? 0),
+      value: formatDownloadCount(downloads?.verified ? breakdown?.vscodeMarketplace ?? null : null),
       status: "neutral",
     },
     {
       label: "GitHub release assets",
-      value: formatCount(breakdown?.githubAllAssets ?? 0),
+      value: formatDownloadCount(downloads?.verified ? breakdown?.githubAllAssets ?? null : null),
       status: "neutral",
     },
     {
       label: "Latest release VSIX",
-      value: formatCount(breakdown?.latestReleaseVsix ?? 0),
+      value: formatDownloadCount(downloads?.verified ? breakdown?.latestReleaseVsix ?? null : null),
       status: "neutral",
     },
   ];
@@ -184,7 +185,7 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
         { label: "Report generated", value: new Date().toLocaleString(), status: "neutral" },
         { label: "Site data refreshed", value: new Date(data.generatedAt).toLocaleString(), status: "neutral" },
         { label: "Overall sync", value: syncStatusLabel(data.syncStatus), status: data.syncStatus === "synced" ? "ok" : "warn" },
-        { label: "Total reach", value: formatCount((downloads?.total ?? 0) + visitors.totalEngagement), status: "neutral" },
+        { label: "Total reach", value: formatCount((getVerifiedDownloadTotal(data) ?? 0) + visitors.totalEngagement), status: "neutral" },
       ],
     },
     marketplace: { title: "Marketplace & Release Records", rows: marketplaceRows },
