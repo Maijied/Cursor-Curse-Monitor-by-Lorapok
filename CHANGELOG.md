@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Marketing site design restore** — six PNG feature lightbox cards, ecosystem tab a11y controls, marquee pause, and showcase assets lost during main branch divergence (`ed438d9`, `0f5df41`)
 - **Universal VS Code wrapper IDE support** — shared `supportedIdeWrappers` list; bold messaging in README, marketing site (2nd section with IDE grid), IDE dashboard About panel, and browser extension Options
 - **Cursor-not-found blocked UI** — full blurred overlay with “No Cursor AI found”, refresh CTA, and [lorapok.tech](https://lorapok.tech) link in IDE dashboard and browser popup
 - **SEO refresh** — VS Code wrapper IDE keywords, updated meta descriptions, canonical JSON-LD download URLs via `generate-seo.mjs`

@@ -282,25 +282,23 @@ test("dashboardView: formatStatusBarText and formatStatusBarTooltip output corre
   assert.ok(tooltip.includes("API: 15.3%"));
 });
 
-test("dashboardView: serializeWebviewBootSnapshot escapes HTML for all platforms", () => {
-  assert.strictEqual(serializeWebviewBootSnapshot(undefined), "null");
-
-  const serialized = serializeWebviewBootSnapshot({
+test("dashboardView: serializeWebviewBootSnapshot escapes HTML and serializes null", () => {
+  assert.equal(serializeWebviewBootSnapshot(undefined), "null");
+  const encoded = serializeWebviewBootSnapshot({
     fetchedAt: "2026-08-27T00:00:00.000Z",
-    email: "user<script>@example.com",
-    error: "Token & path <unsafe>",
-    cursorMissing: false,
-    limitExceeded: false,
+    email: "a<b>&c",
+    usage: null,
+    profile: null,
     fallbackApplied: false,
+    limitExceeded: false,
     customBudgetLimit: 0,
     onDemandSpendUsd: 0,
-    features: [],
-    history: [],
-    local: {},
+    budget: null,
+    features: ["Auto <script>"],
   });
-
-  assert.ok(!serialized.includes("<script>"), "must not embed raw HTML");
-  assert.ok(serialized.includes("\\u003c"), "angle brackets escaped");
-  assert.ok(serialized.includes("\\u0026"), "ampersands escaped");
-  assert.doesNotThrow(() => JSON.parse(serialized.replace(/\\u003c/g, "<").replace(/\\u003e/g, ">").replace(/\\u0026/g, "&")));
+  assert.equal(encoded.includes("<"), false);
+  assert.equal(encoded.includes(">"), false);
+  assert.ok(encoded.includes("\\u003c"));
+  assert.ok(encoded.includes("\\u003e"));
+  assert.ok(encoded.includes("\\u0026"));
 });
