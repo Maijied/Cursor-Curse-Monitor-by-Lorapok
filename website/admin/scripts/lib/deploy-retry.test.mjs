@@ -9,8 +9,8 @@ assert.equal(classifyWranglerFailure("Invalid access token [code: 9109]"), "auth
 assert.equal(classifyWranglerFailure("Authentication error [code: 10000]"), "auth");
 assert.equal(classifyWranglerFailure("something else"), "other");
 
-assert.ok(wranglerRetryWaitSec("rate-limit", 1) >= 90);
-assert.ok(wranglerRetryWaitSec("auth-lockout", 1) >= 135);
-assert.ok(wranglerRetryWaitSec("auth", 1) >= 75);
+assert.ok(wranglerRetryWaitSec("rate-limit", 1) >= 40);
+assert.ok(wranglerRetryWaitSec("auth-lockout", 1) >= 60);
+assert.ok(wranglerRetryWaitSec("auth", 1) >= 35);
 
 console.log("deploy-retry.test.mjs: OK");

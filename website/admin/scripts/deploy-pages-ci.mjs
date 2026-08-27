@@ -124,11 +124,13 @@ if (!relayDeployed && !relayExists) {
 }
 
 if (inCi) {
-  const preCooldownSec = Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 75);
-  console.log(
-    `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits from mail setup can clear…`
-  );
-  await sleep(preCooldownSec * 1000);
+  const preCooldownSec = Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 20);
+  if (preCooldownSec > 0) {
+    console.log(
+      `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits from mail setup can clear…`
+    );
+    await sleep(preCooldownSec * 1000);
+  }
 }
 
 const args = [
@@ -141,7 +143,7 @@ const args = [
   "--commit-dirty=true",
 ];
 
-const maxAttempts = Number(process.env.CF_DEPLOY_MAX_ATTEMPTS ?? 6);
+const maxAttempts = Number(process.env.CF_DEPLOY_MAX_ATTEMPTS ?? 3);
 let lastFailureKind = "other";
 
 for (let attempt = 1; attempt <= maxAttempts; attempt++) {

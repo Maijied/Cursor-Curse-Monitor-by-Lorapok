@@ -97,6 +97,13 @@ let relayDeployed = false;
 let relayExists = false;
 let restSynced = false;
 
+if (inCi) {
+  relayExists = await relayWorkerExists(deployToken, accountId);
+  if (relayExists) {
+    console.log("::notice::CI: ccm-mail-relay already exists — skipping worker redeploy.");
+  }
+}
+
 if (hasEmailToken) {
   console.log("Checking CLOUDFLARE_EMAIL_API_TOKEN (Email Sending → Edit)…");
   const tokenOk = await verifyEmailToken(emailToken, accountId);
@@ -109,42 +116,51 @@ if (hasEmailToken) {
   }
 
   console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
-  runWrangler(["email", "sending", "enable", "lorapok.tech"], {
-    token: deployToken,
-    allowFail: true,
-  });
+  if (!relayExists || !inCi) {
+    runWrangler(["email", "sending", "enable", "lorapok.tech"], {
+      token: deployToken,
+      allowFail: true,
+    });
+  } else {
+    console.log("::notice::CI: skipping email domain enable — relay already configured.");
+  }
 }
 
-console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
-relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
-if (!relayDeployed) {
-  console.warn(
-    "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
-      "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
-  );
+if (!relayExists) {
+  console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
+  relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
+  if (!relayDeployed) {
+    console.warn(
+      "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
+        "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
+    );
+  }
+  relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
 }
-
-relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
 
 if (hasEmailToken && restSynced) {
-  console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
-  const put = spawnSync(
-    "npx",
-    ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
-    {
-      cwd: adminDir,
-      input: emailToken,
-      env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
-      stdio: ["pipe", "inherit", "inherit"],
-    }
-  );
-  if (put.status !== 0) {
-    if (inCi) {
-      console.warn(
-        "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
-      );
-    } else {
-      process.exit(put.status ?? 1);
+  if (inCi && relayExists) {
+    console.log("::notice::CI: skipping Pages secret sync — relay transport already active.");
+  } else {
+    console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
+    const put = spawnSync(
+      "npx",
+      ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
+      {
+        cwd: adminDir,
+        input: emailToken,
+        env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
+        stdio: ["pipe", "inherit", "inherit"],
+      }
+    );
+    if (put.status !== 0) {
+      if (inCi) {
+        console.warn(
+          "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
+        );
+      } else {
+        process.exit(put.status ?? 1);
+      }
     }
   }
 }

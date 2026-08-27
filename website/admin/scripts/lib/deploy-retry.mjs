@@ -8,8 +8,8 @@ export function classifyWranglerFailure(output) {
 
 /** @param {ReturnType<typeof classifyWranglerFailure>} kind @param {number} attempt */
 export function wranglerRetryWaitSec(kind, attempt) {
-  if (kind === "rate-limit") return 60 + attempt * 30;
-  if (kind === "auth-lockout") return 90 + attempt * 45;
-  if (kind === "auth") return 45 + attempt * 30;
-  return 30 + attempt * 20;
+  if (kind === "rate-limit") return 25 + attempt * 15;
+  if (kind === "auth-lockout") return 40 + attempt * 20;
+  if (kind === "auth") return 20 + attempt * 15;
+  return 15 + attempt * 10;
 }
