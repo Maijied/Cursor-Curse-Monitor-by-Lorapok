@@ -28,10 +28,18 @@ if (!deployToken) {
 
 if (probe.ok) {
   console.log(`::notice::Using deploy token (${probe.via ?? "probe"} HTTP ${probe.status}).`);
-} else {
-  console.warn(
-    `::warning::Deploy token probe failed (HTTP ${probe.status}); attempting wrangler Pages deploy anyway.`
+} else if (probe.via?.includes("rate-limit")) {
+  console.error(
+    `::error::Cloudflare API rate-limited deploy token probe (HTTP ${probe.status}). ` +
+      "Wait a few minutes and rerun, or refresh CLOUDFLARE_API_TOKEN in admin-production."
   );
+  process.exit(1);
+} else {
+  console.error(
+    `::error::No valid deploy token (HTTP ${probe.status}). ` +
+      "Refresh GitHub admin-production secret CLOUDFLARE_API_TOKEN with a Cloudflare API token that has Account → Cloudflare Pages → Edit."
+  );
+  process.exit(1);
 }
 
 const wranglerToml = resolve(adminDir, "wrangler.toml");

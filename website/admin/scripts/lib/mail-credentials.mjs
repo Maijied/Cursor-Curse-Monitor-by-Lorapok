@@ -86,16 +86,22 @@ export async function probeDeployToken(deployToken, accountId) {
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${PAGES_PROJECT}`,
       { headers: { Authorization: `Bearer ${deployToken}` } }
     );
-    if (pagesRes.status !== 401 && pagesRes.status !== 403) {
+    if (pagesRes.ok) {
       return { ok: true, status: pagesRes.status, via: "pages" };
+    }
+    if (pagesRes.status === 429) {
+      return { ok: false, status: pagesRes.status, via: "pages-rate-limit" };
     }
 
     const workersRes = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`,
       { headers: { Authorization: `Bearer ${deployToken}` } }
     );
-    if (workersRes.status !== 401 && workersRes.status !== 403) {
+    if (workersRes.ok) {
       return { ok: true, status: workersRes.status, via: "workers" };
+    }
+    if (workersRes.status === 429) {
+      return { ok: false, status: workersRes.status, via: "workers-rate-limit" };
     }
   }
 
