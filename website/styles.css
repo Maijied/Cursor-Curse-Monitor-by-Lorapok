@@ -1663,6 +1663,22 @@ body.subscribe-modal-open { overflow: hidden; }
   background: rgba(77, 159, 255, 0.08);
   transform: none;
 }
+/* Secondary channels sit under the two primary install buttons, so the
+   ribbon needs its own breathing room instead of the intro's divider. */
+.hero-copy .platform-ribbon {
+  gap: 8px 12px;
+  margin: 0 0 20px;
+}
+.platform-pill-note {
+  margin-left: 6px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #8b9bb8;
+}
+.platform-pill:hover .platform-pill-note { color: #c5d4ea; }
+.platform-pill.platform-pending .platform-pill-note { color: var(--warn); }
 @media (max-width: 640px) {
   .hero-platforms {
     flex-direction: column;

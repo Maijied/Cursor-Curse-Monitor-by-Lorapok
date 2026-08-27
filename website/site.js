@@ -307,13 +307,17 @@ function updateStructuredDataVersion(data) {
       ? (data.browserExtension?.firefox?.url ?? data.productContext?.firefoxUrl)
       : (data.github?.releaseUrl ?? data.github?.vsixUrl ?? "#");
     setHref("[data-href-firefox]", firefoxHref);
+    // Keep this label short — it renders inside a pill. The pending case
+    // explains itself through the link title set below.
     const firefoxVersionLabel = firefoxPublished
-      ? (data.browserExtension?.firefox?.version ?? data.browserExtension?.version ?? data.version ?? "—")
-      : `pending AMO · v${data.version ?? data.packageVersion ?? "—"} on GitHub`;
+      ? `v${data.browserExtension?.firefox?.version ?? data.browserExtension?.version ?? data.version ?? "—"}`
+      : "pending AMO";
     setText("[data-firefox-version]", firefoxVersionLabel);
     $$("[data-href-firefox]").forEach((el) => {
       if (!firefoxPublished) {
-        el.title = "Firefox AMO listing pending — install from GitHub Release";
+        el.title = `Firefox AMO listing pending — install v${
+          data.version ?? data.packageVersion ?? "—"
+        } from the GitHub Release`;
         el.classList.add("platform-pending");
       }
     });
