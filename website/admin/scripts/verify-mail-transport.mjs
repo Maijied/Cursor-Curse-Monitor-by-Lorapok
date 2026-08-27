@@ -72,8 +72,4 @@ console.error(
   '  gh secret set CLOUDFLARE_EMAIL_API_TOKEN --env admin-production --body "$(cred get cursor cloudflare_email_api_token)"'
 );
 console.error("Or locally: node website/admin/scripts/repair-mail.mjs");
-if (inCi) {
-  console.warn("::warning::CI: continuing admin Pages deploy without verified outbound mail.");
-  process.exit(0);
-}
 process.exit(1);

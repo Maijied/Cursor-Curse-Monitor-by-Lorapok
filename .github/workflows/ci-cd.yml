@@ -502,6 +502,7 @@ jobs:
             website/seo.json
             website/site-data.json
             website/visitor-stats.json
+            website/readme-stats.svg
           retention-days: 14
 
       - name: Commit and publish refreshed SEO artifacts (with branch rule PR fallback)
@@ -511,7 +512,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json
+          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json website/readme-stats.svg
           if git diff --staged --quiet; then
             echo "No SEO artifact changes to commit."
             exit 0

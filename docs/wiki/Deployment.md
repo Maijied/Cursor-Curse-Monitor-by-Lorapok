@@ -62,6 +62,10 @@ After dispatch, Mission Control shows a **Runtime preview** panel that polls Git
 
 Sync from vault: `CRED_PASSPHRASE=… npm run amo:secrets`
 
+## Discord deployment webhooks
+
+Paste your Discord channel webhook URL in **Mission Control → Settings → Discord**. Deployment start and completion updates are posted automatically when you deploy from Mission Control.
+
 ## Minimum publish tag
 
 Marketplace publish requires **v0.5.5** or newer.
