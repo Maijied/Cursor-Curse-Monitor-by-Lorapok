@@ -4,30 +4,69 @@
 (function () {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function animateValue(el, end, duration) {
+  /**
+   * @param {Element | null | undefined} el
+   * @param {number | null | undefined} end
+   * @param {{ duration?: number; start?: number }} [options]
+   */
+  function animateCount(el, end, options = {}) {
     if (!el || end == null || Number.isNaN(Number(end))) return;
     const target = Number(end);
+    const duration = options.duration ?? 1200;
+    const start = options.start ?? 0;
+
     if (reducedMotion || duration <= 0) {
       el.textContent = target.toLocaleString();
       return;
     }
-    const start = 0;
+
     const startTime = performance.now();
     function frame(now) {
       const t = Math.min(1, (now - startTime) / duration);
       const eased = 1 - Math.pow(1 - t, 3);
-      el.textContent = Math.round(start + (target - start) * eased).toLocaleString();
+      const current = t >= 1 ? target : Math.round(start + (target - start) * eased);
+      el.textContent = current.toLocaleString();
       if (t < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
 
-  function setText(el, value) {
-    if (el) el.textContent = value;
+  /**
+   * @param {Element | null | undefined} el
+   * @param {number | null | undefined} value
+   * @param {{ verified?: boolean; duration?: number; tone?: string }} [options]
+   */
+  function renderStatCount(el, value, options = {}) {
+    if (!el) return;
+    const verified = options.verified !== false;
+    if (options.tone) {
+      el.classList.add("stat-count", `stat-count--${options.tone}`);
+    }
+    if (!verified || value == null || Number.isNaN(Number(value))) {
+      el.textContent = "—";
+      return;
+    }
+    animateCount(el, Number(value), { duration: options.duration ?? 1200 });
   }
 
-  function setBar(el, pct) {
+  /**
+   * @param {string | Element} target
+   * @param {number | null | undefined} value
+   * @param {{ verified?: boolean; duration?: number; tone?: string }} [options]
+   */
+  function animateStatCount(target, value, options = {}) {
+    const nodes =
+      typeof target === "string"
+        ? [...document.querySelectorAll(target)]
+        : target
+          ? [target]
+          : [];
+    nodes.forEach((el) => renderStatCount(el, value, options));
+  }
+
+  function setBar(el, pct, tone) {
     if (!(el instanceof HTMLElement)) return;
+    if (tone) el.classList.add(`stat-meter--${tone}`);
     const width = `${Math.max(0, Math.min(100, pct))}%`;
     if (reducedMotion) {
       el.style.width = width;
@@ -46,20 +85,7 @@
     const root = document.getElementById("hero-stats-dashboard");
     if (!root || !data) return;
 
-    const verified = options.verified === true;
-    const dash = "—";
-    const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? dash : Number(n).toLocaleString());
-
-    if (!verified) {
-      root.querySelectorAll(
-        "[data-hero-downloads], [data-hero-ovsx-combined], [data-hero-ovsx-canonical], [data-hero-ovsx-duplicate], [data-hero-vscode], [data-hero-github]"
-      ).forEach((el) => {
-        el.textContent = dash;
-      });
-      root.classList.add("is-loaded");
-      return;
-    }
-
+    const downloadsVerified = options.verified === true;
     const breakdown = data.downloads?.breakdown ?? {};
     const downloads = Number(data.downloads?.displayTotal ?? data.downloads?.total ?? 0);
     const visits = Number(data.visitors?.websiteVisits ?? 0);
@@ -70,30 +96,75 @@
     const vscode = breakdown.vscodeMarketplace ?? data.vscode?.downloadCount ?? null;
     const github = breakdown.githubAllAssets ?? data.github?.totalReleaseDownloads ?? null;
 
-    const maxScale = Math.max(downloads, visits, engagement, combined, 1);
+    const maxScale = Math.max(
+      downloadsVerified ? downloads : 0,
+      visits,
+      engagement,
+      downloadsVerified ? combined : 0,
+      1,
+    );
 
-    animateValue(root.querySelector("[data-hero-downloads]"), downloads, 1400);
-    animateValue(root.querySelector("[data-hero-ovsx-combined]"), combined, 1200);
-    setText(root.querySelector("[data-hero-vscode]"), fmt(vscode));
-    setText(root.querySelector("[data-hero-github]"), fmt(github));
-    animateValue(root.querySelector("[data-hero-visits]"), visits, 1200);
-    animateValue(root.querySelector("[data-hero-engagement]"), engagement, 1200);
-    animateValue(root.querySelector("[data-hero-ovsx-canonical]"), canonical, 1000);
-    animateValue(root.querySelector("[data-hero-ovsx-duplicate]"), duplicate, 1000);
+    renderStatCount(root.querySelector("[data-hero-downloads]"), downloadsVerified ? downloads : null, {
+      verified: downloadsVerified,
+      duration: 1400,
+      tone: "total",
+    });
+    renderStatCount(root.querySelector("[data-hero-ovsx-combined]"), downloadsVerified ? combined : null, {
+      verified: downloadsVerified,
+      duration: 1200,
+      tone: "ovsx",
+    });
+    renderStatCount(root.querySelector("[data-hero-vscode]"), downloadsVerified ? vscode : null, {
+      verified: downloadsVerified,
+      duration: 1150,
+      tone: "vscode",
+    });
+    renderStatCount(root.querySelector("[data-hero-github]"), downloadsVerified ? github : null, {
+      verified: downloadsVerified,
+      duration: 1150,
+      tone: "github",
+    });
+    renderStatCount(root.querySelector("[data-hero-ovsx-canonical]"), downloadsVerified ? canonical : null, {
+      verified: downloadsVerified,
+      duration: 1000,
+      tone: "canonical",
+    });
+    renderStatCount(root.querySelector("[data-hero-ovsx-duplicate]"), downloadsVerified ? duplicate : null, {
+      verified: downloadsVerified,
+      duration: 1000,
+      tone: "duplicate",
+    });
+    renderStatCount(root.querySelector("[data-hero-visits]"), visits, {
+      verified: true,
+      duration: 1200,
+      tone: "visits",
+    });
+    renderStatCount(root.querySelector("[data-hero-engagement]"), engagement, {
+      verified: true,
+      duration: 1200,
+      tone: "engagement",
+    });
 
-    setBar(root.querySelector("[data-hero-downloads-bar]"), (downloads / maxScale) * 100);
-    setBar(root.querySelector("[data-hero-visits-bar]"), (visits / maxScale) * 100);
-    setBar(root.querySelector("[data-hero-engagement-bar]"), (engagement / maxScale) * 100);
-
-    if (combined > 0) {
-      const canonicalPct = Math.round((canonical / combined) * 100);
-      const duplicatePct = 100 - canonicalPct;
-      setBar(root.querySelector("[data-hero-ovsx-canonical-bar]"), canonicalPct);
-      setBar(root.querySelector("[data-hero-ovsx-duplicate-bar]"), duplicatePct);
+    if (downloadsVerified) {
+      setBar(root.querySelector("[data-hero-downloads-bar]"), (downloads / maxScale) * 100, "total");
+      if (combined > 0) {
+        const canonicalPct = Math.round((canonical / combined) * 100);
+        const duplicatePct = 100 - canonicalPct;
+        setBar(root.querySelector("[data-hero-ovsx-canonical-bar]"), canonicalPct, "canonical");
+        setBar(root.querySelector("[data-hero-ovsx-duplicate-bar]"), duplicatePct, "duplicate");
+      }
+    } else {
+      setBar(root.querySelector("[data-hero-downloads-bar]"), 0, "total");
+      setBar(root.querySelector("[data-hero-ovsx-canonical-bar]"), 0, "canonical");
+      setBar(root.querySelector("[data-hero-ovsx-duplicate-bar]"), 0, "duplicate");
     }
+
+    setBar(root.querySelector("[data-hero-visits-bar]"), (visits / maxScale) * 100, "visits");
+    setBar(root.querySelector("[data-hero-engagement-bar]"), (engagement / maxScale) * 100, "engagement");
 
     root.classList.add("is-loaded");
   }
 
   window.renderHeroStats = renderHeroStats;
+  window.animateStatCount = animateStatCount;
 })();

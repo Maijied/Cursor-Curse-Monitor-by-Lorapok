@@ -240,7 +240,15 @@ function updateStructuredDataVersion(data) {
       $$(sel).forEach((el) => { el.href = href; });
     };
     const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toLocaleString());
-    const fmtDownloads = (n) => (downloadsVerified ? fmt(n) : "—");
+    const animateDownloadCount = (selector, value, tone) => {
+      if (typeof window.animateStatCount === "function") {
+        window.animateStatCount(selector, value, { verified: downloadsVerified, tone });
+        return;
+      }
+      $$(selector).forEach((el) => {
+        el.textContent = downloadsVerified ? fmt(value) : "—";
+      });
+    };
 
     setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
     setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
@@ -249,13 +257,14 @@ function updateStructuredDataVersion(data) {
     const duplicateDl = data.downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? null;
     const combinedDl = data.downloads?.openVsxCombined ?? (canonicalDl != null && duplicateDl != null ? canonicalDl + duplicateDl : canonicalDl);
     const vscodeDl = data.downloads?.breakdown?.vscodeMarketplace ?? data.vscode?.downloadCount ?? null;
-    setText("[data-ovsx-canonical]", fmtDownloads(canonicalDl));
-    setText("[data-ovsx-duplicate]", fmtDownloads(duplicateDl));
-    setText("[data-ovsx-combined]", fmtDownloads(combinedDl));
-    setText("[data-ovsx-canonical-legend]", fmtDownloads(canonicalDl));
-    setText("[data-ovsx-duplicate-legend]", fmtDownloads(duplicateDl));
-    setText("[data-ovsx-combined-legend]", fmtDownloads(combinedDl));
-    setText("[data-vscode-downloads]", fmtDownloads(vscodeDl));
+
+    animateDownloadCount("[data-ovsx-canonical]", canonicalDl, "canonical");
+    animateDownloadCount("[data-ovsx-duplicate]", duplicateDl, "duplicate");
+    animateDownloadCount("[data-ovsx-combined]", combinedDl, "ovsx");
+    animateDownloadCount("[data-ovsx-canonical-legend]", canonicalDl, "canonical");
+    animateDownloadCount("[data-ovsx-duplicate-legend]", duplicateDl, "duplicate");
+    animateDownloadCount("[data-ovsx-combined-legend]", combinedDl, "ovsx");
+    animateDownloadCount("[data-vscode-downloads]", vscodeDl, "vscode");
     setHref("[data-href-ovsx-duplicate]", data.ovsxDuplicate?.url ?? "#");
 
     if (typeof window.renderHeroStats === "function") {
