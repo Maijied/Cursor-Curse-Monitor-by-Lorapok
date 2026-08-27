@@ -1,11 +1,13 @@
 import { logSystemEvent } from "./system-log.js";
 import { readDiscordConfig } from "./discord-config.js";
+import { buildDeployEnrichment, truncateDiscordText } from "./discord-deploy-context.js";
 
 const COLORS = {
   started: 0x5865f2,
   success: 0x57f287,
   failure: 0xed4245,
   cancelled: 0xfee75c,
+  info: 0x4d9fff,
 };
 
 const ACTION_LABELS = {
@@ -13,6 +15,7 @@ const ACTION_LABELS = {
   "publish-tag": "Publish tag",
   rollback: "Rollback",
   "deploy-infra": "Infra deploy",
+  "deployment-status-test": "Deployment status test",
 };
 
 /**
@@ -29,6 +32,7 @@ function formatActionType(actionType) {
   if (raw.includes("publish-tag")) return ACTION_LABELS["publish-tag"];
   if (raw.includes("rollback")) return ACTION_LABELS.rollback;
   if (raw.includes("deploy-infra")) return ACTION_LABELS["deploy-infra"];
+  if (raw.includes("deployment-status-test")) return ACTION_LABELS["deployment-status-test"];
   return raw.split(" - ")[0] ?? raw;
 }
 
@@ -47,30 +51,42 @@ function jobIcon(job) {
 }
 
 /**
- * Build a Discord embed describing a deployment and its pipeline status.
- * @param {Record<string, unknown>} payload - Deployment details, including its phase, outcome, metadata, and jobs.
- * @returns {Record<string, unknown>} The formatted Discord deployment embed.
+ * @param {Record<string, unknown>} payload
+ * @returns {{ title: string; color: number; brandLine: string }}
  */
-export function buildDeploymentEmbed(payload) {
+function resolveStatus(payload) {
   const phase = String(payload.phase ?? "completed");
   const conclusion = payload.conclusion ? String(payload.conclusion) : null;
-  const actionLabel = formatActionType(payload.actionType);
+  const version = payload.tag ?? payload.version;
+  const brandLine = version
+    ? `⚡ **Cursor Curse Monitor** · \`${version}\` · Lorapok Labs`
+    : "⚡ **Cursor Curse Monitor** · Lorapok Labs";
 
-  let title;
-  let color;
   if (phase === "started") {
-    title = "🚀 Deployment started";
-    color = COLORS.started;
-  } else if (conclusion === "success") {
-    title = "✅ Deployment succeeded";
-    color = COLORS.success;
-  } else if (conclusion === "cancelled") {
-    title = "⏹️ Deployment cancelled";
-    color = COLORS.cancelled;
-  } else {
-    title = "❌ Deployment failed";
-    color = COLORS.failure;
+    return { title: "🚀 Deployment started", color: COLORS.started, brandLine };
   }
+  if (conclusion === "success") {
+    return { title: "✅ Deployment succeeded", color: COLORS.success, brandLine };
+  }
+  if (conclusion === "cancelled") {
+    return { title: "⏹️ Deployment cancelled", color: COLORS.cancelled, brandLine };
+  }
+  if (conclusion === "failure") {
+    return { title: "❌ Deployment failed", color: COLORS.failure, brandLine };
+  }
+  return { title: "📡 Deployment update", color: COLORS.info, brandLine };
+}
+
+/**
+ * Build the primary Discord embed describing deployment status.
+ * @param {Record<string, unknown>} payload
+ * @param {Record<string, unknown>|null|undefined} enrichment
+ * @returns {Record<string, unknown>}
+ */
+export function buildDeploymentEmbed(payload, enrichment) {
+  const status = resolveStatus(payload);
+  const actionLabel = formatActionType(payload.actionType);
+  const brand = enrichment?.brand;
 
   /** @type {Array<{ name: string; value: string; inline?: boolean }>} */
   const fields = [{ name: "Action", value: actionLabel, inline: true }];
@@ -80,6 +96,7 @@ export function buildDeploymentEmbed(payload) {
   if (payload.channel) fields.push({ name: "Channel", value: String(payload.channel), inline: true });
   if (payload.market) fields.push({ name: "Marketplaces", value: String(payload.market), inline: true });
   if (payload.triggeredBy) fields.push({ name: "Triggered by", value: String(payload.triggeredBy), inline: true });
+  if (payload.duration) fields.push({ name: "Duration", value: String(payload.duration), inline: true });
 
   if (Array.isArray(payload.jobs) && payload.jobs.length > 0) {
     const lines = payload.jobs
@@ -92,36 +109,119 @@ export function buildDeploymentEmbed(payload) {
     fields.push({ name: "Pipeline", value: lines.slice(0, 1024), inline: false });
   }
 
+  const descriptionParts = [status.brandLine];
+  if (payload.summary) descriptionParts.push(String(payload.summary));
+
   /** @type {Record<string, unknown>} */
   const embed = {
-    title,
-    color,
+    author: {
+      name: "Lorapok Mission Control",
+      icon_url: brand?.icon ?? "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
+    },
+    title: status.title,
+    color: status.color,
+    description: truncateDiscordText(descriptionParts.join("\n\n"), 4096),
     fields,
     timestamp: new Date().toISOString(),
-    footer: { text: "Lorapok Mission Control" },
+    footer: {
+      text: "cursor.lorapok.tech · Mission Control",
+      icon_url: brand?.icon ?? "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
+    },
   };
 
-  if (payload.summary) embed.description = String(payload.summary).slice(0, 4096);
   if (payload.runUrl) embed.url = String(payload.runUrl);
+  if (brand?.icon) embed.thumbnail = { url: brand.icon };
+  if (status.color === COLORS.success && brand?.banner) {
+    embed.image = { url: brand.banner };
+  }
 
   return embed;
+}
+
+/**
+ * Build supplemental embeds with marketplace sync, downloads, changelog, and links.
+ * @param {Record<string, unknown>} payload
+ * @param {Record<string, unknown>|null|undefined} enrichment
+ * @returns {Array<Record<string, unknown>>}
+ */
+export function buildSupplementalEmbeds(payload, enrichment) {
+  if (!enrichment) return [];
+
+  const status = resolveStatus(payload);
+  const embeds = [];
+
+  if (enrichment.marketplaceFields?.length) {
+    embeds.push({
+      title: "📦 Marketplace & release records",
+      color: COLORS.info,
+      fields: enrichment.marketplaceFields,
+    });
+  }
+
+  if (enrichment.downloadBreakdown) {
+    embeds.push({
+      title: "📊 Download breakdown",
+      color: COLORS.info,
+      description: enrichment.downloadBreakdown,
+    });
+  }
+
+  if (enrichment.engagement) {
+    embeds.push({
+      title: "🌐 Website engagement",
+      color: COLORS.info,
+      description: enrichment.engagement,
+    });
+  }
+
+  if (enrichment.changelog) {
+    embeds.push({
+      title: "📝 Changelog",
+      color: status.color,
+      description: truncateDiscordText(enrichment.changelog, 4096),
+    });
+  }
+
+  if (enrichment.quickLinks) {
+    embeds.push({
+      title: "🔗 Quick links",
+      color: COLORS.info,
+      description: enrichment.quickLinks,
+    });
+  }
+
+  return embeds.slice(0, 9);
+}
+
+/**
+ * Build all Discord embeds for a deployment notification.
+ * @param {Record<string, unknown>} payload
+ * @param {Record<string, unknown>|null|undefined} [enrichment]
+ * @returns {Array<Record<string, unknown>>}
+ */
+export function buildDeploymentEmbeds(payload, enrichment) {
+  return [buildDeploymentEmbed(payload, enrichment), ...buildSupplementalEmbeds(payload, enrichment)].slice(
+    0,
+    10
+  );
 }
 
 /**
  * Sends a deployment notification to a Discord webhook.
  * @param {string} webhookUrl - The Discord webhook URL.
  * @param {Record<string, unknown>} payload - Deployment data used to build the notification embed.
+ * @param {Record<string, unknown>|null|undefined} [enrichment] - Optional live product context.
  * @return {{ok: boolean, status: number, error?: string}} The delivery status and, when applicable, a truncated error message.
  */
-export async function sendDiscordWebhook(webhookUrl, payload) {
-  const embed = buildDeploymentEmbed(payload);
+export async function sendDiscordWebhook(webhookUrl, payload, enrichment) {
+  const embeds = buildDeploymentEmbeds(payload, enrichment);
   const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       username: "Mission Control",
       avatar_url: "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
-      embeds: [embed],
+      embeds,
     }),
   });
 
@@ -148,7 +248,17 @@ export async function notifyDiscordDeployment(env, payload) {
     return { ok: false, skipped: true, reason: "no_webhook" };
   }
 
-  const result = await sendDiscordWebhook(config.webhookUrl, payload);
+  let enrichment = null;
+  try {
+    enrichment = await buildDeployEnrichment(env, {
+      tag: payload.tag ?? payload.version ?? null,
+      includeChangelog: payload.phase !== "started" && payload.conclusion !== "cancelled",
+    });
+  } catch (error) {
+    console.warn("Discord deploy enrichment failed", error);
+  }
+
+  const result = await sendDiscordWebhook(config.webhookUrl, payload, enrichment);
 
   await logSystemEvent(env, {
     source: "discord",

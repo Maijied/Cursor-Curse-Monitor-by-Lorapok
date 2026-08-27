@@ -198,6 +198,7 @@ export async function notifyDiscordDeploymentApi(payload: {
   market?: string;
   conclusion?: string;
   runUrl?: string;
+  summary?: string;
   jobs?: Array<{ name: string; status?: string; conclusion?: string }>;
 }) {
   const res = await fetch(`${API_BASE}/integrations/discord/deployment`, {

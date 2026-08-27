@@ -27,6 +27,7 @@ export async function onRequestPost(context) {
     market: body.market ?? null,
     conclusion: body.conclusion ?? "success",
     runUrl: body.runUrl ?? null,
+    summary: body.summary ?? null,
     triggeredBy: auth.email,
     jobs: Array.isArray(body.jobs) ? body.jobs : [],
   });
