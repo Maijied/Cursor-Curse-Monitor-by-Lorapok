@@ -162,6 +162,13 @@
     setBar(root.querySelector("[data-hero-visits-bar]"), (visits / maxScale) * 100, "visits");
     setBar(root.querySelector("[data-hero-engagement-bar]"), (engagement / maxScale) * 100, "engagement");
 
+    const status = document.getElementById("hero-stats-status");
+    if (status) {
+      status.textContent = downloadsVerified
+        ? `Community downloads ${downloads.toLocaleString()} total. Open VSX ${combined.toLocaleString()}.`
+        : "Community download stats unavailable.";
+    }
+
     root.classList.add("is-loaded");
   }
 

@@ -17,6 +17,7 @@ website/admin/.cred-vault-passphrase
 **/VAULT_PASSPHRASE_READ_ONCE.txt
 website/admin/.data/
 website/admin/_worker.bundle
+.firecrawl/
 tests/*.vscdb
 tests/*.vscdb.backup-*
 tests/*-wal.backup-*

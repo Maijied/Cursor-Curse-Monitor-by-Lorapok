@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#06080d" />
+  <meta name="color-scheme" content="dark" />
   <!-- seo:begin -->
   <title>Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard</title>
   <meta name="description" content="Cursor Curse Monitor by Lorapok Labs — live included quota, Auto/API meters, budget tracking, local credential scanner, Firefox &amp; Chrome browser extension, free Composer 2.5 fallback, and universal support for VS Code wrapper AI IDEs (Cursor, Windsurf, VSCodium, Void, Gitpod, Trae, Kiro, and more via Open VSX). Private to your Cursor login only." />
@@ -81,6 +82,7 @@
   <!-- /seo:jsonld -->
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="site-ambient-mesh" aria-hidden="true"></div>
   <div id="dev-notice-banner" class="dev-notice-banner" hidden role="region" aria-label="Development notice">
     <div class="dev-notice-track">
@@ -123,7 +125,7 @@
     </nav>
   </header>
 
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
 
   <section class="hero">
     <div class="hero-bg" aria-hidden="true">
@@ -190,7 +192,8 @@
         </div>
       </div>
       <aside class="hero-visual">
-        <div class="hero-stats-dashboard glass" id="hero-stats-dashboard" aria-label="Community stats">
+          <div class="hero-stats-dashboard glass" id="hero-stats-dashboard" aria-label="Community stats">
+          <p class="sr-only" id="hero-stats-status" role="status" aria-live="polite"></p>
           <div class="panel-head">
             <span class="panel-live-dot" aria-hidden="true"></span>
             Community stats
@@ -737,7 +740,7 @@
         </div>
         <form id="subscribe-form" class="subscribe-form" novalidate>
           <label class="sr-only" for="subscribe-email">Email address</label>
-          <input type="email" id="subscribe-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+          <input type="email" id="subscribe-email" name="email" placeholder="you@example.com" required autocomplete="email" spellcheck="false" inputmode="email" />
           <button type="submit" class="btn primary" id="subscribe-form-submit">
             <span class="subscribe-btn-label">Subscribe</span>
             <span class="subscribe-btn-loader" hidden aria-hidden="true"></span>
@@ -762,7 +765,7 @@
       <p class="subscribe-modal-lead">No spam — just extension updates and important notices from Lorapok Labs.</p>
       <form id="subscribe-modal-form" class="subscribe-modal-form" novalidate>
         <label class="sr-only" for="subscribe-modal-email">Email address</label>
-        <input type="email" id="subscribe-modal-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+        <input type="email" id="subscribe-modal-email" name="email" placeholder="you@example.com" required autocomplete="email" spellcheck="false" inputmode="email" />
         <label class="subscribe-modal-consent" for="subscribe-modal-consent">
           <input type="checkbox" id="subscribe-modal-consent" name="consent" required />
           <span>I agree to receive product updates and release notes from Lorapok Labs. Unsubscribe any time by replying to a message.</span>
