@@ -57,10 +57,16 @@ export default function DiscordIntegrationsCard() {
     try {
       const result = await notifyDiscordDeploymentApi({
         actionType: "deployment-status-test",
-        tag: "test",
+        tag: "v1.0.31",
         channel: "Production",
-        market: "Mission Control",
+        market: "Open VSX · VS Code · GitHub",
         conclusion: "success",
+        jobs: [
+          { name: "Build & Validate", conclusion: "success" },
+          { name: "Deploy Admin Panel", conclusion: "success" },
+          { name: "Deploy Marketing Website", conclusion: "success" },
+        ],
+        summary: "Sample rich deployment card — marketplace sync, downloads, changelog, and links.",
       });
       if (result.skipped) {
         setMessage({ type: "error", text: "Test skipped — save a webhook URL first." });
@@ -82,8 +88,9 @@ export default function DiscordIntegrationsCard() {
             Discord deployment hook
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Channel webhook for deploy, rollback, and infra status (started + completed). Create one in Discord:
-            Edit channel → Integrations → Webhooks.
+            Channel webhook for deploy, rollback, and infra status. Posts include pipeline status,
+            marketplace sync, verified download breakdown, changelog, and quick links — similar to a
+            professional release card. Create one in Discord: Edit channel → Integrations → Webhooks.
           </p>
         </div>
         {config && (
