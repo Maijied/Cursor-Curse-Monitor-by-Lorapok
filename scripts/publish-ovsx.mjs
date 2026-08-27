@@ -62,6 +62,21 @@ function run(cmd, args, opts = {}) {
   return `${result.stdout ?? ""}${result.stderr ?? ""}`;
 }
 
+function validateVsixSharedBundle(vsixPath) {
+  const listing = run("unzip", ["-Z1", vsixPath])
+    .split("\n")
+    .filter(Boolean);
+  const sharedEntry = "extension/vendor/cursor-monitor-shared/dist/index.js";
+  if (!listing.includes(sharedEntry)) {
+    throw new Error(
+      `VSIX missing ${sharedEntry}. Ensure vscode:prepublish ran (compile + stage-shared-for-vsix) and use --no-dependencies.`
+    );
+  }
+  if (listing.some((line) => line.startsWith("extension/node_modules/"))) {
+    throw new Error("VSIX must not bundle node_modules — use --no-dependencies with vendor/cursor-monitor-shared.");
+  }
+}
+
 function packageForOvsxPublisher(workDir) {
   const originalPkg = readFileSync(pkgPath, "utf8");
   const patched = { ...JSON.parse(originalPkg), publisher: OVSX_PUBLISHER };
@@ -69,7 +84,15 @@ function packageForOvsxPublisher(workDir) {
 
   writeFileSync(pkgPath, JSON.stringify(patched, null, 2) + "\n");
   try {
-    run("npx", ["vsce", "package", "-o", outVsix, "--allow-missing-repository"], { inherit: true });
+    run("npx", [
+      "vsce",
+      "package",
+      "-o",
+      outVsix,
+      "--allow-missing-repository",
+      "--no-dependencies",
+    ], { inherit: true });
+    validateVsixSharedBundle(outVsix);
   } finally {
     writeFileSync(pkgPath, originalPkg);
   }
