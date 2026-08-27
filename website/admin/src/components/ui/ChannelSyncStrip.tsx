@@ -1,6 +1,6 @@
 import type { SiteData } from "../../lib/site-data";
 import { buildSyncChannels } from "../../lib/syncChannels";
-import { formatCount } from "../../lib/site-data";
+import { formatDownloadCount } from "../../lib/download-stats";
 import Badge from "./Badge";
 import Card from "./Card";
 
@@ -52,7 +52,7 @@ export default function ChannelSyncStrip({ data, channels: providedChannels }: {
             </p>
             {ch.downloadCount != null && (
               <p className="text-xs text-[var(--color-muted)] mt-1 tabular-nums">
-                {formatCount(ch.downloadCount)} downloads
+                {formatDownloadCount(ch.downloadCount)} downloads
               </p>
             )}
           </div>
