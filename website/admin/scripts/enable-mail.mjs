@@ -168,6 +168,10 @@ if (hasEmailToken && restSynced) {
 setGithubActionsOutput("relay_deployed", relayDeployed ? "true" : "false");
 setGithubActionsOutput("relay_exists", relayExists ? "true" : "false");
 setGithubActionsOutput("rest_ok", restSynced ? "true" : "false");
+setGithubActionsOutput(
+  "mail_api_lightweight",
+  inCi && relayExists && !relayDeployed ? "true" : "false"
+);
 
 console.log("\nDone.");
 if (inCi) {

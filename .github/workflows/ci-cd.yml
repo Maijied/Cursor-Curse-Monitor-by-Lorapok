@@ -456,7 +456,9 @@ jobs:
           MAIL_RELAY_DEPLOYED: ${{ steps.mail_setup.outputs.relay_deployed }}
           MAIL_RELAY_EXISTS_SETUP: ${{ steps.mail_setup.outputs.relay_exists }}
           MAIL_RELAY_EXISTS_VERIFY: ${{ steps.mail_verify.outputs.relay_exists }}
+          MAIL_API_LIGHTWEIGHT: ${{ steps.mail_setup.outputs.mail_api_lightweight }}
           CF_DEPLOY_PRE_COOLDOWN_SEC: "20"
+          CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT: "0"
           CF_DEPLOY_MAX_ATTEMPTS: "3"
         run: node scripts/deploy-pages-ci.mjs
 

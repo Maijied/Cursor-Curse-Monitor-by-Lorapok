@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pickDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
-import { classifyWranglerFailure, wranglerRetryWaitSec } from "./lib/deploy-retry.mjs";
+import { classifyWranglerFailure, resolveRetryWaitSec } from "./lib/deploy-retry.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const inCi = process.env.GITHUB_ACTIONS === "true";
@@ -124,12 +124,17 @@ if (!relayDeployed && !relayExists) {
 }
 
 if (inCi) {
-  const preCooldownSec = Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 20);
+  const mailLightweight = process.env.MAIL_API_LIGHTWEIGHT === "true";
+  const preCooldownSec = mailLightweight
+    ? Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 0)
+    : Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 20);
   if (preCooldownSec > 0) {
     console.log(
       `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits from mail setup can clear…`
     );
     await sleep(preCooldownSec * 1000);
+  } else if (mailLightweight) {
+    console.log("::notice::CI: skipping pre-deploy cooldown — mail setup used lightweight Cloudflare API path.");
   }
 }
 
@@ -154,7 +159,7 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 
   lastFailureKind = classifyWranglerFailure(result.output);
   if (attempt < maxAttempts) {
-    const waitSec = wranglerRetryWaitSec(lastFailureKind, attempt);
+    const waitSec = resolveRetryWaitSec(lastFailureKind, attempt, result.output);
     console.warn(
       `::warning::Pages deploy failed (${lastFailureKind}, attempt ${attempt}/${maxAttempts}); retrying in ${waitSec}s…`
     );
