@@ -311,7 +311,6 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
             modeLabel={session?.modeLabel ?? "Deployment"}
             targetTag={session?.targetTag}
             onClick={openStatusModal}
-            hiddenOnDeploymentsPage={onDeploymentsPage && !statusModalOpen}
           />
           <DeployStatusModal
             open={statusModalOpen}

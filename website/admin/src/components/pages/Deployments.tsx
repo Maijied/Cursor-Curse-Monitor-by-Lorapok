@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
 import {
   fetchTags,
   fetchVersionPlan,
@@ -324,10 +324,10 @@ export default function Deployments() {
       <Card className="border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-text)]">Live platform versions</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text)]">Deployment validation</h3>
             <p className="text-sm text-[var(--color-muted)] mt-1">
-              Queried on load from GitHub, Open VSX, VS Code Marketplace, and Firefox AMO. Deploy target = highest live +
-              1 patch.
+              Validates live versions across GitHub, Open VSX, VS Code Marketplace, and Firefox AMO before you publish.
+              Deploy target = highest live + 1 patch.
             </p>
           </div>
           <button
@@ -335,9 +335,14 @@ export default function Deployments() {
             onClick={() => void runVersionCheck()}
             disabled={versionPlanLoading || !isMaster}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50"
+            aria-label="Validate marketplace platforms before deployment"
           >
-            <RefreshCw size={16} className={versionPlanLoading ? "animate-spin" : ""} aria-hidden="true" />
-            {versionPlanLoading ? "Refreshing…" : "Refresh"}
+            {versionPlanLoading ? (
+              <RefreshCw size={16} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <ShieldCheck size={16} aria-hidden="true" />
+            )}
+            {versionPlanLoading ? "Validating…" : "Validate platforms"}
           </button>
         </div>
         {versionPlanError ? (
@@ -696,7 +701,8 @@ export default function Deployments() {
 
         {inProgress && (
           <p className="mt-4 text-sm text-[var(--color-muted)]">
-            Deployment in progress — form locked until CI finishes. Use the larvae button if you navigate away.
+            Deployment in progress — form locked until CI finishes. The animated larvae button stays pinned in the
+            bottom-right corner; tap it to reopen the pipeline modal from anywhere.
           </p>
         )}
 
