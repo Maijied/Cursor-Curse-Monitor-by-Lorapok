@@ -6,6 +6,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Fixed
+
+- **README download badges** — serve Shields.io endpoint JSON from `website/stats/` on GitHub raw (admin API blocked by Cloudflare bot challenges); show `unavailable` when marketplace sources are not verified — never zero-filled placeholders
+- **Marketing site stat meters** — only render download totals when `site-data.json` marks them verified; otherwise show em dash
+
 ### Added
 
 - **Marketing site design restore** — six PNG feature lightbox cards, IDE icon grid, ecosystem tab a11y controls, marquee pause, and showcase assets lost during main branch divergence (`ed438d9`, `0f5df41`)

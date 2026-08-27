@@ -22,7 +22,7 @@ export function compareSemver(a, b) {
  *   openVsxCanonical?: { version?: string | null; downloadCount?: number } | null;
  *   openVsxDuplicate?: { version?: string | null; downloadCount?: number } | null;
  *   vscode?: { downloadCount?: number } | null;
- *   githubAllAssets?: number;
+ *   githubAllAssets?: number | null;
  *   packageVersion?: string;
  * }} input
  */
@@ -31,10 +31,15 @@ export function computeDownloadTotals(input) {
   const duplicate = input.openVsxDuplicate ?? null;
   const packageVersion = input.packageVersion ?? null;
 
-  const canonicalCount = canonical?.downloadCount ?? 0;
-  const duplicateCount = duplicate?.downloadCount ?? 0;
-  const vscodeCount = input.vscode?.downloadCount ?? 0;
-  const githubAllAssets = input.githubAllAssets ?? 0;
+  const canonicalLive = Boolean(canonical);
+  const duplicateLive = Boolean(duplicate);
+  const vscodeLive = input.vscode != null;
+  const githubLive = input.githubAllAssets != null;
+
+  const canonicalCount = canonicalLive ? (canonical.downloadCount ?? 0) : null;
+  const duplicateCount = duplicateLive ? (duplicate.downloadCount ?? 0) : null;
+  const vscodeCount = vscodeLive ? (input.vscode.downloadCount ?? 0) : null;
+  const githubAllAssets = githubLive ? input.githubAllAssets : null;
 
   let openVsxSource = "canonical";
   let openVsxDisplayCount = canonicalCount;
@@ -48,18 +53,36 @@ export function computeDownloadTotals(input) {
     canonical?.version &&
     compareSemver(duplicate.version, canonical.version) > 0;
 
-  if (canonicalBehindPackage && duplicateAheadCanonical) {
+  if (
+    canonicalBehindPackage &&
+    duplicateAheadCanonical &&
+    canonicalCount != null &&
+    duplicateCount != null
+  ) {
     openVsxSource = "duplicate-fallback-display";
     openVsxDisplayCount = Math.max(canonicalCount, duplicateCount);
   }
 
-  const displayTotal = openVsxDisplayCount + vscodeCount + githubAllAssets;
-  const canonicalTotal = canonicalCount + vscodeCount + githubAllAssets;
+  const verified = canonicalLive && githubLive;
+  const displayTotal = verified
+    ? openVsxDisplayCount + (vscodeCount ?? 0) + githubAllAssets
+    : null;
+  const canonicalTotal =
+    canonicalCount != null && githubAllAssets != null
+      ? canonicalCount + (vscodeCount ?? 0) + githubAllAssets
+      : null;
 
   return {
     displayTotal,
     total: displayTotal,
+    verified,
     source: openVsxSource,
+    liveSources: {
+      openVsxCanonical: canonicalLive,
+      openVsxDuplicate: duplicateLive,
+      vscodeMarketplace: vscodeLive,
+      githubReleases: githubLive,
+    },
     breakdown: {
       openVsxCanonical: canonicalCount,
       openVsxDuplicate: duplicateCount,

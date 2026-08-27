@@ -271,7 +271,7 @@ async function githubLatestRelease() {
 
 async function githubReleaseDownloadTotal() {
   const releases = await fetchJson(`https://api.github.com/repos/${REPO}/releases?per_page=100`);
-  if (!Array.isArray(releases)) return 0;
+  if (!Array.isArray(releases)) return null;
   return releases.reduce((sum, rel) => {
     const assets = rel.assets ?? [];
     return sum + assets.reduce((a, asset) => a + (asset.download_count ?? 0), 0);
@@ -490,12 +490,16 @@ const siteData = {
   downloads: {
     total: downloadTotals.displayTotal,
     displayTotal: downloadTotals.displayTotal,
+    verified: downloadTotals.verified,
+    liveSources: downloadTotals.liveSources,
     canonicalTotal: downloadTotals.canonicalTotal,
     source: downloadTotals.source,
     breakdown: downloadBreakdown,
     openVsxCombined:
-      (downloadBreakdown.openVsxCanonical ?? 0) + (downloadBreakdown.openVsxDuplicate ?? 0),
-    note: "Public total uses canonical Open VSX unless canonical lags package version; duplicate namespace excluded from sum.",
+      downloadBreakdown.openVsxCanonical != null && downloadBreakdown.openVsxDuplicate != null
+        ? downloadBreakdown.openVsxCanonical + downloadBreakdown.openVsxDuplicate
+        : null,
+    note: "Totals require live Open VSX canonical + GitHub release APIs. Missing sources stay null — never zero-filled.",
   },
   visitors: {
     ...visitors,
@@ -518,23 +522,8 @@ const siteData = {
     namespace: OVSX_NS,
     canonical: true,
   },
-  ovsxDuplicate: ovsxDuplicate ?? {
-    namespace: OVSX_DUPLICATE_NS,
-    version: null,
-    url: `https://open-vsx.org/extension/${OVSX_DUPLICATE_NS}/${NAME}`,
-    downloadable: false,
-    downloadCount: 0,
-    installQuery: `${OVSX_DUPLICATE_NS}.${NAME}`,
-    deprecated: true,
-  },
-  vscode: vscode ?? {
-    version: version,
-    url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_NS}.${NAME}`,
-    downloadCount: 0,
-    installCount: 0,
-    installQuery: VSCE_EXT_ID,
-    published: false,
-  },
+  ovsxDuplicate: ovsxDuplicate,
+  vscode,
   github: {
     repo: REPO,
     releaseTag: github?.tag ?? `v${version}`,
@@ -594,7 +583,7 @@ console.log(`Wrote ${out}`);
 console.log(`Wrote ${visitorOut}`);
 console.log(`  Version:          ${version}`);
 console.log(`  Sync status:      ${syncStatus}`);
-console.log(`  Total downloads:  ${downloadTotals.displayTotal.toLocaleString()}`);
+console.log(`  Total downloads:  ${downloadTotals.verified ? downloadTotals.displayTotal.toLocaleString() : "unverified (missing live sources)"}`);
 console.log(`  Website visits:   ${visitors.websiteVisits ?? 0}`);
 console.log(`  Open VSX:         ${ovsxCanonical?.version ?? "n/a"} (${OVSX_NS})`);
 console.log(`  Open VSX dup:     ${ovsxDuplicate?.version ?? "n/a"} (${OVSX_DUPLICATE_NS})`);

@@ -27,12 +27,12 @@
 
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
-    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json" alt="Total downloads (live)" />
-    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx" alt="Open VSX canonical downloads" />
-    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx-total" alt="Open VSX total downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge.json" alt="Total downloads (live)" />
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-openvsx.json" alt="Open VSX canonical downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-openvsx-total.json" alt="Open VSX total downloads" />
   </p>
 
-  <p><sub>📊 <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">Live download chart</a> · counts refresh from marketplace APIs · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
+  <p><sub>📊 <a href="https://cursor.lorapok.tech/readme-stats.svg">Download chart</a> · counts synced from marketplace APIs in CI · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
 
 </div>
 

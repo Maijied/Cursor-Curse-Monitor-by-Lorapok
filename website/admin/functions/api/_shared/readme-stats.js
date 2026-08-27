@@ -1,7 +1,21 @@
 /** @typedef {{ label: string; value: number; color: string; inTotal?: boolean }} ReadmeStatBar */
 
+export function isVerifiedDownloadStats(data) {
+  return data?.downloads?.verified === true;
+}
+
+export function renderShieldsBadgeUnavailable(label = "downloads") {
+  return {
+    schemaVersion: 1,
+    label,
+    message: "unavailable",
+    color: "lightgrey",
+  };
+}
+
 export function formatCount(value) {
-  const n = Number(value) || 0;
+  if (value == null || Number.isNaN(Number(value))) return "—";
+  const n = Number(value);
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
   if (n >= 10_000) return `${Math.round(n / 1000)}k`;
   if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
@@ -12,26 +26,30 @@ export function formatCount(value) {
  * @param {Record<string, unknown>} data site-data.json payload
  */
 export function buildReadmeStatsFromSiteData(data) {
-  const breakdown = /** @type {Record<string, number>} */ (data?.downloads?.breakdown ?? {});
-  const total = Number(data?.downloads?.total ?? data?.downloads?.displayTotal ?? 0);
-  const openVsxCombined = Number(
-    data?.downloads?.openVsxCombined ??
-      (breakdown.openVsxCanonical ?? 0) + (breakdown.openVsxDuplicate ?? 0),
-  );
-  const canonical = breakdown.openVsxCanonical ?? data?.ovsx?.downloadCount ?? 0;
-  const legacy = breakdown.openVsxDuplicate ?? data?.ovsxDuplicate?.downloadCount ?? 0;
-  const vscode = breakdown.vscodeMarketplace ?? data?.vscode?.downloadCount ?? 0;
-  const github = breakdown.githubAllAssets ?? data?.github?.totalReleaseDownloads ?? 0;
+  const verified = isVerifiedDownloadStats(data);
+  const breakdown = /** @type {Record<string, number | null>} */ (data?.downloads?.breakdown ?? {});
+  const total = verified ? Number(data?.downloads?.total ?? data?.downloads?.displayTotal) : null;
+  const openVsxCombined = verified ? Number(data?.downloads?.openVsxCombined) : null;
+  const canonical = breakdown.openVsxCanonical ?? data?.ovsx?.downloadCount ?? null;
+  const legacy = breakdown.openVsxDuplicate ?? data?.ovsxDuplicate?.downloadCount ?? null;
+  const vscode = breakdown.vscodeMarketplace ?? data?.vscode?.downloadCount ?? null;
+  const github = breakdown.githubAllAssets ?? data?.github?.totalReleaseDownloads ?? null;
 
   /** @type {ReadmeStatBar[]} */
   const bars = [
-    { label: "Open VSX (canonical)", value: canonical, color: "#7c5cff", inTotal: true },
-    { label: "VS Code Marketplace", value: vscode, color: "#4d9fff", inTotal: true },
-    { label: "GitHub releases", value: github, color: "#34d399", inTotal: true },
-    { label: "Open VSX (LorapokLabs)", value: legacy, color: "#94a3b8", inTotal: false },
-  ];
+    { label: "Open VSX (canonical)", value: canonical ?? 0, color: "#7c5cff", inTotal: true },
+    { label: "VS Code Marketplace", value: vscode ?? 0, color: "#4d9fff", inTotal: true },
+    { label: "GitHub releases", value: github ?? 0, color: "#34d399", inTotal: true },
+    { label: "Open VSX (LorapokLabs)", value: legacy ?? 0, color: "#94a3b8", inTotal: false },
+  ].filter((bar, index) => {
+    if (!verified) return false;
+    if (index === 1 && vscode == null) return false;
+    if (index === 3 && legacy == null) return false;
+    return bar.value != null;
+  });
 
   return {
+    verified,
     total,
     openVsxCombined,
     canonical,
@@ -56,6 +74,15 @@ function escapeXml(value) {
  * @param {ReturnType<typeof buildReadmeStatsFromSiteData>} stats
  */
 export function renderReadmeStatsSvg(stats) {
+  if (!stats.verified) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="120" viewBox="0 0 720 120" role="img" aria-label="Download stats unavailable">
+  <rect width="720" height="120" rx="16" fill="#0b1020" stroke="rgba(148,163,184,0.35)"/>
+  <text x="360" y="52" text-anchor="middle" fill="#f8fafc" font-size="18" font-weight="700" font-family="Segoe UI, system-ui, sans-serif">Community downloads unavailable</text>
+  <text x="360" y="78" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="Segoe UI, system-ui, sans-serif">Live marketplace sources did not respond — no placeholder counts shown</text>
+</svg>`;
+  }
+
   const width = 720;
   const height = 220;
   const pad = 24;
@@ -91,7 +118,7 @@ export function renderReadmeStatsSvg(stats) {
   <rect width="${width}" height="${height}" rx="16" fill="url(#bg)" stroke="rgba(124,92,255,0.35)"/>
   <text x="${pad}" y="34" fill="#f8fafc" font-size="18" font-weight="700" font-family="Segoe UI, system-ui, sans-serif">Community downloads</text>
   <text x="${pad}" y="54" fill="#94a3b8" font-size="12" font-family="Segoe UI, system-ui, sans-serif">Total ${escapeXml(formatCount(stats.total))} · Open VSX ${escapeXml(formatCount(stats.openVsxCombined))} · v${escapeXml(stats.version)}</text>
-  <text x="${width - pad}" y="34" text-anchor="end" fill="#34d399" font-size="11" font-family="Segoe UI, system-ui, sans-serif">● live</text>
+  <text x="${width - pad}" y="34" text-anchor="end" fill="#94a3b8" font-size="11" font-family="Segoe UI, system-ui, sans-serif">synced</text>
   <line x1="${pad}" y1="${chartTop + chartHeight + 28}" x2="${width - pad}" y2="${chartTop + chartHeight + 28}" stroke="rgba(148,163,184,0.18)"/>
   ${barsSvg}
   <text x="${pad}" y="${height - 14}" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated ${escapeXml(updated)} · canonical total excludes LorapokLabs legacy namespace</text>
@@ -104,10 +131,24 @@ export function renderReadmeStatsSvg(stats) {
  * @param {"total"|"openvsx"|"openvsx-total"|"vscode"} kind
  */
 export function renderShieldsBadge(stats, kind = "total") {
+  if (!stats.verified) {
+    const labels = {
+      total: "downloads",
+      openvsx: "Open VSX",
+      "openvsx-total": "Open VSX total",
+      vscode: "VS Code",
+    };
+    return renderShieldsBadgeUnavailable(labels[kind] ?? "downloads");
+  }
+
   const map = {
     total: { label: "downloads", message: `${formatCount(stats.total)} total`, color: "6C5CE7" },
     openvsx: { label: "Open VSX", message: formatCount(stats.canonical), color: "7C5CFF" },
-    "openvsx-total": { label: "Open VSX total", message: formatCount(stats.openVsxCombined), color: "5B4BDB" },
+    "openvsx-total": {
+      label: "Open VSX total",
+      message: formatCount(stats.openVsxCombined),
+      color: "5B4BDB",
+    },
     vscode: { label: "VS Code", message: formatCount(stats.vscode), color: "007ACC" },
   };
   const entry = map[kind] ?? map.total;
