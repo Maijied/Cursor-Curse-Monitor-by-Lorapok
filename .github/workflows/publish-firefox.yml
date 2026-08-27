@@ -38,7 +38,7 @@ jobs:
           fi
 
       - name: Build browser extension
-        run: npm run browser-ext:build
+        run: npm run build -w browser-extension
 
       - name: Publish to AMO
         env:
