@@ -87,7 +87,18 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     };
 
     const subscription = this.monitor.onDidUpdate(push);
-    webviewView.onDidDispose(() => subscription.dispose());
+    const readyFallback = setTimeout(() => {
+      if (viewReady) {
+        return;
+      }
+      viewReady = true;
+      void deliverSnapshot(false);
+    }, 2000);
+
+    webviewView.onDidDispose(() => {
+      clearTimeout(readyFallback);
+      subscription.dispose();
+    });
 
     webviewView.onDidChangeVisibility(() => {
       if (!webviewView.visible || !viewReady) {

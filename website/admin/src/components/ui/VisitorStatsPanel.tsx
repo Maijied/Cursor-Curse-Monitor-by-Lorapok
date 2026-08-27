@@ -8,7 +8,7 @@ const CLICK_LABELS: Record<string, string> = {
   vscode: "VS Code Marketplace",
   github: "GitHub / repo",
   vsix: "VSIX download",
-  openvsxDuplicate: "Duplicate listing",
+  openvsxDuplicate: "LorapokLabs namespace",
 };
 
 export default function VisitorStatsPanel({ stats, live }: { stats: VisitorStats; live?: boolean }) {

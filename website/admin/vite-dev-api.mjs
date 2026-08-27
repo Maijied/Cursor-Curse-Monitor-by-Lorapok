@@ -8,6 +8,12 @@ import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broad
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
+import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
+import {
+  isValidDiscordWebhookUrl,
+  sanitizeDiscordConfigForClient,
+} from "./functions/api/_shared/discord-config.js";
+import { notifyDiscordDeployment } from "./functions/api/_shared/discord-notify.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -32,6 +38,11 @@ const devStore = {
     updatedAt: null,
     updatedBy: null,
   },
+  discordConfig: {
+    webhookUrl: "",
+    updatedAt: null,
+    updatedBy: null,
+  },
 };
 
 const devKv = {
@@ -39,11 +50,17 @@ const devKv = {
     if (key === "subscribers") {
       return JSON.stringify(devStore.subscribers);
     }
+    if (key === "integrations:discord") {
+      return JSON.stringify(devStore.discordConfig);
+    }
     return null;
   },
   put: async (key, value) => {
     if (key === "subscribers") {
       devStore.subscribers = JSON.parse(value);
+    }
+    if (key === "integrations:discord") {
+      devStore.discordConfig = JSON.parse(value);
     }
   },
 };
@@ -537,7 +554,7 @@ async function fetchMarketplaceSync() {
   const channels = [
     { id: "github", label: "GitHub Release", version: githubRelease?.tag_name?.replace(/^v/, "") ?? null, synced: githubRelease?.tag_name?.replace(/^v/, "") === target },
     { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", version: ovsxCanonical?.version ?? siteData.openVsx?.version ?? null, downloadCount: ovsxCanonical?.downloadCount ?? 0, synced: (ovsxCanonical?.version ?? siteData.openVsx?.version) === target },
-    { id: "ovsx-duplicate", label: "Open VSX duplicate", version: ovsxDuplicate?.version ?? null, downloadCount: ovsxDuplicate?.downloadCount ?? 0, synced: false, warn: true },
+    { id: "ovsx-duplicate", label: "Open VSX (LorapokLabs)", version: ovsxDuplicate?.version ?? null, downloadCount: ovsxDuplicate?.downloadCount ?? 0, synced: false, warn: true },
     { id: "vscode", label: "VS Code Marketplace", version: vscodeVersion, downloadCount: siteData.vscode?.downloadCount ?? 0, synced: vscodeVersion === target },
     { id: "package", label: "package.json", version: target, synced: true },
   ];
@@ -549,6 +566,10 @@ async function fetchMarketplaceSync() {
   };
 }
 
+/**
+ * Create development-mode HTTP middleware for API routes, analytics, usage tracking, integrations, administration, deployments, notifications, and release data.
+ * @return {Function} Middleware that handles recognized API requests and delegates unrecognized requests to the next handler.
+ */
 export function createDevApiMiddleware() {
   return (req, res, next) => {
     const url = req.url?.split("?")[0] ?? "";
@@ -604,7 +625,7 @@ export function createDevApiMiddleware() {
           devStore.usageInstalls.set(installId, {
             installId,
             os: String(parsed.os ?? "unknown").slice(0, 32),
-            host: ["cursor", "vscode"].includes(String(parsed.host)) ? parsed.host : "unknown",
+            host: ["cursor", "vscode", "browser"].includes(String(parsed.host)) ? parsed.host : "unknown",
             version: String(parsed.version ?? "unknown").slice(0, 32),
             lastSeenAt: now,
             firstSeenAt: prev?.firstSeenAt ?? now,
@@ -615,6 +636,37 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
+      return;
+    }
+
+    if (url === "/api/stats/readme.svg" && req.method === "GET") {
+      try {
+        const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        const stats = buildReadmeStatsFromSiteData(siteData);
+        res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+        res.setHeader("Cache-Control", "public, max-age=300");
+        res.end(renderReadmeStatsSvg(stats));
+      } catch (err) {
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+        res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="80"><text x="12" y="40" fill="#fff">stats unavailable</text></svg>`);
+      }
+      return;
+    }
+
+    if (url.startsWith("/api/stats/badge.json") && req.method === "GET") {
+      const kind = new URL(req.url ?? "", "http://localhost").searchParams.get("kind") ?? "total";
+      try {
+        const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        const stats = buildReadmeStatsFromSiteData(siteData);
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "public, max-age=300");
+        res.end(JSON.stringify(renderShieldsBadge(stats, kind)));
+      } catch {
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ schemaVersion: 1, label: "downloads", message: "unavailable", color: "lightgrey" }));
+      }
       return;
     }
 
@@ -664,6 +716,81 @@ export function createDevApiMiddleware() {
       res.setHeader("Content-Type", "application/json");
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.end(JSON.stringify(devStore.communityConfig));
+      return;
+    }
+
+    if (url === "/api/integrations/discord/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+      return;
+    }
+
+    if (url === "/api/integrations/discord/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const webhookUrl = String(parsed.webhookUrl ?? "").trim();
+          if (!isValidDiscordWebhookUrl(webhookUrl)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Invalid Discord webhook URL" }));
+            return;
+          }
+          devStore.discordConfig = {
+            webhookUrl,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          };
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/discord/deployment" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          notifyDiscordDeployment({ ADMIN_KV: devKv }, {
+            phase: "completed",
+            actionType: parsed.actionType ?? "deployment",
+            tag: parsed.tag,
+            channel: parsed.channel,
+            market: parsed.market,
+            conclusion: parsed.conclusion ?? "success",
+            runUrl: parsed.runUrl,
+            triggeredBy: parsed.triggeredBy ?? "dev@local",
+            jobs: parsed.jobs ?? [],
+          })
+            .then((result) => {
+              res.setHeader("Content-Type", "application/json");
+              if (!result.ok && !result.skipped) {
+                res.statusCode = 502;
+                res.end(JSON.stringify({ error: result.error || "Discord notification failed" }));
+                return;
+              }
+              res.end(JSON.stringify({
+                ok: result.ok,
+                skipped: result.skipped ?? false,
+                reason: result.reason,
+              }));
+            })
+            .catch((err) => {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message || "Discord notification failed" }));
+            });
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
       return;
     }
 

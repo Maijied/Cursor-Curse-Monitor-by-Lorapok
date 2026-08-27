@@ -2,22 +2,25 @@ import Card from "./Card";
 import type { DownloadBreakdown } from "../../lib/site-data";
 import { formatCount } from "../../lib/site-data";
 
-const ROWS: { key: keyof DownloadBreakdown; label: string; hint?: string }[] = [
-  { key: "openVsxCanonical", label: "Open VSX (lorapok-labs)", hint: "Canonical listing" },
+const ROWS: { key: keyof DownloadBreakdown | "openVsxCombined"; label: string; hint?: string; excludeFromTotal?: boolean }[] = [
+  { key: "openVsxCombined", label: "Open VSX total", hint: "Both namespaces combined" },
+  { key: "openVsxCanonical", label: "Open VSX (lorapok-labs)", hint: "Canonical listing · in total" },
   { key: "vscodeMarketplace", label: "VS Code Marketplace" },
   { key: "githubAllAssets", label: "GitHub releases", hint: "All release asset downloads" },
   { key: "githubVsix", label: "GitHub (legacy key)", hint: "Same as GitHub releases" },
   { key: "latestReleaseVsix", label: "Latest release VSIX only" },
-  { key: "openVsxDuplicate", label: "Open VSX duplicate", hint: "Excluded from total" },
+  { key: "openVsxDuplicate", label: "Open VSX (LorapokLabs)", hint: "Legacy namespace · excluded from total", excludeFromTotal: true },
 ];
 
 export default function DownloadBreakdownPanel({
   total,
   breakdown,
+  openVsxCombined,
   note,
 }: {
   total: number;
   breakdown: DownloadBreakdown;
+  openVsxCombined?: number;
   note?: string;
 }) {
   return (
@@ -33,9 +36,12 @@ export default function DownloadBreakdownPanel({
       </div>
 
       <div className="space-y-3">
-        {ROWS.map(({ key, label, hint }) => {
-          const value = breakdown[key] ?? 0;
-          const pct = total > 0 && key !== "openVsxDuplicate" ? Math.round((value / total) * 100) : 0;
+        {ROWS.map(({ key, label, hint, excludeFromTotal }) => {
+          const value =
+            key === "openVsxCombined"
+              ? (openVsxCombined ?? (breakdown.openVsxCanonical ?? 0) + (breakdown.openVsxDuplicate ?? 0))
+              : (breakdown[key as keyof DownloadBreakdown] ?? 0);
+          const pct = total > 0 && !excludeFromTotal && key !== "openVsxCombined" ? Math.round((value / total) * 100) : 0;
           return (
             <div key={key} className="group">
               <div className="flex justify-between text-sm mb-1">
@@ -45,7 +51,7 @@ export default function DownloadBreakdownPanel({
                 </span>
                 <span className="font-[family-name:var(--font-mono)] text-[var(--color-text)]">{formatCount(value)}</span>
               </div>
-              {key !== "openVsxDuplicate" && total > 0 && (
+              {!excludeFromTotal && key !== "openVsxCombined" && total > 0 && (
                 <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-neon)] transition-all duration-700"

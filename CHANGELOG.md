@@ -8,7 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Marketing site design restore** — six PNG feature lightbox cards, ecosystem tab a11y controls, marquee pause, and showcase assets lost during main branch divergence (`ed438d9`, `0f5df41`)
+- **Marketing site design restore** — six PNG feature lightbox cards, IDE icon grid, ecosystem tab a11y controls, marquee pause, and showcase assets lost during main branch divergence (`ed438d9`, `0f5df41`)
+- **Admin Discord integration** — configurable deployment webhook in Settings, with notify-on-deploy API and completion watch
+- **Admin deploy UX session** — floating status button, leave-warning modal, global deploy runtime context, and mobile viewport fixes
+- **Extension & browser polish** — dashboard boot snapshot, retain-context webview, popup loading states, and activity bar icon refresh
 - **Universal VS Code wrapper IDE support** — shared `supportedIdeWrappers` list; bold messaging in README, marketing site (2nd section with IDE grid), IDE dashboard About panel, and browser extension Options
 - **Cursor-not-found blocked UI** — full blurred overlay with “No Cursor AI found”, refresh CTA, and [lorapok.tech](https://lorapok.tech) link in IDE dashboard and browser popup
 - **SEO refresh** — VS Code wrapper IDE keywords, updated meta descriptions, canonical JSON-LD download URLs via `generate-seo.mjs`

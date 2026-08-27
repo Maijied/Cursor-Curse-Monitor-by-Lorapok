@@ -578,9 +578,9 @@ function restoreSidebar(
 export async function reindexMissingConversations(
   extensionUri: vscode.Uri
 ): Promise<ReindexResult> {
-  const host = detectEditorHost();
-  const stateDbPath = getCursorGlobalStoragePath(host);
-  const searchDbPath = getConversationSearchDbPath(host);
+  const host = detectEditorHost(vscode.env.appName);
+  const stateDbPath = getCursorGlobalStoragePath(host, vscode.env.appName);
+  const searchDbPath = getConversationSearchDbPath(host, vscode.env.appName);
   const templatePath = path.join(extensionUri.fsPath, "media", "composer-template.json");
 
   if (!fs.existsSync(templatePath)) {

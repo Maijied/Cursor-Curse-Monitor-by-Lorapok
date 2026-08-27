@@ -7,6 +7,7 @@ import {
   triggerInfraDeploy,
   triggerRollback,
 } from "../../lib/api";
+import { useDeployRuntime } from "../../context/DeployRuntimeContext";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
   defaultTagSelection,
@@ -16,7 +17,8 @@ import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
-import DeployRuntimePanel from "../ui/DeployRuntimePanel";
+import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
+import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
 
@@ -29,8 +31,12 @@ function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) 
 
 type Mode = "deploy" | "rollback" | "infra";
 
+/**
+ * Renders the interface for deploying releases, rolling back to known-good tags, or redeploying infrastructure.
+ */
 export default function Deployments() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { inProgress, startSession, registerOnDeployComplete } = useDeployRuntime();
   const { data: siteData } = useSiteData();
   const [mode, setMode] = useState<Mode>("deploy");
   const [tags, setTags] = useState<string[]>([]);
@@ -39,8 +45,6 @@ export default function Deployments() {
   const [suggestedTag, setSuggestedTag] = useState<string | null>(null);
   const [deploying, setDeploying] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [runtimeActive, setRuntimeActive] = useState(false);
-  const [lastTargetTag, setLastTargetTag] = useState("");
   const [channel, setChannel] = useState<"beta" | "production">("production");
   const [selectedTag, setSelectedTag] = useState("");
   const [market, setMarket] = useState<
@@ -57,7 +61,6 @@ export default function Deployments() {
   }, [mode]);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
-  const [dispatchedAfter, setDispatchedAfter] = useState(0);
   const [displayLiveTag, setDisplayLiveTag] = useState<string | null>(null);
   const [displayPkgVersion, setDisplayPkgVersion] = useState<string | null>(null);
   const [versionPlan, setVersionPlan] = useState<Awaited<ReturnType<typeof fetchVersionPlan>> | null>(null);
@@ -98,11 +101,16 @@ export default function Deployments() {
   }, [loadTags]);
 
   useEffect(() => {
-    if (!runtimeActive && liveTag) {
+    if (!inProgress && liveTag) {
       setDisplayLiveTag(liveTag);
       setDisplayPkgVersion(siteData?.packageVersion ?? null);
     }
-  }, [liveTag, runtimeActive, siteData?.packageVersion]);
+  }, [liveTag, inProgress, siteData?.packageVersion]);
+
+  useEffect(() => {
+    registerOnDeployComplete(() => loadTags());
+    return () => registerOnDeployComplete(null);
+  }, [loadTags, registerOnDeployComplete]);
 
   const filteredTags = tags.filter((t) => {
     if (channel === "production") return !/beta|alpha|rc/i.test(t);
@@ -147,6 +155,23 @@ export default function Deployments() {
     }
   }, [deployTargetTag, filteredTags, mode]);
 
+  const workflowName = "ci-cd.yml";
+  const formLocked = deploying || inProgress;
+
+  const beginRuntimeSession = useCallback(
+    (targetTag: string, modeLabel: string, dispatchedAfter: number) => {
+      startSession({
+        workflowName,
+        targetTag,
+        dispatchedAfter,
+        channel: releaseChannel,
+        market: mode === "infra" ? "Infra only" : market,
+        modeLabel,
+      });
+    },
+    [startSession, releaseChannel, market, mode]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
@@ -169,14 +194,14 @@ export default function Deployments() {
 
     if (mode === "infra") {
       setDeploying(true);
+      const dispatchedAfter = Date.now();
       try {
         await triggerInfraDeploy({ deploy_admin: deployAdmin, deploy_website: deployWebsite });
         setMessage({
           type: "success",
           text: `Infra deploy triggered — admin: ${deployAdmin ? "yes" : "no"}, website: ${deployWebsite ? "yes" : "no"}.`,
         });
-        setRuntimeActive(true);
-        setDispatchedAfter(Date.now());
+        beginRuntimeSession("infra", "Infra deploy", dispatchedAfter);
       } catch (err: unknown) {
         setMessage({ type: "error", text: err instanceof Error ? err.message : "Infra deploy failed" });
       }
@@ -197,6 +222,7 @@ export default function Deployments() {
     }
 
     setDeploying(true);
+    const dispatchedAfter = Date.now();
     const payload = {
       target_tag: selectedTag,
       publish_market: market,
@@ -208,13 +234,12 @@ export default function Deployments() {
       if (mode === "rollback") {
         await triggerRollback(payload);
         setMessage({ type: "success", text: `Rollback triggered for ${selectedTag} (${market}).` });
+        beginRuntimeSession(selectedTag, "Rollback", dispatchedAfter);
       } else {
         await triggerDeployment(payload);
         setMessage({ type: "success", text: `Deployment triggered for ${selectedTag} (${market}).` });
+        beginRuntimeSession(selectedTag, "Deploy", dispatchedAfter);
       }
-      setRuntimeActive(true);
-      setLastTargetTag(selectedTag);
-      setDispatchedAfter(Date.now());
     } catch (err: unknown) {
       setMessage({
         type: "error",
@@ -224,12 +249,10 @@ export default function Deployments() {
     setDeploying(false);
   };
 
-  const workflowName = "ci-cd.yml";
-
   const canSubmit =
     isMaster &&
     !tagsError &&
-    !deploying &&
+    !formLocked &&
     (mode === "infra"
       ? deployAdmin || deployWebsite
       : Boolean(selectedTag) && !deployBlocked);
@@ -239,14 +262,6 @@ export default function Deployments() {
 
   const pkgVersion = displayPkgVersion ?? siteData?.packageVersion ?? "—";
   const shownLiveTag = displayLiveTag ?? liveTag;
-
-  const handleRuntimeComplete = useCallback(
-    ({ success }: { success: boolean }) => {
-      setRuntimeActive(false);
-      if (success) loadTags();
-    },
-    [loadTags]
-  );
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
@@ -439,7 +454,7 @@ export default function Deployments() {
         </Card>
       )}
 
-      <div className="flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)]">
+      <div className={`flex gap-2 p-1 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border)] ${formLocked ? "opacity-60 pointer-events-none" : ""}`}>
         {(
           [
             { value: "deploy" as const, label: "Deploy", icon: Rocket },
@@ -519,13 +534,13 @@ export default function Deployments() {
       )}
 
       <Card className="mt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={`space-y-6 ${formLocked ? "opacity-70" : ""}`}>
           {mode !== "infra" ? (
             <div>
               <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
                 {mode === "rollback" ? "Rollback to tag (source)" : "Deploy tag"}
               </label>
-              <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass}>
+              <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass} disabled={formLocked}>
                 {filteredTags.length === 0 && <option value="">No tags in list</option>}
                 {filteredTags.map((t) => (
                   <option key={t} value={t}>
@@ -556,6 +571,7 @@ export default function Deployments() {
               id="target-market"
               value={market}
               onChange={(e) => setMarket(e.target.value as typeof market)}
+              disabled={formLocked}
               className={inputClass}
             >
               <option value="Open VSX + Firefox AMO">Open VSX + Firefox AMO (default — no VS Code)</option>
@@ -586,6 +602,7 @@ export default function Deployments() {
                     value={value}
                     checked={channel === value}
                     onChange={() => setChannel(value)}
+                    disabled={formLocked}
                     className="sr-only"
                   />
                   <span className="font-semibold capitalize">{value === "beta" ? "Beta (Pre-release)" : "Production"}</span>
@@ -604,6 +621,7 @@ export default function Deployments() {
                     type="checkbox"
                     checked={deployAdmin}
                     onChange={(e) => setDeployAdmin(e.target.checked)}
+                    disabled={formLocked}
                   />
                   Mission Control admin (cursor-dev.lorapok.tech)
                 </label>
@@ -613,6 +631,7 @@ export default function Deployments() {
                   type="checkbox"
                   checked={deployWebsite}
                   onChange={(e) => setDeployWebsite(e.target.checked)}
+                  disabled={formLocked}
                 />
                 Marketing site (cursor.lorapok.tech)
               </label>
@@ -631,15 +650,17 @@ export default function Deployments() {
               mode === "rollback" ? "bg-[var(--color-warn)]" : "bg-[var(--color-accent)]"
             }`}
           >
-            {mode === "rollback" ? (
+            {deploying || inProgress ? (
+              <LorapokLarvaeLoader size="sm" ariaLabel="Deployment in progress" className="!gap-0" />
+            ) : mode === "rollback" ? (
               <Undo2 size={20} aria-hidden="true" />
             ) : mode === "infra" ? (
               <Server size={20} aria-hidden="true" />
             ) : (
               <Rocket size={20} aria-hidden="true" />
             )}
-            {deploying
-              ? "Triggering…"
+            {deploying || inProgress
+              ? "Deployment running…"
               : mode === "rollback"
                 ? "Trigger Rollback"
                 : mode === "infra"
@@ -647,6 +668,18 @@ export default function Deployments() {
                   : "Publish to Marketplaces"}
           </button>
         </form>
+
+        {deploying && !inProgress ? (
+          <div
+            className="mt-6 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] p-4"
+            aria-live="polite"
+          >
+            <LorapokLarvaeLoader size="sm" ariaLabel="Dispatching workflow" />
+            <p className="text-sm text-[var(--color-muted)]">
+              Dispatching {workflowName} on GitHub… Larvae will crawl the pipeline once the run starts.
+            </p>
+          </div>
+        ) : null}
 
         {message && (
           <Notification
@@ -658,13 +691,13 @@ export default function Deployments() {
           />
         )}
 
-        <DeployRuntimePanel
-          active={runtimeActive}
-          workflowName={workflowName}
-          targetTag={lastTargetTag}
-          dispatchedAfter={dispatchedAfter}
-          onComplete={handleRuntimeComplete}
-        />
+        {inProgress && (
+          <p className="mt-4 text-sm text-[var(--color-muted)]">
+            Deployment in progress — form locked until CI finishes. Use the larvae button if you navigate away.
+          </p>
+        )}
+
+        <DeployRuntimeInlineSlot />
       </Card>
     </div>
   );

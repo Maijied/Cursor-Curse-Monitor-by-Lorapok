@@ -1,4 +1,4 @@
-import { useEffect, useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 type ModalProps = {
@@ -32,11 +32,33 @@ const sizeClass = {
  */
 export default function Modal({ open, onClose, title, subtitle, children, footer, size = "lg" }: ModalProps) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    const dialog = dialogRef.current;
+    const focusable = dialog
+      ? [...dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )]
+      : [];
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || focusable.length === 0) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -57,6 +79,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -72,7 +95,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 p-2 rounded-lg border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-white/5 transition-colors"
+            className="shrink-0 p-2 rounded-lg border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-surface-hover)] transition-colors"
             aria-label="Close"
           >
             <X size={18} />

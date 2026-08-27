@@ -11,7 +11,7 @@ import {
 import { UsageMonitorService } from "./usageMonitor";
 import { NotificationProvider } from "./notificationProvider";
 import { maybeShowProductNotice, refreshProductNotice } from "./productNotices";
-import { maybeSendAnonymousHeartbeat } from "./telemetry";
+import { maybeSendAnonymousHeartbeat, startAnonymousHeartbeatScheduler } from "./telemetry";
 import { subscribeForProductUpdates, maybeShowSubscribePrompt, snoozeSubscribePrompt, getSubscribePromptViewState } from "./updateSubscription";
 import { SUBSCRIBE_PROMPT_DELAY_MS } from "@lorapok/cursor-monitor-shared";
 import { readCachedAccountEmail } from "./cursorAuth";
@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
   securityMonitor.start();
 
   const extensionVersion = String(context.extension.packageJSON.version ?? "0.0.0");
-  void maybeSendAnonymousHeartbeat(context, extensionVersion);
+  context.subscriptions.push(startAnonymousHeartbeatScheduler(context, extensionVersion));
   void maybeShowProductNotice(context);
   const noticeInterval = setInterval(() => {
     void maybeShowProductNotice(context);
@@ -145,7 +145,8 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar,
     vscode.window.registerWebviewViewProvider(
       DashboardViewProvider.viewType,
-      new DashboardViewProvider(monitor, context.extensionUri, extensionVersion, context)
+      new DashboardViewProvider(monitor, context.extensionUri, extensionVersion, context),
+      { webviewOptions: { retainContextWhenHidden: true } }
     ),
     vscode.commands.registerCommand("cursorCurseMonitor.openDashboard", async () => {
       await vscode.commands.executeCommand(
