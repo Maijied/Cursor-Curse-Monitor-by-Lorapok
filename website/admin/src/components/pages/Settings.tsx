@@ -6,7 +6,7 @@ import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
-import { formatDownloadCount } from "../../lib/download-stats";
+import { formatDownloadCount, getVerifiedDownloadTotal } from "../../lib/download-stats";
 
 /**
  * Renders the application settings page with theme controls, integrations, environment details, and API health information.
@@ -36,7 +36,9 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up max-w-3xl">
-      <PageHeader title="Settings" description="Theme, Discord, connected services, and API health." />
+      <PageHeader title="Settings" description="Discord deployment hook, theme, connected services, and API health." />
+
+      <DiscordIntegrationsCard />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>
@@ -60,8 +62,6 @@ export default function Settings() {
 
       <ConnectedServicesCard />
 
-      <DiscordIntegrationsCard />
-
       <Card>
         <h3 className="font-semibold mb-4">Environment</h3>
         <dl className="space-y-3 text-sm">
@@ -76,7 +76,7 @@ export default function Settings() {
               <div className="flex justify-between gap-4">
                 <dt className="text-[var(--color-muted)]">Total downloads</dt>
                 <dd className="font-semibold text-[var(--color-neon)]">
-                  {formatDownloadCount(siteData.downloads?.verified ? (siteData.downloads?.total ?? null) : null)}
+                  {formatDownloadCount(getVerifiedDownloadTotal(siteData))}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">

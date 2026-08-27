@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
-import { Bell, Save } from "lucide-react";
+import { Bell, Save, Send } from "lucide-react";
 import Card from "./Card";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import { auth } from "../../lib/firebase";
-import { fetchDiscordConfigApi, putDiscordConfigApi, type DiscordConfig } from "../../lib/api";
+import {
+  fetchDiscordConfigApi,
+  notifyDiscordDeploymentApi,
+  putDiscordConfigApi,
+  type DiscordConfig,
+} from "../../lib/api";
 import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
- * Displays the Discord webhook configuration and allows master admins to update it.
+ * Configure the Discord webhook that receives deploy / rollback / infra status.
  */
 export default function DiscordIntegrationsCard() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [config, setConfig] = useState<DiscordConfig | null>(null);
   const [webhookUrl, setWebhookUrl] = useState("");
@@ -26,7 +32,7 @@ export default function DiscordIntegrationsCard() {
   }, []);
 
   const inputClass =
-    "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
+    "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)] font-[family-name:var(--font-mono)] text-sm";
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,11 +43,34 @@ export default function DiscordIntegrationsCard() {
       const result = await putDiscordConfigApi({ webhookUrl: webhookUrl.trim() });
       setConfig(result.config);
       setWebhookUrl("");
-      setMessage({ type: "success", text: "Discord webhook saved." });
+      setMessage({ type: "success", text: "Discord deployment hook saved. Status posts will go to this channel." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
     }
     setSaving(false);
+  };
+
+  const handleTest = async () => {
+    if (!isMaster || !config?.configured) return;
+    setTesting(true);
+    setMessage(null);
+    try {
+      const result = await notifyDiscordDeploymentApi({
+        actionType: "deployment-status-test",
+        tag: "test",
+        channel: "Production",
+        market: "Mission Control",
+        conclusion: "success",
+      });
+      if (result.skipped) {
+        setMessage({ type: "error", text: "Test skipped — save a webhook URL first." });
+      } else {
+        setMessage({ type: "success", text: "Test deployment status sent to Discord." });
+      }
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Test notification failed" });
+    }
+    setTesting(false);
   };
 
   return (
@@ -50,15 +79,16 @@ export default function DiscordIntegrationsCard() {
         <div>
           <h3 className="font-semibold flex items-center gap-2">
             <Bell size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
-            Discord
+            Discord deployment hook
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Paste your channel webhook URL to get deployment updates in Discord.
+            Channel webhook for deploy, rollback, and infra status (started + completed). Create one in Discord:
+            Edit channel → Integrations → Webhooks.
           </p>
         </div>
         {config && (
-          <Badge variant={config.configured ? "synced" : "neutral"}>
-            {config.configured ? "Connected" : "Not set"}
+          <Badge variant={config.configured ? "synced" : "warn"}>
+            {config.configured ? "Hook connected" : "Not set"}
           </Badge>
         )}
       </div>
@@ -85,14 +115,25 @@ export default function DiscordIntegrationsCard() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={!isMaster || saving || !webhookUrl.trim()}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
-          >
-            <Save size={16} aria-hidden="true" />
-            {saving ? "Saving…" : "Save"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              disabled={!isMaster || saving || !webhookUrl.trim()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
+            >
+              <Save size={16} aria-hidden="true" />
+              {saving ? "Saving…" : "Save hook"}
+            </button>
+            <button
+              type="button"
+              onClick={handleTest}
+              disabled={!isMaster || testing || !config?.configured}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
+            >
+              <Send size={16} aria-hidden="true" />
+              {testing ? "Sending…" : "Send test status"}
+            </button>
+          </div>
 
           {!isMaster && (
             <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>

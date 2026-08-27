@@ -67,6 +67,14 @@ export default function ConnectedServicesCard() {
             ? String(health.mailTransport ?? "configured")
             : health.mailHint ?? "Mail transport not configured",
         });
+        next.push({
+          id: "discord",
+          label: "Discord deployment hook",
+          status: health.discordConfigured ? "connected" : "disconnected",
+          detail: health.discordConfigured
+            ? "Webhook set — deploy status posts to Discord"
+            : "Not set — add a channel webhook on Deployments",
+        });
       } catch {
         next.push({
           id: "github",
@@ -83,8 +91,19 @@ export default function ConnectedServicesCard() {
       }
 
       try {
-        const res = await fetch("/site-data.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("unavailable");
+        let res: Response | null = null;
+        for (const url of ["/api/site-data", "/site-data.json"]) {
+          try {
+            const candidate = await fetch(url, { cache: "no-store" });
+            if (candidate.ok) {
+              res = candidate;
+              break;
+            }
+          } catch {
+            /* try next */
+          }
+        }
+        if (!res) throw new Error("unavailable");
         const data = await res.json();
         next.push({
           id: "site-data",
