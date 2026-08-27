@@ -294,6 +294,13 @@ jobs:
         working-directory: website/admin
         run: test -f dist/site-data.json && test -f dist/seo.json
 
+      - name: Upload admin build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-dist
+          path: website/admin/dist
+          retention-days: 1
+
   # ───────────────────────────────────────────────────────────────────────────
   # 3b. AUTO-PREPARE RELEASE TAG ON PUSH TO MAIN
   # ───────────────────────────────────────────────────────────────────────────
@@ -342,6 +349,7 @@ jobs:
   admin-deploy:
     name: Deploy Admin Panel
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     needs: [admin-ci, release-prep, deploy, prepare-tag-on-push]
     if: >-
       always()
@@ -385,34 +393,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download admin build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: admin-dist
+          path: website/admin/dist
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            website/admin/package-lock.json
+          cache-dependency-path: website/admin/package-lock.json
 
-      - name: Install root dependencies
-        run: npm ci
-
-      - name: Generate site artifacts
-        run: |
-          node scripts/generate-site-data.mjs
-          node scripts/generate-seo.mjs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FIREBASE_PROJECT_ID: cursor-curse-by-lorapok
-          ANALYTICS_STATS_URL: ${{ secrets.ANALYTICS_STATS_URL }}
-
-      - name: Install admin dependencies
+      - name: Install admin tooling (wrangler mail scripts only)
         working-directory: website/admin
-        run: npm ci
+        run: npm ci --ignore-scripts
 
-      - name: Build admin panel
+      - name: Assert admin dist artifact
         working-directory: website/admin
-        run: npm run build
+        run: test -f dist/site-data.json && test -f dist/index.html
 
       - name: Check Cloudflare secrets
         env:
@@ -442,6 +442,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MAIL_RELAY_EXISTS_SETUP: ${{ steps.mail_setup.outputs.relay_exists }}
         run: node scripts/verify-mail-transport.mjs
 
       - name: Deploy to Cloudflare Pages
@@ -455,8 +456,10 @@ jobs:
           MAIL_RELAY_DEPLOYED: ${{ steps.mail_setup.outputs.relay_deployed }}
           MAIL_RELAY_EXISTS_SETUP: ${{ steps.mail_setup.outputs.relay_exists }}
           MAIL_RELAY_EXISTS_VERIFY: ${{ steps.mail_verify.outputs.relay_exists }}
-          CF_DEPLOY_PRE_COOLDOWN_SEC: "75"
-          CF_DEPLOY_MAX_ATTEMPTS: "6"
+          MAIL_API_LIGHTWEIGHT: ${{ steps.mail_setup.outputs.mail_api_lightweight }}
+          CF_DEPLOY_PRE_COOLDOWN_SEC: "20"
+          CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT: "0"
+          CF_DEPLOY_MAX_ATTEMPTS: "3"
         run: node scripts/deploy-pages-ci.mjs
 
       - name: Warn when Pages deploy failed
@@ -516,6 +519,7 @@ jobs:
             website/stats/badge.json
             website/stats/badge-openvsx.json
             website/stats/badge-openvsx-total.json
+            website/stats/badge-vscode.json
           retention-days: 14
 
       - name: Commit and publish refreshed SEO artifacts (with branch rule PR fallback)
@@ -525,7 +529,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json website/readme-stats.svg website/stats/badge.json website/stats/badge-openvsx.json website/stats/badge-openvsx-total.json
+          git add website/sitemap.xml website/robots.txt website/seo.json website/site-data.json website/visitor-stats.json website/readme-stats.svg website/stats/badge.json website/stats/badge-openvsx.json website/stats/badge-openvsx-total.json website/stats/badge-vscode.json
           if git diff --staged --quiet; then
             echo "No SEO artifact changes to commit."
             exit 0

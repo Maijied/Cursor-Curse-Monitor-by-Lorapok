@@ -22,10 +22,11 @@ try {
   process.exit(1);
 }
 
-let relayExists = false;
+let relayExists = process.env.MAIL_RELAY_EXISTS_SETUP === "true";
+
 if (inCi) {
   console.log(
-    "::notice::CI: skipping deploy/relay API probes (enable-mail already checked relay; avoids rate-limit lockout)."
+    "::notice::CI: using enable-mail relay status (skips redundant Cloudflare worker probes)."
   );
 } else {
   const deployProbe = await probeDeployToken(deployToken, accountId);
