@@ -83,10 +83,14 @@ function runWrangler(args, { cwd = adminDir, token = deployToken, allowFail = fa
   return result.status === 0;
 }
 
-const deployProbe = await probeDeployToken(deployToken, accountId);
-if (!deployProbe.ok) {
-  const msg = `Deploy token probe failed (HTTP ${deployProbe.status}${deployProbe.via ? ` via ${deployProbe.via}` : ""})`;
-  console.warn(`::warning::${msg} — still attempting wrangler mail setup.`);
+if (!inCi) {
+  const deployProbe = await probeDeployToken(deployToken, accountId);
+  if (!deployProbe.ok) {
+    const msg = `Deploy token probe failed (HTTP ${deployProbe.status}${deployProbe.via ? ` via ${deployProbe.via}` : ""})`;
+    console.warn(`::warning::${msg} — still attempting wrangler mail setup.`);
+  }
+} else {
+  console.log("::notice::CI: skipping deploy token probe before mail setup (wrangler validates token).");
 }
 
 let relayDeployed = false;

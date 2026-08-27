@@ -22,14 +22,16 @@ try {
   process.exit(1);
 }
 
-const deployProbe = await probeDeployToken(deployToken, accountId);
 let relayExists = false;
-if (deployProbe.ok) {
-  relayExists = await relayWorkerExists(deployToken, accountId);
-} else if (inCi) {
-  console.warn(
-    `::warning::CI: cannot verify ccm-mail-relay (deploy token HTTP ${deployProbe.status}) — checking REST fallback only.`
+if (inCi) {
+  console.log(
+    "::notice::CI: skipping deploy/relay API probes (enable-mail already checked relay; avoids rate-limit lockout)."
   );
+} else {
+  const deployProbe = await probeDeployToken(deployToken, accountId);
+  if (deployProbe.ok) {
+    relayExists = await relayWorkerExists(deployToken, accountId);
+  }
 }
 let restOk = false;
 
