@@ -27,8 +27,12 @@
 
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
-    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases"><img src="https://img.shields.io/github/downloads/Maijied/Cursor-Curse-Monitor-by-Lorapok/total?label=Downloads" alt="Downloads" /></a>
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json" alt="Total downloads (live)" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx" alt="Open VSX canonical downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/badge.json?kind=openvsx-total" alt="Open VSX total downloads" />
   </p>
+
+  <p><sub>📊 <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">Live download chart</a> · counts refresh from marketplace APIs · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
 
 </div>
 
@@ -232,6 +236,16 @@ Requires GitHub secrets:
 | **Location** | Dhaka, Bangladesh |
 | **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) |
 | **GitHub** | [@Maijied](https://github.com/Maijied) |
+
+## Contributors
+
+Thanks to everyone who has improved the project through pull requests:
+
+| Contributor | Contribution |
+|-------------|--------------|
+| [**Andrew Ryder**](https://github.com/andrewtryder) | File-backed SQLite auth reads (fixes large `state.vscdb` crashes), configurable status bar usage source (`plan` / `autoApi` / `both`) — [PR #1](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/1) |
+
+See also [AUTHORS.md](AUTHORS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) if you would like to contribute.
 
 ### Lorapok Labs
 

@@ -73,7 +73,9 @@ console.error(
 );
 console.error("Or locally: node website/admin/scripts/repair-mail.mjs");
 if (inCi) {
-  console.warn("::warning::CI: continuing admin Pages deploy without verified outbound mail.");
+  console.warn(
+    "::warning::CI: outbound mail is not verified — admin Pages deploy will continue; run repair-mail.mjs or sync secrets, then redeploy."
+  );
   process.exit(0);
 }
 process.exit(1);

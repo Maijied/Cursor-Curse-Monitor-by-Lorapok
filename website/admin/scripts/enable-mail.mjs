@@ -84,14 +84,9 @@ function runWrangler(args, { cwd = adminDir, token = deployToken, allowFail = fa
 }
 
 const deployProbe = await probeDeployToken(deployToken, accountId);
-const deployTokenOk = deployProbe.ok;
-if (!deployTokenOk) {
-  const msg = `CLOUDFLARE_API_TOKEN rejected (HTTP ${deployProbe.status})`;
-  if (inCi) {
-    console.warn(`::warning::CI: ${msg} — skipping wrangler mail setup; admin deploy will continue.`);
-  } else {
-    console.warn(msg);
-  }
+if (!deployProbe.ok) {
+  const msg = `Deploy token probe failed (HTTP ${deployProbe.status}${deployProbe.via ? ` via ${deployProbe.via}` : ""})`;
+  console.warn(`::warning::${msg} — still attempting wrangler mail setup.`);
 }
 
 let relayDeployed = false;
@@ -108,52 +103,46 @@ if (hasEmailToken) {
       "Email token probe failed — REST fallback will not work until token + domain are fixed."
     );
   }
+
+  console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
+  runWrangler(["email", "sending", "enable", "lorapok.tech"], {
+    token: deployToken,
+    allowFail: true,
+  });
 }
 
-if (deployTokenOk) {
-  if (hasEmailToken) {
-    console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
-    runWrangler(["email", "sending", "enable", "lorapok.tech"], {
-      token: deployToken,
-      allowFail: true,
-    });
-  }
+console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
+relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
+if (!relayDeployed) {
+  console.warn(
+    "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
+      "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
+  );
+}
 
-  console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
-  relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
-  if (!relayDeployed) {
-    console.warn(
-      "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
-        "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
-    );
-  }
+relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
 
-  relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
-
-  if (hasEmailToken && restSynced) {
-    console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
-    const put = spawnSync(
-      "npx",
-      ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
-      {
-        cwd: adminDir,
-        input: emailToken,
-        env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
-        stdio: ["pipe", "inherit", "inherit"],
-      }
-    );
-    if (put.status !== 0) {
-      if (inCi) {
-        console.warn(
-          "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
-        );
-      } else {
-        process.exit(put.status ?? 1);
-      }
+if (hasEmailToken && restSynced) {
+  console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
+  const put = spawnSync(
+    "npx",
+    ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
+    {
+      cwd: adminDir,
+      input: emailToken,
+      env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
+      stdio: ["pipe", "inherit", "inherit"],
+    }
+  );
+  if (put.status !== 0) {
+    if (inCi) {
+      console.warn(
+        "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
+      );
+    } else {
+      process.exit(put.status ?? 1);
     }
   }
-} else if (relayExists === false && inCi) {
-  console.warn("::warning::CI: cannot confirm ccm-mail-relay while deploy token is invalid.");
 }
 
 setGithubActionsOutput("relay_deployed", relayDeployed ? "true" : "false");
