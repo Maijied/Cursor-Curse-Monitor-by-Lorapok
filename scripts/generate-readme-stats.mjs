@@ -29,6 +29,7 @@ const badgeFiles = [
   ["badge.json", "total"],
   ["badge-openvsx.json", "openvsx"],
   ["badge-openvsx-total.json", "openvsx-total"],
+  ["badge-vscode.json", "vscode"],
 ];
 
 for (const [filename, kind] of badgeFiles) {

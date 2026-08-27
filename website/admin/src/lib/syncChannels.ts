@@ -1,4 +1,5 @@
 import type { SiteData } from "./site-data";
+import { resolveVsCodeDownloadCount } from "./download-stats";
 
 export type SyncChannel = {
   id: string;
@@ -31,7 +32,7 @@ export function buildSyncChannels(data: SiteData): SyncChannel[] {
       id: "vscode",
       label: "VS Code",
       version: data.vscode.version,
-      downloadCount: data.vscode.downloadCount ?? data.vscode.installCount ?? null,
+      downloadCount: resolveVsCodeDownloadCount(data),
       synced: data.vscode.version === pkg,
     },
     {

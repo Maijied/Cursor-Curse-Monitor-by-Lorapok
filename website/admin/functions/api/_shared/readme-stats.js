@@ -38,13 +38,13 @@ export function buildReadmeStatsFromSiteData(data) {
   /** @type {ReadmeStatBar[]} */
   const bars = [
     { label: "Open VSX (canonical)", value: canonical ?? 0, color: "#7c5cff", inTotal: true },
+    { label: "Open VSX (LorapokLabs)", value: legacy ?? 0, color: "#94a3b8", inTotal: true },
     { label: "VS Code Marketplace", value: vscode ?? 0, color: "#4d9fff", inTotal: true },
     { label: "GitHub releases", value: github ?? 0, color: "#34d399", inTotal: true },
-    { label: "Open VSX (LorapokLabs)", value: legacy ?? 0, color: "#94a3b8", inTotal: false },
   ].filter((bar, index) => {
     if (!verified) return false;
-    if (index === 1 && vscode == null) return false;
-    if (index === 3 && legacy == null) return false;
+    if (index === 1 && legacy == null) return false;
+    if (index === 2 && vscode == null) return false;
     return bar.value != null;
   });
 
@@ -121,7 +121,7 @@ export function renderReadmeStatsSvg(stats) {
   <text x="${width - pad}" y="34" text-anchor="end" fill="#94a3b8" font-size="11" font-family="Segoe UI, system-ui, sans-serif">synced</text>
   <line x1="${pad}" y1="${chartTop + chartHeight + 28}" x2="${width - pad}" y2="${chartTop + chartHeight + 28}" stroke="rgba(148,163,184,0.18)"/>
   ${barsSvg}
-  <text x="${pad}" y="${height - 14}" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated ${escapeXml(updated)} · grand total across Open VSX, VS Code Marketplace, and GitHub releases</text>
+  <text x="${pad}" y="${height - 14}" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated ${escapeXml(updated)} · grand total across Open VSX (both namespaces), VS Code Marketplace, and GitHub releases</text>
 </svg>`;
 }
 

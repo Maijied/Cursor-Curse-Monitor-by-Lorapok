@@ -15,14 +15,14 @@
   <rect x="24" y="78" width="157.5" height="96" rx="8" fill="#7c5cff" opacity="1"/>
   <text x="102.75" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">Open VSX (canonical)</text>
   <text x="102.75" y="70" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">5.8k</text>
-  <rect x="195.5" y="168" width="157.5" height="6" rx="8" fill="#4d9fff" opacity="1"/>
-  <text x="274.25" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">VS Code Marketplace</text>
-  <text x="274.25" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">356</text>
-  <rect x="367" y="168" width="157.5" height="6" rx="8" fill="#34d399" opacity="1"/>
-  <text x="445.75" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">GitHub releases</text>
-  <text x="445.75" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">8</text>
-  <rect x="538.5" y="111" width="157.5" height="63" rx="8" fill="#94a3b8" opacity="0.55" stroke="#64748b" stroke-width="1" stroke-dasharray="4 3"/>
-  <text x="617.25" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">Open VSX (LorapokLabs)</text>
-  <text x="617.25" y="103" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">3.8k</text>
-  <text x="24" y="206" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated Thu, 27 Aug 2026 18:52:16 GMT · grand total across Open VSX, VS Code Marketplace, and GitHub releases</text>
+  <rect x="195.5" y="111" width="157.5" height="63" rx="8" fill="#94a3b8" opacity="1"/>
+  <text x="274.25" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">Open VSX (LorapokLabs)</text>
+  <text x="274.25" y="103" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">3.8k</text>
+  <rect x="367" y="168" width="157.5" height="6" rx="8" fill="#4d9fff" opacity="1"/>
+  <text x="445.75" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">VS Code Marketplace</text>
+  <text x="445.75" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">356</text>
+  <rect x="538.5" y="168" width="157.5" height="6" rx="8" fill="#34d399" opacity="1"/>
+  <text x="617.25" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">GitHub releases</text>
+  <text x="617.25" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">8</text>
+  <text x="24" y="206" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated Thu, 27 Aug 2026 18:52:16 GMT · grand total across Open VSX (both namespaces), VS Code Marketplace, and GitHub releases</text>
 </svg>

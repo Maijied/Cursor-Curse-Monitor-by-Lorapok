@@ -16,6 +16,11 @@ import {
   SUPPORTED_IDE_WRAPPERS,
   SUPPORTED_IDE_WRAPPERS_HEADLINE,
   SUPPORTED_IDE_WRAPPERS_SUBLINE,
+  COMMUNITY_DOWNLOADS_SITE_DATA_URL,
+  formatCommunityDownloadsBreakdown,
+  formatCommunityDownloadsHeadline,
+  parseCommunityDownloadsFromSiteData,
+  type CommunityDownloadStats,
 } from "@lorapok/cursor-monitor-shared";
 import { snoozeSubscribePrompt, subscribeForProductUpdates } from "../lib/subscribe";
 import { refreshProductNotice } from "../lib/productNotices";
@@ -36,6 +41,7 @@ export function OptionsApp() {
   const [subscribeCopy, setSubscribeCopy] = useState({ title: "", body: "", cta: "", later: "" });
   const [saved, setSaved] = useState(false);
   const [securityFindings, setSecurityFindings] = useState<SecurityFinding[]>([]);
+  const [communityStats, setCommunityStats] = useState<CommunityDownloadStats | null>(null);
 
   useEffect(() => {
     void getSettings().then((s) => {
@@ -60,6 +66,17 @@ export function OptionsApp() {
         setSubscribeCopy(getSubscribePromptCopy(variant));
       }
     });
+  }, []);
+
+  useEffect(() => {
+    void fetch(COMMUNITY_DOWNLOADS_SITE_DATA_URL, { headers: { Accept: "application/json" } })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data) setCommunityStats(parseCommunityDownloadsFromSiteData(data));
+      })
+      .catch(() => {
+        // Fail closed — no placeholder counts.
+      });
   }, []);
 
   const checkTokenPaste = (value: string) => {
@@ -234,6 +251,17 @@ export function OptionsApp() {
           <li>Local credential paste guard in the browser popup</li>
           <li>Private — tokens and usage stay on your machine</li>
         </ul>
+        <p className="muted" style={{ margin: "12px 0 8px", fontSize: "0.85rem" }}>
+          <strong>Community downloads:</strong>{" "}
+          {communityStats
+            ? formatCommunityDownloadsHeadline(communityStats)
+            : "Loading marketplace stats…"}
+        </p>
+        {communityStats && (
+          <p className="muted" style={{ margin: "0 0 8px", fontSize: "0.8rem" }}>
+            {formatCommunityDownloadsBreakdown(communityStats)}
+          </p>
+        )}
         <p className="muted" style={{ margin: "0 0 8px", fontSize: "0.85rem" }}>
           <strong>Supported IDEs:</strong>{" "}
           {SUPPORTED_IDE_WRAPPERS.map((ide) => ide.name).join(", ")}.

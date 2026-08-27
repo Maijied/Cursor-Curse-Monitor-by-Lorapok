@@ -30,6 +30,7 @@
     <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge.json" alt="Total downloads (live)" />
     <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-openvsx.json" alt="Open VSX canonical downloads" />
     <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-openvsx-total.json" alt="Open VSX total downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-vscode.json" alt="VS Code Marketplace downloads" />
   </p>
 
   <p><sub>📊 <a href="https://cursor.lorapok.tech/readme-stats.svg">Download chart</a> · counts synced from marketplace APIs in CI · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
