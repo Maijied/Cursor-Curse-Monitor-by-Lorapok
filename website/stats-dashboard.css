@@ -44,10 +44,53 @@
   display: block;
   font-family: var(--mono);
   font-size: clamp(1.8rem, 4vw, 2.4rem);
-  color: #eef2ff;
   font-weight: 700;
   line-height: 1.1;
   margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-count {
+  font-variant-numeric: tabular-nums;
+  transition: color 0.35s ease, text-shadow 0.35s ease;
+}
+
+.stat-count--total {
+  color: #eef2ff;
+  text-shadow: 0 0 28px rgba(124, 92, 255, 0.35);
+}
+
+.stat-count--ovsx {
+  color: #a78bfa;
+}
+
+.stat-count--vscode {
+  color: #5eb8ff;
+}
+
+.stat-count--github {
+  color: #34d399;
+}
+
+.stat-count--canonical {
+  color: #9ec5ff;
+}
+
+.stat-count--duplicate {
+  color: #fbbf24;
+}
+
+.stat-count--visits {
+  color: #67e8f9;
+}
+
+.stat-count--engagement {
+  color: #f472b6;
+}
+
+.install-card .stat-count {
+  font-family: var(--mono);
+  font-weight: 600;
 }
 
 .hero-total-meter {
@@ -90,7 +133,6 @@
 .hero-channel-item strong {
   font-family: var(--mono);
   font-size: 0.95rem;
-  color: #cbd5e1;
 }
 
 .stats-grid-secondary {
@@ -126,10 +168,10 @@
   display: block;
   font-family: var(--mono);
   font-size: clamp(1rem, 2vw, 1.25rem);
-  color: #9ec5ff;
   font-weight: 600;
   line-height: 1.2;
   margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-tile .meter {
@@ -139,6 +181,47 @@
 
 .stat-tile .meter-fill.stat-meter {
   transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-total-meter .meter-fill,
+.stat-tile .meter-fill.stat-meter {
+  border-radius: 999px;
+}
+
+.stat-meter--total {
+  background: linear-gradient(90deg, #7c5cff, #4d9fff);
+}
+
+.stat-meter--ovsx,
+.stat-meter--canonical,
+.hero-ovsx-split-bar .meter-fill.canonical {
+  background: linear-gradient(90deg, #4d9fff, #7c5cff);
+}
+
+.stat-meter--duplicate,
+.hero-ovsx-split-bar .meter-fill.legacy,
+.hero-ovsx-split-bar .meter-fill.duplicate {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.stat-meter--vscode {
+  background: linear-gradient(90deg, #007acc, #5eb8ff);
+}
+
+.stat-meter--github {
+  background: linear-gradient(90deg, #059669, #34d399);
+}
+
+.stat-meter--visits {
+  background: linear-gradient(90deg, #0891b2, #67e8f9);
+}
+
+.stat-meter--engagement {
+  background: linear-gradient(90deg, #db2777, #f472b6);
+}
+
+.hero-total-meter .meter-fill {
+  transition: width 1.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-ovsx-block {
@@ -165,7 +248,6 @@
 .hero-ovsx-combined strong {
   font-family: var(--mono);
   font-size: 1.15rem;
-  color: #a78bfa;
 }
 
 .hero-ovsx-split-bar {
@@ -201,7 +283,6 @@
 }
 
 .hero-ovsx-legend strong {
-  color: var(--text);
   font-family: var(--mono);
 }
 

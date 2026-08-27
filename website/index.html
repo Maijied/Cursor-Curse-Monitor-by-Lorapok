@@ -197,8 +197,8 @@
           </div>
           <div class="hero-total-block">
             <span class="hero-total-label">Total downloads</span>
-            <strong class="hero-total-value" data-hero-downloads>—</strong>
-            <div class="meter hero-total-meter"><div class="meter-fill stat-meter" data-hero-downloads-bar style="width:0%"></div></div>
+            <strong class="hero-total-value stat-count stat-count--total" data-hero-downloads>—</strong>
+            <div class="meter hero-total-meter"><div class="meter-fill stat-meter stat-meter--total" data-hero-downloads-bar style="width:0%"></div></div>
           </div>
           <div class="hero-channel-breakdown" aria-label="Download breakdown by channel">
             <p class="hero-breakdown-title">Breakdown</p>
@@ -228,13 +228,13 @@
           <div class="stats-grid stats-grid-secondary">
             <div class="stat-tile">
               <span class="stat-tile-label">Website visits</span>
-              <strong class="stat-tile-value" data-hero-visits>—</strong>
-              <div class="meter"><div class="meter-fill stat-meter" data-hero-visits-bar style="width:0%"></div></div>
+              <strong class="stat-tile-value stat-count stat-count--visits" data-hero-visits>—</strong>
+              <div class="meter"><div class="meter-fill stat-meter stat-meter--visits" data-hero-visits-bar style="width:0%"></div></div>
             </div>
             <div class="stat-tile">
               <span class="stat-tile-label">Engagement</span>
-              <strong class="stat-tile-value" data-hero-engagement>—</strong>
-              <div class="meter"><div class="meter-fill stat-meter" data-hero-engagement-bar style="width:0%"></div></div>
+              <strong class="stat-tile-value stat-count stat-count--engagement" data-hero-engagement>—</strong>
+              <div class="meter"><div class="meter-fill stat-meter stat-meter--engagement" data-hero-engagement-bar style="width:0%"></div></div>
             </div>
           </div>
         </div>
@@ -672,7 +672,7 @@
           <p>For <strong>Cursor, VSCodium, Windsurf</strong> and all Open VSX-compatible editors</p>
           <p><strong>Status:</strong> <span id="ovsx-live-status">Checking…</span></p>
           <p><strong>Version:</strong> <span data-ovsx-version>—</span></p>
-          <p><strong>Downloads:</strong> <span data-ovsx-canonical>—</span> canonical · <span data-ovsx-duplicate>—</span> LorapokLabs namespace</p>
+          <p><strong>Downloads:</strong> <span class="stat-count stat-count--canonical" data-ovsx-canonical>—</span> canonical · <span class="stat-count stat-count--duplicate" data-ovsx-duplicate>—</span> LorapokLabs namespace</p>
           <a class="btn primary block" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">View on Open VSX →</a>
         </article>
         <article class="install-card">
@@ -680,7 +680,7 @@
           <p>For <strong>Visual Studio Code</strong></p>
           <p><strong>Status:</strong> <span id="vscode-live-status">Checking…</span></p>
           <p><strong>Version:</strong> <span data-vscode-version>—</span></p>
-          <p><strong>Downloads:</strong> <span data-vscode-downloads>—</span></p>
+          <p><strong>Downloads:</strong> <span class="stat-count stat-count--vscode" data-vscode-downloads>—</span></p>
           <a class="btn primary block" data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">View on VS Code Marketplace →</a>
         </article>
       </div>
