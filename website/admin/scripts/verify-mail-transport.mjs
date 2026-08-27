@@ -31,7 +31,8 @@ if (inCi) {
 } else {
   const deployProbe = await probeDeployToken(deployToken, accountId);
   if (deployProbe.ok) {
-    relayExists = await relayWorkerExists(deployToken, accountId);
+    const exists = await relayWorkerExists(deployToken, accountId);
+    relayExists = exists === true || exists === "rate-limited";
   }
 }
 let restOk = false;
