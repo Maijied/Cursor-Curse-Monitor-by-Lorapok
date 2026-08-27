@@ -23,6 +23,7 @@ body {
   overflow: hidden;
   min-height: 100vh;
   min-height: 100dvh;
+  color-scheme: dark;
 }
 
 /* Fixed panel background — stays out of the scroll layer to prevent repaint flicker */

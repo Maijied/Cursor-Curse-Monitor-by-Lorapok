@@ -8,6 +8,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Keyboard a11y** — skip-to-content link on marketing pages; `:focus-visible` rings on gallery filters and subscribe fields; `color-scheme: dark` for native controls
+- **Hero stats layout** — visits/engagement tiles sit in a two-column grid (was a three-column grid with two items)
+- **Screen readers** — announce verified community totals once after count-up, not during animation
 - **README download badges** — serve Shields.io endpoint JSON from `website/stats/` on GitHub raw (admin API blocked by Cloudflare bot challenges); show `unavailable` when marketplace sources are not verified — never zero-filled placeholders
 - **Marketing site stat meters** — only render download totals when `site-data.json` marks them verified; otherwise show em dash
 - **Grand download total** — sum Open VSX (both namespaces) + VS Code `downloadCount` + GitHub releases (~9.6k+); hero UI leads with total, then channel breakdown
@@ -15,6 +18,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Design agent skills** — project copies of Anthropic `frontend-design`, Vercel web-interface guidelines + React best practices, AccessLint WCAG audit notes, and a Lorapok-brand frontend skill (does not replace live UI)
 - **Marketing site design restore** — six PNG feature lightbox cards, IDE icon grid, ecosystem tab a11y controls, marquee pause, and showcase assets lost during main branch divergence (`ed438d9`, `0f5df41`)
 - **Admin Discord integration** — configurable deployment webhook in Settings, with notify-on-deploy API and completion watch
 - **Admin deploy UX session** — floating status button, leave-warning modal, global deploy runtime context, and mobile viewport fixes
