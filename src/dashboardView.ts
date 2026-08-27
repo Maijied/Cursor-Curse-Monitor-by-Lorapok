@@ -87,18 +87,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     };
 
     const subscription = this.monitor.onDidUpdate(push);
-    const readyFallback = setTimeout(() => {
-      if (viewReady) {
-        return;
-      }
-      viewReady = true;
-      void deliverSnapshot(false);
-    }, 2000);
-
-    webviewView.onDidDispose(() => {
-      clearTimeout(readyFallback);
-      subscription.dispose();
-    });
+    webviewView.onDidDispose(() => subscription.dispose());
 
     webviewView.onDidChangeVisibility(() => {
       if (!webviewView.visible || !viewReady) {
@@ -912,7 +901,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="footer-dot">·</span>
       <a href="mailto:cursor.monitor@lorapok.tech">Updates</a>
     </div>
-    <div class="footer-right">v${esc(extensionVersion)}</div>
+    <div class="footer-right">v${extensionVersion}</div>
   </footer>
 
   <script nonce="${nonce}">
@@ -927,70 +916,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     function signalReady() {
       vscode.postMessage({ type: 'ready' });
     }
-
-    var subscribeModalTimer = null;
-    var subscribePromptReady = false;
-    var snapshotReceived = Boolean(bootSnapshot);
-
-    function applySubscribeState(state) {
-      var modal = document.getElementById('subscribeModal');
-      if (!modal) return;
-      if (!state || !state.showPrompt) {
-        modal.classList.remove('visible');
-        modal.setAttribute('aria-hidden', 'true');
-        subscribePromptReady = false;
-        if (subscribeModalTimer) {
-          clearTimeout(subscribeModalTimer);
-          subscribeModalTimer = null;
-        }
-        return;
-      }
-      var title = document.getElementById('subscribeTitle');
-      var body = document.getElementById('subscribeBody');
-      var btn = document.getElementById('subscribeBtn');
-      var later = document.getElementById('subscribeLaterBtn');
-      if (state.copy) {
-        if (title) title.textContent = state.copy.title;
-        if (body) body.textContent = state.copy.body;
-        if (btn) btn.textContent = state.copy.cta;
-        if (later) later.textContent = state.copy.later;
-      }
-      if (!subscribePromptReady && !subscribeModalTimer) {
-        subscribeModalTimer = setTimeout(function() {
-          subscribePromptReady = true;
-          modal.classList.add('visible');
-          modal.setAttribute('aria-hidden', 'false');
-          trapSubscribeFocus(modal);
-        }, 30000);
-      }
-    }
-
-    // Register before ready signals — on some hosts the extension answers synchronously.
-    window.addEventListener('message', function(event) {
-      if (event.data?.type === 'snapshot') {
-        snapshotReceived = true;
-        render(event.data.payload);
-      }
-      if (event.data?.type === 'subscribeResult') {
-        var status = document.getElementById('subscribeStatus');
-        var btn = document.getElementById('subscribeBtn');
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('subscribe-btn-loading');
-        }
-        if (status) {
-          status.textContent = event.data.payload?.message || '';
-          status.style.color = event.data.payload?.ok ? 'var(--ok)' : 'var(--danger)';
-        }
-        if (event.data.payload?.ok && event.data.payload?.state) {
-          applySubscribeState(event.data.payload.state);
-        }
-      }
-      if (event.data?.type === 'subscribeState') {
-        applySubscribeState(event.data.payload);
-      }
-    });
-
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', signalReady);
     } else {
@@ -1264,6 +1189,64 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
+    window.addEventListener('message', function(event) {
+      if (event.data?.type === 'snapshot') render(event.data.payload);
+      if (event.data?.type === 'subscribeResult') {
+        var status = document.getElementById('subscribeStatus');
+        var btn = document.getElementById('subscribeBtn');
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('subscribe-btn-loading');
+        }
+        if (status) {
+          status.textContent = event.data.payload?.message || '';
+          status.style.color = event.data.payload?.ok ? 'var(--ok)' : 'var(--danger)';
+        }
+        if (event.data.payload?.ok && event.data.payload?.state) {
+          applySubscribeState(event.data.payload.state);
+        }
+      }
+      if (event.data?.type === 'subscribeState') {
+        applySubscribeState(event.data.payload);
+      }
+    });
+
+    var subscribeModalTimer = null;
+    var subscribePromptReady = false;
+
+    function applySubscribeState(state) {
+      var modal = document.getElementById('subscribeModal');
+      if (!modal) return;
+      if (!state || !state.showPrompt) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+        subscribePromptReady = false;
+        if (subscribeModalTimer) {
+          clearTimeout(subscribeModalTimer);
+          subscribeModalTimer = null;
+        }
+        return;
+      }
+      var title = document.getElementById('subscribeTitle');
+      var body = document.getElementById('subscribeBody');
+      var btn = document.getElementById('subscribeBtn');
+      var later = document.getElementById('subscribeLaterBtn');
+      if (state.copy) {
+        if (title) title.textContent = state.copy.title;
+        if (body) body.textContent = state.copy.body;
+        if (btn) btn.textContent = state.copy.cta;
+        if (later) later.textContent = state.copy.later;
+      }
+      if (!subscribePromptReady && !subscribeModalTimer) {
+        subscribeModalTimer = setTimeout(function() {
+          subscribePromptReady = true;
+          modal.classList.add('visible');
+          modal.setAttribute('aria-hidden', 'false');
+          trapSubscribeFocus(modal);
+        }, 30000);
+      }
+    }
+
     function refresh() { vscode.postMessage({ type: 'refresh' }); }
     onClick('refreshBtn', refresh);
     onClick('refreshBtn2', refresh);
@@ -1313,15 +1296,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     } else {
       dismissLoading();
     }
+    var snapshotReceived = Boolean(bootSnapshot);
+    window.addEventListener('message', function(event) {
+      if (event.data?.type === 'snapshot') snapshotReceived = true;
+    }, { capture: true });
     setTimeout(function() {
       if (!snapshotReceived) {
         var errorBox = document.getElementById('errorBox');
-        var loading = document.getElementById('loadingState');
-        if (loading) {
-          loading.disabled = false;
-          loading.textContent = 'Still loading… click to refresh';
-          loading.addEventListener('click', refresh);
-        }
         if (errorBox && errorBox.style.display === 'none') {
           errorBox.style.display = 'block';
           errorBox.textContent = 'Still waiting for usage data. Tap Refresh or reopen the panel.';

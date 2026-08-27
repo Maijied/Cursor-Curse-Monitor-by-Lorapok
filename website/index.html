@@ -85,9 +85,12 @@
   <div id="dev-notice-banner" class="dev-notice-banner" hidden role="region" aria-label="Development notice">
     <div class="dev-notice-track">
       <div class="dev-notice-content" id="dev-notice-content"></div>
-      <div class="dev-notice-content dev-notice-duplicate" aria-hidden="true"></div>
+      <div class="dev-notice-content dev-notice-duplicate" aria-hidden="true" inert></div>
     </div>
-    <button type="button" class="dev-notice-dismiss" id="dev-notice-dismiss" aria-label="Dismiss notice" hidden>&times;</button>
+    <div class="dev-notice-controls">
+      <button type="button" class="dev-notice-pause" id="dev-notice-pause" aria-label="Pause announcement scroll" aria-pressed="false" hidden>Pause</button>
+      <button type="button" class="dev-notice-dismiss" id="dev-notice-dismiss" aria-label="Dismiss notice" hidden>&times;</button>
+    </div>
   </div>
   <header class="site-header">
     <nav class="nav container">
@@ -120,6 +123,8 @@
     </nav>
   </header>
 
+  <main id="main-content">
+
   <section class="hero">
     <div class="hero-bg" aria-hidden="true">
       <div class="hero-mesh"></div>
@@ -128,24 +133,25 @@
     </div>
     <div class="container hero-inner">
       <div class="hero-copy">
-        <p class="hero-kicker">
-          <span class="hero-kicker-dot" aria-hidden="true"></span>
-          Lorapok Labs · All VS Code–based AI IDEs
-        </p>
-        <div class="badges" aria-label="Release status">
-          <span class="badge badge-brand">Lorapok Labs</span>
-          <span class="badge accent" id="ovsx-status">Open VSX · loading…</span>
-          <span class="badge accent" id="vscode-status">VS Code · loading…</span>
-          <span class="badge muted">v<span data-version>—</span></span>
-        </div>
-        <div class="platform-ribbon" id="platform-ribbon" aria-label="Also available on">
-          <span class="platform-ribbon-label">Also available on</span>
-          <div class="platform-ribbon-links">
-            <a class="platform-pill" data-href-ovsx href="#" target="_blank" rel="noopener">Open VSX</a>
-            <a class="platform-pill" data-href-vscode href="#" target="_blank" rel="noopener">VS Code</a>
-            <a class="platform-pill" data-href-firefox href="#" target="_blank" rel="noopener">Firefox</a>
-            <a class="platform-pill" data-href-chrome-zip href="#" download>Chrome zip</a>
-            <a class="platform-pill" data-href-repo href="#" target="_blank" rel="noopener">GitHub</a>
+        <div class="hero-intro">
+          <p class="hero-kicker">
+            <span class="hero-kicker-dot" aria-hidden="true"></span>
+            Lorapok Labs · All VS Code–based AI IDEs
+          </p>
+          <div class="hero-status-row badges" aria-label="Release status">
+            <span class="badge accent" id="ovsx-status">Open VSX · loading…</span>
+            <span class="badge accent" id="vscode-status">VS Code · loading…</span>
+            <span class="badge muted hero-release-badge">Release v<span data-version>—</span></span>
+          </div>
+          <div class="hero-platforms platform-ribbon" id="platform-ribbon" aria-label="Also available on">
+            <span class="hero-platforms-label platform-ribbon-label">Available on</span>
+            <div class="hero-platforms-links platform-ribbon-links">
+              <a class="platform-pill" data-href-ovsx href="#" target="_blank" rel="noopener">Open VSX</a>
+              <a class="platform-pill" data-href-vscode href="#" target="_blank" rel="noopener">VS Code</a>
+              <a class="platform-pill" data-href-firefox href="#" target="_blank" rel="noopener">Firefox</a>
+              <a class="platform-pill" data-href-chrome-zip href="#" download>Chrome zip</a>
+              <a class="platform-pill" data-href-repo href="#" target="_blank" rel="noopener">GitHub</a>
+            </div>
           </div>
         </div>
         <h1>Know your Cursor limits <span class="hero-accent">before</span> they know you.</h1>
@@ -208,16 +214,16 @@
           </div>
           <div class="hero-ovsx-block">
             <div class="hero-ovsx-combined">
-              <span>Open VSX combined</span>
+              <span>Open VSX total</span>
               <strong data-hero-ovsx-combined>—</strong>
             </div>
-            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus duplicate downloads">
+            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus LorapokLabs namespace downloads">
               <div class="meter-fill canonical" data-hero-ovsx-canonical-bar style="width:0%"></div>
-              <div class="meter-fill duplicate" data-hero-ovsx-duplicate-bar style="width:0%"></div>
+              <div class="meter-fill legacy" data-hero-ovsx-duplicate-bar style="width:0%"></div>
             </div>
             <div class="hero-ovsx-legend">
               <span>Canonical <strong data-hero-ovsx-canonical>—</strong></span>
-              <span>Duplicate <strong data-hero-ovsx-duplicate>—</strong></span>
+              <span>LorapokLabs <strong data-hero-ovsx-duplicate>—</strong></span>
             </div>
           </div>
         </div>
@@ -255,13 +261,16 @@
       <h2>IDE extension, browser guard, and Mission Control</h2>
       <p class="section-lead">One product family — usage in Cursor, credential protection in the browser, and ops in the admin panel.</p>
     </div>
-    <div class="ecosystem-tabs" role="tablist" aria-label="Product surfaces">
-      <button type="button" class="ecosystem-tab active" role="tab" aria-selected="true" data-ecosystem-tab="ide">IDE Extension</button>
-      <button type="button" class="ecosystem-tab" role="tab" aria-selected="false" data-ecosystem-tab="browser">Browser Extension</button>
-      <button type="button" class="ecosystem-tab" role="tab" aria-selected="false" data-ecosystem-tab="admin">Mission Control</button>
+    <div class="ecosystem-tabs-row">
+      <div class="ecosystem-tabs" role="tablist" aria-label="Product surfaces">
+        <button type="button" class="ecosystem-tab active" role="tab" id="ecosystem-tab-ide" aria-selected="true" aria-controls="ecosystem-panel-ide" data-ecosystem-tab="ide">IDE Extension</button>
+        <button type="button" class="ecosystem-tab" role="tab" id="ecosystem-tab-browser" aria-selected="false" aria-controls="ecosystem-panel-browser" data-ecosystem-tab="browser">Browser Extension</button>
+        <button type="button" class="ecosystem-tab" role="tab" id="ecosystem-tab-admin" aria-selected="false" aria-controls="ecosystem-panel-admin" data-ecosystem-tab="admin">Mission Control</button>
+      </div>
+      <button type="button" class="ecosystem-rotation-pause" id="ecosystem-rotation-pause" aria-label="Pause automatic tab rotation" aria-pressed="false">Pause</button>
     </div>
     <div class="ecosystem-stage">
-      <article class="ecosystem-panel active" data-ecosystem-panel="ide">
+      <div class="ecosystem-panel active" id="ecosystem-panel-ide" role="tabpanel" aria-labelledby="ecosystem-tab-ide" data-ecosystem-panel="ide">
         <div class="ecosystem-copy">
           <h3>Live usage inside your AI IDE</h3>
           <p><strong>One extension for all VS Code wrapper IDEs.</strong> Quota meters, billing cycle, budget caps, Composer 2.5 fallback, and local credential scanning — works in Cursor, Windsurf, VSCodium, Void, Gitpod, Trae, Kiro, and every Open VSX / VS Code Marketplace host.</p>
@@ -269,8 +278,8 @@
         <button type="button" class="ecosystem-shot lightbox-trigger" data-lightbox-group="ecosystem" data-src="assets/marketing/showcase-dashboard.png" data-caption="Cursor IDE usage dashboard">
           <img src="assets/marketing/showcase-dashboard.png" alt="Cursor IDE usage dashboard" loading="lazy" decoding="async" />
         </button>
-      </article>
-      <article class="ecosystem-panel" data-ecosystem-panel="browser" hidden>
+      </div>
+      <div class="ecosystem-panel" id="ecosystem-panel-browser" role="tabpanel" aria-labelledby="ecosystem-tab-browser" data-ecosystem-panel="browser" hidden>
         <div class="ecosystem-copy">
           <h3>Firefox &amp; Chrome browser extension</h3>
           <p>Budget tracker popup, paste guard, and cursor.com token capture — no store lock-in for Chrome.</p>
@@ -278,8 +287,8 @@
         <button type="button" class="ecosystem-shot lightbox-trigger" data-lightbox-group="ecosystem" data-src="assets/marketing/showcase-browser-ext.png" data-caption="Browser extension popup">
           <img src="assets/marketing/showcase-browser-ext.png" alt="Browser extension popup" loading="lazy" decoding="async" />
         </button>
-      </article>
-      <article class="ecosystem-panel" data-ecosystem-panel="admin" hidden>
+      </div>
+      <div class="ecosystem-panel" id="ecosystem-panel-admin" role="tabpanel" aria-labelledby="ecosystem-tab-admin" data-ecosystem-panel="admin" hidden>
         <div class="ecosystem-copy">
           <h3>Admin Mission Control</h3>
           <p>Mailbox, deployments, marketplace sync, notices, and SEO — operated from cursor-dev.lorapok.tech.</p>
@@ -287,21 +296,22 @@
         <button type="button" class="ecosystem-shot lightbox-trigger" data-lightbox-group="ecosystem" data-src="assets/marketing/showcase-admin.png" data-caption="Mission Control admin panel">
           <img src="assets/marketing/showcase-admin.png" alt="Mission Control admin panel" loading="lazy" decoding="async" />
         </button>
-      </article>
+      </div>
     </div>
   </section>
 
-  <main>
     <section id="features" class="section container">
       <div class="section-head">
         <p class="eyebrow">Why developers install it</p>
         <h2>Everything you need to stay inside your quota</h2>
+        <p class="section-lead">Six core capabilities — each with a product screenshot. Tap any image to view full size.</p>
       </div>
       <div class="feature-grid">
         <article class="feature-card">
-          <div class="feature-svg-visual" aria-hidden="true">
-            <img src="assets/monitor-dashboard.svg" alt="" width="120" height="120" />
-          </div>
+          <button type="button" class="feature-img-btn lightbox-trigger" data-lightbox-group="features" data-src="assets/marketing/showcase-dashboard.png" data-caption="Live usage dashboard in your AI IDE">
+            <img src="assets/marketing/showcase-dashboard.png" alt="Live usage dashboard in your AI IDE" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
           <div class="feature-body">
             <h3 class="feature-title">
               <img src="assets/monitor-dashboard.svg" alt="" width="24" height="24" />
@@ -317,7 +327,7 @@
           </button>
           <div class="feature-body">
             <h3 class="feature-title">
-              <img src="assets/api-connect.svg" alt="" width="24" height="24" />
+              <img src="assets/budget-cap.svg" alt="" width="24" height="24" />
               Budget cap
             </h3>
             <p>Set a personal USD limit, track on-demand spend, and get warned before you overshoot.</p>
@@ -330,22 +340,49 @@
           </button>
           <div class="feature-body">
             <h3 class="feature-title">
-              <img src="assets/team-usage.svg" alt="" width="24" height="24" />
+              <img src="assets/fallback-mode.svg" alt="" width="24" height="24" />
               Free fallback
             </h3>
             <p>At 100% included usage, auto-switch to Composer 2.5 (Fast off) — the free slow pool.</p>
           </div>
         </article>
         <article class="feature-card">
-          <div class="feature-svg-visual" aria-hidden="true">
-            <img src="assets/security-shield.svg" alt="" width="120" height="120" />
-          </div>
+          <button type="button" class="feature-img-btn lightbox-trigger" data-lightbox-group="features" data-src="assets/marketing/showcase-privacy.png" data-caption="Privacy-first — data stays on your machine">
+            <img src="assets/marketing/showcase-privacy.png" alt="Privacy-first — data stays on your machine" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
           <div class="feature-body">
             <h3 class="feature-title">
               <img src="assets/security-shield.svg" alt="" width="24" height="24" />
               Privacy-first
             </h3>
             <p>Your auth token never leaves your machine. No telemetry, no shared team dashboard.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <button type="button" class="feature-img-btn lightbox-trigger" data-lightbox-group="features" data-src="assets/marketing/showcase-db-safety.png" data-caption="Safe DB writes with WAL backup and integrity checks">
+            <img src="assets/marketing/showcase-db-safety.png" alt="Safe DB writes with WAL backup and integrity checks" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
+          <div class="feature-body">
+            <h3 class="feature-title">
+              <img src="assets/activity-bar.svg" alt="" width="24" height="24" />
+              Safe DB writes
+            </h3>
+            <p>Read-only while Cursor runs; fallback writes only after quit with WAL backups and integrity checks.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <button type="button" class="feature-img-btn lightbox-trigger" data-lightbox-group="features" data-src="assets/marketing/showcase-scanner.png" data-caption="Local security scanner for credential leaks">
+            <img src="assets/marketing/showcase-scanner.png" alt="Local security scanner for credential leaks" loading="lazy" />
+            <span class="zoom-hint">View full size</span>
+          </button>
+          <div class="feature-body">
+            <h3 class="feature-title">
+              <img src="assets/security-shield.svg" alt="" width="24" height="24" />
+              Security scanner
+            </h3>
+            <p>Local credential detection in files, clipboard, and commits — Manage Processes–style alerts with redacted previews only.</p>
           </div>
         </article>
       </div>
@@ -541,6 +578,43 @@
           </button>
         </article>
       </div>
+
+      <div class="offline-browser-section">
+        <div class="section-head">
+          <p class="eyebrow">Offline / sideload</p>
+          <h3>Install the browser extension without a store</h3>
+          <p class="section-lead">Use these steps when AMO review is pending, Chrome Web Store is unavailable, or you need an air-gapped install from the GitHub Release assets.</p>
+        </div>
+        <div class="offline-install-grid">
+          <article class="install-card offline-card">
+            <span class="install-label">Firefox · offline</span>
+            <h3>Load from GitHub Release (.xpi)</h3>
+            <ol class="install-steps">
+              <li>Download <code data-firefox-xpi-name>cursor-curse-monitor.xpi</code> from the <a data-href-github-release href="#" target="_blank" rel="noopener">latest GitHub Release</a> (or use the direct link below).</li>
+              <li>Open <code>about:debugging#/runtime/this-firefox</code> in Firefox.</li>
+              <li>Click <strong>Load Temporary Add-on…</strong> and select the <code>.xpi</code> file.</li>
+              <li>Pin the toolbar icon — usage syncs after you sign in on <code>cursor.com/dashboard</code>.</li>
+            </ol>
+            <p class="muted-note">Temporary loads reset when Firefox restarts. For a permanent install, use <a data-href-firefox href="#" target="_blank" rel="noopener">Firefox Add-ons (AMO)</a> once published.</p>
+            <div class="offline-actions">
+              <a class="btn primary block" data-href-firefox-xpi href="#" download>Download Firefox .xpi</a>
+              <a class="btn secondary block" data-href-firefox href="#" target="_blank" rel="noopener">Install from AMO →</a>
+            </div>
+          </article>
+          <article class="install-card offline-card">
+            <span class="install-label">Chrome · offline</span>
+            <h3>Load unpacked from zip</h3>
+            <ol class="install-steps">
+              <li>Download the <strong>Chrome zip</strong> from the <a data-href-github-release href="#" target="_blank" rel="noopener">latest GitHub Release</a>.</li>
+              <li>Unzip to a folder (e.g. <code>~/Extensions/cursor-curse-monitor</code>).</li>
+              <li>Open <code>chrome://extensions</code> (or Edge → <code>edge://extensions</code>).</li>
+              <li>Enable <strong>Developer mode</strong>, then <strong>Load unpacked</strong> and select the extracted folder.</li>
+            </ol>
+            <p class="muted-note">Chrome does not distribute this build via the Web Store — sideload only. Re-load after each browser update if Chrome disables unpacked extensions.</p>
+            <a class="btn primary block" data-href-chrome-zip href="#" download>Download Chrome zip</a>
+          </article>
+        </div>
+      </div>
     </section>
 
     <section id="release" class="section release-section">
@@ -587,7 +661,7 @@
           <p>For <strong>Cursor, VSCodium, Windsurf</strong> and all Open VSX-compatible editors</p>
           <p><strong>Status:</strong> <span id="ovsx-live-status">Checking…</span></p>
           <p><strong>Version:</strong> <span data-ovsx-version>—</span></p>
-          <p><strong>Downloads:</strong> <span data-ovsx-canonical>—</span> canonical · <span data-ovsx-duplicate>—</span> duplicate</p>
+          <p><strong>Downloads:</strong> <span data-ovsx-canonical>—</span> canonical · <span data-ovsx-duplicate>—</span> LorapokLabs namespace</p>
           <a class="btn primary block" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">View on Open VSX →</a>
         </article>
         <article class="install-card">
