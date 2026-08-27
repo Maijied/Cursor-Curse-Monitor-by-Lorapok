@@ -40,6 +40,11 @@ export async function fetchTags() {
   }>("/tags");
 }
 
+/**
+ * Retrieves the API health status and service configuration indicators.
+ *
+ * @returns The health status, service checks, and optional configuration details.
+ */
 export async function fetchHealth() {
   return apiGet<{
     ok: boolean;
@@ -47,11 +52,13 @@ export async function fetchHealth() {
     firebaseProject?: string;
     mailConfigured?: boolean;
     mailTransport?: string;
+    mailRelayBound?: boolean;
+    mailRestConfigured?: boolean;
+    mailResendConfigured?: boolean;
     mailHint?: string;
     adminPublicUrl?: string;
     githubTokenConfigured?: boolean;
-    adminKvConfigured?: boolean;
-    siteDataUrl?: string;
+    discordConfigured?: boolean;
   }>("/health", false);
 }
 
@@ -121,6 +128,12 @@ export async function fetchCommunityConfigApi() {
   return apiGet<CommunityConfig>("/community/config", false);
 }
 
+/**
+ * Saves updated community configuration.
+ *
+ * @param payload - The community configuration fields to update
+ * @returns The update status and saved community configuration
+ */
 export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
   const res = await fetch(`${API_BASE}/community/config`, {
     method: "PUT",
@@ -133,6 +146,71 @@ export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to save community config");
   return data as { ok: boolean; config: CommunityConfig };
+}
+
+export type DiscordConfig = {
+  configured: boolean;
+  webhookPreview: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+/**
+ * Retrieves the configured Discord integration settings.
+ *
+ * @returns The Discord configuration response
+ */
+export async function fetchDiscordConfigApi() {
+  return apiGet<{ ok: boolean; config: DiscordConfig }>("/integrations/discord/config");
+}
+
+/**
+ * Saves the Discord webhook configuration.
+ *
+ * @param payload - The webhook URL to save
+ * @returns The save status and resulting Discord configuration
+ */
+export async function putDiscordConfigApi(payload: { webhookUrl: string }) {
+  const res = await fetch(`${API_BASE}/integrations/discord/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save Discord webhook");
+  return data as { ok: boolean; config: DiscordConfig };
+}
+
+/**
+ * Sends deployment details to the configured Discord integration.
+ *
+ * @param payload - Deployment information to include in the notification
+ * @returns The notification result, including whether it was skipped
+ * @throws {Error} If the notification fails and the response is not marked as skipped
+ */
+export async function notifyDiscordDeploymentApi(payload: {
+  actionType?: string;
+  tag?: string;
+  channel?: string;
+  market?: string;
+  conclusion?: string;
+  runUrl?: string;
+  jobs?: Array<{ name: string; status?: string; conclusion?: string }>;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/discord/deployment`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && !data.skipped) throw new Error(data.error || "Discord notification failed");
+  return data as { ok: boolean; skipped?: boolean };
 }
 
 export type DeployRequest = {

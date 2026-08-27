@@ -1,5 +1,7 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
+import { notifyDiscordDeployment } from "./discord-notify.js";
+import { scheduleDiscordDeploymentCompletionWatch } from "./discord-deployment-watch.js";
 
 const MIN_PUBLISH_TAG = "v0.5.5";
 const WORKFLOW_ID = "ci-cd.yml";
@@ -8,7 +10,18 @@ const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
 const ACTION_DEPLOY_INFRA = "deploy-infra - Deploy Mission Control admin & marketing site";
 const ACTION_FULL_RELEASE = "full-release - Bump version, tag & update Mission Control";
 
-async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields) {
+/**
+ * Dispatch a GitHub Actions workflow on the main branch.
+ * @param {object} env - Environment variables containing the GitHub token.
+ * @param {string} workflowId - GitHub Actions workflow identifier.
+ * @param {object} inputs - Inputs passed to the workflow.
+ * @param {string} successMessage - Message included in the successful response.
+ * @param {object} fields - Additional fields included in the successful response.
+ * @param {object} [notifyContext] - Context for deployment notifications.
+ * @param {object} [pagesContext] - Context used to schedule completion monitoring.
+ * @return {Response} A success response or an error response when dispatch fails.
+ */
+async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields, notifyContext, pagesContext) {
   const githubToken = env.GITHUB_TOKEN;
   if (!githubToken) {
     return jsonResponse(
@@ -55,6 +68,32 @@ async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields)
     );
   }
 
+  if (notifyContext) {
+    notifyDiscordDeployment(env, {
+      phase: "started",
+      actionType: inputs.action_type,
+      tag: inputs.target_tag ?? notifyContext.tag ?? null,
+      channel: inputs.release_channel ?? null,
+      market: inputs.publish_market ?? null,
+      triggeredBy: notifyContext.triggeredBy ?? null,
+      branch: "main",
+      summary: successMessage,
+      runUrl: notifyContext.runUrl ?? null,
+    }).catch((error) => {
+      console.error("Discord started notification failed", error);
+    });
+
+    scheduleDiscordDeploymentCompletionWatch(pagesContext, env, {
+      actionType: inputs.action_type,
+      tag: inputs.target_tag ?? notifyContext.tag ?? null,
+      channel: inputs.release_channel ?? null,
+      market: inputs.publish_market ?? null,
+      triggeredBy: notifyContext.triggeredBy ?? null,
+      dispatchedAt: Date.now(),
+      workflowName: workflowId,
+    });
+  }
+
   return jsonResponse({
     success: true,
     message: successMessage,
@@ -97,12 +136,15 @@ function tagAtLeast(tag, minimum) {
 }
 
 /**
- * Forward publish — existing tag, no main rewrite.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} body
- * @param {string} successMessage
+ * Dispatches a marketplace publish workflow for an existing tag.
+ * @param {Record<string, unknown>} env - Runtime environment containing workflow configuration and credentials.
+ * @param {Record<string, unknown>} body - Request data containing the target tag, market, release channel, and deployment flags.
+ * @param {string} successMessage - Message included in a successful response.
+ * @param {Record<string, unknown>} [notifyContext] - Optional context for deployment notifications.
+ * @param {Record<string, unknown>} [pagesContext] - Optional context for completion monitoring.
+ * @return {Promise<Response>} The workflow dispatch response.
  */
-export async function dispatchPublishWorkflow(env, body, successMessage) {
+export async function dispatchPublishWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const parsed = parseInputs(body);
   if (parsed.error) return parsed.error;
 
@@ -131,17 +173,20 @@ export async function dispatchPublishWorkflow(env, body, successMessage) {
       deploy_website: deployWebsite ? "true" : "false",
     },
     successMessage,
-    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel }
+    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
+    notifyContext,
+    pagesContext
   );
 }
 
 /**
- * Rollback — restore a prior tag to main and publish a bumped patch release.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} body
- * @param {string} successMessage
+ * Dispatch a rollback workflow and activate the public recovery notice.
+ * @param {Record<string, unknown>} body - Contains the target tag, publishing market, and release channel.
+ * @param {Record<string, unknown>} notifyContext - Optional context for deployment notifications.
+ * @param {Record<string, unknown>} pagesContext - Optional context for Pages deployment monitoring.
+ * @returns {Response} The workflow dispatch or error response.
  */
-export async function dispatchRollbackWorkflow(env, body, successMessage) {
+export async function dispatchRollbackWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const parsed = parseInputs(body);
   if (parsed.error) return parsed.error;
 
@@ -165,7 +210,9 @@ export async function dispatchRollbackWorkflow(env, body, successMessage) {
       release_channel: releaseChannel,
     },
     successMessage,
-    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel }
+    { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
+    notifyContext,
+    pagesContext
   );
 
   if (!response.ok) return response;
@@ -198,11 +245,14 @@ const VERSION_TYPE_INPUTS = {
 };
 
 /**
- * Infra-only deploy — Mission Control admin (Cloudflare) + marketing site. No marketplaces.
- * @param {Record<string, unknown>} env
- * @param {string} successMessage
+ * Dispatch an infrastructure-only deployment workflow for the admin and marketing sites.
+ * @param {Record<string, unknown>} env - The deployment environment configuration.
+ * @param {Record<string, unknown>} body - Deployment options, including site deployment flags.
+ * @param {string} successMessage - The message returned when dispatch succeeds.
+ * @param {unknown} notifyContext - Optional notification context.
+ * @param {unknown} pagesContext - Optional Pages deployment context.
  */
-export async function dispatchInfraWorkflow(env, body, successMessage) {
+export async function dispatchInfraWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const deployAdmin = bodyFlag(body, "deploy_admin", true);
   const deployWebsite = bodyFlag(body, "deploy_website", true);
   return dispatchWorkflow(
@@ -216,7 +266,9 @@ export async function dispatchInfraWorkflow(env, body, successMessage) {
       deploy_website: deployWebsite ? "true" : "false",
     },
     successMessage,
-    { deploy_admin: deployAdmin, deploy_website: deployWebsite }
+    { deploy_admin: deployAdmin, deploy_website: deployWebsite },
+    notifyContext,
+    pagesContext
   );
 }
 
@@ -227,12 +279,12 @@ function bodyFlag(body, key, defaultValue) {
 }
 
 /**
- * New release — bump package.json, create tag, publish via ci-cd.yml.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} body
- * @param {string} successMessage
+ * Dispatch a full release workflow using the requested version, market, and release channel.
+ * @param {Record<string, unknown>} body - Release settings, including version and deployment options.
+ * @param {string} successMessage - Message included in the successful response.
+ * @returns {Response} The workflow dispatch response, or an error response for invalid settings or notice activation failure.
  */
-export async function dispatchReleaseWorkflow(env, body, successMessage) {
+export async function dispatchReleaseWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
   const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
   const bumpKey = String(body.version_type ?? body.bump_type ?? "patch");
@@ -273,7 +325,9 @@ export async function dispatchReleaseWorkflow(env, body, successMessage) {
       custom_version: customVersion,
       publish_market: publishMarket,
       release_channel: releaseChannel,
-    }
+    },
+    notifyContext,
+    pagesContext
   );
 
   if (!response.ok) return response;

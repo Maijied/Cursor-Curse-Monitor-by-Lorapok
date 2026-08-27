@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import Sidebar from "./Sidebar";
+import { DeployRuntimeProvider } from "../../context/DeployRuntimeContext";
 import OnlineStatus from "../ui/OnlineStatus";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import { LarvaeLoaderPanel } from "../ui/LorapokLarvaeLoader";
@@ -49,7 +50,8 @@ export default function AppShell() {
   if (!auth.currentUser) return null;
 
   return (
-    <div className="flex h-screen w-full overflow-hidden text-[var(--color-text)]">
+    <DeployRuntimeProvider>
+    <div className="flex h-screen h-dvh min-h-0 w-full overflow-hidden text-[var(--color-text)]">
       {mobileOpen && (
         <button
           type="button"
@@ -109,5 +111,6 @@ export default function AppShell() {
         </div>
       </div>
     </div>
+    </DeployRuntimeProvider>
   );
 }

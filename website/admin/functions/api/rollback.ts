@@ -2,6 +2,12 @@ import { jsonResponse, verifyAdminRequest, requireMasterAdmin } from "./_shared/
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { dispatchRollbackWorkflow } from "./_shared/deploy-workflow.js";
 
+/**
+ * Handles an authenticated master-admin request to trigger a rollback workflow.
+ *
+ * @param context - Request context containing the request, environment, and workflow metadata
+ * @returns The authenticated response for the rollback request
+ */
 export async function onRequestPost(context) {
   const startedAt = Date.now();
   const { request, env } = context;
@@ -13,7 +19,9 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const response = await dispatchRollbackWorkflow(env, body, "Rollback triggered");
+    const response = await dispatchRollbackWorkflow(env, body, "Rollback triggered", {
+      triggeredBy: auth.email,
+    }, context);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Rollback handler error", err);

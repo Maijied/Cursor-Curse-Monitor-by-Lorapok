@@ -2,6 +2,12 @@ import { jsonResponse, verifyAdminRequest, requireMasterAdmin } from "./_shared/
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { dispatchPublishWorkflow } from "./_shared/deploy-workflow.js";
 
+/**
+ * Handles an authenticated master-admin request to trigger a deployment.
+ *
+ * @param context - The request context containing the request and environment.
+ * @returns The authentication, authorization, deployment, or error response.
+ */
 export async function onRequestPost(context) {
   const startedAt = Date.now();
   const { request, env } = context;
@@ -13,7 +19,9 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const response = await dispatchPublishWorkflow(env, body, "Deployment triggered successfully");
+    const response = await dispatchPublishWorkflow(env, body, "Deployment triggered successfully", {
+      triggeredBy: auth.email,
+    }, context);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {
     console.error("Deploy handler error", err);

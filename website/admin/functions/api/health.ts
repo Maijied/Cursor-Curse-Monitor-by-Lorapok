@@ -1,7 +1,14 @@
 import { jsonResponse } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { getMailTransportStatus } from "./_shared/mail.js";
+import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
 
+/**
+ * Reports service health, configuration status, and endpoint URLs.
+ *
+ * @param context - The request context containing environment bindings.
+ * @returns A JSON response with health checks and sanitized service configuration.
+ */
 export async function onRequestGet(context) {
   const { env } = context;
   const checks = { github: false, timestamp: new Date().toISOString() };
@@ -14,6 +21,7 @@ export async function onRequestGet(context) {
   }
 
   const mail = getMailTransportStatus(env);
+  const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
 
   return jsonResponse({
     ok: checks.github,
@@ -23,7 +31,11 @@ export async function onRequestGet(context) {
     adminKvConfigured: Boolean(env.ADMIN_KV),
     mailConfigured: mail.configured,
     mailTransport: mail.transport,
+    mailRelayBound: mail.relayBound ?? false,
+    mailRestConfigured: mail.restConfigured ?? false,
+    mailResendConfigured: mail.resendConfigured ?? false,
     mailHint: mail.hint,
+    discordConfigured: discordConfig.configured,
     adminPublicUrl: env.ADMIN_PUBLIC_URL ?? "https://cursor-dev.lorapok.tech",
     siteDataUrl:
       env.SITE_DATA_URL ??

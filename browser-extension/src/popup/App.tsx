@@ -20,13 +20,20 @@ declare const __EXTENSION_VERSION__: string;
 
 export function App() {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   useEffect(() => {
-    void fetchSnapshot().then(setSnapshot);
-    return onSnapshot(setSnapshot);
+    void fetchSnapshot().then((data) => {
+      setSnapshot(data);
+      setLoading(false);
+    });
+    return onSnapshot((data) => {
+      setSnapshot(data);
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -64,7 +71,7 @@ export function App() {
 
   const b = snapshot?.budget;
   const connected = Boolean(snapshot?.usage && !snapshot?.error);
-  const blocked = !connected;
+  const blocked = !loading && !connected;
   const spendPercent = b
     ? b.usdBudgetActive
       ? b.budgetPercentUsed
@@ -77,7 +84,13 @@ export function App() {
       : "—";
 
   return (
-    <div className={`popup-root${blocked ? " cursor-missing" : ""}`}>
+    <div className={`popup-root${blocked ? " cursor-missing" : ""}${loading ? " is-loading" : ""}`}>
+      {loading && (
+        <div className="popup-loading" role="status" aria-live="polite">
+          <div className="popup-loading-spinner" aria-hidden="true" />
+          <p>Loading usage…</p>
+        </div>
+      )}
       {blocked && (
         <div className="cursor-missing-overlay" role="alertdialog" aria-labelledby="cursor-missing-title">
           <div className="cursor-missing-card">
@@ -160,6 +173,7 @@ export function App() {
                   min={0}
                   step={1}
                   placeholder="USD cap (0 = plan only)"
+                  aria-label="Custom budget cap in USD"
                   value={budgetInput}
                   onChange={(e) => setBudgetInput(e.target.value)}
                 />

@@ -93,6 +93,8 @@ export interface SiteData {
   stableFallback?: StableFallbackInfo;
   downloads?: {
     total: number;
+    canonicalTotal?: number;
+    openVsxCombined?: number;
     breakdown: DownloadBreakdown;
     note?: string;
   };

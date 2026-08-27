@@ -3,10 +3,14 @@ import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
+import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
 
+/**
+ * Renders the application settings page with theme controls, integrations, environment details, and API health information.
+ */
 export default function Settings() {
   const { data: siteData } = useSiteData();
   const [health, setHealth] = useState<
@@ -32,7 +36,7 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up max-w-3xl">
-      <PageHeader title="Settings" description="Theme, connected services, API health, and environment info." />
+      <PageHeader title="Settings" description="Theme, Discord, connected services, and API health." />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>
@@ -55,6 +59,8 @@ export default function Settings() {
       </Card>
 
       <ConnectedServicesCard />
+
+      <DiscordIntegrationsCard />
 
       <Card>
         <h3 className="font-semibold mb-4">Environment</h3>
@@ -130,13 +136,23 @@ export default function Settings() {
               <div className="flex justify-between items-center">
                 <dt className="text-[var(--color-muted)]">Mailbox transport</dt>
                 <dd>
-                  <Badge variant={health.mailConfigured ? "synced" : "warn"}>
+                  <Badge
+                    variant={
+                      !health.mailConfigured
+                        ? "warn"
+                        : health.mailRelayBound
+                          ? "synced"
+                          : health.mailTransport === "cloudflare-rest"
+                            ? "warn"
+                            : "synced"
+                    }
+                  >
                     {health.mailConfigured ? health.mailTransport ?? "configured" : "Not configured"}
                   </Badge>
                 </dd>
               </div>
             )}
-            {health.mailHint && !health.mailConfigured && (
+            {health.mailHint && (health.mailConfigured ? health.mailTransport === "cloudflare-rest" && !health.mailRelayBound : true) && (
               <p className="text-xs text-[var(--color-muted)] pt-1">{health.mailHint}</p>
             )}
             {health.siteDataUrl && (

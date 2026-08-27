@@ -20,18 +20,32 @@ type SqliteDb = InstanceType<SqliteModule["DatabaseSync"]>;
 
 export type EditorHost = "cursor" | "vscode" | "unknown";
 
+/** VS Code–compatible product folder under OS app-data roots (Code, Cursor, Windsurf, …). */
+export function resolveProductDataFolder(appName?: string): string {
+  const name = (appName || process.env.VSCODE_APP_NAME || "").toLowerCase();
+  if (name.includes("cursor")) return "Cursor";
+  if (name.includes("windsurf")) return "Windsurf";
+  if (name.includes("vscodium") || name.includes("codium")) return "VSCodium";
+  if (name.includes("void")) return "Void";
+  if (name.includes("trae")) return "Trae";
+  if (name.includes("kiro")) return "Kiro";
+  if (name.includes("positron")) return "Positron";
+  if (name.includes("visual studio code") || name.includes("vscode") || name === "code") {
+    return "Code";
+  }
+  return "Cursor";
+}
+
 export function detectEditorHost(appName?: string): EditorHost {
   const name = (appName || process.env.VSCODE_APP_NAME || "").toLowerCase();
   if (name.includes("cursor")) return "cursor";
   if (name.includes("visual studio code") || name.includes("vscode") || name === "code") {
     return "vscode";
   }
-  // Default path resolution prefers Cursor when ambiguous.
-  return "cursor";
+  return "unknown";
 }
 
-function appDataRoot(host: EditorHost): { darwin: string; win32: string; linux: string } {
-  const product = host === "vscode" ? "Code" : "Cursor";
+function appDataRoot(product: string): { darwin: string; win32: string; linux: string } {
   const home = os.homedir();
   return {
     darwin: path.join(home, "Library", "Application Support", product, "User", "globalStorage", "state.vscdb"),
@@ -46,26 +60,32 @@ function appDataRoot(host: EditorHost): { darwin: string; win32: string; linux: 
   };
 }
 
+function resolveProductForPath(host?: EditorHost, appName?: string): string {
+  if (host === "vscode") return "Code";
+  if (host === "cursor") return "Cursor";
+  return resolveProductDataFolder(appName);
+}
+
 /** Directory containing state.vscdb and conversation-search.db. */
-export function getCursorGlobalStorageDir(host?: EditorHost): string {
-  return path.dirname(getCursorGlobalStoragePath(host));
+export function getCursorGlobalStorageDir(host?: EditorHost, appName?: string): string {
+  return path.dirname(getCursorGlobalStoragePath(host, appName));
 }
 
 /** Conversation search index used by Agents Window Ctrl+K. */
-export function getConversationSearchDbPath(host?: EditorHost): string {
+export function getConversationSearchDbPath(host?: EditorHost, appName?: string): string {
   if (process.env.CCM_REINDEX_SEARCH_DB) {
     return process.env.CCM_REINDEX_SEARCH_DB;
   }
-  return path.join(getCursorGlobalStorageDir(host), "conversation-search.db");
+  return path.join(getCursorGlobalStorageDir(host, appName), "conversation-search.db");
 }
 
 /** Resolve Cursor or VS Code globalStorage state.vscdb for the current host. */
-export function getCursorGlobalStoragePath(host?: EditorHost): string {
+export function getCursorGlobalStoragePath(host?: EditorHost, appName?: string): string {
   if (process.env.CURSOR_DB_PATH) {
     return process.env.CURSOR_DB_PATH;
   }
-  const resolvedHost = host ?? detectEditorHost();
-  const roots = appDataRoot(resolvedHost === "unknown" ? "cursor" : resolvedHost);
+  const product = resolveProductForPath(host, appName);
+  const roots = appDataRoot(product);
   switch (process.platform) {
     case "darwin":
       return roots.darwin;
@@ -77,14 +97,17 @@ export function getCursorGlobalStoragePath(host?: EditorHost): string {
 }
 
 /** True when the editor process that owns the DB appears to be running. */
-export function isEditorProcessRunning(host: EditorHost = detectEditorHost()): boolean {
+export function isEditorProcessRunning(host: EditorHost = detectEditorHost(), appName?: string): boolean {
   if (process.env.CURSOR_EDITOR_RUNNING === "1") return true;
   if (process.env.CURSOR_EDITOR_RUNNING === "0") return false;
 
+  const product = resolveProductForPath(host, appName);
   const patterns =
-    host === "vscode"
+    product === "Code"
       ? ["Code.exe", "code", "Code - OSS", "code-oss"]
-      : ["Cursor.exe", "Cursor", "cursor"];
+      : product === "Cursor"
+        ? ["Cursor.exe", "Cursor", "cursor"]
+        : [`${product}.exe`, product, product.toLowerCase()];
 
   try {
     if (process.platform === "win32") {
@@ -102,8 +125,8 @@ export function isEditorProcessRunning(host: EditorHost = detectEditorHost()): b
   }
 }
 
-export function cursorDbExists(host?: EditorHost): boolean {
-  return fs.existsSync(getCursorGlobalStoragePath(host));
+export function cursorDbExists(host?: EditorHost, appName?: string): boolean {
+  return fs.existsSync(getCursorGlobalStoragePath(host, appName));
 }
 
 function loadSqlite(): SqliteModule {
@@ -418,8 +441,8 @@ export async function applyComposerFallbackModel(): Promise<{
   error?: string;
   alreadySet?: boolean;
 }> {
-  const host = detectEditorHost();
-  if (isEditorProcessRunning(host)) {
+  const host = detectEditorHost(process.env.VSCODE_APP_NAME);
+  if (isEditorProcessRunning(host, process.env.VSCODE_APP_NAME)) {
     return {
       success: false,
       error:
@@ -427,7 +450,7 @@ export async function applyComposerFallbackModel(): Promise<{
     };
   }
 
-  const dbPath = getCursorGlobalStoragePath(host);
+  const dbPath = getCursorGlobalStoragePath(host, process.env.VSCODE_APP_NAME);
   if (!fs.existsSync(dbPath)) {
     return { success: false, error: "Database file does not exist" };
   }
