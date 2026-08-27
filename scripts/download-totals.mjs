@@ -64,8 +64,16 @@ export function computeDownloadTotals(input) {
   }
 
   const verified = canonicalLive && githubLive;
+  const openVsxCombined =
+    canonicalCount != null && duplicateLive && duplicateCount != null
+      ? canonicalCount + duplicateCount
+      : canonicalCount;
+
   const displayTotal = verified
-    ? openVsxDisplayCount + (vscodeCount ?? 0) + githubAllAssets
+    ? (canonicalCount ?? 0) +
+      (duplicateLive && duplicateCount != null ? duplicateCount : 0) +
+      (vscodeCount ?? 0) +
+      githubAllAssets
     : null;
   const canonicalTotal =
     canonicalCount != null && githubAllAssets != null
@@ -76,6 +84,7 @@ export function computeDownloadTotals(input) {
     displayTotal,
     total: displayTotal,
     verified,
+    openVsxCombined,
     source: openVsxSource,
     liveSources: {
       openVsxCanonical: canonicalLive,

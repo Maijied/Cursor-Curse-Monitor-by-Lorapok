@@ -12,7 +12,8 @@ describe("computeDownloadTotals", () => {
       packageVersion: "1.0.1",
     });
     assert.equal(result.verified, true);
-    assert.equal(result.displayTotal, 123);
+    assert.equal(result.displayTotal, 173);
+    assert.equal(result.openVsxCombined, 150);
     assert.equal(result.breakdown.openVsxDuplicate, 50);
     assert.equal(result.source, "canonical");
   });
@@ -37,7 +38,8 @@ describe("computeDownloadTotals", () => {
       packageVersion: "0.5.18",
     });
     assert.equal(result.source, "duplicate-fallback-display");
-    assert.equal(result.displayTotal, 3254);
-    assert.equal(result.canonicalTotal, 3254);
+    assert.equal(result.displayTotal, 4040);
+    assert.equal(result.openVsxCombined, 4037);
+    assert.equal(result.breakdown.openVsxDisplay, 3251);
   });
 });

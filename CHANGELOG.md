@@ -10,6 +10,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **README download badges** — serve Shields.io endpoint JSON from `website/stats/` on GitHub raw (admin API blocked by Cloudflare bot challenges); show `unavailable` when marketplace sources are not verified — never zero-filled placeholders
 - **Marketing site stat meters** — only render download totals when `site-data.json` marks them verified; otherwise show em dash
+- **Grand download total** — sum Open VSX (both namespaces) + VS Code `downloadCount` + GitHub releases (~9.6k+); hero UI leads with total, then channel breakdown
+- **VS Code Marketplace stats** — use gallery `downloadCount` (updates on version publish), not unique `install` count
 
 ### Added
 

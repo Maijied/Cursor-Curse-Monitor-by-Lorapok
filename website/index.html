@@ -195,12 +195,37 @@
             <span class="panel-live-dot" aria-hidden="true"></span>
             Community stats
           </div>
-          <div class="stats-grid">
-            <div class="stat-tile">
-              <span class="stat-tile-label">Downloads</span>
-              <strong class="stat-tile-value" data-hero-downloads>—</strong>
-              <div class="meter"><div class="meter-fill stat-meter" data-hero-downloads-bar style="width:0%"></div></div>
+          <div class="hero-total-block">
+            <span class="hero-total-label">Total downloads</span>
+            <strong class="hero-total-value" data-hero-downloads>—</strong>
+            <div class="meter hero-total-meter"><div class="meter-fill stat-meter" data-hero-downloads-bar style="width:0%"></div></div>
+          </div>
+          <div class="hero-channel-breakdown" aria-label="Download breakdown by channel">
+            <p class="hero-breakdown-title">Breakdown</p>
+            <div class="hero-channel-grid">
+              <div class="hero-channel-item">
+                <span>Open VSX total</span>
+                <strong data-hero-ovsx-combined>—</strong>
+              </div>
+              <div class="hero-channel-item">
+                <span>VS Code Marketplace</span>
+                <strong data-hero-vscode>—</strong>
+              </div>
+              <div class="hero-channel-item">
+                <span>GitHub releases</span>
+                <strong data-hero-github>—</strong>
+              </div>
             </div>
+            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus LorapokLabs namespace downloads">
+              <div class="meter-fill canonical" data-hero-ovsx-canonical-bar style="width:0%"></div>
+              <div class="meter-fill legacy" data-hero-ovsx-duplicate-bar style="width:0%"></div>
+            </div>
+            <div class="hero-ovsx-legend">
+              <span>Canonical <strong data-hero-ovsx-canonical>—</strong></span>
+              <span>LorapokLabs <strong data-hero-ovsx-duplicate>—</strong></span>
+            </div>
+          </div>
+          <div class="stats-grid stats-grid-secondary">
             <div class="stat-tile">
               <span class="stat-tile-label">Website visits</span>
               <strong class="stat-tile-value" data-hero-visits>—</strong>
@@ -210,20 +235,6 @@
               <span class="stat-tile-label">Engagement</span>
               <strong class="stat-tile-value" data-hero-engagement>—</strong>
               <div class="meter"><div class="meter-fill stat-meter" data-hero-engagement-bar style="width:0%"></div></div>
-            </div>
-          </div>
-          <div class="hero-ovsx-block">
-            <div class="hero-ovsx-combined">
-              <span>Open VSX total</span>
-              <strong data-hero-ovsx-combined>—</strong>
-            </div>
-            <div class="hero-ovsx-split-bar" role="img" aria-label="Open VSX canonical versus LorapokLabs namespace downloads">
-              <div class="meter-fill canonical" data-hero-ovsx-canonical-bar style="width:0%"></div>
-              <div class="meter-fill legacy" data-hero-ovsx-duplicate-bar style="width:0%"></div>
-            </div>
-            <div class="hero-ovsx-legend">
-              <span>Canonical <strong data-hero-ovsx-canonical>—</strong></span>
-              <span>LorapokLabs <strong data-hero-ovsx-duplicate>—</strong></span>
             </div>
           </div>
         </div>

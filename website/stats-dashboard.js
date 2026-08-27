@@ -1,5 +1,5 @@
 /**
- * Animated live stats for hero dashboard — wired from site-data.json via site.js
+ * Animated stats for hero dashboard — wired from site-data.json via site.js
  */
 (function () {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -20,6 +20,10 @@
       if (t < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+  }
+
+  function setText(el, value) {
+    if (el) el.textContent = value;
   }
 
   function setBar(el, pct) {
@@ -43,38 +47,43 @@
     if (!root || !data) return;
 
     const verified = options.verified === true;
+    const dash = "—";
+    const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? dash : Number(n).toLocaleString());
+
     if (!verified) {
-      root.querySelectorAll("[data-hero-downloads], [data-hero-ovsx-combined], [data-hero-ovsx-canonical], [data-hero-ovsx-duplicate]").forEach((el) => {
-        el.textContent = "—";
+      root.querySelectorAll(
+        "[data-hero-downloads], [data-hero-ovsx-combined], [data-hero-ovsx-canonical], [data-hero-ovsx-duplicate], [data-hero-vscode], [data-hero-github]"
+      ).forEach((el) => {
+        el.textContent = dash;
       });
       root.classList.add("is-loaded");
       return;
     }
 
+    const breakdown = data.downloads?.breakdown ?? {};
     const downloads = Number(data.downloads?.displayTotal ?? data.downloads?.total ?? 0);
     const visits = Number(data.visitors?.websiteVisits ?? 0);
     const engagement = Number(data.visitors?.totalEngagement ?? 0);
-    const canonical = Number(
-      data.downloads?.breakdown?.openVsxCanonical ?? data.ovsx?.downloadCount ?? 0
-    );
-    const duplicate = Number(
-      data.downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0
-    );
+    const canonical = Number(breakdown.openVsxCanonical ?? data.ovsx?.downloadCount ?? 0);
+    const duplicate = Number(breakdown.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0);
     const combined = Number(data.downloads?.openVsxCombined ?? canonical + duplicate);
+    const vscode = breakdown.vscodeMarketplace ?? data.vscode?.downloadCount ?? null;
+    const github = breakdown.githubAllAssets ?? data.github?.totalReleaseDownloads ?? null;
 
     const maxScale = Math.max(downloads, visits, engagement, combined, 1);
 
-    animateValue(root.querySelector("[data-hero-downloads]"), downloads, 1200);
+    animateValue(root.querySelector("[data-hero-downloads]"), downloads, 1400);
+    animateValue(root.querySelector("[data-hero-ovsx-combined]"), combined, 1200);
+    setText(root.querySelector("[data-hero-vscode]"), fmt(vscode));
+    setText(root.querySelector("[data-hero-github]"), fmt(github));
     animateValue(root.querySelector("[data-hero-visits]"), visits, 1200);
     animateValue(root.querySelector("[data-hero-engagement]"), engagement, 1200);
-    animateValue(root.querySelector("[data-hero-ovsx-combined]"), combined, 1400);
     animateValue(root.querySelector("[data-hero-ovsx-canonical]"), canonical, 1000);
     animateValue(root.querySelector("[data-hero-ovsx-duplicate]"), duplicate, 1000);
 
     setBar(root.querySelector("[data-hero-downloads-bar]"), (downloads / maxScale) * 100);
     setBar(root.querySelector("[data-hero-visits-bar]"), (visits / maxScale) * 100);
     setBar(root.querySelector("[data-hero-engagement-bar]"), (engagement / maxScale) * 100);
-    setBar(root.querySelector("[data-hero-ovsx-bar]"), combined > 0 ? 100 : 0);
 
     if (combined > 0) {
       const canonicalPct = Math.round((canonical / combined) * 100);

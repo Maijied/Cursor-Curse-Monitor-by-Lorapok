@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-27T18:46:24.846Z",
+  "generatedAt": "2026-08-27T18:52:16.088Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
   "version": "1.0.26",
@@ -57,7 +57,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-08-27T18:46:24.846Z"
+    "updatedAt": "2026-08-27T18:52:16.088Z"
   },
   "noticeTemplates": [
     {
@@ -167,8 +167,8 @@
     }
   ],
   "downloads": {
-    "total": 5806,
-    "displayTotal": 5806,
+    "total": 9975,
+    "displayTotal": 9975,
     "verified": true,
     "liveSources": {
       "openVsxCanonical": true,
@@ -176,19 +176,19 @@
       "vscodeMarketplace": true,
       "githubReleases": true
     },
-    "canonicalTotal": 5806,
+    "canonicalTotal": 6162,
     "source": "canonical",
     "breakdown": {
       "openVsxCanonical": 5798,
       "openVsxDuplicate": 3813,
       "openVsxDisplay": 5798,
-      "vscodeMarketplace": 0,
+      "vscodeMarketplace": 356,
       "githubAllAssets": 8,
       "githubVsix": 8,
       "latestReleaseVsix": 0
     },
     "openVsxCombined": 9611,
-    "note": "Totals require live Open VSX canonical + GitHub release APIs. Missing sources stay null — never zero-filled."
+    "note": "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets)."
   },
   "visitors": {
     "websiteVisits": 128,
@@ -242,8 +242,9 @@
   "vscode": {
     "version": "1.0.29",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "downloadCount": 0,
-    "installCount": 0,
+    "downloadCount": 356,
+    "installCount": 3,
+    "updateCount": 15,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok",
     "published": true
   },
