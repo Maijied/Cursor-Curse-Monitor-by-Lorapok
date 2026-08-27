@@ -11,6 +11,7 @@ import { classifyWranglerFailure, resolveRetryWaitSec } from "./lib/deploy-retry
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const inCi = process.env.GITHUB_ACTIONS === "true";
+const skipMailSetup = process.env.SKIP_MAIL_SETUP === "true";
 const { accountId, deployToken: envDeployToken } = resolveMailCredentials();
 const relayDeployed = process.env.MAIL_RELAY_DEPLOYED === "true";
 const relayExists =
@@ -60,10 +61,10 @@ async function resolveDeployAuth() {
   }
 
   if (inCi) {
-    // enable-mail + verify already hit Cloudflare; redundant probes here cause 429/9109 lockouts.
-    console.log(
-      "::notice::CI: using CLOUDFLARE_API_TOKEN without pre-deploy probe (mail setup already exercised Cloudflare APIs)."
-    );
+    const reason = skipMailSetup
+      ? "push-only Pages deploy (mail setup skipped)"
+      : "mail setup already exercised Cloudflare APIs";
+    console.log(`::notice::CI: using CLOUDFLARE_API_TOKEN without pre-deploy probe (${reason}).`);
     return {
       token: envDeployToken,
       probe: { ok: true, status: 0, via: "ci-skip-probe" },
@@ -124,17 +125,15 @@ if (!relayDeployed && !relayExists) {
 }
 
 if (inCi) {
-  const mailLightweight = process.env.MAIL_API_LIGHTWEIGHT === "true";
+  const mailLightweight = process.env.MAIL_API_LIGHTWEIGHT === "true" || skipMailSetup;
   const preCooldownSec = mailLightweight
-    ? Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 0)
-    : Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 20);
+    ? Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 45)
+    : Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 90);
   if (preCooldownSec > 0) {
     console.log(
-      `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits from mail setup can clear…`
+      `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits can clear…`
     );
     await sleep(preCooldownSec * 1000);
-  } else if (mailLightweight) {
-    console.log("::notice::CI: skipping pre-deploy cooldown — mail setup used lightweight Cloudflare API path.");
   }
 }
 
@@ -148,8 +147,9 @@ const args = [
   "--commit-dirty=true",
 ];
 
-const maxAttempts = Number(process.env.CF_DEPLOY_MAX_ATTEMPTS ?? 3);
+const maxAttempts = Number(process.env.CF_DEPLOY_MAX_ATTEMPTS ?? 4);
 let lastFailureKind = "other";
+let sawDeployRateLimit = false;
 
 for (let attempt = 1; attempt <= maxAttempts; attempt++) {
   const result = runWranglerDeploy(args, deployToken);
@@ -158,13 +158,32 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
   }
 
   lastFailureKind = classifyWranglerFailure(result.output);
-  if (attempt < maxAttempts) {
-    const waitSec = resolveRetryWaitSec(lastFailureKind, attempt, result.output);
-    console.warn(
-      `::warning::Pages deploy failed (${lastFailureKind}, attempt ${attempt}/${maxAttempts}); retrying in ${waitSec}s…`
-    );
-    await sleep(waitSec * 1000);
+  if (lastFailureKind === "rate-limit") {
+    sawDeployRateLimit = true;
   }
+
+  if (attempt >= maxAttempts) {
+    break;
+  }
+
+  // Rapid retries after 429 often surface as 9109/10000 auth lockouts on the same token.
+  if (
+    sawDeployRateLimit &&
+    (lastFailureKind === "auth-lockout" || lastFailureKind === "auth") &&
+    attempt >= 2
+  ) {
+    console.error(
+      "::error::Cloudflare token appears locked after rate limiting — stopping retries in this job. " +
+        "Wait 5+ minutes, then rerun deploy-infra."
+    );
+    break;
+  }
+
+  const waitSec = resolveRetryWaitSec(lastFailureKind, attempt, result.output);
+  console.warn(
+    `::warning::Pages deploy failed (${lastFailureKind}, attempt ${attempt}/${maxAttempts}); retrying in ${waitSec}s…`
+  );
+  await sleep(waitSec * 1000);
 }
 
 console.error(

@@ -98,7 +98,15 @@ let relayExists = false;
 let restSynced = false;
 
 if (inCi) {
-  relayExists = await relayWorkerExists(deployToken, accountId);
+  const exists = await relayWorkerExists(deployToken, accountId);
+  if (exists === "rate-limited") {
+    console.warn(
+      "::warning::CI: ccm-mail-relay probe rate-limited — assuming relay exists to avoid extra Cloudflare API calls before Pages deploy."
+    );
+    relayExists = true;
+  } else {
+    relayExists = exists;
+  }
   if (relayExists) {
     console.log("::notice::CI: ccm-mail-relay already exists — skipping worker redeploy.");
   }
@@ -135,7 +143,9 @@ if (!relayExists) {
         "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
     );
   }
-  relayExists = (await relayWorkerExists(deployToken, accountId)) || relayDeployed;
+  const existsAfterDeploy = await relayWorkerExists(deployToken, accountId);
+  relayExists =
+    existsAfterDeploy === true || existsAfterDeploy === "rate-limited" || relayDeployed;
 }
 
 if (hasEmailToken && restSynced) {
