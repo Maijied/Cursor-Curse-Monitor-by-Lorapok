@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
+import { fetchVsceExtension } from "../website/admin/functions/api/_shared/vsce-stats.js";
 import { computeDownloadTotals } from "./download-totals.mjs";
 import { buildProductContext } from "./lib-product-context.mjs";
 import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
@@ -292,53 +293,17 @@ async function ovsxLatest(namespace) {
 }
 
 async function vsceLatest() {
-  const body = {
-    filters: [{
-      criteria: [{ filterType: 7, value: `${VSCE_NS}.${NAME}` }],
-      pageSize: 1,
-      pageNumber: 1,
-    }],
-    flags: 0x1 | 0x2 | 0x10,
+  const live = await fetchVsceExtension(VSCE_EXT_ID);
+  if (!live) return null;
+  return {
+    version: live.version,
+    url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_EXT_ID}`,
+    downloadCount: live.downloadCount,
+    installCount: live.installCount,
+    updateCount: live.updateCount,
+    installQuery: VSCE_EXT_ID,
+    published: true,
   };
-  try {
-    const res = await fetch(
-      "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json;api-version=6.1-preview.1",
-        },
-        body: JSON.stringify(body),
-      }
-    );
-    if (!res.ok) return null;
-    const json = await res.json();
-    const ext = json?.results?.[0]?.extensions?.[0];
-    if (!ext) return null;
-    const version = ext.versions?.[0]?.version ?? null;
-    const stats = {};
-    for (const s of ext.statistics ?? []) {
-      stats[s.statisticName] = s.value;
-    }
-    const downloadCount = Math.round(
-      stats.install ??
-        stats.downloadCount ??
-        stats.averagedownloadcount ??
-        stats.trendingdaily?.downloadCount ??
-        0
-    );
-    return {
-      version,
-      url: `https://marketplace.visualstudio.com/items?itemName=${VSCE_NS}.${NAME}`,
-      downloadCount,
-      installCount: downloadCount,
-      installQuery: VSCE_EXT_ID,
-      published: true,
-    };
-  } catch {
-    return null;
-  }
 }
 
 async function githubDiscussionsAndIssues() {
@@ -495,11 +460,8 @@ const siteData = {
     canonicalTotal: downloadTotals.canonicalTotal,
     source: downloadTotals.source,
     breakdown: downloadBreakdown,
-    openVsxCombined:
-      downloadBreakdown.openVsxCanonical != null && downloadBreakdown.openVsxDuplicate != null
-        ? downloadBreakdown.openVsxCanonical + downloadBreakdown.openVsxDuplicate
-        : null,
-    note: "Totals require live Open VSX canonical + GitHub release APIs. Missing sources stay null — never zero-filled.",
+    openVsxCombined: downloadTotals.openVsxCombined,
+    note: "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets).",
   },
   visitors: {
     ...visitors,

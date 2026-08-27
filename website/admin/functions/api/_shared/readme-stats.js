@@ -121,7 +121,7 @@ export function renderReadmeStatsSvg(stats) {
   <text x="${width - pad}" y="34" text-anchor="end" fill="#94a3b8" font-size="11" font-family="Segoe UI, system-ui, sans-serif">synced</text>
   <line x1="${pad}" y1="${chartTop + chartHeight + 28}" x2="${width - pad}" y2="${chartTop + chartHeight + 28}" stroke="rgba(148,163,184,0.18)"/>
   ${barsSvg}
-  <text x="${pad}" y="${height - 14}" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated ${escapeXml(updated)} · canonical total excludes LorapokLabs legacy namespace</text>
+  <text x="${pad}" y="${height - 14}" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated ${escapeXml(updated)} · grand total across Open VSX, VS Code Marketplace, and GitHub releases</text>
 </svg>`;
 }
 
