@@ -2,8 +2,8 @@
   "generatedAt": "2026-08-27T18:52:16.088Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
-  "version": "1.0.26",
-  "packageVersion": "1.0.26",
+  "version": "1.0.39",
+  "packageVersion": "1.0.39",
   "publishedReleaseVersion": "1.0.29",
   "releaseStatus": "candidate",
   "syncStatus": "ahead",
@@ -316,7 +316,7 @@
     "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-1.0.29.vsix",
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
-    "releaseTag": "./scripts/release.sh 1.0.26"
+    "releaseTag": "./scripts/release.sh 1.0.39"
   },
   "supportedIdes": {
     "headline": "Works with every major VS Code–based AI IDE",
