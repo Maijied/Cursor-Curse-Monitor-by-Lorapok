@@ -41,7 +41,7 @@ Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `
 - `loragent-cloudflare-mail-master` — branded mail templates
 - `secure-cred-vault` — credential vault operations
 
-Re-sync: `~/.local/bin/sync-global-agent-stack`
+Re-sync: `~/.local/bin/sync-global-agent-stack` (from repo: `node scripts/sync-global-agent-stack.mjs`)
 
 ### IDE extension (root) — build / test / package
 

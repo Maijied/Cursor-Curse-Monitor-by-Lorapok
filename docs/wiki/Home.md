@@ -47,4 +47,4 @@ Lorapok agent skills are installed globally on developer machines:
 | `loragent-cloudflare-mail-master` | Branded outbound mail templates |
 | `secure-cred-vault` | Credential vault → GitHub secrets sync |
 
-Re-sync: `~/.local/bin/sync-global-agent-stack`
+Re-sync: `~/.local/bin/sync-global-agent-stack` (from repo: `node scripts/sync-global-agent-stack.mjs`)
