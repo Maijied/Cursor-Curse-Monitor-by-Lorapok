@@ -7,9 +7,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pickDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
+import { classifyWranglerFailure, wranglerRetryWaitSec } from "./lib/deploy-retry.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const { accountId } = resolveMailCredentials();
+const inCi = process.env.GITHUB_ACTIONS === "true";
+const { accountId, deployToken: envDeployToken } = resolveMailCredentials();
 const relayDeployed = process.env.MAIL_RELAY_DEPLOYED === "true";
 const relayExists =
   process.env.MAIL_RELAY_EXISTS_SETUP === "true" ||
@@ -48,14 +50,50 @@ async function pickDeployTokenWithRetry(maxAttempts = 4) {
   return { ...fallback, sawRateLimit };
 }
 
-const { token: deployToken, probe, sawRateLimit } = await pickDeployTokenWithRetry();
+async function resolveDeployAuth() {
+  if (!envDeployToken) {
+    return {
+      token: null,
+      probe: { ok: false, status: 0 },
+      sawRateLimit: false,
+    };
+  }
+
+  if (inCi) {
+    // enable-mail + verify already hit Cloudflare; redundant probes here cause 429/9109 lockouts.
+    console.log(
+      "::notice::CI: using CLOUDFLARE_API_TOKEN without pre-deploy probe (mail setup already exercised Cloudflare APIs)."
+    );
+    return {
+      token: envDeployToken,
+      probe: { ok: true, status: 0, via: "ci-skip-probe" },
+      sawRateLimit: false,
+    };
+  }
+
+  return pickDeployTokenWithRetry();
+}
+
+function runWranglerDeploy(args, token) {
+  const result = spawnSync("npx", args, {
+    cwd: adminDir,
+    encoding: "utf8",
+    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+  });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+  return { status: result.status ?? 1, output };
+}
+
+const { token: deployToken, probe, sawRateLimit } = await resolveDeployAuth();
 if (!deployToken) {
   console.error("::error::CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) is required.");
   process.exit(1);
 }
 
 if (probe.ok) {
-  console.log(`::notice::Using deploy token (${probe.via ?? "probe"} HTTP ${probe.status}).`);
+  console.log(`::notice::Using deploy token (${probe.via ?? "probe"}${probe.status ? ` HTTP ${probe.status}` : ""}).`);
 } else if (sawRateLimit || probe.via?.includes("rate-limit")) {
   console.warn(
     `::warning::Deploy token probe still rate-limited after retries (HTTP ${probe.status}); attempting wrangler Pages deploy anyway.`
@@ -85,6 +123,14 @@ if (!relayDeployed && !relayExists) {
   console.log("::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is available.");
 }
 
+if (inCi) {
+  const preCooldownSec = Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 75);
+  console.log(
+    `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits from mail setup can clear…`
+  );
+  await sleep(preCooldownSec * 1000);
+}
+
 const args = [
   "wrangler",
   "pages",
@@ -95,23 +141,29 @@ const args = [
   "--commit-dirty=true",
 ];
 
-for (let attempt = 1; attempt <= 4; attempt++) {
-  const result = spawnSync("npx", args, {
-    cwd: adminDir,
-    stdio: "inherit",
-    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
-  });
+const maxAttempts = Number(process.env.CF_DEPLOY_MAX_ATTEMPTS ?? 6);
+let lastFailureKind = "other";
+
+for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  const result = runWranglerDeploy(args, deployToken);
   if (result.status === 0) {
     process.exit(0);
   }
-  if (attempt < 4) {
-    const waitSec = attempt * 20;
-    console.warn(`::warning::Pages deploy failed (attempt ${attempt}/4); retrying in ${waitSec}s…`);
+
+  lastFailureKind = classifyWranglerFailure(result.output);
+  if (attempt < maxAttempts) {
+    const waitSec = wranglerRetryWaitSec(lastFailureKind, attempt);
+    console.warn(
+      `::warning::Pages deploy failed (${lastFailureKind}, attempt ${attempt}/${maxAttempts}); retrying in ${waitSec}s…`
+    );
     await sleep(waitSec * 1000);
   }
 }
 
 console.error(
-  "::error::Cloudflare Pages deploy failed after retries. If logs show code 9109/10429, wait a few minutes and rerun, or refresh CLOUDFLARE_API_TOKEN in admin-production."
+  "::error::Cloudflare Pages deploy failed after retries. " +
+    `Last failure: ${lastFailureKind}. ` +
+    "If logs show code 9109/10429, wait a few minutes and rerun workflow_dispatch deploy-infra, " +
+    "or refresh CLOUDFLARE_API_TOKEN in admin-production."
 );
 process.exit(1);

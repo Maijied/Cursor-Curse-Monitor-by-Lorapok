@@ -445,6 +445,8 @@ jobs:
         run: node scripts/verify-mail-transport.mjs
 
       - name: Deploy to Cloudflare Pages
+        continue-on-error: true
+        id: pages_deploy
         working-directory: website/admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -453,7 +455,14 @@ jobs:
           MAIL_RELAY_DEPLOYED: ${{ steps.mail_setup.outputs.relay_deployed }}
           MAIL_RELAY_EXISTS_SETUP: ${{ steps.mail_setup.outputs.relay_exists }}
           MAIL_RELAY_EXISTS_VERIFY: ${{ steps.mail_verify.outputs.relay_exists }}
+          CF_DEPLOY_PRE_COOLDOWN_SEC: "75"
+          CF_DEPLOY_MAX_ATTEMPTS: "6"
         run: node scripts/deploy-pages-ci.mjs
+
+      - name: Warn when Pages deploy failed
+        if: steps.pages_deploy.outcome != 'success'
+        run: |
+          echo "::warning::Cloudflare Pages deploy did not succeed — CI continues. Rerun workflow_dispatch deploy-infra after rate limits clear, or refresh CLOUDFLARE_API_TOKEN in admin-production."
 
   # ───────────────────────────────────────────────────────────────────────────
   # 5. SEO AUDIT, REFRESH & PROTECTED BRANCH PR CREATION
