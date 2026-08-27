@@ -3,6 +3,7 @@
  * CI gate: outbound mail must have ccm-mail-relay and/or valid REST email token.
  * Used by admin-deploy job (same checks as repair-mail step 4, without Pages deploy).
  */
+import { relayWorkerProbeExists } from "./lib/deploy-retry.mjs";
 import {
   probeDeployToken,
   probeEmailSendingToken,
@@ -32,7 +33,7 @@ if (inCi) {
   const deployProbe = await probeDeployToken(deployToken, accountId);
   if (deployProbe.ok) {
     const exists = await relayWorkerExists(deployToken, accountId);
-    relayExists = exists === true || exists === "rate-limited";
+    relayExists = relayWorkerProbeExists(exists);
   }
 }
 let restOk = false;

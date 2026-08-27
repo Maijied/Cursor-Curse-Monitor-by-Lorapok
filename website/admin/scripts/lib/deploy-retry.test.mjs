@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import {
   classifyWranglerFailure,
   parseRetryAfterSec,
+  relayWorkerProbeExists,
+  resolvePagesPreDeployCooldownSec,
   resolveRetryWaitSec,
+  shouldStopPagesDeployRetries,
   wranglerRetryWaitSec,
 } from "./deploy-retry.mjs";
 
@@ -18,5 +21,23 @@ assert.ok(wranglerRetryWaitSec("rate-limit", 1) >= 90);
 assert.ok(wranglerRetryWaitSec("auth-lockout", 1) >= 120);
 assert.ok(wranglerRetryWaitSec("auth", 1) >= 90);
 assert.equal(resolveRetryWaitSec("rate-limit", 1, "Retry-After: 120"), 120);
+
+assert.equal(relayWorkerProbeExists("rate-limited"), true);
+assert.equal(relayWorkerProbeExists(false), false);
+
+assert.equal(
+  shouldStopPagesDeployRetries({
+    sawRateLimit: true,
+    failureKind: "auth-lockout",
+    attempt: 2,
+    maxAttempts: 4,
+  }).reason,
+  "auth-lockout-after-rate-limit"
+);
+
+assert.equal(
+  resolvePagesPreDeployCooldownSec({ inCi: true, skipMailSetup: true, env: {} }),
+  45
+);
 
 console.log("deploy-retry.test.mjs: OK");

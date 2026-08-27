@@ -11,6 +11,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:scripts": "node --test scripts/lib/deploy-retry.test.mjs scripts/lib/mail-credentials.test.mjs scripts/deploy-pages-ci.test.mjs",
     "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=cursor-monitor-admin",
     "site:data": "node ../../scripts/generate-site-data.mjs",
     "verify:marketplace": "node ../../scripts/verify-marketplace-sync.mjs --strict",
