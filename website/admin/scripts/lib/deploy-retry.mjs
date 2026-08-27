@@ -44,3 +44,39 @@ export function resolveRetryWaitSec(kind, attempt, output) {
   if (retryAfter == null || Number.isNaN(retryAfter)) return base;
   return Math.min(Math.max(base, retryAfter), 300);
 }
+
+/** @param {boolean | "rate-limited"} probeResult */
+export function relayWorkerProbeExists(probeResult) {
+  return probeResult === true || probeResult === "rate-limited";
+}
+
+/**
+ * Pre-deploy cooldown before wrangler pages deploy (seconds).
+ * @param {{ inCi?: boolean; skipMailSetup?: boolean; mailLightweight?: boolean; env?: Record<string, string|undefined> }} options
+ */
+export function resolvePagesPreDeployCooldownSec(options = {}) {
+  const { inCi = false, skipMailSetup = false, mailLightweight = false, env = {} } = options;
+  if (!inCi) return 0;
+  const lightweight = mailLightweight || skipMailSetup;
+  if (lightweight) return Number(env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 45);
+  return Number(env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 90);
+}
+
+/**
+ * Stop retry loop when further wrangler calls would worsen Cloudflare auth lockouts.
+ * @param {{ sawRateLimit: boolean; failureKind: ReturnType<typeof classifyWranglerFailure>; attempt: number; maxAttempts: number }} state
+ */
+export function shouldStopPagesDeployRetries(state) {
+  const { sawRateLimit, failureKind, attempt, maxAttempts } = state;
+  if (attempt >= maxAttempts) {
+    return { stop: true, reason: "max-attempts" };
+  }
+  if (
+    sawRateLimit &&
+    (failureKind === "auth-lockout" || failureKind === "auth") &&
+    attempt >= 2
+  ) {
+    return { stop: true, reason: "auth-lockout-after-rate-limit" };
+  }
+  return { stop: false, reason: null };
+}

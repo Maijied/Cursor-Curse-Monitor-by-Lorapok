@@ -7,7 +7,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pickDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
-import { classifyWranglerFailure, resolveRetryWaitSec } from "./lib/deploy-retry.mjs";
+import {
+  classifyWranglerFailure,
+  resolvePagesPreDeployCooldownSec,
+  resolveRetryWaitSec,
+  shouldStopPagesDeployRetries,
+} from "./lib/deploy-retry.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const inCi = process.env.GITHUB_ACTIONS === "true";
@@ -126,9 +131,12 @@ if (!relayDeployed && !relayExists) {
 
 if (inCi) {
   const mailLightweight = process.env.MAIL_API_LIGHTWEIGHT === "true" || skipMailSetup;
-  const preCooldownSec = mailLightweight
-    ? Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 45)
-    : Number(process.env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 90);
+  const preCooldownSec = resolvePagesPreDeployCooldownSec({
+    inCi: true,
+    skipMailSetup,
+    mailLightweight,
+    env: process.env,
+  });
   if (preCooldownSec > 0) {
     console.log(
       `::notice::CI: waiting ${preCooldownSec}s before Pages deploy so Cloudflare rate limits can clear…`
@@ -166,16 +174,19 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     break;
   }
 
-  // Rapid retries after 429 often surface as 9109/10000 auth lockouts on the same token.
-  if (
-    sawDeployRateLimit &&
-    (lastFailureKind === "auth-lockout" || lastFailureKind === "auth") &&
-    attempt >= 2
-  ) {
-    console.error(
-      "::error::Cloudflare token appears locked after rate limiting — stopping retries in this job. " +
-        "Wait 5+ minutes, then rerun deploy-infra."
-    );
+  const stop = shouldStopPagesDeployRetries({
+    sawRateLimit: sawDeployRateLimit,
+    failureKind: lastFailureKind,
+    attempt,
+    maxAttempts,
+  });
+  if (stop.stop) {
+    if (stop.reason === "auth-lockout-after-rate-limit") {
+      console.error(
+        "::error::Cloudflare token appears locked after rate limiting — stopping retries in this job. " +
+          "Wait 5+ minutes, then rerun deploy-infra."
+      );
+    }
     break;
   }
 

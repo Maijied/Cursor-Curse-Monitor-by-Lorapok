@@ -18,6 +18,7 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { relayWorkerProbeExists } from "./lib/deploy-retry.mjs";
 import {
   probeDeployToken,
   probeEmailSendingToken,
@@ -105,7 +106,7 @@ if (inCi) {
     );
     relayExists = true;
   } else {
-    relayExists = exists;
+    relayExists = exists === true;
   }
   if (relayExists) {
     console.log("::notice::CI: ccm-mail-relay already exists — skipping worker redeploy.");
@@ -144,8 +145,7 @@ if (!relayExists) {
     );
   }
   const existsAfterDeploy = await relayWorkerExists(deployToken, accountId);
-  relayExists =
-    existsAfterDeploy === true || existsAfterDeploy === "rate-limited" || relayDeployed;
+  relayExists = relayWorkerProbeExists(existsAfterDeploy) || relayDeployed;
 }
 
 if (hasEmailToken && restSynced) {
