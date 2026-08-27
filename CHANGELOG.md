@@ -18,7 +18,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- Missing `SUBSCRIBE_PROMPT_DELAY_MS` import in `extension.ts` (compile error)
+- **Admin deploy on Cloudflare 429** — retry deploy token probes with backoff before Pages deploy; proceed to wrangler after probe retries when rate limits persist
 - Orphaned CSS in `dashboardView.ts` that broke `.connected` badge styles
 - `syncStatus` override — release candidates no longer claim `synced` (uses `release-candidate` instead of misleading `dual-listing`)
 

@@ -20,7 +20,30 @@ if (!accountId) {
   process.exit(1);
 }
 
-const { token: deployToken, probe } = await pickDeployToken();
+function sleep(ms) {
+  return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
+}
+
+async function pickDeployTokenWithRetry(maxAttempts = 4) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const result = await pickDeployToken();
+    if (result.probe.ok) {
+      return result;
+    }
+    if (result.probe.via?.includes("rate-limit") && attempt < maxAttempts) {
+      const waitSec = attempt * 15;
+      console.warn(
+        `::warning::Deploy token probe rate-limited (HTTP ${result.probe.status}); retrying in ${waitSec}s (${attempt}/${maxAttempts})…`
+      );
+      await sleep(waitSec * 1000);
+      continue;
+    }
+    return result;
+  }
+  return pickDeployToken();
+}
+
+const { token: deployToken, probe } = await pickDeployTokenWithRetry();
 if (!deployToken) {
   console.error("::error::CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) is required.");
   process.exit(1);
@@ -29,11 +52,9 @@ if (!deployToken) {
 if (probe.ok) {
   console.log(`::notice::Using deploy token (${probe.via ?? "probe"} HTTP ${probe.status}).`);
 } else if (probe.via?.includes("rate-limit")) {
-  console.error(
-    `::error::Cloudflare API rate-limited deploy token probe (HTTP ${probe.status}). ` +
-      "Wait a few minutes and rerun, or refresh CLOUDFLARE_API_TOKEN in admin-production."
+  console.warn(
+    `::warning::Deploy token probe still rate-limited after retries (HTTP ${probe.status}); attempting wrangler Pages deploy anyway.`
   );
-  process.exit(1);
 } else {
   console.error(
     `::error::No valid deploy token (HTTP ${probe.status}). ` +
@@ -53,10 +74,6 @@ if (!relayDeployed && !relayExists) {
   console.warn("::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable.");
 } else {
   console.log("::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is available.");
-}
-
-function sleep(ms) {
-  return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
 }
 
 const args = [
