@@ -316,8 +316,10 @@
 @media (prefers-reduced-motion: reduce) {
   .feature-svg-visual img { animation: none; }
   .hero-stats-dashboard { transition: none; }
+  .stat-count { transition: none; }
   .stat-tile .meter-fill.stat-meter,
-  .hero-ovsx-split-bar .meter-fill { transition: none; }
+  .hero-ovsx-split-bar .meter-fill,
+  .hero-total-meter .meter-fill { transition: none; }
 }
 
 @media (max-width: 720px) {
