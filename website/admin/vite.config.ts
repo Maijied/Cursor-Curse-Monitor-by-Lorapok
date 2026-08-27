@@ -17,6 +17,12 @@ function copyStaticArtifacts(outDir: string) {
 }
 
 export default defineConfig({
+  // The shared package is a linked CommonJS build, and Vite skips prebundling
+  // linked deps by default, so `npm run dev` would serve it raw and the
+  // browser's ESM parser would reject its named exports.
+  optimizeDeps: {
+    include: ['@lorapok/cursor-monitor-shared'],
+  },
   plugins: [
     react(),
     tailwindcss(),
