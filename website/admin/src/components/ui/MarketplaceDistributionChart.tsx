@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import Card from "./Card";
 import Badge from "./Badge";
 import type { SiteData } from "../../lib/site-data";
-import { formatCount, syncStatusLabel } from "../../lib/site-data";
+import { syncStatusLabel } from "../../lib/site-data";
 import {
   buildDownloadChannelSlices,
   formatDownloadCount,

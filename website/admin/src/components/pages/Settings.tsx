@@ -6,7 +6,6 @@ import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
-import { formatCount } from "../../lib/site-data";
 import { formatDownloadCount } from "../../lib/download-stats";
 
 /**
