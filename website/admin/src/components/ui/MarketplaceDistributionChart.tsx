@@ -3,24 +3,26 @@ import Card from "./Card";
 import Badge from "./Badge";
 import type { SiteData } from "../../lib/site-data";
 import { formatCount, syncStatusLabel } from "../../lib/site-data";
+import {
+  buildDownloadChannelSlices,
+  formatDownloadCount,
+  getVerifiedDownloadTotal,
+} from "../../lib/download-stats";
 
 interface MarketplaceDistributionChartProps {
   data: SiteData;
 }
 
-interface ChannelSlice {
-  id: string;
-  label: string;
-  count: number;
-  color: string;
-  version: string | null;
-  synced: boolean;
-  inTotal: boolean;
-}
-
 const DONUT_SIZE = 180;
 const DONUT_RADIUS = 64;
 const DONUT_STROKE = 20;
+
+const CHANNEL_COLORS: Record<string, string> = {
+  "ovsx-canonical": "var(--color-neon)",
+  "ovsx-duplicate": "#94a3b8",
+  vscode: "var(--color-accent-2)",
+  github: "var(--color-accent)",
+};
 
 /** Build cumulative stroke-dash segments for a multi-slice donut (SVG circles, -90° rotation). */
 export function buildDonutStrokeSlices(
@@ -49,69 +51,42 @@ export function buildDonutStrokeSlices(
 export default function MarketplaceDistributionChart({ data }: MarketplaceDistributionChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
 
-  const breakdown = data.downloads?.breakdown;
+  const channelSlices = useMemo(() => buildDownloadChannelSlices(data), [data]);
+  const totalDownloads = getVerifiedDownloadTotal(data);
+  const openVsxCombined = data.downloads?.openVsxCombined ?? null;
+  const verified = data.downloads?.verified === true;
 
-  const channels: ChannelSlice[] = useMemo(
-    () => [
-      {
-        id: "ovsx",
-        label: "Open VSX (canonical)",
-        count: breakdown?.openVsxCanonical ?? data.ovsx.downloadCount ?? 0,
-        color: "var(--color-neon)",
-        version: data.ovsx.version,
-        synced: data.ovsx.version === data.packageVersion,
-        inTotal: true,
-      },
-      {
-        id: "vscode",
-        label: "VS Code Marketplace",
-        count: breakdown?.vscodeMarketplace ?? data.vscode.downloadCount ?? data.vscode.installCount ?? 0,
-        color: "var(--color-accent-2)",
-        version: data.vscode.version,
-        synced: data.vscode.version === data.packageVersion,
-        inTotal: true,
-      },
-      {
-        id: "github",
-        label: "GitHub releases",
-        count: breakdown?.githubAllAssets ?? data.github.totalReleaseDownloads ?? 0,
-        color: "var(--color-accent)",
-        version: data.github.releaseTag.replace(/^v/, ""),
-        synced: data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
-        inTotal: true,
-      },
-      {
-        id: "firefox",
-        label: "Firefox AMO",
-        count: data.browserExtension?.firefox?.downloadCount ?? 0,
-        color: "var(--color-warn)",
-        version: data.browserExtension?.version ?? null,
-        synced: Boolean(data.browserExtension?.firefox?.published),
-        inTotal: true,
-      },
-    ],
-    [breakdown, data],
+  const channels = useMemo(
+    () =>
+      channelSlices.map((slice) => ({
+        ...slice,
+        color: CHANNEL_COLORS[slice.id] ?? "var(--color-muted)",
+        version:
+          slice.id === "ovsx-canonical"
+            ? data.ovsx.version
+            : slice.id === "ovsx-duplicate"
+              ? data.ovsxDuplicate?.version ?? null
+              : slice.id === "vscode"
+                ? data.vscode.version
+                : data.github.releaseTag.replace(/^v/, ""),
+        synced:
+          slice.id === "ovsx-canonical"
+            ? data.ovsx.version === data.packageVersion
+            : slice.id === "ovsx-duplicate"
+              ? false
+              : slice.id === "vscode"
+                ? data.vscode.version === data.packageVersion
+                : data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
+      })),
+    [channelSlices, data],
   );
-
-  const legacyNamespace = useMemo(
-    () => ({
-      id: "ovsx-legacy",
-      label: "Open VSX (LorapokLabs)",
-      count: breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0,
-      version: data.ovsxDuplicate?.version ?? null,
-    }),
-    [breakdown, data],
-  );
-
-  const totalDownloads = data.downloads?.total ?? channels.reduce((sum, channel) => sum + channel.count, 0);
-  const openVsxCombined =
-    data.downloads?.openVsxCombined ?? (channels[0]?.count ?? 0) + legacyNamespace.count;
 
   const circumference = 2 * Math.PI * DONUT_RADIUS;
   const cx = DONUT_SIZE / 2;
   const cy = DONUT_SIZE / 2;
 
   const donutSlices = useMemo(() => {
+    if (totalDownloads == null) return [];
     const geometry = buildDonutStrokeSlices(channels, totalDownloads, circumference);
     return geometry.map((slice) => {
       const channel = channels.find((c) => c.id === slice.id);
@@ -119,11 +94,7 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
     });
   }, [channels, totalDownloads, circumference]);
 
-  const activeChannel = hoveredSlice
-    ? channels.find((channel) => channel.id === hoveredSlice) ??
-      (hoveredSlice === legacyNamespace.id ? { ...legacyNamespace, color: "#94a3b8", synced: false, inTotal: false } : null)
-    : null;
-
+  const activeChannel = hoveredSlice ? channels.find((channel) => channel.id === hoveredSlice) ?? null : null;
   const syncOk = data.syncStatus === "synced";
 
   return (
@@ -132,7 +103,9 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
         <div>
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Marketplace Distribution</h3>
           <p className="text-xs text-[var(--color-muted)] mt-0.5">
-            Canonical download share · {formatCount(openVsxCombined)} Open VSX total across both namespaces
+            {verified
+              ? `Verified grand total · ${formatDownloadCount(openVsxCombined)} Open VSX across both namespaces`
+              : "Live marketplace stats unavailable — no placeholder counts shown"}
           </p>
         </div>
         <Badge variant={syncOk ? "synced" : "warn"}>{syncOk ? "All channels live" : syncStatusLabel(data.syncStatus)}</Badge>
@@ -192,22 +165,27 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
             <span className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] font-medium">
-              {activeChannel ? activeChannel.label : "Canonical total"}
+              {activeChannel ? activeChannel.label : "Grand total"}
             </span>
             <span className="text-xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-text)]">
-              {activeChannel ? formatCount(activeChannel.count) : formatCount(totalDownloads)}
+              {activeChannel
+                ? formatDownloadCount(activeChannel.count)
+                : formatDownloadCount(totalDownloads)}
             </span>
             <span className="text-[10px] text-[var(--color-muted)]">
-              {activeChannel && totalDownloads > 0
+              {activeChannel && totalDownloads != null && totalDownloads > 0
                 ? `${Math.round((activeChannel.count / totalDownloads) * 100)}% of total`
-                : "downloads"}
+                : verified
+                  ? "downloads"
+                  : "unavailable"}
             </span>
           </div>
         </div>
 
         <div className="space-y-2.5">
           {channels.map((channel) => {
-            const pct = totalDownloads > 0 ? channel.count / totalDownloads : 0;
+            const pct =
+              totalDownloads != null && totalDownloads > 0 ? channel.count / totalDownloads : 0;
             const isHovered = hoveredSlice === channel.id;
             return (
               <div
@@ -226,7 +204,7 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
                     <span className="font-medium text-[var(--color-text)] truncate">{channel.label}</span>
                   </div>
                   <span className="font-[family-name:var(--font-mono)] text-[var(--color-text)] font-semibold shrink-0">
-                    {formatCount(channel.count)}
+                    {formatDownloadCount(channel.count)}
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
@@ -241,34 +219,14 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
               </div>
             );
           })}
-
-          <div
-            onMouseEnter={() => setHoveredSlice(legacyNamespace.id)}
-            onMouseLeave={() => setHoveredSlice(null)}
-            className={`p-2 rounded-xl border border-dashed transition-all ${
-              hoveredSlice === legacyNamespace.id
-                ? "border-[var(--color-border)] bg-white/[0.04]"
-                : "border-transparent bg-white/[0.02]"
-            }`}
-          >
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-[#94a3b8]" />
-                <span className="font-medium text-[var(--color-muted)] truncate">{legacyNamespace.label}</span>
-              </div>
-              <span className="font-[family-name:var(--font-mono)] text-[var(--color-muted)] font-semibold shrink-0">
-                {formatCount(legacyNamespace.count)}
-              </span>
-            </div>
-            <p className="text-[10px] text-[var(--color-muted)] mt-1">Legacy namespace · excluded from canonical total</p>
-          </div>
         </div>
       </div>
 
       <div className="text-[11px] text-[var(--color-muted)] pt-3 border-t border-[var(--color-border)] flex flex-wrap items-center justify-between gap-2">
         <span>Package v{data.packageVersion}</span>
         <span>
-          Open VSX {formatCount(channels[0]?.count ?? 0)} canonical · {formatCount(openVsxCombined)} combined
+          Open VSX {formatDownloadCount(channels.find((c) => c.id === "ovsx-canonical")?.count ?? null)} canonical ·{" "}
+          {formatDownloadCount(openVsxCombined)} combined
         </span>
       </div>
     </Card>

@@ -17,6 +17,7 @@ import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
+import { COMMUNITY_DOWNLOADS_NOTE, formatDownloadCount, resolveVsCodeDownloadCount } from "../../lib/download-stats";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
   if (status === "synced") return "synced";
@@ -72,12 +73,14 @@ export default function Overview() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <KpiCard
           label="Total Downloads"
-          value={formatCount(downloads?.total ?? 0)}
+          value={formatDownloadCount(downloads?.verified ? (downloads?.total ?? null) : null)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              Canonical Open VSX + VS Code + GitHub
-              {downloads?.openVsxCombined != null
-                ? ` · Open VSX total ${formatCount(downloads.openVsxCombined)}`
+              {downloads?.verified
+                ? `Open VSX (both namespaces) + VS Code + GitHub`
+                : "Live marketplace stats unavailable"}
+              {downloads?.verified && downloads?.openVsxCombined != null
+                ? ` · Open VSX total ${formatDownloadCount(downloads.openVsxCombined)}`
                 : ""}
             </span>
           }
@@ -161,9 +164,10 @@ export default function Overview() {
           <div className="lg:col-span-2">
             <DownloadBreakdownPanel
               total={downloads.total}
+              verified={downloads.verified}
               breakdown={downloads.breakdown}
               openVsxCombined={downloads.openVsxCombined}
-              note={downloads.note}
+              note={downloads.note ?? COMMUNITY_DOWNLOADS_NOTE}
             />
           </div>
         )}
@@ -206,7 +210,7 @@ export default function Overview() {
                 {
                   name: "VS Code Marketplace",
                   version: data.vscode.version ?? "—",
-                  downloads: data.vscode.downloadCount ?? data.vscode.installCount,
+                  downloads: resolveVsCodeDownloadCount(data),
                   ok: data.vscode.version === data.packageVersion,
                 },
                 ...(data.browserExtension

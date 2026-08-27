@@ -1,10 +1,11 @@
 export interface DownloadBreakdown {
-  openVsxCanonical: number;
-  openVsxDuplicate: number;
-  vscodeMarketplace: number;
-  githubAllAssets: number;
-  githubVsix: number;
-  latestReleaseVsix: number;
+  openVsxCanonical: number | null;
+  openVsxDuplicate: number | null;
+  openVsxDisplay?: number | null;
+  vscodeMarketplace: number | null;
+  githubAllAssets: number | null;
+  githubVsix: number | null;
+  latestReleaseVsix: number | null;
 }
 
 export interface VisitorStats {
@@ -92,9 +93,17 @@ export interface SiteData {
   };
   stableFallback?: StableFallbackInfo;
   downloads?: {
-    total: number;
-    canonicalTotal?: number;
-    openVsxCombined?: number;
+    total: number | null;
+    displayTotal?: number | null;
+    verified?: boolean;
+    liveSources?: {
+      openVsxCanonical?: boolean;
+      openVsxDuplicate?: boolean;
+      vscodeMarketplace?: boolean;
+      githubReleases?: boolean;
+    };
+    canonicalTotal?: number | null;
+    openVsxCombined?: number | null;
     breakdown: DownloadBreakdown;
     note?: string;
   };

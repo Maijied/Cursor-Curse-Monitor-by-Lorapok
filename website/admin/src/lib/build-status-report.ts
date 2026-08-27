@@ -79,8 +79,13 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
 
   const downloadRows: StatusReportRow[] = [
     {
-      label: "Total downloads (deduplicated)",
-      value: formatCount(downloads?.total ?? 0),
+      label: "Total downloads (verified live)",
+      value: formatCount(downloads?.verified ? (downloads?.total ?? 0) : 0),
+      status: downloads?.verified ? "ok" : "warn",
+    },
+    {
+      label: "Open VSX combined",
+      value: formatCount(downloads?.openVsxCombined ?? 0),
       status: "neutral",
     },
     {
@@ -89,13 +94,18 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
       status: "neutral",
     },
     {
+      label: "Open VSX (LorapokLabs)",
+      value: formatCount(breakdown?.openVsxDuplicate ?? 0),
+      status: "neutral",
+    },
+    {
       label: "VS Code Marketplace",
       value: formatCount(breakdown?.vscodeMarketplace ?? 0),
       status: "neutral",
     },
     {
-      label: "GitHub VSIX assets",
-      value: formatCount(breakdown?.githubVsix ?? 0),
+      label: "GitHub release assets",
+      value: formatCount(breakdown?.githubAllAssets ?? 0),
       status: "neutral",
     },
     {

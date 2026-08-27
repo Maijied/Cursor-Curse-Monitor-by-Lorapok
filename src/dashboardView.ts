@@ -10,6 +10,7 @@ import {
   SUPPORTED_IDE_WRAPPERS_HEADLINE,
   SUPPORTED_IDE_WRAPPERS_SUBLINE,
 } from "@lorapok/cursor-monitor-shared";
+import { fetchCommunityDownloadStats } from "./communityDownloads";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -68,6 +69,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       void webviewView.webview.postMessage({ type: "snapshot", payload: snapshot });
     };
 
+    const pushCommunityStats = async () => {
+      const stats = await fetchCommunityDownloadStats();
+      if (stats) {
+        webviewView.webview.postMessage({ type: "communityDownloads", payload: stats });
+      }
+    };
+
     const deliverSnapshot = async (force = false) => {
       if (latestSnapshot) {
         push(latestSnapshot);
@@ -84,6 +92,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           push(fallback);
         }
       }
+      void pushCommunityStats();
     };
 
     const subscription = this.monitor.onDidUpdate(push);
@@ -891,6 +900,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <li>Local workspace credential scanner — nothing leaves your machine</li>
     </ul>
     <p><strong>Supported IDEs:</strong> ${supportedIdeNames}. More tools at <a href="https://lorapok.tech" target="_blank" rel="noopener">lorapok.tech</a>.</p>
+    <div class="community-stats" id="communityStats">
+      <p class="section-label" style="margin-top:12px">Community</p>
+      <p class="muted" id="communityStatsHeadline" style="margin:0;font-size:12px">Loading marketplace stats…</p>
+      <p class="muted" id="communityStatsBreakdown" style="margin:4px 0 0;font-size:11px"></p>
+    </div>
   </section>
 
   <div class="footer-msg">
@@ -1200,8 +1214,30 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
+    function renderCommunityStats(stats) {
+      var headline = document.getElementById('communityStatsHeadline');
+      var breakdown = document.getElementById('communityStatsBreakdown');
+      if (!headline || !breakdown) return;
+      if (!stats || !stats.verified || stats.total == null) {
+        headline.textContent = 'Community downloads unavailable';
+        breakdown.textContent = 'Live marketplace stats did not respond — no placeholder counts shown.';
+        return;
+      }
+      headline.textContent = Number(stats.total).toLocaleString() + ' total downloads across marketplaces';
+      var parts = [];
+      if (stats.openVsxCombined != null) parts.push('Open VSX ' + Number(stats.openVsxCombined).toLocaleString());
+      if (stats.breakdown && stats.breakdown.vscodeMarketplace != null) {
+        parts.push('VS Code ' + Number(stats.breakdown.vscodeMarketplace).toLocaleString());
+      }
+      if (stats.breakdown && stats.breakdown.githubAllAssets != null) {
+        parts.push('GitHub ' + Number(stats.breakdown.githubAllAssets).toLocaleString());
+      }
+      breakdown.textContent = parts.join(' · ');
+    }
+
     window.addEventListener('message', function(event) {
       if (event.data?.type === 'snapshot') render(event.data.payload);
+      if (event.data?.type === 'communityDownloads') renderCommunityStats(event.data.payload);
       if (event.data?.type === 'subscribeResult') {
         var status = document.getElementById('subscribeStatus');
         var btn = document.getElementById('subscribeBtn');

@@ -7,6 +7,7 @@ import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatCount } from "../../lib/site-data";
+import { formatDownloadCount } from "../../lib/download-stats";
 
 /**
  * Renders the application settings page with theme controls, integrations, environment details, and API health information.
@@ -75,7 +76,9 @@ export default function Settings() {
             <>
               <div className="flex justify-between gap-4">
                 <dt className="text-[var(--color-muted)]">Total downloads</dt>
-                <dd className="font-semibold text-[var(--color-neon)]">{formatCount(siteData.downloads?.total)}</dd>
+                <dd className="font-semibold text-[var(--color-neon)]">
+                  {formatDownloadCount(siteData.downloads?.verified ? (siteData.downloads?.total ?? null) : null)}
+                </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-[var(--color-muted)]">Site data synced</dt>

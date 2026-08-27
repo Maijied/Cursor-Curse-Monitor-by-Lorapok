@@ -242,32 +242,21 @@ function updateStructuredDataVersion(data) {
     const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toLocaleString());
     const fmtDownloads = (n) => (downloadsVerified ? fmt(n) : "—");
 
-    // KPI strip (downloads + engagement)
-    setText("[data-downloads-total]", fmtDownloads(data.downloads?.displayTotal ?? data.downloads?.total));
     setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
     setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
 
-    const canonicalDl = data.downloads?.breakdown?.openVsxCanonical ?? data.ovsx?.downloadCount ?? 0;
-    const duplicateDl = data.downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0;
-    const combinedDl = data.downloads?.openVsxCombined ?? canonicalDl + duplicateDl;
+    const canonicalDl = data.downloads?.breakdown?.openVsxCanonical ?? data.ovsx?.downloadCount ?? null;
+    const duplicateDl = data.downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? null;
+    const combinedDl = data.downloads?.openVsxCombined ?? (canonicalDl != null && duplicateDl != null ? canonicalDl + duplicateDl : canonicalDl);
+    const vscodeDl = data.downloads?.breakdown?.vscodeMarketplace ?? data.vscode?.downloadCount ?? null;
     setText("[data-ovsx-canonical]", fmtDownloads(canonicalDl));
     setText("[data-ovsx-duplicate]", fmtDownloads(duplicateDl));
     setText("[data-ovsx-combined]", fmtDownloads(combinedDl));
     setText("[data-ovsx-canonical-legend]", fmtDownloads(canonicalDl));
     setText("[data-ovsx-duplicate-legend]", fmtDownloads(duplicateDl));
     setText("[data-ovsx-combined-legend]", fmtDownloads(combinedDl));
+    setText("[data-vscode-downloads]", fmtDownloads(vscodeDl));
     setHref("[data-href-ovsx-duplicate]", data.ovsxDuplicate?.url ?? "#");
-
-    const breakdownEl = $("#download-breakdown");
-    if (breakdownEl && downloadsVerified && combinedDl > 0) {
-      breakdownEl.hidden = false;
-      const canonicalPct = Math.round((canonicalDl / combinedDl) * 100);
-      const duplicatePct = 100 - canonicalPct;
-      const barCanonical = document.querySelector("[data-ovsx-bar-canonical]");
-      const barDuplicate = document.querySelector("[data-ovsx-bar-duplicate]");
-      if (barCanonical instanceof HTMLElement) barCanonical.style.width = `${canonicalPct}%`;
-      if (barDuplicate instanceof HTMLElement) barDuplicate.style.width = `${duplicatePct}%`;
-    }
 
     if (typeof window.renderHeroStats === "function") {
       window.renderHeroStats(data, { verified: downloadsVerified });
