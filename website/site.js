@@ -230,6 +230,8 @@ function updateStructuredDataVersion(data) {
     data = null;
   }
 
+  const downloadsVerified = data?.downloads?.verified === true;
+
   if (data) {
     const setText = (sel, text) => {
       $$(sel).forEach((el) => { el.textContent = text; });
@@ -238,25 +240,26 @@ function updateStructuredDataVersion(data) {
       $$(sel).forEach((el) => { el.href = href; });
     };
     const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toLocaleString());
+    const fmtDownloads = (n) => (downloadsVerified ? fmt(n) : "—");
 
     // KPI strip (downloads + engagement)
-    setText("[data-downloads-total]", fmt(data.downloads?.displayTotal ?? data.downloads?.total));
+    setText("[data-downloads-total]", fmtDownloads(data.downloads?.displayTotal ?? data.downloads?.total));
     setText("[data-visits-total]", fmt(data.visitors?.websiteVisits));
     setText("[data-engagement-total]", fmt(data.visitors?.totalEngagement));
 
     const canonicalDl = data.downloads?.breakdown?.openVsxCanonical ?? data.ovsx?.downloadCount ?? 0;
     const duplicateDl = data.downloads?.breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0;
     const combinedDl = data.downloads?.openVsxCombined ?? canonicalDl + duplicateDl;
-    setText("[data-ovsx-canonical]", fmt(canonicalDl));
-    setText("[data-ovsx-duplicate]", fmt(duplicateDl));
-    setText("[data-ovsx-combined]", fmt(combinedDl));
-    setText("[data-ovsx-canonical-legend]", fmt(canonicalDl));
-    setText("[data-ovsx-duplicate-legend]", fmt(duplicateDl));
-    setText("[data-ovsx-combined-legend]", fmt(combinedDl));
+    setText("[data-ovsx-canonical]", fmtDownloads(canonicalDl));
+    setText("[data-ovsx-duplicate]", fmtDownloads(duplicateDl));
+    setText("[data-ovsx-combined]", fmtDownloads(combinedDl));
+    setText("[data-ovsx-canonical-legend]", fmtDownloads(canonicalDl));
+    setText("[data-ovsx-duplicate-legend]", fmtDownloads(duplicateDl));
+    setText("[data-ovsx-combined-legend]", fmtDownloads(combinedDl));
     setHref("[data-href-ovsx-duplicate]", data.ovsxDuplicate?.url ?? "#");
 
     const breakdownEl = $("#download-breakdown");
-    if (breakdownEl && combinedDl > 0) {
+    if (breakdownEl && downloadsVerified && combinedDl > 0) {
       breakdownEl.hidden = false;
       const canonicalPct = Math.round((canonicalDl / combinedDl) * 100);
       const duplicatePct = 100 - canonicalPct;
@@ -267,7 +270,7 @@ function updateStructuredDataVersion(data) {
     }
 
     if (typeof window.renderHeroStats === "function") {
-      window.renderHeroStats(data);
+      window.renderHeroStats(data, { verified: downloadsVerified });
     }
     renderSupportedIdes(data);
 

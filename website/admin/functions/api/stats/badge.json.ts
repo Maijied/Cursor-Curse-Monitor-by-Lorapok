@@ -1,6 +1,10 @@
 import { jsonResponse } from "../_shared/auth.js";
 import { fetchSiteData } from "../_shared/site-data.js";
-import { buildReadmeStatsFromSiteData, renderShieldsBadge } from "../_shared/readme-stats.js";
+import {
+  buildReadmeStatsFromSiteData,
+  renderShieldsBadge,
+  renderShieldsBadgeUnavailable,
+} from "../_shared/readme-stats.js";
 
 const CORS_HEADERS = {
   "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
@@ -18,6 +22,15 @@ export async function onRequestGet(context) {
   try {
     const data = await fetchSiteData(env);
     const stats = buildReadmeStatsFromSiteData(data);
+    if (!stats.verified) {
+      const labels = {
+        total: "downloads",
+        openvsx: "Open VSX",
+        "openvsx-total": "Open VSX total",
+        vscode: "VS Code",
+      };
+      return jsonResponse(renderShieldsBadgeUnavailable(labels[safeKind] ?? "downloads"), 503, CORS_HEADERS);
+    }
     return jsonResponse(renderShieldsBadge(stats, safeKind), 200, CORS_HEADERS);
   } catch {
     return jsonResponse(

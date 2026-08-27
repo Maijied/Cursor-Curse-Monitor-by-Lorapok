@@ -11,9 +11,21 @@ describe("computeDownloadTotals", () => {
       githubAllAssets: 3,
       packageVersion: "1.0.1",
     });
+    assert.equal(result.verified, true);
     assert.equal(result.displayTotal, 123);
     assert.equal(result.breakdown.openVsxDuplicate, 50);
     assert.equal(result.source, "canonical");
+  });
+
+  it("marks totals unverified when github releases are unavailable", () => {
+    const result = computeDownloadTotals({
+      openVsxCanonical: { version: "1.0.1", downloadCount: 100 },
+      githubAllAssets: null,
+      packageVersion: "1.0.1",
+    });
+    assert.equal(result.verified, false);
+    assert.equal(result.displayTotal, null);
+    assert.equal(result.breakdown.githubAllAssets, null);
   });
 
   it("uses duplicate fallback display when canonical lags package version", () => {

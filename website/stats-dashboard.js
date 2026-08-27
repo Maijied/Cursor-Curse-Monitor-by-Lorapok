@@ -36,10 +36,20 @@
 
   /**
    * @param {Record<string, unknown>} data site-data.json payload
+   * @param {{ verified?: boolean }} [options]
    */
-  function renderHeroStats(data) {
+  function renderHeroStats(data, options = {}) {
     const root = document.getElementById("hero-stats-dashboard");
     if (!root || !data) return;
+
+    const verified = options.verified === true;
+    if (!verified) {
+      root.querySelectorAll("[data-hero-downloads], [data-hero-ovsx-combined], [data-hero-ovsx-canonical], [data-hero-ovsx-duplicate]").forEach((el) => {
+        el.textContent = "—";
+      });
+      root.classList.add("is-loaded");
+      return;
+    }
 
     const downloads = Number(data.downloads?.displayTotal ?? data.downloads?.total ?? 0);
     const visits = Number(data.visitors?.websiteVisits ?? 0);

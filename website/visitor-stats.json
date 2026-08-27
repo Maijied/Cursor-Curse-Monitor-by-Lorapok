@@ -1,13 +1,13 @@
 {
-  "websiteVisits": 95,
+  "websiteVisits": 128,
   "packageClicks": {
-    "ovsx": 7,
-    "vscode": 1,
+    "ovsx": 9,
+    "vscode": 2,
     "github": 1,
     "vsix": 0,
     "openvsxDuplicate": 0
   },
-  "totalEngagement": 104,
-  "updatedAt": "2026-08-25T12:45:46.963Z",
+  "totalEngagement": 140,
+  "updatedAt": "2026-08-27T13:09:12.183Z",
   "source": "firestore"
 }
