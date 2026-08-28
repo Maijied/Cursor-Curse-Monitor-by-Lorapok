@@ -11,7 +11,8 @@
  * Use this script only for manual repair when CI is blocked or secrets need re-sync.
  *
  * Local (preferred — no cred CLI):
- *   echo 'passphrase' > .cred-vault-passphrase
+ *   npm ci && npm ci --prefix website/admin
+ *   cd website/admin && npx wrangler login && cd ../..
  *   node website/admin/scripts/repair-mail.mjs
  *
  * Or export tokens manually:
@@ -20,6 +21,7 @@
  *   export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"
  */
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveLocalMailEnv } from "./lib/resolve-local-mail-env.mjs";
@@ -52,6 +54,15 @@ console.log("Step 1/4 — enable-mail (relay worker + Pages email secret)…");
 run(process.execPath, [resolve(adminDir, "scripts/enable-mail.mjs")]);
 
 console.log("\nStep 2/4 — build shared package + admin panel…");
+
+const sharedLink = resolve(adminDir, "node_modules/@lorapok/cursor-monitor-shared");
+const sharedTypes = resolve(repoRoot, "packages/shared/dist/index.d.ts");
+if (!existsSync(sharedLink) || !existsSync(sharedTypes)) {
+  console.log("Installing dependencies (admin needs @lorapok/cursor-monitor-shared link)…");
+  run("npm", ["ci"], { cwd: repoRoot });
+  run("npm", ["ci"], { cwd: adminDir });
+}
+
 run("npm", ["run", "build", "-w", "@lorapok/cursor-monitor-shared"], { cwd: repoRoot });
 run("npm", ["run", "build"], { cwd: adminDir });
 
