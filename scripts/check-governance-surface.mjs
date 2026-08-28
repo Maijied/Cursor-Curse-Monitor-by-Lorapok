@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 
 const staged = execFileSync("git", ["diff", "--cached", "--name-only", "--diff-filter=ACMR"], { encoding: "utf8" })
   .split(/\r?\n/).filter(Boolean);
-const sensitive = /^(AGENTS\.md|\.cursor\/|\.agents\/|\.codex\/|\.husky\/|\.github\/workflows\/|package\.json$|scripts\/(release|generate|validate|check-governance))/;
+const sensitive = /^(AGENTS\.md|\.cursor\/|\.agents\/|\.codex\/|\.husky\/|\.github\/workflows\/|package\.json$|scripts\/(release|generate|validate|check-governance|project-mcp-policy|import-agent-stack))/;
 if (!staged.some((path) => sensitive.test(path))) process.exit(0);
 
 function fail(message) {
@@ -18,6 +18,10 @@ try {
 } catch (error) {
   fail(`invalid JSON configuration: ${error instanceof Error ? error.message : String(error)}`);
 }
+
+const { validateProjectMcp } = await import("./project-mcp-policy.mjs");
+const mcpViolations = validateProjectMcp(JSON.parse(readFileSync(".cursor/mcp.json", "utf8")));
+for (const item of mcpViolations) fail(`project MCP policy: ${item}`);
 
 for (const required of ["AGENTS.md", ".cursor/rules/browser-profile.mdc", ".cursor/rules/governance-scope.mdc"]) {
   if (!existsSync(required)) fail(`required governance file is missing: ${required}`);

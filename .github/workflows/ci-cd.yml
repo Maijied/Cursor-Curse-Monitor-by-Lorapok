@@ -158,6 +158,9 @@ jobs:
       - name: Validate workspace version placeholders
         run: npm run version:check
 
+      - name: Validate project MCP allowlist
+        run: npm run validate:mcp
+
       - name: Sync workspace versions for build
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/'))
         env:

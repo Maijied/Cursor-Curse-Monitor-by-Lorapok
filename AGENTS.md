@@ -41,7 +41,9 @@ Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `
 - `loragent-cloudflare-mail-master` — branded mail templates
 - `secure-cred-vault` — credential vault operations
 
-Re-sync: `~/.local/bin/sync-global-agent-stack` (from repo: `node scripts/sync-global-agent-stack.mjs`)
+Re-sync: `~/.local/bin/sync-global-agent-stack` (from repo: `node scripts/sync-global-agent-stack.mjs`).
+
+Optional local import from other projects: `npm run import:agents`. Extra copied skills stay gitignored under `.cursor/skills` and `.agents/skills` (tracked Lorapok skills remain in git). That command must **not** merge scanned MCP into `.cursor/mcp.json` — committed project MCP is Cloudflare-only (`npm run validate:mcp`).
 
 ### IDE extension (root) — build / test / package
 

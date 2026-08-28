@@ -23,3 +23,9 @@ tests/*.vscdb.backup-*
 tests/*-wal.backup-*
 tests/*-shm.backup-*
 tests/reindex-*/
+# Local imported skill/agent dump (keep on this machine; do not ship).
+# Already-tracked files under these dirs stay tracked.
+.agents/skills/**
+.cursor/skills/**
+.cursor/agents/**
+.codex/agents/**
