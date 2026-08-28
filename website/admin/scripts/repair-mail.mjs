@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { requireDeployToken } from "./lib/mail-credentials.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(adminDir, "../..");
 
 function run(cmd, args, { cwd = adminDir, allowFail = false } = {}) {
   const result = spawnSync(cmd, args, { cwd, stdio: "inherit", env: process.env });
@@ -39,8 +40,9 @@ try {
 console.log("Step 1/4 — enable-mail (relay worker + Pages email secret)…");
 run(process.execPath, [resolve(adminDir, "scripts/enable-mail.mjs")]);
 
-console.log("\nStep 2/4 — build admin panel…");
-run("npm", ["run", "build"]);
+console.log("\nStep 2/4 — build shared package + admin panel…");
+run("npm", ["run", "build", "-w", "@lorapok/cursor-monitor-shared"], { cwd: repoRoot });
+run("npm", ["run", "build"], { cwd: adminDir });
 
 console.log("\nStep 3/4 — deploy Pages (activates MAIL_RELAY binding in wrangler.toml)…");
 const deployed = run(
