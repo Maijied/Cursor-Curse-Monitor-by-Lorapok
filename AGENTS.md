@@ -88,6 +88,11 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
   agents can render/interact with the `/login` page but cannot reach the
   authenticated dashboard without a real Google account. `website/admin/.env`
   ships with public Firebase config for local dev.
+- **Fast deploy (local testing, ~1–3 min):** skips live marketplace fetches and
+  mail setup. One-time: `cd website/admin && npx wrangler login`. Then from repo
+  root: `npm run admin:deploy:fast` (production) or
+  `npm run deploy:fast:preview --prefix website/admin` (preview branch).
+  Full repair with mail: `node website/admin/scripts/repair-mail.mjs`.
 
 ### Notes
 

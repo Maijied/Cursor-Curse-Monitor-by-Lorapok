@@ -230,6 +230,8 @@
     "test:versioning": "node --test scripts/sync-workspace-versions.test.mjs",
     "security:scan": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",
     "validate:reinstall": "node scripts/validate-reinstall.mjs",
+    "admin:deploy:fast": "node website/admin/scripts/deploy-pages-fast.mjs",
+    "admin:build:fast": "node website/admin/scripts/build-fast.mjs",
     "prepare": "husky"
   },
   "dependencies": {
