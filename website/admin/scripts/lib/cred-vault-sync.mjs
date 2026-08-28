@@ -153,3 +153,19 @@ export function syncCursorCloudflareSecrets({ apiToken, emailToken, accountId })
   const ok = gpgEncrypt(passphrase, vault);
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
+
+/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string } | null} */
+export function loadCursorCloudflareSecretsFromVault() {
+  const candidates = readPassphraseCandidates();
+  for (const candidate of candidates) {
+    const vault = gpgDecrypt(candidate);
+    const cursor = vault?.cursor;
+    if (!cursor) continue;
+    return {
+      apiToken: String(cursor.cloudflare_api_token ?? "").trim() || undefined,
+      emailToken: String(cursor.cloudflare_email_api_token ?? "").trim() || undefined,
+      accountId: String(cursor.cloudflare_account_id ?? "").trim() || undefined,
+    };
+  }
+  return null;
+}
