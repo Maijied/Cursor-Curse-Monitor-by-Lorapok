@@ -151,7 +151,7 @@ const args = [
   "deploy",
   "dist",
   "--project-name=cursor-monitor-admin",
-  "--branch=main",
+  `--branch=${process.env.CF_PAGES_BRANCH ?? "main"}`,
   "--commit-dirty=true",
 ];
 
