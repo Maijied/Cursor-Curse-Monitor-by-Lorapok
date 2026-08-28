@@ -22,13 +22,13 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { envWithCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
+import { resolveLocalMailEnv } from "./lib/resolve-local-mail-env.mjs";
 import { requireDeployToken } from "./lib/mail-credentials.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(adminDir, "../..");
 
-const mailEnv = envWithCursorCloudflareSecrets(process.env);
+const mailEnv = resolveLocalMailEnv(process.env, adminDir);
 
 function run(cmd, args, { cwd = adminDir, allowFail = false, env = mailEnv } = {}) {
   const result = spawnSync(cmd, args, { cwd, stdio: "inherit", env });
@@ -43,7 +43,7 @@ try {
 } catch (err) {
   console.error(err instanceof Error ? err.message : err);
   console.error(
-    "\nTip: create .cred-vault-passphrase at repo root (gitignored) so repair-mail loads tokens from the gpg vault without `cred get`."
+    "\nTip: create .cred-vault-passphrase at repo root, or run: cd website/admin && npx wrangler login"
   );
   process.exit(1);
 }

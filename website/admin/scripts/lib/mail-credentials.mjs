@@ -8,6 +8,7 @@
  */
 
 import { appendFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 
 const DEFAULT_ACCOUNT_ID = "f049faaf2f67549f5c58837479596a4a";
 
@@ -23,7 +24,10 @@ export function requireDeployToken(env = process.env) {
   const { deployToken, accountId } = resolveMailCredentials(env);
   if (!deployToken) {
     throw new Error(
-      'Set CLOUDFLARE_API_TOKEN (Cloudflare Pages + Workers deploy). Load via: export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"'
+      "CLOUDFLARE_API_TOKEN missing. Local options:\n" +
+        "  • .cred-vault-passphrase at repo root (repair-mail loads gpg vault)\n" +
+        "  • cd website/admin && npx wrangler login  (repair-mail falls back to wrangler OAuth)\n" +
+        '  • export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"'
     );
   }
   return { deployToken, accountId };
@@ -107,6 +111,22 @@ export async function probeDeployToken(deployToken, accountId) {
   }
 
   return { ok: false, status: verifyRes.status || 401 };
+}
+
+/** @param {string} cwd Admin directory with wrangler in node_modules */
+export function tryWranglerOAuthToken(cwd) {
+  const r = spawnSync("npx", ["wrangler", "auth", "token", "--json"], {
+    encoding: "utf8",
+    cwd,
+  });
+  const text = `${r.stdout}\n${r.stderr}`;
+  const match = text.match(/\{[\s\S]*"token"[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]).token ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**

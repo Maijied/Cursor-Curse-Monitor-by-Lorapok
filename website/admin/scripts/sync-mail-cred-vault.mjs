@@ -4,21 +4,16 @@
  */
 import { spawnSync } from "node:child_process";
 import { syncCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
-import { probeDeployToken } from "./lib/mail-credentials.mjs";
+import { probeDeployToken, tryWranglerOAuthToken } from "./lib/mail-credentials.mjs";
 import { createMailToken, probe } from "./lib/mail-token-factory.mjs";
 
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
 const adminDir = new URL("..", import.meta.url).pathname;
 
 function wranglerOAuth() {
-  const r = spawnSync("npx", ["wrangler", "auth", "token", "--json"], {
-    encoding: "utf8",
-    cwd: adminDir,
-  });
-  const text = `${r.stdout}\n${r.stderr}`;
-  const match = text.match(/\{[\s\S]*"token"[\s\S]*\}/);
-  if (!match) throw new Error("wrangler auth token failed");
-  return JSON.parse(match[0]).token;
+  const token = tryWranglerOAuthToken(adminDir);
+  if (!token) throw new Error("wrangler auth token failed — run: cd website/admin && npx wrangler login");
+  return token;
 }
 
 function ghSecret(name, value) {
