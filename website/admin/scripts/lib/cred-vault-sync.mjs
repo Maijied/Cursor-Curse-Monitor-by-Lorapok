@@ -153,3 +153,37 @@ export function syncCursorCloudflareSecrets({ apiToken, emailToken, accountId })
   const ok = gpgEncrypt(passphrase, vault);
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
+
+/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string } | null} */
+export function loadCursorCloudflareSecretsFromVault() {
+  const candidates = readPassphraseCandidates();
+  for (const candidate of candidates) {
+    const vault = gpgDecrypt(candidate);
+    const cursor = vault?.cursor;
+    if (!cursor) continue;
+    return {
+      apiToken: String(cursor.cloudflare_api_token ?? "").trim() || undefined,
+      emailToken: String(cursor.cloudflare_email_api_token ?? "").trim() || undefined,
+      accountId: String(cursor.cloudflare_account_id ?? "").trim() || undefined,
+    };
+  }
+  return null;
+}
+
+/** Merge Cloudflare tokens from gpg vault when not already in env (no cred CLI needed). */
+export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
+  const loaded = loadCursorCloudflareSecretsFromVault();
+  if (!loaded) return baseEnv;
+  return {
+    ...baseEnv,
+    ...(loaded.accountId && !baseEnv.CLOUDFLARE_ACCOUNT_ID
+      ? { CLOUDFLARE_ACCOUNT_ID: loaded.accountId }
+      : {}),
+    ...(loaded.apiToken && !baseEnv.CLOUDFLARE_API_TOKEN
+      ? { CLOUDFLARE_API_TOKEN: loaded.apiToken }
+      : {}),
+    ...(loaded.emailToken && !baseEnv.CLOUDFLARE_EMAIL_API_TOKEN
+      ? { CLOUDFLARE_EMAIL_API_TOKEN: loaded.emailToken }
+      : {}),
+  };
+}

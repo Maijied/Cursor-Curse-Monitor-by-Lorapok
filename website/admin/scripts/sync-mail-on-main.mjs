@@ -15,6 +15,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { envWithCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const adminDir = resolve(scriptDir, "..");
@@ -30,14 +31,18 @@ const LOCAL_PASSPHRASE_FILES = [
   resolve(repoRoot, "website/admin/.cred-vault-passphrase"),
 ];
 
-function runNode(scriptName) {
+function runNode(scriptName, env = process.env) {
   const path = resolve(scriptDir, scriptName);
   const result = spawnSync(process.execPath, [path], {
     stdio: "inherit",
-    env: process.env,
+    env,
     cwd: adminDir,
   });
   if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+function envWithVaultTokens(baseEnv = process.env) {
+  return envWithCursorCloudflareSecrets(baseEnv);
 }
 
 function hasLocalPassphrase() {
@@ -57,6 +62,7 @@ if (!inCi && forceVault) {
   }
   console.log("Local: syncing cred vault → GitHub/Pages secrets…");
   runNode("sync-mail-cred-vault.mjs");
+  process.env = envWithVaultTokens(process.env);
 } else if (!inCi && !forceVault) {
   console.log(
     "ℹ️  Local mode: skipping vault sync (use --vault with .cred-vault-passphrase to refresh secrets)."
@@ -64,9 +70,9 @@ if (!inCi && forceVault) {
 }
 
 console.log("\n=== enable-mail ===");
-runNode("enable-mail.mjs");
+runNode("enable-mail.mjs", envWithVaultTokens(process.env));
 
 console.log("\n=== verify-mail-transport ===");
-runNode("verify-mail-transport.mjs");
+runNode("verify-mail-transport.mjs", envWithVaultTokens(process.env));
 
 console.log("\n✓ sync-mail-on-main complete");

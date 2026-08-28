@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:polling": "CHOKIDAR_USEPOLLING=1 vite",
-    "prebuild": "node ../../scripts/generate-site-data.mjs && node ../../scripts/generate-seo.mjs && node ../../scripts/embed-product-context.mjs",
+    "prebuild": "npm run build -w @lorapok/cursor-monitor-shared --prefix ../.. && node ../../scripts/generate-site-data.mjs && node ../../scripts/generate-seo.mjs && node ../../scripts/embed-product-context.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
