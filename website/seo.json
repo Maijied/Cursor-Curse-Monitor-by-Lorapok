@@ -4,8 +4,8 @@
   "siteBase": "https://cursor.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live Cursor Usage Dashboard",
   "description": "Cursor Curse Monitor by Lorapok Labs — live included quota, Auto/API meters, budget tracking, local credential scanner, Firefox & Chrome browser extension, free Composer 2.5 fallback, and universal support for VS Code wrapper AI IDEs (Cursor, Windsurf, VSCodium, Void, Gitpod, Trae, Kiro, and more via Open VSX). Private to your Cursor login only.",
-  "version": "1.0.26",
-  "packageVersion": "1.0.26",
+  "version": "1.0.45",
+  "packageVersion": "1.0.45",
   "canonical": "https://cursor.lorapok.tech/",
   "syncStatus": "release-candidate",
   "keywords": [
