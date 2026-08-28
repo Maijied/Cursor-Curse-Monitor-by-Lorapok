@@ -169,3 +169,21 @@ export function loadCursorCloudflareSecretsFromVault() {
   }
   return null;
 }
+
+/** Merge Cloudflare tokens from gpg vault when not already in env (no cred CLI needed). */
+export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
+  const loaded = loadCursorCloudflareSecretsFromVault();
+  if (!loaded) return baseEnv;
+  return {
+    ...baseEnv,
+    ...(loaded.accountId && !baseEnv.CLOUDFLARE_ACCOUNT_ID
+      ? { CLOUDFLARE_ACCOUNT_ID: loaded.accountId }
+      : {}),
+    ...(loaded.apiToken && !baseEnv.CLOUDFLARE_API_TOKEN
+      ? { CLOUDFLARE_API_TOKEN: loaded.apiToken }
+      : {}),
+    ...(loaded.emailToken && !baseEnv.CLOUDFLARE_EMAIL_API_TOKEN
+      ? { CLOUDFLARE_EMAIL_API_TOKEN: loaded.emailToken }
+      : {}),
+  };
+}

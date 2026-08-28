@@ -9,21 +9,29 @@
  *
  * CI/CD: every push to `main` runs `enable-mail.mjs` + Pages deploy in admin-deploy job.
  * Use this script only for manual repair when CI is blocked or secrets need re-sync.
+ *
+ * Local (preferred — no cred CLI):
+ *   echo 'passphrase' > .cred-vault-passphrase
+ *   node website/admin/scripts/repair-mail.mjs
+ *
+ * Or export tokens manually:
  *   export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"
  *   export CLOUDFLARE_EMAIL_API_TOKEN="$(cred get cursor cloudflare_email_api_token)"
  *   export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"
- *   node website/admin/scripts/repair-mail.mjs
  */
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { envWithCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
 import { requireDeployToken } from "./lib/mail-credentials.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(adminDir, "../..");
 
-function run(cmd, args, { cwd = adminDir, allowFail = false } = {}) {
-  const result = spawnSync(cmd, args, { cwd, stdio: "inherit", env: process.env });
+const mailEnv = envWithCursorCloudflareSecrets(process.env);
+
+function run(cmd, args, { cwd = adminDir, allowFail = false, env = mailEnv } = {}) {
+  const result = spawnSync(cmd, args, { cwd, stdio: "inherit", env });
   if (result.status !== 0 && !allowFail) {
     process.exit(result.status ?? 1);
   }
@@ -31,9 +39,12 @@ function run(cmd, args, { cwd = adminDir, allowFail = false } = {}) {
 }
 
 try {
-  requireDeployToken();
+  requireDeployToken(mailEnv);
 } catch (err) {
   console.error(err instanceof Error ? err.message : err);
+  console.error(
+    "\nTip: create .cred-vault-passphrase at repo root (gitignored) so repair-mail loads tokens from the gpg vault without `cred get`."
+  );
   process.exit(1);
 }
 

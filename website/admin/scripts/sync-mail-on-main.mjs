@@ -15,7 +15,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadCursorCloudflareSecretsFromVault } from "./lib/cred-vault-sync.mjs";
+import { envWithCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const adminDir = resolve(scriptDir, "..");
@@ -42,20 +42,7 @@ function runNode(scriptName, env = process.env) {
 }
 
 function envWithVaultTokens(baseEnv = process.env) {
-  const loaded = loadCursorCloudflareSecretsFromVault();
-  if (!loaded) return baseEnv;
-  return {
-    ...baseEnv,
-    ...(loaded.accountId && !baseEnv.CLOUDFLARE_ACCOUNT_ID
-      ? { CLOUDFLARE_ACCOUNT_ID: loaded.accountId }
-      : {}),
-    ...(loaded.apiToken && !baseEnv.CLOUDFLARE_API_TOKEN
-      ? { CLOUDFLARE_API_TOKEN: loaded.apiToken }
-      : {}),
-    ...(loaded.emailToken && !baseEnv.CLOUDFLARE_EMAIL_API_TOKEN
-      ? { CLOUDFLARE_EMAIL_API_TOKEN: loaded.emailToken }
-      : {}),
-  };
+  return envWithCursorCloudflareSecrets(baseEnv);
 }
 
 function hasLocalPassphrase() {
