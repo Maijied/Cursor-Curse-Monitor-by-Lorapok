@@ -15,7 +15,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { envWithCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
+import { resolveLocalMailEnv } from "./lib/resolve-local-mail-env.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const adminDir = resolve(scriptDir, "..");
@@ -42,7 +42,7 @@ function runNode(scriptName, env = process.env) {
 }
 
 function envWithVaultTokens(baseEnv = process.env) {
-  return envWithCursorCloudflareSecrets(baseEnv);
+  return resolveLocalMailEnv(baseEnv, adminDir);
 }
 
 function hasLocalPassphrase() {
