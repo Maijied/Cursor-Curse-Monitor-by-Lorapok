@@ -101,7 +101,13 @@ function withSerializedSettingsWrite<T>(operation: () => Promise<T>): Promise<T>
   return run;
 }
 
-async function readSettingsFromStorage(): Promise<ExtensionSettings> {
+interface SettingsStorageRead {
+  settings: ExtensionSettings;
+  migrated: ReturnType<typeof migrateLegacyToken>;
+  key: string;
+}
+
+async function readSettingsFromStorage(): Promise<SettingsStorageRead> {
   const key = storageKey(SETTINGS_KEY);
   const data = await browser.storage.local.get(key);
   const raw = (data[key] as Partial<ExtensionSettings> | undefined) ?? {};
