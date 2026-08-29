@@ -82,7 +82,8 @@ describe("Deployments validation UI", () => {
     fireEvent.change(select, { target: { value: "v1.0.51" } });
     expect(select).toHaveValue("v1.0.51");
 
-    triggerDeployComplete?.();
+    expect(triggerDeployComplete).not.toBeNull();
+    triggerDeployComplete!();
     await waitFor(() => expect(select).toHaveValue("v1.0.51"));
   });
 
