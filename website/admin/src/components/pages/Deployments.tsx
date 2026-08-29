@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
 import {
   fetchTags,
@@ -113,16 +113,20 @@ export default function Deployments() {
     return () => registerOnDeployComplete(null);
   }, [loadTags, registerOnDeployComplete]);
 
-  const filteredTags = tags.filter((t) => {
-    if (channel === "production") return !/beta|alpha|rc/i.test(t);
-    return /beta|alpha|rc/i.test(t) || t.startsWith("v0.");
-  });
+  const filteredTags = useMemo(
+    () =>
+      tags.filter((t) => {
+        if (channel === "production") return !/beta|alpha|rc/i.test(t);
+        return /beta|alpha|rc/i.test(t) || t.startsWith("v0.");
+      }),
+    [tags, channel]
+  );
 
   useEffect(() => {
-    if (filteredTags.length > 0 && !filteredTags.includes(selectedTag)) {
+    if (filteredTags.length > 0 && selectedTag && !filteredTags.includes(selectedTag)) {
       setSelectedTag(defaultTagSelection(filteredTags, liveTag, suggestedTag));
     }
-  }, [channel, filteredTags, liveTag, selectedTag, suggestedTag]);
+  }, [channel, filteredTags, liveTag, suggestedTag, selectedTag]);
 
   const runVersionCheck = useCallback(async () => {
     setVersionPlanLoading(true);
@@ -145,16 +149,8 @@ export default function Deployments() {
 
   const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
   const preparedTag = versionPlan?.recommendedTag ?? suggestedTag ?? latestTag;
-  const deployTargetTag = versionPlan?.recommendedTag ?? null;
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
   const deployBlocked = mode === "deploy" && isLiveSelected;
-
-  useEffect(() => {
-    if (mode !== "deploy" || !deployTargetTag) return;
-    if (filteredTags.includes(deployTargetTag)) {
-      setSelectedTag(deployTargetTag);
-    }
-  }, [deployTargetTag, filteredTags, mode]);
 
   const workflowName = "ci-cd.yml";
   const formLocked = deploying || inProgress;
