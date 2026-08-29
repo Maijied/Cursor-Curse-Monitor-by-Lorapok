@@ -130,7 +130,7 @@ async function verifyEmailLinkEnabled() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         requestType: "EMAIL_SIGNIN",
-        email: "mdshuvo40@gmail.com",
+        email: "admin@lorapok.tech",
         continueUrl: "https://cursor-dev.lorapok.tech/login",
         canHandleCodeInApp: true,
       }),

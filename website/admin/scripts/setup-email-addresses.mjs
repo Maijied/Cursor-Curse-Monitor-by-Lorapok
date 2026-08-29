@@ -12,18 +12,33 @@ import { fileURLToPath } from "node:url";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
-const token = process.env.CLOUDFLARE_API_TOKEN ?? "";
-const opsInbox = process.env.CCM_OPS_INBOX ?? "lorapokdev@gmail.com";
+let token = process.env.CLOUDFLARE_API_TOKEN ?? "";
 
-const ADDRESSES = [
-  "cursor.monitor@lorapok.tech",
-  "cursor.curse.help@lorapok.tech",
-];
+if (!token) {
+  try {
+    const r = spawnSync("npx", ["wrangler", "auth", "token", "--json"], {
+      encoding: "utf8",
+      cwd: adminDir,
+    });
+    const text = `${r.stdout}\n${r.stderr}`;
+    const match = text.match(/\{[\s\S]*"token"[\s\S]*\}/);
+    if (match) {
+      token = JSON.parse(match[0]).token;
+    }
+  } catch {}
+}
 
 if (!token) {
   console.error("Set CLOUDFLARE_API_TOKEN (Email Sending + Email Routing permissions).");
   process.exit(1);
 }
+
+const opsInbox = process.env.CCM_OPS_INBOX ?? "lorapokdev@gmail.com";
+const ADDRESSES = [
+  "admin@lorapok.tech",
+  "cursor.monitor@lorapok.tech",
+  "cursor.curse.help@lorapok.tech",
+];
 
 function run(args, { allowFail = false } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {

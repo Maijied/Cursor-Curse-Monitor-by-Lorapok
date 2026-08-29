@@ -32,7 +32,7 @@ async function probe(token, label) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "mdshuvo40@gmail.com",
+        to: "admin@lorapok.tech",
         from: { address: "cursor-contact@lorapok.tech", name: "CCM Probe" },
         subject: `mail probe ${label}`,
         text: "probe",
