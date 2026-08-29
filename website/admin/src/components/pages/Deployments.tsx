@@ -121,7 +121,7 @@ export default function Deployments() {
   );
 
   useEffect(() => {
-    if (filteredTags.length > 0 && selectedTag && !filteredTags.includes(selectedTag)) {
+    if (selectedTag && !filteredTags.includes(selectedTag)) {
       setSelectedTag(defaultTagSelection(filteredTags, liveTag, suggestedTag));
     }
   }, [channel, filteredTags, liveTag, suggestedTag, selectedTag]);
@@ -213,7 +213,7 @@ export default function Deployments() {
       return;
     }
 
-    if (!selectedTag || !tags.includes(selectedTag)) {
+    if (!selectedTag || !filteredTags.includes(selectedTag)) {
       setMessage({ type: "error", text: "Choose a valid tag from the list." });
       return;
     }
@@ -264,7 +264,7 @@ export default function Deployments() {
     !deployPolicyError &&
     (mode === "infra"
       ? deployAdmin || deployWebsite
-      : Boolean(selectedTag) && !deployBlocked);
+      : Boolean(selectedTag) && filteredTags.includes(selectedTag) && !deployBlocked);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";

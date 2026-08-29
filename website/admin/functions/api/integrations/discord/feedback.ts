@@ -6,16 +6,31 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  if (!auth.isMaster) {
+    return jsonResponse({ error: "Master admin only" }, 403);
+  }
 
-  let body = {};
+  let body: Record<string, unknown> = {};
   try {
-    body = await request.json();
+    const parsed: unknown = await request.json();
+    if (parsed === undefined) {
+      body = {};
+    } else if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    } else {
+      body = parsed as Record<string, unknown>;
+    }
   } catch {
     /* optional body */
   }
 
+  const summary =
+    typeof body.summary === "string"
+      ? body.summary
+      : "Sample user-feedback card — GitHub Issues & Discussions links for end users.";
+
   const result = await notifyDiscordFeedback(env, {
-    summary: body.summary ?? "Sample user-feedback card — GitHub Issues & Discussions links for end users.",
+    summary,
     triggeredBy: auth.email,
   });
 

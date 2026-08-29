@@ -403,7 +403,7 @@ function readLiveTag() {
 }
 
 async function fetchGitHubTags() {
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=30`, {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=100`, {
     headers: githubHeaders(),
   });
   const liveTag = readLiveTag();
@@ -833,8 +833,22 @@ export function createDevApiMiddleware() {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });
       req.on("end", async () => {
+        let parsed;
         try {
-          const parsed = JSON.parse(body || "{}");
+          parsed = JSON.parse(body || "{}");
+          if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed))) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Invalid JSON" }));
+            return;
+          }
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+          return;
+        }
+        try {
           const { notifyDiscordFeedback } = await import("./functions/api/_shared/discord-feedback-notify.js");
           const result = await notifyDiscordFeedback({ ADMIN_KV: devKv }, {
             summary: parsed.summary,
@@ -848,8 +862,9 @@ export function createDevApiMiddleware() {
           }
           res.end(JSON.stringify({ ok: true, skipped: result.skipped ?? false }));
         } catch {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Invalid JSON" }));
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Discord feedback notification failed" }));
         }
       });
       return;
