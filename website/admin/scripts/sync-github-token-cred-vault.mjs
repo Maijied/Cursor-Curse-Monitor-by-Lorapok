@@ -15,6 +15,12 @@ import { pickDeployToken, probeDeployToken, tryWranglerOAuthToken } from "./lib/
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
 const adminDir = new URL("..", import.meta.url).pathname;
 
+/**
+ * Stores the GitHub token as a Cloudflare Pages secret.
+ * @param {string} githubToken - The GitHub token to store.
+ * @param {string} [deployToken] - The Cloudflare API token used for deployment authentication.
+ * @throws {Error} If the secret upload fails.
+ */
 function pagesSecret(githubToken, deployToken) {
   const env = { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId };
   if (deployToken) env.CLOUDFLARE_API_TOKEN = deployToken;
@@ -34,6 +40,11 @@ function pagesSecret(githubToken, deployToken) {
   }
 }
 
+/**
+ * Checks whether a GitHub token is accepted by the repository tags API.
+ * @param {string} token - The GitHub bearer token to validate.
+ * @return {{ok: boolean, status: number}} The request success status and HTTP status code.
+ */
 async function probeGithubToken(token) {
   const res = await fetch("https://api.github.com/repos/Maijied/Cursor-Curse-Monitor-by-Lorapok/tags?per_page=1", {
     headers: {
@@ -66,6 +77,10 @@ if (!probe.ok) {
   process.exit(1);
 }
 
+/**
+ * Resolves the Cloudflare deployment credential and its authentication source.
+ * @return {Promise<{token: string, via: string}|null>} The deployment token and source, or `null` when no credential is available.
+ */
 async function resolveDeployToken() {
   const oauth = tryWranglerOAuthToken(adminDir);
   if (oauth) {

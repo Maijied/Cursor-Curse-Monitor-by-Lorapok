@@ -154,7 +154,11 @@ export function syncCursorCloudflareSecrets({ apiToken, emailToken, accountId })
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
-/** @param {string} cronSecret */
+/**
+ * Updates the Cursor cron secret in the credential vault.
+ * @param {string} cronSecret - The cron secret to store.
+ * @return {{vaultUpdated: boolean, reason?: string}} The update status and, if unsuccessful, the failure reason.
+ */
 export function syncCursorCronSecret(cronSecret) {
   const candidates = readPassphraseCandidates();
   if (!candidates.length) {
@@ -181,7 +185,10 @@ export function syncCursorCronSecret(cronSecret) {
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
-/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} */
+/**
+ * Loads Cursor Cloudflare credentials and a GitHub token from the credential vault.
+ * @return {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} The normalized credentials, or `null` if no usable vault is found.
+ */
 export function loadCursorCloudflareSecretsFromVault() {
   const candidates = readPassphraseCandidates();
   for (const candidate of candidates) {
@@ -200,7 +207,11 @@ export function loadCursorCloudflareSecretsFromVault() {
   return null;
 }
 
-/** @param {Record<string, unknown>} vault */
+/**
+ * Finds the first nonempty GitHub token in the vault's recognized credential sections.
+ * @param {Record<string, unknown>} vault - The vault data containing credential sections.
+ * @return {string|undefined} The trimmed GitHub token, or `undefined` when none is available.
+ */
 function resolveGithubTokenFromVault(vault) {
   const titi = /** @type {Record<string, unknown>} */ (vault?.titi ?? {});
   const github = /** @type {Record<string, unknown>} */ (vault?.github ?? {});
@@ -222,7 +233,11 @@ function resolveGithubTokenFromVault(vault) {
   return undefined;
 }
 
-/** @param {string} githubToken */
+/**
+ * Updates the GitHub token in the credential vault.
+ * @param {string} githubToken - The GitHub token to store.
+ * @returns {{vaultUpdated: boolean, reason?: string}} The update status and an optional failure reason.
+ */
 export function syncCursorGithubToken(githubToken) {
   const candidates = readPassphraseCandidates();
   if (!candidates.length) {
@@ -251,7 +266,11 @@ export function syncCursorGithubToken(githubToken) {
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
-/** Merge Cloudflare tokens from gpg vault when not already in env (no cred CLI needed). */
+/**
+ * Merges credentials loaded from the GPG vault into an environment object.
+ * @param {Object} [baseEnv=process.env] - Environment variables to augment; existing values take precedence.
+ * @return {Object} The environment object with missing vault credentials added, or the original object when vault loading is skipped or fails.
+ */
 export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
   if (baseEnv.CCM_SKIP_CRED_VAULT === "1" || baseEnv.CCM_SKIP_CRED_VAULT === "true") {
     return baseEnv;
