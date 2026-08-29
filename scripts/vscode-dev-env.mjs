@@ -143,6 +143,7 @@ function writeVsCodeConfig() {
     "terminal.integrated.env.linux": {
       CCM_DEV_IDE: "vscode",
       CCM_DEV_ROOT: targetRoot,
+      CCM_PRODUCT_DATA_FOLDER: "Cursor",
       EDITOR_BIN: codeCli,
     },
     "files.watcherExclude": {
@@ -168,6 +169,7 @@ function writeVsCodeConfig() {
         env: {
           CCM_DEV_IDE: "vscode",
           CCM_DEV_ROOT: "${workspaceFolder}",
+          CCM_PRODUCT_DATA_FOLDER: "Cursor",
         },
       },
     ],
@@ -297,12 +299,11 @@ function npmCiFresh() {
     }
   }
 
-  // Sandbox skips lifecycle scripts (husky, etc.) — builds use npm run, not install hooks.
-  const ci = run("npm", ["ci", "--ignore-scripts"], { cwd: targetRoot });
+  const ci = run("npm", ["ci"], { cwd: targetRoot });
   if (ci.status !== 0) {
     fail("npm ci failed in sandbox");
   }
-  log("npm ci complete in sandbox (--ignore-scripts)");
+  log("npm ci complete in sandbox");
 }
 
 function stepBuild() {

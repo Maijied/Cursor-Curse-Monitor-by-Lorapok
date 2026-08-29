@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Extension",
+      "name": "Run Extension (Cursor)",
       "type": "extensionHost",
       "request": "launch",
       "preLaunchTask": "compile",
@@ -11,6 +11,35 @@
       "env": {
         "CCM_DEV_IDE": "cursor",
         "CCM_DEV_ROOT": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Run Extension (VS Code)",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "compile",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "env": {
+        "CCM_DEV_IDE": "vscode",
+        "CCM_DEV_ROOT": "${workspaceFolder}",
+        "CCM_PRODUCT_DATA_FOLDER": "Cursor"
+      }
+    },
+    {
+      "name": "Run Extension (VS Code — test folder)",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "compile",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}/.vscode-test/workspace"
+      ],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "env": {
+        "CCM_DEV_IDE": "vscode",
+        "CCM_DEV_ROOT": "${workspaceFolder}",
+        "CCM_PRODUCT_DATA_FOLDER": "Cursor"
       }
     }
   ]

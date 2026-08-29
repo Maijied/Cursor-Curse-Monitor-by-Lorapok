@@ -90,8 +90,34 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (cached) {
         push(cached);
       }
+
+      const refreshWithTimeout = async (): Promise<DashboardSnapshot | undefined> => {
+        const timeoutMs = 20_000;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          return await Promise.race([
+            this.monitor.refresh(force),
+            new Promise<undefined>((resolve) => {
+              timer = setTimeout(() => resolve(undefined), timeoutMs);
+            }),
+          ]);
+        } finally {
+          if (timer) {
+            clearTimeout(timer);
+          }
+        }
+      };
+
       try {
-        push(await this.monitor.refresh(force));
+        const fresh = await refreshWithTimeout();
+        if (fresh) {
+          push(fresh);
+        } else {
+          const fallback = this.monitor.getSnapshot();
+          if (fallback) {
+            push(fallback);
+          }
+        }
       } catch {
         const fallback = this.monitor.getSnapshot();
         if (fallback) {
@@ -138,11 +164,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           return;
         }
         viewReady = true;
-        await deliverSnapshot(false);
+        void deliverSnapshot(false);
         return;
       }
       if (message.type === "refresh") {
-        await deliverSnapshot(false);
+        void deliverSnapshot(false);
         return;
       }
       if (message.type === "setBudget" && typeof message.value === "number") {
@@ -165,6 +191,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       if (message.type === "switchAccount" && typeof message.accountId === "string") {
         await vscode.commands.executeCommand("cursorCurseMonitor.switchAccount", message.accountId);
+        void deliverSnapshot(true);
         return;
       }
       if (message.type === "addAccount") {
@@ -362,6 +389,75 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .header-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .status-chip::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--muted);
+    }
+    .status-chip.ok {
+      color: var(--ok);
+      border-color: rgba(57,255,20,.22);
+      background: rgba(57,255,20,.06);
+    }
+    .status-chip.ok::before {
+      background: var(--ok);
+      box-shadow: 0 0 6px var(--ok);
+    }
+    .status-chip.warn {
+      color: var(--warn);
+      border-color: rgba(255,196,77,.24);
+      background: rgba(255,196,77,.08);
+    }
+    .status-chip.warn::before {
+      background: var(--warn);
+    }
+    .status-chip.accent {
+      color: var(--accent-2);
+      border-color: rgba(91,157,255,.28);
+      background: rgba(91,157,255,.08);
+    }
+    .status-chip.accent::before {
+      background: var(--accent-2);
+    }
+    .connect-banner {
+      display: none;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,196,77,.28);
+      background: linear-gradient(135deg, rgba(255,196,77,.1), rgba(124,92,255,.08));
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .connect-banner.visible { display: block; }
+    .connect-banner strong { color: var(--warn); }
     .header-actions { display: flex; gap: 6px; align-items: center; }
     .account-switcher {
       display: flex;
@@ -369,6 +465,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       align-items: center;
       margin-top: 8px;
       flex-wrap: wrap;
+    }
+    .account-switcher-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+    .account-switcher-hint {
+      flex: 1 1 100%;
+      margin: 0;
+      font-size: 10px;
+      line-height: 1.4;
     }
     .account-switcher select {
       max-width: 220px;
@@ -419,23 +529,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     @media (prefers-reduced-motion: reduce) {
       .fill, .meter-fill, .logo-wrap { transition: none !important; }
       .subscribe-btn-loading::after { animation: none !important; }
+      .section-toggle .chevron { transition: none; }
+      .collapsible-body { animation: none; }
     }
     .connected {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 6px;
-      font-size: 10px;
-      color: var(--ok);
-      font-weight: 600;
-    }
-    .connected::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--ok);
-      box-shadow: 0 0 6px var(--ok);
+      display: none;
     }
     .section-label {
       font-size: 10px;
@@ -588,7 +686,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       font-size: 11px;
       margin-bottom: 10px;
     }
-    input, button {
+    input:not([type="checkbox"]):not([type="radio"]), button {
       width: 100%;
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -596,6 +694,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       color: var(--text);
       padding: 8px 10px;
       font: inherit;
+    }
+    input[type="checkbox"], input[type="radio"] {
+      width: auto;
+      margin: 0;
+      padding: 0;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
     }
     button {
       cursor: pointer;
@@ -660,27 +766,54 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     .section-toggle {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 12px;
       width: 100%;
-      padding: 0;
-      margin: 0 0 10px;
+      padding: 6px 4px;
+      margin: -6px -4px 10px;
       border: none;
+      border-radius: 8px;
       background: none;
       color: inherit;
       cursor: pointer;
       text-align: left;
+      transition: background .15s ease;
+    }
+    .section-toggle:hover {
+      background: rgba(124, 92, 255, 0.06);
+    }
+    .section-toggle:focus-visible {
+      background: rgba(124, 92, 255, 0.08);
+    }
+    .section-toggle .section-toggle-label {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+    }
+    .section-toggle.nested {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      padding-left: 10px;
+      border-left: 2px solid rgba(124, 92, 255, 0.22);
+      border-radius: 0 8px 8px 0;
     }
     .section-toggle .chevron {
-      width: 18px;
-      height: 18px;
-      border-radius: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
       border: 1px solid var(--border);
+      background: var(--panel-2);
       display: inline-grid;
       place-items: center;
       font-size: 10px;
       color: var(--muted);
-      transition: transform .25s ease, color .2s ease, border-color .2s ease;
+      transition: transform .25s ease, color .2s ease, border-color .2s ease, background .2s ease;
       flex-shrink: 0;
+    }
+    .section-toggle:hover .chevron {
+      border-color: rgba(124, 92, 255, 0.45);
+      color: var(--accent-2);
+      background: rgba(124, 92, 255, 0.08);
     }
     .section-toggle .chevron::before { content: "▾"; }
     .section-toggle[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
@@ -803,10 +936,30 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       width: 120px; padding: 6px 8px; border-radius: 8px;
       border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
     }
-    .settings-check {
-      display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer;
+    .settings-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 0 4px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
     }
-    .settings-check input { margin-top: 2px; }
+    .settings-check {
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      align-items: start;
+      column-gap: 10px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      line-height: 1.35;
+    }
+    .settings-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-top: 1px;
+    }
+    .settings-check span { display: block; }
     .cursor-missing-overlay {
       display: none;
       position: fixed;
@@ -865,10 +1018,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   <button type="button" id="loadingState" class="loading-state" disabled aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Loading dashboard…</span></button>
   <div id="cursorMissingOverlay" class="cursor-missing-overlay" role="alertdialog" aria-modal="true" aria-labelledby="cursorMissingTitle" aria-live="polite">
     <div class="cursor-missing-card">
-      <p class="cursor-missing-eyebrow">No Cursor AI found</p>
-      <h2 id="cursorMissingTitle" style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
-      <p style="margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55;">
-        Sign in at <strong>cursor.com/dashboard</strong> in your browser, or paste an access token from another Cursor login.
+      <p class="cursor-missing-eyebrow">Connect to Cursor first</p>
+      <h2 id="cursorMissingTitle" style="margin:0 0 8px;font-size:18px;">Sign in to view usage</h2>
+      <p id="cursorMissingBody" style="margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55;">
+        Open <strong>cursor.com/dashboard</strong> and sign in, paste an access token, or pick another login found on this computer.
       </p>
       <p style="margin:0 0 14px;color:var(--muted);font-size:11px;line-height:1.5;">
         Explore more Lorapok Labs tools at
@@ -886,19 +1039,29 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="header-text">
       <h1>Usage Dashboard</h1>
       <p id="subtitle">Monitor your API usage and manage your budget.</p>
-      <div class="account-switcher">
-        <label class="sr-only" for="accountSelect">Cursor account</label>
-        <select id="accountSelect" aria-label="Switch Cursor account"></select>
-        <button type="button" class="icon-btn" id="addAccountBtn" title="Add Cursor account" aria-label="Add Cursor account">+</button>
-        <button type="button" class="icon-btn" id="removeAccountBtn" title="Remove saved account" aria-label="Remove saved account">−</button>
+      <div class="header-status-row">
+        <span class="status-chip warn" id="connBadge">Waiting for Cursor login</span>
+        <span class="status-chip" id="editorChip" hidden></span>
+        <span class="status-chip accent" id="discoveredChip" hidden></span>
       </div>
-      <span class="connected" id="connBadge">Connected</span>
+      <div class="account-switcher">
+        <span class="account-switcher-label" id="accountSwitcherLabel">Cursor login</span>
+        <label class="sr-only" for="accountSelect">Switch Cursor account for usage stats</label>
+        <select id="accountSelect" aria-label="Switch Cursor account for usage stats"></select>
+        <button type="button" class="icon-btn" id="addAccountBtn" title="Add another Cursor login" aria-label="Add another Cursor login">+</button>
+        <button type="button" class="icon-btn" id="removeAccountBtn" title="Remove saved login" aria-label="Remove saved login">−</button>
+        <p class="account-switcher-hint" id="accountSwitcherHint" hidden>
+          Multiple Cursor installs were detected on this PC. Pick a login to view its usage, or add another with +.
+        </p>
+      </div>
     </div>
     <div class="header-actions">
       <button type="button" class="icon-btn" id="settingsBtn" title="Extension settings" aria-label="Extension settings">⚙</button>
       <button type="button" class="icon-btn" id="refreshBtn" title="Refresh" aria-label="Refresh dashboard">↻</button>
     </div>
   </header>
+
+  <div id="connectBanner" class="connect-banner" role="status" aria-live="polite"></div>
 
   <div id="errorBox" class="card error" style="display:none"></div>
 
@@ -963,11 +1126,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         <div id="thresholdPill" class="pill warn" style="display:none;margin-bottom:8px">threshold</div>
         <div class="stat-grid">
           <div class="stat-box">
-            <div class="k">Budget cap</div>
+            <div class="k" id="budgetCapLabel">Total pool</div>
             <div class="v" id="budgetCapVal">—</div>
           </div>
           <div class="stat-box">
-            <div class="k">Amount left</div>
+            <div class="k" id="amountLeftLabel">Quota left</div>
             <div class="v" id="amountLeftVal">—</div>
           </div>
           <div class="stat-box">
@@ -1020,9 +1183,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </section>
 
   <section class="card" id="localInsightsCard">
-    <button type="button" class="section-toggle" id="localInsightsToggle" aria-expanded="true" aria-controls="localInsightsBody">
+    <button type="button" class="section-toggle" id="localInsightsToggle" aria-expanded="true" aria-controls="localInsightsBody" aria-label="Toggle local insights section">
+      <span class="section-label section-toggle-label">Local insights</span>
       <span class="chevron" aria-hidden="true"></span>
-      <span class="section-label" style="margin:0">Local insights</span>
     </button>
     <div class="collapsible-body" id="localInsightsBody">
       <div class="stat-grid" style="margin-bottom:10px">
@@ -1035,16 +1198,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           <div class="v" id="cycleAccepted">—</div>
         </div>
       </div>
-      <button type="button" class="section-toggle" id="activeModelsToggle" aria-expanded="true" aria-controls="activeModelsBody" style="margin-top:4px">
+      <button type="button" class="section-toggle nested" id="activeModelsToggle" aria-expanded="true" aria-controls="activeModelsBody" aria-label="Toggle active models">
+        <span class="section-label section-toggle-label">Active models</span>
         <span class="chevron" aria-hidden="true"></span>
-        <span class="muted" style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0">Active models</span>
       </button>
       <div class="collapsible-body" id="activeModelsBody">
         <div class="model-list" id="modelList"><div class="muted">No local model data</div></div>
       </div>
-      <button type="button" class="section-toggle" id="recentSessionsToggle" aria-expanded="true" aria-controls="recentSessionsBody" style="margin-top:12px">
+      <button type="button" class="section-toggle nested" id="recentSessionsToggle" aria-expanded="true" aria-controls="recentSessionsBody" aria-label="Toggle recent sessions">
+        <span class="section-label section-toggle-label">Recent sessions</span>
         <span class="chevron" aria-hidden="true"></span>
-        <span class="muted" style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0">Recent sessions</span>
       </button>
       <div class="collapsible-body" id="recentSessionsBody">
         <div class="session-list" id="sessionList"><div class="muted">No recent sessions</div></div>
@@ -1094,13 +1257,15 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
             <option value="both">Plan + Auto/API</option>
           </select>
         </label>
+        <div class="settings-checklist">
         <label class="settings-check"><input type="checkbox" id="setShowStatusBar" /><span>Show status bar usage</span></label>
-        <label class="settings-check"><input type="checkbox" id="setAutoFallback" /><span>Auto-apply fallback model at 100%</span></label>
+        <label class="settings-check"><input type="checkbox" id="setAutoFallback" checked /><span>Auto-apply fallback model at 100%</span></label>
         <label class="settings-check"><input type="checkbox" id="setProductNotices" /><span>Show product notices</span></label>
         <label class="settings-check"><input type="checkbox" id="setSecurityScan" /><span>Security scan enabled</span></label>
         <label class="settings-check"><input type="checkbox" id="setScanOnSave" /><span>Scan on save</span></label>
         <label class="settings-check"><input type="checkbox" id="setBlockSave" /><span>Block save when secrets detected</span></label>
-        <label class="settings-check"><input type="checkbox" id="setAnonymousStats" /><span>Anonymous usage heartbeat (opt-in)</span></label>
+        <label class="settings-check"><input type="checkbox" id="setAnonymousStats" checked /><span>Anonymous usage heartbeat</span></label>
+        </div>
       </div>
       <div class="subscribe-actions" style="margin-top:14px">
         <button type="button" class="primary" id="settingsSaveBtn" style="width:100%">Save settings</button>
@@ -1349,6 +1514,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
+    function formatUnits(n) {
+      return (Number(n) || 0).toLocaleString();
+    }
+
     function collectEditorSettingsFromForm() {
       return {
         pollIntervalSeconds: Number(document.getElementById('setPollInterval')?.value || 60),
@@ -1367,11 +1536,15 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     function renderAccounts(snapshot) {
       var sel = document.getElementById('accountSelect');
       var removeBtn = document.getElementById('removeAccountBtn');
+      var hint = document.getElementById('accountSwitcherHint');
       if (!sel) return;
       var accounts = snapshot.accounts || [];
       var active = snapshot.activeAccountId || 'system';
       sel.innerHTML = accounts.map(function(a) {
         var label = a.label || a.email || a.id;
+        if (a.id === active) {
+          label = label + ' · active';
+        }
         return '<option value="' + escHtml(a.id) + '">' + escHtml(label) + '</option>';
       }).join('');
       if (!accounts.length) {
@@ -1380,11 +1553,18 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       sel.value = active;
       var selected = accounts.filter(function(a) { return a.id === sel.value; })[0];
       if (removeBtn) {
-        removeBtn.disabled = !selected || selected.source === 'system';
+        removeBtn.disabled = !selected || selected.source === 'system' || selected.source === 'discovered';
+      }
+      if (hint) {
+        var discoveredCount = (snapshot.discoveredLoginCount || 0);
+        hint.hidden = accounts.length < 2 && discoveredCount < 2;
       }
     }
 
+    var snapshotReceived = Boolean(bootSnapshot);
+
     function render(snapshot) {
+      snapshotReceived = true;
       const loading = document.getElementById('loadingState');
       if (loading) loading.remove();
       renderAccounts(snapshot);
@@ -1392,26 +1572,77 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const usage = snapshot.usage;
       const errorBox = document.getElementById('errorBox');
       const missingOverlay = document.getElementById('cursorMissingOverlay');
+      const connectBanner = document.getElementById('connectBanner');
+      const missingBody = document.getElementById('cursorMissingBody');
       if (snapshot.cursorMissing) {
         document.body.classList.add('cursor-missing');
         if (missingOverlay) missingOverlay.classList.add('visible');
+        if (connectBanner) {
+          connectBanner.classList.add('visible');
+          connectBanner.innerHTML = '<strong>Not connected.</strong> ' + escHtml(snapshot.error || 'Sign in to Cursor or choose another login from the switcher.');
+        }
+        if (missingBody && snapshot.discoveredLoginCount && snapshot.discoveredLoginCount > 1) {
+          missingBody.innerHTML = snapshot.discoveredLoginCount + ' Cursor logins were found on this computer. Pick one in the account switcher above, or sign in at <strong>cursor.com/dashboard</strong>.';
+        }
       } else {
         document.body.classList.remove('cursor-missing');
         if (missingOverlay) missingOverlay.classList.remove('visible');
+        if (connectBanner) connectBanner.classList.remove('visible');
       }
 
       const local = snapshot.local || {};
       const teamBit = local.teamName ? ' · ' + local.teamName : '';
-      document.getElementById('subtitle').textContent = (snapshot.email ? snapshot.email + teamBit + ' · ' : '') +
-        'Lorapok Labs · ' + new Date(snapshot.fetchedAt).toLocaleTimeString();
+      const multiAccount = (snapshot.accounts || []).length > 1;
+      const emailLead = snapshot.email
+        ? (multiAccount ? 'Stats for ' + snapshot.email : snapshot.email)
+        : '';
+      const hostLabel = snapshot.host === 'vscode' ? 'VS Code host' : snapshot.host === 'cursor' ? 'Cursor host' : 'Editor host';
+      const productLabel = snapshot.monitoringProduct ? 'Data: ' + snapshot.monitoringProduct : '';
+      document.getElementById('subtitle').textContent = [
+        emailLead ? emailLead + teamBit : '',
+        productLabel,
+        hostLabel,
+        'Lorapok Labs · ' + new Date(snapshot.fetchedAt).toLocaleTimeString()
+      ].filter(Boolean).join(' · ');
 
+      const connBadge = document.getElementById('connBadge');
+      const editorChip = document.getElementById('editorChip');
+      const discoveredChip = document.getElementById('discoveredChip');
       if (snapshot.error) {
         errorBox.style.display = 'block';
         errorBox.textContent = snapshot.error;
-        document.getElementById('connBadge').style.display = 'none';
+        if (connBadge) {
+          connBadge.className = 'status-chip warn';
+          connBadge.textContent = snapshot.cursorMissing ? 'Not signed in' : 'Connection issue';
+        }
       } else {
         errorBox.style.display = 'none';
-        document.getElementById('connBadge').style.display = 'inline-flex';
+        if (connBadge) {
+          connBadge.className = 'status-chip ok';
+          connBadge.textContent = usage && snapshot.fetchedAt
+            ? 'Live · ' + new Date(snapshot.fetchedAt).toLocaleTimeString()
+            : 'Connected';
+        }
+      }
+      if (editorChip) {
+        const editorBits = [];
+        if (snapshot.editorAppName) editorBits.push(snapshot.editorAppName);
+        if (snapshot.monitoringProduct) editorBits.push('DB ' + snapshot.monitoringProduct);
+        if (editorBits.length) {
+          editorChip.hidden = false;
+          editorChip.textContent = editorBits.join(' · ');
+        } else {
+          editorChip.hidden = true;
+        }
+      }
+      if (discoveredChip) {
+        const count = snapshot.discoveredLoginCount || 0;
+        if (count > 1) {
+          discoveredChip.hidden = false;
+          discoveredChip.textContent = count + ' logins on this PC';
+        } else {
+          discoveredChip.hidden = true;
+        }
       }
 
       const models = local.models || [];
@@ -1453,7 +1684,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
             ? 'Sign in to Cursor and refresh'
             : 'Waiting for usage data…';
         }
-        renderSpark(snapshot.history || [], 80);
+        renderSpark(snapshot.history || [], editorSettings.warnAtPercent ?? 80);
         return;
       }
 
@@ -1461,7 +1692,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const threshold = b.thresholdPercent;
       document.getElementById('thresholdLine').style.left = threshold + '%';
       document.getElementById('usageBig').textContent = Math.round(hero) + '%';
-      document.getElementById('usageSub').textContent = 'of included quota used';
+      document.getElementById('usageSub').textContent = b.usdBudgetActive
+        ? 'of personal spend cap used'
+        : (b.planBreakdownBonus > 0
+          ? 'of total pool used (included + bonus)'
+          : 'of included quota used');
 
       const usageBar = document.getElementById('usageBar');
       usageBar.style.width = Math.min(100, hero) + '%';
@@ -1480,12 +1715,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         statusPill.textContent = 'OK';
       }
 
-      document.getElementById('usedValue').textContent = b.includedUsed + ' / ' + b.includedLimit + ' units';
-      document.getElementById('remainingValue').textContent = b.includedRemaining + ' units';
+      document.getElementById('usedValue').textContent =
+        formatUnits(b.includedUsed) + ' / ' + formatUnits(b.includedLimit) + ' units';
+      document.getElementById('remainingValue').textContent = formatUnits(b.includedRemaining) + ' units';
       if (b.planBreakdownBonus > 0) {
         document.getElementById('bonusRow').style.display = 'flex';
         document.getElementById('bonusValue').textContent =
-          b.planBreakdownIncluded + ' + ' + b.planBreakdownBonus;
+          formatUnits(b.planBreakdownIncluded) + ' included + ' + formatUnits(b.planBreakdownBonus) + ' bonus';
       } else {
         document.getElementById('bonusRow').style.display = 'none';
       }
@@ -1504,8 +1740,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const gaugeValue = b.usdBudgetActive ? b.budgetPercentUsed : hero;
       setGauge(gaugeValue);
       document.getElementById('gaugeLbl').textContent = b.usdBudgetActive ? 'spend' : 'quota';
-      document.getElementById('budgetCapVal').textContent = b.hasUsdBudget ? money(b.capUsd) : 'Not set';
-      document.getElementById('amountLeftVal').textContent = b.hasUsdBudget ? money(b.leftUsd) : (b.includedRemaining + ' u');
+      const budgetCapLabel = document.getElementById('budgetCapLabel');
+      const amountLeftLabel = document.getElementById('amountLeftLabel');
+      if (budgetCapLabel) {
+        budgetCapLabel.textContent = b.usdBudgetActive ? 'Spend cap' : 'Total pool';
+      }
+      if (amountLeftLabel) {
+        amountLeftLabel.textContent = b.usdBudgetActive ? 'Spend left' : 'Quota left';
+      }
+      document.getElementById('budgetCapVal').textContent = b.usdBudgetActive
+        ? money(b.capUsd)
+        : (b.includedLimit > 0 ? formatUnits(b.includedLimit) + ' units' : 'Not set');
+      document.getElementById('amountLeftVal').textContent = b.usdBudgetActive
+        ? money(b.leftUsd)
+        : (formatUnits(b.includedRemaining) + ' units');
       document.getElementById('onDemandVal').textContent = b.onDemandEnabled
         ? money(snapshot.onDemandSpendUsd) + (b.onDemandCapUsd ? ' / ' + money(b.onDemandCapUsd) : '')
         : 'Off';
@@ -1549,7 +1797,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
 
       document.getElementById('footerMsg').textContent = b.thresholdReached
-        ? 'Usage is at ' + Math.round(hero) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.'
+        ? (b.usdBudgetActive
+          ? 'Spend is at ' + Math.round(gaugeValue) + '% of your personal cap. Consider Composer 2.5 (Fast off).'
+          : 'Usage is at ' + Math.round(hero) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.')
         : "You're in control. We'll notify you before you reach your cap.";
 
       renderSpark(snapshot.history || [], threshold);
@@ -1781,7 +2031,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     } else {
       dismissLoading();
     }
-    var snapshotReceived = Boolean(bootSnapshot);
     window.addEventListener('message', function(event) {
       if (event.data?.type === 'snapshot') snapshotReceived = true;
     }, { capture: true });
@@ -1888,11 +2137,15 @@ export function formatStatusBarTooltip(snapshot: DashboardSnapshot): string {
   }
   const { auto, api } = autoApiPercents(snapshot);
   const planPct = planPercent(snapshot);
-  const lines = [
+  const lines: string[] = [];
+  if (snapshot.email) {
+    lines.push(`Login: ${snapshot.email}`);
+  }
+  lines.push(
     `Plan: ${Math.round(planPct)}%`,
     `Auto: ${formatPercent(auto)}%`,
-    `API: ${formatPercent(api)}%`,
-  ];
+    `API: ${formatPercent(api)}%`
+  );
   const b = snapshot.budget;
   if (b?.usdBudgetActive) {
     lines.push(`${b.spentUsd.toFixed(2)} / ${b.capUsd.toFixed(2)} USD`);

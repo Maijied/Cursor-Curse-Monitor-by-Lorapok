@@ -3,6 +3,9 @@ import {
   applyComposerFallbackModel,
   cursorDbExists,
   detectEditorHost,
+  discoverCursorAuthInstalls,
+  getMonitoringProductFolder,
+  monitoringDbExists,
 } from "./cursorAuth";
 import {
   appendUsageHistory,
@@ -19,7 +22,7 @@ import { NotificationProvider } from "./notificationProvider";
 import { listPublicAccounts, resolveActiveAuth } from "./accountStore";
 
 const USAGE_HISTORY_KEY = "usageHistoryV1";
-const REFRESH_COOLDOWN_MS = 3000;
+const REFRESH_COOLDOWN_MS = 1500;
 
 type SnapshotListener = (snapshot: DashboardSnapshot) => void;
 
@@ -102,12 +105,14 @@ export class UsageMonitorService implements vscode.Disposable {
   private async doRefresh(): Promise<DashboardSnapshot> {
     const config = vscode.workspace.getConfiguration("cursorCurseMonitor");
     const customBudgetLimit = config.get<number>("customBudgetLimit", 0);
-    const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", false);
+    const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", true);
     const warnAtPercent = config.get<number>("warnAtPercent", 80);
 
     const auth = await resolveActiveAuth(this.context);
     const accounts = await listPublicAccounts(this.context);
-    const dbMissing = !cursorDbExists(undefined, vscode.env.appName);
+    const discoveredLogins = discoverCursorAuthInstalls();
+    const dbMissing = !monitoringDbExists() && !auth.token;
+    const editorAppName = vscode.env.appName;
 
     const snapshot: DashboardSnapshot = {
       fetchedAt: new Date().toISOString(),
@@ -120,12 +125,15 @@ export class UsageMonitorService implements vscode.Disposable {
       onDemandSpendUsd: 0,
       budget: null,
       features: [],
-      host: detectEditorHost(vscode.env.appName),
-      cursorMissing: dbMissing && !auth.token,
+      host: detectEditorHost(editorAppName),
+      cursorMissing: !auth.token,
       local: emptyLocalInsights(),
       history: this.loadHistory(),
       accounts,
       activeAccountId: auth.id,
+      monitoringProduct: auth.productFolder ?? getMonitoringProductFolder(),
+      discoveredLoginCount: discoveredLogins.length,
+      editorAppName,
     };
 
     if (!dbMissing) {
@@ -137,9 +145,13 @@ export class UsageMonitorService implements vscode.Disposable {
     }
 
     if (!auth.token) {
-      snapshot.error = dbMissing
-        ? "Cursor storage database not found. Install or open Cursor, sign in, or add another Cursor account from the switcher."
-        : "Cursor auth token not found. Sign in to Cursor, reload the window, or add another Cursor account.";
+      const loginHint =
+        discoveredLogins.length > 1
+          ? `${discoveredLogins.length} Cursor logins were found on this computer — pick one in the account switcher, or sign in below.`
+          : dbMissing
+            ? "Connect to Cursor first: sign in at cursor.com/dashboard, paste an access token, or open Cursor on this machine."
+            : "Cursor is not signed in. Sign in at cursor.com/dashboard, reload the window, or paste an access token.";
+      snapshot.error = loginHint;
       this.publish(snapshot);
       return snapshot;
     }
@@ -269,7 +281,7 @@ export class UsageMonitorService implements vscode.Disposable {
     }
     const seconds = vscode.workspace
       .getConfiguration("cursorCurseMonitor")
-      .get<number>("pollIntervalSeconds", 60);
+      .get<number>("pollIntervalSeconds", 30);
     this.timer = setInterval(() => {
       void this.refresh();
     }, seconds * 1000);

@@ -1,10 +1,28 @@
 export const SYSTEM_ACCOUNT_ID = "system";
+export const DISCOVERED_ACCOUNT_PREFIX = "disc:";
 
 export interface CursorAccountPublic {
   id: string;
   email: string | null;
   label: string;
-  source: "system" | "saved";
+  source: "system" | "saved" | "discovered";
+  /** Product folder under OS app-data (e.g. Cursor, dCursor) when source is system or discovered. */
+  productFolder?: string;
+}
+
+export function discoveredAccountId(productFolder: string): string {
+  return `${DISCOVERED_ACCOUNT_PREFIX}${encodeURIComponent(productFolder)}`;
+}
+
+export function parseDiscoveredAccountId(id: string): string | null {
+  if (!id.startsWith(DISCOVERED_ACCOUNT_PREFIX)) {
+    return null;
+  }
+  try {
+    return decodeURIComponent(id.slice(DISCOVERED_ACCOUNT_PREFIX.length));
+  } catch {
+    return null;
+  }
 }
 
 export interface StoredCursorAccount {
@@ -84,16 +102,35 @@ export function emailFromCursorToken(token: string): string | null {
 }
 
 export function accountDisplayLabel(
-  account: { email: string | null; label?: string; source?: "system" | "saved" },
+  account: {
+    email: string | null;
+    label?: string;
+    source?: "system" | "saved" | "discovered";
+    productFolder?: string;
+  },
   fallback = "Saved account"
 ): string {
   if (account.label && account.label.trim()) {
     return account.label.trim();
   }
   if (account.email) {
-    return account.source === "system" ? `${account.email} (this session)` : account.email;
+    if (account.source === "system") {
+      return account.productFolder && account.productFolder !== "Cursor"
+        ? `${account.email} (${account.productFolder})`
+        : `${account.email} (this session)`;
+    }
+    if (account.source === "discovered" && account.productFolder) {
+      return `${account.email} (${account.productFolder})`;
+    }
+    return account.email;
   }
-  return account.source === "system" ? "This Cursor session" : fallback;
+  if (account.source === "system") {
+    return account.productFolder ? `${account.productFolder} session` : "This Cursor session";
+  }
+  if (account.source === "discovered" && account.productFolder) {
+    return `${account.productFolder} login`;
+  }
+  return fallback;
 }
 
 export function toPublicAccount(account: StoredCursorAccount): CursorAccountPublic {

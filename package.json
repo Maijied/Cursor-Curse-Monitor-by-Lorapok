@@ -184,7 +184,7 @@
       "properties": {
         "cursorCurseMonitor.pollIntervalSeconds": {
           "type": "number",
-          "default": 60,
+          "default": 30,
           "minimum": 15,
           "maximum": 3600,
           "description": "How often to refresh usage data from the Cursor API."
@@ -197,7 +197,7 @@
         },
         "cursorCurseMonitor.autoApplyFallbackModel": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "When usage is at 100%, apply Composer 2.5 (Fast off) after Cursor/VS Code is fully quit (quit-then-write with WAL/SHM backup). Never writes while the editor is running."
         },
         "cursorCurseMonitor.showStatusBar": {
@@ -229,8 +229,8 @@
         },
         "cursorCurseMonitor.anonymousUsageStats": {
           "type": "boolean",
-          "default": false,
-          "description": "Opt-in anonymous usage heartbeat. Sends a once-per-day ping with a random install ID, OS, and host editor (Cursor/VS Code) only. Off by default. No paths, tokens, emails, or workspace names are sent."
+          "default": true,
+          "description": "Anonymous usage heartbeat. Sends a periodic ping with a random install ID, OS, and host editor (Cursor/VS Code) only. On by default. No paths, tokens, emails, or workspace names are sent."
         },
         "cursorCurseMonitor.productNotices": {
           "type": "boolean",
@@ -268,7 +268,7 @@
   "scripts": {
     "test": "node --test tests/test_api_metrics.test.js tests/test_security_scanner_suite.test.js tests/test_local_store_edge_cases.test.js tests/test_usage_monitor_lifecycle.test.js tests/test_cursor_accounts.js && node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && node tests/test_release_integrity.js && node tests/test_reindex_conversations.js && node tests/test_subscribe_prompt.js && node --test scripts/download-totals.test.mjs && node --test scripts/sync-workspace-versions.test.mjs && node --test tests/test_product_links.mjs && node --test tests/test_message_cards.mjs && npm run browser-ext:test",
     "vscode:prepublish": "npm run compile && node scripts/stage-shared-for-vsix.mjs",
-    "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./",
+    "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./ && node scripts/stage-shared-for-vsix.mjs",
     "browser-ext:build": "npm run version:sync && npm run build -w browser-extension",
     "browser-ext:zip:firefox": "npm run version:sync && npm run build:firefox:zip -w browser-extension",
     "browser-ext:zip:chrome": "npm run version:sync && npm run build:chrome -w browser-extension",
@@ -304,8 +304,11 @@
     "provision:vscode-dev": "node scripts/vscode-dev-env.mjs provision",
     "sync:vscode-dev": "node scripts/vscode-dev-env.mjs sync",
     "dev:vscode": "node scripts/vscode-dev-env.mjs run",
+    "dev:vscode:test": "node scripts/vscode-test-folder.mjs --fresh",
+    "dev:vscode:test:quick": "node scripts/vscode-test-folder.mjs",
     "dev:vscode:all": "node scripts/vscode-dev-env.mjs all",
     "dev:vscode:quick": "node scripts/vscode-dev-env.mjs all --quick",
+    "diagnostic:extension": "node scripts/generate-extension-diagnostic.mjs",
     "check:isolation": "node scripts/check-dev-isolation.mjs",
     "prepare": "husky"
   },

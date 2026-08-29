@@ -115,7 +115,12 @@ export async function promptSwitchCursorAccount(context: vscode.ExtensionContext
   const items: AccountPick[] = [
     ...accounts.map((account) => ({
       label: account.label,
-      description: account.source === "system" ? "This Cursor session" : "Saved login",
+      description:
+        account.source === "system"
+          ? "This editor session"
+          : account.source === "discovered"
+            ? "Found on this computer"
+            : "Saved login",
       accountId: account.id,
     })),
     {

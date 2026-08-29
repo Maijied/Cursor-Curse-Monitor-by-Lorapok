@@ -27,7 +27,7 @@ function hostKind(): "cursor" | "vscode" {
 }
 
 /**
- * Opt-in anonymous heartbeat. Off by default.
+ * Anonymous usage heartbeat. On by default.
  * Payload never includes paths, tokens, emails, or workspace names.
  * installId is created once and never regenerated (offline VSIX uniqueness).
  */
@@ -36,7 +36,7 @@ export async function maybeSendAnonymousHeartbeat(
   extensionVersion: string
 ): Promise<{ sent: boolean; reason?: string }> {
   const config = vscode.workspace.getConfiguration("cursorCurseMonitor");
-  if (!config.get<boolean>("anonymousUsageStats", false)) {
+  if (!config.get<boolean>("anonymousUsageStats", true)) {
     return { sent: false, reason: "disabled" };
   }
 
