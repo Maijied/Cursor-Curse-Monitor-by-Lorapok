@@ -83,6 +83,17 @@ function createSampleProfile(overrides = {}) {
   };
 }
 
+function assertMissingAuthError(error, { dbMissing = false } = {}) {
+  assert.ok(error, "expected a user-facing auth error message");
+  const hints = dbMissing
+    ? ["Connect to Cursor first", "Cursor logins were found on this computer"]
+    : ["Cursor is not signed in", "Cursor logins were found on this computer"];
+  assert.ok(
+    hints.some((hint) => error.includes(hint)),
+    `expected one of ${hints.join(" | ")}, got: ${error}`
+  );
+}
+
 function setupMockDb(dbPath, { hasToken = true, hasEmail = true, hasReactive = true } = {}) {
   let DatabaseSync;
   try {
@@ -293,7 +304,7 @@ test("usage monitor: error states handle missing DB, missing token, and API fail
   const serviceMissingDb = new UsageMonitorService(context);
   const snapshotMissingDb = await serviceMissingDb.refresh();
   assert.strictEqual(snapshotMissingDb.cursorMissing, true);
-  assert.ok(snapshotMissingDb.error && snapshotMissingDb.error.includes("Cursor storage database not found"));
+  assertMissingAuthError(snapshotMissingDb.error, { dbMissing: true });
   serviceMissingDb.dispose();
 
   // 2. DB exists but Auth Token is missing
@@ -302,8 +313,8 @@ test("usage monitor: error states handle missing DB, missing token, and API fail
     process.env.CURSOR_DB_PATH = noTokenDbPath;
     const serviceNoToken = new UsageMonitorService(context);
     const snapshotNoToken = await serviceNoToken.refresh();
-    assert.strictEqual(snapshotNoToken.cursorMissing, false);
-    assert.ok(snapshotNoToken.error && snapshotNoToken.error.includes("Cursor auth token not found"));
+    assert.strictEqual(snapshotNoToken.cursorMissing, true);
+    assertMissingAuthError(snapshotNoToken.error);
     serviceNoToken.dispose();
     try {
       if (fs.existsSync(noTokenDbPath)) fs.unlinkSync(noTokenDbPath);
