@@ -1,4 +1,4 @@
-export type ApiAuthMode = "public" | "admin";
+export type ApiAuthMode = "public" | "admin" | "cron";
 
 export type ApiCatalogGroup =
   | "Public"

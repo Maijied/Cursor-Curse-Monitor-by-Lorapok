@@ -113,9 +113,11 @@ export default function StatsRefreshCard() {
       </div>
 
       {message && (
-        <Notification type={message.type} className="mb-4">
-          {message.text}
-        </Notification>
+        <Notification
+          tone={message.type === "success" ? "success" : "error"}
+          message={message.text}
+          className="mb-4"
+        />
       )}
 
       {loading ? (
