@@ -351,13 +351,49 @@ jobs:
         run: node scripts/prepare-release-tag.mjs
 
   # ───────────────────────────────────────────────────────────────────────────
+  # 4a. ADMIN DEPLOY GATE (skip Cloudflare when push only touches unrelated paths)
+  # ───────────────────────────────────────────────────────────────────────────
+  admin-deploy-gate:
+    name: Admin Deploy Gate
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && !contains(github.event.head_commit.message, 'chore(seo):')
+    outputs:
+      deploy_admin: ${{ steps.gate.outputs.deploy_admin }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Mission Control–affecting changes
+        id: gate
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "deploy_admin=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          PATTERN='^(website/admin/|packages/shared/|scripts/generate-(site-data|seo)\.mjs|website/assets/mail/)'
+          if git diff --name-only "$BEFORE" "$AFTER" | grep -qE "$PATTERN"; then
+            echo "deploy_admin=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy_admin=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Cloudflare Pages deploy — push did not touch Mission Control paths."
+          fi
+
+  # ───────────────────────────────────────────────────────────────────────────
   # 4. ADMIN PANEL DEPLOY (Cloudflare Pages)
   # ───────────────────────────────────────────────────────────────────────────
   admin-deploy:
     name: Deploy Admin Panel
     runs-on: ubuntu-latest
     timeout-minutes: 18
-    needs: [admin-ci, release-prep, deploy, prepare-tag-on-push]
+    needs: [admin-ci, release-prep, deploy, prepare-tag-on-push, admin-deploy-gate]
     if: >-
       always()
       && needs.admin-ci.result == 'success'
@@ -390,6 +426,10 @@ jobs:
           && (
             needs.prepare-tag-on-push.result == 'success' ||
             needs.prepare-tag-on-push.result == 'skipped'
+          )
+          && (
+            needs.admin-deploy-gate.result == 'skipped' ||
+            needs.admin-deploy-gate.outputs.deploy_admin == 'true'
           )
         )
       )
@@ -467,12 +507,14 @@ jobs:
           MAIL_RELAY_EXISTS_VERIFY: ${{ steps.mail_verify.outputs.relay_exists || 'false' }}
           MAIL_API_LIGHTWEIGHT: ${{ github.event_name == 'push' && 'true' || steps.mail_setup.outputs.mail_api_lightweight || 'false' }}
           CF_DEPLOY_PRE_COOLDOWN_SEC: "90"
-          CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT: "45"
+          CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT: "0"
           CF_DEPLOY_MAX_ATTEMPTS: "4"
         run: node scripts/deploy-pages-ci.mjs
 
       - name: Deploy stats cron worker (cred → CRON_SECRET)
-        if: steps.pages_deploy.outcome == 'success'
+        if: >-
+          steps.pages_deploy.outcome == 'success'
+          && github.event_name == 'workflow_dispatch'
         continue-on-error: true
         working-directory: website/admin
         env:

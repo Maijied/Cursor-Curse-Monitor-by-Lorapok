@@ -40,7 +40,7 @@ for (let attempt = 1; attempt <= 3; attempt++) {
   }
 }
 
-// Push-to-main deploy skips mail setup → shorter cooldown.
+// Push-to-main deploy skips mail setup → no pre-deploy cooldown.
 assert.equal(
   resolvePagesPreDeployCooldownSec({
     inCi: true,
@@ -48,7 +48,7 @@ assert.equal(
     mailLightweight: false,
     env: {},
   }),
-  45
+  0
 );
 
 // workflow_dispatch with full mail setup → longer cooldown.

@@ -37,7 +37,7 @@ assert.equal(
 
 assert.equal(
   resolvePagesPreDeployCooldownSec({ inCi: true, skipMailSetup: true, env: {} }),
-  45
+  0
 );
 
 console.log("deploy-retry.test.mjs: OK");

@@ -58,7 +58,7 @@ export function resolvePagesPreDeployCooldownSec(options = {}) {
   const { inCi = false, skipMailSetup = false, mailLightweight = false, env = {} } = options;
   if (!inCi) return 0;
   const lightweight = mailLightweight || skipMailSetup;
-  if (lightweight) return Number(env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 45);
+  if (lightweight) return Number(env.CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT ?? 0);
   return Number(env.CF_DEPLOY_PRE_COOLDOWN_SEC ?? 90);
 }
 
