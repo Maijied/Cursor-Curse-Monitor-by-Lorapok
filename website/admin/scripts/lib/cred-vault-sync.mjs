@@ -181,21 +181,74 @@ export function syncCursorCronSecret(cronSecret) {
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
-/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string } | null} */
+/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} */
 export function loadCursorCloudflareSecretsFromVault() {
   const candidates = readPassphraseCandidates();
   for (const candidate of candidates) {
     const vault = gpgDecrypt(candidate);
     const cursor = vault?.cursor;
-    if (!cursor) continue;
+    if (!cursor && !vault?.titi && !vault?.github) continue;
+    const githubToken = resolveGithubTokenFromVault(vault);
     return {
-      apiToken: String(cursor.cloudflare_api_token ?? "").trim() || undefined,
-      emailToken: String(cursor.cloudflare_email_api_token ?? "").trim() || undefined,
-      accountId: String(cursor.cloudflare_account_id ?? "").trim() || undefined,
-      cronSecret: String(cursor.cron_secret ?? "").trim() || undefined,
+      apiToken: String(cursor?.cloudflare_api_token ?? "").trim() || undefined,
+      emailToken: String(cursor?.cloudflare_email_api_token ?? "").trim() || undefined,
+      accountId: String(cursor?.cloudflare_account_id ?? "").trim() || undefined,
+      cronSecret: String(cursor?.cron_secret ?? "").trim() || undefined,
+      githubToken,
     };
   }
   return null;
+}
+
+/** @param {Record<string, unknown>} vault */
+function resolveGithubTokenFromVault(vault) {
+  const titi = /** @type {Record<string, unknown>} */ (vault?.titi ?? {});
+  const github = /** @type {Record<string, unknown>} */ (vault?.github ?? {});
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const candidates = [
+    titi.github_token,
+    titi.GITHUB_TOKEN,
+    titi.pat,
+    github.token,
+    github.pat,
+    github.github_token,
+    cursor.github_token,
+    cursor.GITHUB_TOKEN,
+  ];
+  for (const value of candidates) {
+    const token = String(value ?? "").trim();
+    if (token) return token;
+  }
+  return undefined;
+}
+
+/** @param {string} githubToken */
+export function syncCursorGithubToken(githubToken) {
+  const candidates = readPassphraseCandidates();
+  if (!candidates.length) {
+    return { vaultUpdated: false, reason: "passphrase missing (.cred-vault-passphrase or CRED_VAULT_PASSPHRASE)" };
+  }
+
+  let vault = null;
+  let passphrase = "";
+  for (const candidate of candidates) {
+    vault = gpgDecrypt(candidate);
+    if (vault) {
+      passphrase = candidate;
+      break;
+    }
+  }
+  if (!vault) {
+    return { vaultUpdated: false, reason: "vault decrypt failed" };
+  }
+
+  vault.titi = vault.titi ?? {};
+  vault.titi.github_token = githubToken;
+  vault.cursor = vault.cursor ?? {};
+  vault.cursor.github_token = githubToken;
+
+  const ok = gpgEncrypt(passphrase, vault);
+  return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
 /** Merge Cloudflare tokens from gpg vault when not already in env (no cred CLI needed). */
@@ -217,5 +270,6 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
       ? { CLOUDFLARE_EMAIL_API_TOKEN: loaded.emailToken }
       : {}),
     ...(loaded.cronSecret && !baseEnv.CRON_SECRET ? { CRON_SECRET: loaded.cronSecret } : {}),
+    ...(loaded.githubToken && !baseEnv.GITHUB_TOKEN ? { GITHUB_TOKEN: loaded.githubToken } : {}),
   };
 }

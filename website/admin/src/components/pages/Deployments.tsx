@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
 import {
   fetchTags,
@@ -69,6 +69,18 @@ export default function Deployments() {
   const [versionPlan, setVersionPlan] = useState<Awaited<ReturnType<typeof fetchVersionPlan>> | null>(null);
   const [versionPlanLoading, setVersionPlanLoading] = useState(false);
   const [versionPlanError, setVersionPlanError] = useState<string | null>(null);
+  const siteDataRef = useRef(siteData);
+  siteDataRef.current = siteData;
+
+  const applyTagSelection = useCallback(
+    (tagNames: string[], nextLiveTag: string | null, nextSuggestedTag: string | null) => {
+      setSelectedTag((prev) => {
+        if (prev && tagNames.includes(prev)) return prev;
+        return defaultTagSelection(tagNames, nextLiveTag, nextSuggestedTag);
+      });
+    },
+    []
+  );
 
   const loadTags = useCallback(() => {
     fetchTags()
@@ -80,10 +92,10 @@ export default function Deployments() {
         setSuggestedTag(data.suggestedTag ?? null);
         setTagsError(null);
         setTagsWarning(data.warning ?? (data.source === "cache" ? "Using cached tags from site-data.json" : null));
-        setSelectedTag(defaultTagSelection(tagNames, data.liveTag ?? null, data.suggestedTag ?? null));
+        applyTagSelection(tagNames, data.liveTag ?? null, data.suggestedTag ?? null);
       })
       .catch((err: Error) => {
-        const fallback = fallbackTagsFromSite(siteData);
+        const fallback = fallbackTagsFromSite(siteDataRef.current);
         if (fallback.tags.length > 0) {
           setTags(fallback.tags);
           setLiveTag(fallback.liveTag);
@@ -91,13 +103,13 @@ export default function Deployments() {
           setSuggestedTag(null);
           setTagsError(null);
           setTagsWarning(err.message || "Using fallback tags from site-data.json");
-          setSelectedTag(defaultTagSelection(fallback.tags, fallback.liveTag, null));
+          applyTagSelection(fallback.tags, fallback.liveTag, null);
         } else {
           setTags([]);
           setTagsError(err.message || "Failed to load tags from API");
         }
       });
-  }, [siteData]);
+  }, [applyTagSelection]);
 
   useEffect(() => {
     loadTags();

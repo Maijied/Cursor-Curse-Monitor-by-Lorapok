@@ -46,9 +46,11 @@ export async function onRequestGet(context) {
     const cached = tagsFromSiteData(siteData);
     if (cached.length > 0) {
       const warning =
-        res.status === 403
-          ? "GitHub API rate limit — using cached tags from site-data.json"
-          : `GitHub tags ${res.status} — using cached tags from site-data.json`;
+        res.status === 401
+          ? "GITHUB_TOKEN on Mission Control is invalid or expired — using cached tags from site-data.json. Run: npm run github:sync-vault --prefix website/admin"
+          : res.status === 403
+            ? "GitHub API rate limit — using cached tags from site-data.json"
+            : `GitHub tags ${res.status} — using cached tags from site-data.json`;
       const payload = await buildTagsPayload(env, cached, "cache", warning, siteData);
       const response = jsonResponse(payload, 200);
       return logAuthenticatedRequest(context, auth, response, startedAt);

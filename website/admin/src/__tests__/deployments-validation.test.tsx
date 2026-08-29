@@ -20,11 +20,15 @@ vi.mock("../hooks/useSiteData", () => ({
   }),
 }));
 
+let triggerDeployComplete: (() => void) | null = null;
+
 vi.mock("../context/DeployRuntimeContext", () => ({
   useDeployRuntime: () => ({
     inProgress: false,
     startSession: vi.fn(),
-    registerOnDeployComplete: vi.fn(),
+    registerOnDeployComplete: (cb: (() => void) | null) => {
+      triggerDeployComplete = cb;
+    },
   }),
 }));
 
@@ -57,6 +61,7 @@ vi.mock("../components/ui/DeployRuntimeInlineSlot", () => ({
 describe("Deployments validation UI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    triggerDeployComplete = null;
   });
 
   it("shows Deployment validation section and Validate platforms button", async () => {
@@ -68,6 +73,7 @@ describe("Deployments validation UI", () => {
   });
 
   it("keeps a manually selected deploy tag instead of snapping back to the prepared tag", async () => {
+    const { useDeployRuntime } = await import("../context/DeployRuntimeContext");
     render(<Deployments />);
 
     const select = await screen.findByLabelText("Deploy tag");
@@ -76,6 +82,7 @@ describe("Deployments validation UI", () => {
     fireEvent.change(select, { target: { value: "v1.0.51" } });
     expect(select).toHaveValue("v1.0.51");
 
+    triggerDeployComplete?.();
     await waitFor(() => expect(select).toHaveValue("v1.0.51"));
   });
 
