@@ -19,15 +19,32 @@ export async function notifyDiscordFeedback(env, payload = {}) {
   }
 
   const branding = getMessageBranding();
-  const res = await fetch(config.feedbackWebhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: "Cursor Curse Monitor",
-      avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
-      embeds: [embed],
-    }),
-  });
+  let res;
+  try {
+    res = await fetch(config.feedbackWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "Cursor Curse Monitor",
+        avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
+        embeds: [embed],
+      }),
+    });
+  } catch (error) {
+    const result = {
+      ok: false,
+      status: 0,
+      error: error instanceof Error ? error.message : "Discord feedback request failed",
+    };
+    await logSystemEvent(env, {
+      source: "discord",
+      level: "error",
+      message: `Discord feedback failed: ${result.error}`,
+      meta: { kind: "feedback" },
+      email: payload.triggeredBy ? String(payload.triggeredBy) : null,
+    });
+    return result;
+  }
 
   const result = res.ok
     ? { ok: true, status: res.status }

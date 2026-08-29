@@ -81,22 +81,9 @@ async function maybeAutoRollbackOnFailure(env, watch, match) {
 
   const summary = `Auto-rollback to \`${sourceTag}\` after failed deploy of \`${failedTag}\`. CI will publish a new \`v{major}.{minor}.Rn\` rollback release.`;
 
-  await notifyDiscordDeployment(env, {
-    phase: "started",
-    actionType: "auto-rollback",
-    tag: sourceTag,
-    channel: watch.channel ?? null,
-    market: watch.market ?? null,
-    summary,
-    triggeredBy: "auto-rollback",
-    runUrl: match.url ?? null,
-  }).catch((error) => {
-    console.error("Auto-rollback started notification failed", error);
-  });
-
   try {
     const { dispatchRollbackWorkflow } = await import("./deploy-workflow.js");
-    await dispatchRollbackWorkflow(
+    const response = await dispatchRollbackWorkflow(
       env,
       {
         target_tag: sourceTag,
@@ -109,9 +96,28 @@ async function maybeAutoRollbackOnFailure(env, watch, match) {
       { triggeredBy: "auto-rollback" },
       null
     );
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      console.error("Auto-rollback dispatch failed", response.status, detail);
+      return;
+    }
   } catch (error) {
     console.error("Auto-rollback dispatch failed", error);
+    return;
   }
+
+  await notifyDiscordDeployment(env, {
+    phase: "started",
+    actionType: "auto-rollback",
+    tag: sourceTag,
+    channel: watch.channel ?? null,
+    market: watch.market ?? null,
+    summary,
+    triggeredBy: "auto-rollback",
+    runUrl: match.url ?? null,
+  }).catch((error) => {
+    console.error("Auto-rollback started notification failed", error);
+  });
 }
 
 /**

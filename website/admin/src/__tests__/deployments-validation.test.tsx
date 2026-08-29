@@ -30,7 +30,7 @@ vi.mock("../context/DeployRuntimeContext", () => ({
 
 vi.mock("../lib/api", () => ({
   fetchTags: vi.fn().mockResolvedValue({
-    tags: ["v1.0.31", "v1.0.35", "v1.0.51"],
+    tags: ["v1.0.31", "v1.0.35", "v1.0.51", "v1.0.34-dev.5"],
     liveTag: "v1.0.31",
     latestTag: "v1.0.51",
     suggestedTag: "v1.0.35",
@@ -87,6 +87,9 @@ describe("Deployments validation UI", () => {
     await waitFor(() => {
       expect(select.querySelectorAll("option").length).toBeGreaterThan(0);
     });
+    const optionValues = Array.from(select.querySelectorAll("option")).map((o) => o.getAttribute("value"));
+    expect(optionValues).not.toContain("v1.0.34-dev.5");
+    expect(optionValues).toContain("v1.0.51");
     expect(screen.getByText(/Beta channel/i)).toBeInTheDocument();
     expect(screen.getByText(/Firefox AMO is not available on beta/i)).toBeInTheDocument();
   });
