@@ -23,6 +23,11 @@ function normalizeComposeCategory(value) {
   return COMPOSE_CATEGORIES.has(key) ? key : "compose";
 }
 
+/**
+ * Retrieves mailbox messages or available mail templates for an authenticated administrator.
+ *
+ * @returns A response containing templates, or filtered and paginated mailbox messages with statistics and transport status.
+ */
 export async function onRequestGet(context) {
   const startedAt = Date.now();
   const { request, env } = context;

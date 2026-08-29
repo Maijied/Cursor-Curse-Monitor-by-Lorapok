@@ -95,6 +95,9 @@ const devKv = {
   },
 };
 
+/**
+ * Reset the development store to its default notice and Discord configuration.
+ */
 export function resetDevStore() {
   devStore.notice = { ...GENERATED_DEV_NOTICE };
   devStore.notices = buildBuiltinNotices();
@@ -166,6 +169,13 @@ function mapReleaseChannel(value) {
   return map[value] ?? null;
 }
 
+/**
+ * Dispatches the CI/CD workflow with the specified inputs.
+ * @param {Object} inputs - Workflow dispatch inputs, including marketplace and release channel values.
+ * @param {string} successMessage - Message included in the successful result.
+ * @returns {Object} The workflow dispatch result and submitted inputs.
+ * @throws {Error} If required inputs are invalid, the GitHub token is unavailable, or the workflow request fails.
+ */
 async function dispatchCiCdWorkflow(inputs, successMessage) {
   const targetTag = inputs.target_tag;
   const publishMarket = inputs.publish_market;
@@ -393,6 +403,10 @@ function readCachedTags() {
   return [];
 }
 
+/**
+ * Reads the live release tag from local site data.
+ * @return {string|null} The live release tag, or `null` if the site data cannot be read or parsed.
+ */
 function readLiveTag() {
   try {
     const data = JSON.parse(readFileSync(siteDataPath, "utf8"));
@@ -402,6 +416,11 @@ function readLiveTag() {
   }
 }
 
+/**
+ * Fetches publishable GitHub tags and falls back to cached site data when the API is unavailable.
+ * @returns {{tags: Array, source: string, warning?: string}} Enriched publishable tags with their data source and an optional fallback warning.
+ * @throws {Error} If GitHub returns an error and no cached tags are available.
+ */
 async function fetchGitHubTags() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=100`, {
     headers: githubHeaders(),

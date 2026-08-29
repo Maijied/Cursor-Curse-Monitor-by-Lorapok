@@ -30,6 +30,11 @@ export function maskWebhookUrl(url) {
   return `${id} ···${token.slice(-4)}`;
 }
 
+/**
+ * Normalizes stored Discord webhook configuration values.
+ * @param {Object} parsed - Stored configuration data, including optional webhook URLs and update metadata.
+ * @returns {{deploymentWebhookUrl: string, feedbackWebhookUrl: string, updatedAt: unknown, updatedBy: unknown}} The normalized configuration, using the legacy `webhookUrl` as a deployment webhook fallback.
+ */
 function normalizeStoredConfig(parsed) {
   const deploymentWebhookUrl = String(
     parsed.deploymentWebhookUrl ?? parsed.webhookUrl ?? ""
@@ -44,8 +49,9 @@ function normalizeStoredConfig(parsed) {
 }
 
 /**
- * Read the Discord configuration from KV storage.
- * @returns {Promise<{deploymentWebhookUrl: string, feedbackWebhookUrl: string, updatedAt: unknown, updatedBy: unknown}>}
+ * Reads the Discord configuration from KV storage.
+ * Returns an empty configuration when storage is unavailable, empty, malformed, or unreadable.
+ * @return {{deploymentWebhookUrl: string, feedbackWebhookUrl: string, updatedAt: unknown, updatedBy: unknown}} The normalized Discord configuration.
  */
 export async function readDiscordConfig(env) {
   const empty = {
@@ -65,9 +71,10 @@ export async function readDiscordConfig(env) {
 }
 
 /**
- * Store the Discord configuration in administrative key-value storage.
+ * Stores the Discord configuration in administrative key-value storage.
  * @param {Record<string, unknown>} env - The environment containing the administrative KV binding.
- * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; updatedAt: string; updatedBy: string }} config
+ * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; updatedAt: string; updatedBy: string }} config - The configuration to store.
+ * @throws {Error} If the administrative KV binding is unavailable.
  */
 export async function writeDiscordConfig(env, config) {
   if (!env?.ADMIN_KV?.put) {
@@ -77,8 +84,9 @@ export async function writeDiscordConfig(env, config) {
 }
 
 /**
- * Creates a client-safe Discord configuration summary.
- * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; webhookUrl?: string; updatedAt?: string | null; updatedBy?: string | null }} config
+ * Creates a client-safe summary of the configured Discord webhooks.
+ * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; webhookUrl?: string; updatedAt?: string | null; updatedBy?: string | null }} config - The stored Discord configuration.
+ * @return {{ deploymentConfigured: boolean; feedbackConfigured: boolean; deploymentWebhookPreview: string | null; feedbackWebhookPreview: string | null; configured: boolean; webhookPreview: string | null; updatedAt: string | null; updatedBy: string | null }} Configuration status, masked webhook previews, and update metadata.
  */
 export function sanitizeDiscordConfigForClient(config) {
   const deploymentWebhookUrl = String(

@@ -27,6 +27,13 @@ const EMPTY: DevNotice = {
   source: "admin",
 };
 
+/**
+ * Applies a notice template to a form and prepares it as a new disabled notice.
+ *
+ * @param form - The current notice form to update
+ * @param template - The template whose notice fields should be applied
+ * @returns The updated notice form with template metadata removed and a refreshed timestamp
+ */
 function applyTemplate(form: DevNotice, template: NoticeTemplate): DevNotice {
   const { templateId: _templateId, label: _label, category: _category, ...fields } = template;
   return {

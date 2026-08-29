@@ -29,8 +29,10 @@ export const PLACEHOLDER_KEYS = [
 ];
 
 /**
- * @param {string} str
- * @param {Record<string, unknown>} ctx
+ * Replace supported placeholder tokens in a string with context values.
+ * @param {string} str - The value containing placeholder tokens.
+ * @param {Record<string, unknown>} ctx - The context values used for substitution.
+ * @return {string} The string with placeholders replaced; non-string values are returned unchanged.
  */
 export function interpolateString(str, ctx) {
   if (typeof str !== "string" || !str.includes("{{")) return str;
@@ -41,8 +43,10 @@ export function interpolateString(str, ctx) {
 }
 
 /**
- * @param {unknown} value
- * @param {Record<string, unknown>} ctx
+ * Recursively interpolates template placeholders in strings within a value.
+ * @param {unknown} value - The value containing strings to interpolate.
+ * @param {Record<string, unknown>} ctx - The context values used for substitution.
+ * @returns {unknown} The value with placeholders interpolated in nested strings.
  */
 export function interpolateDeep(value, ctx) {
   if (typeof value === "string") return interpolateString(value, ctx);
@@ -59,9 +63,10 @@ export function interpolateDeep(value, ctx) {
 }
 
 /**
- * Replace concrete ctx values with {{key}} placeholders (longest values first).
- * @param {unknown} value
- * @param {Record<string, unknown>} ctx
+ * Replace context values with their corresponding `{{key}}` placeholders.
+ * @param {unknown} value - The value to process recursively.
+ * @param {Record<string, unknown>} ctx - Context values associated with placeholder keys.
+ * @return {unknown} The value with supported context values replaced by placeholders.
  */
 export function bakePlaceholders(value, ctx) {
   if (typeof value === "string") {

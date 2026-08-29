@@ -14,7 +14,9 @@ import {
 import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
- * Configure the Discord webhook that receives deploy / rollback / infra status.
+ * Configures and tests the Discord webhook used for deployment status updates.
+ *
+ * @returns The Discord integration configuration card.
  */
 export default function DiscordIntegrationsCard() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);

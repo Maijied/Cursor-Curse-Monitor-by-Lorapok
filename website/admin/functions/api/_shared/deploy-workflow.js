@@ -106,6 +106,11 @@ async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields,
   });
 }
 
+/**
+ * Parses and validates workflow target, market, and release channel inputs.
+ * @param {Object} body - Request data containing target tag, market, and release channel values.
+ * @return {{targetTag?: string, publishMarket?: string, releaseChannel?: string, error?: Object}} Normalized inputs on success or an HTTP error response for invalid input.
+ */
 function parseInputs(body) {
   const targetTag = body.target_tag ?? body.tag;
   const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
@@ -174,11 +179,12 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
 }
 
 /**
- * Dispatch a rollback workflow and activate the public recovery notice.
+ * Dispatch a marketplace rollback workflow and activate the public recovery notice.
  * @param {Record<string, unknown>} body - Contains the target tag, publishing market, and release channel.
- * @param {Record<string, unknown>} notifyContext - Optional context for deployment notifications.
- * @param {Record<string, unknown>} pagesContext - Optional context for Pages deployment monitoring.
- * @returns {Response} The workflow dispatch or error response.
+ * @param {string} successMessage - Message included in the successful workflow response.
+ * @param {Record<string, unknown>} [notifyContext] - Optional context for deployment notifications.
+ * @param {Record<string, unknown>} [pagesContext] - Optional context for deployment monitoring.
+ * @returns {Response} The workflow dispatch result or an error response.
  */
 export async function dispatchRollbackWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const parsed = parseInputs(body);

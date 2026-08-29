@@ -192,6 +192,11 @@ export async function putStatsRefreshConfigApi(payload: {
   return data as { ok: boolean; config: StatsRefreshConfig };
 }
 
+/**
+ * Triggers an immediate statistics refresh.
+ *
+ * @returns Refresh status and optional timing, timestamp, total, and synchronization details.
+ */
 export async function refreshStatsNowApi() {
   const res = await fetch(`${API_BASE}/stats/refresh`, {
     method: "POST",
@@ -234,10 +239,10 @@ export async function fetchDiscordConfigApi() {
 }
 
 /**
- * Saves the Discord webhook configuration.
+ * Saves the Discord deployment and feedback webhook configuration.
  *
- * @param payload - The webhook URL to save
- * @returns The save status and resulting Discord configuration
+ * @param payload - Webhook URLs to save; `webhookUrl` is retained for backward compatibility.
+ * @returns The save status and resulting Discord configuration.
  */
 export async function putDiscordConfigApi(payload: {
   deploymentWebhookUrl?: string;

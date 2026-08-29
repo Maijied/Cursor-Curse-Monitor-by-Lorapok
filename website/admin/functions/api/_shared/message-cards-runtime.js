@@ -1,7 +1,10 @@
 import embedded from "./product-context.embedded.json" with { type: "json" };
 import { hydrateTemplateValue } from "./product-context-runtime.js";
 
-/** @returns {Record<string, unknown>} */
+/**
+ * Provides the embedded message catalog or a default catalog with branding, footers, and no cards.
+ * @returns {Record<string, unknown>} The message catalog.
+ */
 export function getMessageCatalog() {
   return embedded.messageCatalog ?? {
     branding: {
@@ -28,14 +31,18 @@ export function getMessageCatalog() {
 }
 
 /**
- * @param {Record<string, unknown>} [env]
+ * Hydrate the message catalog with environment-specific values.
+ * @param {Record<string, unknown>} [env] - Environment values used during hydration.
+ * @return {Record<string, unknown>} The hydrated message catalog.
  */
 export async function getHydratedMessageCatalog(env) {
   return hydrateTemplateValue(getMessageCatalog(), env);
 }
 
 /**
- * @param {Record<string, unknown>} [env]
+ * Retrieves the message branding configuration.
+ * @param {Record<string, unknown>} [env] - Environment values used to hydrate branding templates.
+ * @return {Record<string, unknown>} The branding configuration, or an empty object when unavailable.
  */
 export async function getMessageBranding(env) {
   const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
@@ -43,7 +50,9 @@ export async function getMessageBranding(env) {
 }
 
 /**
- * @param {Record<string, unknown>} [env]
+ * Retrieves channel footer messages, optionally hydrated with environment values.
+ * @param {Record<string, unknown>} [env] - Environment values used to hydrate footer templates.
+ * @return {Record<string, unknown>} The channel footer messages.
  */
 export async function getChannelFooters(env) {
   const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
@@ -51,8 +60,9 @@ export async function getChannelFooters(env) {
 }
 
 /**
- * @param {string} id
- * @param {Record<string, unknown>} [env]
+ * Finds a message card by its identifier.
+ * @param {string} id - The message card identifier.
+ * @return {object|null} The matching message card, or `null` if no card matches.
  */
 export async function getMessageCard(id, env) {
   const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
@@ -61,8 +71,9 @@ export async function getMessageCard(id, env) {
 }
 
 /**
- * @param {Record<string, unknown>} [env]
- * @returns {Array<Record<string, unknown>>}
+ * Lists message cards configured for Discord delivery.
+ * @param {Record<string, unknown>} [env] - Environment values used to hydrate the message catalog.
+ * @returns {Array<Record<string, unknown>>} Message cards containing a Discord channel configuration.
  */
 export async function listDiscordCards(env) {
   const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
@@ -71,7 +82,9 @@ export async function listDiscordCards(env) {
 }
 
 /**
- * @param {Record<string, unknown>} [env]
+ * Builds the Discord embed used for feedback and support messages.
+ * @param {Record<string, unknown>} [env] - Environment values used to hydrate message content.
+ * @return {{title: string, color: number, description: string, footer: {text: string, icon_url?: string}}} The Discord embed configuration.
  */
 export async function buildDiscordFeedbackEmbed(env) {
   const footers = await getChannelFooters(env);

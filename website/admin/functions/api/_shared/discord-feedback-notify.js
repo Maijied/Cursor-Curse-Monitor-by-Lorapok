@@ -3,9 +3,10 @@ import { readDiscordConfig } from "./discord-config.js";
 import { buildDiscordFeedbackEmbed, getMessageBranding } from "./message-cards-runtime.js";
 
 /**
- * Sends a user-feedback style card to the feedback Discord webhook (not deployment status).
- * @param {Record<string, unknown>} env
- * @param {{ summary?: string; triggeredBy?: string | null }} [payload]
+ * Sends a feedback embed to the configured Discord webhook.
+ * @param {Record<string, unknown>} env - The environment configuration.
+ * @param {{ summary?: string; triggeredBy?: string | null }} [payload] - Optional feedback summary and triggering email.
+ * @return {Promise<{ok: boolean; status?: number; skipped?: boolean; reason?: string; error?: string}>} The webhook delivery result.
  */
 export async function notifyDiscordFeedback(env, payload = {}) {
   const config = await readDiscordConfig(env);
