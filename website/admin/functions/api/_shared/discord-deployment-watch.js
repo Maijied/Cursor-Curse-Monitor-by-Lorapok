@@ -144,17 +144,21 @@ export async function watchDiscordDeploymentCompletion(env, watch) {
 
       if (match?.status === "completed") {
         const jobs = await fetchRunJobs(env, match.id);
-        await notifyDiscordDeployment(env, {
-          phase: "completed",
-          actionType: watch.actionType,
-          tag: watch.tag ?? null,
-          channel: watch.channel ?? null,
-          market: watch.market ?? null,
-          conclusion: match.conclusion ?? "failure",
-          runUrl: match.url,
-          triggeredBy: watch.triggeredBy ?? null,
-          jobs,
-        });
+        try {
+          await notifyDiscordDeployment(env, {
+            phase: "completed",
+            actionType: watch.actionType,
+            tag: watch.tag ?? null,
+            channel: watch.channel ?? null,
+            market: watch.market ?? null,
+            conclusion: match.conclusion ?? "failure",
+            runUrl: match.url,
+            triggeredBy: watch.triggeredBy ?? null,
+            jobs,
+          });
+        } catch (error) {
+          console.error("Discord deployment completion notification failed", error);
+        }
         await maybeAutoRollbackOnFailure(env, watch, match);
         return;
       }
