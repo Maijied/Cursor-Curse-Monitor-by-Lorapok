@@ -21,6 +21,7 @@ import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import CollapsibleCard from "../ui/CollapsibleCard";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
@@ -297,8 +298,12 @@ export default function Deployments() {
 
       <DiscordIntegrationsCard />
 
-      <Card className="border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
-        <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">How it works</h3>
+      <CollapsibleCard
+        title="How it works"
+        defaultOpen={false}
+        className="border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]"
+        subtitle="Push to main prepares tags; Deploy publishes marketplaces; Rollback restores older tags."
+      >
         <ul className="text-sm text-[var(--color-muted)] space-y-2 list-disc pl-5">
           <li>
             <strong className="text-[var(--color-text)]">Push to main</strong> — CI checks every platform version, bumps{" "}
@@ -321,7 +326,7 @@ export default function Deployments() {
         <p className="text-xs text-[var(--color-warn)] mt-3">
           Golden rule: if a marketplace publish fails, use <strong>Rollback</strong> or <strong>Deploy</strong> with a known-good tag — never leave main in a broken state.
         </p>
-      </Card>
+      </CollapsibleCard>
 
       {!isMaster ? (
         <div className="glass-panel px-4 py-3 text-sm border border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] text-[var(--color-warn)] flex items-center gap-2">
@@ -345,15 +350,12 @@ export default function Deployments() {
         </span>
       </div>
 
-      <Card className="border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-base font-semibold text-[var(--color-text)]">Deployment validation</h3>
-            <p className="text-sm text-[var(--color-muted)] mt-1">
-              Validates live versions across GitHub, Open VSX, VS Code Marketplace, and Firefox AMO before you publish.
-              Deploy target = highest live + 1 patch.
-            </p>
-          </div>
+      <CollapsibleCard
+        title="Deployment validation"
+        defaultOpen={false}
+        className="border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]"
+        subtitle="Validates live versions across GitHub, Open VSX, VS Code Marketplace, and Firefox AMO before you publish."
+        actions={
           <button
             type="button"
             onClick={() => void runVersionCheck()}
@@ -368,7 +370,8 @@ export default function Deployments() {
             )}
             {versionPlanLoading ? "Validating…" : "Validate platforms"}
           </button>
-        </div>
+        }
+      >
         {versionPlanError ? (
           <p className="text-sm text-[var(--color-danger)]">{versionPlanError}</p>
         ) : null}
@@ -422,7 +425,7 @@ export default function Deployments() {
             to prepare the next git tag.
           </p>
         )}
-      </Card>
+      </CollapsibleCard>
 
       {siteData?.browserExtension && (
         <Card>

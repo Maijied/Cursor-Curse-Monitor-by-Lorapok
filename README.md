@@ -54,6 +54,42 @@
 
 More Lorapok Labs software: [lorapok.tech](https://lorapok.tech)
 
+## Architecture
+
+End-to-end topology for the IDE extension, browser add-ons, Mission Control, and **Production Deployment** workflow. Interactive animated diagrams also live on the [marketing site](https://cursor.lorapok.tech/#architecture) and [Mission Control → Architecture](https://cursor-dev.lorapok.tech/architecture).
+
+```mermaid
+flowchart LR
+  IDE["Cursor / VS Code"] -->|local token| EXT["IDE Extension"]
+  EXT -->|usage + billing| API["api2.cursor.sh"]
+  EXT --> SCAN["scanSecrets"]
+  Browser["Firefox / Chrome"] --> BEXT["Browser ext"]
+  BEXT --> API
+  BEXT --> SCAN
+  SCAN --> ALERT["Security alerts"]
+  GitHook["pre-commit"] --> SCAN
+
+  Visitor["Visitor"] --> SITE["GitHub Pages"]
+  Operator["Admin"] --> MC["Mission Control"]
+  MC -->|dispatch| GHA["Production Deployment"]
+  MC --> KV[("ADMIN_KV")]
+  GHA --> OVSX["Open VSX"]
+  GHA --> VSM["VS Code Marketplace"]
+  GHA --> AMO["Firefox AMO"]
+  GHA --> CHROME["Chrome zip"]
+  GHA --> Pages["Admin + marketing deploy"]
+```
+
+| Surface | Role |
+|---------|------|
+| **IDE extension** | Local quota dashboard, fallback model, credential scan |
+| **Browser extension** | Popup budget tracker + paste guard (Firefox AMO, Chrome zip) |
+| **Mission Control** | Deploy, rollback, notices, mailbox, team access |
+| **Production Deployment** | `ci-cd.yml` — CI, tag prep, marketplaces, Pages deploy |
+| **Marketing site** | Static GitHub Pages + generated `site-data.json` |
+
+Deep dive: [docs/wiki/Architecture.md](docs/wiki/Architecture.md)
+
 ## Features
 
 | Feature | Description |

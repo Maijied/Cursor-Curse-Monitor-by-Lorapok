@@ -37,7 +37,7 @@ export default function Settings() {
   const ext = siteData?.browserExtension;
 
   return (
-    <div className="space-y-8 animate-fade-slide-up max-w-3xl">
+    <div className="space-y-6 animate-fade-slide-up">
       <PageHeader title="Settings" description="User feedback hook, help & support, theme, connected services, and API health." />
 
       <HelpSupportCard />
