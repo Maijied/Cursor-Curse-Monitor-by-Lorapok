@@ -28,6 +28,7 @@ const {
   dailyStatsRowIsToday,
   todayKey,
 } = require("../src/cursorLocalStore.ts");
+const { configDbPath } = require("../src/cursorAuth.ts");
 
 test("local store: emptyLocalInsights returns a clean default structure", () => {
   const empty = emptyLocalInsights();
@@ -473,15 +474,14 @@ test("local store: readLocalInsights uses explicit product folder path", () => {
     return;
   }
 
-  const os = require("os");
   const productFolder = `ccm-test-product-${Date.now()}`;
-  const productDir = path.join(os.homedir(), ".config", productFolder, "User", "globalStorage");
-  const testDbPath = path.join(productDir, "state.vscdb");
+  const testDbPath = configDbPath(productFolder);
+  const productDataDir = path.dirname(path.dirname(path.dirname(testDbPath)));
   const prevDbPath = process.env.CURSOR_DB_PATH;
   delete process.env.CURSOR_DB_PATH;
 
   try {
-    fs.mkdirSync(productDir, { recursive: true });
+    fs.mkdirSync(path.dirname(testDbPath), { recursive: true });
     const db = new DatabaseSync(testDbPath);
     db.exec("CREATE TABLE ItemTable (key TEXT, value TEXT);");
     const today = todayKey();
@@ -509,7 +509,7 @@ test("local store: readLocalInsights uses explicit product folder path", () => {
       process.env.CURSOR_DB_PATH = prevDbPath;
     }
     try {
-      fs.rmSync(path.join(os.homedir(), ".config", productFolder), { recursive: true, force: true });
+      fs.rmSync(productDataDir, { recursive: true, force: true });
     } catch {
       // ignore cleanup
     }
