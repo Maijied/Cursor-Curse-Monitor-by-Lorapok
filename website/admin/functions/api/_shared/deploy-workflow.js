@@ -2,6 +2,7 @@ import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
 import { notifyDiscordDeployment } from "./discord-notify.js";
 import { scheduleDiscordDeploymentCompletionWatch } from "./discord-deployment-watch.js";
+import { fetchSiteData, liveTagFromSiteData } from "./site-data.js";
 
 const MIN_PUBLISH_TAG = "v0.5.5";
 const WORKFLOW_ID = "ci-cd.yml";
@@ -91,6 +92,9 @@ async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields,
       triggeredBy: notifyContext.triggeredBy ?? null,
       dispatchedAt: Date.now(),
       workflowName: workflowId,
+      rollbackSourceTag: notifyContext?.rollbackSourceTag ?? null,
+      deployAdmin: inputs.deploy_admin === "true",
+      deployWebsite: inputs.deploy_website !== "false",
     });
   }
 
@@ -159,7 +163,16 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
   }
 
   const deployAdmin = body.deploy_admin === true || body.deploy_admin === "true";
-  const deployWebsite = body.deploy_website === true || body.deploy_website === "true";
+  const deployWebsite = body.deploy_website !== false && body.deploy_website !== "false";
+
+  let rollbackSourceTag = notifyContext?.rollbackSourceTag ?? null;
+  if (!rollbackSourceTag) {
+    try {
+      rollbackSourceTag = liveTagFromSiteData(await fetchSiteData(env));
+    } catch {
+      /* optional */
+    }
+  }
 
   return dispatchWorkflow(
     env,
@@ -174,7 +187,7 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
     },
     successMessage,
     { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
-    notifyContext,
+    { ...notifyContext, tag: targetTag, rollbackSourceTag, deployAdmin, deployWebsite },
     pagesContext
   );
 }

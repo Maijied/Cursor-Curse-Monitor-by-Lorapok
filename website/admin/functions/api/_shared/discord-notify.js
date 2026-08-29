@@ -2,7 +2,6 @@ import { logSystemEvent } from "./system-log.js";
 import { readDiscordConfig } from "./discord-config.js";
 import { buildDeployEnrichment, truncateDiscordText } from "./discord-deploy-context.js";
 import {
-  buildDiscordFeedbackEmbed,
   getChannelFooters,
   getMessageBranding,
 } from "./message-cards-runtime.js";
@@ -19,6 +18,7 @@ const ACTION_LABELS = {
   "full-release": "Full release",
   "publish-tag": "Publish tag",
   rollback: "Rollback",
+  "auto-rollback": "Auto-rollback",
   "deploy-infra": "Infra deploy",
   "deployment-status-test": "Deployment status test",
 };
@@ -204,11 +204,6 @@ export function buildSupplementalEmbeds(payload, enrichment) {
     });
   }
 
-  const footers = getChannelFooters();
-  if (footers.discord?.feedbackBlock) {
-    embeds.push(buildDiscordFeedbackEmbed());
-  }
-
   return embeds.slice(0, 9);
 }
 
@@ -264,7 +259,8 @@ export async function sendDiscordWebhook(webhookUrl, payload, enrichment) {
  */
 export async function notifyDiscordDeployment(env, payload) {
   const config = await readDiscordConfig(env);
-  if (!config.webhookUrl) {
+  const webhookUrl = config.deploymentWebhookUrl;
+  if (!webhookUrl) {
     return { ok: false, skipped: true, reason: "no_webhook" };
   }
 
@@ -278,7 +274,7 @@ export async function notifyDiscordDeployment(env, payload) {
     console.warn("Discord deploy enrichment failed", error);
   }
 
-  const result = await sendDiscordWebhook(config.webhookUrl, payload, enrichment);
+  const result = await sendDiscordWebhook(webhookUrl, payload, enrichment);
 
   await logSystemEvent(env, {
     source: "discord",

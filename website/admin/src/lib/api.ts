@@ -212,7 +212,13 @@ export async function refreshStatsNowApi() {
 }
 
 export type DiscordConfig = {
+  deploymentConfigured: boolean;
+  feedbackConfigured: boolean;
+  deploymentWebhookPreview: string | null;
+  feedbackWebhookPreview: string | null;
+  /** @deprecated use deploymentConfigured */
   configured: boolean;
+  /** @deprecated use deploymentWebhookPreview */
   webhookPreview: string | null;
   updatedAt: string | null;
   updatedBy: string | null;
@@ -233,7 +239,12 @@ export async function fetchDiscordConfigApi() {
  * @param payload - The webhook URL to save
  * @returns The save status and resulting Discord configuration
  */
-export async function putDiscordConfigApi(payload: { webhookUrl: string }) {
+export async function putDiscordConfigApi(payload: {
+  deploymentWebhookUrl?: string;
+  feedbackWebhookUrl?: string;
+  /** @deprecated use deploymentWebhookUrl */
+  webhookUrl?: string;
+}) {
   const res = await fetch(`${API_BASE}/integrations/discord/config`, {
     method: "PUT",
     headers: {
@@ -274,6 +285,21 @@ export async function notifyDiscordDeploymentApi(payload: {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok && !data.skipped) throw new Error(data.error || "Discord notification failed");
+  return data as { ok: boolean; skipped?: boolean };
+}
+
+/** Sends a sample user-feedback card to the feedback Discord webhook. */
+export async function notifyDiscordFeedbackApi(payload?: { summary?: string }) {
+  const res = await fetch(`${API_BASE}/integrations/discord/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload ?? {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && !data.skipped) throw new Error(data.error || "Discord feedback notification failed");
   return data as { ok: boolean; skipped?: boolean };
 }
 

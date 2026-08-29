@@ -28,11 +28,12 @@ const EMPTY: DevNotice = {
 };
 
 function applyTemplate(form: DevNotice, template: NoticeTemplate): DevNotice {
+  const { templateId: _templateId, label: _label, category: _category, ...fields } = template;
   return {
     ...form,
-    ...template,
+    ...fields,
     enabled: false,
-    id: template.id ?? undefined,
+    id: undefined,
     source: template.source ?? "admin",
     updatedAt: new Date().toISOString(),
   };

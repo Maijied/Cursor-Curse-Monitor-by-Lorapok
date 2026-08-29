@@ -3,7 +3,9 @@ import {
   bumpVersion,
   defaultTagSelection,
   effectiveVersionBase,
+  filterTagsForChannel,
   formatTagLabel,
+  isBetaPrereleaseTag,
   normalizeTag,
 } from "../lib/release-version";
 
@@ -39,5 +41,18 @@ describe("release-version", () => {
     expect(effectiveVersionBase("v1.0.3", "1.0.3")).toBe("v1.0.3");
     expect(effectiveVersionBase(null, "1.0.3")).toBe("v1.0.3");
     expect(bumpVersion(effectiveVersionBase("v0.5.18", "1.0.3"), "patch")).toBe("v1.0.4");
+  });
+
+  it("filterTagsForChannel shows all tags for beta deploy and rollback", () => {
+    const tags = ["v1.0.30", "v1.0.31-beta.1", "v1.0.32"];
+    expect(filterTagsForChannel(tags, "production", "deploy")).toEqual(["v1.0.30", "v1.0.32"]);
+    expect(filterTagsForChannel(tags, "beta", "deploy")).toEqual(tags);
+    expect(filterTagsForChannel(tags, "production", "rollback")).toEqual(tags);
+  });
+
+  it("detects beta and rollback tag labels", () => {
+    expect(isBetaPrereleaseTag("v1.0.31-beta.1")).toBe(true);
+    expect(formatTagLabel("v1.0.31-beta.1", null)).toContain("Pre-release");
+    expect(formatTagLabel("v1.0.R2", null)).toContain("Rollback");
   });
 });

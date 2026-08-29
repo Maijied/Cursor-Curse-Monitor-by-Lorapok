@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Save, Send } from "lucide-react";
+import { MessageSquare, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
@@ -7,16 +7,16 @@ import Notification from "./Notification";
 import { auth } from "../../lib/firebase";
 import {
   fetchDiscordConfigApi,
-  notifyDiscordDeploymentApi,
+  notifyDiscordFeedbackApi,
   putDiscordConfigApi,
   type DiscordConfig,
 } from "../../lib/api";
 import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
- * Configure the Discord webhook that receives deploy / rollback / infra status.
+ * Configure the Discord webhook that receives user-facing feedback prompts (separate from deployment status).
  */
-export default function DiscordIntegrationsCard() {
+export default function DiscordFeedbackCard() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,10 +41,10 @@ export default function DiscordIntegrationsCard() {
     setSaving(true);
     setMessage(null);
     try {
-      const result = await putDiscordConfigApi({ deploymentWebhookUrl: webhookUrl.trim() });
+      const result = await putDiscordConfigApi({ feedbackWebhookUrl: webhookUrl.trim() });
       setConfig(result.config);
       setWebhookUrl("");
-      setMessage({ type: "success", text: "Discord deployment hook saved. Status posts will go to this channel." });
+      setMessage({ type: "success", text: "Feedback Discord hook saved." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
     }
@@ -52,27 +52,15 @@ export default function DiscordIntegrationsCard() {
   };
 
   const handleTest = async () => {
-    if (!isMaster || !config?.deploymentConfigured) return;
+    if (!isMaster || !config?.feedbackConfigured) return;
     setTesting(true);
     setMessage(null);
     try {
-      const result = await notifyDiscordDeploymentApi({
-        actionType: "deployment-status-test",
-        tag: "v1.0.31",
-        channel: "Production",
-        market: "Open VSX · VS Code · GitHub",
-        conclusion: "success",
-        jobs: [
-          { name: "Build & Validate", conclusion: "success" },
-          { name: "Deploy Admin Panel", conclusion: "success" },
-          { name: "Deploy Marketing Website", conclusion: "success" },
-        ],
-        summary: "Sample rich deployment card — marketplace sync, downloads, changelog, and links.",
-      });
+      const result = await notifyDiscordFeedbackApi();
       if (result.skipped) {
-        setMessage({ type: "error", text: "Test skipped — save a webhook URL first." });
+        setMessage({ type: "error", text: "Test skipped — save a feedback webhook URL first." });
       } else {
-        setMessage({ type: "success", text: "Test deployment status sent to Discord." });
+        setMessage({ type: "success", text: "Sample feedback card sent to Discord." });
       }
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Test notification failed" });
@@ -85,17 +73,18 @@ export default function DiscordIntegrationsCard() {
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
           <h3 className="font-semibold flex items-center gap-2">
-            <Bell size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
-            Discord deployment hook
+            <MessageSquare size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
+            Discord feedback hook
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Channel webhook for deploy, rollback, and infra pipeline status. User feedback links use a separate hook in
-            Settings. Posts include pipeline status, marketplace sync, download breakdown, changelog, and quick links.
+            Optional channel for user-feedback prompts (GitHub Issues, Discussions, support links). This is{" "}
+            <strong className="text-[var(--color-text)]">not</strong> the deployment status webhook — configure that
+            on the Deployments page.
           </p>
         </div>
         {config && (
-          <Badge variant={config.deploymentConfigured ? "synced" : "warn"}>
-            {config.deploymentConfigured ? "Hook connected" : "Not set"}
+          <Badge variant={config.feedbackConfigured ? "synced" : "warn"}>
+            {config.feedbackConfigured ? "Hook connected" : "Not set"}
           </Badge>
         )}
       </div>
@@ -105,21 +94,25 @@ export default function DiscordIntegrationsCard() {
       {loading ? (
         <div className="flex items-center gap-3 py-6 justify-center text-sm text-[var(--color-muted)]">
           <LorapokLarvaeLoader size="sm" ariaLabel="Loading Discord configuration" className="!flex-row !gap-3" />
-          <span>Loading Discord hook…</span>
+          <span>Loading feedback hook…</span>
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label htmlFor="discord-webhook" className="block text-sm font-medium mb-2">
-              Webhook URL
+            <label htmlFor="discord-feedback-webhook" className="block text-sm font-medium mb-2">
+              Feedback webhook URL
             </label>
             <input
-              id="discord-webhook"
+              id="discord-feedback-webhook"
               type="password"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
               disabled={!isMaster}
-              placeholder={config?.deploymentWebhookPreview ? `Saved: ${config.deploymentWebhookPreview}` : "https://discord.com/api/webhooks/…"}
+              placeholder={
+                config?.feedbackWebhookPreview
+                  ? `Saved: ${config.feedbackWebhookPreview}`
+                  : "https://discord.com/api/webhooks/…"
+              }
               className={inputClass}
               autoComplete="off"
             />
@@ -137,17 +130,15 @@ export default function DiscordIntegrationsCard() {
             <button
               type="button"
               onClick={handleTest}
-              disabled={!isMaster || testing || !config?.deploymentConfigured}
+              disabled={!isMaster || testing || !config?.feedbackConfigured}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
             >
               <Send size={16} aria-hidden="true" />
-              {testing ? "Sending…" : "Send test status"}
+              {testing ? "Sending…" : "Send test card"}
             </button>
           </div>
 
-          {!isMaster && (
-            <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>
-          )}
+          {!isMaster && <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>}
         </form>
       )}
     </Card>

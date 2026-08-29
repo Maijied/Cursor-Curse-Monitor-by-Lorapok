@@ -163,8 +163,16 @@ export async function ensureCatalogSeeded(env) {
   }
 
   const next = { seeded: true, items };
-  await writeCatalog(env, next);
-  return next;
+  try {
+    await writeCatalog(env, next);
+    return next;
+  } catch (error) {
+    if (!env?.ADMIN_KV?.put) {
+      console.warn("ensureCatalogSeeded: ADMIN_KV unavailable — returning read-only catalog");
+      return { seeded: false, items };
+    }
+    throw error;
+  }
 }
 
 /** Make the recovery notice public for a new release. */

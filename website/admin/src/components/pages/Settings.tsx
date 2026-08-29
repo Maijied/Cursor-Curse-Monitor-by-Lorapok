@@ -3,7 +3,7 @@ import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
-import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
 import StatsRefreshCard from "../ui/StatsRefreshCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
 import { fetchHealth } from "../../lib/api";
@@ -38,11 +38,11 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up max-w-3xl">
-      <PageHeader title="Settings" description="Discord deployment hook, help & feedback, theme, connected services, and API health." />
+      <PageHeader title="Settings" description="User feedback hook, help & support, theme, connected services, and API health." />
 
       <HelpSupportCard />
 
-      <DiscordIntegrationsCard />
+      <DiscordFeedbackCard />
 
       <StatsRefreshCard />
 

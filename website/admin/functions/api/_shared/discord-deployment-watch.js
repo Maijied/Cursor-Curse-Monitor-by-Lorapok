@@ -58,6 +58,63 @@ async function fetchRunJobs(env, runId) {
 }
 
 /**
+ * After a failed publish-tag deploy, roll back to the live tag that was active before dispatch.
+ * @param {Record<string, unknown>} env
+ * @param {Record<string, unknown>} watch
+ * @param {{ url?: string; conclusion?: string | null }} match
+ */
+async function maybeAutoRollbackOnFailure(env, watch, match) {
+  if (match.conclusion !== "failure") return;
+  const actionType = String(watch.actionType ?? "");
+  if (!actionType.toLowerCase().includes("publish-tag")) return;
+
+  const sourceTag = watch.rollbackSourceTag ? String(watch.rollbackSourceTag) : "";
+  const failedTag = watch.tag ? String(watch.tag) : "";
+  if (!sourceTag) {
+    console.warn("Auto-rollback skipped: no rollback source tag");
+    return;
+  }
+  if (sourceTag === failedTag) {
+    console.warn("Auto-rollback skipped: source tag matches failed deploy tag");
+    return;
+  }
+
+  const summary = `Auto-rollback to \`${sourceTag}\` after failed deploy of \`${failedTag}\`. CI will publish a new \`v{major}.{minor}.Rn\` rollback release.`;
+
+  await notifyDiscordDeployment(env, {
+    phase: "started",
+    actionType: "auto-rollback",
+    tag: sourceTag,
+    channel: watch.channel ?? null,
+    market: watch.market ?? null,
+    summary,
+    triggeredBy: "auto-rollback",
+    runUrl: match.url ?? null,
+  }).catch((error) => {
+    console.error("Auto-rollback started notification failed", error);
+  });
+
+  try {
+    const { dispatchRollbackWorkflow } = await import("./deploy-workflow.js");
+    await dispatchRollbackWorkflow(
+      env,
+      {
+        target_tag: sourceTag,
+        publish_market: watch.market ?? "Open VSX + Firefox AMO",
+        release_channel: watch.channel ?? "Production",
+        deploy_admin: watch.deployAdmin ? "true" : "false",
+        deploy_website: watch.deployWebsite !== false ? "true" : "false",
+      },
+      summary,
+      { triggeredBy: "auto-rollback" },
+      null
+    );
+  } catch (error) {
+    console.error("Auto-rollback dispatch failed", error);
+  }
+}
+
+/**
  * Monitors the dispatched workflow until it completes, then sends a Discord completion notification.
  * @param {Record<string, unknown>} env - Environment configuration used to access GitHub and Discord.
  * @param {{
@@ -93,6 +150,7 @@ export async function watchDiscordDeploymentCompletion(env, watch) {
           triggeredBy: watch.triggeredBy ?? null,
           jobs,
         });
+        await maybeAutoRollbackOnFailure(env, watch, match);
         return;
       }
     } catch (error) {
