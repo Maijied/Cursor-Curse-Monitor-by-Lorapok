@@ -43,11 +43,11 @@ describe("release-version", () => {
     expect(bumpVersion(effectiveVersionBase("v0.5.18", "1.0.3"), "patch")).toBe("v1.0.4");
   });
 
-  it("filterTagsForChannel shows all tags for beta deploy and rollback", () => {
-    const tags = ["v1.0.30", "v1.0.31-beta.1", "v1.0.32"];
+  it("filterTagsForChannel hides CI-only tags and semver pre-release suffixes", () => {
+    const tags = ["v1.0.30", "v1.0.31-beta.1", "v1.0.32", "v1.0.34-dev.5"];
     expect(filterTagsForChannel(tags, "production", "deploy")).toEqual(["v1.0.30", "v1.0.32"]);
-    expect(filterTagsForChannel(tags, "beta", "deploy")).toEqual(tags);
-    expect(filterTagsForChannel(tags, "production", "rollback")).toEqual(tags);
+    expect(filterTagsForChannel(tags, "beta", "deploy")).toEqual(["v1.0.30", "v1.0.32"]);
+    expect(filterTagsForChannel(tags, "production", "rollback")).toEqual(["v1.0.30", "v1.0.32"]);
   });
 
   it("detects beta and rollback tag labels", () => {

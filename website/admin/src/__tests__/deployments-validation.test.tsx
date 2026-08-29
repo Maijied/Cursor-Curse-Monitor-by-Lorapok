@@ -79,7 +79,7 @@ describe("Deployments validation UI", () => {
     await waitFor(() => expect(select).toHaveValue("v1.0.51"));
   });
 
-  it("lists production tags on beta channel (not an empty dropdown)", async () => {
+  it("lists semver tags on beta channel (not CI-only tags)", async () => {
     render(<Deployments />);
     const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
     fireEvent.click(betaRadio);
@@ -88,5 +88,14 @@ describe("Deployments validation UI", () => {
       expect(select.querySelectorAll("option").length).toBeGreaterThan(0);
     });
     expect(screen.getByText(/Beta channel/i)).toBeInTheDocument();
+    expect(screen.getByText(/Firefox AMO is not available on beta/i)).toBeInTheDocument();
+  });
+
+  it("blocks deploy when beta channel is selected with default AMO market", async () => {
+    render(<Deployments />);
+    const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
+    fireEvent.click(betaRadio);
+    const submit = await screen.findByRole("button", { name: /publish to marketplaces/i });
+    expect(submit).toBeDisabled();
   });
 });

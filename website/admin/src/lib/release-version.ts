@@ -44,6 +44,8 @@ function compareTags(a: string, b: string): number {
   return 0;
 }
 
+import { isValidMarketplaceTag } from "./marketplace-deploy-policy";
+
 export function isBetaPrereleaseTag(tag: string): boolean {
   return /beta|alpha|rc/i.test(tag);
 }
@@ -65,12 +67,13 @@ export function filterTagsForChannel(
   channel: "beta" | "production",
   mode: "deploy" | "rollback" | "infra"
 ): string[] {
-  if (mode === "rollback") return tags;
+  const marketplaceTags = tags.filter((tag) => isValidMarketplaceTag(tag));
+  if (mode === "rollback") return marketplaceTags;
   if (channel === "production") {
-    return tags.filter((tag) => !isBetaPrereleaseTag(tag));
+    return marketplaceTags.filter((tag) => !isBetaPrereleaseTag(tag));
   }
-  // Beta channel: any publishable tag can ship as a marketplace pre-release.
-  return tags;
+  // Beta channel: semver tags only; pre-release is set at publish time (--pre-release), not in the tag name.
+  return marketplaceTags.filter((tag) => !isBetaPrereleaseTag(tag));
 }
 
 export function defaultTagSelection(

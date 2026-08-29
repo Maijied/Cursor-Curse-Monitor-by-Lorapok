@@ -6,6 +6,7 @@ import { GENERATED_DEV_NOTICE, buildBuiltinNotices, getNoticeTemplates } from ".
 import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
+import { validateMarketplaceDeploy } from "./functions/api/_shared/marketplace-tag-policy.js";
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
@@ -174,6 +175,14 @@ async function dispatchCiCdWorkflow(inputs, successMessage) {
   }
   if (!publishMarket) throw new Error("Invalid publish_market");
   if (!releaseChannel) throw new Error("Invalid release_channel");
+  if (inputs.action_type?.includes("publish-tag") || inputs.action_type?.includes("rollback")) {
+    const policy = validateMarketplaceDeploy({
+      targetTag,
+      releaseChannel,
+      publishMarket,
+    });
+    if (!policy.ok) throw new Error(policy.error);
+  }
 
   const githubToken = loadGithubToken();
   if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");

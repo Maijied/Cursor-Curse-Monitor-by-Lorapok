@@ -1,10 +1,10 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
+import { validateMarketplaceDeploy } from "./marketplace-tag-policy.js";
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
 import { notifyDiscordDeployment } from "./discord-notify.js";
 import { scheduleDiscordDeploymentCompletionWatch } from "./discord-deployment-watch.js";
 import { fetchSiteData, liveTagFromSiteData } from "./site-data.js";
 
-const MIN_PUBLISH_TAG = "v0.5.5";
 const WORKFLOW_ID = "ci-cd.yml";
 const ACTION_PUBLISH_TAG = "publish-tag - Publish existing git tag to marketplaces";
 const ACTION_ROLLBACK = "rollback - Restore previous tag as a new version";
@@ -124,21 +124,6 @@ function parseInputs(body) {
   return { targetTag: String(targetTag), publishMarket, releaseChannel };
 }
 
-function tagAtLeast(tag, minimum) {
-  const normalize = (value) =>
-    String(value)
-      .replace(/^v/i, "")
-      .split("-")[0]
-      .split(".")
-      .map((part) => Number.parseInt(part, 10) || 0);
-
-  const [aMaj, aMin, aPatch] = normalize(tag);
-  const [bMaj, bMin, bPatch] = normalize(minimum);
-  if (aMaj !== bMaj) return aMaj > bMaj;
-  if (aMin !== bMin) return aMin > bMin;
-  return aPatch >= bPatch;
-}
-
 /**
  * Dispatches a marketplace publish workflow for an existing tag.
  * @param {Record<string, unknown>} env - Runtime environment containing workflow configuration and credentials.
@@ -153,13 +138,9 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
   if (parsed.error) return parsed.error;
 
   const { targetTag, publishMarket, releaseChannel } = parsed;
-  if (!tagAtLeast(targetTag, MIN_PUBLISH_TAG)) {
-    return jsonResponse(
-      {
-        error: `Tag ${targetTag} is too old for marketplace publish. Choose ${MIN_PUBLISH_TAG} or newer.`,
-      },
-      400
-    );
+  const policy = validateMarketplaceDeploy({ targetTag, releaseChannel, publishMarket });
+  if (!policy.ok) {
+    return jsonResponse({ error: policy.error }, 400);
   }
 
   const deployAdmin = body.deploy_admin === true || body.deploy_admin === "true";
@@ -204,13 +185,9 @@ export async function dispatchRollbackWorkflow(env, body, successMessage, notify
   if (parsed.error) return parsed.error;
 
   const { targetTag, publishMarket, releaseChannel } = parsed;
-  if (!tagAtLeast(targetTag, MIN_PUBLISH_TAG)) {
-    return jsonResponse(
-      {
-        error: `Tag ${targetTag} cannot be rolled back safely. Choose ${MIN_PUBLISH_TAG} or newer.`,
-      },
-      400
-    );
+  const policy = validateMarketplaceDeploy({ targetTag, releaseChannel, publishMarket });
+  if (!policy.ok) {
+    return jsonResponse({ error: policy.error }, 400);
   }
 
   const response = await dispatchWorkflow(

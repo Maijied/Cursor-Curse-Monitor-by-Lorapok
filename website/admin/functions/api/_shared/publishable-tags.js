@@ -1,4 +1,4 @@
-const MIN_PUBLISH_TAG = [0, 5, 5];
+import { isValidMarketplaceTag } from "./marketplace-tag-policy.js";
 
 function tagParts(tag) {
   const rollback = String(tag).match(/^v?(\d+)\.(\d+)\.R(\d+)$/i);
@@ -16,15 +16,6 @@ function tagParts(tag) {
     .map((part) => Number.parseInt(part, 10) || 0);
 }
 
-function isPublishableTag(tag) {
-  if (/^v?\d+\.\d+\.R\d+$/i.test(String(tag))) return true;
-  const [major, minor, patch] = tagParts(tag);
-  const [minMajor, minMinor, minPatch] = MIN_PUBLISH_TAG;
-  if (major !== minMajor) return major > minMajor;
-  if (minor !== minMinor) return minor > minMinor;
-  return patch >= minPatch;
-}
-
 /** @returns {number} negative if a < b, positive if a > b, 0 if equal */
 export function compareTags(a, b) {
   const [aMaj, aMin, aPatch] = tagParts(a);
@@ -35,7 +26,7 @@ export function compareTags(a, b) {
 }
 
 export function filterPublishableTags(tags) {
-  return tags.filter((tag) => isPublishableTag(tag));
+  return tags.filter((tag) => isValidMarketplaceTag(tag));
 }
 
 /**

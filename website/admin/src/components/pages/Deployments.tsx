@@ -13,8 +13,8 @@ import {
   defaultTagSelection,
   filterTagsForChannel,
   formatTagLabel,
-  isBetaPrereleaseTag,
 } from "../../lib/release-version";
+import { validateMarketplaceDeploy } from "../../lib/marketplace-deploy-policy";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
@@ -149,6 +149,15 @@ export default function Deployments() {
   const preparedTag = versionPlan?.recommendedTag ?? suggestedTag ?? latestTag;
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
   const deployBlocked = mode === "deploy" && isLiveSelected;
+  const deployPolicy =
+    mode !== "infra" && selectedTag
+      ? validateMarketplaceDeploy({
+          targetTag: selectedTag,
+          releaseChannel,
+          publishMarket: market,
+        })
+      : { ok: true as const };
+  const deployPolicyError = deployPolicy.ok ? null : deployPolicy.error;
 
   const workflowName = "ci-cd.yml";
   const formLocked = deploying || inProgress;
@@ -215,6 +224,10 @@ export default function Deployments() {
       });
       return;
     }
+    if (deployPolicyError) {
+      setMessage({ type: "error", text: deployPolicyError });
+      return;
+    }
 
     setDeploying(true);
     const dispatchedAfter = Date.now();
@@ -248,6 +261,7 @@ export default function Deployments() {
     isMaster &&
     !tagsError &&
     !formLocked &&
+    !deployPolicyError &&
     (mode === "infra"
       ? deployAdmin || deployWebsite
       : Boolean(selectedTag) && !deployBlocked);
@@ -492,8 +506,10 @@ export default function Deployments() {
           ) : null}
           {channel === "beta" ? (
             <p className="mt-2 text-[var(--color-text)]">
-              <strong>Beta channel</strong> publishes with marketplace <em>pre-release</em> flags. You can pick any tag
-              here — tags with <code className="font-mono text-xs">-beta</code> in the name are highlighted.
+              <strong>Beta channel</strong> sets VS Code / Open VSX <em>pre-release</em> flags at publish time.
+              Tags stay <code className="font-mono text-xs">vMAJOR.MINOR.PATCH</code> (no{" "}
+              <code className="font-mono text-xs">-beta</code> suffix). Firefox AMO is not available on beta — use
+              Production for AMO.
             </p>
           ) : null}
         </div>
@@ -554,7 +570,6 @@ export default function Deployments() {
                   <option key={t} value={t}>
                     {formatTagLabel(t, liveTag)}
                     {t === preparedTag ? " (prepared)" : ""}
-                    {channel === "beta" && isBetaPrereleaseTag(t) ? " ★" : ""}
                   </option>
                 ))}
               </select>

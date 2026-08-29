@@ -6,8 +6,11 @@ import {
 } from "../../functions/api/_shared/publishable-tags.js";
 
 describe("publishable-tags", () => {
-  it("filters tags below v0.5.5", () => {
-    expect(filterPublishableTags(["v0.5.4", "v0.5.5", "v0.5.9"])).toEqual(["v0.5.5", "v0.5.9"]);
+  it("filters tags below v0.5.5 and CI-only tags", () => {
+    expect(filterPublishableTags(["v0.5.4", "v0.5.5", "v0.5.9", "v1.0.34-dev.5"])).toEqual([
+      "v0.5.5",
+      "v0.5.9",
+    ]);
   });
 
   it("does not block arbitrary tags", () => {
