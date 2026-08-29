@@ -4,6 +4,7 @@ import {
   isCronJobDue,
   mergeCronJobConfig,
 } from "../../functions/api/_shared/cron-schedule.js";
+import { isStatsLiveCacheFresh } from "../../functions/api/_shared/stats-refresh-config.js";
 
 describe("cron-schedule", () => {
   it("clamps interval minutes within bounds", () => {
@@ -40,5 +41,22 @@ describe("cron-schedule", () => {
     expect(merged.enabled).toBe(true);
     expect(merged.intervalMinutes).toBe(60);
     expect(merged.updatedBy).toBe("admin@test");
+  });
+});
+
+describe("isStatsLiveCacheFresh", () => {
+  const now = Date.parse("2026-08-30T12:00:00.000Z");
+
+  it("returns false when cache is missing or stale", () => {
+    expect(isStatsLiveCacheFresh(null, 5 * 60 * 1000, now)).toBe(false);
+    expect(
+      isStatsLiveCacheFresh({ refreshedAt: "2026-08-30T11:50:00.000Z" }, 5 * 60 * 1000, now)
+    ).toBe(false);
+  });
+
+  it("returns true when cache is within max age", () => {
+    expect(
+      isStatsLiveCacheFresh({ refreshedAt: "2026-08-30T11:56:00.000Z" }, 5 * 60 * 1000, now)
+    ).toBe(true);
   });
 });

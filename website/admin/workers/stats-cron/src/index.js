@@ -17,14 +17,12 @@ export default {
 
     const endpoints = ["/api/cron/stats-refresh", "/api/cron/discord-digest"];
 
-    await Promise.all(
-      endpoints.map(async (path) => {
-        const res = await fetch(`${base}${path}`, { method: "POST", headers });
-        if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          console.error(`ccm-stats-cron ${path}: ${res.status} ${text.slice(0, 200)}`);
-        }
-      })
-    );
+    for (const path of endpoints) {
+      const res = await fetch(`${base}${path}`, { method: "POST", headers });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error(`ccm-stats-cron ${path}: ${res.status} ${text.slice(0, 200)}`);
+      }
+    }
   },
 };
