@@ -12,7 +12,11 @@
   "icon": "media/extension-icon.png",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
-    "email": "admin@lorapok.tech",
+    "email": "mdshuvo40@gmail.com",
+    "emails": [
+      "mdshuvo40@gmail.com",
+      "admin@lorapok.tech"
+    ],
     "url": "https://github.com/Maijied"
   },
   "contributors": [
@@ -27,6 +31,7 @@
     "email": "lorapokdev@gmail.com",
     "supportEmail": "cursor.curse.help@lorapok.tech",
     "productEmail": "cursor.monitor@lorapok.tech",
+    "adminEmail": "admin@lorapok.tech",
     "opsEmail": "lorapokdev@gmail.com",
     "website": "https://lorapok.tech",
     "adminUrl": "https://cursor-dev.lorapok.tech"

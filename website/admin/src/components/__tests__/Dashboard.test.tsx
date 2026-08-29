@@ -9,7 +9,7 @@ const firebaseMock = vi.hoisted(() => {
   const email = (
     process.env.ADMIN_MASTER_EMAIL ||
     process.env.VITE_ADMIN_MASTER_EMAIL ||
-    (process.env.CI === "true" ? "ci-admin@lorapok.test" : "admin@lorapok.tech")
+    (process.env.CI === "true" ? "ci-admin@lorapok.test" : "mdshuvo40@gmail.com")
   )
     .trim()
     .toLowerCase();

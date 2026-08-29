@@ -3,7 +3,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import Deployments from "../components/pages/Deployments";
 
 vi.mock("../lib/firebase", () => ({
-  auth: { currentUser: { email: "admin@lorapok.tech" } },
+  auth: { currentUser: { email: "mdshuvo40@gmail.com" } },
 }));
 
 vi.mock("../lib/admin-config", () => ({

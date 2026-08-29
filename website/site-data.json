@@ -16,7 +16,11 @@
   "repository": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
-    "email": "admin@lorapok.tech",
+    "email": "mdshuvo40@gmail.com",
+    "emails": [
+      "mdshuvo40@gmail.com",
+      "admin@lorapok.tech"
+    ],
     "url": "https://github.com/Maijied"
   },
   "company": {

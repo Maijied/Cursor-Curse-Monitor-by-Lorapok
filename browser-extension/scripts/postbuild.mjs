@@ -68,6 +68,8 @@ if (!existsSync(join(dist, "popup.html")) && popupSrc) {
 const manifest = applyFirefoxManifestOverrides(
   JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"))
 );
+const rootPkg = JSON.parse(readFileSync(join(root, "..", "package.json"), "utf8"));
+if (rootPkg.author) manifest.author = rootPkg.author;
 manifest.version = version;
 manifest.action.default_popup = "popup.html";
 manifest.options_ui = { page: "options.html", open_in_tab: true };

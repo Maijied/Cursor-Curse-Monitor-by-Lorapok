@@ -21,7 +21,7 @@ binding = "MAIL_RELAY"
 service = "ccm-mail-relay"
 
 [vars]
-ADMIN_MASTER_EMAIL = "admin@lorapok.tech"
+ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
 SITE_DATA_URL = "https://cursor.lorapok.tech/site-data.json"
 ADMIN_PUBLIC_URL = "https://cursor-dev.lorapok.tech"

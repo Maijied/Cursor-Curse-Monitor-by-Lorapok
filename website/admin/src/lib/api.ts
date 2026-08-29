@@ -576,7 +576,7 @@ export async function probeApiEndpoint(
       Object.assign(headers, await authHeaders());
     } catch {
       // In dev or preview, provide fallback admin identifier
-      headers["X-Dev-Admin"] = "admin@lorapok.tech";
+      headers["X-Dev-Admin"] = "mdshuvo40@gmail.com";
     }
   }
   if (options?.body) {

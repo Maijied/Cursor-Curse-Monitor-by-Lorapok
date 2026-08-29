@@ -240,7 +240,7 @@ Requires GitHub secrets:
 | **Publisher** | Lorapok Labs (`lorapok-labs` on Open VSX, `LorapokLabs` on VS Code Marketplace) |
 | **Role** | Founder and Principal Engineer @ [Lorapok Labs](https://lorapok.tech) · Senior Software Engineer @ [Shohoz Ltd](https://shohoz.com) |
 | **Location** | Dhaka, Bangladesh |
-| **Email** | [admin@lorapok.tech](mailto:admin@lorapok.tech) |
+| **Email** | [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) · [admin@lorapok.tech](mailto:admin@lorapok.tech) |
 | **GitHub** | [@Maijied](https://github.com/Maijied) |
 
 ## Contributors
