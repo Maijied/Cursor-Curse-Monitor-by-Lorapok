@@ -25,9 +25,9 @@
   },
   "messageCatalog": {
     "branding": {
-      "mainLogoUrl": "https://cursor.lorapok.tech/assets/icon.png",
-      "mainLogoAlt": "Cursor Curse Monitor by Lorapok",
-      "discordAvatarUrl": "https://cursor.lorapok.tech/assets/icon.png",
+      "mainLogoUrl": "{{mainLogoUrl}}",
+      "mainLogoAlt": "{{displayName}}",
+      "discordAvatarUrl": "{{mainLogoUrl}}",
       "discordAuthorName": "Lorapok Mission Control",
       "discordFooterText": "cursor.lorapok.tech · Mission Control",
       "emailTagline": "Cursor Curse Monitor · Mission Control",
@@ -39,11 +39,11 @@
         "helpCta": "Get help",
         "collaborateCta": "Join discussions",
         "unsubscribeHint": "Reply to this email any time to unsubscribe from product updates.",
-        "supportLine": "Questions? cursor.curse.help@lorapok.tech"
+        "supportLine": "Questions? {{supportEmail}}"
       },
       "discord": {
-        "feedbackBlock": "💬 **Feedback** — [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues)\n💡 **Discuss** — [GitHub Discussions](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions)\n🆘 **Support** — cursor.curse.help@lorapok.tech",
-        "productBlock": "🌐 [Product site](https://cursor.lorapok.tech) · 🛠️ [Mission Control](https://cursor-dev.lorapok.tech) · 📦 [Latest release](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34)",
+        "feedbackBlock": "💬 **Feedback** — [GitHub Issues]({{feedbackUrl}})\n💡 **Discuss** — [GitHub Discussions]({{collaborateUrl}})\n🆘 **Support** — {{supportEmail}}",
+        "productBlock": "🌐 [Product site]({{homepage}}) · 🛠️ [Mission Control]({{adminUrl}}) · 📦 [Latest release]({{releaseUrl}})",
         "deploySuccessHint": "Share feedback in GitHub Issues if anything looks off after this deploy."
       },
       "notice": {
@@ -59,16 +59,16 @@
         "channels": {
           "email": {
             "subject": "You're invited to Mission Control",
-            "text": "You've been invited to Mission Control for Cursor Curse Monitor by Lorapok.\n\nOpen: https://cursor-dev.lorapok.tech\n\nSign in with your Google account or email magic link.",
+            "text": "You've been invited to Mission Control for {{displayName}}.\n\nOpen: {{adminUrl}}\n\nSign in with your Google account or email magic link.",
             "variables": [
               "inviteUrl",
               "invitedBy"
             ]
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "subscribe-welcome",
@@ -77,7 +77,7 @@
         "channels": {
           "email": {
             "subject": "You're subscribed to CCM updates",
-            "text": "Thanks for subscribing to Cursor Curse Monitor by Lorapok release updates from Lorapok Labs.\n\nWebsite: https://cursor.lorapok.tech\nReply to this email any time to unsubscribe from product updates.",
+            "text": "Thanks for subscribing to {{displayName}} release updates from Lorapok Labs.\n\nWebsite: {{homepage}}\nReply to this email any time to unsubscribe from product updates.",
             "variables": [
               "email"
             ]
@@ -88,12 +88,12 @@
             "dismissible": true,
             "title": "You're subscribed to release updates",
             "shortMessage": "We'll email you when new CCM builds ship from Lorapok Labs.",
-            "message": "You're on the list for Cursor Curse Monitor by Lorapok updates. Manage preferences by replying to any product email or visiting https://cursor.lorapok.tech."
+            "message": "You're on the list for {{displayName}} updates. Manage preferences by replying to any product email or visiting {{homepage}}."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "support-response",
@@ -101,14 +101,14 @@
         "category": "support",
         "channels": {
           "email": {
-            "subject": "Re: Your Cursor Curse Monitor by Lorapok request",
-            "text": "Thanks for reaching out to cursor.curse.help@lorapok.tech.\n\nWe've received your message and will follow up shortly. For faster help, include your extension version (v1.0.34), Cursor version, and steps to reproduce.\n\nHelp center: https://cursor.lorapok.tech\nReport a bug: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+            "subject": "Re: Your {{displayName}} request",
+            "text": "Thanks for reaching out to {{supportEmail}}.\n\nWe've received your message and will follow up shortly. For faster help, include your extension version ({{releaseTag}}), Cursor version, and steps to reproduce.\n\nHelp center: {{homepage}}\nReport a bug: {{feedbackUrl}}",
             "variables": []
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "warning-incident",
@@ -118,7 +118,7 @@
         "channels": {
           "email": {
             "subject": "Service notice — action may be required",
-            "text": "We're investigating an issue affecting some Cursor Curse Monitor by Lorapok users.\n\nWhat you should know:\n• Installed extensions may show stale usage until the next refresh\n• Avoid triggering new deploys until we confirm recovery\n• Track updates: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions\n\nWe apologize for the inconvenience.",
+            "text": "We're investigating an issue affecting some {{displayName}} users.\n\nWhat you should know:\n• Installed extensions may show stale usage until the next refresh\n• Avoid triggering new deploys until we confirm recovery\n• Track updates: {{collaborateUrl}}\n\nWe apologize for the inconvenience.",
             "variables": [
               "title",
               "message"
@@ -130,16 +130,16 @@
             "dismissible": false,
             "title": "Service incident — we're on it",
             "shortMessage": "Some users may see stale usage data until we confirm recovery.",
-            "message": "We're investigating an active incident. Refresh the dashboard after we post an all-clear notice. Follow https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions for live updates."
+            "message": "We're investigating an active incident. Refresh the dashboard after we post an all-clear notice. Follow {{collaborateUrl}} for live updates."
           },
           "discord": {
             "title": "⚠️ Service incident",
             "summary": "Mission Control is tracking an incident. Extension usage may be stale until recovery."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "critical-security",
@@ -148,8 +148,8 @@
         "severity": "critical",
         "channels": {
           "email": {
-            "subject": "Important security update — Cursor Curse Monitor by Lorapok v1.0.34",
-            "text": "Please update Cursor Curse Monitor by Lorapok to v1.0.34 or newer as soon as possible.\n\nThis release includes security hardening. Never paste API tokens into untrusted sites. Use only cursor.com/dashboard or the extension Options page.\n\nDownload: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\nSupport: cursor.curse.help@lorapok.tech",
+            "subject": "Important security update — {{displayName}} {{releaseTag}}",
+            "text": "Please update {{displayName}} to {{releaseTag}} or newer as soon as possible.\n\nThis release includes security hardening. Never paste API tokens into untrusted sites. Use only cursor.com/dashboard or the extension Options page.\n\nDownload: {{releaseUrl}}\nSupport: {{supportEmail}}",
             "variables": []
           },
           "notice": {
@@ -158,26 +158,26 @@
             "dismissible": false,
             "title": "Security update recommended",
             "shortMessage": "Update to the latest release for token-handling hardening.",
-            "message": "Update to v1.0.34 or newer. Re-paste tokens only via cursor.com/dashboard or Options — never in chat or email. Report concerns at https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues."
+            "message": "Update to {{releaseTag}} or newer. Re-paste tokens only via cursor.com/dashboard or Options — never in chat or email. Report concerns at {{feedbackUrl}}."
           },
           "discord": {
             "title": "🔒 Security advisory",
-            "summary": "Users should update Cursor Curse Monitor by Lorapok to v1.0.34 or newer."
+            "summary": "Users should update {{displayName}} to {{releaseTag}} or newer."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "bugfix-release",
-        "label": "Bug fix — v1.0.34",
+        "label": "Bug fix — {{releaseTag}}",
         "category": "notice",
         "severity": "info",
         "channels": {
           "email": {
-            "subject": "Cursor Curse Monitor by Lorapok v1.0.34 — bug fixes",
-            "text": "We've released v1.0.34 with bug fixes and stability improvements.\n\nUpdate from your marketplace or GitHub: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\n\nIf a problem persists, reply with logs or open https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues.",
+            "subject": "{{displayName}} {{releaseTag}} — bug fixes",
+            "text": "We've released {{releaseTag}} with bug fixes and stability improvements.\n\nUpdate from your marketplace or GitHub: {{releaseUrl}}\n\nIf a problem persists, reply with logs or open {{feedbackUrl}}.",
             "variables": [
               "fixes"
             ]
@@ -186,24 +186,24 @@
             "type": "maintenance",
             "severity": "info",
             "dismissible": true,
-            "title": "Bug fixes in v1.0.34",
-            "shortMessage": "Patch v1.0.34 addresses reported issues. Update when convenient.",
-            "message": "We've shipped v1.0.34 with stability fixes. Update from your marketplace or https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34. Still stuck? https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
+            "title": "Bug fixes in {{releaseTag}}",
+            "shortMessage": "Patch {{releaseTag}} addresses reported issues. Update when convenient.",
+            "message": "We've shipped {{releaseTag}} with stability fixes. Update from your marketplace or {{releaseUrl}}. Still stuck? {{feedbackUrl}}"
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "feature-release",
-        "label": "Feature release — v1.0.34",
+        "label": "Feature release — {{releaseTag}}",
         "category": "feature",
         "severity": "info",
         "channels": {
           "email": {
-            "subject": "Cursor Curse Monitor by Lorapok v1.0.34 is here",
-            "text": "v1.0.34 is now available for Cursor Curse Monitor by Lorapok.\n\nHighlights include dashboard settings modal, unified message cards for email and Discord, and agent conversation recovery tools.\n\nGet it: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\nFirefox: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
+            "subject": "{{displayName}} {{releaseTag}} is here",
+            "text": "{{releaseTag}} is now available for {{displayName}}.\n\nHighlights include dashboard settings modal, unified message cards for email and Discord, and agent conversation recovery tools.\n\nGet it: {{releaseUrl}}\nFirefox: {{firefoxUrl}}",
             "variables": [
               "highlights"
             ]
@@ -212,18 +212,18 @@
             "type": "feature",
             "severity": "info",
             "dismissible": true,
-            "title": "What's new in Cursor Curse Monitor v1.0.34",
-            "shortMessage": "v1.0.34 adds dashboard settings, shared notification cards, and polish across Mission Control.",
-            "message": "Cursor Curse Monitor v1.0.34 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34"
+            "title": "What's new in Cursor Curse Monitor {{releaseTag}}",
+            "shortMessage": "{{releaseTag}} adds dashboard settings, shared notification cards, and polish across Mission Control.",
+            "message": "Cursor Curse Monitor {{releaseTag}} is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: {{releaseUrl}}"
           },
           "discord": {
             "title": "✨ Feature release",
-            "summary": "v1.0.34 is live — check Mission Control for marketplace sync status."
+            "summary": "{{releaseTag}} is live — check Mission Control for marketplace sync status."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "release-notes",
@@ -232,16 +232,16 @@
         "severity": "info",
         "channels": {
           "email": {
-            "subject": "Cursor Curse Monitor by Lorapok v1.0.34 release notes",
-            "text": "A new version of Cursor Curse Monitor by Lorapok (v1.0.34) is available from Lorapok Labs.\n\nRead the full changelog on GitHub: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\nVisit the product site: https://cursor.lorapok.tech\n\nThank you for using CCM.",
+            "subject": "{{displayName}} {{releaseTag}} release notes",
+            "text": "A new version of {{displayName}} ({{releaseTag}}) is available from Lorapok Labs.\n\nRead the full changelog on GitHub: {{releaseUrl}}\nVisit the product site: {{homepage}}\n\nThank you for using CCM.",
             "variables": [
               "message"
             ]
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "mailbox-test",
@@ -250,15 +250,15 @@
         "channels": {
           "email": {
             "subject": "Cursor Curse Monitor — mailbox test",
-            "text": "This is a live delivery test from Mission Control at 2026-08-29T02:19:01.475Z.\n\nIf you received this, outbound mail from cursor.monitor@lorapok.tech is working.",
+            "text": "This is a live delivery test from Mission Control at 2026-08-29T10:26:52.974Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
             "variables": [
               "email"
             ]
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "conversation-recovery",
@@ -281,9 +281,9 @@
             "summary": "CCM can rebuild orphaned agent chats from local transcripts after worktree switches."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "quota-warning",
@@ -304,9 +304,9 @@
             "summary": "Remind beta testers to watch budget caps and fallback model settings in CCM."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "agent-editor-tip",
@@ -323,9 +323,9 @@
             "message": "While Cursor Agent edits your repo, CCM monitors API usage locally, scans for leaked secrets on save, and can recover missing agent threads after worktree changes. Open **Settings** in the dashboard to tune polling and notices."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "beta-tester-invite",
@@ -334,8 +334,8 @@
         "severity": "info",
         "channels": {
           "email": {
-            "subject": "You're invited to CCM beta builds — v1.0.34",
-            "text": "You've been invited to test pre-release builds of Cursor Curse Monitor by Lorapok.\n\nInstall the latest VSIX from GitHub Actions or https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\n\nSend feedback: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+            "subject": "You're invited to CCM beta builds — {{releaseTag}}",
+            "text": "You've been invited to test pre-release builds of {{displayName}}.\n\nInstall the latest VSIX from GitHub Actions or {{releaseUrl}}\n\nSend feedback: {{feedbackUrl}}",
             "variables": []
           },
           "notice": {
@@ -344,16 +344,16 @@
             "dismissible": true,
             "title": "Beta builds available",
             "shortMessage": "Try the latest VSIX from GitHub Actions and share feedback before marketplace publish.",
-            "message": "Beta builds ship through GitHub Actions before Open VSX and VS Marketplace. Report issues at https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues."
+            "message": "Beta builds ship through GitHub Actions before Open VSX and VS Marketplace. Report issues at {{feedbackUrl}}."
           },
           "discord": {
             "title": "🧪 Beta invite",
             "summary": "New beta VSIX ready for testers — check Actions artifacts and Mission Control deploy notes."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "feedback-thanks",
@@ -362,18 +362,18 @@
         "severity": "info",
         "channels": {
           "email": {
-            "subject": "Thanks for your Cursor Curse Monitor by Lorapok feedback",
-            "text": "We received your feedback — thank you for helping improve Cursor Curse Monitor by Lorapok.\n\nIf you included steps to reproduce, we'll follow up at cursor.curse.help@lorapok.tech.\n\nTrack requests: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+            "subject": "Thanks for your {{displayName}} feedback",
+            "text": "We received your feedback — thank you for helping improve {{displayName}}.\n\nIf you included steps to reproduce, we'll follow up at {{supportEmail}}.\n\nTrack requests: {{feedbackUrl}}",
             "variables": []
           },
           "discord": {
             "title": "💬 Feedback reminder",
-            "summary": "💬 **Feedback** — [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues)\n💡 **Discuss** — [GitHub Discussions](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions)\n🆘 **Support** — cursor.curse.help@lorapok.tech"
+            "summary": "💬 **Feedback** — [GitHub Issues]({{feedbackUrl}})\n💡 **Discuss** — [GitHub Discussions]({{collaborateUrl}})\n🆘 **Support** — {{supportEmail}}"
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "incident-resolved",
@@ -383,7 +383,7 @@
         "channels": {
           "email": {
             "subject": "All clear — service restored",
-            "text": "The recent Cursor Curse Monitor by Lorapok incident is resolved. Refresh your dashboard for the latest usage data.\n\nThank you for your patience.",
+            "text": "The recent {{displayName}} incident is resolved. Refresh your dashboard for the latest usage data.\n\nThank you for your patience.",
             "variables": [
               "title",
               "message"
@@ -402,9 +402,9 @@
             "summary": "Services restored. Ask testers to refresh CCM if usage looked stale."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "rollback-incident",
@@ -427,13 +427,13 @@
             "summary": "Deployment rolled back — watch Mission Control for the all-clear."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "platform-availability",
-        "label": "Platform availability — v1.0.34",
+        "label": "Platform availability — {{releaseTag}}",
         "category": "info",
         "severity": "info",
         "channels": {
@@ -442,13 +442,13 @@
             "severity": "info",
             "dismissible": true,
             "title": "Available on VS Code, Open VSX, Firefox & GitHub",
-            "shortMessage": "v1.0.34 is on GitHub Releases; install from your preferred store.",
-            "message": "Cursor Curse Monitor v1.0.34 is available from Lorapok Labs on multiple platforms:\n\n• Website: https://cursor.lorapok.tech\n• Open VSX: https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok\n• VS Code Marketplace: https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok\n• Firefox AMO: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/\n• GitHub Releases: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\n\nSupport: cursor.curse.help@lorapok.tech"
+            "shortMessage": "{{releaseTag}} is on GitHub Releases; install from your preferred store.",
+            "message": "Cursor Curse Monitor {{releaseTag}} is available from Lorapok Labs on multiple platforms:\n\n• Website: {{homepage}}\n• Open VSX: {{ovsxUrl}}\n• VS Code Marketplace: {{vscodeUrl}}\n• Firefox AMO: {{firefoxUrl}}\n• GitHub Releases: {{releaseUrl}}\n\nSupport: {{supportEmail}}"
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "maintenance-window",
@@ -462,16 +462,16 @@
             "dismissible": true,
             "title": "Scheduled maintenance — Mission Control",
             "shortMessage": "Brief maintenance on cursor-dev.lorapok.tech — deployments and mailbox may pause.",
-            "message": "Lorapok Labs will perform scheduled maintenance on Mission Control (https://cursor-dev.lorapok.tech). Installed extensions continue to work offline with cached data. Follow https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions for updates."
+            "message": "Lorapok Labs will perform scheduled maintenance on Mission Control ({{adminUrl}}). Installed extensions continue to work offline with cached data. Follow {{collaborateUrl}} for updates."
           },
           "discord": {
             "title": "🛠️ Maintenance window",
             "summary": "Mission Control maintenance — deploy triggers may fail briefly."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "amo-review-pending",
@@ -485,12 +485,12 @@
             "dismissible": true,
             "title": "Firefox AMO review in progress",
             "shortMessage": "The browser extension update is awaiting Mozilla review — use GitHub or Chrome meanwhile.",
-            "message": "Firefox builds may lag Open VSX while AMO review completes. Track status at https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/ or install from https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34."
+            "message": "Firefox builds may lag Open VSX while AMO review completes. Track status at {{firefoxUrl}} or install from {{releaseUrl}}."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       },
       {
         "id": "telemetry-opt-in",
@@ -507,9 +507,9 @@
             "message": "CCM can send a once-per-day anonymous ping with install ID, OS, and host editor only. No paths, tokens, or workspace names. Toggle **Anonymous usage stats** in dashboard Settings."
           }
         },
-        "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-        "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-        "updatedAt": "2026-08-29T02:19:01.475Z"
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-08-29T10:26:52.974Z"
       }
     ]
   },
@@ -519,7 +519,7 @@
       "label": "Admin invite",
       "category": "invite",
       "subject": "You're invited to Mission Control",
-      "text": "You've been invited to Mission Control for Cursor Curse Monitor by Lorapok.\n\nOpen: https://cursor-dev.lorapok.tech\n\nSign in with your Google account or email magic link.",
+      "text": "You've been invited to Mission Control for {{displayName}}.\n\nOpen: {{adminUrl}}\n\nSign in with your Google account or email magic link.",
       "variables": [
         "inviteUrl",
         "invitedBy"
@@ -530,7 +530,7 @@
       "label": "Subscribe confirmation",
       "category": "subscribe",
       "subject": "You're subscribed to CCM updates",
-      "text": "Thanks for subscribing to Cursor Curse Monitor by Lorapok release updates from Lorapok Labs.\n\nWebsite: https://cursor.lorapok.tech\nReply to this email any time to unsubscribe from product updates.",
+      "text": "Thanks for subscribing to {{displayName}} release updates from Lorapok Labs.\n\nWebsite: {{homepage}}\nReply to this email any time to unsubscribe from product updates.",
       "variables": [
         "email"
       ]
@@ -539,8 +539,8 @@
       "id": "support-response",
       "label": "Support response",
       "category": "support",
-      "subject": "Re: Your Cursor Curse Monitor by Lorapok request",
-      "text": "Thanks for reaching out to cursor.curse.help@lorapok.tech.\n\nWe've received your message and will follow up shortly. For faster help, include your extension version (v1.0.34), Cursor version, and steps to reproduce.\n\nHelp center: https://cursor.lorapok.tech\nReport a bug: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+      "subject": "Re: Your {{displayName}} request",
+      "text": "Thanks for reaching out to {{supportEmail}}.\n\nWe've received your message and will follow up shortly. For faster help, include your extension version ({{releaseTag}}), Cursor version, and steps to reproduce.\n\nHelp center: {{homepage}}\nReport a bug: {{feedbackUrl}}",
       "variables": []
     },
     {
@@ -549,7 +549,7 @@
       "category": "notice",
       "severity": "warning",
       "subject": "Service notice — action may be required",
-      "text": "We're investigating an issue affecting some Cursor Curse Monitor by Lorapok users.\n\nWhat you should know:\n• Installed extensions may show stale usage until the next refresh\n• Avoid triggering new deploys until we confirm recovery\n• Track updates: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions\n\nWe apologize for the inconvenience.",
+      "text": "We're investigating an issue affecting some {{displayName}} users.\n\nWhat you should know:\n• Installed extensions may show stale usage until the next refresh\n• Avoid triggering new deploys until we confirm recovery\n• Track updates: {{collaborateUrl}}\n\nWe apologize for the inconvenience.",
       "variables": [
         "title",
         "message"
@@ -560,28 +560,28 @@
       "label": "Critical — security",
       "category": "notice",
       "severity": "critical",
-      "subject": "Important security update — Cursor Curse Monitor by Lorapok v1.0.34",
-      "text": "Please update Cursor Curse Monitor by Lorapok to v1.0.34 or newer as soon as possible.\n\nThis release includes security hardening. Never paste API tokens into untrusted sites. Use only cursor.com/dashboard or the extension Options page.\n\nDownload: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\nSupport: cursor.curse.help@lorapok.tech",
+      "subject": "Important security update — {{displayName}} {{releaseTag}}",
+      "text": "Please update {{displayName}} to {{releaseTag}} or newer as soon as possible.\n\nThis release includes security hardening. Never paste API tokens into untrusted sites. Use only cursor.com/dashboard or the extension Options page.\n\nDownload: {{releaseUrl}}\nSupport: {{supportEmail}}",
       "variables": []
     },
     {
       "id": "bugfix-release",
-      "label": "Bug fix — v1.0.34",
+      "label": "Bug fix — {{releaseTag}}",
       "category": "notice",
       "severity": "info",
-      "subject": "Cursor Curse Monitor by Lorapok v1.0.34 — bug fixes",
-      "text": "We've released v1.0.34 with bug fixes and stability improvements.\n\nUpdate from your marketplace or GitHub: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\n\nIf a problem persists, reply with logs or open https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues.",
+      "subject": "{{displayName}} {{releaseTag}} — bug fixes",
+      "text": "We've released {{releaseTag}} with bug fixes and stability improvements.\n\nUpdate from your marketplace or GitHub: {{releaseUrl}}\n\nIf a problem persists, reply with logs or open {{feedbackUrl}}.",
       "variables": [
         "fixes"
       ]
     },
     {
       "id": "feature-release",
-      "label": "Feature release — v1.0.34",
+      "label": "Feature release — {{releaseTag}}",
       "category": "feature",
       "severity": "info",
-      "subject": "Cursor Curse Monitor by Lorapok v1.0.34 is here",
-      "text": "v1.0.34 is now available for Cursor Curse Monitor by Lorapok.\n\nHighlights include dashboard settings modal, unified message cards for email and Discord, and agent conversation recovery tools.\n\nGet it: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\nFirefox: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
+      "subject": "{{displayName}} {{releaseTag}} is here",
+      "text": "{{releaseTag}} is now available for {{displayName}}.\n\nHighlights include dashboard settings modal, unified message cards for email and Discord, and agent conversation recovery tools.\n\nGet it: {{releaseUrl}}\nFirefox: {{firefoxUrl}}",
       "variables": [
         "highlights"
       ]
@@ -591,8 +591,8 @@
       "label": "Release notes broadcast",
       "category": "notice",
       "severity": "info",
-      "subject": "Cursor Curse Monitor by Lorapok v1.0.34 release notes",
-      "text": "A new version of Cursor Curse Monitor by Lorapok (v1.0.34) is available from Lorapok Labs.\n\nRead the full changelog on GitHub: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\nVisit the product site: https://cursor.lorapok.tech\n\nThank you for using CCM.",
+      "subject": "{{displayName}} {{releaseTag}} release notes",
+      "text": "A new version of {{displayName}} ({{releaseTag}}) is available from Lorapok Labs.\n\nRead the full changelog on GitHub: {{releaseUrl}}\nVisit the product site: {{homepage}}\n\nThank you for using CCM.",
       "variables": [
         "message"
       ]
@@ -602,7 +602,7 @@
       "label": "Mailbox delivery test",
       "category": "test",
       "subject": "Cursor Curse Monitor — mailbox test",
-      "text": "This is a live delivery test from Mission Control at 2026-08-29T02:19:01.472Z.\n\nIf you received this, outbound mail from cursor.monitor@lorapok.tech is working.",
+      "text": "This is a live delivery test from Mission Control at 2026-08-29T10:26:52.973Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
       "variables": [
         "email"
       ]
@@ -612,8 +612,8 @@
       "label": "Beta channel invite",
       "category": "invite",
       "severity": "info",
-      "subject": "You're invited to CCM beta builds — v1.0.34",
-      "text": "You've been invited to test pre-release builds of Cursor Curse Monitor by Lorapok.\n\nInstall the latest VSIX from GitHub Actions or https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\n\nSend feedback: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+      "subject": "You're invited to CCM beta builds — {{releaseTag}}",
+      "text": "You've been invited to test pre-release builds of {{displayName}}.\n\nInstall the latest VSIX from GitHub Actions or {{releaseUrl}}\n\nSend feedback: {{feedbackUrl}}",
       "variables": []
     },
     {
@@ -621,8 +621,8 @@
       "label": "Feedback received",
       "category": "response",
       "severity": "info",
-      "subject": "Thanks for your Cursor Curse Monitor by Lorapok feedback",
-      "text": "We received your feedback — thank you for helping improve Cursor Curse Monitor by Lorapok.\n\nIf you included steps to reproduce, we'll follow up at cursor.curse.help@lorapok.tech.\n\nTrack requests: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
+      "subject": "Thanks for your {{displayName}} feedback",
+      "text": "We received your feedback — thank you for helping improve {{displayName}}.\n\nIf you included steps to reproduce, we'll follow up at {{supportEmail}}.\n\nTrack requests: {{feedbackUrl}}",
       "variables": []
     },
     {
@@ -631,7 +631,7 @@
       "category": "notice",
       "severity": "info",
       "subject": "All clear — service restored",
-      "text": "The recent Cursor Curse Monitor by Lorapok incident is resolved. Refresh your dashboard for the latest usage data.\n\nThank you for your patience.",
+      "text": "The recent {{displayName}} incident is resolved. Refresh your dashboard for the latest usage data.\n\nThank you for your patience.",
       "variables": [
         "title",
         "message"
@@ -648,12 +648,12 @@
       "dismissible": true,
       "title": "You're subscribed to release updates",
       "shortMessage": "We'll email you when new CCM builds ship from Lorapok Labs.",
-      "message": "You're on the list for Cursor Curse Monitor by Lorapok updates. Manage preferences by replying to any product email or visiting https://cursor.lorapok.tech.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "message": "You're on the list for {{displayName}} updates. Manage preferences by replying to any product email or visiting {{homepage}}.",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "warning-incident",
@@ -664,12 +664,12 @@
       "dismissible": false,
       "title": "Service incident — we're on it",
       "shortMessage": "Some users may see stale usage data until we confirm recovery.",
-      "message": "We're investigating an active incident. Refresh the dashboard after we post an all-clear notice. Follow https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions for live updates.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "message": "We're investigating an active incident. Refresh the dashboard after we post an all-clear notice. Follow {{collaborateUrl}} for live updates.",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "critical-security",
@@ -680,44 +680,44 @@
       "dismissible": false,
       "title": "Security update recommended",
       "shortMessage": "Update to the latest release for token-handling hardening.",
-      "message": "Update to v1.0.34 or newer. Re-paste tokens only via cursor.com/dashboard or Options — never in chat or email. Report concerns at https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "message": "Update to {{releaseTag}} or newer. Re-paste tokens only via cursor.com/dashboard or Options — never in chat or email. Report concerns at {{feedbackUrl}}.",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "bugfix-release",
-      "label": "Bug fix — v1.0.34",
+      "label": "Bug fix — {{releaseTag}}",
       "category": "notice",
       "severity": "info",
       "type": "maintenance",
       "dismissible": true,
-      "title": "Bug fixes in v1.0.34",
-      "shortMessage": "Patch v1.0.34 addresses reported issues. Update when convenient.",
-      "message": "We've shipped v1.0.34 with stability fixes. Update from your marketplace or https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34. Still stuck? https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "title": "Bug fixes in {{releaseTag}}",
+      "shortMessage": "Patch {{releaseTag}} addresses reported issues. Update when convenient.",
+      "message": "We've shipped {{releaseTag}} with stability fixes. Update from your marketplace or {{releaseUrl}}. Still stuck? {{feedbackUrl}}",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "feature-release",
-      "label": "Feature release — v1.0.34",
+      "label": "Feature release — {{releaseTag}}",
       "category": "feature",
       "severity": "info",
       "type": "feature",
       "dismissible": true,
-      "title": "What's new in Cursor Curse Monitor v1.0.34",
-      "shortMessage": "v1.0.34 adds dashboard settings, shared notification cards, and polish across Mission Control.",
-      "message": "Cursor Curse Monitor v1.0.34 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "title": "What's new in Cursor Curse Monitor {{releaseTag}}",
+      "shortMessage": "{{releaseTag}} adds dashboard settings, shared notification cards, and polish across Mission Control.",
+      "message": "Cursor Curse Monitor {{releaseTag}} is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: {{releaseUrl}}",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "conversation-recovery",
@@ -729,12 +729,12 @@
       "title": "Recover missing agent conversations",
       "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
       "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "release",
       "id": "conversation-recovery-v0515",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "quota-warning",
@@ -746,11 +746,11 @@
       "title": "Approaching your usage cap",
       "shortMessage": "CCM detected high usage this cycle — review budget settings or enable fallback model.",
       "message": "Your Cursor usage is nearing the configured warning threshold. Open the dashboard to review spend, set a personal budget cap, or enable Composer 2.5 fallback before you hit the limit.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "agent-editor-tip",
@@ -762,11 +762,11 @@
       "title": "CCM + Cursor Agent",
       "shortMessage": "Keep the dashboard open while agents run — usage, security scan, and conversation recovery stay in sync.",
       "message": "While Cursor Agent edits your repo, CCM monitors API usage locally, scans for leaked secrets on save, and can recover missing agent threads after worktree changes. Open **Settings** in the dashboard to tune polling and notices.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "beta-tester-invite",
@@ -777,12 +777,12 @@
       "dismissible": true,
       "title": "Beta builds available",
       "shortMessage": "Try the latest VSIX from GitHub Actions and share feedback before marketplace publish.",
-      "message": "Beta builds ship through GitHub Actions before Open VSX and VS Marketplace. Report issues at https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "message": "Beta builds ship through GitHub Actions before Open VSX and VS Marketplace. Report issues at {{feedbackUrl}}.",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "incident-resolved",
@@ -794,11 +794,11 @@
       "title": "Incident resolved",
       "shortMessage": "Services are healthy again — refresh the dashboard for live usage.",
       "message": "Mission Control confirms recovery. If anything still looks wrong, send feedback with your extension version.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "rollback-incident",
@@ -810,28 +810,28 @@
       "title": "Rollback and recovery notice",
       "shortMessage": "We're rolling back to the last stable build. Avoid retrying the affected action until we confirm recovery.",
       "message": "We're extremely sorry for the disruption. An immediate rollback is in progress to restore the last stable version while we investigate. We'll post an update as soon as recovery is confirmed.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "rollback",
       "id": "rollback-recovery-notice",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "platform-availability",
-      "label": "Platform availability — v1.0.34",
+      "label": "Platform availability — {{releaseTag}}",
       "category": "info",
       "severity": "info",
       "type": "development",
       "dismissible": true,
       "title": "Available on VS Code, Open VSX, Firefox & GitHub",
-      "shortMessage": "v1.0.34 is on GitHub Releases; install from your preferred store.",
-      "message": "Cursor Curse Monitor v1.0.34 is available from Lorapok Labs on multiple platforms:\n\n• Website: https://cursor.lorapok.tech\n• Open VSX: https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok\n• VS Code Marketplace: https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok\n• Firefox AMO: https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/\n• GitHub Releases: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34\n\nSupport: cursor.curse.help@lorapok.tech",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "shortMessage": "{{releaseTag}} is on GitHub Releases; install from your preferred store.",
+      "message": "Cursor Curse Monitor {{releaseTag}} is available from Lorapok Labs on multiple platforms:\n\n• Website: {{homepage}}\n• Open VSX: {{ovsxUrl}}\n• VS Code Marketplace: {{vscodeUrl}}\n• Firefox AMO: {{firefoxUrl}}\n• GitHub Releases: {{releaseUrl}}\n\nSupport: {{supportEmail}}",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "maintenance-window",
@@ -842,12 +842,12 @@
       "dismissible": true,
       "title": "Scheduled maintenance — Mission Control",
       "shortMessage": "Brief maintenance on cursor-dev.lorapok.tech — deployments and mailbox may pause.",
-      "message": "Lorapok Labs will perform scheduled maintenance on Mission Control (https://cursor-dev.lorapok.tech). Installed extensions continue to work offline with cached data. Follow https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions for updates.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "message": "Lorapok Labs will perform scheduled maintenance on Mission Control ({{adminUrl}}). Installed extensions continue to work offline with cached data. Follow {{collaborateUrl}} for updates.",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "amo-review-pending",
@@ -858,12 +858,12 @@
       "dismissible": true,
       "title": "Firefox AMO review in progress",
       "shortMessage": "The browser extension update is awaiting Mozilla review — use GitHub or Chrome meanwhile.",
-      "message": "Firefox builds may lag Open VSX while AMO review completes. Track status at https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/ or install from https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "message": "Firefox builds may lag Open VSX while AMO review completes. Track status at {{firefoxUrl}} or install from {{releaseUrl}}.",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     },
     {
       "templateId": "telemetry-opt-in",
@@ -875,11 +875,11 @@
       "title": "Optional anonymous usage heartbeat",
       "shortMessage": "Help Lorapok Labs prioritize platforms — enable in dashboard Settings (off by default).",
       "message": "CCM can send a once-per-day anonymous ping with install ID, OS, and host editor only. No paths, tokens, or workspace names. Toggle **Anonymous usage stats** in dashboard Settings.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-29T02:19:01.472Z"
+      "updatedAt": "2026-08-29T10:26:52.973Z"
     }
   ],
   "builtinNotices": [
@@ -889,13 +889,13 @@
       "enabled": false,
       "type": "feature",
       "severity": "info",
-      "title": "What's new in Cursor Curse Monitor v1.0.34",
-      "shortMessage": "v1.0.34 adds dashboard settings, shared notification cards, and polish across Mission Control.",
-      "message": "Cursor Curse Monitor v1.0.34 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "title": "What's new in Cursor Curse Monitor {{releaseTag}}",
+      "shortMessage": "{{releaseTag}} adds dashboard settings, shared notification cards, and polish across Mission Control.",
+      "message": "Cursor Curse Monitor {{releaseTag}} is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: {{releaseUrl}}",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": true,
-      "updatedAt": "2026-08-29T02:19:01.470Z"
+      "updatedAt": "2026-08-29T10:26:52.972Z"
     },
     {
       "id": "conversation-recovery-v0515",
@@ -906,10 +906,10 @@
       "title": "Recover missing agent conversations",
       "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
       "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": true,
-      "updatedAt": "2026-08-29T02:19:01.468Z"
+      "updatedAt": "2026-08-29T10:26:52.972Z"
     },
     {
       "id": "rollback-recovery-notice",
@@ -920,10 +920,10 @@
       "title": "Rollback and recovery notice",
       "message": "We're extremely sorry for the disruption. An immediate rollback is in progress to restore the last stable version while we investigate. We'll post an update as soon as recovery is confirmed.",
       "shortMessage": "We're rolling back to the last stable build. Avoid retrying the affected action until we confirm recovery.",
-      "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-      "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+      "feedbackUrl": "{{feedbackUrl}}",
+      "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": false,
-      "updatedAt": "2026-08-29T02:19:01.468Z"
+      "updatedAt": "2026-08-29T10:26:52.972Z"
     }
   ],
   "generatedDevNotice": {
@@ -932,13 +932,13 @@
     "enabled": false,
     "type": "feature",
     "severity": "info",
-    "title": "What's new in Cursor Curse Monitor v1.0.34",
-    "shortMessage": "v1.0.34 adds dashboard settings, shared notification cards, and polish across Mission Control.",
-    "message": "Cursor Curse Monitor v1.0.34 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34",
-    "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-    "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+    "title": "What's new in Cursor Curse Monitor {{releaseTag}}",
+    "shortMessage": "{{releaseTag}} adds dashboard settings, shared notification cards, and polish across Mission Control.",
+    "message": "Cursor Curse Monitor {{releaseTag}} is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: {{releaseUrl}}",
+    "feedbackUrl": "{{feedbackUrl}}",
+    "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": true,
-    "updatedAt": "2026-08-29T02:19:01.471Z"
+    "updatedAt": "2026-08-29T10:26:52.973Z"
   },
   "conversationRecoveryNotice": {
     "id": "conversation-recovery-v0515",
@@ -949,10 +949,10 @@
     "title": "Recover missing agent conversations",
     "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
     "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
-    "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-    "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+    "feedbackUrl": "{{feedbackUrl}}",
+    "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": true,
-    "updatedAt": "2026-08-29T02:19:01.468Z"
+    "updatedAt": "2026-08-29T10:26:52.972Z"
   },
   "rollbackNotice": {
     "id": "rollback-recovery-notice",
@@ -963,9 +963,9 @@
     "title": "Rollback and recovery notice",
     "message": "We're extremely sorry for the disruption. An immediate rollback is in progress to restore the last stable version while we investigate. We'll post an update as soon as recovery is confirmed.",
     "shortMessage": "We're rolling back to the last stable build. Avoid retrying the affected action until we confirm recovery.",
-    "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
-    "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
+    "feedbackUrl": "{{feedbackUrl}}",
+    "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": false,
-    "updatedAt": "2026-08-29T02:19:01.468Z"
+    "updatedAt": "2026-08-29T10:26:52.972Z"
   }
 }

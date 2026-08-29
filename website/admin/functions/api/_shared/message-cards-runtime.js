@@ -1,4 +1,5 @@
 import embedded from "./product-context.embedded.json" with { type: "json" };
+import { hydrateTemplateValue } from "./product-context-runtime.js";
 
 /** @returns {Record<string, unknown>} */
 export function getMessageCatalog() {
@@ -26,36 +27,56 @@ export function getMessageCatalog() {
   };
 }
 
-export function getMessageBranding() {
-  return getMessageCatalog().branding ?? {};
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getHydratedMessageCatalog(env) {
+  return hydrateTemplateValue(getMessageCatalog(), env);
 }
 
-export function getChannelFooters() {
-  return getMessageCatalog().footers ?? {};
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getMessageBranding(env) {
+  const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
+  return catalog.branding ?? {};
+}
+
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getChannelFooters(env) {
+  const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
+  return catalog.footers ?? {};
 }
 
 /**
  * @param {string} id
+ * @param {Record<string, unknown>} [env]
  */
-export function getMessageCard(id) {
-  const cards = /** @type {Array<{ id: string }>} */ (getMessageCatalog().cards ?? []);
+export async function getMessageCard(id, env) {
+  const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
+  const cards = /** @type {Array<{ id: string }>} */ (catalog.cards ?? []);
   return cards.find((card) => card.id === id) ?? null;
 }
 
 /**
+ * @param {Record<string, unknown>} [env]
  * @returns {Array<Record<string, unknown>>}
  */
-export function listDiscordCards() {
-  const cards = /** @type {Array<{ channels?: { discord?: unknown } }>} */ (
-    getMessageCatalog().cards ?? []
-  );
+export async function listDiscordCards(env) {
+  const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
+  const cards = /** @type {Array<{ channels?: { discord?: unknown } }>} */ (catalog.cards ?? []);
   return cards.filter((card) => card.channels?.discord);
 }
 
-export function buildDiscordFeedbackEmbed() {
-  const footers = getChannelFooters();
-  const branding = getMessageBranding();
-  const feedbackCard = getMessageCard("feedback-thanks");
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function buildDiscordFeedbackEmbed(env) {
+  const footers = await getChannelFooters(env);
+  const branding = await getMessageBranding(env);
+  const feedbackCard = await getMessageCard("feedback-thanks", env);
   const discordChannel = /** @type {{ title?: string; summary?: string }|undefined} */ (
     feedbackCard?.channels?.discord
   );

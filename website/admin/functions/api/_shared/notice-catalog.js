@@ -1,7 +1,7 @@
 import embedded from "./product-context.embedded.json" with { type: "json" };
+import { hydrateTemplateValue } from "./product-context-runtime.js";
 
-const ctx = embedded.ctx;
-
+/** Static embedded snapshot (may contain {{placeholders}}). Prefer async getters with env. */
 export const GENERATED_DEV_NOTICE = embedded.generatedDevNotice;
 
 export const CONVERSATION_RECOVERY_NOTICE = embedded.conversationRecoveryNotice;
@@ -14,8 +14,39 @@ export function buildBuiltinNotices() {
   return embedded.builtinNotices ?? [];
 }
 
-export function getNoticeTemplates() {
-  return embedded.noticeTemplates ?? [];
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getNoticeTemplates(env) {
+  return hydrateTemplateValue(embedded.noticeTemplates ?? [], env);
 }
 
-export { ctx as productContext };
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getHydratedBuiltinNotices(env) {
+  return hydrateTemplateValue(embedded.builtinNotices ?? [], env);
+}
+
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getGeneratedDevNotice(env) {
+  return hydrateTemplateValue(embedded.generatedDevNotice, env);
+}
+
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getConversationRecoveryNotice(env) {
+  return hydrateTemplateValue(embedded.conversationRecoveryNotice, env);
+}
+
+/**
+ * @param {Record<string, unknown>} [env]
+ */
+export async function getRollbackNotice(env) {
+  return hydrateTemplateValue(embedded.rollbackNotice, env);
+}
+
+export const productContext = embedded.ctx;

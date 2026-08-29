@@ -4,6 +4,7 @@ import { buildDeployEnrichment, truncateDiscordText } from "./discord-deploy-con
 import {
   getChannelFooters,
   getMessageBranding,
+  getMessageCatalog,
 } from "./message-cards-runtime.js";
 
 const COLORS = {
@@ -91,7 +92,8 @@ function resolveStatus(payload) {
 export function buildDeploymentEmbed(payload, enrichment) {
   const status = resolveStatus(payload);
   const actionLabel = formatActionType(payload.actionType);
-  const catalogBrand = getMessageBranding();
+  const catalogBrand =
+    enrichment?.catalogBrand ?? getMessageCatalog().branding ?? {};
   const brand = enrichment?.brand ?? {};
   const avatarUrl =
     brand.icon ?? catalogBrand.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png";
@@ -122,7 +124,8 @@ export function buildDeploymentEmbed(payload, enrichment) {
   const descriptionParts = [status.brandLine];
   if (payload.summary) descriptionParts.push(String(payload.summary));
   if (status.color === COLORS.success) {
-    const hint = getChannelFooters().discord?.deploySuccessHint;
+    const footers = enrichment?.catalogFooters ?? getMessageCatalog().footers ?? {};
+    const hint = footers.discord?.deploySuccessHint;
     if (hint) descriptionParts.push(hint);
   }
 
@@ -227,9 +230,11 @@ export function buildDeploymentEmbeds(payload, enrichment) {
  * @param {Record<string, unknown>|null|undefined} [enrichment] - Optional live product context.
  * @return {{ok: boolean, status: number, error?: string}} The delivery status and, when applicable, a truncated error message.
  */
-export async function sendDiscordWebhook(webhookUrl, payload, enrichment) {
+export async function sendDiscordWebhook(webhookUrl, payload, enrichment, env) {
   const embeds = buildDeploymentEmbeds(payload, enrichment);
-  const branding = getMessageBranding();
+  const branding =
+    enrichment?.catalogBrand ??
+    (env ? await getMessageBranding(env) : getMessageCatalog().branding ?? {});
   const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -274,7 +279,7 @@ export async function notifyDiscordDeployment(env, payload) {
     console.warn("Discord deploy enrichment failed", error);
   }
 
-  const result = await sendDiscordWebhook(webhookUrl, payload, enrichment);
+  const result = await sendDiscordWebhook(webhookUrl, payload, enrichment, env);
 
   await logSystemEvent(env, {
     source: "discord",

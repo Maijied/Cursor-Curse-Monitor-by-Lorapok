@@ -17,7 +17,7 @@ export async function onRequestGet(context) {
 
   const url = new URL(request.url);
   if (url.searchParams.get("templates") === "1") {
-    return jsonResponse({ templates: getNoticeTemplates() });
+    return jsonResponse({ templates: await getNoticeTemplates(env) });
   }
 
   try {

@@ -6,12 +6,12 @@ const seeded = {
   seeded: true,
   items: [{ ...GENERATED_DEV_NOTICE }],
 };
-const { items, changed } = mergeBuiltinNotices(seeded.items);
+const { items, changed } = await mergeBuiltinNotices(seeded.items);
 assert.equal(changed, true);
 assert.equal(items.some((n) => n.id === CONVERSATION_RECOVERY_NOTICE.id), true);
 assert.equal(items.some((n) => n.id === GENERATED_DEV_NOTICE.id), true);
 
-const again = mergeBuiltinNotices(items);
+const again = await mergeBuiltinNotices(items);
 assert.equal(again.changed, false);
 
 console.log("notices-merge.test.mjs: OK");

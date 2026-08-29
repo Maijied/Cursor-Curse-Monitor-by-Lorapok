@@ -187,7 +187,7 @@ export function formatEngagementText(siteData) {
  * @param {string|null|undefined} tag
  * @returns {string}
  */
-export function buildQuickLinksText(tag) {
+export function buildQuickLinksText(tag, footers) {
   const releaseTag = normalizeTag(tag);
   const releaseUrl = tag && tag !== "test"
     ? `${BRAND.repo}/releases/tag/${encodeURIComponent(releaseTag)}`
@@ -200,8 +200,7 @@ export function buildQuickLinksText(tag) {
     `[VS Code Marketplace](${BRAND.vscode})`,
     `[Changelog](${BRAND.repo}/blob/main/CHANGELOG.md)`,
   ].join(" · ");
-  const footers = getChannelFooters();
-  const productBlock = footers.discord?.productBlock;
+  const productBlock = footers?.discord?.productBlock;
   if (productBlock) {
     return `${productLinks}\n\n${productBlock}`;
   }
@@ -268,17 +267,22 @@ export async function buildDeployEnrichment(env, options = {}) {
     }
   }
 
+  const catalogBrand = await getMessageBranding(env);
+  const catalogFooters = await getChannelFooters(env);
+
   return {
     brand: {
       ...BRAND,
-      icon: getMessageBranding().discordAvatarUrl ?? BRAND.icon,
+      icon: catalogBrand.discordAvatarUrl ?? BRAND.icon,
     },
+    catalogBrand,
+    catalogFooters,
     siteData,
     channels,
     changelog,
     downloadBreakdown: formatDownloadBreakdownText(siteData),
     engagement: formatEngagementText(siteData),
     marketplaceFields: buildMarketplaceFields(siteData, channels),
-    quickLinks: buildQuickLinksText(tag),
+    quickLinks: buildQuickLinksText(tag, catalogFooters),
   };
 }
