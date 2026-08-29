@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pickDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
+import { pickDeployToken, probeDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
 import {
   classifyWranglerFailure,
   resolvePagesPreDeployCooldownSec,
@@ -65,10 +65,32 @@ async function resolveDeployAuth() {
     };
   }
 
+  if (inCi && skipMailSetup) {
+    const probe = await probeDeployToken(envDeployToken, accountId);
+    if (probe.ok) {
+      console.log(
+        `::notice::CI push: deploy token verified (${probe.via ?? "probe"}${probe.status ? ` HTTP ${probe.status}` : ""}).`
+      );
+      return { token: envDeployToken, probe, sawRateLimit: false };
+    }
+    if (probe.via?.includes("rate-limit")) {
+      console.warn(
+        `::warning::CI push: deploy token probe rate-limited (HTTP ${probe.status}); attempting Pages deploy once.`
+      );
+      return { token: envDeployToken, probe, sawRateLimit: true };
+    }
+    console.error(
+      "::error::CLOUDFLARE_API_TOKEN cannot deploy to Cloudflare Pages " +
+        `(HTTP ${probe.status}). Refresh the admin-production secret with a token that has ` +
+        "Account → Cloudflare Pages → Edit (and Workers Scripts → Edit for the mail relay). " +
+        'Local: export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)" then ' +
+        "gh secret set CLOUDFLARE_API_TOKEN --env admin-production"
+    );
+    process.exit(1);
+  }
+
   if (inCi) {
-    const reason = skipMailSetup
-      ? "push-only Pages deploy (mail setup skipped)"
-      : "mail setup already exercised Cloudflare APIs";
+    const reason = "mail setup already exercised Cloudflare APIs";
     console.log(`::notice::CI: using CLOUDFLARE_API_TOKEN without pre-deploy probe (${reason}).`);
     return {
       token: envDeployToken,
@@ -155,7 +177,9 @@ const args = [
   "--commit-dirty=true",
 ];
 
-const maxAttempts = Number(process.env.CF_DEPLOY_MAX_ATTEMPTS ?? 4);
+const maxAttempts = Number(
+  process.env.CF_DEPLOY_MAX_ATTEMPTS ?? (skipMailSetup ? 1 : 4)
+);
 let lastFailureKind = "other";
 let sawDeployRateLimit = false;
 
@@ -185,6 +209,11 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       console.error(
         "::error::Cloudflare token appears locked after rate limiting — stopping retries in this job. " +
           "Wait 5+ minutes, then rerun deploy-infra."
+      );
+    } else if (stop.reason === "invalid-token") {
+      console.error(
+        "::error::Cloudflare deploy token rejected (9109/10000) — not retrying. " +
+          "Refresh CLOUDFLARE_API_TOKEN in admin-production, then rerun deploy-infra."
       );
     }
     break;
