@@ -1,5 +1,5 @@
-import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
-import { runDiscordDigest } from "../../_shared/discord-digest.js";
+import { jsonResponse, verifyAdminRequest } from "../../../_shared/auth.js";
+import { runDiscordDigest } from "../../../_shared/discord-digest.js";
 
 /**
  * Manual Discord download digest (master admin).
