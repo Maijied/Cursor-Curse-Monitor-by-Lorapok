@@ -537,7 +537,9 @@ const siteData = {
     tags: deployTags,
     releaseUrl: github?.url ?? `https://github.com/${REPO}/releases/latest`,
     vsixName,
-    vsixUrl: github?.vsixUrl ?? `https://github.com/${REPO}/releases/latest/download/${vsixName}`,
+    vsixUrl:
+      github?.vsixUrl
+      ?? `https://github.com/${REPO}/releases/download/${github?.tag ?? `v${version}`}/${vsixName}`,
     vsixDownloadCount: github?.vsixDownloadCount ?? 0,
     totalReleaseDownloads: githubDownloads,
     publishedAt: github?.publishedAt ?? null,
