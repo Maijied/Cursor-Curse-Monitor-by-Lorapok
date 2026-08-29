@@ -296,9 +296,11 @@ test("usage monitor: listener dispatch, subscription lifecycle, and immediate re
 
 test("usage monitor: error states handle missing DB, missing token, and API failure gracefully", async () => {
   const originalFetch = global.fetch;
+  const originalDbPath = process.env.CURSOR_DB_PATH;
   const context = createMockContext();
   vscode._reset();
 
+  try {
   // 1. Missing DB
   process.env.CURSOR_DB_PATH = path.join(__dirname, "nonexistent-monitor-db.vscdb");
   const serviceMissingDb = new UsageMonitorService(context);
@@ -336,6 +338,13 @@ test("usage monitor: error states handle missing DB, missing token, and API fail
   }
 
   global.fetch = originalFetch;
+  } finally {
+    if (originalDbPath === undefined) {
+      delete process.env.CURSOR_DB_PATH;
+    } else {
+      process.env.CURSOR_DB_PATH = originalDbPath;
+    }
+  }
 });
 
 test("usage monitor: threshold warning alerting state machine prevents duplicate toasts", async () => {
