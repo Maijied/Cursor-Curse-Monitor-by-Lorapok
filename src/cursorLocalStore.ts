@@ -1,7 +1,9 @@
+import * as fs from "fs";
 import {
   REACTIVE_STORAGE_KEY,
-  cursorDbExists,
-  withReadOnlyCursorDb,
+  getMonitoringStoragePath,
+  getProductStoragePath,
+  withReadOnlyCursorDbAtPath,
 } from "./cursorAuth";
 import {
   ActiveModel,
@@ -184,23 +186,67 @@ function parseCachedTeam(raw: string | null): { teamName: string | null; teamId:
   }
 }
 
-function todayKey(): string {
-  const now = new Date();
+export function todayKey(now = new Date()): string {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
+/** Normalize Cursor dailyStats `date` values to local YYYY-MM-DD. */
+export function normalizeDailyStatsDate(raw: unknown): string | null {
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    const date = new Date(raw);
+    return Number.isNaN(date.getTime()) ? null : todayKey(date);
+  }
+  if (typeof raw !== "string") {
+    return null;
+  }
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    return todayKey(parsed);
+  }
+  const match = trimmed.match(/(\d{4}-\d{2}-\d{2})/);
+  return match?.[1] ?? null;
+}
+
+function extractDailyStatsDateFromKey(key: string): string | null {
+  const match = String(key).match(/(\d{4}-\d{2}-\d{2})/);
+  return match?.[1] ?? null;
+}
+
+export function dailyStatsRowIsToday(
+  rowKey: string,
+  stats: DailyCodeStats,
+  today: string
+): boolean {
+  const dateFromValue = normalizeDailyStatsDate(stats.date);
+  if (dateFromValue === today) {
+    return true;
+  }
+  const dateFromKey = extractDailyStatsDateFromKey(rowKey);
+  return dateFromKey === today;
+}
+
 /** Privacy-safe local insights: stats, models, session titles. Never reads chat bodies. */
-export function readLocalInsights(): LocalInsights {
+export function readLocalInsights(productFolder?: string): LocalInsights {
   const empty = emptyLocalInsights();
-  if (!cursorDbExists()) {
+  const dbPath = productFolder
+    ? getProductStoragePath(productFolder)
+    : getMonitoringStoragePath();
+  if (!fs.existsSync(dbPath)) {
     return empty;
   }
 
   try {
-    return withReadOnlyCursorDb((db) => {
+    return withReadOnlyCursorDbAtPath(dbPath, (db) => {
       const insights = emptyLocalInsights();
       const today = todayKey();
 
@@ -220,8 +266,7 @@ export function readLocalInsights(): LocalInsights {
         insights.cycleAccepted += stats.tabAcceptedLines + stats.composerAcceptedLines;
         insights.tabAccepted += stats.tabAcceptedLines;
         insights.composerAccepted += stats.composerAcceptedLines;
-        const dateFromKey = String(row.key ?? "").split(".").pop();
-        if (stats.date === today || dateFromKey === today) {
+        if (dailyStatsRowIsToday(String(row.key ?? ""), stats, today)) {
           insights.today = stats;
         }
       }

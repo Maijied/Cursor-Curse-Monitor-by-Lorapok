@@ -1669,9 +1669,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       const today = local.today;
       const todayAcc = today ? (today.tabAcceptedLines + today.composerAcceptedLines) : 0;
       const todaySug = today ? (today.tabSuggestedLines + today.composerSuggestedLines) : 0;
-      document.getElementById('todayAccepted').textContent = today
-        ? todayAcc + ' / ' + todaySug + ' lines'
-        : '—';
+      document.getElementById('todayAccepted').textContent =
+        todayAcc + ' / ' + todaySug + ' lines';
       document.getElementById('cycleAccepted').textContent =
         (local.cycleAccepted || 0) + ' lines';
 
