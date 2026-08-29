@@ -8,9 +8,6 @@ import {
 
 /**
  * Retrieves the Discord configuration for an authenticated administrator.
- *
- * @param context - The request context containing the incoming request and environment bindings
- * @returns A response containing the sanitized Discord configuration or an authentication error response
  */
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -22,9 +19,7 @@ export async function onRequestGet(context) {
 }
 
 /**
- * Updates the Discord webhook configuration for an authenticated master admin.
- *
- * @returns A JSON response containing the saved configuration, or an error response for authentication, authorization, validation, or persistence failures.
+ * Updates deployment and/or feedback Discord webhook URLs (master admin only).
  */
 export async function onRequestPut(context) {
   const { request, env } = context;
@@ -41,17 +36,38 @@ export async function onRequestPut(context) {
     return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
-  if (typeof body.webhookUrl !== "string") {
-    return jsonResponse({ error: "webhookUrl is required" }, 400);
+  const current = await readDiscordConfig(env);
+  let deploymentWebhookUrl = current.deploymentWebhookUrl;
+  let feedbackWebhookUrl = current.feedbackWebhookUrl;
+
+  if (body.deploymentWebhookUrl !== undefined || body.webhookUrl !== undefined) {
+    deploymentWebhookUrl = String(body.deploymentWebhookUrl ?? body.webhookUrl ?? "").trim();
+    if (!isValidDiscordWebhookUrl(deploymentWebhookUrl)) {
+      return jsonResponse({ error: "Invalid deployment Discord webhook URL" }, 400);
+    }
   }
 
-  const webhookUrl = body.webhookUrl.trim();
-  if (!isValidDiscordWebhookUrl(webhookUrl)) {
-    return jsonResponse({ error: "Invalid Discord webhook URL" }, 400);
+  if (body.feedbackWebhookUrl !== undefined) {
+    feedbackWebhookUrl = String(body.feedbackWebhookUrl ?? "").trim();
+    if (feedbackWebhookUrl && !isValidDiscordWebhookUrl(feedbackWebhookUrl)) {
+      return jsonResponse({ error: "Invalid feedback Discord webhook URL" }, 400);
+    }
+  }
+
+  if (
+    body.deploymentWebhookUrl === undefined &&
+    body.webhookUrl === undefined &&
+    body.feedbackWebhookUrl === undefined
+  ) {
+    return jsonResponse(
+      { error: "deploymentWebhookUrl or feedbackWebhookUrl is required" },
+      400
+    );
   }
 
   const next = {
-    webhookUrl,
+    deploymentWebhookUrl,
+    feedbackWebhookUrl,
     updatedAt: new Date().toISOString(),
     updatedBy: auth.email,
   };

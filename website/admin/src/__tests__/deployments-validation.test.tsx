@@ -78,4 +78,15 @@ describe("Deployments validation UI", () => {
 
     await waitFor(() => expect(select).toHaveValue("v1.0.51"));
   });
+
+  it("lists production tags on beta channel (not an empty dropdown)", async () => {
+    render(<Deployments />);
+    const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
+    fireEvent.click(betaRadio);
+    const select = await screen.findByLabelText("Deploy tag");
+    await waitFor(() => {
+      expect(select.querySelectorAll("option").length).toBeGreaterThan(0);
+    });
+    expect(screen.getByText(/Beta channel/i)).toBeInTheDocument();
+  });
 });

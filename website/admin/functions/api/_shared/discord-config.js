@@ -30,30 +30,44 @@ export function maskWebhookUrl(url) {
   return `${id} ···${token.slice(-4)}`;
 }
 
+function normalizeStoredConfig(parsed) {
+  const deploymentWebhookUrl = String(
+    parsed.deploymentWebhookUrl ?? parsed.webhookUrl ?? ""
+  );
+  const feedbackWebhookUrl = String(parsed.feedbackWebhookUrl ?? "");
+  return {
+    deploymentWebhookUrl,
+    feedbackWebhookUrl,
+    updatedAt: parsed.updatedAt ?? null,
+    updatedBy: parsed.updatedBy ?? null,
+  };
+}
+
 /**
  * Read the Discord configuration from KV storage.
- * @returns {Promise<{webhookUrl: string, updatedAt: unknown, updatedBy: unknown}>} The normalized Discord configuration, or empty defaults when unavailable or invalid.
+ * @returns {Promise<{deploymentWebhookUrl: string, feedbackWebhookUrl: string, updatedAt: unknown, updatedBy: unknown}>}
  */
 export async function readDiscordConfig(env) {
-  if (!env?.ADMIN_KV?.get) return { webhookUrl: "", updatedAt: null, updatedBy: null };
+  const empty = {
+    deploymentWebhookUrl: "",
+    feedbackWebhookUrl: "",
+    updatedAt: null,
+    updatedBy: null,
+  };
+  if (!env?.ADMIN_KV?.get) return empty;
   try {
     const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-    if (!raw) return { webhookUrl: "", updatedAt: null, updatedBy: null };
-    const parsed = JSON.parse(raw);
-    return {
-      webhookUrl: String(parsed.webhookUrl ?? ""),
-      updatedAt: parsed.updatedAt ?? null,
-      updatedBy: parsed.updatedBy ?? null,
-    };
+    if (!raw) return empty;
+    return normalizeStoredConfig(JSON.parse(raw));
   } catch {
-    return { webhookUrl: "", updatedAt: null, updatedBy: null };
+    return empty;
   }
 }
 
 /**
  * Store the Discord configuration in administrative key-value storage.
  * @param {Record<string, unknown>} env - The environment containing the administrative KV binding.
- * @param {{ webhookUrl: string; updatedAt: string; updatedBy: string }} config - The Discord configuration to store.
+ * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; updatedAt: string; updatedBy: string }} config
  */
 export async function writeDiscordConfig(env, config) {
   if (!env?.ADMIN_KV?.put) {
@@ -64,15 +78,29 @@ export async function writeDiscordConfig(env, config) {
 
 /**
  * Creates a client-safe Discord configuration summary.
- * @param {{ webhookUrl: string; updatedAt?: string | null; updatedBy?: string | null }} config - The Discord webhook configuration and update metadata.
- * @return {{ configured: boolean; webhookPreview: string | null; updatedAt: string | null; updatedBy: string | null }} The configuration status, masked webhook preview, and normalized update metadata.
+ * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; webhookUrl?: string; updatedAt?: string | null; updatedBy?: string | null }} config
  */
 export function sanitizeDiscordConfigForClient(config) {
-  const { webhookUrl, updatedAt, updatedBy } = config;
+  const deploymentWebhookUrl = String(
+    config.deploymentWebhookUrl ?? config.webhookUrl ?? ""
+  );
+  const feedbackWebhookUrl = String(config.feedbackWebhookUrl ?? "");
+  const deploymentConfigured = Boolean(
+    deploymentWebhookUrl && isValidDiscordWebhookUrl(deploymentWebhookUrl)
+  );
+  const feedbackConfigured = Boolean(
+    feedbackWebhookUrl && isValidDiscordWebhookUrl(feedbackWebhookUrl)
+  );
   return {
-    configured: Boolean(webhookUrl && isValidDiscordWebhookUrl(webhookUrl)),
-    webhookPreview: webhookUrl ? maskWebhookUrl(webhookUrl) : null,
-    updatedAt: updatedAt ?? null,
-    updatedBy: updatedBy ?? null,
+    deploymentConfigured,
+    feedbackConfigured,
+    deploymentWebhookPreview: deploymentWebhookUrl ? maskWebhookUrl(deploymentWebhookUrl) : null,
+    feedbackWebhookPreview: feedbackWebhookUrl ? maskWebhookUrl(feedbackWebhookUrl) : null,
+    /** @deprecated use deploymentConfigured */
+    configured: deploymentConfigured,
+    /** @deprecated use deploymentWebhookPreview */
+    webhookPreview: deploymentWebhookUrl ? maskWebhookUrl(deploymentWebhookUrl) : null,
+    updatedAt: config.updatedAt ?? null,
+    updatedBy: config.updatedBy ?? null,
   };
 }

@@ -44,9 +44,33 @@ function compareTags(a: string, b: string): number {
   return 0;
 }
 
+export function isBetaPrereleaseTag(tag: string): boolean {
+  return /beta|alpha|rc/i.test(tag);
+}
+
+export function isRollbackReleaseTag(tag: string): boolean {
+  return /^v?\d+\.\d+\.R\d+$/i.test(String(tag));
+}
+
 export function formatTagLabel(tag: string, liveTag: string | null): string {
   if (liveTag && tag === liveTag) return `${tag} (Live)`;
+  if (isRollbackReleaseTag(tag)) return `${tag} (Rollback release)`;
+  if (isBetaPrereleaseTag(tag)) return `${tag} (Pre-release)`;
   return tag;
+}
+
+/** Tags shown in the Deploy / Rollback pickers for the selected channel. */
+export function filterTagsForChannel(
+  tags: string[],
+  channel: "beta" | "production",
+  mode: "deploy" | "rollback" | "infra"
+): string[] {
+  if (mode === "rollback") return tags;
+  if (channel === "production") {
+    return tags.filter((tag) => !isBetaPrereleaseTag(tag));
+  }
+  // Beta channel: any publishable tag can ship as a marketplace pre-release.
+  return tags;
 }
 
 export function defaultTagSelection(

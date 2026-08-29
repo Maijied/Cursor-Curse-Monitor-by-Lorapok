@@ -42,6 +42,7 @@ describe("discord integration APIs", () => {
     const res = await fetch(`${base}/api/integrations/discord/config`);
     const data = await res.json();
     expect(res.ok).toBe(true);
+    expect(data.config.deploymentConfigured).toBe(false);
     expect(data.config.configured).toBe(false);
   });
 
@@ -50,13 +51,13 @@ describe("discord integration APIs", () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        webhookUrl: "https://discord.com/api/webhooks/565087/abcdefghijklmnop",
+        deploymentWebhookUrl: "https://discord.com/api/webhooks/565087/abcdefghijklmnop",
       }),
     });
     const saved = await save.json();
     expect(save.ok).toBe(true);
-    expect(saved.config.configured).toBe(true);
-    expect(saved.config.webhookPreview).toContain("565087");
+    expect(saved.config.deploymentConfigured).toBe(true);
+    expect(saved.config.deploymentWebhookPreview).toContain("565087");
   });
 
   it("skips deployment status when no webhook is saved", async () => {

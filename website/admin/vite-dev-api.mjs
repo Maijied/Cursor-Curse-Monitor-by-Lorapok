@@ -45,7 +45,8 @@ const devStore = {
     updatedBy: null,
   },
   discordConfig: {
-    webhookUrl: "",
+    deploymentWebhookUrl: "",
+    feedbackWebhookUrl: "",
     updatedAt: null,
     updatedBy: null,
   },
@@ -97,7 +98,8 @@ export function resetDevStore() {
   devStore.notice = { ...GENERATED_DEV_NOTICE };
   devStore.notices = buildBuiltinNotices();
   devStore.discordConfig = {
-    webhookUrl: "",
+    deploymentWebhookUrl: "",
+    feedbackWebhookUrl: "",
     updatedAt: null,
     updatedBy: null,
   };
@@ -781,19 +783,61 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
-          const webhookUrl = String(parsed.webhookUrl ?? "").trim();
-          if (!isValidDiscordWebhookUrl(webhookUrl)) {
-            res.statusCode = 400;
-            res.end(JSON.stringify({ error: "Invalid Discord webhook URL" }));
-            return;
+          const current = devStore.discordConfig;
+          let deploymentWebhookUrl = current.deploymentWebhookUrl ?? current.webhookUrl ?? "";
+          let feedbackWebhookUrl = current.feedbackWebhookUrl ?? "";
+
+          if (parsed.deploymentWebhookUrl !== undefined || parsed.webhookUrl !== undefined) {
+            deploymentWebhookUrl = String(parsed.deploymentWebhookUrl ?? parsed.webhookUrl ?? "").trim();
+            if (!isValidDiscordWebhookUrl(deploymentWebhookUrl)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid deployment Discord webhook URL" }));
+              return;
+            }
           }
+          if (parsed.feedbackWebhookUrl !== undefined) {
+            feedbackWebhookUrl = String(parsed.feedbackWebhookUrl ?? "").trim();
+            if (feedbackWebhookUrl && !isValidDiscordWebhookUrl(feedbackWebhookUrl)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid feedback Discord webhook URL" }));
+              return;
+            }
+          }
+
           devStore.discordConfig = {
-            webhookUrl,
+            deploymentWebhookUrl,
+            feedbackWebhookUrl,
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
           };
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/discord/feedback" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const { notifyDiscordFeedback } = await import("./functions/api/_shared/discord-feedback-notify.js");
+          const result = await notifyDiscordFeedback({ ADMIN_KV: devKv }, {
+            summary: parsed.summary,
+            triggeredBy: "dev@local",
+          });
+          res.setHeader("Content-Type", "application/json");
+          if (!result.ok && !result.skipped) {
+            res.statusCode = 502;
+            res.end(JSON.stringify({ error: result.error || "Discord feedback notification failed" }));
+            return;
+          }
+          res.end(JSON.stringify({ ok: true, skipped: result.skipped ?? false }));
         } catch {
           res.statusCode = 400;
           res.end(JSON.stringify({ error: "Invalid JSON" }));
@@ -1035,7 +1079,8 @@ export function createDevApiMiddleware() {
             adminKvConfigured: true,
             mailConfigured: true,
             mailTransport: "dev-simulated",
-            discordConfigured: Boolean(devStore.discordConfig.webhookUrl),
+            discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
+            feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
             siteDataUrl: "/site-data.json",
           }));
         })
@@ -1050,7 +1095,8 @@ export function createDevApiMiddleware() {
             adminKvConfigured: true,
             mailConfigured: true,
             mailTransport: "dev-simulated",
-            discordConfigured: Boolean(devStore.discordConfig.webhookUrl),
+            discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
+            feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
             siteDataUrl: "/site-data.json",
           }));
         });

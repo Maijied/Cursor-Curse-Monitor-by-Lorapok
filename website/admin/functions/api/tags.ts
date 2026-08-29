@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
-  const res = await githubFetch(`/repos/${GITHUB_REPO}/tags?per_page=30`, env);
+  const res = await githubFetch(`/repos/${GITHUB_REPO}/tags?per_page=100`, env);
 
   if (res.ok) {
     const data = await res.json();

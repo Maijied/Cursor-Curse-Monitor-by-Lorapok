@@ -1,6 +1,7 @@
 import { jsonResponse, verifyAdminRequest, requireMasterAdmin } from "./_shared/auth.js";
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { dispatchPublishWorkflow } from "./_shared/deploy-workflow.js";
+import { fetchSiteData, liveTagFromSiteData } from "./_shared/site-data.js";
 
 /**
  * Handles an authenticated master-admin request to trigger a deployment.
@@ -19,8 +20,15 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
+    let rollbackSourceTag = null;
+    try {
+      rollbackSourceTag = liveTagFromSiteData(await fetchSiteData(env));
+    } catch {
+      /* optional */
+    }
     const response = await dispatchPublishWorkflow(env, body, "Deployment triggered successfully", {
       triggeredBy: auth.email,
+      rollbackSourceTag,
     }, context);
     return logAuthenticatedRequest(context, auth, response, startedAt);
   } catch (err) {

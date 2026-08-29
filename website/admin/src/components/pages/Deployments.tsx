@@ -11,7 +11,9 @@ import { useDeployRuntime } from "../../context/DeployRuntimeContext";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
   defaultTagSelection,
+  filterTagsForChannel,
   formatTagLabel,
+  isBetaPrereleaseTag,
 } from "../../lib/release-version";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
@@ -114,12 +116,8 @@ export default function Deployments() {
   }, [loadTags, registerOnDeployComplete]);
 
   const filteredTags = useMemo(
-    () =>
-      tags.filter((t) => {
-        if (channel === "production") return !/beta|alpha|rc/i.test(t);
-        return /beta|alpha|rc/i.test(t) || t.startsWith("v0.");
-      }),
-    [tags, channel]
+    () => filterTagsForChannel(tags, channel, mode),
+    [tags, channel, mode]
   );
 
   useEffect(() => {
@@ -492,6 +490,12 @@ export default function Deployments() {
               <strong className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">{preparedTag}</strong>
             </>
           ) : null}
+          {channel === "beta" ? (
+            <p className="mt-2 text-[var(--color-text)]">
+              <strong>Beta channel</strong> publishes with marketplace <em>pre-release</em> flags. You can pick any tag
+              here — tags with <code className="font-mono text-xs">-beta</code> in the name are highlighted.
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -550,6 +554,7 @@ export default function Deployments() {
                   <option key={t} value={t}>
                     {formatTagLabel(t, liveTag)}
                     {t === preparedTag ? " (prepared)" : ""}
+                    {channel === "beta" && isBetaPrereleaseTag(t) ? " ★" : ""}
                   </option>
                 ))}
               </select>
