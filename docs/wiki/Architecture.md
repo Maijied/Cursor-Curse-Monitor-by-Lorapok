@@ -43,7 +43,7 @@ Weekly GitHub Actions jobs regenerate marketing data; Cloudflare `ccm-stats-cron
 ```mermaid
 flowchart TB
   subgraph settings["Mission Control Settings"]
-    StatsCfg["Live stats refresh · enabled + intervalMinutes"]
+    CronCfg["Cron schedules · stats refresh + Discord digest"]
     DiscordCfg["Discord webhooks · deployment + feedback"]
   end
 
@@ -55,7 +55,8 @@ flowchart TB
 
   subgraph cf["Cloudflare"]
     Worker["ccm-stats-cron worker · every minute"]
-    CronAPI["POST /api/cron/stats-refresh"]
+    CronStats["POST /api/cron/stats-refresh"]
+    CronDigest["POST /api/cron/discord-digest"]
     KV[("ADMIN_KV")]
     Pages["Pages Functions /api/*"]
   end
@@ -67,6 +68,7 @@ flowchart TB
   end
 
   subgraph discord["Discord notifications"]
+    Digest["runDiscordDigest · download breakdown"]
     DeployEvt["Deploy started / completed watch"]
     CINotify["CI discord-deployment-notify.mjs"]
     Feedback["Feedback webhook test"]
@@ -74,14 +76,18 @@ flowchart TB
     FeedbackHook[("feedbackWebhookUrl")]
   end
 
-  StatsCfg -.->|interval gate| CronAPI
+  CronCfg -.->|interval gate| CronStats
+  CronCfg -.->|interval gate| CronDigest
   DiscordCfg --> Webhook
   DiscordCfg --> FeedbackHook
-  Worker -->|X-Cron-Secret| CronAPI
-  CronAPI -->|when due| Refresh
+  Worker -->|X-Cron-Secret| CronStats
+  Worker -->|X-Cron-Secret| CronDigest
+  CronStats -->|when due| Refresh
+  CronDigest -->|when due| Digest
   Refresh --> KV
   Refresh --> Cache
   Cache --> Public
+  Digest --> Webhook
   Pages --> KV
 
   DeployEvt --> Webhook
@@ -90,6 +96,7 @@ flowchart TB
 
   MC["Operator"] --> settings
   MC -->|manual refresh| Refresh
+  MC -->|send digest now| Digest
 ```
 
 ## IDE extension

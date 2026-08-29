@@ -219,6 +219,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ccm-feedback::before {
+    transition: none !important;
+  }
+
   .larvae-loader-root,
   .larvae-segment,
   .larvae-eye,

@@ -2,7 +2,7 @@ const DEFAULT_SITE_DATA_URL =
   "https://cursor.lorapok.tech/site-data.json";
 
 export async function fetchSiteData(env) {
-  const url = env.SITE_DATA_URL ?? DEFAULT_SITE_DATA_URL;
+  const url = env?.SITE_DATA_URL ?? DEFAULT_SITE_DATA_URL;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`site-data fetch failed (${res.status})`);
   return res.json();

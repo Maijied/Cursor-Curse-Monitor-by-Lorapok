@@ -3,6 +3,7 @@ import {
   clampIntervalMinutes,
   isCronJobDue,
   mergeCronJobConfig,
+  recordCronJobRun,
 } from "../../functions/api/_shared/cron-schedule.js";
 import { isStatsLiveCacheFresh } from "../../functions/api/_shared/stats-refresh-config.js";
 
@@ -41,6 +42,41 @@ describe("cron-schedule", () => {
     expect(merged.enabled).toBe(true);
     expect(merged.intervalMinutes).toBe(60);
     expect(merged.updatedBy).toBe("admin@test");
+  });
+
+  it("recordCronJobRun preserves newer editable settings from KV", async () => {
+    const store = new Map([
+      [
+        "integrations:discord-digest",
+        JSON.stringify({
+          enabled: false,
+          intervalMinutes: 120,
+          updatedBy: "admin@test",
+        }),
+      ],
+    ]);
+    const env = {
+      ADMIN_KV: {
+        get: async (key: string) => store.get(key) ?? null,
+        put: async (key: string, value: string) => {
+          store.set(key, value);
+        },
+      },
+    };
+
+    await recordCronJobRun(
+      env,
+      "integrations:discord-digest",
+      { enabled: true, intervalMinutes: 1440 },
+      { ok: true, durationMs: 42, triggeredBy: "cron" }
+    );
+
+    const saved = JSON.parse(store.get("integrations:discord-digest") ?? "{}");
+    expect(saved.enabled).toBe(false);
+    expect(saved.intervalMinutes).toBe(120);
+    expect(saved.updatedBy).toBe("admin@test");
+    expect(saved.lastRunOk).toBe(true);
+    expect(saved.lastDurationMs).toBe(42);
   });
 });
 

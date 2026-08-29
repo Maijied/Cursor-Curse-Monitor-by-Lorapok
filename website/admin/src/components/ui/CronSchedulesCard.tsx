@@ -91,6 +91,12 @@ export default function CronSchedulesCard() {
             }
           : prev
       );
+      setStatsEnabled(result.statsRefresh.enabled);
+      setStatsInterval(result.statsRefresh.intervalMinutes);
+      setDigestEnabled(result.discordDigest.enabled);
+      setDigestInterval(result.discordDigest.intervalMinutes);
+      setDigestRefreshFirst(result.discordDigest.refreshBeforeSend);
+      setDigestIncludeChangelog(result.discordDigest.includeChangelog);
       setMessage({ type: "success", text: "Cron schedules saved." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });

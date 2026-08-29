@@ -29,7 +29,7 @@ async function fetchGithubReleaseDownloadTotal(env) {
   const headers = env.GITHUB_TOKEN
     ? { Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: "application/vnd.github+json" }
     : { Accept: "application/json" };
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=30`, {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`, {
     headers,
   });
   if (!res.ok) return null;

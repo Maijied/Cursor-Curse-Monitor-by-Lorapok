@@ -14,6 +14,8 @@
  * }} CronRunMeta
  */
 
+import { putKvJsonIfChanged } from "./kv-put.js";
+
 export const CRON_RUN_DEFAULTS = {
   lastRunAt: null,
   lastRunOk: null,
@@ -92,14 +94,36 @@ export function mergeCronJobConfig(current, patch, options = {}) {
 /**
  * @param {Record<string, unknown>} env
  * @param {string} key
- * @param {Record<string, unknown>} next
  */
-import { putKvJson } from "./kv-put.js";
+async function readCronJobState(env, key) {
+  if (!env.ADMIN_KV?.get) return {};
+  try {
+    const raw = await env.ADMIN_KV.get(key);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
 
 /**
  * @param {Record<string, unknown>} env
  * @param {string} key
- * @param {Record<string, unknown>} current
+ * @param {Record<string, unknown>} next
+ */
+async function writeCronJobState(env, key, next) {
+  if (!env.ADMIN_KV?.put) {
+    throw new Error("ADMIN_KV binding not configured");
+  }
+  await putKvJsonIfChanged(env, key, next);
+}
+
+/**
+ * Records cron run metadata without overwriting newer editable settings.
+ * @param {Record<string, unknown>} env
+ * @param {string} key
+ * @param {Record<string, unknown>} _current
  * @param {{
  *   ok: boolean;
  *   error?: string | null;
@@ -108,16 +132,16 @@ import { putKvJson } from "./kv-put.js";
  *   at?: string;
  * }} result
  */
-export async function recordCronJobRun(env, key, current, result) {
+export async function recordCronJobRun(env, key, _current, result) {
   const at = result.at ?? new Date().toISOString();
+  const latest = await readCronJobState(env, key);
   const next = {
-    ...current,
+    ...latest,
     lastRunAt: at,
     lastRunOk: result.ok,
     lastError: result.ok ? null : result.error ?? "failed",
     lastDurationMs: result.durationMs ?? null,
     lastTriggeredBy: result.triggeredBy ?? "cron",
-    updatedAt: at,
   };
   await writeCronJobState(env, key, next);
   return next;
