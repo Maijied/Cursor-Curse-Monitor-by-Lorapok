@@ -77,16 +77,20 @@ function commitsForRelease(version, fromTag) {
     return [];
   }
 
-  const lines = execFileSync(
-    "git",
-    ["log", `${from}..${toTag}`, "--pretty=format:%s"],
-    { cwd: repoRoot, encoding: "utf8" },
-  )
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
+  try {
+    const lines = execFileSync(
+      "git",
+      ["log", `${from}..${toTag}`, "--pretty=format:%s"],
+      { cwd: repoRoot, encoding: "utf8" },
+    )
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
-  return lines.filter((s) => !isInternalCommit(s)).map(humanizeCommit);
+    return lines.filter((s) => !isInternalCommit(s)).map(humanizeCommit);
+  } catch {
+    return [];
+  }
 }
 
 /**
