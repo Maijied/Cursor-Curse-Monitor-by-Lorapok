@@ -29,6 +29,16 @@ describe("computeDownloadTotals", () => {
     assert.equal(result.breakdown.githubAllAssets, null);
   });
 
+  it("marks totals unverified when vscode marketplace is unavailable", () => {
+    const result = computeDownloadTotals({
+      openVsxCanonical: { version: "1.0.1", downloadCount: 100 },
+      githubAllAssets: 3,
+      packageVersion: "1.0.1",
+    });
+    assert.equal(result.verified, false);
+    assert.equal(result.displayTotal, null);
+  });
+
   it("uses duplicate fallback display when canonical lags package version", () => {
     const result = computeDownloadTotals({
       openVsxCanonical: { version: "0.5.14", downloadCount: 3251 },

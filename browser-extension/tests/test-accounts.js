@@ -15,6 +15,7 @@ assert(options.includes("Saved Cursor accounts"), "options must list saved accou
 assert(options.includes("Add another account"), "options must allow adding another login");
 assert(storage.includes("accounts"), "storage must persist multiple accounts");
 assert(storage.includes("migrateLegacyToken"), "storage must migrate the previous single token");
+assert(storage.includes("cursor-curse-monitor@lorapok.tech"), "storage must recognize production Firefox extension id");
 assert(worker.includes("saveToken"), "captured dashboard tokens must upsert a saved account");
 assert(!storage.includes("console.log"), "storage must not log settings");
 

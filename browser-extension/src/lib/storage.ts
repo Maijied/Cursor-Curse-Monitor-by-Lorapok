@@ -47,19 +47,32 @@ const SETTINGS_KEY = "settings";
 const HISTORY_KEY = "usageHistoryV1";
 const SNAPSHOT_KEY = "lastSnapshot";
 
+const FIREFOX_PRODUCTION_EXTENSION_ID = "cursor-curse-monitor@lorapok.tech";
+
 function isUnpackedDevBuild(): boolean {
   try {
-    const manifest = browser.runtime.getManifest() as { update_url?: string };
-    return !manifest.update_url;
+    const manifest = browser.runtime.getManifest() as {
+      update_url?: string;
+      browser_specific_settings?: { gecko?: { id?: string } };
+    };
+    if (manifest.update_url) {
+      return false;
+    }
+    const geckoId = manifest.browser_specific_settings?.gecko?.id;
+    if (geckoId === FIREFOX_PRODUCTION_EXTENSION_ID) {
+      return false;
+    }
+    if (browser.runtime.id === FIREFOX_PRODUCTION_EXTENSION_ID) {
+      return false;
+    }
+    return true;
   } catch {
-    return false;
+    return true;
   }
 }
 
-const STORAGE_PREFIX = isUnpackedDevBuild() ? "ccm_dev_" : "";
-
 function storageKey(base: string): string {
-  return `${STORAGE_PREFIX}${base}`;
+  return `${isUnpackedDevBuild() ? "ccm_dev_" : ""}${base}`;
 }
 
 export function extensionStorageKey(base: string): string {
