@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import type { SecurityFinding } from "@lorapok/cursor-monitor-shared";
+import type { SecurityFinding, StoredCursorAccount } from "@lorapok/cursor-monitor-shared";
 import { Footer } from "../components/Footer";
 import { SecurityAlertModal } from "../components/SecurityAlertModal";
 import { scanPasteField } from "../lib/securityScan";
 import {
   clearAuth,
   getSettings,
+  removeAccount,
   saveToken,
+  setActiveAccount,
   updateSettings,
 } from "../lib/storage";
 import {
@@ -25,10 +27,13 @@ import {
 import { snoozeSubscribePrompt, subscribeForProductUpdates } from "../lib/subscribe";
 import { refreshProductNotice } from "../lib/productNotices";
 import { requestRefresh } from "../lib/messaging";
+import browser from "webextension-polyfill";
 import "../popup/styles.css";
 
 export function OptionsApp() {
   const [token, setToken] = useState("");
+  const [accounts, setAccounts] = useState<StoredCursorAccount[]>([]);
+  const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [budget, setBudget] = useState("0");
   const [threshold, setThreshold] = useState("80");
   const [poll, setPoll] = useState("5");
@@ -42,10 +47,23 @@ export function OptionsApp() {
   const [saved, setSaved] = useState(false);
   const [securityFindings, setSecurityFindings] = useState<SecurityFinding[]>([]);
   const [communityStats, setCommunityStats] = useState<CommunityDownloadStats | null>(null);
+  const [connecting, setConnecting] = useState(false);
+
+  const openDashboard = () => {
+    setConnecting(true);
+    void browser.tabs.create({ url: "https://cursor.com/dashboard" });
+    void requestRefresh().finally(() => setConnecting(false));
+  };
+
+  const loadAccounts = async () => {
+    const s = await getSettings();
+    setAccounts(s.accounts);
+    setActiveAccountId(s.activeAccountId);
+    return s;
+  };
 
   useEffect(() => {
-    void getSettings().then((s) => {
-      setToken(s.accessToken ?? "");
+    void loadAccounts().then((s) => {
       setBudget(String(s.customBudgetLimit));
       setThreshold(String(s.warnAtPercent));
       setPoll(String(s.pollIntervalMinutes));
@@ -101,6 +119,8 @@ export function OptionsApp() {
     });
     await requestRefresh();
     void refreshProductNotice(productNotices);
+    setToken("");
+    await loadAccounts();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -128,6 +148,19 @@ export function OptionsApp() {
     await clearAuth();
     setToken("");
     setSecurityFindings([]);
+    await loadAccounts();
+    await requestRefresh();
+  };
+
+  const useAccount = async (id: string) => {
+    await setActiveAccount(id);
+    await loadAccounts();
+    await requestRefresh();
+  };
+
+  const deleteAccount = async (id: string) => {
+    await removeAccount(id);
+    await loadAccounts();
     await requestRefresh();
   };
 
@@ -145,12 +178,57 @@ export function OptionsApp() {
         />
       )}
       <h1>Cursor Curse Monitor — Settings</h1>
+      <section className="connect-hero card">
+        <p className="popup-eyebrow">Connection</p>
+        <h2 style={{ margin: "4px 0 8px", fontSize: "1.05rem" }}>Connect to Cursor</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Sign in at cursor.com/dashboard for automatic capture, or paste a token manually below.
+        </p>
+        <div className="connect-actions" style={{ marginTop: 12 }}>
+          <button type="button" className="btn primary" onClick={openDashboard} disabled={connecting}>
+            {connecting ? "Checking session…" : "Sign in with browser"}
+          </button>
+        </div>
+      </section>
       <p className="muted">
-        Connect via cursor.com/dashboard (auto) or paste your Cursor access token below.
+        Each saved token becomes a separate account you can switch between.
       </p>
 
+      {accounts.length > 0 && (
+        <section className="account-list" aria-label="Saved Cursor accounts">
+          <h2 style={{ fontSize: "1rem", margin: "0 0 8px" }}>Saved Cursor accounts</h2>
+          <ul className="account-rows">
+            {accounts.map((account) => {
+              const active = account.id === activeAccountId;
+              const name = account.label || account.email || "Saved login";
+              return (
+                <li key={account.id} className={`account-row${active ? " is-active" : ""}`}>
+                  <div>
+                    <strong>{name}</strong>
+                    {account.email && account.label ? (
+                      <p className="muted" style={{ margin: "2px 0 0" }}>{account.email}</p>
+                    ) : null}
+                    {active ? <p className="muted" style={{ margin: "2px 0 0" }}>Active</p> : null}
+                  </div>
+                  <div className="account-row-actions">
+                    {!active && (
+                      <button type="button" className="btn ghost" onClick={() => void useAccount(account.id)}>
+                        Use
+                      </button>
+                    )}
+                    <button type="button" className="btn ghost" onClick={() => void deleteAccount(account.id)}>
+                      Remove
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <form className="options-form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
-        <label htmlFor="token">Access token (manual)</label>
+        <label htmlFor="token">Add another account (paste token)</label>
         <textarea
           id="token"
           value={token}
@@ -233,7 +311,7 @@ export function OptionsApp() {
         <div className="options-actions">
           <button type="submit" className="btn primary">Save settings</button>
           <button type="button" className="btn ghost" onClick={() => void disconnect()}>
-            Disconnect
+            Disconnect all
           </button>
           {saved && <span className="muted">Saved.</span>}
         </div>

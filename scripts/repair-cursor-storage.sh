@@ -1,18 +1,31 @@
 #!/usr/bin/env bash
-# Repairs Cursor globalStorage when state.vscdb is corrupted (often after a full-file rewrite).
-# Quit Cursor completely before running this script.
+# Repairs editor globalStorage when state.vscdb is corrupted (often after a full-file rewrite).
+# Quit Cursor/VS Code completely before running this script.
+#
+# Usage:
+#   ./scripts/repair-cursor-storage.sh              # Cursor (default)
+#   CCM_PRODUCT_DATA_FOLDER=Code ./scripts/repair-cursor-storage.sh   # VS Code
+#   CURSOR_GLOBAL_STORAGE=/path/to/globalStorage ./scripts/repair-cursor-storage.sh
 
 set -euo pipefail
 
-STORAGE_DIR="${CURSOR_GLOBAL_STORAGE:-$HOME/.config/Cursor/User/globalStorage}"
+PRODUCT="${CCM_PRODUCT_DATA_FOLDER:-Cursor}"
+STORAGE_DIR="${CURSOR_GLOBAL_STORAGE:-$HOME/.config/${PRODUCT}/User/globalStorage}"
 DB="$STORAGE_DIR/state.vscdb"
 WAL="$STORAGE_DIR/state.vscdb-wal"
 SHM="$STORAGE_DIR/state.vscdb-shm"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="$STORAGE_DIR/repair-backup-$STAMP"
 
-if pgrep -x cursor >/dev/null 2>&1 || pgrep -f "/usr/share/cursor" >/dev/null 2>&1; then
-  echo "Cursor is still running. Quit Cursor completely, then rerun this script."
+editor_running() {
+  pgrep -x cursor >/dev/null 2>&1 || \
+  pgrep -f "/usr/share/cursor" >/dev/null 2>&1 || \
+  pgrep -x code >/dev/null 2>&1 || \
+  pgrep -f "/usr/share/code" >/dev/null 2>&1
+}
+
+if editor_running; then
+  echo "An editor (Cursor or VS Code) is still running. Quit completely, then rerun."
   exit 1
 fi
 
@@ -42,5 +55,5 @@ fi
 
 echo "state.vscdb is still damaged ($RESULT)."
 mv "$DB" "$BACKUP_DIR/state.vscdb.broken"
-echo "Moved broken database aside. Cursor will create a fresh state.vscdb on next launch."
-echo "You may need to sign in to Cursor again. Backup: $BACKUP_DIR"
+echo "Moved broken database aside. The editor will create a fresh state.vscdb on next launch."
+echo "You may need to sign in again. Backup: $BACKUP_DIR"

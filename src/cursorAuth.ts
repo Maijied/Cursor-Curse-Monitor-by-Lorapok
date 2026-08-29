@@ -21,7 +21,10 @@ type SqliteDb = InstanceType<SqliteModule["DatabaseSync"]>;
 export type EditorHost = "cursor" | "vscode" | "unknown";
 
 /** VS Code–compatible product folder under OS app-data roots (Code, Cursor, Windsurf, …). */
-export function resolveProductDataFolder(appName?: string): string {
+export function resolveProductDataFolder(appName?: string): string | null {
+  if (process.env.CCM_PRODUCT_DATA_FOLDER?.trim()) {
+    return process.env.CCM_PRODUCT_DATA_FOLDER.trim();
+  }
   const name = (appName || process.env.VSCODE_APP_NAME || "").toLowerCase();
   if (name.includes("cursor")) return "Cursor";
   if (name.includes("windsurf")) return "Windsurf";
@@ -30,10 +33,12 @@ export function resolveProductDataFolder(appName?: string): string {
   if (name.includes("trae")) return "Trae";
   if (name.includes("kiro")) return "Kiro";
   if (name.includes("positron")) return "Positron";
+  if (name.includes("agy") || name.includes("antigravity")) return "AGY";
+  if (name.includes("codex")) return "Codex";
   if (name.includes("visual studio code") || name.includes("vscode") || name === "code") {
     return "Code";
   }
-  return "Cursor";
+  return null;
 }
 
 export function detectEditorHost(appName?: string): EditorHost {
@@ -63,7 +68,55 @@ function appDataRoot(product: string): { darwin: string; win32: string; linux: s
 function resolveProductForPath(host?: EditorHost, appName?: string): string {
   if (host === "vscode") return "Code";
   if (host === "cursor") return "Cursor";
-  return resolveProductDataFolder(appName);
+  const folder = resolveProductDataFolder(appName);
+  if (folder) return folder;
+  throw new Error(
+    `Unknown editor app (${appName ?? "unset"}). Set CCM_PRODUCT_DATA_FOLDER to the folder name under ~/.config (e.g. Code, Cursor, AGY).`
+  );
+}
+
+/** Editor User folder (parent of globalStorage and workspaceStorage). */
+export function getUserConfigDir(host?: EditorHost, appName?: string): string {
+  const product = resolveProductForPath(host, appName);
+  const home = os.homedir();
+  switch (process.platform) {
+    case "darwin":
+      return path.join(home, "Library", "Application Support", product, "User");
+    case "win32":
+      return path.join(
+        process.env.APPDATA ?? path.join(home, "AppData", "Roaming"),
+        product,
+        "User"
+      );
+    default:
+      return path.join(home, ".config", product, "User");
+  }
+}
+
+export function getWorkspaceStorageDir(host?: EditorHost, appName?: string): string {
+  return path.join(getUserConfigDir(host, appName), "workspaceStorage");
+}
+
+/** Agent transcript roots (.cursor/projects, .agy/projects, …). */
+export function resolveAgentProjectsRoot(host?: EditorHost, appName?: string): string {
+  if (process.env.CCM_REINDEX_PROJECTS_ROOT) {
+    return process.env.CCM_REINDEX_PROJECTS_ROOT;
+  }
+  const candidates = [
+    path.join(os.homedir(), ".cursor", "projects"),
+    path.join(os.homedir(), ".agy", "projects"),
+    path.join(os.homedir(), ".codex", "projects"),
+    path.join(os.homedir(), ".vscode", "projects"),
+  ];
+  if (host === "vscode") {
+    candidates.unshift(path.join(os.homedir(), ".vscode", "projects"));
+  }
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return path.join(os.homedir(), ".cursor", "projects");
 }
 
 /** Directory containing state.vscdb and conversation-search.db. */

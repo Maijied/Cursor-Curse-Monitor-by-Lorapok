@@ -2,12 +2,13 @@ import { GITHUB_REPO } from "./repo-constants.js";
 import { githubFetch } from "./github.js";
 import { fetchSiteData } from "./site-data.js";
 import { fetchLiveChannels } from "./live-channels.js";
+import { getChannelFooters, getMessageBranding } from "./message-cards-runtime.js";
 
 const BRAND = {
   site: "https://cursor.lorapok.tech",
   admin: "https://cursor-dev.lorapok.tech",
   repo: `https://github.com/${GITHUB_REPO}`,
-  icon: "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
+  icon: "https://cursor.lorapok.tech/assets/icon.png",
   banner: "https://cursor.lorapok.tech/assets/marketing/og-social-card.png",
   ovsx: "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
   vscode:
@@ -191,7 +192,7 @@ export function buildQuickLinksText(tag) {
   const releaseUrl = tag && tag !== "test"
     ? `${BRAND.repo}/releases/tag/${encodeURIComponent(releaseTag)}`
     : `${BRAND.repo}/releases`;
-  return [
+  const productLinks = [
     `[Product site](${BRAND.site})`,
     `[Mission Control](${BRAND.admin})`,
     `[GitHub release](${releaseUrl})`,
@@ -199,6 +200,12 @@ export function buildQuickLinksText(tag) {
     `[VS Code Marketplace](${BRAND.vscode})`,
     `[Changelog](${BRAND.repo}/blob/main/CHANGELOG.md)`,
   ].join(" · ");
+  const footers = getChannelFooters();
+  const productBlock = footers.discord?.productBlock;
+  if (productBlock) {
+    return `${productLinks}\n\n${productBlock}`;
+  }
+  return productLinks;
 }
 
 /**
@@ -262,7 +269,10 @@ export async function buildDeployEnrichment(env, options = {}) {
   }
 
   return {
-    brand: BRAND,
+    brand: {
+      ...BRAND,
+      icon: getMessageBranding().discordAvatarUrl ?? BRAND.icon,
+    },
     siteData,
     channels,
     changelog,

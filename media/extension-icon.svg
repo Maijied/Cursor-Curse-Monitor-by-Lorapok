@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Cursor Curse Monitor">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="16" x2="104" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1b2030"/>
+      <stop offset="100%" stop-color="#0a0d14"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="32" y1="32" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="55%" stop-color="#4d9fff"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="44" y1="72" x2="84" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#4d9fff"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)"/>
+  <rect x="8.75" y="8.75" width="110.5" height="110.5" rx="27.25" stroke="rgba(124,92,255,0.35)" stroke-width="1.5"/>
+
+  <circle cx="64" cy="64" r="42" stroke="rgba(148,163,184,0.18)" stroke-width="6" fill="none"/>
+  <circle
+    cx="64"
+    cy="64"
+    r="42"
+    stroke="url(#ring)"
+    stroke-width="6"
+    stroke-linecap="round"
+    fill="none"
+    stroke-dasharray="198 264"
+    stroke-dashoffset="18"
+    transform="rotate(-90 64 64)"
+    filter="url(#softGlow)"
+  />
+
+  <rect x="46" y="70" width="10" height="22" rx="3" fill="url(#bar)" opacity="0.55"/>
+  <rect x="59" y="58" width="10" height="34" rx="3" fill="url(#bar)" opacity="0.82"/>
+  <rect x="72" y="48" width="10" height="44" rx="3" fill="url(#bar)"/>
+
+  <circle cx="64" cy="38" r="7" fill="#34d399" filter="url(#softGlow)"/>
+  <circle cx="62" cy="36.5" r="2" fill="#ecfeff" opacity="0.9"/>
+</svg>

@@ -154,7 +154,34 @@ export function syncCursorCloudflareSecrets({ apiToken, emailToken, accountId })
   return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
-/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string } | null} */
+/** @param {string} cronSecret */
+export function syncCursorCronSecret(cronSecret) {
+  const candidates = readPassphraseCandidates();
+  if (!candidates.length) {
+    return { vaultUpdated: false, reason: "passphrase missing (.cred-vault-passphrase or CRED_VAULT_PASSPHRASE)" };
+  }
+
+  let vault = null;
+  let passphrase = "";
+  for (const candidate of candidates) {
+    vault = gpgDecrypt(candidate);
+    if (vault) {
+      passphrase = candidate;
+      break;
+    }
+  }
+  if (!vault) {
+    return { vaultUpdated: false, reason: "vault decrypt failed" };
+  }
+
+  vault.cursor = vault.cursor ?? {};
+  vault.cursor.cron_secret = cronSecret;
+
+  const ok = gpgEncrypt(passphrase, vault);
+  return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
+}
+
+/** @returns {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string } | null} */
 export function loadCursorCloudflareSecretsFromVault() {
   const candidates = readPassphraseCandidates();
   for (const candidate of candidates) {
@@ -165,6 +192,7 @@ export function loadCursorCloudflareSecretsFromVault() {
       apiToken: String(cursor.cloudflare_api_token ?? "").trim() || undefined,
       emailToken: String(cursor.cloudflare_email_api_token ?? "").trim() || undefined,
       accountId: String(cursor.cloudflare_account_id ?? "").trim() || undefined,
+      cronSecret: String(cursor.cron_secret ?? "").trim() || undefined,
     };
   }
   return null;
@@ -185,5 +213,6 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
     ...(loaded.emailToken && !baseEnv.CLOUDFLARE_EMAIL_API_TOKEN
       ? { CLOUDFLARE_EMAIL_API_TOKEN: loaded.emailToken }
       : {}),
+    ...(loaded.cronSecret && !baseEnv.CRON_SECRET ? { CRON_SECRET: loaded.cronSecret } : {}),
   };
 }

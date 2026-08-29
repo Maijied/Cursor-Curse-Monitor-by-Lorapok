@@ -1,6 +1,6 @@
 {
   "name": "browser-extension",
-  "version": "0.0.0",
+  "version": "1.0.26",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "build:chrome": "npm run build && node scripts/zip-chrome.mjs",
     "amo:metadata": "node scripts/generate-amo-metadata.mjs",
     "amo:publish": "node scripts/publish-amo.mjs",
-    "test": "node tests/test-shared.js && node tests/test-footer.js && node tests/test-whats-new.js && node tests/test-manifest-firefox.mjs && node tests/test-zip-firefox.mjs && node tests/test-amo-publish-conflict.mjs && node tests/test-auth-capture.js && node tests/test-security-scan.cjs",
+    "test": "node tests/test-shared.js && node tests/test-footer.js && node tests/test-whats-new.js && node tests/test-manifest-firefox.mjs && node tests/test-zip-firefox.mjs && node tests/test-amo-publish-conflict.mjs && node tests/test-auth-capture.js && node tests/test-security-scan.cjs && node tests/test-accounts.js",
     "lint": "tsc --noEmit -p ./"
   },
   "dependencies": {

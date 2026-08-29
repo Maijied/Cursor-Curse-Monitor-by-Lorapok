@@ -16,6 +16,15 @@ import { subscribeForProductUpdates, maybeShowSubscribePrompt, snoozeSubscribePr
 import { SUBSCRIBE_PROMPT_DELAY_MS } from "@lorapok/cursor-monitor-shared";
 import { readCachedAccountEmail } from "./cursorAuth";
 import { SecurityMonitorService } from "./securityMonitor";
+import {
+  promptAddCursorAccount,
+  promptLoginWithBrowser,
+  promptPasteCursorToken,
+  promptRemoveCursorAccount,
+  promptSwitchCursorAccount,
+} from "./accountCommands";
+import { setActiveAccountId } from "./accountStore";
+import { showExtensionInfo, sendFeedback } from "./productSupport";
 
 let monitor: UsageMonitorService | undefined;
 let securityMonitor: SecurityMonitorService | undefined;
@@ -214,6 +223,47 @@ export function activate(context: vscode.ExtensionContext): void {
           },
         ],
       });
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.switchAccount", async (accountId?: string) => {
+      if (typeof accountId === "string" && accountId && !accountId.startsWith("__")) {
+        await setActiveAccountId(context, accountId);
+      } else {
+        const changed = await promptSwitchCursorAccount(context);
+        if (!changed) {
+          return;
+        }
+      }
+      await monitor?.refresh(true);
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.addAccount", async () => {
+      const added = await promptAddCursorAccount(context);
+      if (added) {
+        await monitor?.refresh(true);
+      }
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.loginWithBrowser", async () => {
+      const added = await promptLoginWithBrowser(context);
+      if (added) {
+        await monitor?.refresh(true);
+      }
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.pasteToken", async () => {
+      const added = await promptPasteCursorToken(context);
+      if (added) {
+        await monitor?.refresh(true);
+      }
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.removeAccount", async (accountId?: string) => {
+      const removed = await promptRemoveCursorAccount(context, accountId);
+      if (removed) {
+        await monitor?.refresh(true);
+      }
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.showExtensionInfo", async () => {
+      await showExtensionInfo(context);
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.sendFeedback", async () => {
+      await sendFeedback(context);
     }),
     monitor,
     securityMonitor

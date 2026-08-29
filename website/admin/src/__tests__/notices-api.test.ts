@@ -49,7 +49,7 @@ describe("notice catalog APIs", () => {
     const data = await res.json();
     expect(res.ok).toBe(true);
     expect(data.templates.some((t) => t.templateId === "feature-release")).toBe(true);
-    expect(data.templates.some((t) => t.templateId === "bugfix-patch")).toBe(true);
+    expect(data.templates.some((t) => t.templateId === "bugfix-release")).toBe(true);
   });
 
   it("returns disabled when no notice is enabled on public GET /api/notice", async () => {

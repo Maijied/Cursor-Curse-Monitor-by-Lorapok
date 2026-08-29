@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardSnapshot } from "@lorapok/cursor-monitor-shared";
 import { AnimatedGauge } from "../components/AnimatedGauge";
 import { SpendChart } from "../components/SpendChart";
@@ -6,7 +6,7 @@ import { Footer } from "../components/Footer";
 import { SubscribeModal } from "../components/SubscribeModal";
 import { WhatsNewCard } from "../components/WhatsNewCard";
 import { fetchSnapshot, onSnapshot, requestRefresh } from "../lib/messaging";
-import { getSettings, updateSettings } from "../lib/storage";
+import { getSettings, setActiveAccount, updateSettings } from "../lib/storage";
 import browser from "webextension-polyfill";
 
 function money(n: number): string {
@@ -24,6 +24,9 @@ export function App() {
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [switching, setSwitching] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const connectPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     void fetchSnapshot().then((data) => {
@@ -53,6 +56,15 @@ export function App() {
     void requestRefresh().then((s) => s && setSnapshot(s));
   }, []);
 
+  const switchAccount = async (accountId: string) => {
+    if (!accountId || accountId === snapshot?.activeAccountId) return;
+    setSwitching(true);
+    await setActiveAccount(accountId);
+    const next = await requestRefresh();
+    if (next) setSnapshot(next);
+    setSwitching(false);
+  };
+
   const saveBudget = async () => {
     const value = Number(budgetInput);
     if (!Number.isFinite(value) || value < 0) return;
@@ -66,8 +78,40 @@ export function App() {
   };
 
   const openCursor = () => {
+    setConnecting(true);
     void browser.tabs.create({ url: "https://cursor.com/dashboard" });
+    let attempts = 0;
+    if (connectPollRef.current) {
+      clearInterval(connectPollRef.current);
+    }
+    connectPollRef.current = setInterval(() => {
+      attempts += 1;
+      void requestRefresh().then((next) => {
+        if (next?.usage && !next.error) {
+          setSnapshot(next);
+          setConnecting(false);
+          if (connectPollRef.current) {
+            clearInterval(connectPollRef.current);
+            connectPollRef.current = null;
+          }
+        } else if (attempts >= 15) {
+          setConnecting(false);
+          if (connectPollRef.current) {
+            clearInterval(connectPollRef.current);
+            connectPollRef.current = null;
+          }
+        }
+      });
+    }, 2000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (connectPollRef.current) {
+        clearInterval(connectPollRef.current);
+      }
+    };
+  }, []);
 
   const b = snapshot?.budget;
   const connected = Boolean(snapshot?.usage && !snapshot?.error);
@@ -97,19 +141,38 @@ export function App() {
             <p className="cursor-missing-eyebrow">No Cursor AI found</p>
             <h2 id="cursor-missing-title">Connect to Cursor first</h2>
             <p className="muted">
-              Open <strong>cursor.com/dashboard</strong> while signed in, or paste your access token in Options.
+              Open <strong>cursor.com/dashboard</strong> while signed in, or add another Cursor
+              account by pasting a token in Options.
               Works with every major VS Code–based AI IDE when you install the desktop extension.
             </p>
             <p className="muted lorapok-cta">
               Explore more Lorapok Labs tools at{" "}
               <a href="https://lorapok.tech" target="_blank" rel="noopener noreferrer">lorapok.tech</a>
             </p>
+            {snapshot?.accounts && snapshot.accounts.length > 1 && (
+              <div className="account-switcher overlay-accounts">
+                <label htmlFor="popup-account-overlay">Switch saved account</label>
+                <select
+                  id="popup-account-overlay"
+                  value={snapshot.activeAccountId ?? ""}
+                  disabled={switching}
+                  onChange={(e) => void switchAccount(e.target.value)}
+                  aria-label="Switch Cursor account"
+                >
+                  {snapshot.accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="connect-actions">
-              <button type="button" className="btn primary" onClick={openCursor}>
-                Open cursor.com/dashboard
+              <button type="button" className="btn primary" onClick={openCursor} disabled={connecting}>
+                {connecting ? "Waiting for sign-in…" : "Sign in with browser"}
               </button>
               <button type="button" className="btn ghost" onClick={openOptions}>
-                Paste token manually
+                Paste access token
               </button>
             </div>
             {snapshot?.error && <p className="error-text">{snapshot.error}</p>}
@@ -131,6 +194,26 @@ export function App() {
         </div>
       </header>
 
+      {((snapshot?.accounts && snapshot.accounts.length > 0) || switching) && (
+        <div className="account-switcher">
+          <label htmlFor="popup-account">Cursor account</label>
+          <select
+            id="popup-account"
+            value={snapshot?.activeAccountId ?? ""}
+            disabled={switching}
+            onChange={(e) => void switchAccount(e.target.value)}
+            aria-label="Switch Cursor account"
+          >
+            {(snapshot?.accounts ?? []).map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.label}
+              </option>
+            ))}
+          </select>
+          {snapshot?.email && <p className="account-email">{snapshot.email}</p>}
+        </div>
+      )}
+
       {showWhatsNew && <WhatsNewCard onDismiss={() => void dismissWhatsNew()} />}
 
       {connected && b && (
@@ -147,8 +230,19 @@ export function App() {
               <div className="stat-col">
                 <span className="stat-k">Budget cap</span>
                 <span className="stat-v">{b.hasUsdBudget ? money(b.capUsd) : `${b.includedLimit} u`}</span>
-                <button type="button" className="link-btn" onClick={() => setEditingBudget(true)}>
-                  Edit budget
+                <button
+                  type="button"
+                  className={`cap-edit-btn${editingBudget ? " is-open" : ""}`}
+                  onClick={() => {
+                    setEditingBudget((open) => !open);
+                    if (!editingBudget) {
+                      setBudgetInput(String(b?.capUsd ?? snapshot.customBudgetLimit ?? 0));
+                    }
+                  }}
+                  aria-expanded={editingBudget}
+                >
+                  <span className="cap-icon" aria-hidden="true">✎</span>
+                  <span>Edit budget cap</span>
                 </button>
               </div>
               <div className="stat-col">
@@ -167,19 +261,25 @@ export function App() {
               </div>
             </div>
             {editingBudget && (
-              <div className="budget-edit">
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  placeholder="USD cap (0 = plan only)"
-                  aria-label="Custom budget cap in USD"
-                  value={budgetInput}
-                  onChange={(e) => setBudgetInput(e.target.value)}
-                />
-                <button type="button" className="btn primary" onClick={saveBudget}>
-                  Save
-                </button>
+              <div className="budget-edit-panel open">
+                <label className="budget-edit-label" htmlFor="popup-budget-cap">
+                  Personal budget cap (USD)
+                </label>
+                <div className="budget-edit">
+                  <input
+                    id="popup-budget-cap"
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="USD cap (0 = plan only)"
+                    aria-label="Custom budget cap in USD"
+                    value={budgetInput}
+                    onChange={(e) => setBudgetInput(e.target.value)}
+                  />
+                  <button type="button" className="btn primary" onClick={saveBudget}>
+                    Save cap
+                  </button>
+                </div>
               </div>
             )}
           </section>

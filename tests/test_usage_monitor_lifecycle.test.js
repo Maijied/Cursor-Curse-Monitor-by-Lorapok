@@ -19,9 +19,11 @@ require("ts-node").register({ transpileOnly: true });
 
 const vscode = require("./mock-vscode.js");
 const { UsageMonitorService } = require("../src/usageMonitor.ts");
+const { addSavedAccount } = require("../src/accountStore.ts");
 
 function createMockContext() {
   const state = new Map();
+  const secrets = new Map();
   return {
     subscriptions: [],
     globalState: {
@@ -29,6 +31,15 @@ function createMockContext() {
       update: (key, value) => {
         state.set(key, value);
         return Promise.resolve();
+      },
+    },
+    secrets: {
+      get: async (key) => secrets.get(key),
+      store: async (key, value) => {
+        secrets.set(key, value);
+      },
+      delete: async (key) => {
+        secrets.delete(key);
       },
     },
   };
@@ -502,5 +513,41 @@ test("usage monitor: start, schedule configuration listener, and dispose lifecyc
     try {
       if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
     } catch {}
+  }
+});
+
+test("usage monitor: saved account can refresh when Cursor DB is missing", async () => {
+  const originalFetch = global.fetch;
+  const dbPath = path.join(__dirname, `mock-monitor-missing-${Date.now()}.vscdb`);
+  process.env.CURSOR_DB_PATH = dbPath;
+  vscode._reset();
+
+  let fetchedUrls = [];
+  global.fetch = async (url) => {
+    fetchedUrls.push(String(url));
+    if (String(url).includes("/usage-summary")) {
+      return { ok: true, json: async () => createSampleUsage() };
+    }
+    if (String(url).includes("/full_stripe_profile")) {
+      return { ok: true, json: async () => createSampleProfile() };
+    }
+    return { ok: false, status: 404 };
+  };
+
+  const context = createMockContext();
+  await addSavedAccount(context, "saved-token-abcdefghijklmnopqrstuvwxyz", "alt@lorapok.tech");
+  const service = new UsageMonitorService(context);
+
+  try {
+    const snapshot = await service.refresh(true);
+    assert.equal(snapshot.cursorMissing, false);
+    assert.equal(snapshot.email, "alt@lorapok.tech");
+    assert.equal(snapshot.error, undefined);
+    assert.ok(snapshot.accounts?.some((account) => account.email === "alt@lorapok.tech"));
+    assert.ok(!JSON.stringify(snapshot.accounts).includes("saved-token"));
+    assert.ok(fetchedUrls.some((url) => url.includes("/usage-summary")));
+  } finally {
+    global.fetch = originalFetch;
+    service.dispose();
   }
 });

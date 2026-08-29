@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Check, Circle, Loader2, Minus, X } from "lucide-react";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import {
@@ -18,6 +18,8 @@ type DeployPipelineStepsProps = {
   jobs: PipelineJob[];
 };
 
+const TRACK_INSET_PX = 24;
+
 function isBrowserJob(name: string): boolean {
   return /firefox|chrome|amo|browser|web-ext/i.test(name);
 }
@@ -29,7 +31,7 @@ function isJobSettled(job: PipelineJob): boolean {
 export default function DeployPipelineSteps({ jobs: rawJobs }: DeployPipelineStepsProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [larvaeLeft, setLarvaeLeft] = useState(0);
+  const [larvaeLeft, setLarvaeLeft] = useState(TRACK_INSET_PX);
   const [progressWidth, setProgressWidth] = useState(0);
 
   const jobs = useMemo(() => sortWorkflowJobs(rawJobs), [rawJobs]);
@@ -48,15 +50,17 @@ export default function DeployPipelineSteps({ jobs: rawJobs }: DeployPipelineSte
   );
   const allDone = jobs.length > 0 && jobs.every(isJobSettled);
 
-  const measure = () => {
+  const measure = useCallback(() => {
     const track = trackRef.current;
-    const activeEl = stepRefs.current[activeIndex];
-    if (!track || !activeEl) return;
+    if (!track || !jobs.length) return;
+
+    const activeEl = stepRefs.current[activeIndex] ?? stepRefs.current[0];
+    if (!activeEl) return;
 
     const trackRect = track.getBoundingClientRect();
     const stepRect = activeEl.getBoundingClientRect();
     const centerX = stepRect.left + stepRect.width / 2 - trackRect.left;
-    setLarvaeLeft(centerX);
+    setLarvaeLeft(Math.max(TRACK_INSET_PX, centerX));
 
     const lastSuccess = jobs.reduce(
       (acc, job, index) => (job.conclusion === "success" ? index : acc),
@@ -70,24 +74,31 @@ export default function DeployPipelineSteps({ jobs: rawJobs }: DeployPipelineSte
     if (!successEl) return;
     const successRect = successEl.getBoundingClientRect();
     const progressEnd = successRect.left + successRect.width / 2 - trackRect.left;
-    setProgressWidth(Math.max(0, progressEnd));
-  };
+    setProgressWidth(Math.max(0, progressEnd - TRACK_INSET_PX));
+  }, [jobs, activeIndex]);
 
   useLayoutEffect(() => {
     measure();
-  }, [jobs, activeIndex]);
+    const frame = requestAnimationFrame(() => measure());
+    return () => cancelAnimationFrame(frame);
+  }, [measure]);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
     const observer = new ResizeObserver(() => measure());
     observer.observe(track);
+    stepRefs.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+    track.addEventListener("scroll", measure, { passive: true });
     window.addEventListener("resize", measure);
     return () => {
       observer.disconnect();
+      track.removeEventListener("scroll", measure);
       window.removeEventListener("resize", measure);
     };
-  }, [jobs, activeIndex]);
+  }, [measure, jobs.length]);
 
   if (!jobs.length) return null;
 
@@ -130,8 +141,11 @@ export default function DeployPipelineSteps({ jobs: rawJobs }: DeployPipelineSte
             aria-hidden="true"
           />
           <div
-            className="deploy-pipeline-progress pointer-events-none absolute left-6 top-[3.35rem] h-0.5 rounded-full bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-neon)] to-[var(--color-accent-2)]"
-            style={{ width: progressWidth > 0 ? `${progressWidth}px` : 0 }}
+            className="deploy-pipeline-progress pointer-events-none absolute top-[3.35rem] h-0.5 rounded-full bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-neon)] to-[var(--color-accent-2)]"
+            style={{
+              left: TRACK_INSET_PX,
+              width: progressWidth > 0 ? `${progressWidth}px` : 0,
+            }}
             aria-hidden="true"
           />
 

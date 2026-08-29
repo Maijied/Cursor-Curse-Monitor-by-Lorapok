@@ -1,5 +1,5 @@
 import { jsonResponse } from "./_shared/auth.js";
-import { fetchSiteData } from "./_shared/site-data.js";
+import { fetchSiteDataWithLiveCache } from "./_shared/stats-refresh.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -13,7 +13,7 @@ const CORS_HEADERS = {
  */
 export async function onRequestGet(context) {
   try {
-    const data = await fetchSiteData(context.env);
+    const data = await fetchSiteDataWithLiveCache(context.env);
     return jsonResponse(data, 200, CORS_HEADERS);
   } catch (err) {
     return jsonResponse(

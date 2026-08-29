@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Validate release metadata without publishing or mutating external services. */
 import { readFileSync, existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +41,14 @@ function readJson(path, label) {
 
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(pkg.version)) {
   fail(`package.json version is not valid semver: ${pkg.version}`);
+}
+
+const catCheck = spawnSync(process.execPath, ["scripts/validate-extension-categories.mjs"], {
+  cwd: root,
+  stdio: "inherit",
+});
+if (catCheck.status !== 0) {
+  failed = true;
 }
 
 const workspacePlaceholder = "0.0.0";

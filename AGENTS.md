@@ -32,6 +32,50 @@ node browser-extension/scripts/publish-amo.mjs   # AMO sign (needs AMO_JWT_* env
 - Shared API logic lives in `packages/shared/` (`@lorapok/cursor-monitor-shared`).
 - AMO pipeline: `generate-amo-metadata.mjs` → `validate-amo-metadata.mjs` → `web-ext sign` → `verify-amo-status.mjs` (all orchestrated by `publish-amo.mjs`).
 
+### Local dev smoke (before commit/push)
+
+One command builds, tests, and opens IDE + Firefox + Chrome dev targets:
+
+```bash
+npm run dev:smoke          # full test suite + launch
+npm run dev:smoke:quick    # scoped tests + launch
+node scripts/dev-smoke.mjs --dry-run
+```
+
+- **Not** in CI or husky — opt-in only (`CI=true` skips unless `CCM_DEV_SMOKE=1`).
+- Env: `CCM_DEV_CHROME=maizied` (signed-in Chrome for cursor.com), `CHROME_BIN`, `FIREFOX_BIN`, `EDITOR_BIN`.
+- VS Code task: **Tasks: Run Task → dev-smoke**; F5 uses `preLaunchTask: compile`.
+
+### VS Code-only sandbox (Personal_Projects)
+
+Isolated copy for **fresh install + test + VS Code Extension Host** (never Cursor):
+
+```bash
+npm run dev:vscode:all       # provision worktree, npm ci, build, test, open VS Code
+npm run sync:vscode-dev      # after editing here in Cursor, push files to sandbox
+npm run dev:vscode           # build + test + open VS Code in existing sandbox
+```
+
+Default path: `/mnt/NewVolume/Personal_Projects/cursor-usage-monitor-vscode-dev`  
+Override: `CCM_VSCODE_DEV_ROOT`. Guide in sandbox: `.vscode-dev/SANDBOX.md`.
+
+### Parallel editors (no conflicts)
+
+| Workspace | IDE | Build output | Browser dev profile |
+|-----------|-----|--------------|------------------------|
+| `~/cursor-usage-monitor` (this repo) | **Cursor** (`CCM_DEV_IDE=cursor` in launch.json) | `dist/`, `.dev-smoke/` | Isolated per smoke run |
+| `…/cursor-usage-monitor-vscode-dev` | **VS Code only** | Own `node_modules` + `dist/` | `.vscode-dev/` |
+| Production browser add-on | Any browser | — | Store keys (no `ccm_dev_` prefix) |
+| Unpacked dev extension | Chrome/Firefox | — | `ccm_dev_*` storage keys (won’t clash with store build) |
+
+Rules:
+
+- Do **not** run `npm run compile` / `watch` in both workspaces at once (build lock: `.vscode-dev/locks/compile.lock`).
+- After editing here in Cursor → `npm run sync:vscode-dev` before testing in VS Code sandbox.
+- DB writes (reindex, fallback model) require the **editor to be fully quit** — same product folder only.
+- Unknown forks (AGY, etc.): set `CCM_PRODUCT_DATA_FOLDER` to the config dir name under `~/.config`.
+- Check: `npm run check:isolation`
+
 ### Global agent skills
 
 Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `~/.claude/skills`):

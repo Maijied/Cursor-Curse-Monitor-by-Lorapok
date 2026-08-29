@@ -9,7 +9,7 @@
   "version": "1.0.26",
   "publisher": "LorapokLabs",
   "license": "GPL-3.0-or-later",
-  "icon": "media/icon.png",
+  "icon": "media/extension-icon.png",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
     "email": "mdshuvo40@gmail.com",
@@ -44,12 +44,19 @@
     "node": ">=22.5.0"
   },
   "categories": [
-    "Other"
+    "AI",
+    "Visualization"
   ],
+  "galleryBanner": {
+    "color": "#12101a",
+    "theme": "dark"
+  },
   "keywords": [
+    "ai",
     "cursor",
     "lorapok",
     "usage",
+    "dashboard",
     "billing",
     "budget",
     "monitor",
@@ -96,8 +103,64 @@
         "command": "cursorCurseMonitor.reindexConversations",
         "title": "Cursor Curse Monitor: Reindex Missing Conversations",
         "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.switchAccount",
+        "title": "Cursor Curse Monitor: Switch Account",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.addAccount",
+        "title": "Cursor Curse Monitor: Add Cursor Account",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.removeAccount",
+        "title": "Cursor Curse Monitor: Remove Saved Account",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.showExtensionInfo",
+        "title": "Extension Info",
+        "category": "Cursor Curse Monitor",
+        "icon": "$(info)"
+      },
+      {
+        "command": "cursorCurseMonitor.sendFeedback",
+        "title": "Send Feedback",
+        "category": "Cursor Curse Monitor",
+        "icon": "$(mail)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cursorCurseMonitor.refresh",
+          "when": "view == cursorCurseMonitor.dashboard",
+          "group": "navigation@1"
+        },
+        {
+          "command": "cursorCurseMonitor.showExtensionInfo",
+          "when": "view == cursorCurseMonitor.dashboard",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cursorCurseMonitor.sendFeedback",
+          "when": "view == cursorCurseMonitor.dashboard",
+          "group": "navigation@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "cursorCurseMonitor.showExtensionInfo",
+          "when": "true"
+        },
+        {
+          "command": "cursorCurseMonitor.sendFeedback",
+          "when": "true"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -203,7 +266,7 @@
     }
   },
   "scripts": {
-    "test": "node --test tests/test_api_metrics.test.js tests/test_security_scanner_suite.test.js tests/test_local_store_edge_cases.test.js tests/test_usage_monitor_lifecycle.test.js && node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && node tests/test_release_integrity.js && node tests/test_reindex_conversations.js && node tests/test_subscribe_prompt.js && node --test scripts/download-totals.test.mjs && node --test scripts/sync-workspace-versions.test.mjs && npm run browser-ext:test",
+    "test": "node --test tests/test_api_metrics.test.js tests/test_security_scanner_suite.test.js tests/test_local_store_edge_cases.test.js tests/test_usage_monitor_lifecycle.test.js tests/test_cursor_accounts.js && node tests/test_fallback.js && node tests/test_auth_read.js && node tests/test_telemetry.js && node tests/test_write_guard.js && node tests/test_budget_metrics.js && node tests/test_local_store.js && node tests/test_scan_secrets.js && node tests/test_release_integrity.js && node tests/test_reindex_conversations.js && node tests/test_subscribe_prompt.js && node --test scripts/download-totals.test.mjs && node --test scripts/sync-workspace-versions.test.mjs && node --test tests/test_product_links.mjs && node --test tests/test_message_cards.mjs && npm run browser-ext:test",
     "vscode:prepublish": "npm run compile && node scripts/stage-shared-for-vsix.mjs",
     "compile": "npm run build -w @lorapok/cursor-monitor-shared && tsc -p ./",
     "browser-ext:build": "npm run version:sync && npm run build -w browser-extension",
@@ -228,10 +291,21 @@
     "amo:secrets": "node scripts/sync-amo-github-secrets.mjs",
     "test:downloads": "node --test scripts/download-totals.test.mjs",
     "test:versioning": "node --test scripts/sync-workspace-versions.test.mjs",
+    "test:dev-smoke": "node --test scripts/dev-smoke.test.mjs",
+    "test:vscode-dev": "node --test scripts/vscode-dev-env.test.mjs",
     "security:scan": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",
     "validate:reinstall": "node scripts/validate-reinstall.mjs",
     "admin:deploy:fast": "node website/admin/scripts/deploy-pages-fast.mjs",
     "admin:build:fast": "node website/admin/scripts/build-fast.mjs",
+    "dev:smoke": "node scripts/dev-smoke.mjs",
+    "dev:smoke:quick": "node scripts/dev-smoke.mjs --quick",
+    "dev:browser": "npm run dev -w browser-extension",
+    "provision:vscode-dev": "node scripts/vscode-dev-env.mjs provision",
+    "sync:vscode-dev": "node scripts/vscode-dev-env.mjs sync",
+    "dev:vscode": "node scripts/vscode-dev-env.mjs run",
+    "dev:vscode:all": "node scripts/vscode-dev-env.mjs all",
+    "dev:vscode:quick": "node scripts/vscode-dev-env.mjs all --quick",
+    "check:isolation": "node scripts/check-dev-isolation.mjs",
     "prepare": "husky"
   },
   "dependencies": {

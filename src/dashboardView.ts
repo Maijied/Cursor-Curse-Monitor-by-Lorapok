@@ -11,6 +11,12 @@ import {
   SUPPORTED_IDE_WRAPPERS_SUBLINE,
 } from "@lorapok/cursor-monitor-shared";
 import { fetchCommunityDownloadStats } from "./communityDownloads";
+import {
+  readEditorSettings,
+  serializeEditorSettings,
+  updateEditorSettings,
+  type EditorSettings,
+} from "./editorSettings";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -120,7 +126,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
     // Register the message handler before assigning html — on Windows, macOS, and
     // Linux the inline script can post `ready` synchronously when html is set.
-    webviewView.webview.onDidReceiveMessage(async (message: { type: string; value?: number; email?: string }) => {
+    webviewView.webview.onDidReceiveMessage(async (message: {
+      type: string;
+      value?: number;
+      email?: string;
+      accountId?: string;
+      settings?: Partial<EditorSettings>;
+    }) => {
       if (message.type === "ready") {
         if (viewReady) {
           return;
@@ -151,6 +163,29 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (message.type === "reindexConversations") {
         await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
       }
+      if (message.type === "switchAccount" && typeof message.accountId === "string") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.switchAccount", message.accountId);
+        return;
+      }
+      if (message.type === "addAccount") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.addAccount");
+        return;
+      }
+      if (message.type === "loginWithBrowser") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.loginWithBrowser");
+        return;
+      }
+      if (message.type === "pasteToken") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.pasteToken");
+        return;
+      }
+      if (message.type === "removeAccount") {
+        await vscode.commands.executeCommand(
+          "cursorCurseMonitor.removeAccount",
+          typeof message.accountId === "string" ? message.accountId : undefined
+        );
+        return;
+      }
       if (message.type === "subscribeUpdates" && typeof message.email === "string") {
         const result = await subscribeForProductUpdates(
           this.extensionContext,
@@ -173,6 +208,19 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         const state = await getSubscribePromptViewState(this.extensionContext);
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
       }
+      if (message.type === "getEditorSettings") {
+        webviewView.webview.postMessage({
+          type: "editorSettings",
+          payload: readEditorSettings(),
+        });
+        return;
+      }
+      if (message.type === "updateEditorSettings" && message.settings) {
+        const next = await updateEditorSettings(message.settings);
+        webviewView.webview.postMessage({ type: "editorSettings", payload: next });
+        await deliverSnapshot(true);
+        return;
+      }
       if (message.type === "getSubscribeState") {
         const state = await getSubscribePromptViewState(this.extensionContext);
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
@@ -187,7 +235,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       this.extensionVersion,
       nonce,
       iconUri,
-      serializeWebviewBootSnapshot(latestSnapshot)
+      serializeWebviewBootSnapshot(latestSnapshot),
+      serializeEditorSettings(readEditorSettings())
     );
   }
 
@@ -198,7 +247,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     extensionVersion: string,
     nonce: string,
     iconUri: string,
-    bootJson: string
+    bootJson: string,
+    bootSettingsJson: string
   ): string {
     const esc = (value: string) =>
       value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -243,17 +293,32 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 10px;
       width: 100%;
       margin: 0 0 12px;
-      padding: 10px 12px;
+      padding: 14px 12px;
       border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--panel);
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(124,92,255,.08), rgba(91,157,255,.04)),
+        var(--panel);
       color: var(--muted);
       font: inherit;
       font-size: 12px;
       letter-spacing: 0.02em;
       cursor: default;
+    }
+    .loading-state .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(124,92,255,.22);
+      border-top-color: var(--accent);
+      animation: ccm-spin 0.85s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes ccm-spin {
+      to { transform: rotate(360deg); }
     }
     .loading-state:not(:disabled) {
       cursor: pointer;
@@ -298,6 +363,37 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       text-overflow: ellipsis;
     }
     .header-actions { display: flex; gap: 6px; align-items: center; }
+    .account-switcher {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .account-switcher select {
+      max-width: 220px;
+      min-width: 0;
+      flex: 1;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      font-size: 11px;
+      padding: 0 8px;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .icon-btn {
       width: 28px;
       height: 28px;
@@ -311,10 +407,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       font-size: 14px;
     }
     .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+    .icon-btn:disabled { opacity: 0.4; cursor: default; }
     .icon-btn:focus-visible,
     button:focus-visible,
     a:focus-visible,
-    input:focus-visible {
+    input:focus-visible,
+    select:focus-visible {
       outline: 2px solid var(--accent-2);
       outline-offset: 2px;
     }
@@ -525,7 +623,77 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       margin: 0;
     }
     .budget-edit { display: none; margin-top: 8px; }
-    .budget-edit.open { display: block; }
+    .budget-edit.open { display: block; animation: budgetReveal 0.35s ease-out both; }
+    @keyframes budgetReveal {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .cap-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(91,157,255,.35);
+      background: linear-gradient(135deg, rgba(91,157,255,.12), rgba(124,92,255,.1));
+      color: var(--accent-2);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .cap-edit-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(124,92,255,.55);
+      box-shadow: 0 8px 20px rgba(91,157,255,.15);
+    }
+    .cap-edit-btn .cap-icon {
+      width: 14px;
+      height: 14px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 12px;
+    }
+    .section-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 0;
+      margin: 0 0 10px;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+    .section-toggle .chevron {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: inline-grid;
+      place-items: center;
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform .25s ease, color .2s ease, border-color .2s ease;
+      flex-shrink: 0;
+    }
+    .section-toggle .chevron::before { content: "▾"; }
+    .section-toggle[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+    .section-toggle[aria-expanded="false"] + .collapsible-body {
+      display: none;
+    }
+    .collapsible-body { animation: budgetReveal 0.28s ease-out both; }
+    .connect-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .connect-actions button { margin-top: 0; }
     .footer {
       display: flex;
       justify-content: space-between;
@@ -625,6 +793,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       line-height: 1.35;
     }
     .subscribe-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .settings-panel { max-height: min(88vh, 640px); overflow-y: auto; }
+    .settings-grid { display: flex; flex-direction: column; gap: 10px; }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      font-size: 12px; color: var(--muted);
+    }
+    .settings-row input, .settings-row select {
+      width: 120px; padding: 6px 8px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    }
+    .settings-check {
+      display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer;
+    }
+    .settings-check input { margin-top: 2px; }
     .cursor-missing-overlay {
       display: none;
       position: fixed;
@@ -670,26 +852,33 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       opacity: 0.45;
     }
     body.cursor-missing #refreshBtn,
-    body.cursor-missing #refreshBtn2 {
+    body.cursor-missing #refreshBtn2,
+    body.cursor-missing #cursorMissingRefresh,
+    body.cursor-missing #cursorMissingBrowser,
+    body.cursor-missing #cursorMissingPaste {
       pointer-events: auto;
       opacity: 1;
     }
   </style>
 </head>
 <body>
-  <button type="button" id="loadingState" class="loading-state" disabled aria-live="polite">Loading dashboard…</button>
+  <button type="button" id="loadingState" class="loading-state" disabled aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Loading dashboard…</span></button>
   <div id="cursorMissingOverlay" class="cursor-missing-overlay" role="alertdialog" aria-modal="true" aria-labelledby="cursorMissingTitle" aria-live="polite">
     <div class="cursor-missing-card">
       <p class="cursor-missing-eyebrow">No Cursor AI found</p>
       <h2 id="cursorMissingTitle" style="margin:0 0 8px;font-size:18px;">Cursor is not installed or not signed in</h2>
       <p style="margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55;">
-        Install or open <strong>Cursor</strong> (or another supported VS Code–based AI IDE), sign in once, then refresh this dashboard.
+        Sign in at <strong>cursor.com/dashboard</strong> in your browser, or paste an access token from another Cursor login.
       </p>
       <p style="margin:0 0 14px;color:var(--muted);font-size:11px;line-height:1.5;">
         Explore more Lorapok Labs tools at
         <a href="https://lorapok.tech" target="_blank" rel="noopener" style="color:var(--accent-2);font-weight:600">lorapok.tech</a>.
       </p>
-      <button type="button" class="primary" id="cursorMissingRefresh" style="width:100%;max-width:240px">Refresh after opening Cursor</button>
+      <div class="connect-actions">
+        <button type="button" class="primary" id="cursorMissingBrowser">Sign in with browser</button>
+        <button type="button" class="ghost" id="cursorMissingPaste">Paste access token</button>
+        <button type="button" class="ghost" id="cursorMissingRefresh">Refresh after connecting</button>
+      </div>
     </div>
   </div>
   <header class="header">
@@ -697,9 +886,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="header-text">
       <h1>Usage Dashboard</h1>
       <p id="subtitle">Monitor your API usage and manage your budget.</p>
+      <div class="account-switcher">
+        <label class="sr-only" for="accountSelect">Cursor account</label>
+        <select id="accountSelect" aria-label="Switch Cursor account"></select>
+        <button type="button" class="icon-btn" id="addAccountBtn" title="Add Cursor account" aria-label="Add Cursor account">+</button>
+        <button type="button" class="icon-btn" id="removeAccountBtn" title="Remove saved account" aria-label="Remove saved account">−</button>
+      </div>
       <span class="connected" id="connBadge">Connected</span>
     </div>
     <div class="header-actions">
+      <button type="button" class="icon-btn" id="settingsBtn" title="Extension settings" aria-label="Extension settings">⚙</button>
       <button type="button" class="icon-btn" id="refreshBtn" title="Refresh" aria-label="Refresh dashboard">↻</button>
     </div>
   </header>
@@ -791,7 +987,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         <div id="budgetCapBig" style="font-size:18px;font-weight:700;margin-top:2px">$0.00</div>
         <div class="usage-sub" style="margin:0">USD · optional limit</div>
       </div>
-      <button class="edit-link" id="editBudgetBtn">Edit cap</button>
+      <button class="cap-edit-btn" id="editBudgetBtn" type="button" aria-expanded="false" aria-controls="budgetEdit">
+        <span class="cap-icon" aria-hidden="true">✎</span>
+        <span>Edit cap</span>
+      </button>
     </div>
     <div class="budget-edit" id="budgetEdit">
       <input id="budgetInput" type="number" min="0" step="1" placeholder="0 = plan included only" />
@@ -820,22 +1019,37 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="features" id="featureChips"></div>
   </section>
 
-  <section class="card">
-    <p class="section-label">Local insights</p>
-    <div class="stat-grid" style="margin-bottom:10px">
-      <div class="stat-box">
-        <div class="k">Today accepted</div>
-        <div class="v" id="todayAccepted">—</div>
+  <section class="card" id="localInsightsCard">
+    <button type="button" class="section-toggle" id="localInsightsToggle" aria-expanded="true" aria-controls="localInsightsBody">
+      <span class="chevron" aria-hidden="true"></span>
+      <span class="section-label" style="margin:0">Local insights</span>
+    </button>
+    <div class="collapsible-body" id="localInsightsBody">
+      <div class="stat-grid" style="margin-bottom:10px">
+        <div class="stat-box">
+          <div class="k">Today accepted</div>
+          <div class="v" id="todayAccepted">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="k">Cycle accepted</div>
+          <div class="v" id="cycleAccepted">—</div>
+        </div>
       </div>
-      <div class="stat-box">
-        <div class="k">Cycle accepted</div>
-        <div class="v" id="cycleAccepted">—</div>
+      <button type="button" class="section-toggle" id="activeModelsToggle" aria-expanded="true" aria-controls="activeModelsBody" style="margin-top:4px">
+        <span class="chevron" aria-hidden="true"></span>
+        <span class="muted" style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0">Active models</span>
+      </button>
+      <div class="collapsible-body" id="activeModelsBody">
+        <div class="model-list" id="modelList"><div class="muted">No local model data</div></div>
+      </div>
+      <button type="button" class="section-toggle" id="recentSessionsToggle" aria-expanded="true" aria-controls="recentSessionsBody" style="margin-top:12px">
+        <span class="chevron" aria-hidden="true"></span>
+        <span class="muted" style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0">Recent sessions</span>
+      </button>
+      <div class="collapsible-body" id="recentSessionsBody">
+        <div class="session-list" id="sessionList"><div class="muted">No recent sessions</div></div>
       </div>
     </div>
-    <div class="muted" style="font-size:10px;margin-bottom:6px">Active models</div>
-    <div class="model-list" id="modelList"><div class="muted">No local model data</div></div>
-    <div class="muted" style="font-size:10px;margin:12px 0 6px">Recent sessions</div>
-    <div class="session-list" id="sessionList"><div class="muted">No recent sessions</div></div>
   </section>
 
   <section class="card">
@@ -855,6 +1069,61 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     </div>
     <button class="ghost" id="reindexBtn" style="margin-top:10px;width:100%">Reindex missing conversations</button>
   </section>
+
+  <div class="subscribe-modal-overlay" id="settingsModal" aria-hidden="true">
+    <div class="subscribe-modal-panel settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
+      <p class="cursor-missing-eyebrow">Extension settings</p>
+      <h2 id="settingsTitle" style="margin:0 0 8px;font-size:16px">Dashboard & editor preferences</h2>
+      <p class="muted" style="margin:0 0 14px;font-size:11px;line-height:1.5">
+        These map to VS Code settings under <strong>Cursor Curse Monitor</strong>. Useful while Cursor Agent runs in this workspace.
+      </p>
+      <div class="settings-grid">
+        <label class="settings-row">
+          <span>Poll interval (seconds)</span>
+          <input id="setPollInterval" type="number" min="15" max="3600" step="15" />
+        </label>
+        <label class="settings-row">
+          <span>Warn at usage %</span>
+          <input id="setWarnPercent" type="number" min="1" max="100" step="1" />
+        </label>
+        <label class="settings-row">
+          <span>Status bar source</span>
+          <select id="setStatusBarSource">
+            <option value="plan">Plan quota</option>
+            <option value="autoApi">Auto + API</option>
+            <option value="both">Plan + Auto/API</option>
+          </select>
+        </label>
+        <label class="settings-check"><input type="checkbox" id="setShowStatusBar" /><span>Show status bar usage</span></label>
+        <label class="settings-check"><input type="checkbox" id="setAutoFallback" /><span>Auto-apply fallback model at 100%</span></label>
+        <label class="settings-check"><input type="checkbox" id="setProductNotices" /><span>Show product notices</span></label>
+        <label class="settings-check"><input type="checkbox" id="setSecurityScan" /><span>Security scan enabled</span></label>
+        <label class="settings-check"><input type="checkbox" id="setScanOnSave" /><span>Scan on save</span></label>
+        <label class="settings-check"><input type="checkbox" id="setBlockSave" /><span>Block save when secrets detected</span></label>
+        <label class="settings-check"><input type="checkbox" id="setAnonymousStats" /><span>Anonymous usage heartbeat (opt-in)</span></label>
+      </div>
+      <div class="subscribe-actions" style="margin-top:14px">
+        <button type="button" class="primary" id="settingsSaveBtn" style="width:100%">Save settings</button>
+        <button type="button" class="ghost" id="settingsCancelBtn" style="width:100%">Cancel</button>
+      </div>
+      <p class="muted" id="settingsStatus" style="margin:8px 0 0;font-size:11px"></p>
+    </div>
+  </div>
+
+  <div class="subscribe-modal-overlay" id="reindexModal" aria-hidden="true">
+    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="reindexTitle" tabindex="-1">
+      <p class="cursor-missing-eyebrow" style="color:var(--warn)">Data recovery</p>
+      <h2 id="reindexTitle" style="margin:0 0 8px;font-size:16px">Reindex missing conversations?</h2>
+      <p class="muted" style="margin:0 0 14px;font-size:11px;line-height:1.5">
+        This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward.
+        <strong>Quit Cursor or VS Code completely</strong> before continuing — live database writes are blocked while the editor is running.
+      </p>
+      <div class="subscribe-actions">
+        <button type="button" class="primary" id="reindexConfirm" style="width:100%">Reindex now</button>
+        <button type="button" class="ghost" id="reindexCancel" style="width:100%">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <div class="subscribe-modal-overlay" id="subscribeModal" aria-hidden="true">
     <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle" aria-describedby="subscribeBody" tabindex="-1" id="subscribePanel">
@@ -932,6 +1201,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const bootSnapshot = ${bootJson};
+    let editorSettings = ${bootSettingsJson};
 
     function dismissLoading() {
       var loading = document.getElementById('loadingState');
@@ -1034,9 +1304,90 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       modal.addEventListener('keydown', onKey);
     }
 
+    function applyEditorSettingsForm(settings) {
+      if (!settings) return;
+      editorSettings = settings;
+      var poll = document.getElementById('setPollInterval');
+      var warn = document.getElementById('setWarnPercent');
+      var source = document.getElementById('setStatusBarSource');
+      if (poll) poll.value = String(settings.pollIntervalSeconds ?? 60);
+      if (warn) warn.value = String(settings.warnAtPercent ?? 80);
+      if (source) source.value = settings.statusBarUsageSource || 'autoApi';
+      var map = [
+        ['setShowStatusBar', 'showStatusBar'],
+        ['setAutoFallback', 'autoApplyFallbackModel'],
+        ['setProductNotices', 'productNotices'],
+        ['setSecurityScan', 'securityScanEnabled'],
+        ['setScanOnSave', 'scanOnSave'],
+        ['setBlockSave', 'blockSaveOnSecret'],
+        ['setAnonymousStats', 'anonymousUsageStats'],
+      ];
+      map.forEach(function(pair) {
+        var el = document.getElementById(pair[0]);
+        if (el) el.checked = !!settings[pair[1]];
+      });
+    }
+
+    function openSettingsModal() {
+      applyEditorSettingsForm(editorSettings);
+      var modal = document.getElementById('settingsModal');
+      var status = document.getElementById('settingsStatus');
+      if (status) status.textContent = '';
+      if (modal) {
+        modal.classList.add('visible');
+        modal.setAttribute('aria-hidden', 'false');
+        var saveBtn = document.getElementById('settingsSaveBtn');
+        if (saveBtn) saveBtn.focus();
+      }
+    }
+
+    function closeSettingsModal() {
+      var modal = document.getElementById('settingsModal');
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function collectEditorSettingsFromForm() {
+      return {
+        pollIntervalSeconds: Number(document.getElementById('setPollInterval')?.value || 60),
+        warnAtPercent: Number(document.getElementById('setWarnPercent')?.value || 80),
+        statusBarUsageSource: document.getElementById('setStatusBarSource')?.value || 'autoApi',
+        showStatusBar: !!document.getElementById('setShowStatusBar')?.checked,
+        autoApplyFallbackModel: !!document.getElementById('setAutoFallback')?.checked,
+        productNotices: !!document.getElementById('setProductNotices')?.checked,
+        securityScanEnabled: !!document.getElementById('setSecurityScan')?.checked,
+        scanOnSave: !!document.getElementById('setScanOnSave')?.checked,
+        blockSaveOnSecret: !!document.getElementById('setBlockSave')?.checked,
+        anonymousUsageStats: !!document.getElementById('setAnonymousStats')?.checked,
+      };
+    }
+
+    function renderAccounts(snapshot) {
+      var sel = document.getElementById('accountSelect');
+      var removeBtn = document.getElementById('removeAccountBtn');
+      if (!sel) return;
+      var accounts = snapshot.accounts || [];
+      var active = snapshot.activeAccountId || 'system';
+      sel.innerHTML = accounts.map(function(a) {
+        var label = a.label || a.email || a.id;
+        return '<option value="' + escHtml(a.id) + '">' + escHtml(label) + '</option>';
+      }).join('');
+      if (!accounts.length) {
+        sel.innerHTML = '<option value="system">This Cursor session</option>';
+      }
+      sel.value = active;
+      var selected = accounts.filter(function(a) { return a.id === sel.value; })[0];
+      if (removeBtn) {
+        removeBtn.disabled = !selected || selected.source === 'system';
+      }
+    }
+
     function render(snapshot) {
       const loading = document.getElementById('loadingState');
       if (loading) loading.remove();
+      renderAccounts(snapshot);
       const b = snapshot.budget;
       const usage = snapshot.usage;
       const errorBox = document.getElementById('errorBox');
@@ -1256,6 +1607,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (event.data?.type === 'subscribeState') {
         applySubscribeState(event.data.payload);
       }
+      if (event.data?.type === 'editorSettings') {
+        applyEditorSettingsForm(event.data.payload);
+        var settingsStatus = document.getElementById('settingsStatus');
+        if (settingsStatus) {
+          settingsStatus.textContent = 'Settings saved.';
+          settingsStatus.style.color = 'var(--ok)';
+        }
+      }
     });
 
     var subscribeModalTimer = null;
@@ -1295,15 +1654,85 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
 
     function refresh() { vscode.postMessage({ type: 'refresh' }); }
+    onClick('settingsBtn', openSettingsModal);
+    onClick('settingsCancelBtn', closeSettingsModal);
+    onClick('settingsSaveBtn', function() {
+      var status = document.getElementById('settingsStatus');
+      if (status) {
+        status.textContent = 'Saving…';
+        status.style.color = 'var(--muted)';
+      }
+      vscode.postMessage({ type: 'updateEditorSettings', settings: collectEditorSettingsFromForm() });
+    });
     onClick('refreshBtn', refresh);
     onClick('refreshBtn2', refresh);
     onClick('cursorMissingRefresh', refresh);
+    onClick('cursorMissingBrowser', function() {
+      vscode.postMessage({ type: 'loginWithBrowser' });
+    });
+    onClick('cursorMissingPaste', function() {
+      vscode.postMessage({ type: 'pasteToken' });
+    });
+    onClick('addAccountBtn', function() {
+      vscode.postMessage({ type: 'addAccount' });
+    });
+    onClick('removeAccountBtn', function() {
+      var sel = document.getElementById('accountSelect');
+      vscode.postMessage({ type: 'removeAccount', accountId: sel && sel.value ? sel.value : undefined });
+    });
+    var accountSelect = document.getElementById('accountSelect');
+    if (accountSelect) {
+      accountSelect.addEventListener('change', function() {
+        vscode.postMessage({ type: 'switchAccount', accountId: accountSelect.value });
+      });
+    }
     onClick('fallbackBtn', function() {
       vscode.postMessage({ type: 'applyFallback' });
     });
     onClick('reindexBtn', function() {
+      var modal = document.getElementById('reindexModal');
+      if (modal) {
+        modal.classList.add('visible');
+        modal.setAttribute('aria-hidden', 'false');
+        var confirmBtn = document.getElementById('reindexConfirm');
+        if (confirmBtn) confirmBtn.focus();
+      }
+    });
+    onClick('reindexCancel', function() {
+      var modal = document.getElementById('reindexModal');
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+    onClick('reindexConfirm', function() {
+      var modal = document.getElementById('reindexModal');
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+      }
       vscode.postMessage({ type: 'reindexConversations' });
     });
+    function bindCollapse(toggleId) {
+      var toggle = document.getElementById(toggleId);
+      if (!toggle) return;
+      var saved = vscode.getState();
+      var key = 'collapse_' + toggleId;
+      if (saved && typeof saved[key] === 'boolean') {
+        toggle.setAttribute('aria-expanded', saved[key] ? 'true' : 'false');
+      }
+      toggle.addEventListener('click', function() {
+        var expanded = toggle.getAttribute('aria-expanded') !== 'false';
+        var next = !expanded;
+        toggle.setAttribute('aria-expanded', next ? 'true' : 'false');
+        var state = vscode.getState() || {};
+        state[key] = next;
+        vscode.setState(state);
+      });
+    }
+    bindCollapse('localInsightsToggle');
+    bindCollapse('activeModelsToggle');
+    bindCollapse('recentSessionsToggle');
     onClick('subscribeBtn', function() {
       var email = document.getElementById('subscribeEmail').value || '';
       var consent = document.getElementById('subscribeConsent');
@@ -1330,7 +1759,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     });
     vscode.postMessage({ type: 'getSubscribeState' });
     onClick('editBudgetBtn', function() {
-      document.getElementById('budgetEdit').classList.toggle('open');
+      var panel = document.getElementById('budgetEdit');
+      var btn = document.getElementById('editBudgetBtn');
+      if (!panel) return;
+      var open = !panel.classList.contains('open');
+      panel.classList.toggle('open', open);
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) {
+        var input = document.getElementById('budgetInput');
+        if (input) input.focus();
+      }
     });
     onClick('saveBudgetBtn', function() {
       var value = Number(document.getElementById('budgetInput').value || 0);

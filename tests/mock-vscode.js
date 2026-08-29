@@ -84,6 +84,8 @@ const mockVscode = {
       notifications.push({ type: "error", text, items });
       return undefined;
     },
+    showInputBox: async () => undefined,
+    showQuickPick: async () => undefined,
   },
   commands: {
     registerCommand: (cmd, handler) => {

@@ -1,3 +1,5 @@
+import type { CursorAccountPublic } from "./cursorAccounts";
+
 export interface UsagePlan {
   enabled: boolean;
   used: number;
@@ -106,6 +108,9 @@ export interface DashboardSnapshot {
   host?: "cursor" | "vscode" | "unknown";
   local?: LocalInsights;
   history?: UsageHistoryPoint[];
+  /** Public account list for the switcher. Tokens are never included. */
+  accounts?: CursorAccountPublic[];
+  activeAccountId?: string;
 }
 
 export interface DailyCodeStats {

@@ -3,8 +3,6 @@ import {
   applyComposerFallbackModel,
   cursorDbExists,
   detectEditorHost,
-  readCachedAccountEmail,
-  readCursorAccessToken,
 } from "./cursorAuth";
 import {
   appendUsageHistory,
@@ -18,6 +16,7 @@ import {
 } from "./cursorApi";
 import { emptyLocalInsights, readLocalInsights } from "./cursorLocalStore";
 import { NotificationProvider } from "./notificationProvider";
+import { listPublicAccounts, resolveActiveAuth } from "./accountStore";
 
 const USAGE_HISTORY_KEY = "usageHistoryV1";
 const REFRESH_COOLDOWN_MS = 3000;
@@ -106,9 +105,13 @@ export class UsageMonitorService implements vscode.Disposable {
     const autoApplyFallback = config.get<boolean>("autoApplyFallbackModel", false);
     const warnAtPercent = config.get<number>("warnAtPercent", 80);
 
+    const auth = await resolveActiveAuth(this.context);
+    const accounts = await listPublicAccounts(this.context);
+    const dbMissing = !cursorDbExists(undefined, vscode.env.appName);
+
     const snapshot: DashboardSnapshot = {
       fetchedAt: new Date().toISOString(),
-      email: null,
+      email: auth.email,
       usage: null,
       profile: null,
       fallbackApplied: false,
@@ -118,35 +121,32 @@ export class UsageMonitorService implements vscode.Disposable {
       budget: null,
       features: [],
       host: detectEditorHost(vscode.env.appName),
-      cursorMissing: !cursorDbExists(undefined, vscode.env.appName),
+      cursorMissing: dbMissing && !auth.token,
       local: emptyLocalInsights(),
       history: this.loadHistory(),
+      accounts,
+      activeAccountId: auth.id,
     };
 
-    if (snapshot.cursorMissing) {
-      snapshot.error =
-        "Cursor storage database not found. Install or open Cursor, sign in, then refresh. Monitoring stays read-only until the database exists.";
+    if (!dbMissing) {
+      try {
+        snapshot.local = readLocalInsights();
+      } catch {
+        snapshot.local = emptyLocalInsights();
+      }
+    }
+
+    if (!auth.token) {
+      snapshot.error = dbMissing
+        ? "Cursor storage database not found. Install or open Cursor, sign in, or add another Cursor account from the switcher."
+        : "Cursor auth token not found. Sign in to Cursor, reload the window, or add another Cursor account.";
       this.publish(snapshot);
       return snapshot;
     }
 
     try {
-      snapshot.local = readLocalInsights();
-    } catch {
-      snapshot.local = emptyLocalInsights();
-    }
-
-    try {
-      const token = await readCursorAccessToken();
-      if (!token) {
-        throw new Error(
-          "Cursor auth token not found. Sign in to Cursor and reload the window."
-        );
-      }
-
-      snapshot.email = await readCachedAccountEmail();
-      snapshot.usage = await fetchUsageSummary(token);
-      snapshot.profile = await fetchStripeProfile(token);
+      snapshot.usage = await fetchUsageSummary(auth.token);
+      snapshot.profile = await fetchStripeProfile(auth.token);
       snapshot.onDemandSpendUsd =
         (snapshot.usage.individualUsage.onDemand.used ?? 0) / 100;
       snapshot.limitExceeded = isLimitExceeded(snapshot.usage);
@@ -168,23 +168,29 @@ export class UsageMonitorService implements vscode.Disposable {
           : `Cursor usage is at ${Math.round(percent)}%.`;
         NotificationProvider.show({
           title: "Usage Warning",
-          message: `${budgetMsg} Consider switching to Composer 2.5 (Fast off) before you hit the limit.`,
+          message:
+            auth.source === "system"
+              ? `${budgetMsg} Consider switching to Composer 2.5 (Fast off) before you hit the limit.`
+              : `${budgetMsg} This is a saved Cursor login — Composer fallback still applies only to this editor session.`,
           type: "warning",
-          actions: [
-            {
-              label: "Apply Fallback",
-              action: () => {
-                void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
-              },
-            },
-          ],
+          actions:
+            auth.source === "system"
+              ? [
+                  {
+                    label: "Apply Fallback",
+                    action: () => {
+                      void vscode.commands.executeCommand("cursorCurseMonitor.applyFallbackModel");
+                    },
+                  },
+                ]
+              : [],
         });
       }
       if (percent < warnAtPercent) {
         this.warnedAtThreshold = false;
       }
 
-      if (snapshot.limitExceeded && autoApplyFallback) {
+      if (snapshot.limitExceeded && autoApplyFallback && auth.source === "system") {
         const result = await applyComposerFallbackModel();
         snapshot.fallbackApplied = result.success;
         if (result.success && !this.fallbackAppliedThisCycle) {

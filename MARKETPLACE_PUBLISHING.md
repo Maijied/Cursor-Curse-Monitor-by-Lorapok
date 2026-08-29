@@ -70,7 +70,80 @@ This guide explains how to publish the Cursor Curse Monitor extension to the VS 
 | `AMO_JWT_ISSUER` | Firefox JWT issuer | For `web-ext sign` (browser extension) |
 | `AMO_JWT_SECRET` | Firefox JWT secret | For `web-ext sign` (browser extension) |
 
+## Extension categories (VS Code, Open VSX, Firefox)
+
+Marketplace sidebars only show extensions whose `package.json` **`categories`** array uses **exact** strings from the allow-list. Unknown values are ignored or fall back to **Other**.
+
+### IDE extension (`package.json` → `categories`)
+
+Official references:
+
+- [VS Code extension manifest — categories](https://code.visualstudio.com/api/references/extension-manifest)
+- [Open VSX `CATEGORIES` constant](https://github.com/eclipse-openvsx/openvsx/blob/master/webui/src/extension-registry-types.ts) (same strings as the VS Code sidebar in current builds)
+
+| Category | Use when your extension… |
+|----------|---------------------------|
+| **AI** | Works with AI assistants, models, prompts, or AI usage (Cursor, Copilot-style tools). |
+| **Visualization** | Shows charts, dashboards, meters, or data views in the editor. |
+| **Data Science** | Jupyter-style workflows, notebooks integration, data exploration. |
+| **Machine Learning** | Training, inference, or ML tooling inside the editor. |
+| **Notebooks** | Notebook editors or notebook-specific features. |
+| **Programming Languages** | Syntax, completion, or language services (not display-language packs). |
+| **Snippets** | Snippet packs or template insertion. |
+| **Linters** | Diagnostics / lint rules. |
+| **Formatters** | Code formatting. |
+| **Debuggers** | Debug adapters or debug UI. |
+| **Themes** | Color/icon themes. |
+| **Keymaps** | Keyboard layout packs. |
+| **SCM Providers** | Git or other source-control integrations. |
+| **Extension Packs** | Bundles other extensions (`extensionPack`). |
+| **Language Packs** | **UI locale only** (translated VS Code/Cursor interface). |
+| **Testing** | Test runners, coverage, or test UI. |
+| **Education** | Learning / tutorial content. |
+| **Azure** | Azure-specific integrations (VS Code Marketplace). |
+| **Chat** | Chat-panel or conversational UI extensions (VS Code Marketplace). |
+| **Other** | Last resort — avoid as the **only** category. |
+
+**Cursor Curse Monitor** uses:
+
+```json
+"categories": ["AI", "Visualization"]
+```
+
+The **first** entry is the primary sidebar filter (AI). CI runs `scripts/validate-extension-categories.mjs` during `npm run validate:release`.
+
+### Firefox add-on (AMO — different system)
+
+AMO uses **slug** categories in `browser-extension/amo/amo-metadata.base.json`, not VS Code strings:
+
+```json
+"categories": { "firefox": ["web-development", "privacy-security"] }
+```
+
+See [Firefox extension categories](https://extensionworkshop.com/documentation/develop/build-a-high-quality-listing/) and AMO Developer Hub when changing browser listing categories.
+
 ## Deployment Methods
+
+### Beta (pre-release) testing
+
+Beta releases are **not** pushed to all users automatically:
+
+| Channel | Who sees it | How to install |
+|---------|-------------|----------------|
+| **GitHub Release (pre-release)** | Anyone with the link | Download `.vsix` → Cursor/VS Code → Extensions → `⋯` → **Install from VSIX** |
+| **VS Code Marketplace** | Opt-in only | Extension page → **Install Pre-Release Version** |
+| **Open VSX** | Opt-in only | Pre-release flag on publish (`--pre-release`) |
+| **Firefox AMO** | Full release only | AMO does not expose a separate pre-release channel in this pipeline |
+
+**One-click beta flow (Mission Control or Actions):**
+
+1. **Action type:** `full-release`
+2. **Release channel:** `Beta (Pre-release)`
+3. **Publish market:** choose targets (e.g. Open VSX + VS Code)
+
+Beta `full-release` now **tags, builds, and publishes** in one workflow run. Production `full-release` still only bumps the tag on `main` — run **publish-tag** separately when ready.
+
+**IDE dashboard:** use the **info** and **mail** icons on the Dashboard view title bar for extension links and feedback.
 
 ### Method 1: Mission Control (recommended)
 

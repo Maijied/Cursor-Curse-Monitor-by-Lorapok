@@ -14,6 +14,12 @@ import {
   sanitizeDiscordConfigForClient,
 } from "./functions/api/_shared/discord-config.js";
 import { notifyDiscordDeployment } from "./functions/api/_shared/discord-notify.js";
+import {
+  DEFAULT_STATS_REFRESH_CONFIG,
+  readStatsLiveCache,
+  sanitizeStatsRefreshConfigForClient,
+} from "./functions/api/_shared/stats-refresh-config.js";
+import { fetchSiteDataWithLiveCache, mergeSiteDataWithLiveCache, runStatsRefresh } from "./functions/api/_shared/stats-refresh.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -43,7 +49,17 @@ const devStore = {
     updatedAt: null,
     updatedBy: null,
   },
+  statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
+  statsLiveCache: null,
 };
+
+const devFunctionsEnv = () => ({
+  ADMIN_KV: devKv,
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+  SITE_DATA_URL: process.env.SITE_DATA_URL ?? "https://cursor.lorapok.tech/site-data.json",
+  ANALYTICS_STATS_URL: process.env.ANALYTICS_STATS_URL,
+  CRON_SECRET: process.env.CRON_SECRET,
+});
 
 const devKv = {
   get: async (key) => {
@@ -53,6 +69,12 @@ const devKv = {
     if (key === "integrations:discord") {
       return JSON.stringify(devStore.discordConfig);
     }
+    if (key === "integrations:stats-refresh") {
+      return JSON.stringify(devStore.statsRefreshConfig);
+    }
+    if (key === "stats:live-cache") {
+      return devStore.statsLiveCache ? JSON.stringify(devStore.statsLiveCache) : null;
+    }
     return null;
   },
   put: async (key, value) => {
@@ -61,6 +83,12 @@ const devKv = {
     }
     if (key === "integrations:discord") {
       devStore.discordConfig = JSON.parse(value);
+    }
+    if (key === "integrations:stats-refresh") {
+      devStore.statsRefreshConfig = JSON.parse(value);
+    }
+    if (key === "stats:live-cache") {
+      devStore.statsLiveCache = JSON.parse(value);
     }
   },
 };
@@ -725,16 +753,19 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/site-data" && req.method === "GET") {
-      try {
-        const site = JSON.parse(readFileSync(siteDataPath, "utf8"));
-        res.setHeader("Content-Type", "application/json");
-        res.setHeader("Cache-Control", "public, max-age=60");
-        res.end(JSON.stringify(site));
-      } catch (err) {
-        res.statusCode = 502;
-        res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "site-data unavailable" }));
-      }
+      readStatsLiveCache(devFunctionsEnv())
+        .then((cache) => {
+          const base = JSON.parse(readFileSync(siteDataPath, "utf8"));
+          const site = mergeSiteDataWithLiveCache(base, cache);
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Cache-Control", "public, max-age=60");
+          res.end(JSON.stringify(site));
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "site-data unavailable" }));
+        });
       return;
     }
 
@@ -810,6 +841,91 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
+      return;
+    }
+
+    if (url === "/api/integrations/stats-refresh/config" && req.method === "GET") {
+      readStatsLiveCache(devFunctionsEnv())
+        .then((cache) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeStatsRefreshConfigForClient(devStore.statsRefreshConfig),
+              cache: cache
+                ? {
+                    refreshedAt: cache.refreshedAt,
+                    displayTotal: cache.downloads?.displayTotal ?? null,
+                    verified: cache.downloads?.verified ?? false,
+                    syncStatus: cache.marketplaceSync?.syncStatus ?? null,
+                  }
+                : null,
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message || "Failed to load stats refresh config" }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/stats-refresh/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const interval = Number(parsed.intervalMinutes ?? devStore.statsRefreshConfig.intervalMinutes);
+          devStore.statsRefreshConfig = {
+            ...devStore.statsRefreshConfig,
+            enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : devStore.statsRefreshConfig.enabled,
+            intervalMinutes: Number.isFinite(interval)
+              ? Math.min(60, Math.max(1, Math.round(interval)))
+              : devStore.statsRefreshConfig.intervalMinutes,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          };
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeStatsRefreshConfigForClient(devStore.statsRefreshConfig),
+            })
+          );
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/stats/refresh" && req.method === "POST") {
+      runStatsRefresh(devFunctionsEnv(), { triggeredBy: "dev@local", force: true })
+        .then((result) => {
+          res.setHeader("Content-Type", "application/json");
+          if (result.skipped) {
+            res.statusCode = 409;
+            res.end(JSON.stringify({ ok: false, ...result }));
+            return;
+          }
+          res.end(
+            JSON.stringify({
+              ok: true,
+              durationMs: result.durationMs,
+              refreshedAt: result.snapshot?.refreshedAt,
+              displayTotal: result.snapshot?.downloads?.displayTotal ?? null,
+              syncStatus: result.snapshot?.marketplaceSync?.syncStatus ?? null,
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: false, error: err.message || "Refresh failed" }));
+        });
       return;
     }
 
