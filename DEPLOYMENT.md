@@ -2,9 +2,9 @@
 
 > **Architecture overview:** domains, hosting, Cloudflare migration, and system diagram — [README.md § Architecture](README.md#architecture).
 
-## CI/CD Overview
+## Production Deployment Overview
 
-All CI/CD is managed by a **single smart workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
+All production deployment is managed by a **single smart workflow**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
 
 | Trigger | Jobs | What it does |
 |---------|------|-------------|
@@ -40,7 +40,7 @@ Every push to `main` automatically:
 
 To publish a new version (Beta or Production):
 
-1. Go to **Mission Control → Deployments** (master admin) or **Actions → CI/CD → Run workflow**
+1. Go to **Mission Control → Deployments** (master admin) or **Actions → Production Deployment → Run workflow**
 2. Configure the release:
    - **Publish Market**: `Both`, `VS Code Marketplace`, `Open VSX`, or `Firefox AMO`
    - **Release Channel**: `Production` or `Beta (Pre-release)`
@@ -176,7 +176,7 @@ Config: [`.secretlintrc.json`](.secretlintrc.json). Test fixtures under `tests/`
 
 ## Install from CI Artifact
 
-1. Open **Actions → CI/CD** run
+1. Open **Actions → Production Deployment** run
 2. Download **cursor-curse-monitor-vsix-*** artifact
 3. Extract the downloaded ZIP file.
 4. Install:

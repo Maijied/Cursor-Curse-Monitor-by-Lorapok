@@ -18,7 +18,7 @@
   </p>
 
   <p>
-    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci-cd.yml?branch=main&label=CI%2FCD" alt="CI/CD" /></a>
+    <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/actions"><img src="https://img.shields.io/github/actions/workflow/status/Maijied/Cursor-Curse-Monitor-by-Lorapok/ci-cd.yml?branch=main&label=Production%20Deployment" alt="Production Deployment" /></a>
     <a href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/open-vsx/v/lorapok-labs/cursor-curse-monitor-by-lorapok?label=Open%20VSX" alt="Open VSX" /></a>
     <a href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok"><img src="https://img.shields.io/visual-studio-marketplace/v/LorapokLabs.cursor-curse-monitor-by-lorapok?label=VS%20Code%20Marketplace" alt="VS Code Marketplace" /></a>
     <img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPL-3.0 License" />
@@ -165,9 +165,9 @@ The extension takes multiple precautions when writing to the Cursor state databa
 - **Parameterized queries** — prevents SQL injection
 - **Stale backup cleanup** — removes old backups automatically
 
-## CI/CD
+## Production Deployment
 
-All CI/CD is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-cd.yml)). **Marketplace publishing is manual** — pushes to `main` run CI and update the website; releases are triggered from Mission Control or GitHub Actions.
+All production deployment is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-cd.yml)). **Marketplace publishing is manual** — pushes to `main` run CI and update the website; releases are triggered from Mission Control or GitHub Actions.
 
 | Trigger | What happens |
 |---------|-------------|
@@ -179,7 +179,7 @@ All CI/CD is managed by a **single workflow** ([ci-cd.yml](.github/workflows/ci-
 
 ### Releases (master admin only)
 
-Production releases are dispatched from **[Mission Control](https://cursor-dev.lorapok.tech)** (Deployments) or **Actions → CI/CD → Run workflow**. Only the master admin account can trigger deploy, release, and rollback APIs.
+Production releases are dispatched from **[Mission Control](https://cursor-dev.lorapok.tech)** (Deployments) or **Actions → Production Deployment → Run workflow**. Only the master admin account can trigger deploy, release, and rollback APIs.
 
 1. Choose **Release Channel** (Production or Beta)
 2. Choose **Publish Market** (`Both`, `Open VSX`, `VS Code Marketplace`, or `Firefox AMO`)

@@ -53,7 +53,7 @@ const SECTIONS = [
     content: (
       <>
         <p>
-          Releases are driven by a single CI/CD workflow (<code className="font-[family-name:var(--font-mono)] text-sm">.github/workflows/ci-cd.yml</code>).
+          Releases are driven by the <strong>Production Deployment</strong> workflow (<code className="font-[family-name:var(--font-mono)] text-sm">.github/workflows/ci-cd.yml</code>).
           Pushes to <code className="font-[family-name:var(--font-mono)] text-sm">main</code> run CI and deploy the website; marketplace publishing requires a manual workflow dispatch or tag push.
         </p>
         <h4 className="font-semibold mt-6 mb-2 text-[var(--color-text)]">Deploy (forward)</h4>

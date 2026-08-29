@@ -166,7 +166,7 @@ node scripts/validate-seo.mjs
 ### Option A — GitHub Actions (recommended)
 
 1. Commit and push all changes to `main`.
-2. **Actions → CI/CD → Run workflow**
+2. **Actions → Production Deployment → Run workflow**
 3. Inputs:
    - **Publish Market:** `Both`
    - **Release Channel:** `Production`
