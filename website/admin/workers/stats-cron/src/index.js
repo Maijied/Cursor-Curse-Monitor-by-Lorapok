@@ -1,5 +1,5 @@
 /**
- * Calls Mission Control cron endpoint on a schedule (every minute; server enforces interval).
+ * Calls Mission Control cron endpoints on a schedule (every minute; server enforces intervals).
  */
 export default {
   async scheduled(_event, env) {
@@ -10,17 +10,21 @@ export default {
       return;
     }
 
-    const res = await fetch(`${base}/api/cron/stats-refresh`, {
-      method: "POST",
-      headers: {
-        "X-Cron-Secret": secret,
-        Accept: "application/json",
-      },
-    });
+    const headers = {
+      "X-Cron-Secret": secret,
+      Accept: "application/json",
+    };
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error(`ccm-stats-cron: ${res.status} ${text.slice(0, 200)}`);
-    }
+    const endpoints = ["/api/cron/stats-refresh", "/api/cron/discord-digest"];
+
+    await Promise.all(
+      endpoints.map(async (path) => {
+        const res = await fetch(`${base}${path}`, { method: "POST", headers });
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          console.error(`ccm-stats-cron ${path}: ${res.status} ${text.slice(0, 200)}`);
+        }
+      })
+    );
   },
 };

@@ -6,6 +6,10 @@ import {
   readStatsRefreshConfig,
   sanitizeStatsRefreshConfigForClient,
 } from "./_shared/stats-refresh-config.js";
+import {
+  readDiscordDigestConfig,
+  sanitizeDiscordDigestConfigForClient,
+} from "./_shared/discord-digest-config.js";
 
 /**
  * Reports service health, configuration status, and endpoint URLs.
@@ -27,6 +31,7 @@ export async function onRequestGet(context) {
   const mail = getMailTransportStatus(env);
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
+  const discordDigest = sanitizeDiscordDigestConfigForClient(await readDiscordDigestConfig(env));
 
   return jsonResponse({
     ok: checks.github,
@@ -44,8 +49,11 @@ export async function onRequestGet(context) {
     feedbackDiscordConfigured: discordConfig.feedbackConfigured,
     statsRefreshEnabled: statsRefresh.enabled,
     statsRefreshIntervalMinutes: statsRefresh.intervalMinutes,
-    cronSecretConfigured: Boolean(env.CRON_SECRET),
     statsRefreshLastRunAt: statsRefresh.lastRunAt,
+    discordDigestEnabled: discordDigest.enabled,
+    discordDigestIntervalMinutes: discordDigest.intervalMinutes,
+    discordDigestLastRunAt: discordDigest.lastRunAt,
+    cronSecretConfigured: Boolean(env.CRON_SECRET),
     adminPublicUrl: env.ADMIN_PUBLIC_URL ?? "https://cursor-dev.lorapok.tech",
     siteDataUrl:
       env.SITE_DATA_URL ??

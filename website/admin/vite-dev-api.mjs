@@ -25,6 +25,15 @@ import {
   readStatsLiveCache,
   sanitizeStatsRefreshConfigForClient,
 } from "./functions/api/_shared/stats-refresh-config.js";
+import {
+  DEFAULT_DISCORD_DIGEST_CONFIG,
+  sanitizeDiscordDigestConfigForClient,
+} from "./functions/api/_shared/discord-digest-config.js";
+import {
+  GITHUB_CRON_JOBS,
+  MANAGED_CRON_JOBS,
+} from "./functions/api/_shared/cron-jobs-registry.js";
+import { runDiscordDigest } from "./functions/api/_shared/discord-digest.js";
 import { fetchSiteDataWithLiveCache, mergeSiteDataWithLiveCache, runStatsRefresh } from "./functions/api/_shared/stats-refresh.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
@@ -57,6 +66,7 @@ const devStore = {
     updatedBy: null,
   },
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
+  discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
   statsLiveCache: null,
 };
 
@@ -79,6 +89,9 @@ const devKv = {
     if (key === "integrations:stats-refresh") {
       return JSON.stringify(devStore.statsRefreshConfig);
     }
+    if (key === "integrations:discord-digest") {
+      return JSON.stringify(devStore.discordDigestConfig);
+    }
     if (key === "stats:live-cache") {
       return devStore.statsLiveCache ? JSON.stringify(devStore.statsLiveCache) : null;
     }
@@ -93,6 +106,9 @@ const devKv = {
     }
     if (key === "integrations:stats-refresh") {
       devStore.statsRefreshConfig = JSON.parse(value);
+    }
+    if (key === "integrations:discord-digest") {
+      devStore.discordDigestConfig = JSON.parse(value);
     }
     if (key === "stats:live-cache") {
       devStore.statsLiveCache = JSON.parse(value);
@@ -997,6 +1013,138 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
+      return;
+    }
+
+    if (url === "/api/integrations/cron-jobs/config" && req.method === "GET") {
+      readStatsLiveCache(devFunctionsEnv())
+        .then((cache) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              githubJobs: GITHUB_CRON_JOBS,
+              managedJobs: MANAGED_CRON_JOBS,
+              statsRefresh: sanitizeStatsRefreshConfigForClient(devStore.statsRefreshConfig),
+              discordDigest: sanitizeDiscordDigestConfigForClient(devStore.discordDigestConfig),
+              cache: cache
+                ? {
+                    refreshedAt: cache.refreshedAt,
+                    displayTotal: cache.downloads?.displayTotal ?? null,
+                    verified: cache.downloads?.verified ?? false,
+                    syncStatus: cache.marketplaceSync?.syncStatus ?? null,
+                  }
+                : null,
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message || "Failed to load cron config" }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/cron-jobs/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          if (parsed.statsRefresh) {
+            const interval = Number(
+              parsed.statsRefresh.intervalMinutes ?? devStore.statsRefreshConfig.intervalMinutes
+            );
+            devStore.statsRefreshConfig = {
+              ...devStore.statsRefreshConfig,
+              enabled:
+                typeof parsed.statsRefresh.enabled === "boolean"
+                  ? parsed.statsRefresh.enabled
+                  : devStore.statsRefreshConfig.enabled,
+              intervalMinutes: Number.isFinite(interval)
+                ? Math.min(60, Math.max(1, Math.round(interval)))
+                : devStore.statsRefreshConfig.intervalMinutes,
+              updatedAt: new Date().toISOString(),
+              updatedBy: "dev@local",
+            };
+          }
+          if (parsed.discordDigest) {
+            const interval = Number(
+              parsed.discordDigest.intervalMinutes ?? devStore.discordDigestConfig.intervalMinutes
+            );
+            devStore.discordDigestConfig = {
+              ...devStore.discordDigestConfig,
+              enabled:
+                typeof parsed.discordDigest.enabled === "boolean"
+                  ? parsed.discordDigest.enabled
+                  : devStore.discordDigestConfig.enabled,
+              intervalMinutes: Number.isFinite(interval)
+                ? Math.min(10080, Math.max(60, Math.round(interval)))
+                : devStore.discordDigestConfig.intervalMinutes,
+              refreshBeforeSend:
+                typeof parsed.discordDigest.refreshBeforeSend === "boolean"
+                  ? parsed.discordDigest.refreshBeforeSend
+                  : devStore.discordDigestConfig.refreshBeforeSend,
+              includeChangelog:
+                typeof parsed.discordDigest.includeChangelog === "boolean"
+                  ? parsed.discordDigest.includeChangelog
+                  : devStore.discordDigestConfig.includeChangelog,
+              updatedAt: new Date().toISOString(),
+              updatedBy: "dev@local",
+            };
+          }
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              statsRefresh: sanitizeStatsRefreshConfigForClient(devStore.statsRefreshConfig),
+              discordDigest: sanitizeDiscordDigestConfigForClient(devStore.discordDigestConfig),
+            })
+          );
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/discord/digest/test" && req.method === "POST") {
+      runDiscordDigest(devFunctionsEnv(), { triggeredBy: "dev@local", force: true })
+        .then((result) => {
+          res.setHeader("Content-Type", "application/json");
+          if (result.skipped && result.reason === "no_webhook") {
+            res.statusCode = 409;
+            res.end(
+              JSON.stringify({
+                ok: false,
+                skipped: true,
+                reason: result.reason,
+                error: result.error,
+              })
+            );
+            return;
+          }
+          if (!result.ok) {
+            res.statusCode = 502;
+            res.end(JSON.stringify({ error: result.error ?? "Discord digest failed" }));
+            return;
+          }
+          res.end(
+            JSON.stringify({
+              ok: true,
+              durationMs: result.durationMs ?? null,
+              displayTotal: result.displayTotal ?? null,
+              syncStatus: result.syncStatus ?? null,
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message || "Discord digest failed" }));
+        });
       return;
     }
 

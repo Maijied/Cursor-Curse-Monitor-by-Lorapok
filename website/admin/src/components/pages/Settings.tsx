@@ -4,7 +4,7 @@ import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
-import StatsRefreshCard from "../ui/StatsRefreshCard";
+import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
@@ -44,7 +44,7 @@ export default function Settings() {
 
       <DiscordFeedbackCard />
 
-      <StatsRefreshCard />
+      <CronSchedulesCard />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>
@@ -162,6 +162,40 @@ export default function Settings() {
             )}
             {health.mailHint && (health.mailConfigured ? health.mailTransport === "cloudflare-rest" && !health.mailRelayBound : true) && (
               <p className="text-xs text-[var(--color-muted)] pt-1">{health.mailHint}</p>
+            )}
+            {health.cronSecretConfigured != null && (
+              <div className="flex justify-between items-center">
+                <dt className="text-[var(--color-muted)]">Cron secret (worker)</dt>
+                <dd>
+                  <Badge variant={health.cronSecretConfigured ? "synced" : "warn"}>
+                    {health.cronSecretConfigured ? "Configured" : "Missing"}
+                  </Badge>
+                </dd>
+              </div>
+            )}
+            {health.statsRefreshEnabled != null && (
+              <div className="flex justify-between items-center gap-4">
+                <dt className="text-[var(--color-muted)]">Stats refresh cron</dt>
+                <dd>
+                  <Badge variant={health.statsRefreshEnabled ? "synced" : "warn"}>
+                    {health.statsRefreshEnabled
+                      ? `Every ${health.statsRefreshIntervalMinutes ?? "?"} min`
+                      : "Paused"}
+                  </Badge>
+                </dd>
+              </div>
+            )}
+            {health.discordDigestEnabled != null && (
+              <div className="flex justify-between items-center gap-4">
+                <dt className="text-[var(--color-muted)]">Discord digest cron</dt>
+                <dd>
+                  <Badge variant={health.discordDigestEnabled ? "synced" : "warn"}>
+                    {health.discordDigestEnabled
+                      ? `Every ${health.discordDigestIntervalMinutes ?? "?"} min`
+                      : "Paused"}
+                  </Badge>
+                </dd>
+              </div>
             )}
             {health.siteDataUrl && (
               <div className="flex justify-between gap-4">

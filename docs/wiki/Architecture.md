@@ -36,6 +36,62 @@ flowchart LR
   GHA --> CHROME[Chrome zip]
 ```
 
+## Schedules & Discord
+
+Weekly GitHub Actions jobs regenerate marketing data; Cloudflare `ccm-stats-cron` calls Mission Control every minute and respects the **Settings → Live stats refresh** interval in `ADMIN_KV`. Discord cards fire on deploy events, CI website/admin deploy, and feedback tests.
+
+```mermaid
+flowchart TB
+  subgraph settings["Mission Control Settings"]
+    StatsCfg["Live stats refresh · enabled + intervalMinutes"]
+    DiscordCfg["Discord webhooks · deployment + feedback"]
+  end
+
+  subgraph gh["GitHub Actions — fixed schedule"]
+    SEO["seo-pipeline · Mon 06:00 UTC"]
+    DepSec["dependency-security · Mon 07:30 UTC"]
+    SEO --> Artifacts["site-data.json · SEO · badges · sitemap"]
+  end
+
+  subgraph cf["Cloudflare"]
+    Worker["ccm-stats-cron worker · every minute"]
+    CronAPI["POST /api/cron/stats-refresh"]
+    KV[("ADMIN_KV")]
+    Pages["Pages Functions /api/*"]
+  end
+
+  subgraph stats["Live download stats"]
+    Refresh["runStatsRefresh"]
+    Cache["stats:live-cache"]
+    Public["GET /api/site-data · badge.json"]
+  end
+
+  subgraph discord["Discord notifications"]
+    DeployEvt["Deploy started / completed watch"]
+    CINotify["CI discord-deployment-notify.mjs"]
+    Feedback["Feedback webhook test"]
+    Webhook[("deploymentWebhookUrl")]
+    FeedbackHook[("feedbackWebhookUrl")]
+  end
+
+  StatsCfg -.->|interval gate| CronAPI
+  DiscordCfg --> Webhook
+  DiscordCfg --> FeedbackHook
+  Worker -->|X-Cron-Secret| CronAPI
+  CronAPI -->|when due| Refresh
+  Refresh --> KV
+  Refresh --> Cache
+  Cache --> Public
+  Pages --> KV
+
+  DeployEvt --> Webhook
+  CINotify --> Webhook
+  Feedback --> FeedbackHook
+
+  MC["Operator"] --> settings
+  MC -->|manual refresh| Refresh
+```
+
 ## IDE extension
 
 - Quota and billing come from Cursor’s remote usage API after reading the local auth token in `state.vscdb`

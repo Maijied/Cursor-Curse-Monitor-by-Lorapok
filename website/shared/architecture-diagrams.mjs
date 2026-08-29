@@ -137,6 +137,68 @@ export const ARCHITECTURE_VIEWS = {
   MailPush --> FastDeploy["Fast admin deploy path"]
   ContErr --> WarnDiscord["Discord failure card"]`,
   },
+
+  scheduledOps: {
+    label: "Schedules & Discord",
+    description:
+      "Cron layers and Discord notifications: GitHub Actions weekly jobs, Cloudflare minute worker with Settings-controlled intervals, live stats cache, and deployment webhooks.",
+    diagram: `flowchart TB
+  subgraph settings["Mission Control Settings"]
+    CronCfg["Cron schedules · stats refresh + Discord digest"]
+    DiscordCfg["Discord webhooks · deployment + feedback"]
+  end
+
+  subgraph gh["GitHub Actions — fixed schedule"]
+    SEO["seo-pipeline · Mon 06:00 UTC"]
+    DepSec["dependency-security · Mon 07:30 UTC"]
+    SEO --> Artifacts["site-data.json · SEO · badges · sitemap"]
+  end
+
+  subgraph cf["Cloudflare"]
+    Worker["ccm-stats-cron worker · every minute"]
+    CronStats["POST /api/cron/stats-refresh"]
+    CronDigest["POST /api/cron/discord-digest"]
+    KV[("ADMIN_KV")]
+    Pages["Pages Functions /api/*"]
+  end
+
+  subgraph stats["Live download stats"]
+    Refresh["runStatsRefresh"]
+    Cache["stats:live-cache"]
+    Public["GET /api/site-data · badge.json"]
+  end
+
+  subgraph discord["Discord notifications"]
+    Digest["runDiscordDigest · download breakdown"]
+    DeployEvt["Deploy started / completed watch"]
+    CINotify["CI discord-deployment-notify.mjs"]
+    Feedback["Feedback webhook test"]
+    Webhook[("deploymentWebhookUrl")]
+    FeedbackHook[("feedbackWebhookUrl")]
+  end
+
+  CronCfg -.->|interval gate| CronStats
+  CronCfg -.->|interval gate| CronDigest
+  DiscordCfg --> Webhook
+  DiscordCfg --> FeedbackHook
+  Worker -->|X-Cron-Secret| CronStats
+  Worker -->|X-Cron-Secret| CronDigest
+  CronStats -->|when due| Refresh
+  CronDigest -->|when due| Digest
+  Refresh --> KV
+  Refresh --> Cache
+  Cache --> Public
+  Digest --> Webhook
+  Pages --> KV
+
+  DeployEvt --> Webhook
+  CINotify --> Webhook
+  Feedback --> FeedbackHook
+
+  MC["Operator"] --> settings
+  MC -->|manual refresh| Refresh
+  MC -->|send digest now| Digest`,
+  },
 };
 
 /** Simplified diagram for GitHub README rendering */
@@ -159,5 +221,8 @@ export const README_ARCHITECTURE_DIAGRAM = `flowchart LR
   GHA --> AMO["Firefox AMO"]
   GHA --> CHROME["Chrome zip"]
   GHA --> Pages["Admin + marketing deploy"]`;
+
+/** Scheduled jobs + Discord — mirrors ARCHITECTURE_VIEWS.scheduledOps */
+export const README_SCHEDULED_OPS_DIAGRAM = ARCHITECTURE_VIEWS.scheduledOps.diagram;
 
 export const ARCHITECTURE_VIEW_KEYS = Object.keys(ARCHITECTURE_VIEWS);

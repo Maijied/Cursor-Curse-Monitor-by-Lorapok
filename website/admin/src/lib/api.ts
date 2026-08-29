@@ -59,6 +59,13 @@ export async function fetchHealth() {
     adminPublicUrl?: string;
     githubTokenConfigured?: boolean;
     discordConfigured?: boolean;
+    statsRefreshEnabled?: boolean;
+    statsRefreshIntervalMinutes?: number;
+    statsRefreshLastRunAt?: string | null;
+    discordDigestEnabled?: boolean;
+    discordDigestIntervalMinutes?: number;
+    discordDigestLastRunAt?: string | null;
+    cronSecretConfigured?: boolean;
   }>("/health", false);
 }
 
@@ -160,6 +167,11 @@ export type StatsRefreshConfig = {
   updatedBy: string | null;
 };
 
+export type DiscordDigestConfig = StatsRefreshConfig & {
+  refreshBeforeSend: boolean;
+  includeChangelog: boolean;
+};
+
 export type StatsRefreshCacheSummary = {
   refreshedAt: string;
   displayTotal: number | null;
@@ -167,19 +179,63 @@ export type StatsRefreshCacheSummary = {
   syncStatus: string | null;
 } | null;
 
+export type GithubCronJobMeta = {
+  id: string;
+  label: string;
+  description: string;
+  schedule: string;
+  scheduleLabel: string;
+  workflow: string;
+  editable: false;
+};
+
+export type CronJobsConfigResponse = {
+  ok: boolean;
+  githubJobs: GithubCronJobMeta[];
+  managedJobs: Array<{
+    id: string;
+    label: string;
+    description: string;
+    workerEndpoint: string;
+    intervalMin: number;
+    intervalMax: number;
+    intervalDefault: number;
+    intervalUnit: string;
+  }>;
+  statsRefresh: StatsRefreshConfig;
+  discordDigest: DiscordDigestConfig;
+  cache: StatsRefreshCacheSummary;
+};
+
+/** @deprecated Use fetchCronJobsConfigApi */
 export async function fetchStatsRefreshConfigApi() {
-  return apiGet<{
-    ok: boolean;
-    config: StatsRefreshConfig;
-    cache: StatsRefreshCacheSummary;
-  }>("/integrations/stats-refresh/config");
+  const data = await fetchCronJobsConfigApi();
+  return { ok: data.ok, config: data.statsRefresh, cache: data.cache };
 }
 
+/** @deprecated Use putCronJobsConfigApi */
 export async function putStatsRefreshConfigApi(payload: {
   enabled?: boolean;
   intervalMinutes?: number;
 }) {
-  const res = await fetch(`${API_BASE}/integrations/stats-refresh/config`, {
+  const result = await putCronJobsConfigApi({ statsRefresh: payload });
+  return { ok: result.ok, config: result.statsRefresh };
+}
+
+export async function fetchCronJobsConfigApi() {
+  return apiGet<CronJobsConfigResponse>("/integrations/cron-jobs/config");
+}
+
+export async function putCronJobsConfigApi(payload: {
+  statsRefresh?: { enabled?: boolean; intervalMinutes?: number };
+  discordDigest?: {
+    enabled?: boolean;
+    intervalMinutes?: number;
+    refreshBeforeSend?: boolean;
+    includeChangelog?: boolean;
+  };
+}) {
+  const res = await fetch(`${API_BASE}/integrations/cron-jobs/config`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -188,14 +244,34 @@ export async function putStatsRefreshConfigApi(payload: {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to save stats refresh settings");
-  return data as { ok: boolean; config: StatsRefreshConfig };
+  if (!res.ok) throw new Error(data.error || "Failed to save cron settings");
+  return data as {
+    ok: boolean;
+    statsRefresh: StatsRefreshConfig;
+    discordDigest: DiscordDigestConfig;
+  };
+}
+
+export async function sendDiscordDigestTestApi() {
+  const res = await fetch(`${API_BASE}/integrations/discord/digest/test`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Discord digest failed");
+  return data as {
+    ok: boolean;
+    durationMs?: number;
+    displayTotal?: number | null;
+    syncStatus?: string | null;
+  };
 }
 
 /**
  * Triggers an immediate statistics refresh.
- *
- * @returns Refresh status and optional timing, timestamp, total, and synchronization details.
  */
 export async function refreshStatsNowApi() {
   const res = await fetch(`${API_BASE}/stats/refresh`, {

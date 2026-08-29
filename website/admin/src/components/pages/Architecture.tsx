@@ -56,7 +56,7 @@ export default function Architecture() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Architecture"
-        description="End-to-end topology — data flow, Production Deployment pipeline, and edge-case guards."
+        description="End-to-end topology — data flow, Production Deployment pipeline, edge-case guards, and scheduled jobs with Discord."
       />
 
       <Card>

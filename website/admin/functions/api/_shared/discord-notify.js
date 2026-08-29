@@ -22,6 +22,7 @@ const ACTION_LABELS = {
   "auto-rollback": "Auto-rollback",
   "deploy-infra": "Infra deploy",
   "deployment-status-test": "Deployment status test",
+  "download-digest": "Download digest",
 };
 
 /**
