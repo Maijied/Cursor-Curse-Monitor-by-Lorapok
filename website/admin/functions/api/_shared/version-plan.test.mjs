@@ -7,6 +7,7 @@ import {
   maxVersionFromChannels,
   nextRollbackVersion,
   parseRollbackVersion,
+  warnLiveChannelDrift,
 } from "./version-plan.js";
 
 assert.equal(compareSemver("1.0.3", "1.0.2"), 1);
@@ -51,5 +52,30 @@ const rollbackPlan = buildRollbackPlan({
 
 assert.equal(rollbackPlan.recommendedTag, "v1.0.R2");
 assert.equal(rollbackPlan.planMode, "rollback");
+
+const warnings = [];
+warnLiveChannelDrift({
+  packageVersion: "1.0.57",
+  channels: [
+    { id: "github", version: "1.0.58" },
+    { id: "ovsx", version: "1.0.58" },
+    { id: "vscode", version: "1.0.57" },
+  ],
+  log: { warn: (msg) => warnings.push(msg) },
+});
+assert.ok(warnings.some((w) => w.includes("disagree") && w.includes("1.0.58") && w.includes("1.0.57")));
+assert.ok(warnings.some((w) => w.includes("behind highest live")));
+
+warnings.length = 0;
+warnLiveChannelDrift({
+  packageVersion: "1.0.58",
+  channels: [
+    { id: "github", version: "1.0.58" },
+    { id: "ovsx", version: "1.0.58" },
+    { id: "vscode", version: "1.0.58" },
+  ],
+  log: { warn: (msg) => warnings.push(msg) },
+});
+assert.equal(warnings.length, 0);
 
 console.log("version-plan.test.mjs: OK");

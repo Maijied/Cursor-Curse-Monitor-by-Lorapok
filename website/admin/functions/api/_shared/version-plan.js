@@ -220,3 +220,39 @@ export function buildVersionPlan({ packageVersion, channels, bumpType = "patch",
       : "Could not determine version plan.",
   };
 }
+
+/**
+ * Warn-only guard for site-data generation. package.json is the release candidate;
+ * live channels are observations. CI prepare-release-tag bumps max(live)+patch on main.
+ *
+ * @param {{ packageVersion: string, channels: Array<{id?:string,label?:string,version:string|null}>, log?: { warn?: (msg:string)=>void, log?: (msg:string)=>void } }} input
+ */
+export function warnLiveChannelDrift({ packageVersion, channels, log = console }) {
+  const emit = (msg) => {
+    if (typeof log.warn === "function") log.warn(msg);
+    else if (typeof log.log === "function") log.log(msg);
+  };
+
+  const pkgV = normalizeSemver(packageVersion);
+  const observed = channels
+    .map((c) => ({ ...c, core: normalizeSemver(c.version) }))
+    .filter((c) => c.core);
+  const uniqueLive = [...new Set(observed.map((c) => c.core))];
+  const maxLive = maxVersionFromChannels(observed);
+
+  if (uniqueLive.length > 1) {
+    emit(
+      `::warning::Live channel versions disagree (${uniqueLive.join(", ")}). ` +
+        `Site-data uses package.json v${pkgV ?? "?"} as release candidate` +
+        (maxLive ? `; highest live is v${maxLive}.` : ".") +
+        " Run sync-open-vsx if duplicate Open VSX namespaces drift.",
+    );
+  }
+
+  if (pkgV && maxLive && compareSemver(pkgV, maxLive) < 0) {
+    emit(
+      `::warning::package.json (${pkgV}) is behind highest live (${maxLive}). ` +
+        "prepare-release-tag on main push will bump to max+patch — do not hand-edit package.json for site-data.",
+    );
+  }
+}

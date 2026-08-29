@@ -12,6 +12,7 @@ import { computeDownloadTotals } from "./download-totals.mjs";
 import { buildProductContext } from "./lib-product-context.mjs";
 import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
 import { buildMailTemplates } from "./mail-templates.mjs";
+import { warnLiveChannelDrift } from "../website/admin/functions/api/_shared/version-plan.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -388,9 +389,8 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   fetchFirefoxAmo(),
 ]);
 
-// Root package.json is the single version source — it must match GitHub release
-// and marketplace listings. Run `npm version <x.y.z> --no-git-tag-version` before
-// site:data when live channels have moved ahead.
+// Root package.json is the release candidate. Live channels are observations — warn on
+// drift but never block CI; prepare-release-tag bumps max(live)+patch on main push.
 const version = pkg.version;
 const publishedReleaseVersion = github?.version ?? null;
 
@@ -409,34 +409,15 @@ function ovsxUnityVersion(canonicalVersion, duplicateVersion) {
   return newer;
 }
 
-function assertUnifiedVersion() {
-  const pkgV = normalizeVersion(version);
-  const ovsxLive = ovsxUnityVersion(ovsxCanonical?.version, ovsxDuplicate?.version);
-  const live = [
-    ["GitHub", publishedReleaseVersion],
-    ["Open VSX", ovsxLive],
-    ["VS Code", vscode?.version],
-  ]
-    .map(([label, v]) => ({ label, v: normalizeVersion(v) }))
-    .filter((entry) => entry.v);
-
-  const uniqueLive = [...new Set(live.map((e) => e.v))];
-  if (uniqueLive.length > 1) {
-    console.error(
-      `::error::Live channel versions disagree (${uniqueLive.join(", ")}). Resolve marketplace drift before regenerating site-data.`
-    );
-    process.exit(1);
-  }
-
-  if (uniqueLive.length === 1 && uniqueLive[0] !== pkgV) {
-    console.error(
-      `::error::package.json version (${pkgV}) must match live release (${uniqueLive[0]}). Run: npm version ${uniqueLive[0]} --no-git-tag-version`
-    );
-    process.exit(1);
-  }
-}
-
-assertUnifiedVersion();
+const ovsxLive = ovsxUnityVersion(ovsxCanonical?.version, ovsxDuplicate?.version);
+warnLiveChannelDrift({
+  packageVersion: version,
+  channels: [
+    { id: "github", label: "GitHub", version: publishedReleaseVersion },
+    { id: "ovsx", label: "Open VSX", version: ovsxLive },
+    { id: "vscode", label: "VS Code", version: vscode?.version },
+  ],
+});
 
 const releaseStatus = publishedReleaseVersion === version ? "published" : "candidate";
 const vsixName = github?.vsixName ?? `${NAME}-${version}.vsix`;
