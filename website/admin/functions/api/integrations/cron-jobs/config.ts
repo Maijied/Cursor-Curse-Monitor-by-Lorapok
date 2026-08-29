@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   GITHUB_CRON_JOBS,
   MANAGED_CRON_JOBS,
@@ -117,7 +118,7 @@ export async function onRequestPut(context) {
     );
   } catch (err) {
     return jsonResponse(
-      { error: err instanceof Error ? err.message : "Save failed" },
+      { error: formatKvPutError(err) },
       503,
       CORS_HEADERS
     );

@@ -5,17 +5,25 @@ import { fetchSiteData } from "./site-data.js";
 import {
   readStatsLiveCache,
   readStatsRefreshConfig,
+  STATS_BADGES_BUNDLE_KEY,
   STATS_README_SVG_KEY,
   STATS_REFRESH_CACHE_KEY,
   STATS_REFRESH_CONFIG_KEY,
 } from "./stats-refresh-config.js";
 import { recordCronJobRun } from "./cron-schedule.js";
+import { formatKvPutError, putKvJsonIfChanged, putKvStringIfChanged } from "./kv-put.js";
 import { logSystemEvent } from "./system-log.js";
 import {
   buildReadmeStatsFromSiteData,
   renderReadmeStatsSvg,
   renderShieldsBadge,
 } from "./readme-stats.js";
+
+/** @param {Record<string, unknown>} snapshot */
+function stableSnapshotBody(snapshot) {
+  const { refreshedAt, triggeredBy, ...rest } = snapshot;
+  return rest;
+}
 
 async function fetchGithubReleaseDownloadTotal(env) {
   const headers = env.GITHUB_TOKEN
@@ -178,20 +186,26 @@ export async function runStatsRefresh(env, options = {}) {
     throw new Error("ADMIN_KV binding not configured");
   }
 
-  await env.ADMIN_KV.put(STATS_REFRESH_CACHE_KEY, JSON.stringify(snapshot));
+  const previous = await readStatsLiveCache(env);
+  const statsChanged =
+    !previous || JSON.stringify(stableSnapshotBody(previous)) !== JSON.stringify(stableSnapshotBody(snapshot));
 
-  const mergedSiteData = mergeSiteDataWithLiveCache(base, snapshot);
-  const readmeStats = buildReadmeStatsFromSiteData(mergedSiteData);
-  await Promise.all([
-    env.ADMIN_KV.put(STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats)),
-    env.ADMIN_KV.put("stats:badge:total", JSON.stringify(renderShieldsBadge(readmeStats, "total"))),
-    env.ADMIN_KV.put("stats:badge:openvsx", JSON.stringify(renderShieldsBadge(readmeStats, "openvsx"))),
-    env.ADMIN_KV.put(
-      "stats:badge:openvsx-total",
-      JSON.stringify(renderShieldsBadge(readmeStats, "openvsx-total"))
-    ),
-    env.ADMIN_KV.put("stats:badge:vscode", JSON.stringify(renderShieldsBadge(readmeStats, "vscode"))),
-  ]);
+  if (statsChanged) {
+    await putKvJsonIfChanged(env, STATS_REFRESH_CACHE_KEY, snapshot);
+
+    const mergedSiteData = mergeSiteDataWithLiveCache(base, snapshot);
+    const readmeStats = buildReadmeStatsFromSiteData(mergedSiteData);
+    const badgeBundle = {
+      total: renderShieldsBadge(readmeStats, "total"),
+      openvsx: renderShieldsBadge(readmeStats, "openvsx"),
+      "openvsx-total": renderShieldsBadge(readmeStats, "openvsx-total"),
+      vscode: renderShieldsBadge(readmeStats, "vscode"),
+    };
+    await Promise.all([
+      putKvStringIfChanged(env, STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats)),
+      putKvJsonIfChanged(env, STATS_BADGES_BUNDLE_KEY, badgeBundle),
+    ]);
+  }
 
   const durationMs = Date.now() - started;
   await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
@@ -213,16 +227,20 @@ export async function runStatsRefresh(env, options = {}) {
     },
   });
 
-  return { ok: true, snapshot, durationMs };
+  return { ok: true, snapshot, durationMs, statsChanged };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Refresh failed";
+    const message = formatKvPutError(err);
     const durationMs = Date.now() - started;
-    await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
-      ok: false,
-      error: message,
-      durationMs,
-      triggeredBy: options.triggeredBy ?? "manual",
-    });
+    try {
+      await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
+        ok: false,
+        error: message,
+        durationMs,
+        triggeredBy: options.triggeredBy ?? "manual",
+      });
+    } catch {
+      // KV quota may block run metadata too
+    }
     await logSystemEvent(env, {
       source: "stats-refresh",
       level: "error",

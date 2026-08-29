@@ -1,3 +1,5 @@
+import { putKvJsonIfChanged } from "./kv-put.js";
+
 const CONFIG_KEY = "integrations:discord";
 
 const DISCORD_WEBHOOK_RE =
@@ -80,7 +82,7 @@ export async function writeDiscordConfig(env, config) {
   if (!env?.ADMIN_KV?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  await env.ADMIN_KV.put(CONFIG_KEY, JSON.stringify(config));
+  await putKvJsonIfChanged(env, CONFIG_KEY, config);
 }
 
 /**

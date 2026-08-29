@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   readStatsRefreshConfig,
   readStatsLiveCache,
@@ -69,7 +70,7 @@ export async function onRequestPut(context) {
     return jsonResponse({ ok: true, config: sanitizeStatsRefreshConfigForClient(config) }, 200, CORS_HEADERS);
   } catch (err) {
     return jsonResponse(
-      { error: err instanceof Error ? err.message : "Save failed" },
+      { error: formatKvPutError(err) },
       503,
       CORS_HEADERS
     );
