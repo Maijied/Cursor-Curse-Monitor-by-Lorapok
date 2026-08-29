@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import Deployments from "../components/pages/Deployments";
 
 vi.mock("../lib/firebase", () => ({
@@ -30,14 +30,14 @@ vi.mock("../context/DeployRuntimeContext", () => ({
 
 vi.mock("../lib/api", () => ({
   fetchTags: vi.fn().mockResolvedValue({
-    tags: ["v1.0.31"],
+    tags: ["v1.0.31", "v1.0.35", "v1.0.51"],
     liveTag: "v1.0.31",
-    latestTag: "v1.0.31",
-    suggestedTag: "v1.0.32",
+    latestTag: "v1.0.51",
+    suggestedTag: "v1.0.35",
   }),
   fetchVersionPlan: vi.fn().mockResolvedValue({
     summary: "Platforms checked",
-    recommendedTag: "v1.0.32",
+    recommendedTag: "v1.0.35",
     reasons: [{ id: "github", label: "GitHub", liveVersion: "1.0.31", status: "synced", reason: "ok" }],
     checkedAt: new Date().toISOString(),
   }),
@@ -65,5 +65,17 @@ describe("Deployments validation UI", () => {
     expect(
       screen.getByRole("button", { name: /validate marketplace platforms before deployment/i })
     ).toHaveTextContent("Validate platforms");
+  });
+
+  it("keeps a manually selected deploy tag instead of snapping back to the prepared tag", async () => {
+    render(<Deployments />);
+
+    const select = await screen.findByLabelText("Deploy tag");
+    await waitFor(() => expect(select).toHaveValue("v1.0.35"));
+
+    fireEvent.change(select, { target: { value: "v1.0.51" } });
+    expect(select).toHaveValue("v1.0.51");
+
+    await waitFor(() => expect(select).toHaveValue("v1.0.51"));
   });
 });
