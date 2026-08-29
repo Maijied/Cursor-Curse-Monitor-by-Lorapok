@@ -1,5 +1,5 @@
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
-import { runStatsRefresh } from "../_shared/stats-refresh.js";
+import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { runStatsRefresh } from "../../_shared/stats-refresh.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

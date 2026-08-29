@@ -1,6 +1,6 @@
-import { fetchSiteDataWithLiveCache } from "../_shared/stats-refresh.js";
-import { STATS_README_SVG_KEY } from "../_shared/stats-refresh-config.js";
-import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg } from "../_shared/readme-stats.js";
+import { fetchSiteDataWithLiveCache } from "../../_shared/stats-refresh.js";
+import { STATS_README_SVG_KEY } from "../../_shared/stats-refresh-config.js";
+import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg } from "../../_shared/readme-stats.js";
 
 const CACHE_HEADERS = {
   "Content-Type": "image/svg+xml; charset=utf-8",
