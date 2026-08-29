@@ -287,10 +287,6 @@
   font-family: var(--mono);
 }
 
-.hero-session-demo {
-  margin-top: 14px;
-}
-
 .feature-svg-visual {
   display: flex;
   align-items: center;
@@ -312,6 +308,11 @@
 @keyframes feature-svg-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+.hero-visual-stage .hero-stats-dashboard {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 @media (prefers-reduced-motion: reduce) {
