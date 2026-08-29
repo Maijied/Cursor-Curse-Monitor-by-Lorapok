@@ -158,6 +158,7 @@ npm install          # also runs husky via prepare
 npm run compile
 npm test          # extension tests (Node 22+)
 npm run security:scan   # full-repo secretlint (same as CI)
+npm run security:deps   # npm advisory scan (Dependency Security Bot)
 npm run package   # build .vsix
 ```
 

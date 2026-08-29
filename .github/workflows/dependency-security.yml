@@ -1,0 +1,159 @@
+name: Dependency Security Bot
+
+# Project-owned dependency vulnerability management (replaces Dependabot update PRs).
+# Concepts from GitHub "Managing security alerts":
+# https://docs.github.com/en/code-security/how-tos/manage-security-alerts
+#
+# | GitHub alert practice              | This workflow                          |
+# |------------------------------------|----------------------------------------|
+# | Prioritize by severity / importance| Sorted report; prod scope fails first  |
+# | scope:development vs production    | npm audit --omit=dev vs full tree      |
+# | has:patch / security updates       | fixAvailable flag + remediate dispatch   |
+# | Dismiss with audited reason        | dependency-security-dismissals.json    |
+# | Secret scanning alerts             | secretlint via CI security:scan job    |
+# | Remediate at scale / filter        | Weekly schedule + PR gate + artifacts  |
+
+on:
+  schedule:
+    # Mondays 07:30 UTC — after SEO/stats cron, before business hours
+    - cron: "30 7 * * 1"
+  pull_request:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "website/admin/package.json"
+      - "website/admin/package-lock.json"
+      - "browser-extension/package.json"
+      - "packages/shared/package.json"
+      - ".github/dependency-security*.json"
+      - "scripts/dependency-security-*.mjs"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        required: true
+        type: choice
+        options:
+          - scan
+          - remediate
+        default: scan
+
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: read
+
+concurrency:
+  group: dependency-security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scan:
+    name: Scan & triage npm advisories
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || inputs.mode == 'scan'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            website/admin/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install admin dependencies
+        working-directory: website/admin
+        run: npm ci
+
+      - name: Run dependency security bot
+        run: |
+          node scripts/dependency-security-bot.mjs \
+            --write-summary \
+            --write-artifact \
+            --artifact .github/dependency-security-report.json
+
+      - name: Upload security report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-security-report
+          path: .github/dependency-security-report.json
+          retention-days: 30
+          if-no-files-found: error
+
+  remediate:
+    name: Remediate patchable advisories
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'remediate'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            website/admin/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix website/admin
+
+      - name: Baseline scan
+        run: node scripts/dependency-security-bot.mjs --write-artifact --artifact .github/dependency-security-report-before.json --no-fail
+
+      - name: Apply npm audit fix (production scope)
+        run: node scripts/dependency-security-remediate.mjs
+
+      - name: Verify tests still pass
+        run: npm test
+
+      - name: Post-remediation scan
+        run: node scripts/dependency-security-bot.mjs --write-summary --no-fail
+
+      - name: Open pull request when lockfiles changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet package-lock.json website/admin/package-lock.json; then
+            echo "No dependency lockfile changes to propose."
+            exit 0
+          fi
+          BRANCH="chore/deps-security-$(date -u +%Y%m%d)"
+          git checkout -B "$BRANCH"
+          git add package-lock.json website/admin/package-lock.json
+          git commit -m "chore(deps): apply dependency security bot remediations" \
+            -m "Automated npm audit fix (production scope) from Dependency Security Bot." \
+            -m "Review prioritized alerts in the workflow artifact before merge."
+          git push origin "$BRANCH" --force
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore(deps): dependency security bot remediations" \
+            --body "$(cat <<'EOF'
+## Summary
+Automated remediation PR from **Dependency Security Bot** (`workflow_dispatch` → remediate).
+
+- Applies `npm audit fix --omit=dev` to root and `website/admin` lockfiles
+- Runs the full test suite before opening this PR
+- Aligns with [Managing Dependabot alerts](https://docs.github.com/en/code-security/how-tos/manage-security-alerts/manage-dependabot-alerts/viewing-and-updating-dependabot-alerts) (prioritize production, review fix availability)
+
+## Test plan
+- [ ] CI / Dependency Security Bot scan passes
+- [ ] `npm test` green locally if you pull this branch
+- [ ] Dismiss any remaining alerts in `.github/dependency-security-dismissals.json` with an audited reason if not fixing now
+EOF
+)" || echo "PR may already exist for $BRANCH"
