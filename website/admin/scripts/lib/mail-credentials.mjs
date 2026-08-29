@@ -115,9 +115,13 @@ export async function probeDeployToken(deployToken, accountId) {
 
 /** @param {string} cwd Admin directory with wrangler in node_modules */
 export function tryWranglerOAuthToken(cwd) {
+  const env = { ...process.env };
+  delete env.CLOUDFLARE_API_TOKEN;
+  delete env.CLOUDFLARE_EMAIL_API_TOKEN;
   const r = spawnSync("npx", ["wrangler", "auth", "token", "--json"], {
     encoding: "utf8",
     cwd,
+    env,
   });
   const text = `${r.stdout}\n${r.stderr}`;
   const match = text.match(/\{[\s\S]*"token"[\s\S]*\}/);

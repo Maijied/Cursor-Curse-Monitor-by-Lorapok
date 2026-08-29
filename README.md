@@ -33,7 +33,12 @@
     <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-vscode.json" alt="VS Code Marketplace downloads" />
   </p>
 
-  <p><sub>📊 <a href="https://cursor.lorapok.tech/readme-stats.svg">Download chart</a> · counts synced from marketplace APIs in CI · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a></sub></p>
+  <p align="center">
+    <a href="https://cursor.lorapok.tech/site-data.json">
+      <img src="https://cursor.lorapok.tech/readme-stats.svg" alt="Community download stats chart" width="720" />
+    </a>
+  </p>
+  <p><sub>📊 <a href="https://cursor.lorapok.tech/readme-stats.svg">Download chart</a> · counts synced from marketplace APIs in CI · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a> · live overlay from <a href="https://cursor-dev.lorapok.tech/api/site-data">Mission Control</a></sub></p>
 
 </div>
 

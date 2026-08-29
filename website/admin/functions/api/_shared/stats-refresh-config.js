@@ -1,7 +1,9 @@
 const CONFIG_KEY = "integrations:stats-refresh";
 const CACHE_KEY = "stats:live-cache";
+const README_SVG_KEY = "stats:readme-svg";
 
 export const STATS_REFRESH_CACHE_KEY = CACHE_KEY;
+export const STATS_README_SVG_KEY = README_SVG_KEY;
 
 export const DEFAULT_STATS_REFRESH_CONFIG = {
   enabled: false,

@@ -282,6 +282,7 @@
     "publish:vscode": "vsce publish",
     "verify:marketplace": "node scripts/verify-marketplace-sync.mjs --strict",
     "site:data": "node scripts/generate-site-data.mjs",
+    "stats:sync-all": "npm run site:data",
     "site:seo": "node scripts/generate-seo.mjs",
     "site:seo:validate": "node scripts/validate-seo.mjs",
     "validate:release": "node scripts/validate-release.mjs",

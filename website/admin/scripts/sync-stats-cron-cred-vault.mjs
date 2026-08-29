@@ -16,7 +16,7 @@ import {
   loadCursorCloudflareSecretsFromVault,
   syncCursorCronSecret,
 } from "./lib/cred-vault-sync.mjs";
-import { resolveLocalMailEnv } from "./lib/resolve-local-mail-env.mjs";
+import { resolveDeployAuth } from "./lib/resolve-deploy-auth.mjs";
 import { syncStatsCronSecrets } from "./lib/stats-cron-deploy.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -89,47 +89,42 @@ if (!cronSecret) {
   process.exit(1);
 }
 
-const env = resolveLocalMailEnv(process.env, adminDir);
-const deployToken = env.CLOUDFLARE_API_TOKEN?.trim();
-const accountId = env.CLOUDFLARE_ACCOUNT_ID?.trim();
-
-if (!skipCloudflare && !deployToken) {
-  console.error(
-    "\nNeed Cloudflare deploy token. Options:\n" +
-      '  export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"\n' +
-      "  — or — create .cred-vault-passphrase at repo root\n" +
-      "  — or — cd website/admin && npx wrangler login"
-  );
-  process.exit(1);
-}
-
-if (!skipGithub) {
-  ghSecret(cronSecret);
-  console.log("✓ GitHub secret CRON_SECRET set (admin-production)");
-} else {
-  log("2/4", "Skipping GitHub (--skip-github)");
-}
-
-if (!skipCloudflare) {
-  log("3/4", "Syncing CRON_SECRET to Cloudflare Pages + ccm-stats-cron worker (wrangler)…");
-  if (dryRun) {
-    console.log("[dry-run] would sync Pages + worker secrets");
+async function main() {
+  if (!skipGithub) {
+    ghSecret(cronSecret);
+    console.log("✓ GitHub secret CRON_SECRET set (admin-production)");
   } else {
-    syncStatsCronSecrets(cronSecret, { deployToken, accountId }, { adminDir, stdio: "inherit" });
-    console.log("✓ Pages + worker CRON_SECRET synced");
+    log("2/4", "Skipping GitHub (--skip-github)");
   }
-} else {
-  log("3/4", "Skipping Cloudflare (--skip-cloudflare)");
+
+  if (!skipCloudflare) {
+    log("3/4", "Syncing CRON_SECRET to Cloudflare Pages + ccm-stats-cron worker (wrangler)…");
+    if (dryRun) {
+      console.log("[dry-run] would sync Pages + worker secrets");
+    } else {
+      const { deployToken, accountId, via } = await resolveDeployAuth(adminDir);
+      console.log(`  auth: ${via}`);
+      syncStatsCronSecrets(cronSecret, { deployToken, accountId }, { adminDir, stdio: "inherit" });
+      console.log("✓ Pages + worker CRON_SECRET synced");
+    }
+  } else {
+    log("3/4", "Skipping Cloudflare (--skip-cloudflare)");
+  }
+
+  log("4/4", "Backing up cron_secret into gpg cred vault (optional)…");
+  if (!dryRun) {
+    const vaultResult = syncCursorCronSecret(cronSecret);
+    if (vaultResult.vaultUpdated) {
+      console.log("✓ cred vault updated: cursor/cron_secret");
+    } else if (vaultResult.reason) {
+      console.warn(`ℹ cred vault not updated (${vaultResult.reason})`);
+    }
+  }
+
+  console.log("\nDone. CI admin-deploy runs deploy-stats-cron-ci.mjs when CRON_SECRET is in GitHub.");
 }
 
-log("4/4", "Backing up cron_secret into gpg cred vault (optional)…");
-if (!dryRun) {
-  const vaultResult = syncCursorCronSecret(cronSecret);
-  if (vaultResult.vaultUpdated) {
-    console.log("✓ cred vault updated: cursor/cron_secret");
-  } else if (vaultResult.reason) {
-    console.warn(`ℹ cred vault not updated (${vaultResult.reason})`);
-  }
-}
-
-console.log("\nDone. CI admin-deploy runs deploy-stats-cron-ci.mjs when CRON_SECRET is in GitHub.");
+main().catch((err) => {
+  console.error(`\n${err instanceof Error ? err.message : err}`);
+  process.exit(1);
+});

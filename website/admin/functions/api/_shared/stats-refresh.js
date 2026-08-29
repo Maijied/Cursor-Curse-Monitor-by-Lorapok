@@ -5,10 +5,15 @@ import { fetchSiteData } from "./site-data.js";
 import {
   readStatsLiveCache,
   readStatsRefreshConfig,
+  STATS_README_SVG_KEY,
   STATS_REFRESH_CACHE_KEY,
-  writeStatsRefreshConfig,
 } from "./stats-refresh-config.js";
 import { logSystemEvent } from "./system-log.js";
+import {
+  buildReadmeStatsFromSiteData,
+  renderReadmeStatsSvg,
+  renderShieldsBadge,
+} from "./readme-stats.js";
 
 async function fetchGithubReleaseDownloadTotal(env) {
   const headers = env.GITHUB_TOKEN
@@ -50,7 +55,14 @@ function channelById(channels, id) {
 export function mergeSiteDataWithLiveCache(base, cache) {
   if (!cache) return base;
   const merged = { ...base };
-  if (cache.refreshedAt) merged.liveRefreshedAt = cache.refreshedAt;
+  if (cache.refreshedAt) {
+    merged.liveRefreshedAt = cache.refreshedAt;
+    const baseAt = base.generatedAt ? Date.parse(String(base.generatedAt)) : 0;
+    const liveAt = Date.parse(String(cache.refreshedAt));
+    if (!Number.isNaN(liveAt) && (Number.isNaN(baseAt) || liveAt > baseAt)) {
+      merged.generatedAt = cache.refreshedAt;
+    }
+  }
   if (cache.downloads) merged.downloads = cache.downloads;
   if (cache.channels) merged.liveChannels = cache.channels;
   if (cache.marketplaceSync) merged.marketplaceSync = cache.marketplaceSync;
@@ -164,6 +176,26 @@ export async function runStatsRefresh(env, options = {}) {
   }
 
   await env.ADMIN_KV.put(STATS_REFRESH_CACHE_KEY, JSON.stringify(snapshot));
+
+  const mergedSiteData = mergeSiteDataWithLiveCache(base, snapshot);
+  const readmeStats = buildReadmeStatsFromSiteData(mergedSiteData);
+  await env.ADMIN_KV.put(STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats));
+  await env.ADMIN_KV.put(
+    "stats:badge:total",
+    JSON.stringify(renderShieldsBadge(readmeStats, "total"))
+  );
+  await env.ADMIN_KV.put(
+    "stats:badge:openvsx",
+    JSON.stringify(renderShieldsBadge(readmeStats, "openvsx"))
+  );
+  await env.ADMIN_KV.put(
+    "stats:badge:openvsx-total",
+    JSON.stringify(renderShieldsBadge(readmeStats, "openvsx-total"))
+  );
+  await env.ADMIN_KV.put(
+    "stats:badge:vscode",
+    JSON.stringify(renderShieldsBadge(readmeStats, "vscode"))
+  );
 
   const durationMs = Date.now() - started;
   await env.ADMIN_KV.put(
