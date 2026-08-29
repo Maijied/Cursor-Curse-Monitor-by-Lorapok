@@ -3,6 +3,11 @@
 
 const MIN_PUBLISH_TAG = [0, 5, 5];
 
+/**
+ * Parses a standard or rollback version tag into numeric components.
+ * @param {*} tag - The version tag to parse.
+ * @return {number[]} The major, minor, and patch or rollback components, using `0` for invalid components.
+ */
 function tagParts(tag) {
   const rollback = String(tag).match(/^v?(\d+)\.(\d+)\.R(\d+)$/i);
   if (rollback) {
@@ -19,6 +24,11 @@ function tagParts(tag) {
     .map((part) => Number.parseInt(part, 10) || 0);
 }
 
+/**
+ * Determines whether a version tag meets the minimum publishable version.
+ * @param {string} tag - The version tag to evaluate.
+ * @return {boolean} `true` if the tag is at least version 0.5.5, `false` otherwise.
+ */
 function meetsMinVersion(tag) {
   const [major, minor, patch] = tagParts(tag);
   const [minMajor, minMinor, minPatch] = MIN_PUBLISH_TAG;
@@ -37,15 +47,20 @@ export function isMarketplaceSemverTag(tag) {
   return /^v?\d+\.\d+\.\d+$/i.test(String(tag));
 }
 
-/** CI artifact tags that must not ship to marketplaces. */
+/**
+ * Determines whether a tag has a CI-only suffix.
+ * @param {*} tag - The tag to inspect.
+ * @return {boolean} `true` if the tag has a `-dev`, `-pr`, `-beta`, `-alpha`, or `-rc` suffix and is not a rollback tag, `false` otherwise.
+ */
 export function hasCiOnlySuffix(tag) {
   if (isRollbackTag(tag)) return false;
   return /-(dev|pr|beta|alpha|rc)/i.test(String(tag).replace(/^v/i, ""));
 }
 
 /**
- * @param {string} tag
- * @returns {boolean}
+ * Determines whether a marketplace tag meets the accepted format and minimum version requirements.
+ * @param {string} tag - The marketplace tag to validate.
+ * @returns {boolean} `true` if the tag is a valid rollback or plain version tag at or above the minimum version, `false` otherwise.
  */
 export function isValidMarketplaceTag(tag) {
   if (isRollbackTag(tag)) return meetsMinVersion(tag);
@@ -55,8 +70,9 @@ export function isValidMarketplaceTag(tag) {
 }
 
 /**
- * @param {PublishMarket} publishMarket
- * @returns {boolean}
+ * Determines whether the selected publish market includes Firefox AMO.
+ * @param {PublishMarket} publishMarket - The marketplace publication target.
+ * @returns {boolean} `true` if the market includes Firefox AMO, `false` otherwise.
  */
 export function marketIncludesAmo(publishMarket) {
   return (
@@ -67,20 +83,21 @@ export function marketIncludesAmo(publishMarket) {
 }
 
 /**
- * @param {ReleaseChannel} releaseChannel
- * @returns {boolean}
+ * Determines whether a release channel is the beta pre-release channel.
+ * @param {ReleaseChannel} releaseChannel - The release channel to evaluate.
+ * @return {boolean} `true` if the channel is beta, `false` otherwise.
  */
 export function isBetaChannel(releaseChannel) {
   return releaseChannel === "Beta (Pre-release)";
 }
 
 /**
- * @param {{
- *   targetTag: string;
- *   releaseChannel: ReleaseChannel;
- *   publishMarket: PublishMarket;
- * }} params
- * @returns {{ ok: true } | { ok: false; error: string }}
+ * Validates a marketplace deployment tag and release-market compatibility.
+ * @param {Object} params - Deployment details.
+ * @param {string} params.targetTag - Marketplace version or rollback tag.
+ * @param {ReleaseChannel} params.releaseChannel - Release channel for the deployment.
+ * @param {PublishMarket} params.publishMarket - Marketplace targeted by the deployment.
+ * @returns {{ ok: true } | { ok: false, error: string }} A success result or a descriptive validation error.
  */
 export function validateMarketplaceDeploy({ targetTag, releaseChannel, publishMarket }) {
   if (!isValidMarketplaceTag(targetTag)) {

@@ -169,6 +169,15 @@ export function buildComposeHtml({ subject, body }) {
   return emailShell(subject, content, { preheader: body.slice(0, 120), category: "compose" });
 }
 
+/**
+ * Builds an HTML email for a development notice.
+ * @param {Object} options - Notice content and presentation options.
+ * @param {string} options.title - The notice title.
+ * @param {string} options.message - The notice message.
+ * @param {string} options.severity - The notice severity.
+ * @param {string} [options.feedbackUrl] - Optional URL for sending feedback.
+ * @return {string} The formatted development notice email.
+ */
 export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
   const severityColor =
     severity === "critical" ? "#ff6b6b" : severity === "warning" ? "#fbbf24" : "#4d9fff";

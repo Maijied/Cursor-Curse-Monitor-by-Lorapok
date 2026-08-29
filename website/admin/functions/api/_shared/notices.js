@@ -27,6 +27,12 @@ export const DEFAULT_NOTICE = {
 
 export { GENERATED_DEV_NOTICE, CONVERSATION_RECOVERY_NOTICE, ROLLBACK_NOTICE, getNoticeTemplates };
 
+/**
+ * Merges built-in notices into a notice collection and refreshes matching generated notices.
+ * @param {Array} items - The existing notices.
+ * @param {Object} [env] - Optional environment used to load hydrated built-in notices.
+ * @return {{items: Array, changed: boolean}} The merged notices and whether the collection changed.
+ */
 export async function mergeBuiltinNotices(items, env) {
   const builtins = env ? await getHydratedBuiltinNotices(env) : BUILTIN_NOTICES;
   const next = [...items];
@@ -134,6 +140,14 @@ export async function writeCatalog(env, catalog) {
   return catalog;
 }
 
+/**
+ * Ensures the notice catalog contains built-in notices and is marked as seeded.
+ *
+ * Migrates a legacy active notice when needed and persists changes. If the storage
+ * binding is unavailable, returns the updated catalog without marking it as seeded.
+ *
+ * @return {{seeded: boolean, items: Array}} The seeded catalog, or a read-only catalog when storage is unavailable.
+ */
 export async function ensureCatalogSeeded(env) {
   const catalog = await readCatalog(env);
   let items = [...catalog.items];
@@ -179,7 +193,10 @@ export async function ensureCatalogSeeded(env) {
   }
 }
 
-/** Make the recovery notice public for a new release. */
+/**
+ * Activates the conversation recovery notice and persists it as the sole enabled notice.
+ * @returns {Object} The public representation of the activated notice.
+ */
 export async function activateConversationRecoveryNotice(env) {
   const catalog = await ensureCatalogSeeded(env);
   const recovery = await getConversationRecoveryNotice(env);
@@ -192,7 +209,10 @@ export async function activateConversationRecoveryNotice(env) {
   return publicNoticeShape(notice);
 }
 
-/** Make the recovery notice public after a rollback workflow has been accepted. */
+/**
+ * Activates the rollback notice and disables all other notices.
+ * @returns {Object} The public representation of the activated rollback notice.
+ */
 export async function activateRollbackNotice(env) {
   const catalog = await ensureCatalogSeeded(env);
   const rollback = await getRollbackNotice(env);

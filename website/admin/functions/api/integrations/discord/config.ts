@@ -19,7 +19,11 @@ export async function onRequestGet(context) {
 }
 
 /**
- * Updates deployment and/or feedback Discord webhook URLs (master admin only).
+ * Updates deployment and/or feedback Discord webhook URLs for master administrators.
+ *
+ * The deployment webhook accepts `deploymentWebhookUrl` or the legacy `webhookUrl` field.
+ *
+ * @returns An HTTP response containing the updated configuration or an error.
  */
 export async function onRequestPut(context) {
   const { request, env } = context;

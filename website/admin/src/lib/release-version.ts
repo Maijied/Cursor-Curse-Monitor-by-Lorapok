@@ -34,6 +34,13 @@ export function effectiveVersionBase(liveTag: string | null, packageVersion: str
   return candidates.sort(compareTags).at(-1) ?? null;
 }
 
+/**
+ * Compares the numeric version components of two tags.
+ *
+ * @param a - The first version tag
+ * @param b - The second version tag
+ * @returns A negative number if `a` precedes `b`, a positive number if `a` follows `b`, or `0` if their major, minor, and patch components are equal
+ */
 function compareTags(a: string, b: string): number {
   const pa = a.replace(/^v/i, "").split("-")[0].split(".").map((n) => Number.parseInt(n, 10) || 0);
   const pb = b.replace(/^v/i, "").split("-")[0].split(".").map((n) => Number.parseInt(n, 10) || 0);
@@ -46,14 +53,33 @@ function compareTags(a: string, b: string): number {
 
 import { isValidMarketplaceTag } from "./marketplace-deploy-policy";
 
+/**
+ * Determines whether a tag identifies a beta, alpha, or release candidate pre-release.
+ *
+ * @param tag - The tag to classify
+ * @returns `true` if the tag contains `beta`, `alpha`, or `rc`, `false` otherwise.
+ */
 export function isBetaPrereleaseTag(tag: string): boolean {
   return /beta|alpha|rc/i.test(tag);
 }
 
+/**
+ * Determines whether a tag identifies a rollback release.
+ *
+ * @param tag - The tag to classify
+ * @returns `true` if the tag matches a major and minor version followed by an `R` release number, `false` otherwise.
+ */
 export function isRollbackReleaseTag(tag: string): boolean {
   return /^v?\d+\.\d+\.R\d+$/i.test(String(tag));
 }
 
+/**
+ * Adds a status label to a release tag when applicable.
+ *
+ * @param tag - The release tag to label
+ * @param liveTag - The tag currently live, if available
+ * @returns The tag with its applicable status label
+ */
 export function formatTagLabel(tag: string, liveTag: string | null): string {
   if (liveTag && tag === liveTag) return `${tag} (Live)`;
   if (isRollbackReleaseTag(tag)) return `${tag} (Rollback release)`;
@@ -61,7 +87,14 @@ export function formatTagLabel(tag: string, liveTag: string | null): string {
   return tag;
 }
 
-/** Tags shown in the Deploy / Rollback pickers for the selected channel. */
+/**
+ * Filters release tags for deployment, rollback, or infrastructure workflows.
+ *
+ * @param tags - Candidate release tags
+ * @param channel - Release channel used to exclude prerelease-named tags
+ * @param mode - Workflow mode; rollback mode includes all valid marketplace tags
+ * @returns Marketplace-valid tags eligible for the specified channel and mode
+ */
 export function filterTagsForChannel(
   tags: string[],
   channel: "beta" | "production",
@@ -76,6 +109,14 @@ export function filterTagsForChannel(
   return marketplaceTags.filter((tag) => !isBetaPrereleaseTag(tag));
 }
 
+/**
+ * Selects the preferred release tag from the available tags.
+ *
+ * @param tags - The available release tags
+ * @param liveTag - The currently live tag, when available
+ * @param suggestedTag - The suggested tag, when available
+ * @returns The suggested tag, live tag, first available tag, or an empty string
+ */
 export function defaultTagSelection(
   tags: string[],
   liveTag: string | null,

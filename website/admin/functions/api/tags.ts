@@ -16,6 +16,14 @@ async function buildTagsPayload(env, rawTags, source, warning, siteDataOverride)
   return { ...enriched, source, ...(warning ? { warning } : {}) };
 }
 
+/**
+ * Retrieves repository tags for an authenticated administrative request.
+ *
+ * Falls back to cached site data when GitHub is unavailable and returns a gateway error when neither source provides tags.
+ *
+ * @param context - The request context containing the incoming request and environment bindings
+ * @returns The HTTP response containing the tags payload or an error
+ */
 export async function onRequestGet(context) {
   const startedAt = Date.now();
   const { request, env } = context;

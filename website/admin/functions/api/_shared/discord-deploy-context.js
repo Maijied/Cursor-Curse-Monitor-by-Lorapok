@@ -184,8 +184,10 @@ export function formatEngagementText(siteData) {
 }
 
 /**
- * @param {string|null|undefined} tag
- * @returns {string}
+ * Builds Markdown links to the product's primary resources and release information.
+ * @param {string|null|undefined} tag - Release tag used to create a tag-specific release link.
+ * @param {Object} footers - Optional configured footer content.
+ * @returns {string} Markdown-formatted product links, optionally followed by a product footer.
  */
 export function buildQuickLinksText(tag, footers) {
   const releaseTag = normalizeTag(tag);
@@ -235,9 +237,11 @@ async function fetchReleaseNotes(env, tag) {
 }
 
 /**
- * Gather live product context for rich Discord deployment embeds.
- * @param {Record<string, unknown>} env
+ * Collects product data and formatted content for Discord deployment embeds.
  * @param {{ tag?: string|null; includeChangelog?: boolean }} options
+ * @param {string|null} [options.tag] - Release tag used to retrieve release notes and build release links.
+ * @param {boolean} [options.includeChangelog=true] - Whether to include release notes.
+ * @returns {Promise<object>} Enriched branding, product data, marketplace fields, release notes, and formatted embed content.
  */
 export async function buildDeployEnrichment(env, options = {}) {
   const tag = options.tag ?? null;

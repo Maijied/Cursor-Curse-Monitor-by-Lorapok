@@ -10,6 +10,12 @@ import {
   writeCatalog,
 } from "./_shared/notices.js";
 
+/**
+ * Retrieves notice templates or the current public notice catalog.
+ *
+ * @param context - The request context containing the request and environment bindings.
+ * @returns A response containing either notice templates or public-formatted notices and the active notice.
+ */
 export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);

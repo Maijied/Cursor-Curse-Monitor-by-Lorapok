@@ -7,9 +7,10 @@ import {
 import { interpolateDeep } from "./template-interpolate.js";
 
 /**
- * Merge live site-data version fields into the embedded product context.
- * @param {Record<string, unknown>} baseCtx
- * @param {Record<string, unknown>|null|undefined} siteData
+ * Merges live site data and derived release metadata into the embedded product context.
+ * @param {Record<string, unknown>} baseCtx - The embedded product context to extend.
+ * @param {Record<string, unknown>|null|undefined} siteData - Live site data used to update product and release fields.
+ * @return {Record<string, unknown>} A copied product context containing the merged metadata.
  */
 export function mergeProductContext(baseCtx, siteData) {
   const ctx = { ...baseCtx };
@@ -46,7 +47,9 @@ export function mergeProductContext(baseCtx, siteData) {
 }
 
 /**
- * @param {Record<string, unknown>} [env]
+ * Resolve the product context using live site data when available, falling back to the embedded context if retrieval fails.
+ * @param {Record<string, unknown>} [env] - Runtime environment used to retrieve site data.
+ * @returns {Record<string, unknown>} The resolved product context.
  */
 export async function resolveProductContext(env) {
   const base = { ...(embedded.ctx ?? {}) };
@@ -60,8 +63,10 @@ export async function resolveProductContext(env) {
 }
 
 /**
- * @param {unknown} templateValue
- * @param {Record<string, unknown>} [env]
+ * Resolves product context and interpolates placeholders throughout a template value.
+ * @param {unknown} templateValue - The value containing templates to interpolate.
+ * @param {Record<string, unknown>} [env] - The environment used to resolve product context.
+ * @returns {unknown} The template value with product-context placeholders interpolated.
  */
 export async function hydrateTemplateValue(templateValue, env) {
   const ctx = await resolveProductContext(env);

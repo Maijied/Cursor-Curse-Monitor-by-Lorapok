@@ -156,10 +156,10 @@ export function buildDeploymentEmbed(payload, enrichment) {
 }
 
 /**
- * Build supplemental embeds with marketplace sync, downloads, changelog, and links.
- * @param {Record<string, unknown>} payload
- * @param {Record<string, unknown>|null|undefined} enrichment
- * @returns {Array<Record<string, unknown>>}
+ * Build supplemental Discord embeds from available deployment enrichment data.
+ * @param {Record<string, unknown>} payload - Deployment data used to determine embed status.
+ * @param {Record<string, unknown>|null|undefined} enrichment - Optional marketplace, download, engagement, changelog, and link data.
+ * @returns {Array<Record<string, unknown>>} Up to nine supplemental embeds.
  */
 export function buildSupplementalEmbeds(payload, enrichment) {
   if (!enrichment) return [];
@@ -224,11 +224,12 @@ export function buildDeploymentEmbeds(payload, enrichment) {
 }
 
 /**
- * Sends a deployment notification to a Discord webhook.
+ * Delivers a deployment notification to a Discord webhook.
  * @param {string} webhookUrl - The Discord webhook URL.
- * @param {Record<string, unknown>} payload - Deployment data used to build the notification embed.
- * @param {Record<string, unknown>|null|undefined} [enrichment] - Optional live product context.
- * @return {{ok: boolean, status: number, error?: string}} The delivery status and, when applicable, a truncated error message.
+ * @param {Record<string, unknown>} payload - Deployment data used to build the notification embeds.
+ * @param {Record<string, unknown>|null|undefined} [enrichment] - Optional live product context used for notification content and branding.
+ * @param {*} [env] - Optional runtime environment used to resolve branding.
+ * @return {{ok: boolean, status: number, error?: string}} The delivery result, including a truncated error message when the request fails.
  */
 export async function sendDiscordWebhook(webhookUrl, payload, enrichment, env) {
   const embeds = buildDeploymentEmbeds(payload, enrichment);

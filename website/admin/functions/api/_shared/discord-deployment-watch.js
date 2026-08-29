@@ -58,10 +58,10 @@ async function fetchRunJobs(env, runId) {
 }
 
 /**
- * After a failed publish-tag deploy, roll back to the live tag that was active before dispatch.
- * @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} watch
- * @param {{ url?: string; conclusion?: string | null }} match
+ * Dispatches a rollback deployment after a failed `publish-tag` deployment.
+ * @param {Record<string, unknown>} env - Runtime configuration used for dispatching the rollback and sending notifications.
+ * @param {Record<string, unknown>} watch - Deployment metadata, including the failed tag and rollback target.
+ * @param {{ url?: string; conclusion?: string | null }} match - Matched workflow run metadata.
  */
 async function maybeAutoRollbackOnFailure(env, watch, match) {
   if (match.conclusion !== "failure") return;
@@ -121,8 +121,7 @@ async function maybeAutoRollbackOnFailure(env, watch, match) {
 }
 
 /**
- * Monitors the dispatched workflow until it completes, then sends a Discord completion notification.
- * @param {Record<string, unknown>} env - Environment configuration used to access GitHub and Discord.
+ * Monitors the selected workflow run and sends a Discord notification when it completes.
  * @param {{
  *   actionType: string;
  *   tag?: string | null;
@@ -131,7 +130,7 @@ async function maybeAutoRollbackOnFailure(env, watch, match) {
  *   triggeredBy?: string | null;
  *   dispatchedAt?: number;
  *   workflowName?: string;
- * }} watch - Deployment metadata and workflow selection criteria.
+ * }} watch - Deployment metadata and criteria used to identify the workflow run.
  */
 export async function watchDiscordDeploymentCompletion(env, watch) {
   const startedAt = Date.now();
