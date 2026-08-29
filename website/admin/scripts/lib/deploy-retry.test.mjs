@@ -36,6 +36,16 @@ assert.equal(
 );
 
 assert.equal(
+  shouldStopPagesDeployRetries({
+    sawRateLimit: false,
+    failureKind: "auth-lockout",
+    attempt: 1,
+    maxAttempts: 4,
+  }).reason,
+  "invalid-token"
+);
+
+assert.equal(
   resolvePagesPreDeployCooldownSec({ inCi: true, skipMailSetup: true, env: {} }),
   0
 );

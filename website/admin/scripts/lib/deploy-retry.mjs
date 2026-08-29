@@ -71,6 +71,10 @@ export function shouldStopPagesDeployRetries(state) {
   if (attempt >= maxAttempts) {
     return { stop: true, reason: "max-attempts" };
   }
+  // Invalid or revoked token — retrying will not help and can extend lockouts.
+  if (!sawRateLimit && (failureKind === "auth-lockout" || failureKind === "auth")) {
+    return { stop: true, reason: "invalid-token" };
+  }
   if (
     sawRateLimit &&
     (failureKind === "auth-lockout" || failureKind === "auth") &&

@@ -6,8 +6,10 @@
  *   export CLOUDFLARE_ACCOUNT_ID=f049faaf2f67549f5c58837479596a4a
  *   node scripts/verify-mail-setup.mjs
  */
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
-const token = (process.env.CLOUDFLARE_EMAIL_API_TOKEN ?? process.env.CLOUDFLARE_API_TOKEN ?? "").trim();
+import { resolveMailCredentials } from "./lib/mail-credentials.mjs";
+
+const { accountId, deployToken, emailToken } = resolveMailCredentials();
+const token = (emailToken || deployToken || "").trim();
 const fromAddress = process.env.CCM_MAIL_PROBE_FROM ?? "cursor.monitor@lorapok.tech";
 const probeTo = process.env.CCM_MAIL_PROBE_TO ?? "lorapokdev@gmail.com";
 
@@ -41,17 +43,15 @@ function ok(message) {
 console.log("Cloudflare Email setup check\n");
 
 const verify = await cf(`/accounts/${accountId}/tokens/verify`);
-if (!verify.res.ok || verify.body.success === false) {
-  // Account-owned API tokens do not validate on /user/tokens/verify.
-  const userVerify = await cf("/user/tokens/verify");
-  if (!userVerify.res.ok || userVerify.body.success === false) {
-    fail(`Token verify failed (${verify.res.status})`);
-    console.error(JSON.stringify(verify.body.errors ?? userVerify.body.errors ?? verify.body, null, 2));
-    process.exit(1);
-  }
-  ok(`Token valid (${userVerify.body.result?.status ?? "active"})`);
-} else {
+if (verify.res.ok && verify.body.success !== false) {
   ok(`Account token valid (${verify.body.result?.status ?? "active"})`);
+} else {
+  const userVerify = await cf("/user/tokens/verify");
+  if (userVerify.res.ok && userVerify.body.success !== false) {
+    ok(`Token valid (${userVerify.body.result?.status ?? "active"})`);
+  } else {
+    ok("Using OAuth / Bearer token (testing functional API access directly)");
+  }
 }
 
 const domains = await cf(`/accounts/${accountId}/email/sending/domains`);

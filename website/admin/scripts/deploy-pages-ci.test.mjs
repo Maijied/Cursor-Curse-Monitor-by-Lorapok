@@ -40,6 +40,26 @@ for (let attempt = 1; attempt <= 3; attempt++) {
   }
 }
 
+assert.equal(
+  shouldStopPagesDeployRetries({
+    sawRateLimit: false,
+    failureKind: "auth-lockout",
+    attempt: 1,
+    maxAttempts: 4,
+  }).reason,
+  "invalid-token"
+);
+
+assert.equal(
+  shouldStopPagesDeployRetries({
+    sawRateLimit: false,
+    failureKind: "auth",
+    attempt: 1,
+    maxAttempts: 4,
+  }).reason,
+  "invalid-token"
+);
+
 // Push-to-main deploy skips mail setup → no pre-deploy cooldown.
 assert.equal(
   resolvePagesPreDeployCooldownSec({

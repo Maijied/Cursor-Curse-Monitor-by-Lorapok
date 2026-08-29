@@ -508,7 +508,7 @@ jobs:
           MAIL_API_LIGHTWEIGHT: ${{ github.event_name == 'push' && 'true' || steps.mail_setup.outputs.mail_api_lightweight || 'false' }}
           CF_DEPLOY_PRE_COOLDOWN_SEC: "90"
           CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT: "0"
-          CF_DEPLOY_MAX_ATTEMPTS: "4"
+          CF_DEPLOY_MAX_ATTEMPTS: ${{ github.event_name == 'push' && '1' || '4' }}
         run: node scripts/deploy-pages-ci.mjs
 
       - name: Deploy stats cron worker (cred → CRON_SECRET)

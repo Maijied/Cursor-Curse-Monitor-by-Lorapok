@@ -200,6 +200,9 @@ export function loadCursorCloudflareSecretsFromVault() {
 
 /** Merge Cloudflare tokens from gpg vault when not already in env (no cred CLI needed). */
 export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
+  if (baseEnv.CCM_SKIP_CRED_VAULT === "1" || baseEnv.CCM_SKIP_CRED_VAULT === "true") {
+    return baseEnv;
+  }
   const loaded = loadCursorCloudflareSecretsFromVault();
   if (!loaded) return baseEnv;
   return {
