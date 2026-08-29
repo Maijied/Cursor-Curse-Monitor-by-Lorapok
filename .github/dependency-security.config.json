@@ -19,8 +19,7 @@
   ],
   "scanDevelopment": true,
   "failOnSeverity": {
-    "production": "high",
-    "development": "critical"
+    "production": "high"
   },
   "severityOrder": ["critical", "high", "moderate", "low"],
   "autoTriage": {

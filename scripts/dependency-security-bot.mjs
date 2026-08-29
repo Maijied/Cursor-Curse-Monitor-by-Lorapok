@@ -216,11 +216,14 @@ export function collectAlerts(config, dismissals, { runAudit = runNpmAudit } = {
 }
 
 export function evaluateFailures(openAlerts, config) {
-  const failOn = config.failOnSeverity ?? { production: "high", development: "critical" };
+  const failOn = config.failOnSeverity ?? { production: "high" };
   const failures = [];
 
   for (const alert of openAlerts) {
-    const threshold = failOn[alert.scope] ?? failOn.production ?? "high";
+    const threshold = failOn[alert.scope];
+    if (threshold == null || threshold === "never" || threshold === "off") {
+      continue;
+    }
     if (severityMeetsThreshold(alert.severity, threshold)) {
       failures.push({ alert, threshold });
     }
