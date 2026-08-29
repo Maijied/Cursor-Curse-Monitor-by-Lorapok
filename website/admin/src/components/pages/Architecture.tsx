@@ -74,7 +74,7 @@ Admin SPA ───────► cursor-dev.lorapok.tech (Cloudflare Pages)
 Extension ───────► Open VSX (lorapok-labs) + VS Code Marketplace
                  └──► Cursor API (local machine only)
 
-CI/CD ───────────► GitHub Actions → marketplaces + Pages + admin deploy`}
+Production Deployment ──► GitHub Actions → marketplaces + Pages + admin deploy`}
           </pre>
         </div>
 
