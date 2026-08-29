@@ -14,6 +14,7 @@ import {
   buildGeneratedCatalogNotice,
   buildNoticeTemplates,
 } from "./notice-templates.mjs";
+import { bakePlaceholders } from "../website/admin/functions/api/_shared/template-interpolate.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "website/admin/functions/api/_shared/product-context.embedded.json");
@@ -38,6 +39,8 @@ const messageCatalog = buildMessageCatalog(ctx);
 const recovery = builtinNotices.find((n) => n.id === "conversation-recovery-v0515") ?? builtinNotices[1];
 const rollback = builtinNotices.find((n) => n.id === "rollback-recovery-notice") ?? builtinNotices[2];
 
+const placeholderCtx = { ...ctx, releaseTag: `v${ctx.releaseVersion ?? ctx.version}` };
+
 writeFileSync(
   out,
   JSON.stringify(
@@ -45,13 +48,13 @@ writeFileSync(
       version: pkg.version,
       displayName: pkg.displayName ?? pkg.name,
       ctx,
-      messageCatalog,
-      mailTemplates,
-      noticeTemplates,
-      builtinNotices,
-      generatedDevNotice,
-      conversationRecoveryNotice: recovery,
-      rollbackNotice: rollback,
+      messageCatalog: bakePlaceholders(messageCatalog, placeholderCtx),
+      mailTemplates: bakePlaceholders(mailTemplates, placeholderCtx),
+      noticeTemplates: bakePlaceholders(noticeTemplates, placeholderCtx),
+      builtinNotices: bakePlaceholders(builtinNotices, placeholderCtx),
+      generatedDevNotice: bakePlaceholders(generatedDevNotice, placeholderCtx),
+      conversationRecoveryNotice: bakePlaceholders(recovery, placeholderCtx),
+      rollbackNotice: bakePlaceholders(rollback, placeholderCtx),
     },
     null,
     2

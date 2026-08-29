@@ -13,12 +13,12 @@ export async function notifyDiscordFeedback(env, payload = {}) {
     return { ok: false, skipped: true, reason: "no_feedback_webhook" };
   }
 
-  const embed = buildDiscordFeedbackEmbed();
+  const embed = await buildDiscordFeedbackEmbed(env);
   if (payload.summary) {
     embed.description = String(payload.summary);
   }
 
-  const branding = getMessageBranding();
+  const branding = await getMessageBranding(env);
   let res;
   try {
     res = await fetch(config.feedbackWebhookUrl, {

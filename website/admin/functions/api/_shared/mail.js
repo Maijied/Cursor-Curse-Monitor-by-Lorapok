@@ -1,7 +1,7 @@
 import { recordMailboxMessage } from "./mailbox.js";
 import { logSystemEvent } from "./system-log.js";
 import { resolveMailBranding } from "./mail-branding.js";
-import { getChannelFooters } from "./message-cards-runtime.js";
+import { getMessageCatalog } from "./message-cards-runtime.js";
 import {
   coerceMailDisplayName,
   normalizeMailFromInput,
@@ -176,7 +176,7 @@ export function buildNoticeHtml({ title, message, severity, feedbackUrl }) {
     severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
   const safeTitle = escapeHtml(title || "Development notice");
   const safeMessage = escapeHtml(message ?? "");
-  const feedbackLabel = getChannelFooters().email?.feedbackCta ?? "Send feedback";
+  const feedbackLabel = getMessageCatalog().footers?.email?.feedbackCta ?? "Send feedback";
   const feedbackLink = feedbackUrl ? ctaButton(feedbackLabel, feedbackUrl) : "";
   const body = `
     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 18px;"><tr>

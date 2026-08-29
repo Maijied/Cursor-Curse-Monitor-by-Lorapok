@@ -3,7 +3,10 @@ import {
   CONVERSATION_RECOVERY_NOTICE,
   GENERATED_DEV_NOTICE,
   ROLLBACK_NOTICE,
+  getConversationRecoveryNotice,
+  getHydratedBuiltinNotices,
   getNoticeTemplates,
+  getRollbackNotice,
 } from "./notice-catalog.js";
 
 const CATALOG_KEY = "notice:catalog";
@@ -24,10 +27,11 @@ export const DEFAULT_NOTICE = {
 
 export { GENERATED_DEV_NOTICE, CONVERSATION_RECOVERY_NOTICE, ROLLBACK_NOTICE, getNoticeTemplates };
 
-export function mergeBuiltinNotices(items) {
+export async function mergeBuiltinNotices(items, env) {
+  const builtins = env ? await getHydratedBuiltinNotices(env) : BUILTIN_NOTICES;
   const next = [...items];
   let changed = false;
-  for (const builtin of BUILTIN_NOTICES) {
+  for (const builtin of builtins) {
     const index = next.findIndex((n) => n.id === builtin.id);
     if (index < 0) {
       next.push({ ...builtin });
@@ -133,7 +137,7 @@ export async function writeCatalog(env, catalog) {
 export async function ensureCatalogSeeded(env) {
   const catalog = await readCatalog(env);
   let items = [...catalog.items];
-  const { items: mergedItems, changed: builtinsAdded } = mergeBuiltinNotices(items);
+  const { items: mergedItems, changed: builtinsAdded } = await mergeBuiltinNotices(items, env);
   items = mergedItems;
   let changed = builtinsAdded || !catalog.seeded;
 
@@ -178,7 +182,8 @@ export async function ensureCatalogSeeded(env) {
 /** Make the recovery notice public for a new release. */
 export async function activateConversationRecoveryNotice(env) {
   const catalog = await ensureCatalogSeeded(env);
-  const notice = { ...CONVERSATION_RECOVERY_NOTICE, updatedAt: new Date().toISOString(), enabled: true };
+  const recovery = await getConversationRecoveryNotice(env);
+  const notice = { ...recovery, updatedAt: new Date().toISOString(), enabled: true };
   const items = [notice, ...catalog.items.filter((item) => item.id !== notice.id)].map((item) => ({
     ...item,
     enabled: item.id === notice.id,
@@ -190,7 +195,8 @@ export async function activateConversationRecoveryNotice(env) {
 /** Make the recovery notice public after a rollback workflow has been accepted. */
 export async function activateRollbackNotice(env) {
   const catalog = await ensureCatalogSeeded(env);
-  const notice = { ...ROLLBACK_NOTICE, updatedAt: new Date().toISOString() };
+  const rollback = await getRollbackNotice(env);
+  const notice = { ...rollback, updatedAt: new Date().toISOString() };
   const items = [notice, ...catalog.items.filter((item) => item.id !== notice.id)].map((item) => ({
     ...item,
     enabled: item.id === notice.id,

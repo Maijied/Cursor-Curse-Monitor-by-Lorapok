@@ -31,7 +31,7 @@ export async function onRequestGet(context) {
 
   const url = new URL(request.url);
   if (url.searchParams.get("templates") === "1") {
-    const response = jsonResponse({ templates: getMailTemplates() });
+    const response = jsonResponse({ templates: await getMailTemplates(env) });
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 

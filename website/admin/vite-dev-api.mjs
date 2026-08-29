@@ -1256,7 +1256,14 @@ export function createDevApiMiddleware() {
     if (url === "/api/notices" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
       if (new URL(req.url ?? "/", "http://localhost").searchParams.get("templates") === "1") {
-        res.end(JSON.stringify({ templates: getNoticeTemplates() }));
+        getNoticeTemplates({})
+          .then((templates) => {
+            res.end(JSON.stringify({ templates }));
+          })
+          .catch((err) => {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Failed to load templates" }));
+          });
         return;
       }
       const active = devStore.notices.find((n) => n.enabled) ?? null;
@@ -1619,7 +1626,14 @@ export function createDevApiMiddleware() {
     if (url.startsWith("/api/mailbox") && req.method === "GET") {
       if (new URL(req.url ?? "/", "http://localhost").searchParams.get("templates") === "1") {
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ templates: getMailTemplates() }));
+        getMailTemplates({})
+          .then((templates) => {
+            res.end(JSON.stringify({ templates }));
+          })
+          .catch((err) => {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Failed to load templates" }));
+          });
         return;
       }
       const query = new URL(req.url ?? "", "http://localhost");
