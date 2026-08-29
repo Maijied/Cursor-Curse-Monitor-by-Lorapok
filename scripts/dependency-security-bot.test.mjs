@@ -102,13 +102,19 @@ describe("dependency-security-bot", () => {
   it("fails when production alerts meet configured threshold", () => {
     const open = [
       { scope: "production", severity: "high", package: "lodash" },
-      { scope: "development", severity: "moderate", package: "chalk" },
+      { scope: "development", severity: "critical", package: "chalk" },
     ];
     const failures = evaluateFailures(open, {
-      failOnSeverity: { production: "high", development: "critical" },
+      failOnSeverity: { production: "high" },
     });
     assert.equal(failures.length, 1);
     assert.equal(failures[0].alert.package, "lodash");
+  });
+
+  it("does not fail development alerts unless threshold is configured", () => {
+    const open = [{ scope: "development", severity: "critical", package: "web-ext" }];
+    const failures = evaluateFailures(open, { failOnSeverity: { production: "high" } });
+    assert.equal(failures.length, 0);
   });
 
   it("compares severities against thresholds", () => {

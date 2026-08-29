@@ -143,17 +143,5 @@ jobs:
           git push origin "$BRANCH" --force
           gh pr create --base main --head "$BRANCH" \
             --title "chore(deps): dependency security bot remediations" \
-            --body "$(cat <<'EOF'
-## Summary
-Automated remediation PR from **Dependency Security Bot** (`workflow_dispatch` → remediate).
-
-- Applies `npm audit fix --omit=dev` to root and `website/admin` lockfiles
-- Runs the full test suite before opening this PR
-- Aligns with [Managing Dependabot alerts](https://docs.github.com/en/code-security/how-tos/manage-security-alerts/manage-dependabot-alerts/viewing-and-updating-dependabot-alerts) (prioritize production, review fix availability)
-
-## Test plan
-- [ ] CI / Dependency Security Bot scan passes
-- [ ] `npm test` green locally if you pull this branch
-- [ ] Dismiss any remaining alerts in `.github/dependency-security-dismissals.json` with an audited reason if not fixing now
-EOF
-)" || echo "PR may already exist for $BRANCH"
+            --body-file .github/dependency-security-pr-body.md \
+            || echo "PR may already exist for $BRANCH"
