@@ -855,7 +855,7 @@ export function createDevApiMiddleware() {
         let parsed;
         try {
           parsed = JSON.parse(body || "{}");
-          if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed))) {
+          if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
             res.statusCode = 400;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ error: "Invalid JSON" }));

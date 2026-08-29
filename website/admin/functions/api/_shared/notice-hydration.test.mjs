@@ -2,8 +2,9 @@
 import assert from "node:assert/strict";
 import { getNoticeTemplates } from "./notice-catalog.js";
 
+// Avoid production network: failed fetch falls back to embedded ctx (includes releaseTag).
 const templates = await getNoticeTemplates({
-  SITE_DATA_URL: "https://cursor.lorapok.tech/site-data.json",
+  SITE_DATA_URL: "http://127.0.0.1:9/__fixture__/site-data.json",
 });
 
 const feature = templates.find((t) => t.templateId === "feature-release");
