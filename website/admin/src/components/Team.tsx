@@ -6,6 +6,8 @@ import { syncAdminAccess } from "../lib/api";
 import { isMasterAdmin, MASTER_ADMIN } from "../lib/admin-config";
 import PageHeader from "./layout/PageHeader";
 import Card from "./ui/Card";
+import LoadableButton from "./ui/LoadableButton";
+import Notification, { type NotificationTone } from "./ui/Notification";
 
 type AdminRecord = { id: string; email: string };
 
@@ -91,6 +93,17 @@ export default function Team() {
   const inputClass =
     "flex-1 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none transition-all text-[var(--color-text)]";
 
+  const teamNotice = (() => {
+    if (!msg) return null;
+    if (msg.startsWith("Error:")) {
+      return { tone: "error" as NotificationTone, title: "Action failed", message: msg.slice(6).trim() };
+    }
+    if (/pending|sync failed/i.test(msg)) {
+      return { tone: "warning" as NotificationTone, title: "Partial success", message: msg };
+    }
+    return { tone: "success" as NotificationTone, title: "Team updated", message: msg };
+  })();
+
   return (
     <div className="space-y-6 animate-fade-slide-up">
       <PageHeader
@@ -116,16 +129,21 @@ export default function Team() {
             placeholder="colleague@example.com"
             className={inputClass}
           />
-          <button
+          <LoadableButton
             type="submit"
-            disabled={loading}
+            loading={loading}
+            loadingLabel="Adding…"
             className="bg-[var(--color-accent)] hover:opacity-90 text-white font-bold py-3 px-8 rounded-xl transition-all disabled:opacity-50 shadow-[0_8px_24px_rgba(124,92,255,0.25)]"
           >
-            {loading ? "Adding…" : "Add Admin"}
-          </button>
+            Add Admin
+          </LoadableButton>
         </form>
 
-        {msg && <p className="mt-4 text-sm text-[var(--color-accent-2)] font-medium">{msg}</p>}
+        {teamNotice ? (
+          <div className="mt-4">
+            <Notification tone={teamNotice.tone} title={teamNotice.title} message={teamNotice.message} />
+          </div>
+        ) : null}
       </Card>
 
       <Card>

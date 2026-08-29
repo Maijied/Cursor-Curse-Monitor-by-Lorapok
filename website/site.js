@@ -150,11 +150,24 @@ function markSubscribedEmail(email) {
 }
 
 function setSubscribeButtonLoading(button, loading) {
+  if (window.CcmUi?.setButtonLoading) {
+    window.CcmUi.setButtonLoading(button, loading);
+    return;
+  }
   if (!button) return;
-  const loader = button.querySelector(".subscribe-btn-loader");
   button.disabled = loading;
   button.classList.toggle("is-loading", loading);
-  if (loader) loader.hidden = !loading;
+}
+
+function showSubscribeFeedback(el, { tone, title, message }) {
+  if (window.CcmUi?.showFeedback) {
+    window.CcmUi.showFeedback(el, { tone, title, message });
+    return;
+  }
+  if (!el) return;
+  el.hidden = false;
+  el.className = `ccm-feedback ccm-feedback--${tone} ccm-feedback--visible`;
+  el.textContent = message ?? "";
 }
 
 async function submitSubscribeRequest({ email, subscribeUrl, source }) {
@@ -410,32 +423,44 @@ function updateStructuredDataVersion(data) {
       const email = String(input.value || "").trim().toLowerCase();
       const consent = form.querySelector("#subscribe-consent");
       if (!email) {
-        message.hidden = false;
-        message.className = "subscribe-message error";
-        message.textContent = "Enter your email address.";
+        showSubscribeFeedback(message, {
+          tone: "error",
+          title: "Email required",
+          message: "Enter your email address.",
+        });
         return;
       }
       if (consent && !consent.checked) {
-        message.hidden = false;
-        message.className = "subscribe-message error";
-        message.textContent = "Please agree to receive product updates.";
+        showSubscribeFeedback(message, {
+          tone: "error",
+          title: "Consent required",
+          message: "Please agree to receive product updates.",
+        });
         return;
       }
 
-      message.hidden = false;
-      message.className = "subscribe-message pending";
-      message.textContent = "Subscribing…";
+      showSubscribeFeedback(message, {
+        tone: "pending",
+        title: "Subscribing…",
+        message: "Our little larvae is sending your request.",
+      });
       setSubscribeButtonLoading(submitBtn, true);
 
       try {
         const body = await submitSubscribeRequest({ email, subscribeUrl, source: "website" });
-        message.className = "subscribe-message success";
-        message.textContent = body.message || "You're subscribed!";
+        showSubscribeFeedback(message, {
+          tone: "success",
+          title: "You're subscribed!",
+          message: body.message || "Release notes will land in your inbox.",
+        });
         form.reset();
         closeSubscribeModal();
       } catch (err) {
-        message.className = "subscribe-message error";
-        message.textContent = err instanceof Error ? err.message : "Could not subscribe right now.";
+        showSubscribeFeedback(message, {
+          tone: "error",
+          title: "Could not subscribe",
+          message: err instanceof Error ? err.message : "Please try again in a moment.",
+        });
       } finally {
         setSubscribeButtonLoading(submitBtn, false);
       }
@@ -496,31 +521,43 @@ function updateStructuredDataVersion(data) {
       const email = String(input.value || "").trim().toLowerCase();
       const consent = form.querySelector("#subscribe-modal-consent");
       if (!email) {
-        message.hidden = false;
-        message.className = "subscribe-message error";
-        message.textContent = "Enter your email address.";
+        showSubscribeFeedback(message, {
+          tone: "error",
+          title: "Email required",
+          message: "Enter your email address.",
+        });
         return;
       }
       if (consent && !consent.checked) {
-        message.hidden = false;
-        message.className = "subscribe-message error";
-        message.textContent = "Please agree to receive product updates.";
+        showSubscribeFeedback(message, {
+          tone: "error",
+          title: "Consent required",
+          message: "Please agree to receive product updates.",
+        });
         return;
       }
 
-      message.hidden = false;
-      message.className = "subscribe-message pending";
-      message.textContent = "Subscribing…";
+      showSubscribeFeedback(message, {
+        tone: "pending",
+        title: "Subscribing…",
+        message: "Hang tight — almost there.",
+      });
       setSubscribeButtonLoading(submitBtn, true);
 
       try {
         const body = await submitSubscribeRequest({ email, subscribeUrl, source: "website-modal" });
-        message.className = "subscribe-message success";
-        message.textContent = body.message || "You're subscribed!";
+        showSubscribeFeedback(message, {
+          tone: "success",
+          title: "You're subscribed!",
+          message: body.message || "We'll keep you posted on releases.",
+        });
         window.setTimeout(closeModal, 1200);
       } catch (err) {
-        message.className = "subscribe-message error";
-        message.textContent = err instanceof Error ? err.message : "Could not subscribe right now.";
+        showSubscribeFeedback(message, {
+          tone: "error",
+          title: "Could not subscribe",
+          message: err instanceof Error ? err.message : "Please try again in a moment.",
+        });
       } finally {
         setSubscribeButtonLoading(submitBtn, false);
       }

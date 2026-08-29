@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BarChart3, RefreshCw, Save } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
+import LoadableButton from "./LoadableButton";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import { auth } from "../../lib/firebase";
@@ -168,24 +169,26 @@ export default function StatsRefreshCard() {
 
           <div className="flex flex-wrap gap-3">
             {isMaster && (
-              <button
+              <LoadableButton
                 type="submit"
-                disabled={saving}
+                loading={saving}
+                loadingLabel="Saving…"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-50"
               >
                 <Save size={16} aria-hidden="true" />
-                {saving ? "Saving…" : "Save settings"}
-              </button>
+                Save settings
+              </LoadableButton>
             )}
-            <button
+            <LoadableButton
               type="button"
               onClick={handleRefreshNow}
-              disabled={refreshing}
+              loading={refreshing}
+              loadingLabel="Refreshing…"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text)] hover:bg-white/5 disabled:opacity-50"
             >
-              <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} aria-hidden="true" />
-              {refreshing ? "Refreshing…" : "Refresh now"}
-            </button>
+              <RefreshCw size={16} aria-hidden="true" />
+              Refresh now
+            </LoadableButton>
           </div>
         </form>
       )}

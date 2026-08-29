@@ -28,6 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="larvae-loader.css" />
   <link rel="stylesheet" href="stats-dashboard.css" />
   <!-- seo:jsonld -->
   <script type="application/ld+json">
@@ -798,16 +799,16 @@
         <form id="subscribe-form" class="subscribe-form" novalidate>
           <label class="sr-only" for="subscribe-email">Email address</label>
           <input type="email" id="subscribe-email" name="email" placeholder="you@example.com" required autocomplete="email" spellcheck="false" inputmode="email" />
-          <button type="submit" class="btn primary" id="subscribe-form-submit">
+          <button type="submit" class="btn primary btn-loadable" id="subscribe-form-submit">
             <span class="subscribe-btn-label">Subscribe</span>
-            <span class="subscribe-btn-loader" hidden aria-hidden="true"></span>
+            <span class="btn-larvae-loader" hidden aria-hidden="true"></span>
           </button>
         </form>
         <label class="subscribe-consent" for="subscribe-consent" style="display:flex;align-items:flex-start;gap:10px;max-width:520px;margin:12px auto 0;font-size:0.9rem;color:var(--muted)">
           <input type="checkbox" id="subscribe-consent" name="consent" required style="margin-top:4px" />
           <span>I agree to receive product updates and release notes from Lorapok Labs. Unsubscribe any time by replying to a message.</span>
         </label>
-        <p class="subscribe-message" id="subscribe-message" role="status" aria-live="polite" hidden></p>
+        <p class="ccm-feedback" id="subscribe-message" role="status" aria-live="polite" hidden></p>
       </div>
     </section>
   </main>
@@ -828,14 +829,14 @@
           <span>I agree to receive product updates and release notes from Lorapok Labs. Unsubscribe any time by replying to a message.</span>
         </label>
         <div class="subscribe-modal-actions">
-          <button type="submit" class="btn primary" id="subscribe-modal-submit">
+          <button type="submit" class="btn primary btn-loadable" id="subscribe-modal-submit">
             <span class="subscribe-btn-label">Subscribe</span>
-            <span class="subscribe-btn-loader" hidden aria-hidden="true"></span>
+            <span class="btn-larvae-loader" hidden aria-hidden="true"></span>
           </button>
           <button type="button" class="btn ghost" data-subscribe-later>Maybe later</button>
           <button type="button" class="btn ghost subscribe-decline" data-subscribe-decline>No thanks</button>
         </div>
-        <p class="subscribe-message" id="subscribe-modal-message" role="status" aria-live="polite" hidden></p>
+        <p class="ccm-feedback" id="subscribe-modal-message" role="status" aria-live="polite" hidden></p>
       </form>
     </div>
   </div>
@@ -899,6 +900,7 @@
 
   <script src="stats-dashboard.js" defer></script>
   <script src="analytics.js" defer></script>
+  <script src="ui-feedback.js" defer></script>
   <script src="site.js" defer></script>
   <script type="module">
     import { initArchitectureSection } from "./architecture.mjs";

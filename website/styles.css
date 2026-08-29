@@ -1522,39 +1522,10 @@ h1 {
   box-shadow: 0 0 0 3px rgba(77, 159, 255, 0.15);
 }
 .subscribe-form .btn { flex-shrink: 0; }
-.subscribe-message {
-  margin: 14px 0 0;
-  font-size: 0.9rem;
-}
-.subscribe-message.success { color: var(--ok); }
-.subscribe-message.error { color: #f87171; }
-.subscribe-message.pending { color: var(--muted); }
 @media (max-width: 520px) {
   .subscribe-form { flex-direction: column; }
   .subscribe-form .btn { width: 100%; }
 }
-
-/* Subscribe loader (Lorapok Larvae ring) */
-.subscribe-btn-loader {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: subscribe-spin 0.75s linear infinite;
-  vertical-align: middle;
-}
-.btn.primary.is-loading .subscribe-btn-label { opacity: 0; }
-.btn.primary.is-loading .subscribe-btn-loader {
-  display: inline-block;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -9px 0 0 -9px;
-}
-.btn.primary { position: relative; }
-@keyframes subscribe-spin { to { transform: rotate(360deg); } }
 
 /* Newsletter modal */
 .subscribe-modal {
@@ -2737,10 +2708,10 @@ a.ide-card:focus-visible {
   }
   .architecture-mermaid-animated .node,
   .architecture-mermaid-animated .edgePath,
+  .architecture-mermaid-animated .edgePath path,
   .architecture-mermaid-animated .cluster {
     animation: none !important;
     opacity: 1 !important;
-    transform: none !important;
   }
 }
 
@@ -2817,7 +2788,6 @@ a.ide-card:focus-visible {
 .architecture-diagram-mount .architecture-mermaid-animated .node,
 .architecture-diagram-mount .architecture-mermaid-animated .cluster {
   opacity: 0;
-  transform: translateY(8px);
   animation: arch-node-in 0.65s ease forwards;
 }
 
@@ -2840,7 +2810,6 @@ a.ide-card:focus-visible {
 @keyframes arch-node-in {
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

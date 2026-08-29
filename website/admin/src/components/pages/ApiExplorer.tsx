@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
+import LoadableButton from "../ui/LoadableButton";
 import { API_CATALOG, API_CATALOG_GROUPS, type ApiCatalogEntry } from "../../lib/api-catalog";
 import { probeApiEndpoint, type ApiProbeResult } from "../../lib/api";
 
@@ -74,15 +75,16 @@ export default function ApiExplorer() {
         description="Probe Mission Control and public API routes. Safe GET endpoints run automatically on load."
         action={
           <div className="flex flex-wrap gap-2">
-            <button
+            <LoadableButton
               type="button"
               onClick={runAllSafe}
-              disabled={runningAll}
+              loading={runningAll}
+              loadingLabel="Testing…"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-50"
             >
-              <RefreshCw size={16} className={runningAll ? "animate-spin" : ""} aria-hidden="true" />
+              <RefreshCw size={16} aria-hidden="true" />
               Test all safe
-            </button>
+            </LoadableButton>
             <Link
               to="/dashboard/logs"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"

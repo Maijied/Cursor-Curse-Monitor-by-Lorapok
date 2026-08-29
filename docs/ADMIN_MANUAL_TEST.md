@@ -171,19 +171,19 @@ node scripts/validate-seo.mjs
    - **Publish Market:** `Both`
    - **Release Channel:** `Production`
    - **Version Bump Type:** `custom`
-   - **Custom Version:** `0.5.6` (if not already bumped locally)
+   - **Custom Version:** `1.0.56` (if not already bumped locally)
 4. Wait for `deploy` + `website` jobs.
 5. Verify:
-   - [Open VSX lorapok-labs](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok) → 0.5.6
-   - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok) → 0.5.6
-   - GitHub Release `v0.5.6` with VSIX asset
+   - [Open VSX lorapok-labs](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok) → 1.0.56
+   - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok) → 1.0.56
+   - GitHub Release `v1.0.56` with VSIX asset
 
 ### Option B — Tag push (if version already on main)
 
 ```bash
-git tag v0.5.6
+git tag v1.0.56
 git push origin main
-git push origin v0.5.6
+git push origin v1.0.56
 ```
 
 ### Option C — Local Open VSX only
