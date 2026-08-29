@@ -4,8 +4,8 @@
   "siteBase": "https://cursor.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live usage dashboard",
   "description": "Live included quota, Auto/API meters, budget tracking, and a local credential scanner. Browser extension for Firefox and Chrome. Works in VS Code–based AI IDEs via Open VSX or the Marketplace. Private to your login — data stays local.",
-  "version": "1.0.34",
-  "packageVersion": "1.0.34",
+  "version": "1.0.50",
+  "packageVersion": "1.0.50",
   "canonical": "https://cursor.lorapok.tech/",
   "syncStatus": "synced",
   "keywords": [
