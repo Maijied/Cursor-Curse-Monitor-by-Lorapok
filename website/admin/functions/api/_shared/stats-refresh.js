@@ -198,10 +198,11 @@ export async function runStatsRefresh(env, options = {}) {
   );
 
   const durationMs = Date.now() - started;
+  const latestConfig = await readStatsRefreshConfig(env);
   await env.ADMIN_KV.put(
     "integrations:stats-refresh",
     JSON.stringify({
-      ...config,
+      ...latestConfig,
       lastRunAt: snapshot.refreshedAt,
       lastRunOk: true,
       lastError: null,

@@ -11,7 +11,7 @@
  * Env: CCM_VSCODE_DEV_ROOT, EDITOR_BIN=/snap/bin/code
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -79,7 +79,38 @@ function sourceRevision() {
   return r.status === 0 ? r.stdout.trim() : "unknown";
 }
 
+function normalizePath(p) {
+  return resolve(p).replace(/\\/g, "/").replace(/\/+$/, "");
+}
+
+function pathsOverlap(a, b) {
+  const left = normalizePath(a);
+  const right = normalizePath(b);
+  if (left === right) {
+    return true;
+  }
+  return left.startsWith(`${right}/`) || right.startsWith(`${left}/`);
+}
+
+function assertSandboxDoesNotOverlapSource() {
+  const source = realpathSync(sourceRoot);
+  let target = resolve(targetRoot);
+  if (existsSync(targetRoot)) {
+    try {
+      target = realpathSync(targetRoot);
+    } catch {
+      // keep resolved path when realpath fails (broken symlink, etc.)
+    }
+  }
+  if (pathsOverlap(source, target)) {
+    fail(
+      `CCM_VSCODE_DEV_ROOT must not overlap the source workspace (source=${source}, target=${target})`
+    );
+  }
+}
+
 function ensureSandboxDir() {
+  assertSandboxDoesNotOverlapSource();
   if (!existsSync(targetRoot)) {
     if (dryRun) {
       log(`[dry-run] mkdir -p ${targetRoot}`);

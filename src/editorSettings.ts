@@ -17,6 +17,29 @@ export type EditorSettings = {
 };
 
 const CONFIG_SECTION = "cursorCurseMonitor";
+const POLL_MIN_SECONDS = 15;
+const POLL_MAX_SECONDS = 3600;
+
+function clampPollIntervalSeconds(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 30;
+  }
+  return Math.min(POLL_MAX_SECONDS, Math.max(POLL_MIN_SECONDS, Math.round(value)));
+}
+
+function clampWarnAtPercent(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 80;
+  }
+  return Math.min(100, Math.max(1, Math.round(value)));
+}
+
+function clampBudgetLimit(value: number): number {
+  if (!Number.isFinite(value) || value < 0) {
+    return 0;
+  }
+  return value;
+}
 
 export function readEditorSettings(): EditorSettings {
   const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
@@ -39,7 +62,19 @@ export async function updateEditorSettings(
   partial: Partial<EditorSettings>
 ): Promise<EditorSettings> {
   const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
-  const entries = Object.entries(partial) as Array<[keyof EditorSettings, EditorSettings[keyof EditorSettings]]>;
+  const normalized: Partial<EditorSettings> = { ...partial };
+  if (normalized.pollIntervalSeconds !== undefined) {
+    normalized.pollIntervalSeconds = clampPollIntervalSeconds(normalized.pollIntervalSeconds);
+  }
+  if (normalized.warnAtPercent !== undefined) {
+    normalized.warnAtPercent = clampWarnAtPercent(normalized.warnAtPercent);
+  }
+  if (normalized.customBudgetLimit !== undefined) {
+    normalized.customBudgetLimit = clampBudgetLimit(normalized.customBudgetLimit);
+  }
+  const entries = Object.entries(normalized) as Array<
+    [keyof EditorSettings, EditorSettings[keyof EditorSettings]]
+  >;
   for (const [key, value] of entries) {
     if (value === undefined) {
       continue;

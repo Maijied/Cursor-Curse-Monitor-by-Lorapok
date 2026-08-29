@@ -34,6 +34,9 @@ export default defineConfig({
   define: {
     __EXTENSION_VERSION__: JSON.stringify(extensionVersion),
     __RELEASE_NOTES__: JSON.stringify(releaseNotes),
+    __CCM_DEV_STORAGE_PREFIX__: JSON.stringify(
+      process.env.CCM_BROWSER_EXT_DEV_STORAGE === "1"
+    ),
   },
   build: {
     outDir: "dist",
