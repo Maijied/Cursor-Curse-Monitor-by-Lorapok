@@ -51,7 +51,7 @@ export async function fetchLiveChannels(siteData, options = {}) {
     fetchJson(`https://open-vsx.org/api/lorapok-labs/${name}`),
     fetchJson(`https://open-vsx.org/api/LorapokLabs/${name}`),
     fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, { headers: githubHeaders }),
-    fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=30`, { headers: githubHeaders }),
+    fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=100`, { headers: githubHeaders }),
     fetchVsceExtension(vsceId),
     fetchJson("https://addons.mozilla.org/api/v5/addons/addon/cursor-curse-monitor/"),
   ]);
