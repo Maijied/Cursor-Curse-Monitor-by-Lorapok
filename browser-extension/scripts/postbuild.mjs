@@ -69,7 +69,6 @@ const manifest = applyFirefoxManifestOverrides(
   JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"))
 );
 const rootPkg = JSON.parse(readFileSync(join(root, "..", "package.json"), "utf8"));
-if (rootPkg.author) manifest.author = rootPkg.author;
 manifest.version = version;
 manifest.action.default_popup = "popup.html";
 manifest.options_ui = { page: "options.html", open_in_tab: true };
@@ -83,6 +82,7 @@ manifest.content_scripts = [
 ];
 
 const chromeManifest = structuredClone(manifest);
+if (rootPkg.author) chromeManifest.author = rootPkg.author;
 chromeManifest.background = {
   service_worker: "background/service-worker.js",
   type: "module",
