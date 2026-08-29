@@ -1,3 +1,11 @@
+import {
+  clampIntervalMinutes,
+  CRON_RUN_DEFAULTS,
+  isCronJobDue,
+  mergeCronJobConfig,
+  sanitizeCronRunMetaForClient,
+} from "./cron-schedule.js";
+
 const CONFIG_KEY = "integrations:stats-refresh";
 const CACHE_KEY = "stats:live-cache";
 const README_SVG_KEY = "stats:readme-svg";
@@ -8,13 +16,7 @@ export const STATS_README_SVG_KEY = README_SVG_KEY;
 export const DEFAULT_STATS_REFRESH_CONFIG = {
   enabled: false,
   intervalMinutes: 5,
-  lastRunAt: null,
-  lastRunOk: null,
-  lastError: null,
-  lastDurationMs: null,
-  lastTriggeredBy: null,
-  updatedAt: null,
-  updatedBy: null,
+  ...CRON_RUN_DEFAULTS,
 };
 
 /**
@@ -26,15 +28,7 @@ export async function readStatsRefreshConfig(env) {
     const raw = await env.ADMIN_KV.get(CONFIG_KEY);
     if (!raw) return { ...DEFAULT_STATS_REFRESH_CONFIG };
     const parsed = JSON.parse(raw);
-    const interval = Number(parsed.intervalMinutes ?? DEFAULT_STATS_REFRESH_CONFIG.intervalMinutes);
-    return {
-      ...DEFAULT_STATS_REFRESH_CONFIG,
-      ...parsed,
-      intervalMinutes: Number.isFinite(interval)
-        ? Math.min(60, Math.max(1, Math.round(interval)))
-        : DEFAULT_STATS_REFRESH_CONFIG.intervalMinutes,
-      enabled: parsed.enabled === true,
-    };
+    return normalizeStatsRefreshConfig(parsed);
   } catch {
     return { ...DEFAULT_STATS_REFRESH_CONFIG };
   }
@@ -49,46 +43,39 @@ export async function writeStatsRefreshConfig(env, patch) {
     throw new Error("ADMIN_KV binding not configured");
   }
   const current = await readStatsRefreshConfig(env);
-  const interval = Number(patch.intervalMinutes ?? current.intervalMinutes);
-  const next = {
-    ...current,
-    enabled: typeof patch.enabled === "boolean" ? patch.enabled : current.enabled,
-    intervalMinutes: Number.isFinite(interval)
-      ? Math.min(60, Math.max(1, Math.round(interval)))
-      : current.intervalMinutes,
-    updatedAt: new Date().toISOString(),
-    updatedBy: typeof patch.updatedBy === "string" ? patch.updatedBy : current.updatedBy,
-  };
+  const next = mergeCronJobConfig(current, patch, { defaultInterval: 5, min: 1, max: 60 });
   await env.ADMIN_KV.put(CONFIG_KEY, JSON.stringify(next));
   return next;
+}
+
+/**
+ * @param {Record<string, unknown>} parsed
+ */
+export function normalizeStatsRefreshConfig(parsed) {
+  return {
+    ...DEFAULT_STATS_REFRESH_CONFIG,
+    ...parsed,
+    enabled: parsed.enabled === true,
+    intervalMinutes: clampIntervalMinutes(
+      parsed.intervalMinutes,
+      DEFAULT_STATS_REFRESH_CONFIG.intervalMinutes,
+      { min: 1, max: 60 }
+    ),
+  };
 }
 
 /**
  * @param {typeof DEFAULT_STATS_REFRESH_CONFIG} config
  */
 export function sanitizeStatsRefreshConfigForClient(config) {
-  return {
-    enabled: config.enabled,
-    intervalMinutes: config.intervalMinutes,
-    lastRunAt: config.lastRunAt,
-    lastRunOk: config.lastRunOk,
-    lastError: config.lastError,
-    lastDurationMs: config.lastDurationMs,
-    lastTriggeredBy: config.lastTriggeredBy,
-    updatedAt: config.updatedAt,
-    updatedBy: config.updatedBy,
-  };
+  return sanitizeCronRunMetaForClient(config);
 }
 
 /**
  * @param {typeof DEFAULT_STATS_REFRESH_CONFIG} config
  */
 export function isStatsRefreshDue(config, now = Date.now()) {
-  if (!config.enabled) return false;
-  if (!config.lastRunAt) return true;
-  const last = Date.parse(config.lastRunAt);
-  if (Number.isNaN(last)) return true;
-  return now - last >= config.intervalMinutes * 60 * 1000;
+  return isCronJobDue(config, now);
 }
 
 /**

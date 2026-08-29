@@ -70,7 +70,7 @@
         "priceCurrency": "USD"
       },
       "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
-      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.56",
+      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest",
       "publisher": {
         "@type": "Organization",
         "name": "Lorapok Labs",
@@ -340,6 +340,7 @@
       <button type="button" class="architecture-tab active" data-arch-tab="dataFlow" role="tab" aria-selected="true">Data flow</button>
       <button type="button" class="architecture-tab" data-arch-tab="deployPipeline" role="tab" aria-selected="false">Production Deployment</button>
       <button type="button" class="architecture-tab" data-arch-tab="edgeCases" role="tab" aria-selected="false">Edge cases</button>
+      <button type="button" class="architecture-tab" data-arch-tab="scheduledOps" role="tab" aria-selected="false">Schedules &amp; Discord</button>
     </div>
     <div class="architecture-panels">
       <article class="architecture-panel active" data-arch-panel="dataFlow" role="tabpanel">
@@ -353,6 +354,10 @@
       <article class="architecture-panel" data-arch-panel="edgeCases" role="tabpanel" hidden>
         <p class="architecture-panel-copy">Auth boundaries, dual Open VSX namespace drift, live-tag guards, and runtime limits that keep releases safe.</p>
         <div class="architecture-diagram-mount" data-arch-diagram="edgeCases" aria-label="Edge cases architecture diagram"></div>
+      </article>
+      <article class="architecture-panel" data-arch-panel="scheduledOps" role="tabpanel" hidden>
+        <p class="architecture-panel-copy">Weekly GitHub Actions jobs, Cloudflare minute cron with Settings-controlled live stats refresh, KV cache, and Discord deployment/feedback webhooks.</p>
+        <div class="architecture-diagram-mount" data-arch-diagram="scheduledOps" aria-label="Schedules and Discord architecture diagram"></div>
       </article>
     </div>
     <p class="architecture-foot muted">Canonical source: <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#architecture">README architecture</a> · <a href="https://cursor-dev.lorapok.tech/architecture" target="_blank" rel="noopener">Mission Control</a></p>

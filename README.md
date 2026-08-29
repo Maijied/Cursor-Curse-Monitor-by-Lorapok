@@ -56,7 +56,7 @@ More Lorapok Labs software: [lorapok.tech](https://lorapok.tech)
 
 ## Architecture
 
-End-to-end topology for the IDE extension, browser add-ons, Mission Control, and **Production Deployment** workflow. Interactive animated diagrams also live on the [marketing site](https://cursor.lorapok.tech/#architecture) and [Mission Control → Architecture](https://cursor-dev.lorapok.tech/architecture).
+End-to-end topology for the IDE extension, browser add-ons, Mission Control, and **Production Deployment** workflow. Interactive animated diagrams also live on the [marketing site](https://cursor.lorapok.tech/#architecture) and [Mission Control → Architecture](https://cursor-dev.lorapok.tech/architecture) — including **Schedules & Discord**.
 
 ```mermaid
 flowchart LR
@@ -87,6 +87,62 @@ flowchart LR
 | **Mission Control** | Deploy, rollback, notices, mailbox, team access |
 | **Production Deployment** | `ci-cd.yml` — CI, tag prep, marketplaces, Pages deploy |
 | **Marketing site** | Static GitHub Pages + generated `site-data.json` |
+
+### Schedules & Discord
+
+Cron layers and notification paths (interval for live stats refresh is configurable in **Settings**).
+
+```mermaid
+flowchart TB
+  subgraph settings["Mission Control Settings"]
+    StatsCfg["Live stats refresh · enabled + intervalMinutes"]
+    DiscordCfg["Discord webhooks · deployment + feedback"]
+  end
+
+  subgraph gh["GitHub Actions — fixed schedule"]
+    SEO["seo-pipeline · Mon 06:00 UTC"]
+    DepSec["dependency-security · Mon 07:30 UTC"]
+    SEO --> Artifacts["site-data.json · SEO · badges · sitemap"]
+  end
+
+  subgraph cf["Cloudflare"]
+    Worker["ccm-stats-cron worker · every minute"]
+    CronAPI["POST /api/cron/stats-refresh"]
+    KV[("ADMIN_KV")]
+    Pages["Pages Functions /api/*"]
+  end
+
+  subgraph stats["Live download stats"]
+    Refresh["runStatsRefresh"]
+    Cache["stats:live-cache"]
+    Public["GET /api/site-data · badge.json"]
+  end
+
+  subgraph discord["Discord notifications"]
+    DeployEvt["Deploy started / completed watch"]
+    CINotify["CI discord-deployment-notify.mjs"]
+    Feedback["Feedback webhook test"]
+    Webhook[("deploymentWebhookUrl")]
+    FeedbackHook[("feedbackWebhookUrl")]
+  end
+
+  StatsCfg -.->|interval gate| CronAPI
+  DiscordCfg --> Webhook
+  DiscordCfg --> FeedbackHook
+  Worker -->|X-Cron-Secret| CronAPI
+  CronAPI -->|when due| Refresh
+  Refresh --> KV
+  Refresh --> Cache
+  Cache --> Public
+  Pages --> KV
+
+  DeployEvt --> Webhook
+  CINotify --> Webhook
+  Feedback --> FeedbackHook
+
+  MC["Operator"] --> settings
+  MC -->|manual refresh| Refresh
+```
 
 Deep dive: [docs/wiki/Architecture.md](docs/wiki/Architecture.md)
 
