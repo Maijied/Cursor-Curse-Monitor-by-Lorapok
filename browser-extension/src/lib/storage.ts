@@ -77,7 +77,18 @@ function withDerivedAuth(settings: ExtensionSettings): ExtensionSettings {
   };
 }
 
-export async function getSettings(): Promise<ExtensionSettings> {
+let settingsWriteChain: Promise<void> = Promise.resolve();
+
+function withSerializedSettingsWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const run = settingsWriteChain.then(operation, operation);
+  settingsWriteChain = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+}
+
+async function readSettingsFromStorage(): Promise<ExtensionSettings> {
   const key = storageKey(SETTINGS_KEY);
   const data = await browser.storage.local.get(key);
   const raw = (data[key] as Partial<ExtensionSettings> | undefined) ?? {};
@@ -86,59 +97,87 @@ export async function getSettings(): Promise<ExtensionSettings> {
     raw.accessToken,
     raw.email
   );
-  const next = withDerivedAuth({
-    ...DEFAULTS,
-    ...raw,
-    accounts: migrated.accounts,
-    activeAccountId: raw.activeAccountId ?? migrated.activeAccountId,
-  });
+  return {
+    settings: withDerivedAuth({
+      ...DEFAULTS,
+      ...raw,
+      accounts: migrated.accounts,
+      activeAccountId: raw.activeAccountId ?? migrated.activeAccountId,
+    }),
+    migrated,
+    key,
+  };
+}
+
+async function persistSettings(settings: ExtensionSettings): Promise<void> {
+  await browser.storage.local.set({ [storageKey(SETTINGS_KEY)]: settings });
+}
+
+export async function getSettings(): Promise<ExtensionSettings> {
+  const { settings, migrated, key } = await readSettingsFromStorage();
   if (migrated.migrated) {
-    await browser.storage.local.set({ [key]: next });
+    await withSerializedSettingsWrite(async () => {
+      await browser.storage.local.set({ [key]: settings });
+    });
   }
-  return next;
+  return settings;
 }
 
 export async function updateSettings(
   patch: Partial<ExtensionSettings>
 ): Promise<ExtensionSettings> {
-  const current = await getSettings();
-  const next = withDerivedAuth({ ...current, ...patch });
-  await browser.storage.local.set({ [storageKey(SETTINGS_KEY)]: next });
-  return next;
+  return withSerializedSettingsWrite(async () => {
+    const { settings: current } = await readSettingsFromStorage();
+    const next = withDerivedAuth({ ...current, ...patch });
+    await persistSettings(next);
+    return next;
+  });
 }
 
 export async function saveToken(token: string, email?: string | null): Promise<void> {
-  const current = await getSettings();
-  const result = upsertSavedAccount(current.accounts, token, email);
-  const added = result.accounts.find((account) => account.id === result.id);
-  await updateSettings({
-    accounts: result.accounts,
-    activeAccountId: result.id,
-    accessToken: added?.token ?? token,
-    email: added?.email ?? email ?? null,
+  await withSerializedSettingsWrite(async () => {
+    const { settings: current } = await readSettingsFromStorage();
+    const result = upsertSavedAccount(current.accounts, token, email);
+    const added = result.accounts.find((account) => account.id === result.id);
+    const next = withDerivedAuth({
+      ...current,
+      accounts: result.accounts,
+      activeAccountId: result.id,
+      accessToken: added?.token ?? token,
+      email: added?.email ?? email ?? null,
+    });
+    await persistSettings(next);
   });
 }
 
 export async function setActiveAccount(id: string): Promise<void> {
-  const current = await getSettings();
-  const active = resolveSavedAuth(current.accounts, id);
-  await updateSettings({
-    activeAccountId: active?.id ?? null,
-    accessToken: active?.token ?? null,
-    email: active?.email ?? null,
+  await withSerializedSettingsWrite(async () => {
+    const { settings: current } = await readSettingsFromStorage();
+    const active = resolveSavedAuth(current.accounts, id);
+    const next = withDerivedAuth({
+      ...current,
+      activeAccountId: active?.id ?? null,
+      accessToken: active?.token ?? null,
+      email: active?.email ?? null,
+    });
+    await persistSettings(next);
   });
 }
 
 export async function removeAccount(id: string): Promise<void> {
-  const current = await getSettings();
-  const accounts = current.accounts.filter((account) => account.id !== id);
-  const keepId = current.activeAccountId === id ? null : current.activeAccountId;
-  const active = resolveSavedAuth(accounts, keepId);
-  await updateSettings({
-    accounts,
-    activeAccountId: active?.id ?? null,
-    accessToken: active?.token ?? null,
-    email: active?.email ?? null,
+  await withSerializedSettingsWrite(async () => {
+    const { settings: current } = await readSettingsFromStorage();
+    const accounts = current.accounts.filter((account) => account.id !== id);
+    const keepId = current.activeAccountId === id ? null : current.activeAccountId;
+    const active = resolveSavedAuth(accounts, keepId);
+    const next = withDerivedAuth({
+      ...current,
+      accounts,
+      activeAccountId: active?.id ?? null,
+      accessToken: active?.token ?? null,
+      email: active?.email ?? null,
+    });
+    await persistSettings(next);
   });
 }
 

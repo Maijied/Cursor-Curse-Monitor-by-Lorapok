@@ -518,6 +518,7 @@ test("usage monitor: start, schedule configuration listener, and dispose lifecyc
 
 test("usage monitor: saved account can refresh when Cursor DB is missing", async () => {
   const originalFetch = global.fetch;
+  const originalDbPath = process.env.CURSOR_DB_PATH;
   const dbPath = path.join(__dirname, `mock-monitor-missing-${Date.now()}.vscdb`);
   process.env.CURSOR_DB_PATH = dbPath;
   vscode._reset();
@@ -549,5 +550,10 @@ test("usage monitor: saved account can refresh when Cursor DB is missing", async
   } finally {
     global.fetch = originalFetch;
     service.dispose();
+    if (originalDbPath === undefined) {
+      delete process.env.CURSOR_DB_PATH;
+    } else {
+      process.env.CURSOR_DB_PATH = originalDbPath;
+    }
   }
 });
