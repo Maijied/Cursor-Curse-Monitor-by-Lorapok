@@ -155,8 +155,11 @@ function setSubscribeButtonLoading(button, loading) {
     return;
   }
   if (!button) return;
+  const loader = button.querySelector(".btn-larvae-loader, .subscribe-btn-loader");
   button.disabled = loading;
   button.classList.toggle("is-loading", loading);
+  button.setAttribute("aria-busy", loading ? "true" : "false");
+  if (loader) loader.hidden = !loading;
 }
 
 function showSubscribeFeedback(el, { tone, title, message }) {
