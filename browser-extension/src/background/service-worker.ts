@@ -1,8 +1,10 @@
 import browser from "webextension-polyfill";
 import { MESSAGE_TYPES } from "../lib/messaging";
+import { captureAuthFromCursorCookies } from "../lib/authCapture";
 import { refreshSnapshot } from "../lib/monitor";
 import { maybeShowProductNotice } from "../lib/productNotices";
-import { getOrCreateInstallId, getSnapshot, getSettings, updateSettings } from "../lib/storage";
+import { getOrCreateInstallId, getSettings, getSnapshot, saveToken, updateSettings } from "../lib/storage";
+import { emailFromCursorToken } from "@lorapok/cursor-monitor-shared";
 
 declare const __EXTENSION_VERSION__: string;
 
@@ -49,11 +51,15 @@ function updateBadge(snapshot: Awaited<ReturnType<typeof refreshSnapshot>>) {
 }
 
 async function runRefresh(): Promise<void> {
+  const settings = await getSettings();
+  if (!settings.accessToken) {
+    await captureAuthFromCursorCookies();
+  }
   const snapshot = await refreshSnapshot();
   updateBadge(snapshot);
   await maybeNotify(snapshot);
-  const settings = await getSettings();
-  await maybeShowProductNotice(settings.productNotices);
+  const refreshedSettings = await getSettings();
+  await maybeShowProductNotice(refreshedSettings.productNotices);
   void browser.runtime.sendMessage({
     type: MESSAGE_TYPES.SNAPSHOT,
     payload: snapshot,
@@ -74,10 +80,13 @@ browser.runtime.onMessage.addListener((message) => {
 browser.runtime.onMessage.addListener((message, _sender) => {
   const msg = message as { type: string; token?: string; email?: string };
   if (msg.type === "tokenCaptured" && msg.token) {
-    return updateSettings({
-      accessToken: msg.token,
-      email: msg.email ?? null,
-    }).then(() => runRefresh());
+    const email = msg.email ?? emailFromCursorToken(msg.token);
+    return saveToken(msg.token, email).then(() => runRefresh());
+  }
+  if (msg.type === "probeAuth") {
+    return captureAuthFromCursorCookies().then((captured) =>
+      captured ? runRefresh().then(() => true) : false
+    );
   }
   return undefined;
 });
@@ -106,16 +115,25 @@ browser.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-// Content script bridge: listen for token from injected script
-browser.tabs.onUpdated.addListener(() => {
-  /* tokens arrive via content script messages */
+browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+  if (changeInfo.status !== "complete" || !tab.url) {
+    return;
+  }
+  if (!/https:\/\/([a-z0-9-]+\.)*cursor\.com/i.test(tab.url)) {
+    return;
+  }
+  void captureAuthFromCursorCookies().then((captured) => {
+    if (captured) {
+      void runRefresh();
+    }
+  });
 });
 
 void scheduleAlarm();
 void scheduleHeartbeatAlarm();
 void runRefresh();
 
-  const HEARTBEAT_MINUTES = 4;
+const HEARTBEAT_MINUTES = 4;
 
 async function sendUsageHeartbeat(): Promise<void> {
   const settings = await getSettings();

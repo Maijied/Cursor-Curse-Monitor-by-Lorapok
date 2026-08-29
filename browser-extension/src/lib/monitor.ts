@@ -6,6 +6,8 @@ import {
   fetchStripeProfile,
   fetchUsageSummary,
   isLimitExceeded,
+  resolveSavedAuth,
+  toPublicAccount,
   UsageHistoryPoint,
 } from "@lorapok/cursor-monitor-shared";
 import {
@@ -17,9 +19,10 @@ import {
 
 export async function refreshSnapshot(): Promise<DashboardSnapshot> {
   const settings = await getSettings();
+  const active = resolveSavedAuth(settings.accounts, settings.activeAccountId);
   const snapshot: DashboardSnapshot = {
     fetchedAt: new Date().toISOString(),
-    email: settings.email,
+    email: active?.email ?? settings.email,
     usage: null,
     profile: null,
     fallbackApplied: false,
@@ -29,18 +32,20 @@ export async function refreshSnapshot(): Promise<DashboardSnapshot> {
     budget: null,
     features: [],
     history: await getHistory(),
+    accounts: settings.accounts.map(toPublicAccount),
+    activeAccountId: active?.id,
   };
 
-  if (!settings.accessToken) {
+  if (!active?.token) {
     snapshot.error =
-      "Not connected. Open cursor.com/dashboard while signed in, or paste your token in Options.";
+      "Not connected. Open cursor.com/dashboard while signed in, or add another Cursor account in Options.";
     await saveSnapshot(snapshot);
     return snapshot;
   }
 
   try {
-    snapshot.usage = await fetchUsageSummary(settings.accessToken);
-    snapshot.profile = await fetchStripeProfile(settings.accessToken);
+    snapshot.usage = await fetchUsageSummary(active.token);
+    snapshot.profile = await fetchStripeProfile(active.token);
     snapshot.onDemandSpendUsd =
       (snapshot.usage.individualUsage.onDemand.used ?? 0) / 100;
     snapshot.limitExceeded = isLimitExceeded(snapshot.usage);

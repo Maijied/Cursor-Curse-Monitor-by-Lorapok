@@ -8,6 +8,9 @@ import {
   detectEditorHost,
   getConversationSearchDbPath,
   getCursorGlobalStoragePath,
+  getWorkspaceStorageDir,
+  isEditorProcessRunning,
+  resolveAgentProjectsRoot,
   validateDatabaseIntegrity,
 } from "./cursorAuth";
 
@@ -105,8 +108,8 @@ function workspaceUri(workspacePath: string) {
   };
 }
 
-function readWorkspaceCatalog(): WorkspaceMeta[] {
-  const root = path.join(os.homedir(), ".config", "Cursor", "User", "workspaceStorage");
+function readWorkspaceCatalog(host: ReturnType<typeof detectEditorHost>, appName: string): WorkspaceMeta[] {
+  const root = getWorkspaceStorageDir(host, appName);
   const catalog: WorkspaceMeta[] = [];
   if (!fs.existsSync(root)) return catalog;
 
@@ -151,8 +154,13 @@ function resolveFingerprint(searchDbPath: string): string {
   }
 }
 
-function resolveWorkspaceForPath(workspacePath: string, searchDbPath: string): WorkspaceMeta | null {
-  const catalog = readWorkspaceCatalog();
+function resolveWorkspaceForPath(
+  workspacePath: string,
+  searchDbPath: string,
+  host: ReturnType<typeof detectEditorHost>,
+  appName: string
+): WorkspaceMeta | null {
+  const catalog = readWorkspaceCatalog(host, appName);
   const exact = catalog.find((item) => item.workspacePath === workspacePath);
   if (exact) {
     exact.fingerprint = resolveFingerprint(searchDbPath) || exact.fingerprint;
@@ -161,10 +169,14 @@ function resolveWorkspaceForPath(workspacePath: string, searchDbPath: string): W
   return null;
 }
 
-function currentWorkspaceMeta(searchDbPath: string): WorkspaceMeta | null {
+function currentWorkspaceMeta(
+  searchDbPath: string,
+  host: ReturnType<typeof detectEditorHost>,
+  appName: string
+): WorkspaceMeta | null {
   const folder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!folder) return null;
-  const resolved = resolveWorkspaceForPath(folder, searchDbPath);
+  const resolved = resolveWorkspaceForPath(folder, searchDbPath, host, appName);
   if (resolved) return resolved;
   return {
     workspaceId: crypto.createHash("sha256").update(folder).digest("hex").slice(0, 32),
@@ -173,7 +185,11 @@ function currentWorkspaceMeta(searchDbPath: string): WorkspaceMeta | null {
   };
 }
 
-function inferWorkspacePath(projectDir: string): string | null {
+function inferWorkspacePath(
+  projectDir: string,
+  host: ReturnType<typeof detectEditorHost>,
+  appName: string
+): string | null {
   const slug = path.basename(projectDir);
   if (slug.startsWith("home-")) {
     const parts = slug.split("-");
@@ -181,15 +197,18 @@ function inferWorkspacePath(projectDir: string): string | null {
       return path.join(os.homedir(), ...parts.slice(1));
     }
   }
-  const catalog = readWorkspaceCatalog();
+  const catalog = readWorkspaceCatalog(host, appName);
   const match = catalog.find((item) => projectDir.includes(path.basename(item.workspacePath)));
   return match?.workspacePath ?? null;
 }
 
-function discoverTranscripts(searchDbPath: string): ParsedTranscript[] {
-  const projectsRoot =
-    process.env.CCM_REINDEX_PROJECTS_ROOT ?? path.join(os.homedir(), ".cursor", "projects");
-  const fallbackWorkspace = currentWorkspaceMeta(searchDbPath);
+function discoverTranscripts(
+  searchDbPath: string,
+  host: ReturnType<typeof detectEditorHost>,
+  appName: string
+): ParsedTranscript[] {
+  const projectsRoot = resolveAgentProjectsRoot(host, appName);
+  const fallbackWorkspace = currentWorkspaceMeta(searchDbPath, host, appName);
   const results: ParsedTranscript[] = [];
 
   if (!fs.existsSync(projectsRoot)) return results;
@@ -198,9 +217,9 @@ function discoverTranscripts(searchDbPath: string): ParsedTranscript[] {
     const transcriptsRoot = path.join(projectsRoot, projectEntry, "agent-transcripts");
     if (!fs.existsSync(transcriptsRoot)) continue;
 
-    const workspacePath = inferWorkspacePath(path.join(projectsRoot, projectEntry));
+    const workspacePath = inferWorkspacePath(path.join(projectsRoot, projectEntry), host, appName);
     const workspace =
-      (workspacePath ? resolveWorkspaceForPath(workspacePath, searchDbPath) : null) ??
+      (workspacePath ? resolveWorkspaceForPath(workspacePath, searchDbPath, host, appName) : null) ??
       fallbackWorkspace;
     if (!workspace) continue;
 
@@ -579,8 +598,22 @@ export async function reindexMissingConversations(
   extensionUri: vscode.Uri
 ): Promise<ReindexResult> {
   const host = detectEditorHost(vscode.env.appName);
-  const stateDbPath = getCursorGlobalStoragePath(host, vscode.env.appName);
-  const searchDbPath = getConversationSearchDbPath(host, vscode.env.appName);
+  const appName = vscode.env.appName;
+
+  if (isEditorProcessRunning(host, appName)) {
+    return {
+      success: false,
+      error:
+        "Editor is still running. Quit Cursor/VS Code completely before reindexing — live database writes are disabled to protect your data.",
+      searchIndexed: [],
+      sidebarRestored: [],
+      skipped: [],
+      backups: [],
+    };
+  }
+
+  const stateDbPath = getCursorGlobalStoragePath(host, appName);
+  const searchDbPath = getConversationSearchDbPath(host, appName);
   const templatePath = path.join(extensionUri.fsPath, "media", "composer-template.json");
 
   if (!fs.existsSync(templatePath)) {
@@ -624,7 +657,7 @@ export async function reindexMissingConversations(
   ].filter((item): item is string => Boolean(item));
 
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as Record<string, unknown>;
-  const transcripts = discoverTranscripts(searchDbPath);
+  const transcripts = discoverTranscripts(searchDbPath, host, appName);
   const searchIndexed: string[] = [];
   const sidebarRestored: string[] = [];
   const skipped: string[] = [];

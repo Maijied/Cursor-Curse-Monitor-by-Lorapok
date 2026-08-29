@@ -4,6 +4,8 @@ import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import StatsRefreshCard from "../ui/StatsRefreshCard";
+import HelpSupportCard from "../ui/HelpSupportCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatDownloadCount, getVerifiedDownloadTotal } from "../../lib/download-stats";
@@ -36,9 +38,13 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-fade-slide-up max-w-3xl">
-      <PageHeader title="Settings" description="Discord deployment hook, theme, connected services, and API health." />
+      <PageHeader title="Settings" description="Discord deployment hook, help & feedback, theme, connected services, and API health." />
+
+      <HelpSupportCard />
 
       <DiscordIntegrationsCard />
+
+      <StatsRefreshCard />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>

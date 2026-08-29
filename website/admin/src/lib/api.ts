@@ -148,6 +148,69 @@ export async function putCommunityConfigApi(payload: Partial<CommunityConfig>) {
   return data as { ok: boolean; config: CommunityConfig };
 }
 
+export type StatsRefreshConfig = {
+  enabled: boolean;
+  intervalMinutes: number;
+  lastRunAt: string | null;
+  lastRunOk: boolean | null;
+  lastError: string | null;
+  lastDurationMs: number | null;
+  lastTriggeredBy: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export type StatsRefreshCacheSummary = {
+  refreshedAt: string;
+  displayTotal: number | null;
+  verified: boolean;
+  syncStatus: string | null;
+} | null;
+
+export async function fetchStatsRefreshConfigApi() {
+  return apiGet<{
+    ok: boolean;
+    config: StatsRefreshConfig;
+    cache: StatsRefreshCacheSummary;
+  }>("/integrations/stats-refresh/config");
+}
+
+export async function putStatsRefreshConfigApi(payload: {
+  enabled?: boolean;
+  intervalMinutes?: number;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/stats-refresh/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save stats refresh settings");
+  return data as { ok: boolean; config: StatsRefreshConfig };
+}
+
+export async function refreshStatsNowApi() {
+  const res = await fetch(`${API_BASE}/stats/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Stats refresh failed");
+  return data as {
+    ok: boolean;
+    durationMs?: number;
+    refreshedAt?: string;
+    displayTotal?: number | null;
+    syncStatus?: string | null;
+  };
+}
+
 export type DiscordConfig = {
   configured: boolean;
   webhookPreview: string | null;

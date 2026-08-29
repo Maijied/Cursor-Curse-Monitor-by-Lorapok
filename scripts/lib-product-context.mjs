@@ -9,10 +9,14 @@ export function buildProductContext(pkg = {}) {
     pkg.repository?.url?.match(/github\.com\/([^/]+\/[^/.]+)/)?.[1] ?? DEFAULT_REPO;
   const homepage = (pkg.homepage ?? "https://cursor.lorapok.tech/").replace(/\/$/, "");
 
+  const site = homepage.replace(/\/$/, "");
+
   return {
     version,
     displayName: pkg.displayName ?? "Cursor Curse Monitor by Lorapok",
     homepage,
+    mainLogoUrl: `${site}/assets/icon.png`,
+    discordAvatarUrl: `${site}/assets/icon.png`,
     adminUrl: pkg.company?.adminUrl ?? "https://cursor-dev.lorapok.tech",
     supportEmail: pkg.company?.supportEmail ?? "cursor.curse.help@lorapok.tech",
     productEmail: pkg.company?.productEmail ?? "cursor.monitor@lorapok.tech",

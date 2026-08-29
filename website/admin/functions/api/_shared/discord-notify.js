@@ -1,6 +1,11 @@
 import { logSystemEvent } from "./system-log.js";
 import { readDiscordConfig } from "./discord-config.js";
 import { buildDeployEnrichment, truncateDiscordText } from "./discord-deploy-context.js";
+import {
+  buildDiscordFeedbackEmbed,
+  getChannelFooters,
+  getMessageBranding,
+} from "./message-cards-runtime.js";
 
 const COLORS = {
   started: 0x5865f2,
@@ -86,7 +91,12 @@ function resolveStatus(payload) {
 export function buildDeploymentEmbed(payload, enrichment) {
   const status = resolveStatus(payload);
   const actionLabel = formatActionType(payload.actionType);
-  const brand = enrichment?.brand;
+  const catalogBrand = getMessageBranding();
+  const brand = enrichment?.brand ?? {};
+  const avatarUrl =
+    brand.icon ?? catalogBrand.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png";
+  const authorName = catalogBrand.discordAuthorName ?? "Lorapok Mission Control";
+  const footerText = catalogBrand.discordFooterText ?? "cursor.lorapok.tech · Mission Control";
 
   /** @type {Array<{ name: string; value: string; inline?: boolean }>} */
   const fields = [{ name: "Action", value: actionLabel, inline: true }];
@@ -111,12 +121,16 @@ export function buildDeploymentEmbed(payload, enrichment) {
 
   const descriptionParts = [status.brandLine];
   if (payload.summary) descriptionParts.push(String(payload.summary));
+  if (status.color === COLORS.success) {
+    const hint = getChannelFooters().discord?.deploySuccessHint;
+    if (hint) descriptionParts.push(hint);
+  }
 
   /** @type {Record<string, unknown>} */
   const embed = {
     author: {
-      name: "Lorapok Mission Control",
-      icon_url: brand?.icon ?? "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
+      name: authorName,
+      icon_url: avatarUrl,
     },
     title: status.title,
     color: status.color,
@@ -124,13 +138,13 @@ export function buildDeploymentEmbed(payload, enrichment) {
     fields,
     timestamp: new Date().toISOString(),
     footer: {
-      text: "cursor.lorapok.tech · Mission Control",
-      icon_url: brand?.icon ?? "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
+      text: footerText,
+      icon_url: avatarUrl,
     },
   };
 
   if (payload.runUrl) embed.url = String(payload.runUrl);
-  if (brand?.icon) embed.thumbnail = { url: brand.icon };
+  embed.thumbnail = { url: avatarUrl };
   if (status.color === COLORS.success && brand?.banner) {
     embed.image = { url: brand.banner };
   }
@@ -190,6 +204,11 @@ export function buildSupplementalEmbeds(payload, enrichment) {
     });
   }
 
+  const footers = getChannelFooters();
+  if (footers.discord?.feedbackBlock) {
+    embeds.push(buildDiscordFeedbackEmbed());
+  }
+
   return embeds.slice(0, 9);
 }
 
@@ -215,12 +234,13 @@ export function buildDeploymentEmbeds(payload, enrichment) {
  */
 export async function sendDiscordWebhook(webhookUrl, payload, enrichment) {
   const embeds = buildDeploymentEmbeds(payload, enrichment);
+  const branding = getMessageBranding();
   const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       username: "Mission Control",
-      avatar_url: "https://cursor.lorapok.tech/assets/marketing/icon-128.png",
+      avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
       embeds,
     }),
   });

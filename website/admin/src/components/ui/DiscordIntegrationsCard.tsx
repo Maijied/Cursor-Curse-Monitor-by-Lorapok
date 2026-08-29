@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bell, Save, Send } from "lucide-react";
 import Card from "./Card";
+import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import { auth } from "../../lib/firebase";
@@ -103,7 +104,10 @@ export default function DiscordIntegrationsCard() {
       {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
 
       {loading ? (
-        <p className="text-sm text-[var(--color-muted)]">Loading…</p>
+        <div className="flex items-center gap-3 py-6 justify-center text-sm text-[var(--color-muted)]">
+          <LorapokLarvaeLoader size="sm" ariaLabel="Loading Discord configuration" className="!flex-row !gap-3" />
+          <span>Loading Discord hook…</span>
+        </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-4">
           <div>

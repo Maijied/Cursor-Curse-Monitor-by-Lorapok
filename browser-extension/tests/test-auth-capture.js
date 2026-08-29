@@ -13,6 +13,7 @@ const path = join(
 const src = readFileSync(path, "utf8");
 
 assert(src.includes("api2.cursor.sh"), "auth capture must target Cursor API");
+assert(src.includes("WorkosCursorSessionToken"), "must read dashboard session cookie");
 assert(src.includes("tokenCaptured"), "must message background on token");
 assert(src.includes("postMessage"), "must use page postMessage bridge");
 

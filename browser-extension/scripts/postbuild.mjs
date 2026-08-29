@@ -34,7 +34,7 @@ function rewriteHtmlPaths(html) {
 mkdirSync(join(dist, "icons"), { recursive: true });
 mkdirSync(join(dist, "background"), { recursive: true });
 const iconsDir = join(root, "icons");
-const iconSrc = join(root, "..", "media", "icon.png");
+const iconSrc = join(root, "..", "media", "extension-icon.png");
 for (const size of [16, 32, 48, 128]) {
   const named = join(iconsDir, `icon-${size}.png`);
   const dest = join(dist, "icons", `icon-${size}.png`);

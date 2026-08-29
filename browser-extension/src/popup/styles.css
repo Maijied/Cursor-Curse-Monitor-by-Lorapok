@@ -103,6 +103,43 @@ body {
 
 .header-actions { display: flex; gap: 6px; }
 
+.account-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 10px;
+}
+
+.account-switcher label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.account-switcher select {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.account-email {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.overlay-accounts {
+  text-align: left;
+  margin: 12px 0 0;
+}
+
 .icon-btn {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -207,10 +244,61 @@ body {
   text-underline-offset: 2px;
 }
 
+.cap-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 159, 255, 0.35);
+  background: linear-gradient(135deg, rgba(77, 159, 255, 0.12), rgba(124, 92, 255, 0.1));
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.cap-edit-btn:hover,
+.cap-edit-btn.is-open {
+  transform: translateY(-1px);
+  border-color: rgba(124, 92, 255, 0.55);
+  box-shadow: 0 8px 20px rgba(77, 159, 255, 0.15);
+}
+
+.cap-edit-btn .cap-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.budget-edit-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.25s ease;
+}
+
+.budget-edit-panel.open {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+.budget-edit-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .budget-edit {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .budget-edit input {
@@ -274,6 +362,14 @@ body {
 .value { font-weight: 600; font-family: var(--mono); }
 
 .connect-card { text-align: center; }
+
+.connect-hero {
+  margin-bottom: 14px;
+}
+
+.connect-hero h2 {
+  color: var(--text);
+}
 
 .popup-root.cursor-missing > *:not(.cursor-missing-overlay) {
   filter: blur(8px) saturate(0.85);
@@ -658,6 +754,36 @@ body {
 .options-form textarea { min-height: 80px; resize: vertical; }
 
 .options-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+.account-rows {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.account-row.is-active {
+  border-color: rgba(124, 92, 255, 0.45);
+}
+
+.account-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
 
 .sr-only {
   position: absolute;

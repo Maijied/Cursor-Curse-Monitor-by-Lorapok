@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildProductContext } from "./lib-product-context.mjs";
 import { buildMailTemplates } from "./mail-templates.mjs";
+import { buildMessageCatalog } from "./message-cards.mjs";
 import {
   buildBuiltinNotices,
   buildGeneratedCatalogNotice,
@@ -22,6 +23,7 @@ const builtinNotices = buildBuiltinNotices(pkg);
 const generatedDevNotice = buildGeneratedCatalogNotice(ctx);
 const noticeTemplates = buildNoticeTemplates(ctx);
 const mailTemplates = buildMailTemplates(ctx);
+const messageCatalog = buildMessageCatalog(ctx);
 
 const recovery = builtinNotices.find((n) => n.id === "conversation-recovery-v0515") ?? builtinNotices[1];
 const rollback = builtinNotices.find((n) => n.id === "rollback-recovery-notice") ?? builtinNotices[2];
@@ -33,6 +35,7 @@ writeFileSync(
       version: pkg.version,
       displayName: pkg.displayName ?? pkg.name,
       ctx,
+      messageCatalog,
       mailTemplates,
       noticeTemplates,
       builtinNotices,

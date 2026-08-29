@@ -1,8 +1,9 @@
 import browser from "webextension-polyfill";
+import { extensionStorageKey } from "./storage";
 
 const NOTICE_URL = "https://cursor-dev.lorapok.tech/api/notice";
-const DISMISSED_KEY = "dismissedProductNoticeIds";
-const LAST_CHECK_KEY = "productNoticeLastCheckMs";
+const DISMISSED_KEY = extensionStorageKey("dismissedProductNoticeIds");
+const LAST_CHECK_KEY = extensionStorageKey("productNoticeLastCheckMs");
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 type RemoteNotice = {

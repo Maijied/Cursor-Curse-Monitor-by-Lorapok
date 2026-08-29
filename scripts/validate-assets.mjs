@@ -98,14 +98,20 @@ checkSvg("media/logo.svg", {
   mustNotHave: ['fill="#fff"', 'width="128" height="128" fill'],
   label: "animated logo (SVG)",
 });
+checkSvg("media/extension-icon.svg", {
+  viewBox: "0 0 128 128",
+  mustHave: ["<svg"],
+  label: "IDE extension marketplace icon (SVG)",
+});
 checkSvg("media/icon.svg", {
   viewBox: "0 0 128 128",
   mustHave: ["<svg"],
-  label: "transparent icon (SVG)",
+  label: "website/marketing icon (SVG)",
 });
 
-// Marketplace PNG
-checkPng("media/icon.png", { label: "marketplace icon (PNG)" });
+// Marketplace PNGs
+checkPng("media/extension-icon.png", { label: "IDE extension icon (PNG)" });
+checkPng("media/icon.png", { label: "website icon (PNG)" });
 checkPng("media/logo.png", { label: "dashboard logo fallback (PNG)", minSize: 64 });
 
 // package.json references

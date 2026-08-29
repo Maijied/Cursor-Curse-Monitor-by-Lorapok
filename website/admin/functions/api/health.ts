@@ -2,6 +2,10 @@ import { jsonResponse } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { getMailTransportStatus } from "./_shared/mail.js";
 import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
+import {
+  readStatsRefreshConfig,
+  sanitizeStatsRefreshConfigForClient,
+} from "./_shared/stats-refresh-config.js";
 
 /**
  * Reports service health, configuration status, and endpoint URLs.
@@ -22,6 +26,7 @@ export async function onRequestGet(context) {
 
   const mail = getMailTransportStatus(env);
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
+  const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
 
   return jsonResponse({
     ok: checks.github,
@@ -36,6 +41,10 @@ export async function onRequestGet(context) {
     mailResendConfigured: mail.resendConfigured ?? false,
     mailHint: mail.hint,
     discordConfigured: discordConfig.configured,
+    statsRefreshEnabled: statsRefresh.enabled,
+    statsRefreshIntervalMinutes: statsRefresh.intervalMinutes,
+    cronSecretConfigured: Boolean(env.CRON_SECRET),
+    statsRefreshLastRunAt: statsRefresh.lastRunAt,
     adminPublicUrl: env.ADMIN_PUBLIC_URL ?? "https://cursor-dev.lorapok.tech",
     siteDataUrl:
       env.SITE_DATA_URL ??
