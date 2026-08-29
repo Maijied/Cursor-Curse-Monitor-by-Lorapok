@@ -33,7 +33,7 @@ const DEFAULTS: ExtensionSettings = {
   customBudgetLimit: 0,
   warnAtPercent: 80,
   pollIntervalMinutes: 5,
-  anonymousUsageStats: false,
+  anonymousUsageStats: true,
   productNotices: true,
   subscribedEmail: null,
   subscribeSnoozeUntil: null,

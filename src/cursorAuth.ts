@@ -20,20 +20,103 @@ type SqliteDb = InstanceType<SqliteModule["DatabaseSync"]>;
 
 export type EditorHost = "cursor" | "vscode" | "unknown";
 
+let runtimeAppName: string | undefined;
+
+/** Set from vscode.env.appName during extension activation (VSCODE_APP_NAME is often unset). */
+export function setRuntimeAppName(appName: string | undefined): void {
+  runtimeAppName = appName?.trim() || undefined;
+}
+
+function effectiveAppName(appName?: string): string | undefined {
+  const name = appName || runtimeAppName || process.env.VSCODE_APP_NAME;
+  return name?.trim() || undefined;
+}
+
+export interface DiscoveredCursorLogin {
+  productFolder: string;
+  dbPath: string;
+  email: string | null;
+  hasToken: boolean;
+}
+
+const MONITORING_PRODUCT_PRIORITY = [
+  "Cursor",
+  "dCursor",
+  "Antigravity IDE",
+  "Antigravity",
+  "AGY",
+  "Windsurf",
+  "Void",
+  "Trae",
+  "Kiro",
+  "Codex",
+];
+
+function getConfigRoot(): string {
+  const home = os.homedir();
+  if (process.platform === "darwin") {
+    return path.join(home, "Library", "Application Support");
+  }
+  if (process.platform === "win32") {
+    return process.env.APPDATA ?? path.join(home, "AppData", "Roaming");
+  }
+  return path.join(home, ".config");
+}
+
+function productSortScore(product: string): number {
+  const idx = MONITORING_PRODUCT_PRIORITY.indexOf(product);
+  return idx >= 0 ? idx : 100;
+}
+
+function configDbPath(product: string): string {
+  const home = os.homedir();
+  if (process.platform === "darwin") {
+    return path.join(home, "Library", "Application Support", product, "User", "globalStorage", "state.vscdb");
+  }
+  if (process.platform === "win32") {
+    return path.join(
+      process.env.APPDATA ?? path.join(home, "AppData", "Roaming"),
+      product,
+      "User",
+      "globalStorage",
+      "state.vscdb"
+    );
+  }
+  return path.join(home, ".config", product, "User", "globalStorage", "state.vscdb");
+}
+
+function firstExistingProductDb(candidates: string[]): string | null {
+  for (const product of candidates) {
+    if (fs.existsSync(configDbPath(product))) {
+      return product;
+    }
+  }
+  return null;
+}
+
 /** VS Code–compatible product folder under OS app-data roots (Code, Cursor, Windsurf, …). */
 export function resolveProductDataFolder(appName?: string): string | null {
   if (process.env.CCM_PRODUCT_DATA_FOLDER?.trim()) {
     return process.env.CCM_PRODUCT_DATA_FOLDER.trim();
   }
-  const name = (appName || process.env.VSCODE_APP_NAME || "").toLowerCase();
-  if (name.includes("cursor")) return "Cursor";
+  const name = (effectiveAppName(appName) || "").toLowerCase();
+  // Order matters: dCursor before Cursor; Antigravity before generic AGY.
+  if (name.includes("dcursor")) {
+    return firstExistingProductDb(["dCursor", "Cursor"]) ?? "dCursor";
+  }
+  if (name.includes("antigravity")) {
+    return firstExistingProductDb(["Antigravity IDE", "Antigravity", "AGY"]) ?? "Antigravity IDE";
+  }
+  if (name.includes("cursor")) {
+    return "Cursor";
+  }
   if (name.includes("windsurf")) return "Windsurf";
   if (name.includes("vscodium") || name.includes("codium")) return "VSCodium";
   if (name.includes("void")) return "Void";
   if (name.includes("trae")) return "Trae";
   if (name.includes("kiro")) return "Kiro";
   if (name.includes("positron")) return "Positron";
-  if (name.includes("agy") || name.includes("antigravity")) return "AGY";
+  if (name.includes("agy")) return firstExistingProductDb(["AGY", "Antigravity IDE", "Antigravity"]) ?? "AGY";
   if (name.includes("codex")) return "Codex";
   if (name.includes("visual studio code") || name.includes("vscode") || name === "code") {
     return "Code";
@@ -42,12 +125,110 @@ export function resolveProductDataFolder(appName?: string): string | null {
 }
 
 export function detectEditorHost(appName?: string): EditorHost {
-  const name = (appName || process.env.VSCODE_APP_NAME || "").toLowerCase();
-  if (name.includes("cursor")) return "cursor";
+  const name = (effectiveAppName(appName) || "").toLowerCase();
+  if (name.includes("cursor") || name.includes("dcursor") || name.includes("windsurf") || name.includes("antigravity")) {
+    return "cursor";
+  }
   if (name.includes("visual studio code") || name.includes("vscode") || name === "code") {
     return "vscode";
   }
   return "unknown";
+}
+
+function readAuthKeysAtPath(dbPath: string): { token: string | null; email: string | null } {
+  if (!fs.existsSync(dbPath)) {
+    return { token: null, email: null };
+  }
+  const integrity = validateDatabaseIntegrity(dbPath);
+  if (!integrity.valid) {
+    return { token: null, email: null };
+  }
+  try {
+    const { DatabaseSync } = loadSqlite();
+    const db = new DatabaseSync(dbPath, { readOnly: true, timeout: 3000 });
+    try {
+      const tokenRow = db
+        .prepare("SELECT value FROM ItemTable WHERE key = ?")
+        .get("cursorAuth/accessToken") as { value?: unknown } | undefined;
+      const emailRow = db
+        .prepare("SELECT value FROM ItemTable WHERE key = ?")
+        .get("cursorAuth/cachedEmail") as { value?: unknown } | undefined;
+      const token =
+        typeof tokenRow?.value === "string" && tokenRow.value.trim().length > 8
+          ? tokenRow.value.trim()
+          : null;
+      const email = typeof emailRow?.value === "string" ? emailRow.value.trim() || null : null;
+      return { token, email };
+    } finally {
+      db.close();
+    }
+  } catch {
+    return { token: null, email: null };
+  }
+}
+
+/** Scan app-data folders for Cursor installs with a signed-in access token. */
+export function discoverCursorAuthInstalls(): DiscoveredCursorLogin[] {
+  let dirs: string[] = [];
+  try {
+    dirs = fs
+      .readdirSync(getConfigRoot(), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+
+  const results: DiscoveredCursorLogin[] = [];
+  for (const productFolder of dirs) {
+    const dbPath = configDbPath(productFolder);
+    if (!fs.existsSync(dbPath)) {
+      continue;
+    }
+    const auth = readAuthKeysAtPath(dbPath);
+    if (!auth.token) {
+      continue;
+    }
+    results.push({
+      productFolder,
+      dbPath,
+      email: auth.email,
+      hasToken: true,
+    });
+  }
+
+  results.sort((a, b) => {
+    const score = productSortScore(a.productFolder) - productSortScore(b.productFolder);
+    if (score !== 0) {
+      return score;
+    }
+    return a.productFolder.localeCompare(b.productFolder);
+  });
+  return results;
+}
+
+export function readAuthFromProduct(productFolder: string): { token: string | null; email: string | null } {
+  return readAuthKeysAtPath(configDbPath(productFolder));
+}
+
+function pickDefaultProductFolder(appName?: string): string {
+  if (process.env.CCM_PRODUCT_DATA_FOLDER?.trim()) {
+    return process.env.CCM_PRODUCT_DATA_FOLDER.trim();
+  }
+  const fromName = resolveProductDataFolder(appName);
+  if (fromName && fs.existsSync(configDbPath(fromName))) {
+    return fromName;
+  }
+  const discovered = discoverCursorAuthInstalls();
+  const firstDiscovered = discovered[0];
+  if (firstDiscovered) {
+    return firstDiscovered.productFolder;
+  }
+  const host = detectEditorHost(appName);
+  if (host === "vscode") {
+    return "Code";
+  }
+  return firstExistingProductDb(["Cursor", "dCursor", "Antigravity IDE", "AGY", "Code"]) ?? "Cursor";
 }
 
 function appDataRoot(product: string): { darwin: string; win32: string; linux: string } {
@@ -66,13 +247,21 @@ function appDataRoot(product: string): { darwin: string; win32: string; linux: s
 }
 
 function resolveProductForPath(host?: EditorHost, appName?: string): string {
-  if (host === "vscode") return "Code";
-  if (host === "cursor") return "Cursor";
+  if (host === "vscode") {
+    return "Code";
+  }
+  if (host === "cursor") {
+    const folder = resolveProductDataFolder(appName);
+    if (folder) {
+      return folder;
+    }
+    return pickDefaultProductFolder(appName);
+  }
   const folder = resolveProductDataFolder(appName);
-  if (folder) return folder;
-  throw new Error(
-    `Unknown editor app (${appName ?? "unset"}). Set CCM_PRODUCT_DATA_FOLDER to the folder name under ~/.config (e.g. Code, Cursor, AGY).`
-  );
+  if (folder) {
+    return folder;
+  }
+  return pickDefaultProductFolder(appName);
 }
 
 /** Editor User folder (parent of globalStorage and workspaceStorage). */
@@ -154,7 +343,7 @@ export function isEditorProcessRunning(host: EditorHost = detectEditorHost(), ap
   if (process.env.CURSOR_EDITOR_RUNNING === "1") return true;
   if (process.env.CURSOR_EDITOR_RUNNING === "0") return false;
 
-  const product = resolveProductForPath(host, appName);
+  const product = resolveProductForPath(host, effectiveAppName(appName));
   const patterns =
     product === "Code"
       ? ["Code.exe", "code", "Code - OSS", "code-oss"]
@@ -178,9 +367,49 @@ export function isEditorProcessRunning(host: EditorHost = detectEditorHost(), ap
   }
 }
 
+/** Cursor product folder used for auth/usage SQLite (not the host IDE's Code DB). */
+export function getMonitoringProductFolder(): string {
+  if (process.env.CCM_PRODUCT_DATA_FOLDER?.trim()) {
+    return process.env.CCM_PRODUCT_DATA_FOLDER.trim();
+  }
+  const appName = effectiveAppName();
+  const host = detectEditorHost(appName);
+  if (host === "vscode") {
+    const discovered = discoverCursorAuthInstalls();
+    const firstDiscovered = discovered[0];
+    if (firstDiscovered) {
+      return firstDiscovered.productFolder;
+    }
+    return firstExistingProductDb(["Cursor", "dCursor"]) ?? "Cursor";
+  }
+  const fromName = resolveProductDataFolder(appName);
+  if (fromName && fromName !== "Code" && fs.existsSync(configDbPath(fromName))) {
+    return fromName;
+  }
+  const discovered = discoverCursorAuthInstalls();
+  const firstDiscovered = discovered[0];
+  if (firstDiscovered) {
+    return firstDiscovered.productFolder;
+  }
+  return fromName ?? firstExistingProductDb(["Cursor", "dCursor"]) ?? "Cursor";
+}
+
+/** Cursor or VS Code globalStorage state.vscdb used for usage monitoring auth. */
+export function getMonitoringStoragePath(): string {
+  if (process.env.CURSOR_DB_PATH) {
+    return process.env.CURSOR_DB_PATH;
+  }
+  return configDbPath(getMonitoringProductFolder());
+}
+
+export function monitoringDbExists(): boolean {
+  return fs.existsSync(getMonitoringStoragePath());
+}
+
 export function cursorDbExists(host?: EditorHost, appName?: string): boolean {
   return fs.existsSync(getCursorGlobalStoragePath(host, appName));
 }
+
 
 function loadSqlite(): SqliteModule {
   try {
@@ -351,7 +580,7 @@ function runPragmaIntegrityCheck(dbPath: string): { ok: boolean; detail?: string
 }
 
 function openReadOnlyCursorDb(): SqliteDb {
-  const dbPath = getCursorGlobalStoragePath();
+  const dbPath = getMonitoringStoragePath();
 
   if (!fs.existsSync(dbPath)) {
     throw new Error("Cursor storage database not found");
@@ -383,7 +612,7 @@ export function withReadOnlyCursorDb<T>(fn: (db: SqliteDb) => T): T {
 }
 
 function readCursorKeyDirect(key: string): string | null {
-  const dbPath = getCursorGlobalStoragePath();
+  const dbPath = getMonitoringStoragePath();
   if (!fs.existsSync(dbPath)) {
     return null;
   }
@@ -494,8 +723,8 @@ export async function applyComposerFallbackModel(): Promise<{
   error?: string;
   alreadySet?: boolean;
 }> {
-  const host = detectEditorHost(process.env.VSCODE_APP_NAME);
-  if (isEditorProcessRunning(host, process.env.VSCODE_APP_NAME)) {
+  const host = detectEditorHost(effectiveAppName());
+  if (isEditorProcessRunning(host, effectiveAppName())) {
     return {
       success: false,
       error:
@@ -503,7 +732,7 @@ export async function applyComposerFallbackModel(): Promise<{
     };
   }
 
-  const dbPath = getCursorGlobalStoragePath(host, process.env.VSCODE_APP_NAME);
+  const dbPath = getMonitoringStoragePath();
   if (!fs.existsSync(dbPath)) {
     return { success: false, error: "Database file does not exist" };
   }

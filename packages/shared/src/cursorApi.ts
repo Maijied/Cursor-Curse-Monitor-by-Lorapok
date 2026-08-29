@@ -111,6 +111,12 @@ export interface DashboardSnapshot {
   /** Public account list for the switcher. Tokens are never included. */
   accounts?: CursorAccountPublic[];
   activeAccountId?: string;
+  /** Folder name under ~/.config (or OS app-data) used for the primary session DB. */
+  monitoringProduct?: string;
+  /** Cursor-compatible installs on this machine with a signed-in token. */
+  discoveredLoginCount?: number;
+  /** vscode.env.appName from the host editor. */
+  editorAppName?: string;
 }
 
 export interface DailyCodeStats {
@@ -314,16 +320,20 @@ export async function fetchStripeProfile(token: string): Promise<StripeProfile> 
 
 export function isLimitExceeded(usage: UsageSummary): boolean {
   const plan = usage.individualUsage.plan;
-  if (plan.enabled && plan.totalPercentUsed >= 100) {
+  const pool = resolveUsagePlanPool(plan);
+  if (plan.enabled && pool.remaining <= 0 && pool.total > 0) {
     return true;
   }
-  if (plan.enabled && plan.remaining <= 0 && plan.limit > 0) {
+  if (plan.enabled && plan.totalPercentUsed >= 100 && pool.remaining <= 0) {
     return true;
   }
 
   const autoMsg = (usage.autoModelSelectedDisplayMessage ?? "").toLowerCase();
   const apiMsg = (usage.namedModelSelectedDisplayMessage ?? "").toLowerCase();
-  return autoMsg.includes("100%") || apiMsg.includes("100%");
+  if (pool.remaining <= 0) {
+    return autoMsg.includes("100%") || apiMsg.includes("100%");
+  }
+  return false;
 }
 
 export function formatCycleDate(iso: string): string {
@@ -350,6 +360,30 @@ export function formatPercent(n: number, digits = 1): string {
   }
   const rounded = Number(n.toFixed(digits));
   return String(rounded);
+}
+
+/** Normalize included + bonus pools from Cursor usage-summary (API limit is often included-only). */
+export function resolveUsagePlanPool(plan: UsagePlan): {
+  included: number;
+  bonus: number;
+  total: number;
+  used: number;
+  remaining: number;
+  percentUsed: number;
+} {
+  const breakdown = plan.breakdown;
+  const included = breakdown?.included ?? plan.limit;
+  const bonus = breakdown?.bonus ?? 0;
+  const total =
+    breakdown?.total ?? (included + bonus > 0 ? included + bonus : plan.limit);
+  const used = plan.used;
+  const remaining =
+    total > 0 ? Math.max(0, total - used) : Math.max(0, plan.remaining);
+  const percentUsed =
+    total > 0
+      ? Math.min(100, (used / total) * 100)
+      : Math.min(100, plan.totalPercentUsed || 0);
+  return { included, bonus, total, used, remaining, percentUsed };
 }
 
 export const USAGE_HISTORY_MAX = 90;
@@ -381,6 +415,7 @@ export function buildBudgetMetrics(
   limitExceeded: boolean
 ): BudgetMetrics {
   const plan = usage.individualUsage.plan;
+  const pool = resolveUsagePlanPool(plan);
   const onDemand = usage.individualUsage.onDemand;
   const onDemandCapUsd =
     onDemand.limit != null && onDemand.limit > 0 ? onDemand.limit / 100 : null;
@@ -399,17 +434,16 @@ export function buildBudgetMetrics(
     ? Math.min(100, (spentUsd / capUsd) * 100)
     : 0;
 
-  const exhaustedIncluded = plan.remaining <= 0 && plan.limit > 0;
-  const includedPercent = exhaustedIncluded
-    ? Math.max(100, plan.totalPercentUsed || 0)
-    : plan.totalPercentUsed;
+  const exhaustedAll = pool.remaining <= 0 && pool.total > 0;
+  const includedPercent = exhaustedAll
+    ? Math.max(100, plan.totalPercentUsed || pool.percentUsed)
+    : pool.percentUsed;
   const percentUsed = Math.max(
     includedPercent,
     plan.autoPercentUsed || 0,
     plan.apiPercentUsed || 0
   );
 
-  const breakdown = plan.breakdown;
   const thresholdReached =
     percentUsed >= thresholdPercent ||
     (usdBudgetActive && budgetPercentUsed >= thresholdPercent);
@@ -419,9 +453,9 @@ export function buildBudgetMetrics(
   return {
     percentUsed,
     includedPercent,
-    includedUsed: plan.used,
-    includedLimit: plan.limit,
-    includedRemaining: plan.remaining,
+    includedUsed: pool.used,
+    includedLimit: pool.total,
+    includedRemaining: pool.remaining,
     autoPercentUsed: plan.autoPercentUsed,
     apiPercentUsed: plan.apiPercentUsed,
     capUsd,
@@ -440,9 +474,9 @@ export function buildBudgetMetrics(
     onDemandRemainingUsd,
     hasUsdBudget,
     usdBudgetActive,
-    planBreakdownIncluded: breakdown?.included ?? plan.used,
-    planBreakdownBonus: breakdown?.bonus ?? 0,
-    planBreakdownTotal: breakdown?.total ?? plan.limit,
+    planBreakdownIncluded: pool.included,
+    planBreakdownBonus: pool.bonus,
+    planBreakdownTotal: pool.total,
     teamOnDemandEnabled: Boolean(teamOnDemand?.enabled),
     teamOnDemandSpendUsd:
       teamOnDemand && teamOnDemand.used != null ? teamOnDemand.used / 100 : null,

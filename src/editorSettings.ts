@@ -21,13 +21,13 @@ const CONFIG_SECTION = "cursorCurseMonitor";
 export function readEditorSettings(): EditorSettings {
   const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
   return {
-    pollIntervalSeconds: config.get<number>("pollIntervalSeconds", 60),
+    pollIntervalSeconds: config.get<number>("pollIntervalSeconds", 30),
     customBudgetLimit: config.get<number>("customBudgetLimit", 0),
-    autoApplyFallbackModel: config.get<boolean>("autoApplyFallbackModel", false),
+    autoApplyFallbackModel: config.get<boolean>("autoApplyFallbackModel", true),
     showStatusBar: config.get<boolean>("showStatusBar", true),
     statusBarUsageSource: config.get<StatusBarUsageSource>("statusBarUsageSource", "autoApi"),
     warnAtPercent: config.get<number>("warnAtPercent", 80),
-    anonymousUsageStats: config.get<boolean>("anonymousUsageStats", false),
+    anonymousUsageStats: config.get<boolean>("anonymousUsageStats", true),
     productNotices: config.get<boolean>("productNotices", true),
     securityScanEnabled: config.get<boolean>("securityScanEnabled", true),
     scanOnSave: config.get<boolean>("scanOnSave", true),

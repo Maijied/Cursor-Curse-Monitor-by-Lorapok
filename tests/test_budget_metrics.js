@@ -52,6 +52,32 @@ async function run() {
   assert.ok(!autoChip.includes("35.235714"), "raw float must not appear in chips");
   assert.strictEqual(formatPercent(35.23571428571429), "35.2");
 
+  const bonusHeadroom = {
+    billingCycleStart: "2026-08-15T00:00:00.000Z",
+    billingCycleEnd: "2026-09-23T00:00:00.000Z",
+    membershipType: "pro",
+    limitType: "user",
+    isUnlimited: false,
+    individualUsage: {
+      plan: {
+        enabled: true,
+        used: 2000,
+        limit: 2000,
+        remaining: 0,
+        breakdown: { included: 2000, bonus: 12420, total: 14420 },
+        autoPercentUsed: 25.4,
+        apiPercentUsed: 66.7,
+        totalPercentUsed: 13.9,
+      },
+      onDemand: { enabled: false, used: 0, limit: null, remaining: null },
+    },
+  };
+  const bonusMetrics = buildBudgetMetrics(bonusHeadroom, 20, 0, 80, false);
+  assert.strictEqual(bonusMetrics.includedRemaining, 12420, "bonus units count toward remaining");
+  assert.strictEqual(bonusMetrics.includedLimit, 14420, "total pool includes bonus");
+  assert.ok(bonusMetrics.percentUsed < 100, "hero percent must not claim 100% when bonus remains");
+  assert.strictEqual(bonusMetrics.usdBudgetActive, false, "personal cap is inactive without on-demand spend");
+
   const first = { t: 1_000, includedPercent: 10, auto: 10, api: 10, spentUsd: 0 };
   const sameSoon = { t: 1_000 + 60_000, includedPercent: 10.2, auto: 10.1, api: 10, spentUsd: 0 };
   const jumped = { t: 1_000 + 120_000, includedPercent: 40, auto: 12, api: 40, spentUsd: 0 };

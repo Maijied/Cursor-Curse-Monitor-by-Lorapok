@@ -147,14 +147,31 @@ test("cursorApi: isLimitExceeded correctly identifies limit boundaries", () => {
 
   const exceeded1 = JSON.parse(JSON.stringify(baseSummary));
   exceeded1.individualUsage.plan.totalPercentUsed = 100;
+  exceeded1.individualUsage.plan.remaining = 0;
+  exceeded1.individualUsage.plan.used = 500;
   assert.strictEqual(isLimitExceeded(exceeded1), true);
+
+  const bonusStillAvailable = JSON.parse(JSON.stringify(baseSummary));
+  bonusStillAvailable.individualUsage.plan.used = 2000;
+  bonusStillAvailable.individualUsage.plan.limit = 2000;
+  bonusStillAvailable.individualUsage.plan.remaining = 0;
+  bonusStillAvailable.individualUsage.plan.totalPercentUsed = 100;
+  bonusStillAvailable.individualUsage.plan.breakdown = {
+    included: 2000,
+    bonus: 12420,
+    total: 14420,
+  };
+  assert.strictEqual(isLimitExceeded(bonusStillAvailable), false);
 
   const exceeded2 = JSON.parse(JSON.stringify(baseSummary));
   exceeded2.individualUsage.plan.remaining = 0;
+  exceeded2.individualUsage.plan.used = 500;
   assert.strictEqual(isLimitExceeded(exceeded2), true);
 
   const exceeded3 = JSON.parse(JSON.stringify(baseSummary));
   exceeded3.autoModelSelectedDisplayMessage = "Usage is at 100%";
+  exceeded3.individualUsage.plan.remaining = 0;
+  exceeded3.individualUsage.plan.used = 500;
   assert.strictEqual(isLimitExceeded(exceeded3), true);
 });
 
