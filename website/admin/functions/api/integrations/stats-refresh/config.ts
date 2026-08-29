@@ -1,10 +1,10 @@
-import { jsonResponse, verifyAdminRequest } from "../../../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import {
   readStatsRefreshConfig,
   readStatsLiveCache,
   sanitizeStatsRefreshConfigForClient,
   writeStatsRefreshConfig,
-} from "../../../_shared/stats-refresh-config.js";
+} from "../../_shared/stats-refresh-config.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

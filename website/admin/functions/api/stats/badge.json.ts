@@ -1,10 +1,10 @@
-import { jsonResponse } from "../../_shared/auth.js";
-import { fetchSiteDataWithLiveCache } from "../../_shared/stats-refresh.js";
+import { jsonResponse } from "../_shared/auth.js";
+import { fetchSiteDataWithLiveCache } from "../_shared/stats-refresh.js";
 import {
   buildReadmeStatsFromSiteData,
   renderShieldsBadge,
   renderShieldsBadgeUnavailable,
-} from "../../_shared/readme-stats.js";
+} from "../_shared/readme-stats.js";
 
 const CORS_HEADERS = {
   "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
