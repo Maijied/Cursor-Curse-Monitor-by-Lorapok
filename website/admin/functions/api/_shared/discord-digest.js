@@ -16,6 +16,10 @@ import {
   DISCORD_DIGEST_CONFIG_KEY,
   readDiscordDigestConfig,
 } from "./discord-digest-config.js";
+import {
+  isStatsLiveCacheFresh,
+  readStatsLiveCache,
+} from "./stats-refresh-config.js";
 import { fetchSiteDataWithLiveCache, runStatsRefresh } from "./stats-refresh.js";
 import { logSystemEvent } from "./system-log.js";
 
@@ -59,10 +63,18 @@ export async function runDiscordDigest(env, options = {}) {
   }
 
   if (config.refreshBeforeSend) {
-    try {
-      await runStatsRefresh(env, { triggeredBy: options.triggeredBy ?? "discord-digest", force: true });
-    } catch (error) {
-      console.warn("Discord digest: stats refresh before send failed", error);
+    const cache = await readStatsLiveCache(env);
+    if (!isStatsLiveCacheFresh(cache)) {
+      const refresh = await runStatsRefresh(env, {
+        triggeredBy: options.triggeredBy ?? "discord-digest",
+        force: true,
+      });
+      if (!refresh.ok && !refresh.skipped) {
+        console.warn(
+          "Discord digest: stats refresh before send failed",
+          refresh.error ?? "unknown error"
+        );
+      }
     }
   }
 

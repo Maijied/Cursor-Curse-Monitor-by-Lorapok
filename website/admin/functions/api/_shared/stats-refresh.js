@@ -7,7 +7,9 @@ import {
   readStatsRefreshConfig,
   STATS_README_SVG_KEY,
   STATS_REFRESH_CACHE_KEY,
+  STATS_REFRESH_CONFIG_KEY,
 } from "./stats-refresh-config.js";
+import { recordCronJobRun } from "./cron-schedule.js";
 import { logSystemEvent } from "./system-log.js";
 import {
   buildReadmeStatsFromSiteData,
@@ -19,7 +21,7 @@ async function fetchGithubReleaseDownloadTotal(env) {
   const headers = env.GITHUB_TOKEN
     ? { Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: "application/vnd.github+json" }
     : { Accept: "application/json" };
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`, {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=30`, {
     headers,
   });
   if (!res.ok) return null;
@@ -95,6 +97,7 @@ export async function runStatsRefresh(env, options = {}) {
     }
   }
 
+  try {
   const base = await fetchSiteData(env);
   const [channels, githubAllAssets, visitors] = await Promise.all([
     fetchLiveChannels(base, { githubToken: env.GITHUB_TOKEN }),
@@ -179,38 +182,24 @@ export async function runStatsRefresh(env, options = {}) {
 
   const mergedSiteData = mergeSiteDataWithLiveCache(base, snapshot);
   const readmeStats = buildReadmeStatsFromSiteData(mergedSiteData);
-  await env.ADMIN_KV.put(STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats));
-  await env.ADMIN_KV.put(
-    "stats:badge:total",
-    JSON.stringify(renderShieldsBadge(readmeStats, "total"))
-  );
-  await env.ADMIN_KV.put(
-    "stats:badge:openvsx",
-    JSON.stringify(renderShieldsBadge(readmeStats, "openvsx"))
-  );
-  await env.ADMIN_KV.put(
-    "stats:badge:openvsx-total",
-    JSON.stringify(renderShieldsBadge(readmeStats, "openvsx-total"))
-  );
-  await env.ADMIN_KV.put(
-    "stats:badge:vscode",
-    JSON.stringify(renderShieldsBadge(readmeStats, "vscode"))
-  );
+  await Promise.all([
+    env.ADMIN_KV.put(STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats)),
+    env.ADMIN_KV.put("stats:badge:total", JSON.stringify(renderShieldsBadge(readmeStats, "total"))),
+    env.ADMIN_KV.put("stats:badge:openvsx", JSON.stringify(renderShieldsBadge(readmeStats, "openvsx"))),
+    env.ADMIN_KV.put(
+      "stats:badge:openvsx-total",
+      JSON.stringify(renderShieldsBadge(readmeStats, "openvsx-total"))
+    ),
+    env.ADMIN_KV.put("stats:badge:vscode", JSON.stringify(renderShieldsBadge(readmeStats, "vscode"))),
+  ]);
 
   const durationMs = Date.now() - started;
-  const latestConfig = await readStatsRefreshConfig(env);
-  await env.ADMIN_KV.put(
-    "integrations:stats-refresh",
-    JSON.stringify({
-      ...latestConfig,
-      lastRunAt: snapshot.refreshedAt,
-      lastRunOk: true,
-      lastError: null,
-      lastDurationMs: durationMs,
-      lastTriggeredBy: options.triggeredBy ?? "manual",
-      updatedAt: snapshot.refreshedAt,
-    })
-  );
+  await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
+    ok: true,
+    durationMs,
+    triggeredBy: options.triggeredBy ?? "manual",
+    at: snapshot.refreshedAt,
+  });
 
   await logSystemEvent(env, {
     source: "stats-refresh",
@@ -225,6 +214,23 @@ export async function runStatsRefresh(env, options = {}) {
   });
 
   return { ok: true, snapshot, durationMs };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Refresh failed";
+    const durationMs = Date.now() - started;
+    await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
+      ok: false,
+      error: message,
+      durationMs,
+      triggeredBy: options.triggeredBy ?? "manual",
+    });
+    await logSystemEvent(env, {
+      source: "stats-refresh",
+      level: "error",
+      message: `Live stats refresh failed: ${message}`,
+      meta: { durationMs, triggeredBy: options.triggeredBy ?? "manual" },
+    });
+    return { ok: false, error: message, durationMs };
+  }
 }
 
 /**

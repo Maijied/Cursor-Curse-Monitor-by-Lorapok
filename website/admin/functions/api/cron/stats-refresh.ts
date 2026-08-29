@@ -23,25 +23,20 @@ export async function onRequestPost(context) {
 
   try {
     const result = await runStatsRefresh(env, { triggeredBy: "cron" });
+    if (result.skipped) {
+      return jsonResponse({ ok: true, skipped: true, reason: result.reason, intervalMinutes: config.intervalMinutes });
+    }
+    if (!result.ok) {
+      return jsonResponse({ ok: false, error: result.error ?? "Refresh failed", durationMs: result.durationMs ?? null }, 502);
+    }
     return jsonResponse({
-      ok: result.ok,
-      skipped: result.skipped ?? false,
-      reason: result.reason,
+      ok: true,
+      skipped: false,
       refreshedAt: result.snapshot?.refreshedAt ?? null,
       durationMs: result.durationMs ?? null,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Refresh failed";
-    const next = {
-      ...config,
-      lastRunAt: new Date().toISOString(),
-      lastRunOk: false,
-      lastError: message,
-      lastTriggeredBy: "cron",
-    };
-    if (env.ADMIN_KV?.put) {
-      await env.ADMIN_KV.put("integrations:stats-refresh", JSON.stringify(next));
-    }
     return jsonResponse({ ok: false, error: message }, 502);
   }
 }

@@ -10,6 +10,8 @@ const CONFIG_KEY = "integrations:stats-refresh";
 const CACHE_KEY = "stats:live-cache";
 const README_SVG_KEY = "stats:readme-svg";
 
+export const STATS_REFRESH_CONFIG_KEY = CONFIG_KEY;
+
 export const STATS_REFRESH_CACHE_KEY = CACHE_KEY;
 export const STATS_README_SVG_KEY = README_SVG_KEY;
 
@@ -90,4 +92,16 @@ export async function readStatsLiveCache(env) {
   } catch {
     return null;
   }
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} cache
+ * @param {number} [maxAgeMs]
+ * @param {number} [now]
+ */
+export function isStatsLiveCacheFresh(cache, maxAgeMs = 5 * 60 * 1000, now = Date.now()) {
+  if (!cache?.refreshedAt) return false;
+  const at = Date.parse(String(cache.refreshedAt));
+  if (Number.isNaN(at)) return false;
+  return now - at < maxAgeMs;
 }

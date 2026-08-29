@@ -21,6 +21,13 @@ export async function onRequestPost(context) {
     if (result.skipped) {
       return jsonResponse({ ok: false, ...result }, 409, CORS_HEADERS);
     }
+    if (!result.ok) {
+      return jsonResponse(
+        { ok: false, error: result.error ?? "Refresh failed", durationMs: result.durationMs ?? null },
+        502,
+        CORS_HEADERS
+      );
+    }
     return jsonResponse(
       {
         ok: true,
