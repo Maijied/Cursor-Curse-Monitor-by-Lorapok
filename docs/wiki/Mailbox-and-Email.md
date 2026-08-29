@@ -20,18 +20,25 @@ gh secret set CLOUDFLARE_EMAIL_API_TOKEN --env admin-production \
 # CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID should already be set for admin-deploy
 ```
 
-3. **CI/CD (automatic on merge to `main`)** — `admin-deploy` job runs:
-   - `enable-mail.mjs` (relay worker + Pages email secret)
-   - `verify-mail-transport.mjs` (fail closed if neither relay nor REST)
-   - `wrangler pages deploy` (activates `MAIL_RELAY` binding)
+3. **One-time inbound routing** (forward `@lorapok.tech` mail to ops inbox):
 
-4. Manual repair only when CI is down or you need an immediate fix:
+```bash
+export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"
+export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"
+node website/admin/scripts/setup-email-addresses.mjs
+```
+
+4. **CI/CD on push to `main`** — `admin-deploy` deploys Pages only when Mission Control paths change. It **skips** `enable-mail.mjs` and stats-cron deploy to avoid slow Cloudflare mail API calls. Full mail repair runs via **workflow_dispatch → deploy-infra** or locally.
+
+5. Manual repair when mail breaks or you need an immediate fix:
 
 ```bash
 node website/admin/scripts/repair-mail.mjs   # same steps as CI, locally
 ```
 
-5. Use **Mailbox → Send branded test email** to verify
+6. Use **Mailbox → Send branded test email** to verify
+
+Full blueprint (inbound + outbound + CI): [Cloudflare Email and Routing](../guides/CLOUDFLARE_EMAIL_AND_ROUTING.md).
 
 ## Message categories
 
@@ -70,9 +77,11 @@ export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"
 ## Scripts
 
 ```bash
-node website/admin/scripts/verify-mail-setup.mjs   # probe email token
-node website/admin/scripts/enable-mail.mjs         # relay worker + Pages secret
-node website/admin/scripts/repair-mail.mjs         # full fix: enable + build + deploy + verify
+node website/admin/scripts/setup-email-addresses.mjs  # inbound routing (one-time)
+node website/admin/scripts/verify-mail-setup.mjs      # probe email token
+node website/admin/scripts/enable-mail.mjs            # relay worker + Pages secret
+node website/admin/scripts/repair-mail.mjs            # full fix: enable + build + deploy + verify
+node website/admin/scripts/deploy-pages-fast.mjs        # fast deploy without mail API calls
 node website/admin/scripts/probe-mail-token.mjs
 node website/admin/scripts/setup-mail-secrets.mjs
 ```
