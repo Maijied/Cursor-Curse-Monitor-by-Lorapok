@@ -394,12 +394,27 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
 const version = pkg.version;
 const publishedReleaseVersion = github?.version ?? null;
 
+function ovsxUnityVersion(canonicalVersion, duplicateVersion) {
+  const canonical = normalizeVersion(canonicalVersion);
+  const duplicate = normalizeVersion(duplicateVersion);
+  if (!canonical && !duplicate) return null;
+  if (!canonical) return duplicate;
+  if (!duplicate) return canonical;
+  if (canonical === duplicate) return canonical;
+  const newer = compareSemver(duplicate, canonical) > 0 ? duplicate : canonical;
+  console.warn(
+    `::warning::Open VSX namespaces disagree (${canonical} lorapok-labs vs ${duplicate} LorapokLabs). ` +
+      `Using ${newer} for release guard until canonical indexing catches up — run sync-open-vsx if drift persists.`
+  );
+  return newer;
+}
+
 function assertUnifiedVersion() {
   const pkgV = normalizeVersion(version);
+  const ovsxLive = ovsxUnityVersion(ovsxCanonical?.version, ovsxDuplicate?.version);
   const live = [
     ["GitHub", publishedReleaseVersion],
-    ["Open VSX", ovsxCanonical?.version],
-    ["Open VSX duplicate", ovsxDuplicate?.version],
+    ["Open VSX", ovsxLive],
     ["VS Code", vscode?.version],
   ]
     .map(([label, v]) => ({ label, v: normalizeVersion(v) }))

@@ -231,6 +231,7 @@ async function main() {
           `${after ?? "missing"} (expected ${target}). Open VSX indexing may be delayed; ` +
           `verify-marketplace-sync will re-check.`
       );
+      process.exitCode = 1;
       return;
     }
 
