@@ -87,12 +87,14 @@ export async function listDiscordCards(env) {
  * @return {{title: string, color: number, description: string, footer: {text: string, icon_url?: string}}} The Discord embed configuration.
  */
 export async function buildDiscordFeedbackEmbed(env) {
-  const footers = await getChannelFooters(env);
-  const branding = await getMessageBranding(env);
-  const feedbackCard = await getMessageCard("feedback-thanks", env);
-  const discordChannel = /** @type {{ title?: string; summary?: string }|undefined} */ (
-    feedbackCard?.channels?.discord
+  const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
+  const footers = catalog.footers ?? {};
+  const branding = catalog.branding ?? {};
+  const cards = /** @type {Array<{ id: string; channels?: { discord?: { title?: string; summary?: string } } }>} */ (
+    catalog.cards ?? []
   );
+  const feedbackCard = cards.find((card) => card.id === "feedback-thanks") ?? null;
+  const discordChannel = feedbackCard?.channels?.discord;
 
   return {
     title: discordChannel?.title ?? "💬 Feedback & support",

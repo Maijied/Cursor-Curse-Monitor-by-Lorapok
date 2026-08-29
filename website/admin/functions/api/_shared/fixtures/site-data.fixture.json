@@ -1,0 +1,9 @@
+{
+  "packageVersion": "9.9.9",
+  "publishedReleaseVersion": "9.9.9",
+  "github": {
+    "releaseTag": "v9.9.9",
+    "tags": ["v9.9.9"]
+  },
+  "homepage": "https://cursor.lorapok.tech/"
+}

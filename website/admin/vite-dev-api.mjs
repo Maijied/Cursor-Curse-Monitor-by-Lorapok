@@ -2,7 +2,12 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getMailTemplates } from "./functions/api/_shared/mail-templates.js";
-import { GENERATED_DEV_NOTICE, buildBuiltinNotices, getNoticeTemplates } from "./functions/api/_shared/notice-catalog.js";
+import {
+  GENERATED_DEV_NOTICE,
+  buildBuiltinNotices,
+  getHydratedBuiltinNotices,
+  getNoticeTemplates,
+} from "./functions/api/_shared/notice-catalog.js";
 import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
@@ -95,12 +100,16 @@ const devKv = {
   },
 };
 
+async function refreshDevBuiltinNotices() {
+  devStore.notices = await getHydratedBuiltinNotices(devFunctionsEnv());
+}
+
 /**
  * Reset the development store to its default notice and Discord configuration.
  */
-export function resetDevStore() {
+export async function resetDevStore() {
   devStore.notice = { ...GENERATED_DEV_NOTICE };
-  devStore.notices = buildBuiltinNotices();
+  await refreshDevBuiltinNotices();
   devStore.discordConfig = {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
@@ -108,6 +117,8 @@ export function resetDevStore() {
     updatedBy: null,
   };
 }
+
+void refreshDevBuiltinNotices();
 
 function logDevActivity(req, status, email = "dev@local") {
   const path = req.url?.split("?")[0] ?? "/";

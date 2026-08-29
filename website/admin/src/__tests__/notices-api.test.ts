@@ -25,7 +25,7 @@ describe("notice catalog APIs", () => {
   let base;
 
   beforeEach(async () => {
-    resetDevStore();
+    await resetDevStore();
     const started = await listen(createDevApiMiddleware());
     server = started.server;
     base = started.url;

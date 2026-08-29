@@ -12,24 +12,50 @@ import { fileURLToPath } from "node:url";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
-let token = process.env.CLOUDFLARE_API_TOKEN ?? "";
 
-if (!token) {
+/**
+ * @param {string} text
+ * @returns {{ token?: string; apiKey?: string; email?: string } | null}
+ */
+function parseWranglerAuthJson(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[0]);
+    if (parsed.token) return { token: String(parsed.token) };
+    if (parsed.api_key) {
+      return {
+        apiKey: String(parsed.api_key),
+        email: parsed.email ? String(parsed.email) : undefined,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** @type {{ token?: string; apiKey?: string; email?: string }} */
+let wranglerAuth = {};
+if (process.env.CLOUDFLARE_API_TOKEN) {
+  wranglerAuth = { token: process.env.CLOUDFLARE_API_TOKEN };
+} else {
   try {
     const r = spawnSync("npx", ["wrangler", "auth", "token", "--json"], {
       encoding: "utf8",
       cwd: adminDir,
     });
-    const text = `${r.stdout}\n${r.stderr}`;
-    const match = text.match(/\{[\s\S]*"token"[\s\S]*\}/);
-    if (match) {
-      token = JSON.parse(match[0]).token;
-    }
+    const parsed = parseWranglerAuthJson(`${r.stdout}\n${r.stderr}`);
+    if (parsed) wranglerAuth = parsed;
   } catch {}
 }
 
-if (!token) {
+if (!wranglerAuth.token && !wranglerAuth.apiKey) {
   console.error("Set CLOUDFLARE_API_TOKEN (Email Sending + Email Routing permissions).");
+  process.exit(1);
+}
+if (wranglerAuth.apiKey && !wranglerAuth.email) {
+  console.error("Wrangler returned Global API Key auth without email; set CLOUDFLARE_API_TOKEN instead.");
   process.exit(1);
 }
 
@@ -40,11 +66,22 @@ const ADDRESSES = [
   "cursor.curse.help@lorapok.tech",
 ];
 
+function wranglerEnv() {
+  const env = { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId };
+  if (wranglerAuth.token) {
+    env.CLOUDFLARE_API_TOKEN = wranglerAuth.token;
+    return env;
+  }
+  env.CLOUDFLARE_API_KEY = wranglerAuth.apiKey;
+  if (wranglerAuth.email) env.CLOUDFLARE_EMAIL = wranglerAuth.email;
+  return env;
+}
+
 function run(args, { allowFail = false } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {
     cwd: adminDir,
     stdio: "inherit",
-    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+    env: wranglerEnv(),
   });
   if (result.status !== 0 && !allowFail) process.exit(result.status ?? 1);
 }
