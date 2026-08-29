@@ -63,7 +63,7 @@ export function computeDownloadTotals(input) {
     openVsxDisplayCount = Math.max(canonicalCount, duplicateCount);
   }
 
-  const verified = canonicalLive && githubLive;
+  const verified = canonicalLive && githubLive && vscodeLive;
   const openVsxCombined =
     canonicalCount != null && duplicateLive && duplicateCount != null
       ? canonicalCount + duplicateCount

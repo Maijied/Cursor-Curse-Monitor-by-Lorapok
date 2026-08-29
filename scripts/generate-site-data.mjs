@@ -166,19 +166,33 @@ async function fetchRemoteVisitorStats() {
   return readVisitorStats();
 }
 
-function readBrowserExtensionVersion() {
+function readRootPackageVersion() {
   try {
-    const manifestPath = join(root, "browser-extension", "dist", "manifest.json");
-    if (existsSync(manifestPath)) {
-      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-      if (manifest.version && manifest.version !== "0.0.0") return manifest.version;
-    }
-    const extPkg = JSON.parse(readFileSync(join(root, "browser-extension", "package.json"), "utf8"));
-    if (extPkg.version && extPkg.version !== "0.0.0") return extPkg.version;
     const rootPkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
     return rootPkg.version ?? null;
   } catch {
     return null;
+  }
+}
+
+function readBrowserExtensionVersion() {
+  const rootVersion = readRootPackageVersion();
+  try {
+    const manifestPath = join(root, "browser-extension", "dist", "manifest.json");
+    if (existsSync(manifestPath)) {
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+      if (manifest.version && manifest.version !== "0.0.0") {
+        if (rootVersion && normalizeVersion(manifest.version) !== normalizeVersion(rootVersion)) {
+          return rootVersion;
+        }
+        return manifest.version;
+      }
+    }
+    const extPkg = JSON.parse(readFileSync(join(root, "browser-extension", "package.json"), "utf8"));
+    if (extPkg.version && extPkg.version !== "0.0.0") return extPkg.version;
+    return rootVersion;
+  } catch {
+    return rootVersion;
   }
 }
 
@@ -374,10 +388,41 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   fetchFirefoxAmo(),
 ]);
 
-// The repository package is the release candidate. Live marketplace/release
-// versions are observations and must never silently replace repository truth.
+// Root package.json is the single version source — it must match GitHub release
+// and marketplace listings. Run `npm version <x.y.z> --no-git-tag-version` before
+// site:data when live channels have moved ahead.
 const version = pkg.version;
 const publishedReleaseVersion = github?.version ?? null;
+
+function assertUnifiedVersion() {
+  const pkgV = normalizeVersion(version);
+  const live = [
+    ["GitHub", publishedReleaseVersion],
+    ["Open VSX", ovsxCanonical?.version],
+    ["Open VSX duplicate", ovsxDuplicate?.version],
+    ["VS Code", vscode?.version],
+  ]
+    .map(([label, v]) => ({ label, v: normalizeVersion(v) }))
+    .filter((entry) => entry.v);
+
+  const uniqueLive = [...new Set(live.map((e) => e.v))];
+  if (uniqueLive.length > 1) {
+    console.error(
+      `::error::Live channel versions disagree (${uniqueLive.join(", ")}). Resolve marketplace drift before regenerating site-data.`
+    );
+    process.exit(1);
+  }
+
+  if (uniqueLive.length === 1 && uniqueLive[0] !== pkgV) {
+    console.error(
+      `::error::package.json version (${pkgV}) must match live release (${uniqueLive[0]}). Run: npm version ${uniqueLive[0]} --no-git-tag-version`
+    );
+    process.exit(1);
+  }
+}
+
+assertUnifiedVersion();
+
 const releaseStatus = publishedReleaseVersion === version ? "published" : "candidate";
 const vsixName = github?.vsixName ?? `${NAME}-${version}.vsix`;
 let syncStatus = computeSyncStatus(ovsxCanonical?.version, ovsxDuplicate?.version, version);
@@ -414,7 +459,7 @@ const downloadBreakdown = {
   latestReleaseVsix: github?.vsixDownloadCount ?? 0,
 };
 
-const productContext = buildProductContext(pkg);
+const productContext = buildProductContext(pkg, { publishedReleaseVersion });
 const noticeTemplates = buildNoticeTemplates(productContext);
 const mailTemplates = buildMailTemplates(productContext);
 const defaultNotice = buildGeneratedCatalogNotice(productContext);
@@ -502,16 +547,13 @@ const siteData = {
     firefoxXpiName: github?.firefoxXpiName ?? null,
   },
   browserExtension: {
-    version:
-      firefoxAmo.version && firefoxAmo.version !== "0.0.0"
-        ? firefoxAmo.version
-        : readBrowserExtensionVersion() ?? version,
+    version,
     firefox: {
       ...firefoxAmo,
       version:
         firefoxAmo.version && firefoxAmo.version !== "0.0.0"
           ? firefoxAmo.version
-          : readBrowserExtensionVersion() ?? version,
+          : version,
       xpiUrl: github?.firefoxXpiUrl ?? null,
       xpiName: github?.firefoxXpiName ?? null,
     },

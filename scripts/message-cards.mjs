@@ -56,7 +56,7 @@ export function buildChannelFooters(ctx) {
  * @param {ReturnType<typeof buildProductContext>} ctx
  */
 export function buildMessageCards(ctx) {
-  const v = ctx.version;
+  const v = ctx.releaseVersion ?? ctx.version;
   const now = new Date().toISOString();
 
   /** @type {Array<Record<string, unknown>>} */
@@ -507,5 +507,6 @@ export function buildNoticeTemplatesFromCards(ctx) {
       enabled: false,
       source: card.channels.notice.source ?? card.source ?? "template",
       ...(card.channels.notice.id ? { id: card.channels.notice.id } : {}),
+      updatedAt: new Date().toISOString(),
     }));
 }

@@ -3,7 +3,7 @@
  * Embeds package.json product context and pre-built catalogs for Cloudflare Pages
  * functions (no fs or repo-root script imports at runtime).
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildProductContext } from "./lib-product-context.mjs";
@@ -18,7 +18,17 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "website/admin/functions/api/_shared/product-context.embedded.json");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const ctx = buildProductContext(pkg);
+const siteDataPath = join(root, "website", "site-data.json");
+let publishedReleaseVersion = null;
+if (existsSync(siteDataPath)) {
+  try {
+    const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+    publishedReleaseVersion = siteData.publishedReleaseVersion ?? null;
+  } catch {
+    publishedReleaseVersion = null;
+  }
+}
+const ctx = buildProductContext(pkg, { publishedReleaseVersion });
 const builtinNotices = buildBuiltinNotices(pkg);
 const generatedDevNotice = buildGeneratedCatalogNotice(ctx);
 const noticeTemplates = buildNoticeTemplates(ctx);

@@ -3,8 +3,17 @@
  */
 const DEFAULT_REPO = "Maijied/Cursor-Curse-Monitor-by-Lorapok";
 
-export function buildProductContext(pkg = {}) {
-  const version = String(pkg.version ?? "1.0.3").replace(/^v/, "");
+/**
+ * @param {Record<string, unknown>} [pkg]
+ * @param {{ publishedReleaseVersion?: string | null }} [options]
+ */
+export function buildProductContext(pkg = {}, options = {}) {
+  const packageVersion = String(pkg.version ?? "1.0.3").replace(/^v/, "");
+  const publishedReleaseVersion = options.publishedReleaseVersion
+    ? String(options.publishedReleaseVersion).replace(/^v/, "")
+    : null;
+  /** User-facing install/release version (observed GitHub release when ahead of package). */
+  const releaseVersion = publishedReleaseVersion ?? packageVersion;
   const repo =
     pkg.repository?.url?.match(/github\.com\/([^/]+\/[^/.]+)/)?.[1] ?? DEFAULT_REPO;
   const homepage = (pkg.homepage ?? "https://cursor.lorapok.tech/").replace(/\/$/, "");
@@ -12,7 +21,10 @@ export function buildProductContext(pkg = {}) {
   const site = homepage.replace(/\/$/, "");
 
   return {
-    version,
+    version: releaseVersion,
+    packageVersion,
+    releaseVersion,
+    publishedReleaseVersion,
     displayName: pkg.displayName ?? "Cursor Curse Monitor by Lorapok",
     homepage,
     mainLogoUrl: `${site}/assets/icon.png`,
@@ -23,7 +35,7 @@ export function buildProductContext(pkg = {}) {
     website: pkg.company?.website ?? "https://lorapok.tech",
     feedbackUrl: `https://github.com/${repo}/issues`,
     collaborateUrl: `https://github.com/${repo}/discussions`,
-    releaseUrl: `https://github.com/${repo}/releases/tag/v${version}`,
+    releaseUrl: `https://github.com/${repo}/releases/tag/v${releaseVersion}`,
     latestReleaseUrl: `https://github.com/${repo}/releases/latest`,
     firefoxUrl: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
     ovsxUrl: "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
