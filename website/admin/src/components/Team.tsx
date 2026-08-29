@@ -92,18 +92,18 @@ export default function Team() {
     "flex-1 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none transition-all text-[var(--color-text)]";
 
   return (
-    <div className="max-w-3xl animate-fade-slide-up">
+    <div className="space-y-6 animate-fade-slide-up">
       <PageHeader
         title="Team Access"
         description="Manage who has access to the deployment dashboard and authenticated API routes."
       />
 
-      <Card className="mb-6">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-3 text-[var(--color-text)]">
-          <UserPlus className="text-[var(--color-accent)]" size={24} />
+      <Card>
+        <h3 className="text-base font-semibold mb-4 flex items-center gap-2 text-[var(--color-text)]">
+          <UserPlus className="text-[var(--color-accent)]" size={20} aria-hidden="true" />
           Invite Administrator
         </h3>
-        <p className="text-sm text-[var(--color-muted)] mb-6">
+        <p className="text-sm text-[var(--color-muted)] mb-4">
           Adds the email to Firestore and syncs API access (Cloudflare KV when configured).
         </p>
 
@@ -129,8 +129,8 @@ export default function Team() {
       </Card>
 
       <Card>
-        <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-[var(--color-text)]">
-          <Shield className="text-[var(--color-neon)]" size={24} />
+        <h3 className="text-base font-semibold mb-4 flex items-center gap-2 text-[var(--color-text)]">
+          <Shield className="text-[var(--color-neon)]" size={20} aria-hidden="true" />
           Authorized Administrators
         </h3>
 

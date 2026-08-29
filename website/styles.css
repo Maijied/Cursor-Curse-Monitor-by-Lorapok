@@ -2590,4 +2590,117 @@ a.ide-card:focus-visible {
   .supported-ides-section .ide-card:hover {
     transform: none;
   }
+  .architecture-mermaid-animated .node,
+  .architecture-mermaid-animated .edgePath,
+  .architecture-mermaid-animated .cluster {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Architecture section (animated Mermaid) ── */
+.architecture-section {
+  position: relative;
+}
+
+.architecture-tabs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.architecture-tab {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease, transform 0.25s ease;
+}
+
+.architecture-tab:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.architecture-tab.active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.architecture-panels {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--surface) 92%, transparent), var(--bg-elevated));
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.architecture-panel-copy {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1rem;
+  max-width: 52rem;
+}
+
+.architecture-diagram-mount {
+  min-height: 14rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.architecture-diagram-mount.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.architecture-diagram-mount .architecture-mermaid-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.architecture-diagram-mount .architecture-mermaid-animated .node,
+.architecture-diagram-mount .architecture-mermaid-animated .cluster {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: arch-node-in 0.65s ease forwards;
+}
+
+.architecture-diagram-mount .architecture-mermaid-animated .edgePath path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: arch-edge-draw 1.1s ease forwards 0.25s;
+}
+
+.architecture-foot {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+.architecture-error {
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+@keyframes arch-node-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes arch-edge-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }

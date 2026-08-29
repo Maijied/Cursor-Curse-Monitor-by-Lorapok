@@ -113,6 +113,7 @@
       <div class="nav-links" id="nav-links">
         <a href="#supported-ides">Supported IDEs</a>
         <a href="#ecosystem">Ecosystem</a>
+        <a href="#architecture">Architecture</a>
         <a href="#features">Features</a>
         <a href="#gallery">Gallery</a>
         <a href="#install">Install</a>
@@ -305,6 +306,34 @@
         </button>
       </div>
     </div>
+  </section>
+
+  <section id="architecture" class="section architecture-section container">
+    <div class="section-head">
+      <p class="eyebrow">System topology</p>
+      <h2>Architecture — data, deploy, and edge cases</h2>
+      <p class="section-lead">Animated Mermaid diagrams for the full Lorapok stack: local extensions, Mission Control, Production Deployment, and marketplace guards.</p>
+    </div>
+    <div class="architecture-tabs-row" role="tablist" aria-label="Architecture views">
+      <button type="button" class="architecture-tab active" data-arch-tab="dataFlow" role="tab" aria-selected="true">Data flow</button>
+      <button type="button" class="architecture-tab" data-arch-tab="deployPipeline" role="tab" aria-selected="false">Production Deployment</button>
+      <button type="button" class="architecture-tab" data-arch-tab="edgeCases" role="tab" aria-selected="false">Edge cases</button>
+    </div>
+    <div class="architecture-panels">
+      <article class="architecture-panel active" data-arch-panel="dataFlow" role="tabpanel">
+        <p class="architecture-panel-copy">Local-first IDE and browser surfaces. Usage and scans stay on your machine except authenticated Cursor API calls.</p>
+        <div class="architecture-diagram-mount" data-arch-diagram="dataFlow" aria-label="Data flow architecture diagram"></div>
+      </article>
+      <article class="architecture-panel" data-arch-panel="deployPipeline" role="tabpanel" hidden>
+        <p class="architecture-panel-copy">Single GitHub Actions workflow: CI, tag prep, marketplace publish, admin + marketing deploy, Discord notifications.</p>
+        <div class="architecture-diagram-mount" data-arch-diagram="deployPipeline" aria-label="Production Deployment architecture diagram"></div>
+      </article>
+      <article class="architecture-panel" data-arch-panel="edgeCases" role="tabpanel" hidden>
+        <p class="architecture-panel-copy">Auth boundaries, dual Open VSX namespace drift, live-tag guards, and runtime limits that keep releases safe.</p>
+        <div class="architecture-diagram-mount" data-arch-diagram="edgeCases" aria-label="Edge cases architecture diagram"></div>
+      </article>
+    </div>
+    <p class="architecture-foot muted">Canonical source: <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#architecture">README architecture</a> · <a href="https://cursor-dev.lorapok.tech/architecture" target="_blank" rel="noopener">Mission Control</a></p>
   </section>
 
     <section id="features" class="section container">
@@ -863,5 +892,9 @@
   <script src="stats-dashboard.js" defer></script>
   <script src="analytics.js" defer></script>
   <script src="site.js" defer></script>
+  <script type="module">
+    import { initArchitectureSection } from "./architecture.mjs";
+    initArchitectureSection();
+  </script>
 </body>
 </html>

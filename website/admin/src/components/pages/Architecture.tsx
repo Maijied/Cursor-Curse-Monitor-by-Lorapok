@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { ArrowRight, Database, GitBranch, LayoutDashboard, Puzzle, Server } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
+import ArchitectureMermaid from "../ui/ArchitectureMermaid";
+import {
+  ARCHITECTURE_VIEWS,
+  ARCHITECTURE_VIEW_KEYS,
+} from "../../../../shared/architecture-diagrams.mjs";
 
 const STEPS = [
   {
@@ -40,45 +46,68 @@ const STEPS = [
   },
 ];
 
+type ViewKey = (typeof ARCHITECTURE_VIEW_KEYS)[number];
+
 export default function Architecture() {
+  const [activeView, setActiveView] = useState<ViewKey>(ARCHITECTURE_VIEW_KEYS[0] as ViewKey);
+  const view = ARCHITECTURE_VIEWS[activeView];
+
   return (
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Architecture"
-        description="Read-only flow from the extension through admin APIs to GitHub Discussions."
+        description="End-to-end topology — data flow, Production Deployment pipeline, and edge-case guards."
       />
 
       <Card>
         <p className="text-sm text-[var(--color-muted)] mb-6 max-w-3xl">
-          End-to-end topology for the extension, marketing site, admin APIs, and release pipeline.
-          The canonical diagram lives in the repository{" "}
+          Interactive diagrams mirror the repository{" "}
           <a
             href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#architecture"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--color-accent-2)] hover:underline"
           >
-            README
+            README architecture
           </a>
-          . Summary below.
+          . Switch views to inspect deploy paths, marketplace channels, and failure guards.
         </p>
 
-        <div className="mb-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] p-4 overflow-x-auto">
-          <pre className="text-xs text-[var(--color-muted)] font-[family-name:var(--font-mono)] whitespace-pre leading-relaxed">
-{`Marketing site ──► GitHub Pages (maijied.github.io/…)
-                 └──► Cloudflare /api/notice + analytics
-
-Admin SPA ───────► cursor-dev.lorapok.tech (Cloudflare Pages)
-                 └──► Pages Functions /api/* + ADMIN_KV + Firebase Auth
-
-Extension ───────► Open VSX (lorapok-labs) + VS Code Marketplace
-                 └──► Cursor API (local machine only)
-
-Production Deployment ──► GitHub Actions → marketplaces + Pages + admin deploy`}
-          </pre>
+        <div
+          className="architecture-tabs flex flex-wrap gap-2 mb-4"
+          role="tablist"
+          aria-label="Architecture diagram views"
+        >
+          {ARCHITECTURE_VIEW_KEYS.map((key: string) => {
+            const item = ARCHITECTURE_VIEWS[key as ViewKey];
+            const active = key === activeView;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-300 ${
+                  active
+                    ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-[var(--color-accent)]"
+                    : "border-[var(--color-border)] text-[var(--color-muted)] hover:bg-white/5"
+                }`}
+                onClick={() => setActiveView(key as ViewKey)}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
 
-        <p className="text-sm text-[var(--color-muted)] mb-8 max-w-2xl">
+        {view ? (
+          <div role="tabpanel" className="space-y-4 animate-fade-slide-up">
+            <p className="text-sm text-[var(--color-muted)] max-w-3xl">{view.description}</p>
+            <ArchitectureMermaid key={activeView} diagram={view.diagram} />
+          </div>
+        ) : null}
+
+        <p className="text-sm text-[var(--color-muted)] mt-8 mb-4 max-w-2xl">
           Each step below is a one-way read or a tightly scoped admin write (deploy, notice, discussion post).
         </p>
 
