@@ -735,10 +735,21 @@ jobs:
                 echo "Version already $NEW_VERSION — re-tagging without package.json bump"
               fi
             elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
-              node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version=pkg.version.split('-')[0]; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
-              CURRENT=$(node -p "require('./package.json').version")
-              npm version $BUMP_TYPE --no-git-tag-version --preid=beta
-              NEW_VERSION=$(node -p "require('./package.json').version")
+              # Beta uses marketplace --pre-release flags, not semver -beta in tags (VS Code/Open VSX policy).
+              LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
+              NEW_VERSION=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
+              MAX_LIVE=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
+              if [ -z "$NEW_VERSION" ]; then
+                echo "::error::Could not resolve next beta version from live marketplace data."
+                exit 1
+              fi
+              echo "Live max across all channels: v${MAX_LIVE} → beta pre-release target v${NEW_VERSION}"
+              CURRENT=$(node -p "require('./package.json').version.split('-')[0]")
+              if [ "$NEW_VERSION" != "$CURRENT" ]; then
+                npm version --no-git-tag-version "$NEW_VERSION"
+              else
+                echo "package.json already at v$NEW_VERSION"
+              fi
             else
               # Production: target = highest live version across all marketplaces + bump
               LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
@@ -916,6 +927,11 @@ jobs:
             DO_VSCE="true"
           elif [[ "$TARGET" == "Firefox AMO" ]]; then
             DO_AMO="true"
+          fi
+
+          if [ "$PRE_RELEASE" = "true" ]; then
+            DO_AMO="false"
+            echo "::notice::Skipping Firefox AMO — listed AMO has no pre-release channel in this pipeline."
           fi
 
           echo "do_ovsx=$DO_OVSX" >> "$GITHUB_OUTPUT"
