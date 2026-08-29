@@ -203,6 +203,7 @@ function updateStructuredDataVersion(data) {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
   const NOTICE_URL = "https://cursor-dev.lorapok.tech/api/notice";
+  const LIVE_SITE_DATA_URL = "https://cursor-dev.lorapok.tech/api/site-data";
   const FALLBACK_NOTICE = {
     enabled: false,
     id: "site-data-fallback",
@@ -228,6 +229,22 @@ function updateStructuredDataVersion(data) {
     data = await res.json();
   } catch {
     data = null;
+  }
+
+  try {
+    const liveRes = await fetch(LIVE_SITE_DATA_URL, { cache: "no-store" });
+    if (liveRes.ok) {
+      const live = await liveRes.json();
+      if (live && !live.error) {
+        const staticAt = data?.generatedAt ? Date.parse(String(data.generatedAt)) : 0;
+        const liveAt = Date.parse(String(live.liveRefreshedAt ?? live.generatedAt ?? ""));
+        if (!data || (!Number.isNaN(liveAt) && (Number.isNaN(staticAt) || liveAt >= staticAt))) {
+          data = { ...(data ?? {}), ...live };
+        }
+      }
+    }
+  } catch {
+    // Static site-data.json is enough when Mission Control API is unreachable.
   }
 
   const downloadsVerified = data?.downloads?.verified === true;

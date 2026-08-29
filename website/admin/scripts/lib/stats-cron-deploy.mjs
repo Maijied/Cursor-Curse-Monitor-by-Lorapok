@@ -40,7 +40,12 @@ export function putPagesCronSecret(secret, auth, opts = {}) {
     }
   );
   if (r.status !== 0) {
-    throw new Error(`Pages CRON_SECRET sync failed: ${r.stderr || r.stdout}`);
+    const detail = [r.stderr, r.stdout].filter(Boolean).join("\n").trim();
+    throw new Error(
+      detail
+        ? `Pages CRON_SECRET sync failed:\n${detail}`
+        : "Pages CRON_SECRET sync failed (wrangler exited non-zero — check token or run: cd website/admin && npx wrangler login)"
+    );
   }
 }
 
@@ -65,7 +70,12 @@ export function putWorkerCronSecret(secret, auth, opts = {}) {
     }
   );
   if (r.status !== 0) {
-    throw new Error(`Worker CRON_SECRET sync failed: ${r.stderr || r.stdout}`);
+    const detail = [r.stderr, r.stdout].filter(Boolean).join("\n").trim();
+    throw new Error(
+      detail
+        ? `Worker CRON_SECRET sync failed:\n${detail}`
+        : "Worker CRON_SECRET sync failed (wrangler exited non-zero)"
+    );
   }
 }
 
