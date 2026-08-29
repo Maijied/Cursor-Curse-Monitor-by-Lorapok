@@ -5,7 +5,7 @@
  * When marketplace sources are unverified, badges/charts show unavailable — never zero-filled.
  */
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -32,10 +32,13 @@ try {
   console.log(`Wrote ${pngPath}`);
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  if (process.env.CI === "true") {
+  if (existsSync(pngPath)) {
+    console.warn(`Keeping existing ${pngPath} (rsvg-convert unavailable: ${message})`);
+  } else if (process.env.CI === "true") {
     throw new Error(`readme-stats.png required in CI (install librsvg2-bin): ${message}`);
+  } else {
+    console.warn(`Skip ${pngPath} (rsvg-convert unavailable): ${message}`);
   }
-  console.warn(`Skip ${pngPath} (rsvg-convert unavailable): ${message}`);
 }
 
 /** @type {const} */
