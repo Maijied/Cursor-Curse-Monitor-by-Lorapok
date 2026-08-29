@@ -9,13 +9,15 @@
 
 import { appendFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { envWithCursorCloudflareSecrets } from "./cred-vault-sync.mjs";
 
 const DEFAULT_ACCOUNT_ID = "f049faaf2f67549f5c58837479596a4a";
 
 export function resolveMailCredentials(env = process.env) {
-  const accountId = (env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID).trim();
-  const deployToken = (env.CLOUDFLARE_API_TOKEN ?? "").trim();
-  const emailToken = (env.CLOUDFLARE_EMAIL_API_TOKEN ?? "").trim();
+  const mergedEnv = envWithCursorCloudflareSecrets(env);
+  const accountId = (mergedEnv.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID).trim();
+  const deployToken = (mergedEnv.CLOUDFLARE_API_TOKEN ?? "").trim();
+  const emailToken = (mergedEnv.CLOUDFLARE_EMAIL_API_TOKEN ?? "").trim();
 
   return { accountId, deployToken, emailToken };
 }
