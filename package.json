@@ -277,7 +277,7 @@
     "package": "vsce package --no-dependencies && node scripts/validate-vsix-contents.mjs",
     "validate:assets": "node scripts/validate-assets.mjs",
     "sync:icons": "node scripts/sync-icons.mjs",
-    "prepackage": "npm run validate:assets && npm run sync:icons && npm run version:sync",
+    "prepackage": "npm run validate:assets && npm run sync:icons && node scripts/generate-readme-stats.mjs && npm run version:sync",
     "publish:ovsx": "node scripts/publish-ovsx.mjs",
     "publish:vscode": "vsce publish",
     "verify:marketplace": "node scripts/verify-marketplace-sync.mjs --strict",
