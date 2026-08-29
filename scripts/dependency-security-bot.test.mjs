@@ -8,6 +8,8 @@ import {
   parseNpmAuditReport,
   severityMeetsThreshold,
   triageAlerts,
+  validateDismissals,
+  validateNpmAuditJson,
 } from "./dependency-security-bot.mjs";
 
 const sampleAudit = {
@@ -60,6 +62,71 @@ describe("dependency-security-bot", () => {
     assert.equal(alerts[0].package, "lodash");
     assert.equal(alerts[0].fixAvailable, true);
     assert.equal(alerts[0].fixVersion, "4.17.21");
+  });
+
+  it("emits one alert per advisory when a package has multiple via objects", () => {
+    const multiAudit = {
+      vulnerabilities: {
+        lodash: {
+          name: "lodash",
+          severity: "high",
+          isDirect: true,
+          via: [
+            {
+              source: 1,
+              url: "https://github.com/advisories/GHSA-AAAA-BBBB-CCCC",
+              severity: "high",
+              title: "Issue A",
+              range: "<4.17.21",
+            },
+            {
+              source: 2,
+              url: "https://github.com/advisories/GHSA-DDDD-EEEE-FFFF",
+              severity: "moderate",
+              title: "Issue B",
+              range: "<4.17.21",
+            },
+          ],
+          range: "4.17.20",
+          fixAvailable: false,
+        },
+      },
+    };
+    const alerts = parseNpmAuditReport(multiAudit, {
+      workspace: "root",
+      scope: "production",
+    });
+    assert.equal(alerts.length, 2);
+    const { open, dismissed } = triageAlerts(
+      alerts,
+      [{ id: "GHSA-AAAA-BBBB-CCCC", reason: "tolerate_risk" }],
+      {},
+    );
+    assert.equal(dismissed.length, 1);
+    assert.equal(open.length, 1);
+    assert.ok(open[0].advisoryIds.includes("GHSA-DDDD-EEEE-FFFF"));
+  });
+
+  it("rejects npm audit error JSON", () => {
+    assert.throws(
+      () =>
+        validateNpmAuditJson(
+          { error: { code: "ENOLOCK", summary: "no lockfile" } },
+          ".",
+        ),
+      /ENOLOCK/,
+    );
+  });
+
+  it("rejects dismissals with missing or unknown reasons", () => {
+    assert.throws(
+      () => validateDismissals({ dismissals: [{ id: "GHSA-1", reason: "bogus" }] }),
+      /Invalid dismissal reason/,
+    );
+    assert.throws(
+      () => validateDismissals({ dismissals: [{ package: "lodash" }] }),
+      /Invalid dismissal reason/,
+    );
   });
 
   it("prioritizes production + fixable alerts higher", () => {
