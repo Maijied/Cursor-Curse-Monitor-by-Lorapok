@@ -1,0 +1,28 @@
+# Agent skill trees are documentation/examples — not production dependencies.
+# Keeps GitHub's "Dependency Graph" / "Graph Update" workflows scoped to the app.
+version: 2
+
+graphs:
+  - package-ecosystem: pip
+    directory: "/"
+    exclude-paths:
+      - ".agents/skills/**"
+      - ".cursor/skills/**"
+  - package-ecosystem: npm
+    directory: "/"
+    exclude-paths:
+      - ".agents/skills/**"
+      - ".cursor/skills/**"
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    exclude-paths:
+      - ".agents/skills/**"
+      - ".cursor/skills/**"
+  - package-ecosystem: npm
+    directory: "/website/admin"
+    schedule:
+      interval: weekly

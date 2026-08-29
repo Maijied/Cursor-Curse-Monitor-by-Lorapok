@@ -376,6 +376,7 @@ vercel-cli/
 vercel-deploy/
 vercel-firewall/
 vercel-sandbox/
+vercel-services/
 vercel-storage/
 verification/
 vgl/
