@@ -68,7 +68,7 @@ function productSortScore(product: string): number {
   return idx >= 0 ? idx : 100;
 }
 
-function configDbPath(product: string): string {
+export function configDbPath(product: string): string {
   const home = os.homedir();
   if (process.platform === "darwin") {
     return path.join(home, "Library", "Application Support", product, "User", "globalStorage", "state.vscdb");
@@ -579,9 +579,15 @@ function runPragmaIntegrityCheck(dbPath: string): { ok: boolean; detail?: string
   }
 }
 
-function openReadOnlyCursorDb(): SqliteDb {
-  const dbPath = getMonitoringStoragePath();
+/** Resolve state.vscdb for a Cursor product folder (Cursor, dCursor, …). */
+export function getProductStoragePath(productFolder: string): string {
+  if (process.env.CURSOR_DB_PATH) {
+    return process.env.CURSOR_DB_PATH;
+  }
+  return configDbPath(productFolder);
+}
 
+function openReadOnlyCursorDbAtPath(dbPath: string): SqliteDb {
   if (!fs.existsSync(dbPath)) {
     throw new Error("Cursor storage database not found");
   }
@@ -599,6 +605,20 @@ function openReadOnlyCursorDb(): SqliteDb {
     readOnly: true,
     timeout: 5000,
   });
+}
+
+function openReadOnlyCursorDb(): SqliteDb {
+  return openReadOnlyCursorDbAtPath(getMonitoringStoragePath());
+}
+
+/** Run a read-only callback against a specific state.vscdb path. Always closes the handle. */
+export function withReadOnlyCursorDbAtPath<T>(dbPath: string, fn: (db: SqliteDb) => T): T {
+  const db = openReadOnlyCursorDbAtPath(dbPath);
+  try {
+    return fn(db);
+  } finally {
+    db.close();
+  }
 }
 
 /** Run a read-only callback against Cursor's state.vscdb. Always closes the handle. */

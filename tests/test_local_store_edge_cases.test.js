@@ -24,6 +24,9 @@ const {
   formatRelativeTime,
   parseComposerHeader,
   readLocalInsights,
+  normalizeDailyStatsDate,
+  dailyStatsRowIsToday,
+  todayKey,
 } = require("../src/cursorLocalStore.ts");
 
 test("local store: emptyLocalInsights returns a clean default structure", () => {
@@ -418,6 +421,95 @@ test("local store: readLocalInsights handles missing DB, empty DB, multi-day sta
       if (fs.existsSync(testDbPath)) {
         fs.unlinkSync(testDbPath);
       }
+    } catch {
+      // ignore cleanup
+    }
+  }
+});
+
+test("local store: normalizeDailyStatsDate handles ISO timestamps and key suffixes", () => {
+  const today = todayKey();
+  assert.strictEqual(normalizeDailyStatsDate(today), today);
+  assert.strictEqual(normalizeDailyStatsDate(`${today}T12:34:56.000Z`), today);
+  assert.strictEqual(
+    normalizeDailyStatsDate(Date.parse(`${today}T00:00:00.000Z`)),
+    today
+  );
+  assert.strictEqual(normalizeDailyStatsDate(""), null);
+});
+
+test("local store: dailyStatsRowIsToday matches date in JSON or key", () => {
+  const today = todayKey();
+  const stats = {
+    date: today,
+    tabSuggestedLines: 1,
+    tabAcceptedLines: 2,
+    composerSuggestedLines: 3,
+    composerAcceptedLines: 4,
+  };
+  assert.strictEqual(
+    dailyStatsRowIsToday(`aiCodeTracking.dailyStats.v1.5.${today}`, stats, today),
+    true
+  );
+  assert.strictEqual(
+    dailyStatsRowIsToday("aiCodeTracking.dailyStats.v1.5", { ...stats, date: `${today}T00:00:00.000Z` }, today),
+    true
+  );
+  assert.strictEqual(
+    dailyStatsRowIsToday(
+      "aiCodeTracking.dailyStats.v1.5.2026-08-01",
+      { ...stats, date: "2026-08-01" },
+      today
+    ),
+    false
+  );
+});
+
+test("local store: readLocalInsights uses explicit product folder path", () => {
+  let DatabaseSync;
+  try {
+    ({ DatabaseSync } = require("node:sqlite"));
+  } catch {
+    return;
+  }
+
+  const os = require("os");
+  const productFolder = `ccm-test-product-${Date.now()}`;
+  const productDir = path.join(os.homedir(), ".config", productFolder, "User", "globalStorage");
+  const testDbPath = path.join(productDir, "state.vscdb");
+  const prevDbPath = process.env.CURSOR_DB_PATH;
+  delete process.env.CURSOR_DB_PATH;
+
+  try {
+    fs.mkdirSync(productDir, { recursive: true });
+    const db = new DatabaseSync(testDbPath);
+    db.exec("CREATE TABLE ItemTable (key TEXT, value TEXT);");
+    const today = todayKey();
+    db.prepare("INSERT INTO ItemTable VALUES (?, ?)").run(
+      `aiCodeTracking.dailyStats.v1.5.${today}`,
+      JSON.stringify({
+        date: `${today}T08:00:00.000Z`,
+        tabSuggestedLines: 0,
+        tabAcceptedLines: 11,
+        composerSuggestedLines: 0,
+        composerAcceptedLines: 22,
+      })
+    );
+    db.close();
+
+    const insights = readLocalInsights(productFolder);
+    assert.ok(insights.today);
+    assert.strictEqual(insights.today.tabAcceptedLines, 11);
+    assert.strictEqual(insights.today.composerAcceptedLines, 22);
+    assert.strictEqual(insights.cycleAccepted, 33);
+  } finally {
+    if (prevDbPath === undefined) {
+      delete process.env.CURSOR_DB_PATH;
+    } else {
+      process.env.CURSOR_DB_PATH = prevDbPath;
+    }
+    try {
+      fs.rmSync(path.join(os.homedir(), ".config", productFolder), { recursive: true, force: true });
     } catch {
       // ignore cleanup
     }

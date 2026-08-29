@@ -138,7 +138,7 @@ export class UsageMonitorService implements vscode.Disposable {
 
     if (!dbMissing) {
       try {
-        snapshot.local = readLocalInsights();
+        snapshot.local = readLocalInsights(auth.productFolder);
       } catch {
         snapshot.local = emptyLocalInsights();
       }
