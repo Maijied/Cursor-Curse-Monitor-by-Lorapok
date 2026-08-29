@@ -5,6 +5,7 @@ import {
   mergeCronJobConfig,
   sanitizeCronRunMetaForClient,
 } from "./cron-schedule.js";
+import { putKvJsonIfChanged } from "./kv-put.js";
 
 export const DISCORD_DIGEST_CONFIG_KEY = "integrations:discord-digest";
 
@@ -72,7 +73,7 @@ export async function writeDiscordDigestConfig(env, patch) {
   if (!env.ADMIN_KV?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  await env.ADMIN_KV.put(DISCORD_DIGEST_CONFIG_KEY, JSON.stringify(next));
+  await putKvJsonIfChanged(env, DISCORD_DIGEST_CONFIG_KEY, next);
   return next;
 }
 

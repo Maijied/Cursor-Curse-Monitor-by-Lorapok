@@ -94,12 +94,7 @@ export function mergeCronJobConfig(current, patch, options = {}) {
  * @param {string} key
  * @param {Record<string, unknown>} next
  */
-export async function writeCronJobState(env, key, next) {
-  if (!env.ADMIN_KV?.put) {
-    throw new Error("ADMIN_KV binding not configured");
-  }
-  await env.ADMIN_KV.put(key, JSON.stringify(next));
-}
+import { putKvJson } from "./kv-put.js";
 
 /**
  * @param {Record<string, unknown>} env

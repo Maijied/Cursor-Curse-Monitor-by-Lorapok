@@ -18,6 +18,7 @@ const BADGE_KEYS = {
   "openvsx-total": "stats:badge:openvsx-total",
   vscode: "stats:badge:vscode",
 };
+const BADGE_BUNDLE_KEY = "stats:badges-bundle";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -26,6 +27,16 @@ export async function onRequestGet(context) {
   const safeKind = KINDS.has(kind) ? /** @type {"total"|"openvsx"|"openvsx-total"|"vscode"} */ (kind) : "total";
 
   try {
+    if (env.ADMIN_KV?.get) {
+      const bundleRaw = await env.ADMIN_KV.get(BADGE_BUNDLE_KEY);
+      if (bundleRaw) {
+        const bundle = JSON.parse(bundleRaw);
+        if (bundle?.[safeKind]) {
+          return jsonResponse(bundle[safeKind], 200, CORS_HEADERS);
+        }
+      }
+    }
+
     const badgeKey = BADGE_KEYS[safeKind];
     if (env.ADMIN_KV?.get && badgeKey) {
       const cached = await env.ADMIN_KV.get(badgeKey);

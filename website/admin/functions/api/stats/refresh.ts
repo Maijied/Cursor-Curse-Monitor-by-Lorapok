@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { formatKvPutError } from "../_shared/kv-put.js";
 import { runStatsRefresh } from "../_shared/stats-refresh.js";
 
 const CORS_HEADERS = {
@@ -41,7 +42,7 @@ export async function onRequestPost(context) {
     );
   } catch (err) {
     return jsonResponse(
-      { ok: false, error: err instanceof Error ? err.message : "Refresh failed" },
+      { ok: false, error: formatKvPutError(err) },
       502,
       CORS_HEADERS
     );

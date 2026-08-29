@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   isValidDiscordWebhookUrl,
   readDiscordConfig,
@@ -79,7 +80,7 @@ export async function onRequestPut(context) {
   try {
     await writeDiscordConfig(env, next);
   } catch (err) {
-    return jsonResponse({ error: err instanceof Error ? err.message : "Save failed" }, 503);
+    return jsonResponse({ error: formatKvPutError(err) }, 503);
   }
 
   return jsonResponse({ ok: true, config: sanitizeDiscordConfigForClient(next) });
