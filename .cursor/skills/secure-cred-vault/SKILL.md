@@ -1,86 +1,67 @@
 ---
 name: secure-cred-vault
-description: Credential vault operations for Lorapok projects — gpg-encrypted store, GitHub secrets sync, and cred CLI usage. Use when syncing Cloudflare, AMO, or Firebase tokens to CI without printing secrets.
+description: >-
+  Canonical credential vault for ALL projects on this machine. Use this skill
+  whenever ANY agent (Cursor, Claude Code, Cowork) or the user deals with API
+  keys, tokens, secrets, passwords, connection strings, .env values, Cloudflare
+  auth, GitHub PATs, OpenAI keys, or “save/store credentials” — even if they
+  never say vault/encrypt. Store/retrieve via passphrase-encrypted category JSON
+  at /mnt/NewVolume/Personal_Projects/cred/ using `cred` (scripts/cred-store.sh).
+  Never paste secrets into chat or plaintext files; user types values at hidden
+  prompts; agents reference secrets by name only. Read AGENTS.md + README.md.
 ---
 
-# Secure Cred Vault
+# Secure Credential Vault
 
-Use this skill when syncing secrets from the encrypted vault to GitHub, Cloudflare Pages, or local shells. **Never print secret values.**
+**Complete process (install → end):** [README.md](./README.md)  
+**Mandatory agent rules:** [AGENTS.md](./AGENTS.md)  
+**Vault folder guide:** `/mnt/NewVolume/Personal_Projects/cred/HOW_TO_USE.md`
 
-## Vault layout
+## What it is
 
-| Path | Purpose |
-|------|---------|
-| `CRED_STORE_FILE` | Encrypted JSON (default: `/mnt/NewVolume/Personal_Projects/cred/credentials.json.gpg`) |
-| `.cred-vault-passphrase` | Gitignored one-line passphrase (repo root or `website/admin/`) |
-| `CRED_VAULT_PASSPHRASE` | Shell env override (non-interactive CI / agents) |
-
-Vault JSON shape (decrypted):
+One **passphrase-encrypted** file that decrypts to **category-organized plain JSON**:
 
 ```json
 {
-  "cursor": {
-    "cloudflare_api_token": "…",
-    "cloudflare_email_api_token": "…",
-    "cloudflare_account_id": "f049faaf2f67549f5c58837479596a4a"
-  },
-  "firefox": {
-    "jwt_issuer": "user:…",
-    "jwt_secret": "…"
-  }
+  "cloudflare": { "api_token": "…", "account_id": "…" },
+  "github":     { "pat": "…" }
 }
 ```
 
-## Credential split (Cloudflare)
+Path: `/mnt/NewVolume/Personal_Projects/cred/credentials.json.gpg`  
+Backend: GnuPG AES-256 + jq via `scripts/cred-store.sh` (`cred` after install).
 
-| Key | Use |
-|-----|-----|
-| `cursor/cloudflare_api_token` | Pages/Workers **deploy** only (`CLOUDFLARE_API_TOKEN`) |
-| `cursor/cloudflare_email_api_token` | Email Sending **REST** only (`CLOUDFLARE_EMAIL_API_TOKEN`) |
-| `cursor/cloudflare_account_id` | Account ID for API calls |
+## Golden rules (all AI agents)
 
-**Never** use the deploy token for outbound mail.
+1. **Never save a secret pasted in chat.** Tell user to rotate, then `cred set` themselves.
+2. **Never print decrypted values** into the conversation. `cred list` = names only.
+3. **Never put secrets in argv** or store the vault passphrase.
+4. **Wire projects by name:** `export X="$(cred get category key)"`.
+5. Prefer **scoped API tokens** over Cloudflare Global API Keys.
 
-## Load into shell
-
-```bash
-export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"
-export CLOUDFLARE_EMAIL_API_TOKEN="$(cred get cursor cloudflare_email_api_token)"
-export CLOUDFLARE_ACCOUNT_ID="$(cred get cursor cloudflare_account_id)"
-```
-
-If `cred` CLI is unavailable, use gpg decrypt + `jq` against `CRED_STORE_FILE` with passphrase from `.cred-vault-passphrase`.
-
-## CCM sync scripts (this repo)
-
-| Script | Action |
-|--------|--------|
-| `website/admin/scripts/sync-mail-cred-vault.mjs` | Mail token → GitHub `admin-production` + Pages secret + vault |
-| `website/admin/scripts/sync-mail-on-main.mjs` | CI entry; `--vault` for local vault refresh |
-| `website/admin/scripts/lib/cred-vault-sync.mjs` | Shared gpg read/write for `cursor/*` keys |
-| `scripts/sync-amo-github-secrets.mjs` | AMO JWT → GitHub repo secrets |
-
-## One-time setup (maintainer PC)
+## Install + init (if missing)
 
 ```bash
-# 1. Create gitignored passphrase file
-echo 'your-passphrase' > .cred-vault-passphrase
-
-# 2. Sync mail tokens (needs wrangler OAuth or existing tokens in env)
-node website/admin/scripts/sync-mail-on-main.mjs --vault
-
-# 3. Sync AMO JWT to GitHub
-CRED_PASSPHRASE=… node scripts/sync-amo-github-secrets.mjs
+bash /home/maizied/.claude/skills/secure-cred-vault/scripts/install.sh
+source ~/.zshrc   # or ~/.bashrc
+cred init         # only if vault file missing
 ```
 
-## Cloud agents
+## Store / use
 
-Cloud VMs typically **do not** mount `/mnt/NewVolume/…`. Use GitHub environment secrets (`admin-production`) for CI deploys. Local vault sync is maintainer-only; agents should not commit passphrases or decrypted vaults.
+```bash
+cred set <category> <key>          # user types value
+cred list
+cred get <category> <key>
+eval "$(cred env <category>)"
+```
 
-## Anti-patterns
+## If user pasted a secret in chat
 
-- Committing `.cred-vault-passphrase` or decrypted vault JSON
-- Setting `CLOUDFLARE_EMAIL_API_TOKEN` to the deploy token
-- Printing tokens in logs, PRs, or test fixtures (use masked IDs like webhook `565087/…` only in unit tests)
+1. Say it is exposed → rotate at provider.  
+2. Do not write the pasted value anywhere.  
+3. Have them `cred set <cat> <key>` with the new value.
 
-Global copy: `~/.cursor/skills/secure-cred-vault/SKILL.md`
+## Categories
+
+`cloudflare`, `github`, `openai`, `stripe`, `postgres_prod`, plus project-specific lowercase names.

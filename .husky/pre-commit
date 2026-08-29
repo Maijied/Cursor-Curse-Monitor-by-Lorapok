@@ -3,5 +3,6 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACM)
 if [ -z "$STAGED" ]; then
   exit 0
 fi
-echo "$STAGED" | tr '\n' '\0' | xargs -0 npx secretlint --secretlintrc .secretlintrc.json
+# Batch secretlint to avoid xargs ARG_MAX failures on large skill/agent imports.
+echo "$STAGED" | tr '\n' '\0' | xargs -0 -n 150 sh -c 'npx secretlint --secretlintrc .secretlintrc.json "$@"' _
 node scripts/check-governance-surface.mjs
