@@ -1,5 +1,15 @@
-# Agent skill trees are documentation/examples — not production dependencies.
-# Keeps GitHub's "Dependency Graph" / "Graph Update" workflows scoped to the app.
+# Lorapok Dependency Security Bot
+#
+# Replaces GitHub Dependabot version-update PRs for this repo with a project-owned
+# workflow aligned to GitHub's security alert management guidance:
+# https://docs.github.com/en/code-security/how-tos/manage-security-alerts
+#
+# - Scan & triage: scripts/dependency-security-bot.mjs
+# - Dismissals audit trail: .github/dependency-security-dismissals.json
+# - Auto-fix PRs: workflow_dispatch "remediate" (npm audit fix, production scope)
+#
+# Keep dependency-graph excludes so skill trees do not pollute the graph.
+
 version: 2
 
 graphs:
@@ -14,15 +24,4 @@ graphs:
       - ".agents/skills/**"
       - ".cursor/skills/**"
 
-updates:
-  - package-ecosystem: npm
-    directory: "/"
-    schedule:
-      interval: weekly
-    exclude-paths:
-      - ".agents/skills/**"
-      - ".cursor/skills/**"
-  - package-ecosystem: npm
-    directory: "/website/admin"
-    schedule:
-      interval: weekly
+# Dependabot version updates disabled — use Dependency Security Bot workflow instead.

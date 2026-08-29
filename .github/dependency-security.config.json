@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "reportTitle": "Lorapok Dependency Security Bot",
+  "workspaces": [
+    {
+      "name": "root",
+      "directory": ".",
+      "lockfile": "package-lock.json",
+      "ecosystem": "npm",
+      "production": true
+    },
+    {
+      "name": "admin",
+      "directory": "website/admin",
+      "lockfile": "package-lock.json",
+      "ecosystem": "npm",
+      "production": true
+    }
+  ],
+  "scanDevelopment": true,
+  "failOnSeverity": {
+    "production": "high",
+    "development": "critical"
+  },
+  "severityOrder": ["critical", "high", "moderate", "low"],
+  "autoTriage": {
+    "prioritizeProduction": true,
+    "boostWhenFixAvailable": true
+  }
+}
