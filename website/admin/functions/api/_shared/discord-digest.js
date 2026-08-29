@@ -126,15 +126,34 @@ export async function runDiscordDigest(env, options = {}) {
   const embeds = [primary, ...supplemental].slice(0, 10);
 
   const branding = enrichment?.catalogBrand ?? {};
-  const res = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: "Mission Control",
-      avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
-      embeds,
-    }),
-  });
+  let res;
+  try {
+    res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "Mission Control",
+        avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
+        embeds,
+      }),
+    });
+  } catch (error) {
+    const durationMs = Date.now() - started;
+    const message = error instanceof Error ? error.message : String(error);
+    await recordCronJobRun(env, DISCORD_DIGEST_CONFIG_KEY, config, {
+      ok: false,
+      error: message,
+      durationMs,
+      triggeredBy: options.triggeredBy ?? "cron",
+    });
+    await logSystemEvent(env, {
+      source: "discord-digest",
+      level: "error",
+      message: `Discord digest failed: ${message}`,
+      meta: { durationMs },
+    });
+    return { ok: false, error: message, durationMs };
+  }
 
   const durationMs = Date.now() - started;
   if (!res.ok) {

@@ -46,6 +46,14 @@ export function mergeProductContext(baseCtx, siteData) {
   return ctx;
 }
 
+function shouldSkipLiveSiteData(env) {
+  return (
+    env?.SKIP_LIVE_SITE_DATA === "true" ||
+    env?.SKIP_LIVE_SITE_DATA === true ||
+    (typeof process !== "undefined" && process.env?.SKIP_LIVE_SITE_DATA === "true")
+  );
+}
+
 /**
  * Resolve the product context using live site data when available, falling back to the embedded context if retrieval fails.
  * @param {Record<string, unknown>} [env] - Runtime environment used to retrieve site data.
@@ -53,6 +61,9 @@ export function mergeProductContext(baseCtx, siteData) {
  */
 export async function resolveProductContext(env) {
   const base = { ...(embedded.ctx ?? {}) };
+  if (shouldSkipLiveSiteData(env ?? {})) {
+    return base;
+  }
   try {
     const site = await fetchSiteData(env ?? {});
     return mergeProductContext(base, site);

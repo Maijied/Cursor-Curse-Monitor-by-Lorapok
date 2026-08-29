@@ -18,10 +18,14 @@ export default {
     const endpoints = ["/api/cron/stats-refresh", "/api/cron/discord-digest"];
 
     for (const path of endpoints) {
-      const res = await fetch(`${base}${path}`, { method: "POST", headers });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        console.error(`ccm-stats-cron ${path}: ${res.status} ${text.slice(0, 200)}`);
+      try {
+        const res = await fetch(`${base}${path}`, { method: "POST", headers });
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          console.error(`ccm-stats-cron ${path}: ${res.status} ${text.slice(0, 200)}`);
+        }
+      } catch (error) {
+        console.error(`ccm-stats-cron ${path}: network error`, error);
       }
     }
   },

@@ -46,10 +46,11 @@ export function buildAdminFast(env = process.env) {
   }
 
   console.log("Fast build (shared + embed only — no live marketplace APIs)…");
-  run("npm", ["run", "build", "-w", "@lorapok/cursor-monitor-shared"], { cwd: repoRoot, env });
-  run(process.execPath, [resolve(repoRoot, "scripts/embed-product-context.mjs")], { cwd: repoRoot, env });
-  run("npx", ["tsc", "-b"], { cwd: adminDir, env });
-  run("npx", ["vite", "build"], { cwd: adminDir, env });
+  const fastBuildEnv = { ...env, SKIP_LIVE_SITE_DATA: "true" };
+  run("npm", ["run", "build", "-w", "@lorapok/cursor-monitor-shared"], { cwd: repoRoot, env: fastBuildEnv });
+  run(process.execPath, [resolve(repoRoot, "scripts/embed-product-context.mjs")], { cwd: repoRoot, env: fastBuildEnv });
+  run("npx", ["tsc", "-b"], { cwd: adminDir, env: fastBuildEnv });
+  run("npx", ["vite", "build"], { cwd: adminDir, env: fastBuildEnv });
 
   const distIndex = resolve(adminDir, "dist/index.html");
   const distSiteData = resolve(adminDir, "dist/site-data.json");
