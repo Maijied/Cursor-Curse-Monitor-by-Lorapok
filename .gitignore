@@ -19,6 +19,9 @@ website/admin/.data/
 website/admin/_worker.bundle
 .firecrawl/
 .dev-smoke/
+dev-smoke/
+skills-lock.json
+.codex/
 .vscode-dev/
 .vscode-dev/locks/
 tests/*.vscdb

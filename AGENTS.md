@@ -76,6 +76,11 @@ Rules:
 - Unknown forks (AGY, etc.): set `CCM_PRODUCT_DATA_FOLDER` to the config dir name under `~/.config`.
 - Check: `npm run check:isolation`
 
+### Project agent skills
+
+- **Canonical tree:** `.agents/skills/` (tracked; `.agents/skills/.gitignore` keeps API/credential skills local-only).
+- **Cursor path:** `.cursor/skills` is a symlink to `.agents/skills` so Cursor and Codex share one copy.
+
 ### Global agent skills
 
 Lorapok skills are installed globally (`~/.cursor/skills`, `~/.agents/skills`, `~/.claude/skills`):

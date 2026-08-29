@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const sourceRoot = join(repoRoot, ".cursor", "skills");
+const sourceRoot = join(repoRoot, ".agents", "skills");
 
 /** Skills documented as global in AGENTS.md / docs/wiki/Home.md */
 const GLOBAL_SKILLS = [
