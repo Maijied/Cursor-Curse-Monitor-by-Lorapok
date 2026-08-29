@@ -183,7 +183,7 @@ export default function Deployments() {
     if (!isMaster) {
       setMessage({
         type: "error",
-        text: "Only the master admin can trigger releases. Sign in as mdshuvo40@gmail.com or contact the project owner.",
+        text: "Only the master admin can trigger releases. Sign in as admin@lorapok.tech or contact the project owner.",
       });
       return;
     }

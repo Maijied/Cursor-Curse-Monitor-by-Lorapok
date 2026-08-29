@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T05:26:01.184Z",
+  "generatedAt": "2026-08-29T07:56:26.474Z",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
   "version": "1.0.34",
@@ -16,7 +16,7 @@
   "repository": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",
-    "email": "mdshuvo40@gmail.com",
+    "email": "admin@lorapok.tech",
     "url": "https://github.com/Maijied"
   },
   "company": {
@@ -62,7 +62,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-08-29T05:26:01.184Z"
+    "updatedAt": "2026-08-29T07:56:26.473Z"
   },
   "noticeTemplates": [
     {
@@ -246,8 +246,8 @@
     }
   ],
   "downloads": {
-    "total": 12468,
-    "displayTotal": 12468,
+    "total": 12682,
+    "displayTotal": 12682,
     "verified": true,
     "liveSources": {
       "openVsxCanonical": true,
@@ -255,18 +255,18 @@
       "vscodeMarketplace": true,
       "githubReleases": true
     },
-    "canonicalTotal": 7405,
+    "canonicalTotal": 7523,
     "source": "canonical",
     "breakdown": {
-      "openVsxCanonical": 6951,
-      "openVsxDuplicate": 5063,
-      "openVsxDisplay": 6951,
-      "vscodeMarketplace": 443,
+      "openVsxCanonical": 7067,
+      "openVsxDuplicate": 5159,
+      "openVsxDisplay": 7067,
+      "vscodeMarketplace": 445,
       "githubAllAssets": 11,
       "githubVsix": 11,
       "latestReleaseVsix": 0
     },
-    "openVsxCombined": 12014,
+    "openVsxCombined": 12226,
     "note": "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets)."
   },
   "visitors": {
@@ -306,7 +306,7 @@
     "version": "1.0.34",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 6951,
+    "downloadCount": 7067,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
@@ -315,13 +315,13 @@
     "version": "1.0.34",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 5063,
+    "downloadCount": 5159,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
     "version": "1.0.34",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "downloadCount": 443,
+    "downloadCount": 445,
     "installCount": 3,
     "updateCount": 16,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok",
@@ -331,6 +331,9 @@
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
     "releaseTag": "v1.0.34",
     "tags": [
+      "v1.0.49",
+      "v1.0.48",
+      "v1.0.47",
       "v1.0.46",
       "v1.0.45",
       "v1.0.44",
@@ -357,10 +360,7 @@
       "v1.0.23",
       "v1.0.22",
       "v1.0.21",
-      "v1.0.20",
-      "v1.0.19",
-      "v1.0.18",
-      "v1.0.17"
+      "v1.0.20"
     ],
     "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.34",
     "vsixName": "cursor-curse-monitor-by-lorapok-1.0.34.vsix",

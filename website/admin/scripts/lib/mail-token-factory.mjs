@@ -60,7 +60,7 @@ export async function probe(token, accountId) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "mdshuvo40@gmail.com",
+        to: "admin@lorapok.tech",
         from: { address: "cursor-contact@lorapok.tech", name: "CCM Setup" },
         subject: "CCM mail token configured",
         text: "Cloudflare Email Sending is now wired for Mission Control.",

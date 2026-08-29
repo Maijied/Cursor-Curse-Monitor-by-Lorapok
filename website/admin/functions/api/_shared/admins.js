@@ -1,4 +1,4 @@
-const DEFAULT_MASTER = "mdshuvo40@gmail.com";
+const DEFAULT_MASTER = "admin@lorapok.tech";
 const KV_KEY = "admin-emails";
 
 export function getMasterEmail(env) {

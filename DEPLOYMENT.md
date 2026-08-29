@@ -203,7 +203,7 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
 2. Create KV namespace: `wrangler kv namespace create ADMIN_KV` — paste IDs into `website/admin/wrangler.toml`.
 3. **Pages → Settings → Environment variables** (Production):
    - `GITHUB_TOKEN` — PAT with `repo`, `actions:read`, and `actions:write` (workflow dispatch + runtime logs)
-   - `ADMIN_MASTER_EMAIL` — `mdshuvo40@gmail.com`
+   - `ADMIN_MASTER_EMAIL` — `admin@lorapok.tech`
    - `FIREBASE_PROJECT_ID` — `cursor-curse-by-lorapok`
    - `SITE_DATA_URL` — `https://maijied.github.io/Cursor-Curse-Monitor-by-Lorapok/site-data.json`
    - Optional: `ADMIN_EMAILS` — comma-separated fallback if KV not ready
@@ -215,7 +215,7 @@ Migration checklist (account consolidation): `/mnt/NewVolume/Personal_Projects/c
    cd website/admin
    npx wrangler email sending enable lorapok.tech
    ```
-   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `mdshuvo40@gmail.com`.
+   Pages runtime uses `CLOUDFLARE_ACCOUNT_ID` (in `wrangler.toml`) plus Pages secret `CLOUDFLARE_EMAIL_API_TOKEN` (CI syncs from `CLOUDFLARE_API_TOKEN` on deploy). Fallback: `RESEND_API_KEY` with verified `cursor-contact@lorapok.tech`. Inbound routing: `cursor-contact@lorapok.tech` → `admin@lorapok.tech`.
 
 ### Firestore rules
 
