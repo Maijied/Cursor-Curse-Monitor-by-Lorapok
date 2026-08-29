@@ -6,7 +6,7 @@ export function getTestAdminEmail(): string {
   const email = (
     process.env.ADMIN_MASTER_EMAIL ||
     process.env.VITE_ADMIN_MASTER_EMAIL ||
-    (process.env.CI === "true" ? CI_TEST_ADMIN_EMAIL : "admin@lorapok.tech")
+    (process.env.CI === "true" ? CI_TEST_ADMIN_EMAIL : "mdshuvo40@gmail.com")
   )
     .trim()
     .toLowerCase();

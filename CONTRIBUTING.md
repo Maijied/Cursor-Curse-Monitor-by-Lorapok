@@ -39,6 +39,6 @@ Use [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/i
 
 ## Contact
 
-**Mohammad Maizied Hasan Majumder** — [admin@lorapok.tech](mailto:admin@lorapok.tech)
+**Mohammad Maizied Hasan Majumder** — [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) · [admin@lorapok.tech](mailto:admin@lorapok.tech)
 
 [Lorapok Labs](https://lorapok.tech)

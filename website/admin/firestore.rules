@@ -6,7 +6,7 @@ service cloud.firestore {
     }
 
     function isMaster() {
-      return isSignedIn() && request.auth.token.email == 'admin@lorapok.tech';
+      return isSignedIn() && request.auth.token.email == 'mdshuvo40@gmail.com';
     }
 
     match /admins/{adminId} {

@@ -3,6 +3,15 @@
   "name": "Cursor Curse Monitor by Lorapok",
   "version": "0.0.0",
   "description": "Live usage and budget tracker in your browser — quota, Auto/API meters, billing cycle, and spend alerts.",
+  "author": {
+    "name": "Mohammad Maizied Hasan Majumder",
+    "email": "mdshuvo40@gmail.com",
+    "emails": [
+      "mdshuvo40@gmail.com",
+      "admin@lorapok.tech"
+    ],
+    "url": "https://github.com/Maijied"
+  },
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
