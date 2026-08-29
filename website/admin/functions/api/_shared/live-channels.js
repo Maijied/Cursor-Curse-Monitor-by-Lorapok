@@ -61,11 +61,14 @@ export async function fetchLiveChannels(siteData, options = {}) {
     siteData.github?.releaseTag?.replace(/^v/i, "")?.split("-")[0] ??
     null;
   const latestGitTag = maxTagVersion(githubTags) ?? githubReleaseVersion;
+  // FIX: Only use amoData.current_version.version if it's a real version, never fall back to packageVersion
+  // This prevents the circular bump issue where AMO appears to be at the current version
   const amoVersion =
-    amoData?.current_version?.version ??
-    siteData.browserExtension?.firefox?.version ??
-    siteData.browserExtension?.version ??
-    null;
+    amoData?.current_version?.version && amoData.current_version.version !== "0.0.0"
+      ? amoData.current_version.version
+      : siteData.browserExtension?.firefox?.version ??
+        siteData.browserExtension?.version ??
+        null;
   const chromeVersion =
     versionFromChromeAsset(githubRelease?.assets) ??
     siteData.github?.chromeZipName?.match(/(\d+\.\d+\.\d+)/)?.[1] ??
@@ -104,7 +107,7 @@ export async function fetchLiveChannels(siteData, options = {}) {
     {
       id: "firefox-amo",
       label: "Firefox AMO",
-      version: amoVersion && amoVersion !== "0.0.0" ? amoVersion : packageVersion,
+      version: amoVersion,
       published: amoData?.status === "public",
     },
     {
