@@ -21,7 +21,7 @@ import {
 
 /** @param {Record<string, unknown>} snapshot */
 function stableSnapshotBody(snapshot) {
-  const { refreshedAt, triggeredBy, ...rest } = snapshot;
+  const { refreshedAt: _refreshedAt, triggeredBy: _triggeredBy, ...rest } = snapshot;
   return rest;
 }
 

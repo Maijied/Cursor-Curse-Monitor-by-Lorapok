@@ -139,7 +139,7 @@ node scripts/validate-seo.mjs
 |---|------|----------|
 | 9.1 | `npm run package` | VSIX builds without errors |
 | 9.2 | Install VSIX in Cursor/VS Code | Extension activates |
-| 9.3 | Open usage dashboard sidebar | Version shows **0.5.6** |
+| 9.3 | Open usage dashboard sidebar | Version matches root `package.json` |
 | 9.4 | Trigger refresh | No duplicate refresh / mutex warnings in dev console |
 | 9.5 | Large `state.vscdb` fixture | Token read succeeds (sqlite path, not full WASM load) |
 
@@ -155,9 +155,9 @@ node scripts/validate-seo.mjs
 
 | # | Check | Expected |
 |---|-------|----------|
-| 10.1 | `website/site-data.json` | `"version": "0.5.6"`, `github.tags` populated |
-| 10.2 | `website/seo.json` | `softwareVersion` = 0.5.6 |
-| 10.3 | Local website preview | Install commands reference 0.5.6 |
+| 10.1 | `website/site-data.json` | `"version"` matches `package.json`, `github.tags` populated |
+| 10.2 | `website/seo.json` | `softwareVersion` matches `package.json` |
+| 10.3 | Local website preview | Install commands reference current release version |
 
 ---
 
@@ -171,19 +171,20 @@ node scripts/validate-seo.mjs
    - **Publish Market:** `Both`
    - **Release Channel:** `Production`
    - **Version Bump Type:** `custom`
-   - **Custom Version:** `1.0.56` (if not already bumped locally)
+   - **Custom Version:** current `package.json` version (if not already bumped locally)
 4. Wait for `deploy` + `website` jobs.
-5. Verify:
-   - [Open VSX lorapok-labs](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok) → 1.0.56
-   - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok) → 1.0.56
-   - GitHub Release `v1.0.56` with VSIX asset
+5. Verify marketplace listings and GitHub Release match `package.json` version:
+   - [Open VSX lorapok-labs](https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok)
+   - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok)
+   - GitHub Release tag with VSIX asset
 
 ### Option B — Tag push (if version already on main)
 
 ```bash
-git tag v1.0.56
+# Replace VERSION with package.json version
+git tag vVERSION
 git push origin main
-git push origin v1.0.56
+git push origin vVERSION
 ```
 
 ### Option C — Local Open VSX only

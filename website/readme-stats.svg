@@ -8,21 +8,21 @@
   </defs>
   <rect width="720" height="220" rx="16" fill="url(#bg)" stroke="rgba(124,92,255,0.35)"/>
   <text x="24" y="34" fill="#f8fafc" font-size="18" font-weight="700" font-family="Segoe UI, system-ui, sans-serif">Community downloads</text>
-  <text x="24" y="54" fill="#94a3b8" font-size="12" font-family="Segoe UI, system-ui, sans-serif">Total 13k · Open VSX 12k · v1.0.56</text>
+  <text x="24" y="54" fill="#94a3b8" font-size="12" font-family="Segoe UI, system-ui, sans-serif">Total 13k · Open VSX 13k · v1.0.57</text>
   <text x="696" y="34" text-anchor="end" fill="#94a3b8" font-size="11" font-family="Segoe UI, system-ui, sans-serif">synced</text>
   <line x1="24" y1="202" x2="696" y2="202" stroke="rgba(148,163,184,0.18)"/>
   
   <rect x="24" y="78" width="157.5" height="96" rx="8" fill="#7c5cff" opacity="1"/>
   <text x="102.75" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">Open VSX (canonical)</text>
-  <text x="102.75" y="70" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">7.2k</text>
-  <rect x="195.5" y="104" width="157.5" height="70" rx="8" fill="#94a3b8" opacity="1"/>
+  <text x="102.75" y="70" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">7.4k</text>
+  <rect x="195.5" y="102" width="157.5" height="72" rx="8" fill="#94a3b8" opacity="1"/>
   <text x="274.25" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">Open VSX (LorapokLabs)</text>
-  <text x="274.25" y="96" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">5.3k</text>
+  <text x="274.25" y="94" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">5.5k</text>
   <rect x="367" y="168" width="157.5" height="6" rx="8" fill="#4d9fff" opacity="1"/>
   <text x="445.75" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">VS Code Marketplace</text>
-  <text x="445.75" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">462</text>
+  <text x="445.75" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">484</text>
   <rect x="538.5" y="168" width="157.5" height="6" rx="8" fill="#34d399" opacity="1"/>
   <text x="617.25" y="192" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Segoe UI, system-ui, sans-serif">GitHub releases</text>
-  <text x="617.25" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">13</text>
-  <text x="24" y="206" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated Sat, 29 Aug 2026 19:01:15 GMT · grand total across Open VSX (both namespaces), VS Code Marketplace, and GitHub releases</text>
+  <text x="617.25" y="160" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">11</text>
+  <text x="24" y="206" fill="#64748b" font-size="10" font-family="Segoe UI, system-ui, sans-serif">Updated Sat, 29 Aug 2026 22:03:53 GMT · grand total across Open VSX (both namespaces), VS Code Marketplace, and GitHub releases</text>
 </svg>
