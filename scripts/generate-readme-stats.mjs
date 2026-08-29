@@ -4,6 +4,7 @@
  * Static files are served from GitHub raw so shields.io avoids Cloudflare bot challenges.
  * When marketplace sources are unverified, badges/charts show unavailable — never zero-filled.
  */
+import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,12 +18,25 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const siteDataPath = join(root, "website", "site-data.json");
 const statsDir = join(root, "website", "stats");
 const svgPath = join(root, "website", "readme-stats.svg");
+const pngPath = join(root, "website", "readme-stats.png");
 
 const data = JSON.parse(readFileSync(siteDataPath, "utf8"));
 const stats = buildReadmeStatsFromSiteData(data);
 
 mkdirSync(statsDir, { recursive: true });
-writeFileSync(svgPath, renderReadmeStatsSvg(stats));
+const svg = renderReadmeStatsSvg(stats);
+writeFileSync(svgPath, svg);
+
+try {
+  execFileSync("rsvg-convert", ["-w", "720", svgPath, "-o", pngPath], { stdio: "inherit" });
+  console.log(`Wrote ${pngPath}`);
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (process.env.CI === "true") {
+    throw new Error(`readme-stats.png required in CI (install librsvg2-bin): ${message}`);
+  }
+  console.warn(`Skip ${pngPath} (rsvg-convert unavailable): ${message}`);
+}
 
 /** @type {const} */
 const badgeFiles = [
