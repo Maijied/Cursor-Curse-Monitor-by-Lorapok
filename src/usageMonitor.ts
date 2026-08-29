@@ -279,9 +279,10 @@ export class UsageMonitorService implements vscode.Disposable {
     if (this.timer) {
       clearInterval(this.timer);
     }
-    const seconds = vscode.workspace
+    const rawSeconds = vscode.workspace
       .getConfiguration("cursorCurseMonitor")
       .get<number>("pollIntervalSeconds", 30);
+    const seconds = Math.min(3600, Math.max(15, Number(rawSeconds) || 30));
     this.timer = setInterval(() => {
       void this.refresh();
     }, seconds * 1000);

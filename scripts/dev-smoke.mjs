@@ -147,7 +147,11 @@ function stepBuild() {
     ];
 
     for (const [cmd, runArgs] of steps) {
-      const result = runSync(cmd, runArgs);
+      const env =
+        cmd === "npm" && runArgs[1] === "browser-ext:build"
+          ? { ...process.env, CCM_BROWSER_EXT_DEV_STORAGE: "1" }
+          : process.env;
+      const result = runSync(cmd, runArgs, { env });
       if (result.status !== 0) {
         fail(`build failed: ${cmd} ${runArgs.join(" ")}`);
       }

@@ -50,6 +50,9 @@ const SNAPSHOT_KEY = "lastSnapshot";
 const FIREFOX_PRODUCTION_EXTENSION_ID = "cursor-curse-monitor@lorapok.tech";
 
 function isUnpackedDevBuild(): boolean {
+  if (__CCM_DEV_STORAGE_PREFIX__) {
+    return true;
+  }
   try {
     const manifest = browser.runtime.getManifest() as {
       update_url?: string;
@@ -65,9 +68,10 @@ function isUnpackedDevBuild(): boolean {
     if (browser.runtime.id === FIREFOX_PRODUCTION_EXTENSION_ID) {
       return false;
     }
-    return true;
+    // Default production storage keys (Chrome sideload zip, store builds without update_url).
+    return false;
   } catch {
-    return true;
+    return false;
   }
 }
 

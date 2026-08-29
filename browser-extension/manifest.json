@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Cursor Curse Monitor by Lorapok",
   "version": "0.0.0",
-  "description": "Live Cursor usage & budget tracker in your browser — quota, Auto/API meters, billing cycle, and spend alerts. Also available on Open VSX, VS Code Marketplace, and GitHub Releases.",
+  "description": "Live usage and budget tracker in your browser — quota, Auto/API meters, billing cycle, and spend alerts.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
