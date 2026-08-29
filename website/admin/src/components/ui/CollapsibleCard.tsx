@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Card from "./Card";
 
 type CollapsibleCardProps = {
@@ -24,6 +24,10 @@ export default function CollapsibleCard({
 }: CollapsibleCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
+  const reduceMotion = useReducedMotion();
+  const panelTransition = reduceMotion
+    ? { duration: 0 }
+    : { duration: 0.35, ease: [0.4, 0, 0.2, 1] as const };
 
   return (
     <Card className={className}>
@@ -59,7 +63,7 @@ export default function CollapsibleCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+            transition={panelTransition}
             className="overflow-hidden"
           >
             <div className="pt-4">

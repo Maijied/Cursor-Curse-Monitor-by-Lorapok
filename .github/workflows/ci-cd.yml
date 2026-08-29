@@ -543,6 +543,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_ACTOR: ${{ github.actor }}
+          ACTION_TYPE: ${{ github.event.inputs.action_type || github.event_name }}
         run: |
           CONCLUSION=success
           if [ "${{ steps.pages_deploy.outcome }}" != "success" ]; then
@@ -551,7 +552,7 @@ jobs:
           node scripts/discord-deployment-notify.mjs \
             --conclusion "$CONCLUSION" \
             --target "Deploy Admin Panel" \
-            --action-type "${{ github.event.inputs.action_type || format('{0}', github.event_name) }}" \
+            --action-type "$ACTION_TYPE" \
             --deploy-url "https://cursor-dev.lorapok.tech/"
 
   # ───────────────────────────────────────────────────────────────────────────
@@ -1172,6 +1173,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_ACTOR: ${{ github.actor }}
+          ACTION_TYPE: ${{ github.event.inputs.action_type || github.event_name }}
         run: |
           CONCLUSION=success
           if [ "${{ steps.deployment.outcome }}" != "success" ]; then
@@ -1180,7 +1182,7 @@ jobs:
           node scripts/discord-deployment-notify.mjs \
             --conclusion "$CONCLUSION" \
             --target "Deploy Marketing Website" \
-            --action-type "${{ github.event.inputs.action_type || format('{0}', github.event_name) }}" \
+            --action-type "$ACTION_TYPE" \
             --deploy-url "https://cursor.lorapok.tech/"
 
   # ───────────────────────────────────────────────────────────────────────────

@@ -168,10 +168,10 @@
 
   .architecture-mermaid-animated .node,
   .architecture-mermaid-animated .edgePath,
+  .architecture-mermaid-animated .edgePath path,
   .architecture-mermaid-animated .cluster {
     animation: none !important;
     opacity: 1 !important;
-    transform: none !important;
   }
 
   .deploy-pipeline-larvae {

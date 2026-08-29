@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { AlertTriangle, ExternalLink, Lock, RefreshCw, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, Lock, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
 import {
   fetchTags,
   fetchVersionPlan,
@@ -23,6 +23,7 @@ import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import CollapsibleCard from "../ui/CollapsibleCard";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
+import LoadableButton from "../ui/LoadableButton";
 import { auth } from "../../lib/firebase";
 import { isMasterAdmin } from "../../lib/admin-config";
 
@@ -356,20 +357,18 @@ export default function Deployments() {
         className="border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]"
         subtitle="Validates live versions across GitHub, Open VSX, VS Code Marketplace, and Firefox AMO before you publish."
         actions={
-          <button
+          <LoadableButton
             type="button"
             onClick={() => void runVersionCheck()}
             disabled={versionPlanLoading || !isMaster}
+            loading={versionPlanLoading}
+            loadingLabel="Validating…"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50"
             aria-label="Validate marketplace platforms before deployment"
           >
-            {versionPlanLoading ? (
-              <RefreshCw size={16} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <ShieldCheck size={16} aria-hidden="true" />
-            )}
-            {versionPlanLoading ? "Validating…" : "Validate platforms"}
-          </button>
+            <ShieldCheck size={16} aria-hidden="true" />
+            Validate platforms
+          </LoadableButton>
         }
       >
         {versionPlanError ? (

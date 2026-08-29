@@ -1,0 +1,243 @@
+/* Lorapok Larvae loader + animated feedback (marketing site) */
+
+@keyframes larvae-wiggle {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  25% { transform: rotate(3deg) translateY(-2px); }
+  50% { transform: rotate(5deg) translateY(0); }
+  75% { transform: rotate(-2deg) translateY(-1px); }
+}
+
+@keyframes larvae-segment-pulse {
+  0%, 100% { opacity: 0.82; }
+  50% { opacity: 1; }
+}
+
+@keyframes larvae-eye-glow {
+  0%, 100% { opacity: 0.75; filter: drop-shadow(0 0 2px #39ff14); }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px #39ff14); }
+}
+
+@keyframes larvae-leg-kick {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+
+@keyframes larvae-trail {
+  0%, 100% { opacity: 0.15; transform: scaleX(0.85); }
+  50% { opacity: 0.35; transform: scaleX(1); }
+}
+
+.larvae-loader-root {
+  animation: larvae-wiggle 1.15s ease-in-out infinite;
+  transform-origin: 50% 85%;
+  display: block;
+}
+
+.larvae-segment { animation: larvae-segment-pulse 1.35s ease-in-out infinite; }
+.larvae-segment-2 { animation-delay: 0.15s; }
+.larvae-segment-3 { animation-delay: 0.3s; }
+
+.larvae-eye { animation: larvae-eye-glow 1.6s ease-in-out infinite; }
+.larvae-eye-right { animation-delay: 0.2s; }
+
+.larvae-leg-left { transform-origin: 38px 88px; animation: larvae-leg-kick 0.55s ease-in-out infinite; }
+.larvae-leg-right { transform-origin: 58px 88px; animation: larvae-leg-kick 0.55s ease-in-out infinite reverse; }
+
+.larvae-trail { animation: larvae-trail 1.15s ease-in-out infinite; }
+
+/* Button loading state */
+.btn.primary,
+.btn-loadable {
+  position: relative;
+}
+
+.btn.primary.is-loading .subscribe-btn-label,
+.btn-loadable.is-loading .subscribe-btn-label,
+.btn-loadable.is-loading .btn-label {
+  opacity: 0;
+}
+
+.btn-larvae-loader,
+.subscribe-btn-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.btn-larvae-loader[hidden],
+.subscribe-btn-loader[hidden] {
+  display: none !important;
+}
+
+/* Animated feedback banners */
+.ccm-feedback {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 14px auto 0;
+  max-width: 520px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition:
+    opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ccm-feedback::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: 0;
+  transform: scaleX(0.4);
+  transform-origin: left center;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+}
+
+.ccm-feedback--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ccm-feedback--visible::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.ccm-feedback-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  animation: ccm-feedback-icon-in 0.5s cubic-bezier(0.34, 1.35, 0.64, 1) both;
+}
+
+.ccm-feedback-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.ccm-feedback-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.ccm-feedback-text {
+  display: block;
+  color: var(--muted);
+}
+
+.ccm-feedback--success {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  border-color: color-mix(in srgb, var(--ok) 32%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ok) 12%, transparent);
+}
+.ccm-feedback--success::before {
+  background: linear-gradient(90deg, transparent, var(--ok), transparent);
+}
+.ccm-feedback--success .ccm-feedback-text { color: color-mix(in srgb, var(--ok) 75%, var(--muted)); }
+
+.ccm-feedback--error {
+  color: #f87171;
+  background: color-mix(in srgb, #f87171 10%, transparent);
+  border-color: color-mix(in srgb, #f87171 30%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, #f87171 10%, transparent);
+}
+.ccm-feedback--error::before {
+  background: linear-gradient(90deg, transparent, #f87171, transparent);
+}
+.ccm-feedback--error .ccm-feedback-text { color: color-mix(in srgb, #f87171 80%, var(--muted)); }
+
+.ccm-feedback--pending {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+}
+.ccm-feedback--pending::before {
+  background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
+}
+.ccm-feedback--pending .ccm-feedback-text { color: var(--muted); }
+
+.ccm-feedback--info {
+  color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+}
+.ccm-feedback--info::before {
+  background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
+}
+
+.ccm-feedback--warning {
+  color: #fbbf24;
+  background: color-mix(in srgb, #fbbf24 10%, transparent);
+  border-color: color-mix(in srgb, #fbbf24 30%, transparent);
+}
+.ccm-feedback--warning::before {
+  background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+}
+
+@keyframes ccm-feedback-icon-in {
+  0% { opacity: 0; transform: scale(0.55) rotate(-8deg); }
+  70% { transform: scale(1.06) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes ccm-feedback-check-draw {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+.ccm-feedback--success .ccm-feedback-check {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: ccm-feedback-check-draw 0.45s ease 0.12s forwards;
+}
+
+.subscribe-modal .ccm-feedback {
+  max-width: none;
+  margin-top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .larvae-loader-root,
+  .larvae-segment,
+  .larvae-eye,
+  .larvae-leg-left,
+  .larvae-leg-right,
+  .larvae-trail,
+  .ccm-feedback,
+  .ccm-feedback-icon,
+  .ccm-feedback-check {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .ccm-feedback {
+    opacity: 1;
+    transform: none;
+  }
+
+  .ccm-feedback--success .ccm-feedback-check {
+    stroke-dashoffset: 0;
+  }
+}
