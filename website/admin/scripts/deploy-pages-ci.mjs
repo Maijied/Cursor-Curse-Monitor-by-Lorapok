@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pickDeployToken, probeDeployToken, resolveMailCredentials } from "./lib/mail-credentials.mjs";
+import { pickDeployToken, probeDeployToken, resolveMailCredentials, tryWranglerOAuthToken } from "./lib/mail-credentials.mjs";
 import {
   classifyWranglerFailure,
   resolvePagesPreDeployCooldownSec,
@@ -99,7 +99,26 @@ async function resolveDeployAuth() {
     };
   }
 
-  return pickDeployTokenWithRetry();
+  const picked = await pickDeployTokenWithRetry();
+  if (picked.probe.ok) {
+    return picked;
+  }
+
+  const oauth = tryWranglerOAuthToken(adminDir);
+  if (oauth) {
+    const oauthProbe = await probeDeployToken(oauth, accountId);
+    if (oauthProbe.ok) {
+      console.warn(
+        `Using wrangler OAuth token (stored deploy token invalid or expired: HTTP ${picked.probe.status}).`
+      );
+      console.warn(
+        "  Tip: refresh vault token with: node website/admin/scripts/sync-mail-cred-vault.mjs"
+      );
+      return { token: oauth, probe: oauthProbe, sawRateLimit: false };
+    }
+  }
+
+  return picked;
 }
 
 function runWranglerDeploy(args, token) {
