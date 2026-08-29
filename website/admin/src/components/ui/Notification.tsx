@@ -52,6 +52,7 @@ export default function Notification({ tone, title, message, onDismiss, classNam
   const style = toneStyles[tone];
   const Icon = style.icon;
   const reduceMotion = useReducedMotion();
+  const instant = reduceMotion ? { duration: 0 } : undefined;
 
   return (
     <motion.div
@@ -59,33 +60,33 @@ export default function Notification({ tone, title, message, onDismiss, classNam
       aria-live={tone === "error" ? "assertive" : "polite"}
       initial={reduceMotion ? false : { opacity: 0, y: -10, scale: 0.98, filter: "blur(6px)" }}
       animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-      transition={{ type: "spring", stiffness: 420, damping: 28, mass: 0.85 }}
+      transition={instant ?? { type: "spring", stiffness: 420, damping: 28, mass: 0.85 }}
       className={`relative overflow-hidden flex gap-3 p-4 rounded-xl border ${style.box} ${className}`}
     >
       <motion.span
         aria-hidden="true"
         className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${barColors[tone]}`}
-        initial={{ scaleX: 0, opacity: 0 }}
+        initial={reduceMotion ? false : { scaleX: 0, opacity: 0 }}
         animate={{ scaleX: 1, opacity: 1 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        transition={instant ?? { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         style={{ transformOrigin: "left center" }}
       />
 
       {tone === "loading" ? (
         <motion.div
           className="shrink-0 mt-0.5"
-          initial={{ scale: 0.7, opacity: 0 }}
+          initial={reduceMotion ? false : { scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 24, delay: 0.04 }}
+          transition={instant ?? { type: "spring", stiffness: 500, damping: 24, delay: 0.04 }}
         >
           <LorapokLarvaeLoader size="sm" ariaLabel="Loading" />
         </motion.div>
       ) : Icon ? (
         <motion.div
           className="shrink-0 mt-0.5"
-          initial={{ scale: 0.55, opacity: 0, rotate: -12 }}
+          initial={reduceMotion ? false : { scale: 0.55, opacity: 0, rotate: -12 }}
           animate={{ scale: 1, opacity: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 520, damping: 22, delay: 0.05 }}
+          transition={instant ?? { type: "spring", stiffness: 520, damping: 22, delay: 0.05 }}
         >
           <Icon size={20} className={style.iconClass} aria-hidden="true" />
         </motion.div>
@@ -95,18 +96,18 @@ export default function Notification({ tone, title, message, onDismiss, classNam
         {title ? (
           <motion.p
             className="font-semibold text-[var(--color-text)] mb-0.5"
-            initial={{ opacity: 0, x: -6 }}
+            initial={reduceMotion ? false : { opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.28, delay: 0.08 }}
+            transition={instant ?? { duration: 0.28, delay: 0.08 }}
           >
             {title}
           </motion.p>
         ) : null}
         <motion.p
           className={`text-sm leading-relaxed ${title ? "text-[var(--color-muted)]" : "text-[var(--color-text)]"}`}
-          initial={{ opacity: 0, x: -4 }}
+          initial={reduceMotion ? false : { opacity: 0, x: -4 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+          transition={instant ?? { duration: 0.3, delay: 0.1 }}
         >
           {message}
         </motion.p>
