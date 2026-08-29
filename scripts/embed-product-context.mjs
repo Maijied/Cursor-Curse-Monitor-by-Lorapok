@@ -47,7 +47,7 @@ writeFileSync(
     {
       version: pkg.version,
       displayName: pkg.displayName ?? pkg.name,
-      ctx,
+      ctx: placeholderCtx,
       messageCatalog: bakePlaceholders(messageCatalog, placeholderCtx),
       mailTemplates: bakePlaceholders(mailTemplates, placeholderCtx),
       noticeTemplates: bakePlaceholders(noticeTemplates, placeholderCtx),

@@ -121,6 +121,10 @@ export default function Deployments() {
   );
 
   useEffect(() => {
+    if (filteredTags.length === 0) {
+      if (selectedTag) setSelectedTag("");
+      return;
+    }
     if (selectedTag && !filteredTags.includes(selectedTag)) {
       setSelectedTag(defaultTagSelection(filteredTags, liveTag, suggestedTag));
     }
