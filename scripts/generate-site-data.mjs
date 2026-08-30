@@ -389,9 +389,9 @@ const [github, githubTagList, githubDownloads, ovsxCanonical, ovsxDuplicate, vsc
   fetchFirefoxAmo(),
 ]);
 
-// Root package.json is the release candidate. Live channels are observations — warn on
-// drift but never block CI; prepare-release-tag bumps max(live)+patch on main push.
-const version = pkg.version;
+// Root package.json is the release candidate when synced; in git it stays 0.0.0.
+// Live channels are observations — warn on drift but never block CI.
+const version = pkg.version === "0.0.0" ? (github?.version ?? ovsxCanonical?.version ?? vscode?.version ?? pkg.version) : pkg.version;
 const publishedReleaseVersion = github?.version ?? null;
 
 function ovsxUnityVersion(canonicalVersion, duplicateVersion) {
