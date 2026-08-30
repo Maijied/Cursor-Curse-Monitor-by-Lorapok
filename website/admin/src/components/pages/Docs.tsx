@@ -3,7 +3,7 @@ import { BookOpen, Download, ExternalLink, Search } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import { useSiteData } from "../../hooks/useSiteData";
-import { formatDownloadCount, getDisplayDownloadTotal } from "../../lib/download-stats";
+import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailabilityLabel } from "../../lib/download-stats";
 
 const QUICK_LINKS = [
   { label: "Firebase Console", href: "https://console.firebase.google.com/project/cursor-curse-by-lorapok" },
@@ -426,7 +426,9 @@ export default function Docs() {
                 <p className="text-2xl font-bold text-[var(--color-text)] mt-1">
                   {formatDownloadCount(getDisplayDownloadTotal(siteData))}
                 </p>
-                <p className="text-[10px] text-[var(--color-muted)] mt-2">All marketplaces combined</p>
+                <p className="text-[10px] text-[var(--color-muted)] mt-2">
+                  {downloadStatsAvailabilityLabel(siteData)}
+                </p>
               </Card>
             )}
             <Card>

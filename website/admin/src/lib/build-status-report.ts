@@ -1,6 +1,12 @@
 import type { SiteData, VisitorStats } from "./site-data";
 import { formatCount, syncStatusLabel } from "./site-data";
-import { formatDownloadCount, getDisplayDownloadTotal, getVerifiedChannelCount } from "./download-stats";
+import {
+  formatDownloadCount,
+  getDisplayDownloadTotal,
+  getVerifiedChannelCount,
+  downloadStatsAvailabilityLabel,
+  isDownloadStatsVerified,
+} from "./download-stats";
 
 export interface StatusReportRow {
   label: string;
@@ -80,7 +86,11 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
 
   const downloadRows: StatusReportRow[] = [
     {
-      label: "Total downloads (live)",
+      label: isDownloadStatsVerified(data)
+        ? "Total downloads (verified live)"
+        : getDisplayDownloadTotal(data) != null
+          ? `Total downloads (${downloadStatsAvailabilityLabel(data)})`
+          : "Total downloads (live)",
       value: formatDownloadCount(getDisplayDownloadTotal(data)),
       status: downloads?.verified ? "ok" : getDisplayDownloadTotal(data) != null ? "warn" : "warn",
     },

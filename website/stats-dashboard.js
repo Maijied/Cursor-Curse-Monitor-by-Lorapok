@@ -86,10 +86,11 @@
     const duplicate = breakdown.openVsxDuplicate ?? data?.ovsxDuplicate?.downloadCount ?? null;
     const vscode = breakdown.vscodeMarketplace ?? data?.vscode?.downloadCount ?? null;
     const github =
-      breakdown.githubAllAssets ??
-      data?.github?.totalReleaseDownloads ??
-      data?.github?.allAssetsDownloadCount ??
-      null;
+      "githubAllAssets" in breakdown
+        ? (breakdown.githubAllAssets ?? null)
+        : (data?.github?.totalReleaseDownloads ??
+          data?.github?.allAssetsDownloadCount ??
+          null);
     const fullyVerified = data?.downloads?.verified === true;
     const hasChannelData = canonical != null || duplicate != null || vscode != null;
     const displayable = fullyVerified || hasChannelData;
