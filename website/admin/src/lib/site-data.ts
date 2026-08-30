@@ -132,6 +132,7 @@ export interface SiteData {
     tags?: string[];
     vsixDownloadCount?: number;
     totalReleaseDownloads?: number;
+    allAssetsDownloadCount?: number;
     chromeZipUrl?: string | null;
     chromeZipName?: string | null;
   };
