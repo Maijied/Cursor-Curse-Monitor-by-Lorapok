@@ -1,5 +1,10 @@
 /**
  * Edge-compatible download totals (mirrors scripts/download-totals.mjs).
+ * Regenerate: npm run sync:download-totals
+ */
+
+/**
+ * Shared download total calculation for site-data generation and tests.
  */
 
 export function compareSemver(a, b) {
@@ -124,3 +129,4 @@ export function preserveVerifiedDownloads(previousDownloads, nextTotals) {
     note: previousDownloads.note ?? nextTotals.note,
   };
 }
+
