@@ -18,14 +18,21 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const isCli = process.argv[1] === fileURLToPath(import.meta.url);
 
 function readBaseVersion() {
+  const ref = process.env.GITHUB_REF ?? "";
+  if (ref.startsWith("refs/tags/")) {
+    const tagVersion = process.env.GITHUB_REF_NAME?.replace(/^v/, "");
+    if (tagVersion) return tagVersion.split("-")[0];
+  }
+  if (process.env.LIVE_MAX_VERSION) return process.env.LIVE_MAX_VERSION.replace(/^v/, "");
   if (process.env.RELEASE_BASE) return process.env.RELEASE_BASE.replace(/^v/, "");
   try {
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
     const base = String(pkg.version).split("-")[0];
-    return base || "1.0.1";
+    if (base && base !== "0.0.0") return base;
   } catch {
-    return "1.0.1";
+    // fall through
   }
+  return "1.0.1";
 }
 
 function commitCount() {
