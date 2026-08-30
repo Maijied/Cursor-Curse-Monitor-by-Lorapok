@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { computeDownloadTotals } from "./download-totals.mjs";
+import { computeDownloadTotals, preserveVerifiedDownloads } from "./download-totals.mjs";
 
 describe("computeDownloadTotals", () => {
   it("sums canonical open vsx, vscode, and github assets", () => {
@@ -37,6 +37,31 @@ describe("computeDownloadTotals", () => {
     });
     assert.equal(result.verified, false);
     assert.equal(result.displayTotal, null);
+  });
+
+  it("preserves verified totals when live refresh is incomplete", () => {
+    const previous = {
+      verified: true,
+      total: 13356,
+      displayTotal: 13356,
+      liveSources: {
+        openVsxCanonical: true,
+        openVsxDuplicate: true,
+        vscodeMarketplace: true,
+        githubReleases: true,
+      },
+      breakdown: { githubAllAssets: 3 },
+    };
+    const next = computeDownloadTotals({
+      openVsxCanonical: { version: "1.0.1", downloadCount: 100 },
+      vscode: { downloadCount: 20 },
+      githubAllAssets: null,
+      packageVersion: "1.0.1",
+    });
+    const preserved = preserveVerifiedDownloads(previous, next);
+    assert.equal(preserved.verified, true);
+    assert.equal(preserved.total, 13356);
+    assert.equal(preserved.displayTotal, 13356);
   });
 
   it("uses duplicate fallback display when canonical lags package version", () => {

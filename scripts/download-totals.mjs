@@ -103,3 +103,24 @@ export function computeDownloadTotals(input) {
     canonicalTotal,
   };
 }
+
+/**
+ * Keep last verified download totals when a live refresh cannot verify all channels.
+ * @param {Record<string, unknown>|null|undefined} previousDownloads
+ * @param {ReturnType<typeof computeDownloadTotals>} nextTotals
+ */
+export function preserveVerifiedDownloads(previousDownloads, nextTotals) {
+  if (previousDownloads?.verified !== true || nextTotals.verified) return nextTotals;
+  return {
+    ...nextTotals,
+    displayTotal: previousDownloads.displayTotal ?? previousDownloads.total ?? null,
+    total: previousDownloads.total ?? previousDownloads.displayTotal ?? null,
+    verified: true,
+    liveSources: previousDownloads.liveSources ?? nextTotals.liveSources,
+    breakdown: previousDownloads.breakdown ?? nextTotals.breakdown,
+    canonicalTotal: previousDownloads.canonicalTotal ?? nextTotals.canonicalTotal,
+    openVsxCombined: previousDownloads.openVsxCombined ?? nextTotals.openVsxCombined,
+    source: previousDownloads.source ?? nextTotals.source,
+    note: previousDownloads.note ?? nextTotals.note,
+  };
+}
