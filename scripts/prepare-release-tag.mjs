@@ -4,9 +4,10 @@
  * Falls back to a PR when branch protection blocks direct pushes to main.
  */
 import { execFileSync } from "node:child_process";
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { syncReleaseArtifactVersions } from "./lib-sync-release-artifacts.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const bumpType = process.env.BUMP_TYPE || "patch";
@@ -62,39 +63,6 @@ function remoteTagExists(tag) {
 function writeOutput(key, value) {
   if (!process.env.GITHUB_OUTPUT) return;
   appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
-}
-
-/** Keep committed site artifacts aligned with package.json without npm ci or live API calls. */
-function syncReleaseArtifactVersions(version) {
-  const sitePath = join(root, "website/site-data.json");
-  const seoPath = join(root, "website/seo.json");
-  const indexPath = join(root, "website/index.html");
-  const site = JSON.parse(readFileSync(sitePath, "utf8"));
-  site.version = version;
-  site.packageVersion = version;
-  if (site.install && typeof site.install === "object") {
-    site.install.releaseTag = `./scripts/release.sh ${version}`;
-  }
-  writeFileSync(sitePath, `${JSON.stringify(site, null, 2)}\n`, "utf8");
-
-  const seo = JSON.parse(readFileSync(seoPath, "utf8"));
-  seo.version = version;
-  seo.packageVersion = version;
-  if (seo.structuredData?.softwareApplication && typeof seo.structuredData.softwareApplication === "object") {
-    seo.structuredData.softwareApplication.softwareVersion = version;
-  }
-  writeFileSync(seoPath, `${JSON.stringify(seo, null, 2)}\n`, "utf8");
-
-  if (existsSync(indexPath)) {
-    const indexHtml = readFileSync(indexPath, "utf8");
-    const updated = indexHtml.replace(
-      /"softwareVersion"\s*:\s*"[^"]+"/g,
-      `"softwareVersion": "${version}"`,
-    );
-    if (updated !== indexHtml) {
-      writeFileSync(indexPath, updated, "utf8");
-    }
-  }
 }
 
 function pushTag(tag) {
@@ -190,6 +158,8 @@ function pushMainWithPrFallback(version, tag) {
   writeOutput("pr_required", "true");
 }
 
+const githubToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const current = String(pkg.version).split("-")[0];
 const planRaw = run("node", ["scripts/compute-next-release-version.mjs", "--json", `--bump=${bumpType}`], {
@@ -221,7 +191,11 @@ if (!dryRun) {
 if (current !== recommended) {
   console.log(`Bumping package.json ${current} → ${recommended}`);
   run("npm", ["version", "--no-git-tag-version", recommended]);
-  syncReleaseArtifactVersions(recommended);
+  const bumpedPkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const syncResult = await syncReleaseArtifactVersions(root, recommended, bumpedPkg, { githubToken });
+  console.log(
+    `Synced site artifacts (${syncResult.releaseStatus}, published ${syncResult.publishedReleaseVersion ?? "none"})`,
+  );
   run("git", ["add", "package.json", "package-lock.json", "website/site-data.json", "website/seo.json", "website/index.html"]);
   run("git", ["commit", "-m", `chore: release v${recommended}`]);
 }

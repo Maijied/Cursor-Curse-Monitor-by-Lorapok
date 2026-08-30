@@ -220,6 +220,30 @@ function updateStructuredDataVersion(data) {
   const $$ = (sel) => [...document.querySelectorAll(sel)];
   const NOTICE_URL = "https://cursor-dev.lorapok.tech/api/notice";
   const LIVE_SITE_DATA_URL = "https://cursor-dev.lorapok.tech/api/site-data";
+
+  function mergeLiveSiteData(staticData, liveData) {
+    if (!liveData || liveData.error) return staticData;
+    const staticAt = staticData?.generatedAt ? Date.parse(String(staticData.generatedAt)) : 0;
+    const liveAt = Date.parse(String(liveData.liveRefreshedAt ?? liveData.generatedAt ?? ""));
+    if (!staticData) return liveData;
+    if (Number.isNaN(liveAt) || (!Number.isNaN(staticAt) && liveAt < staticAt)) {
+      return staticData;
+    }
+
+    const merged = { ...staticData, ...liveData };
+
+    if (staticData.downloads?.verified === true && liveData.downloads?.verified !== true) {
+      merged.downloads = staticData.downloads;
+    }
+
+    const staticVisits = staticData.visitors?.websiteVisits;
+    const liveVisits = liveData.visitors?.websiteVisits;
+    if (staticVisits != null && (liveVisits == null || Number(liveVisits) === 0)) {
+      merged.visitors = { ...liveData.visitors, ...staticData.visitors };
+    }
+
+    return merged;
+  }
   const FALLBACK_NOTICE = {
     enabled: false,
     id: "site-data-fallback",
@@ -251,13 +275,7 @@ function updateStructuredDataVersion(data) {
     const liveRes = await fetch(LIVE_SITE_DATA_URL, { cache: "no-store" });
     if (liveRes.ok) {
       const live = await liveRes.json();
-      if (live && !live.error) {
-        const staticAt = data?.generatedAt ? Date.parse(String(data.generatedAt)) : 0;
-        const liveAt = Date.parse(String(live.liveRefreshedAt ?? live.generatedAt ?? ""));
-        if (!data || (!Number.isNaN(liveAt) && (Number.isNaN(staticAt) || liveAt >= staticAt))) {
-          data = { ...(data ?? {}), ...live };
-        }
-      }
+      data = mergeLiveSiteData(data, live);
     }
   } catch {
     // Static site-data.json is enough when Mission Control API is unreachable.
