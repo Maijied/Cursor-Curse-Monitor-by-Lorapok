@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Propagate the computed version to workspace packages for builds only.
- * Committed workspace package.json files stay at 0.0.0 — only root package.json
- * is bumped on production release (Mission Control / release.sh).
+ * Committed package.json files stay at 0.0.0 — CI resolves live marketplace
+ * versions and runs version:sync before compile/package.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -49,14 +49,16 @@ export function syncWorkspaceVersions(explicitVersion, opts = {}) {
   return { version, changes };
 }
 
-/** Ensure workspace packages are not manually version-bumped in git. */
+/** Ensure committed package.json versions stay at the workspace placeholder. */
 export function assertWorkspacePlaceholders() {
   const violations = [];
-  for (const target of TARGETS.slice(1)) {
+  for (const target of TARGETS) {
     const { data } = readJson(target.path);
     const value = data[target.field];
     if (value !== WORKSPACE_PLACEHOLDER) {
-      violations.push(`${target.path} is "${value}" — commit ${WORKSPACE_PLACEHOLDER} and use version:sync at build time`);
+      violations.push(
+        `${target.path} is "${value}" — commit ${WORKSPACE_PLACEHOLDER} and run npm run version:sync at build time`,
+      );
     }
   }
   return violations;
