@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { fetchVsceExtension } from "../website/admin/functions/api/_shared/vsce-stats.js";
-import { computeDownloadTotals } from "./download-totals.mjs";
+import { computeDownloadTotals, preserveVerifiedDownloads } from "./download-totals.mjs";
 import { buildProductContext } from "./lib-product-context.mjs";
 import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
 import { buildMailTemplates } from "./mail-templates.mjs";
@@ -442,13 +442,24 @@ const ovsx = ovsxCanonical ?? {
 
 const githubAllAssets = githubDownloads;
 
-const downloadTotals = computeDownloadTotals({
+const downloadTotalsRaw = computeDownloadTotals({
   openVsxCanonical: ovsxCanonical,
   openVsxDuplicate: ovsxDuplicate,
   vscode,
   githubAllAssets,
   packageVersion: version,
 });
+
+const existingSiteDataPath = join(root, "website", "site-data.json");
+const existingSiteData = existsSync(existingSiteDataPath)
+  ? JSON.parse(readFileSync(existingSiteDataPath, "utf8"))
+  : null;
+const downloadTotals = preserveVerifiedDownloads(existingSiteData?.downloads, downloadTotalsRaw);
+if (downloadTotals.verified && !downloadTotalsRaw.verified) {
+  console.warn(
+    "::warning::Live download sources incomplete — preserving last verified download totals",
+  );
+}
 
 const downloadBreakdown = {
   ...downloadTotals.breakdown,

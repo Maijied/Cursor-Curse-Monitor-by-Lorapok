@@ -1,5 +1,5 @@
 import { GITHUB_REPO } from "./repo-constants.js";
-import { computeDownloadTotals } from "./download-totals.js";
+import { computeDownloadTotals, preserveVerifiedDownloads } from "./download-totals.js";
 import { fetchLiveChannels } from "./live-channels.js";
 import { fetchSiteData } from "./site-data.js";
 import {
@@ -73,7 +73,13 @@ export function mergeSiteDataWithLiveCache(base, cache) {
       merged.generatedAt = cache.refreshedAt;
     }
   }
-  if (cache.downloads) merged.downloads = cache.downloads;
+  if (cache.downloads) {
+    if (base.downloads?.verified === true && cache.downloads?.verified !== true) {
+      merged.downloads = base.downloads;
+    } else {
+      merged.downloads = cache.downloads;
+    }
+  }
   if (cache.channels) merged.liveChannels = cache.channels;
   if (cache.marketplaceSync) merged.marketplaceSync = cache.marketplaceSync;
   if (cache.visitors) merged.visitors = { ...(base.visitors ?? {}), ...cache.visitors };
@@ -119,17 +125,20 @@ export async function runStatsRefresh(env, options = {}) {
   const firefox = channelById(channels, "firefox-amo");
   const packageVersion = String(base.packageVersion ?? base.version ?? "").replace(/^v/i, "");
 
-  const downloads = computeDownloadTotals({
-    openVsxCanonical: ovsxCanonical
-      ? { version: ovsxCanonical.version, downloadCount: ovsxCanonical.downloadCount ?? 0 }
-      : null,
-    openVsxDuplicate: ovsxDuplicate
-      ? { version: ovsxDuplicate.version, downloadCount: ovsxDuplicate.downloadCount ?? 0 }
-      : null,
-    vscode: vscodeChannel ? { downloadCount: vscodeChannel.downloadCount ?? 0 } : null,
-    githubAllAssets,
-    packageVersion,
-  });
+  const downloads = preserveVerifiedDownloads(
+    base.downloads,
+    computeDownloadTotals({
+      openVsxCanonical: ovsxCanonical
+        ? { version: ovsxCanonical.version, downloadCount: ovsxCanonical.downloadCount ?? 0 }
+        : null,
+      openVsxDuplicate: ovsxDuplicate
+        ? { version: ovsxDuplicate.version, downloadCount: ovsxDuplicate.downloadCount ?? 0 }
+        : null,
+      vscode: vscodeChannel ? { downloadCount: vscodeChannel.downloadCount ?? 0 } : null,
+      githubAllAssets,
+      packageVersion,
+    }),
+  );
 
   const target = packageVersion;
   const marketplaceSync = {
