@@ -105,11 +105,55 @@ permissions:
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
+  # 0. RESOLVE VERSION FROM LIVE MARKETPLACES (all CI jobs consume outputs)
+  # ───────────────────────────────────────────────────────────────────────────
+  resolve-version:
+    name: Resolve Version (Live Marketplaces)
+    runs-on: ubuntu-latest
+    if: >-
+      !(github.event_name == 'push'
+        && !startsWith(github.ref, 'refs/tags/')
+        && contains(github.event.head_commit.message, 'chore: release'))
+      && !(github.event_name == 'workflow_dispatch' && startsWith(inputs.action_type, 'seo-refresh'))
+    outputs:
+      live_max: ${{ steps.resolve.outputs.live_max }}
+      build_version: ${{ steps.resolve.outputs.build_version }}
+      recommended_version: ${{ steps.resolve.outputs.recommended_version }}
+      recommended_tag: ${{ steps.resolve.outputs.recommended_tag }}
+      max_all_version: ${{ steps.resolve.outputs.max_all_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve live marketplace versions
+        id: resolve
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BUMP_TYPE: patch
+        run: node scripts/resolve-ci-version.mjs --github-output
+
+  # ───────────────────────────────────────────────────────────────────────────
   # 1. ROOT & CORE EXTENSION CI
   # ───────────────────────────────────────────────────────────────────────────
   ci:
     name: Build & Validate (Root Extension)
     runs-on: ubuntu-latest
+    needs: [resolve-version]
     if: >-
       !(github.event_name == 'push'
         && !startsWith(github.ref, 'refs/tags/')
@@ -146,6 +190,9 @@ jobs:
       - name: Validate marketing & mail assets
         run: test $(ls website/assets/marketing/*.png | wc -l) -ge 10 && test $(ls website/assets/mail/*.png | wc -l) -ge 3
 
+      - name: Sync workspace versions from live marketplaces
+        run: npm run version:sync -- --version "${{ needs.resolve-version.outputs.build_version }}"
+
       - name: Validate release metadata & sync integrity
         run: npm run validate:release
 
@@ -167,15 +214,6 @@ jobs:
       - name: Validate workspace version placeholders
         run: npm run version:check
 
-      - name: Sync workspace versions for build
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/'))
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: npm run version:sync
-
       - name: Package VSIX
         run: npm run package
 
@@ -193,7 +231,7 @@ jobs:
   browser-extension-ci:
     name: Browser Extension CI
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [ci, resolve-version]
     env:
       GITHUB_EVENT_NAME: ${{ github.event_name }}
       GITHUB_SHA: ${{ github.sha }}
@@ -216,6 +254,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Sync workspace versions from live marketplaces
+        run: npm run version:sync -- --version "${{ needs.resolve-version.outputs.build_version }}"
 
       - name: Build shared package
         run: npm run build -w @lorapok/cursor-monitor-shared
@@ -254,7 +295,7 @@ jobs:
   admin-ci:
     name: Admin Panel CI
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [ci, resolve-version]
     if: >-
       !(github.event_name == 'push'
         && !startsWith(github.ref, 'refs/tags/')
@@ -275,6 +316,9 @@ jobs:
 
       - name: Install root dependencies (SEO scripts)
         run: npm ci
+
+      - name: Sync workspace versions from live marketplaces
+        run: npm run version:sync -- --version "${{ needs.resolve-version.outputs.build_version }}"
 
       - name: Generate site artifacts for admin build
         run: |
@@ -733,7 +777,7 @@ jobs:
               exit 1
             fi
             echo "Rollback from $TARGET_TAG → $TAG (highest live was v${MAX_LIVE})"
-            npm version --no-git-tag-version "$NEW_VERSION"
+            npm run version:sync -- --version "$NEW_VERSION"
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -756,14 +800,8 @@ jobs:
                 exit 1
               fi
               NEW_VERSION="$CUSTOM_VERSION"
-              CURRENT=$(node -p "require('./package.json').version.split('-')[0]")
-              if [ "$NEW_VERSION" != "$CURRENT" ]; then
-                npm version --no-git-tag-version "$NEW_VERSION"
-              else
-                echo "Version already $NEW_VERSION — re-tagging without package.json bump"
-              fi
+              echo "Custom release target v${NEW_VERSION}"
             elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
-              # Beta uses marketplace --pre-release flags, not semver -beta in tags (VS Code/Open VSX policy).
               LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
               NEW_VERSION=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
               MAX_LIVE=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
@@ -772,41 +810,26 @@ jobs:
                 exit 1
               fi
               echo "Live max across all channels: v${MAX_LIVE} → beta pre-release target v${NEW_VERSION}"
-              CURRENT=$(node -p "require('./package.json').version.split('-')[0]")
-              if [ "$NEW_VERSION" != "$CURRENT" ]; then
-                npm version --no-git-tag-version "$NEW_VERSION"
-              else
-                echo "package.json already at v$NEW_VERSION"
-              fi
             else
-              # Production: target = highest live version across all marketplaces + bump
-              LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
-              NEW_VERSION=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
-              MAX_LIVE=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
+              NEW_VERSION="$LIVE_RECOMMENDED_VERSION"
+              if [ -z "$NEW_VERSION" ]; then
+                LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
+                NEW_VERSION=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
+                MAX_LIVE=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
+              else
+                MAX_LIVE="$LIVE_MAX_VERSION"
+              fi
               if [ -z "$NEW_VERSION" ]; then
                 echo "::error::Could not resolve next version from live marketplace data."
                 exit 1
               fi
               echo "Live max across all channels: v${MAX_LIVE} → release target v${NEW_VERSION}"
-              CURRENT=$(node -p "require('./package.json').version.split('-')[0]")
-              if [ "$NEW_VERSION" != "$CURRENT" ]; then
-                npm version --no-git-tag-version "$NEW_VERSION"
-              else
-                echo "package.json already at v$NEW_VERSION"
-              fi
             fi
 
             TAG="v$NEW_VERSION"
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            if ! git diff --quiet package.json package-lock.json 2>/dev/null; then
-              node scripts/sync-release-artifacts.mjs
-              git add package.json package-lock.json website/site-data.json website/seo.json website/index.html
-              git commit -m "chore: release v$NEW_VERSION"
-              git push origin main
-            fi
 
             if git rev-parse "$TAG" >/dev/null 2>&1; then
               echo "Tag $TAG already exists — skipping tag creation"
@@ -883,13 +906,20 @@ jobs:
         env:
           VERSION_INPUT: ${{ needs.release-prep.outputs.new_version }}
           TARGET_TAG: ${{ inputs.target_tag }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           VERSION="$VERSION_INPUT"
           if [ -z "$VERSION" ] && [ -n "$TARGET_TAG" ]; then
             VERSION="${TARGET_TAG#v}"
           fi
           if [ -z "$VERSION" ]; then
-            VERSION="$(node -p "require('./package.json').version.split('-')[0]")"
+            if [ -n "$GITHUB_REF_NAME" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+              VERSION="${GITHUB_REF_NAME#v}"
+            else
+              VERSION="$(node scripts/resolve-ci-version.mjs --field recommendedVersion)"
+            fi
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -920,6 +950,9 @@ jobs:
           RELEASE_CHANNEL: ${{ inputs.release_channel }}
           PUBLISH_MARKET: ${{ inputs.publish_market }}
           REF_TYPE: ${{ github.ref_type }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           VERSION="$VERSION_INPUT"
           if [ -z "$VERSION" ]; then
@@ -928,7 +961,7 @@ jobs:
             elif [ -n "$TARGET_TAG" ]; then
               VERSION="${TARGET_TAG#v}"
             else
-              VERSION="$(node -p "require('./package.json').version")"
+              VERSION="$(node scripts/resolve-ci-version.mjs --field recommendedVersion)"
             fi
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
