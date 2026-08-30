@@ -48,9 +48,11 @@ async function fetchGithubReleaseDownloadTotal(env, base = null) {
 
 /** @param {Record<string, unknown>|null|undefined} base */
 function githubReleaseFallback(base) {
-  const fromBreakdown = base?.downloads?.breakdown?.githubAllAssets;
+  const breakdown = base?.downloads?.breakdown;
+  if (breakdown != null && "githubAllAssets" in breakdown) {
+    return breakdown.githubAllAssets != null ? Number(breakdown.githubAllAssets) : null;
+  }
   const fromGithub = base?.github?.totalReleaseDownloads ?? base?.github?.allAssetsDownloadCount;
-  if (fromBreakdown != null) return Number(fromBreakdown);
   if (fromGithub != null) return Number(fromGithub);
   return null;
 }
