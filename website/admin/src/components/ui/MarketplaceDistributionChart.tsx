@@ -5,8 +5,10 @@ import type { SiteData } from "../../lib/site-data";
 import { syncStatusLabel } from "../../lib/site-data";
 import {
   buildDownloadChannelSlices,
+  downloadStatsAvailabilityLabel,
   formatDownloadCount,
-  getVerifiedDownloadTotal,
+  getDisplayDownloadTotal,
+  isDownloadStatsVerified,
 } from "../../lib/download-stats";
 
 interface MarketplaceDistributionChartProps {
@@ -52,9 +54,9 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
 
   const channelSlices = useMemo(() => buildDownloadChannelSlices(data), [data]);
-  const totalDownloads = getVerifiedDownloadTotal(data);
+  const totalDownloads = getDisplayDownloadTotal(data);
   const openVsxCombined = data.downloads?.openVsxCombined ?? null;
-  const verified = data.downloads?.verified === true;
+  const verified = isDownloadStatsVerified(data);
 
   const channels = useMemo(
     () =>
@@ -105,7 +107,9 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
           <p className="text-xs text-[var(--color-muted)] mt-0.5">
             {verified
               ? `Verified grand total · ${formatDownloadCount(openVsxCombined)} Open VSX across both namespaces`
-              : "Live marketplace stats unavailable — no placeholder counts shown"}
+              : totalDownloads != null
+                ? `${downloadStatsAvailabilityLabel(data)} · ${formatDownloadCount(openVsxCombined)} Open VSX combined`
+                : "Live marketplace stats unavailable — no placeholder counts shown"}
           </p>
         </div>
         <Badge variant={syncOk ? "synced" : "warn"}>{syncOk ? "All channels live" : syncStatusLabel(data.syncStatus)}</Badge>
@@ -175,8 +179,10 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
             <span className="text-[10px] text-[var(--color-muted)]">
               {activeChannel && totalDownloads != null && totalDownloads > 0
                 ? `${Math.round((activeChannel.count / totalDownloads) * 100)}% of total`
-                : verified
-                  ? "downloads"
+                : totalDownloads != null
+                  ? verified
+                    ? "downloads"
+                    : "marketplace live"
                   : "unavailable"}
             </span>
           </div>

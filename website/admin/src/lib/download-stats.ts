@@ -27,6 +27,45 @@ export function isDownloadStatsVerified(data: SiteData): boolean {
   return data.downloads?.verified === true;
 }
 
+/** True when UI can show marketplace download numbers (fully verified or partial breakdown). */
+export function isDownloadStatsDisplayable(data: SiteData): boolean {
+  return isDownloadStatsVerified(data) || hasDownloadBreakdown(data);
+}
+
+function hasDownloadBreakdown(data: SiteData): boolean {
+  const breakdown = data.downloads?.breakdown;
+  if (!breakdown) return false;
+  return (
+    breakdown.openVsxCanonical != null ||
+    breakdown.openVsxDuplicate != null ||
+    breakdown.vscodeMarketplace != null ||
+    breakdown.githubAllAssets != null
+  );
+}
+
+function channelCountFromData(data: SiteData, channel: DownloadChannelKey): number | null {
+  const breakdown = data.downloads?.breakdown;
+  switch (channel) {
+    case "openVsxCanonical":
+      return breakdown?.openVsxCanonical ?? data.ovsx?.downloadCount ?? null;
+    case "openVsxDuplicate":
+      return breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? null;
+    case "vscodeMarketplace":
+      return breakdown?.vscodeMarketplace ?? data.vscode?.downloadCount ?? null;
+    case "githubAllAssets":
+      if (breakdown != null && "githubAllAssets" in breakdown) {
+        return breakdown.githubAllAssets ?? null;
+      }
+      return (
+        data.github?.totalReleaseDownloads ??
+        data.github?.allAssetsDownloadCount ??
+        null
+      );
+    default:
+      return null;
+  }
+}
+
 /** Resolve verified grand total from site-data. */
 export function getVerifiedDownloadTotal(data: SiteData): number | null {
   if (!isDownloadStatsVerified(data)) return null;
@@ -35,29 +74,43 @@ export function getVerifiedDownloadTotal(data: SiteData): number | null {
 }
 
 /**
- * Per-channel download count. Fail-closed: returns null unless marketplace
- * stats are verified, so callers render an em dash instead of a stale count.
+ * Grand total for Mission Control — verified live total, or sum of available
+ * marketplace channels when GitHub release aggregation is temporarily missing.
  */
-export function getVerifiedChannelCount(data: SiteData, channel: DownloadChannelKey): number | null {
-  if (!isDownloadStatsVerified(data)) return null;
-  const breakdown = data.downloads?.breakdown;
-  switch (channel) {
-    case "openVsxCanonical":
-      return breakdown?.openVsxCanonical ?? data.ovsx.downloadCount ?? null;
-    case "openVsxDuplicate":
-      return breakdown?.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? null;
-    case "vscodeMarketplace":
-      return breakdown?.vscodeMarketplace ?? data.vscode.downloadCount ?? null;
-    case "githubAllAssets":
-      return breakdown?.githubAllAssets ?? data.github.totalReleaseDownloads ?? null;
-    default:
-      return null;
-  }
+export function getDisplayDownloadTotal(data: SiteData): number | null {
+  const verifiedTotal = getVerifiedDownloadTotal(data);
+  if (verifiedTotal != null) return verifiedTotal;
+  if (!hasDownloadBreakdown(data)) return null;
+
+  const canonical = channelCountFromData(data, "openVsxCanonical") ?? 0;
+  const duplicate = channelCountFromData(data, "openVsxDuplicate") ?? 0;
+  const vscode = channelCountFromData(data, "vscodeMarketplace") ?? 0;
+  const github = channelCountFromData(data, "githubAllAssets") ?? 0;
+  return canonical + duplicate + vscode + github;
 }
 
-/** Build donut/list channel slices that sum to the verified grand total. */
+/**
+ * Per-channel download count for dashboards. Fail-closed when no channel data exists.
+ */
+export function getVerifiedChannelCount(data: SiteData, channel: DownloadChannelKey): number | null {
+  if (!isDownloadStatsDisplayable(data)) return null;
+  return channelCountFromData(data, channel);
+}
+
+/** User-facing hint when downloads are partial vs fully verified. */
+export function downloadStatsAvailabilityLabel(data: SiteData): string {
+  if (isDownloadStatsVerified(data)) {
+    return "Open VSX (both namespaces) + VS Code + GitHub";
+  }
+  if (isDownloadStatsDisplayable(data)) {
+    return "Marketplace channels live · GitHub may be pending";
+  }
+  return "Live marketplace stats unavailable";
+}
+
+/** Build donut/list channel slices for charts. */
 export function buildDownloadChannelSlices(data: SiteData): DownloadChannelSlice[] {
-  if (!isDownloadStatsVerified(data)) {
+  if (!isDownloadStatsDisplayable(data)) {
     return [];
   }
 
@@ -75,4 +128,3 @@ export function buildDownloadChannelSlices(data: SiteData): DownloadChannelSlice
     }))
     .filter((slice) => slice.count > 0 || slice.id === "vscode" || slice.id === "github");
 }
-

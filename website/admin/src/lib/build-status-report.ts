@@ -1,6 +1,6 @@
 import type { SiteData, VisitorStats } from "./site-data";
 import { formatCount, syncStatusLabel } from "./site-data";
-import { formatDownloadCount, getVerifiedDownloadTotal } from "./download-stats";
+import { formatDownloadCount, getDisplayDownloadTotal, getVerifiedChannelCount } from "./download-stats";
 
 export interface StatusReportRow {
   label: string;
@@ -80,38 +80,47 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
 
   const downloadRows: StatusReportRow[] = [
     {
-      label: "Total downloads (verified live)",
-      value: formatDownloadCount(getVerifiedDownloadTotal(data)),
-      status: downloads?.verified ? "ok" : "warn",
+      label: "Total downloads (live)",
+      value: formatDownloadCount(getDisplayDownloadTotal(data)),
+      status: downloads?.verified ? "ok" : getDisplayDownloadTotal(data) != null ? "warn" : "warn",
     },
     {
       label: "Open VSX combined",
-      value: formatDownloadCount(downloads?.verified ? downloads.openVsxCombined ?? null : null),
+      value: formatDownloadCount(
+        downloads?.openVsxCombined ??
+          (getVerifiedChannelCount(data, "openVsxCanonical") != null &&
+          getVerifiedChannelCount(data, "openVsxDuplicate") != null
+            ? (getVerifiedChannelCount(data, "openVsxCanonical") ?? 0) +
+              (getVerifiedChannelCount(data, "openVsxDuplicate") ?? 0)
+            : null),
+      ),
       status: "neutral",
     },
     {
       label: "Open VSX canonical",
-      value: formatDownloadCount(downloads?.verified ? breakdown?.openVsxCanonical ?? null : null),
+      value: formatDownloadCount(getVerifiedChannelCount(data, "openVsxCanonical")),
       status: "neutral",
     },
     {
       label: "Open VSX (LorapokLabs)",
-      value: formatDownloadCount(downloads?.verified ? breakdown?.openVsxDuplicate ?? null : null),
+      value: formatDownloadCount(getVerifiedChannelCount(data, "openVsxDuplicate")),
       status: "neutral",
     },
     {
       label: "VS Code Marketplace",
-      value: formatDownloadCount(downloads?.verified ? breakdown?.vscodeMarketplace ?? null : null),
+      value: formatDownloadCount(getVerifiedChannelCount(data, "vscodeMarketplace")),
       status: "neutral",
     },
     {
       label: "GitHub release assets",
-      value: formatDownloadCount(downloads?.verified ? breakdown?.githubAllAssets ?? null : null),
+      value: formatDownloadCount(getVerifiedChannelCount(data, "githubAllAssets")),
       status: "neutral",
     },
     {
       label: "Latest release VSIX",
-      value: formatDownloadCount(downloads?.verified ? breakdown?.latestReleaseVsix ?? null : null),
+      value: formatDownloadCount(
+        downloads?.verified ? breakdown?.latestReleaseVsix ?? null : null,
+      ),
       status: "neutral",
     },
   ];
@@ -185,7 +194,7 @@ export function buildStatusReport(data: SiteData, visitors: VisitorStats): Statu
         { label: "Report generated", value: new Date().toLocaleString(), status: "neutral" },
         { label: "Site data refreshed", value: new Date(data.generatedAt).toLocaleString(), status: "neutral" },
         { label: "Overall sync", value: syncStatusLabel(data.syncStatus), status: data.syncStatus === "synced" ? "ok" : "warn" },
-        { label: "Total reach", value: formatCount((getVerifiedDownloadTotal(data) ?? 0) + visitors.totalEngagement), status: "neutral" },
+        { label: "Total reach", value: formatCount((getDisplayDownloadTotal(data) ?? 0) + visitors.totalEngagement), status: "neutral" },
       ],
     },
     marketplace: { title: "Marketplace & Release Records", rows: marketplaceRows },

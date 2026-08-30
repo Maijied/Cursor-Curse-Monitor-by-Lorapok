@@ -19,9 +19,11 @@ import { useUsageStats } from "../../hooks/useUsageStats";
 import { syncStatusLabel, formatCount } from "../../lib/site-data";
 import {
   COMMUNITY_DOWNLOADS_NOTE,
+  downloadStatsAvailabilityLabel,
   formatDownloadCount,
+  getDisplayDownloadTotal,
   getVerifiedChannelCount,
-  getVerifiedDownloadTotal,
+  isDownloadStatsDisplayable,
 } from "../../lib/download-stats";
 
 function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
@@ -59,8 +61,13 @@ export default function Overview() {
 
   const syncVariant = syncBadgeVariant(data.syncStatus);
   const downloads = data.downloads;
-  const verifiedTotal = getVerifiedDownloadTotal(data);
-  const openVsxCombined = downloads?.verified ? downloads.openVsxCombined ?? null : null;
+  const downloadsDisplayable = isDownloadStatsDisplayable(data);
+  const displayTotal = getDisplayDownloadTotal(data);
+  const openVsxCombined = downloadsDisplayable
+    ? (downloads?.openVsxCombined ??
+        ((getVerifiedChannelCount(data, "openVsxCanonical") ?? 0) +
+          (getVerifiedChannelCount(data, "openVsxDuplicate") ?? 0)))
+    : null;
   const canonicalOpenVsx = getVerifiedChannelCount(data, "openVsxCanonical");
 
   return (
@@ -81,12 +88,10 @@ export default function Overview() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <KpiCard
           label="Total Downloads"
-          value={formatDownloadCount(verifiedTotal)}
+          value={formatDownloadCount(displayTotal)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              {verifiedTotal != null
-                ? `Open VSX (both namespaces) + VS Code + GitHub`
-                : "Live marketplace stats unavailable"}
+              {downloadStatsAvailabilityLabel(data)}
               {openVsxCombined != null
                 ? ` · Open VSX total ${formatDownloadCount(openVsxCombined)}`
                 : ""}
@@ -171,8 +176,8 @@ export default function Overview() {
         {downloads && (
           <div className="lg:col-span-2">
             <DownloadBreakdownPanel
-              total={verifiedTotal}
-              verified={downloads.verified}
+              total={displayTotal}
+              verified={downloadsDisplayable}
               breakdown={downloads.breakdown}
               openVsxCombined={openVsxCombined}
               note={downloads.note ?? COMMUNITY_DOWNLOADS_NOTE}

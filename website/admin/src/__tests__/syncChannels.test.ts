@@ -32,4 +32,23 @@ describe("buildSyncChannels", () => {
       expect(channel.downloadCount).toBeNull();
     }
   });
+
+  it("shows partial download counts when breakdown exists without full verification", () => {
+    const data = {
+      ...base,
+      downloads: {
+        verified: false,
+        breakdown: {
+          openVsxCanonical: 100,
+          openVsxDuplicate: 50,
+          vscodeMarketplace: 20,
+          githubAllAssets: null,
+        },
+      },
+    } as unknown as SiteData;
+    const channels = buildSyncChannels(data);
+    expect(channels.find((c) => c.id === "ovsx")?.downloadCount).toBe(100);
+    expect(channels.find((c) => c.id === "vscode")?.downloadCount).toBe(20);
+    expect(channels.find((c) => c.id === "github")?.downloadCount).toBeNull();
+  });
 });
