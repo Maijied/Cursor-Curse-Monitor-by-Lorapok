@@ -25,20 +25,34 @@ function stableSnapshotBody(snapshot) {
   return rest;
 }
 
-async function fetchGithubReleaseDownloadTotal(env) {
+async function fetchGithubReleaseDownloadTotal(env, base = null) {
   const headers = env.GITHUB_TOKEN
     ? { Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: "application/vnd.github+json" }
     : { Accept: "application/json" };
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`, {
-    headers,
-  });
-  if (!res.ok) return null;
-  const releases = await res.json();
-  if (!Array.isArray(releases)) return null;
-  return releases.reduce((sum, rel) => {
-    const assets = rel.assets ?? [];
-    return sum + assets.reduce((a, asset) => a + (asset.download_count ?? 0), 0);
-  }, 0);
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`, {
+      headers,
+    });
+    if (!res.ok) return githubReleaseFallback(base);
+    const releases = await res.json();
+    if (!Array.isArray(releases)) return githubReleaseFallback(base);
+    const total = releases.reduce((sum, rel) => {
+      const assets = rel.assets ?? [];
+      return sum + assets.reduce((a, asset) => a + (asset.download_count ?? 0), 0);
+    }, 0);
+    return total > 0 ? total : githubReleaseFallback(base);
+  } catch {
+    return githubReleaseFallback(base);
+  }
+}
+
+/** @param {Record<string, unknown>|null|undefined} base */
+function githubReleaseFallback(base) {
+  const fromBreakdown = base?.downloads?.breakdown?.githubAllAssets;
+  const fromGithub = base?.github?.totalReleaseDownloads ?? base?.github?.allAssetsDownloadCount;
+  if (fromBreakdown != null) return Number(fromBreakdown);
+  if (fromGithub != null) return Number(fromGithub);
+  return null;
 }
 
 async function fetchVisitorStats(env) {
@@ -74,11 +88,7 @@ export function mergeSiteDataWithLiveCache(base, cache) {
     }
   }
   if (cache.downloads) {
-    if (base.downloads?.verified === true && cache.downloads?.verified !== true) {
-      merged.downloads = base.downloads;
-    } else {
-      merged.downloads = cache.downloads;
-    }
+    merged.downloads = preserveVerifiedDownloads(base.downloads, cache.downloads);
   }
   if (cache.channels) merged.liveChannels = cache.channels;
   if (cache.marketplaceSync) merged.marketplaceSync = cache.marketplaceSync;
@@ -115,7 +125,7 @@ export async function runStatsRefresh(env, options = {}) {
   const base = await fetchSiteData(env);
   const [channels, githubAllAssets, visitors] = await Promise.all([
     fetchLiveChannels(base, { githubToken: env.GITHUB_TOKEN }),
-    fetchGithubReleaseDownloadTotal(env),
+    fetchGithubReleaseDownloadTotal(env, base),
     fetchVisitorStats(env),
   ]);
 

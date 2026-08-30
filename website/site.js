@@ -233,7 +233,21 @@ function updateStructuredDataVersion(data) {
     const merged = { ...staticData, ...liveData };
 
     if (staticData.downloads?.verified === true && liveData.downloads?.verified !== true) {
-      merged.downloads = staticData.downloads;
+      merged.downloads = {
+        ...staticData.downloads,
+        breakdown: {
+          ...(staticData.downloads.breakdown ?? {}),
+          ...(liveData.downloads?.breakdown ?? {}),
+        },
+        openVsxCombined:
+          liveData.downloads?.openVsxCombined ?? staticData.downloads.openVsxCombined,
+      };
+    } else if (liveData.downloads?.verified !== true && liveData.downloads?.breakdown) {
+      merged.downloads = {
+        ...(staticData.downloads ?? {}),
+        ...liveData.downloads,
+        verified: staticData.downloads?.verified ?? false,
+      };
     }
 
     const staticVisits = staticData.visitors?.websiteVisits;
@@ -281,7 +295,10 @@ function updateStructuredDataVersion(data) {
     // Static site-data.json is enough when Mission Control API is unreachable.
   }
 
-  const downloadsVerified = data?.downloads?.verified === true;
+  const downloadsVerified =
+    typeof window.resolveHeroDownloadStats === "function"
+      ? window.resolveHeroDownloadStats(data).displayable
+      : data?.downloads?.verified === true;
 
   if (data) {
     const setText = (sel, text) => {
