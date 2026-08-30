@@ -201,6 +201,9 @@ jobs:
       - name: Validate workspace version placeholders
         run: npm run version:check
 
+      - name: Verify Cloudflare download-totals mirror
+        run: npm run sync:download-totals:check
+
       - name: Validate release metadata (committed git state)
         run: npm run validate:release
 
