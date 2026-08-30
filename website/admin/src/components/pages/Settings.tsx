@@ -8,7 +8,7 @@ import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
-import { formatDownloadCount, getVerifiedDownloadTotal } from "../../lib/download-stats";
+import { formatDownloadCount, getDisplayDownloadTotal } from "../../lib/download-stats";
 
 /**
  * Renders the application settings page with theme controls, integrations, environment details, and API health information.
@@ -82,7 +82,7 @@ export default function Settings() {
               <div className="flex justify-between gap-4">
                 <dt className="text-[var(--color-muted)]">Total downloads</dt>
                 <dd className="font-semibold text-[var(--color-neon)]">
-                  {formatDownloadCount(getVerifiedDownloadTotal(siteData))}
+                  {formatDownloadCount(getDisplayDownloadTotal(siteData))}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">

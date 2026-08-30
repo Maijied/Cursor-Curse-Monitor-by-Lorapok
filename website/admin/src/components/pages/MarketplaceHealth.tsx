@@ -9,7 +9,7 @@ import SyncRadar from "../ui/SyncRadar";
 import ChannelSyncStrip from "../ui/ChannelSyncStrip";
 import { fetchMarketplaceSync, type MarketplaceSync } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
-import { formatDownloadCount, getVerifiedDownloadTotal } from "../../lib/download-stats";
+import { formatDownloadCount, getDisplayDownloadTotal } from "../../lib/download-stats";
 
 /**
  * Displays live marketplace synchronization status and channel health.
@@ -89,7 +89,7 @@ export default function MarketplaceHealth() {
             <Card>
               <h3 className="text-lg font-semibold mb-2">Download snapshot</h3>
               <p className="text-3xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-neon)]">
-                {formatDownloadCount(getVerifiedDownloadTotal(siteData))}
+                {formatDownloadCount(getDisplayDownloadTotal(siteData))}
               </p>
               <p className="text-xs text-[var(--color-muted)] mt-2">{siteData.downloads.note}</p>
             </Card>
@@ -106,7 +106,7 @@ export default function MarketplaceHealth() {
               <h3 className="text-lg font-semibold mb-2">Download snapshot</h3>
               <p className="text-xs text-[var(--color-muted)] mb-2">Generated {new Date(siteData.generatedAt).toLocaleString()}</p>
               <p className="text-3xl font-bold font-[family-name:var(--font-mono)] text-[var(--color-neon)]">
-                {formatDownloadCount(getVerifiedDownloadTotal(siteData))}
+                {formatDownloadCount(getDisplayDownloadTotal(siteData))}
               </p>
               <p className="text-xs text-[var(--color-muted)] mt-2">{siteData.downloads.note}</p>
             </Card>
