@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * On push to main: bump package.json to max(live)+patch, commit, tag, and push.
- * Falls back to a PR when branch protection blocks direct pushes to main.
+ * On push to main: create the next git tag from max(live marketplaces) + patch.
+ * Package.json stays at 0.0.0 in git — versions are synced at CI build/deploy time.
  */
 import { execFileSync } from "node:child_process";
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { syncReleaseArtifactVersions } from "./lib-sync-release-artifacts.mjs";
+import { resolveCiVersion } from "./resolve-ci-version.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const bumpType = process.env.BUMP_TYPE || "patch";
@@ -76,96 +76,7 @@ function pushTag(tag) {
   process.exit(1);
 }
 
-function pushMainWithPrFallback(version, tag) {
-  const direct = runCapture("git", ["push", "origin", "main"]);
-  if (direct.ok) {
-    console.log("Pushed version bump directly to main");
-    writeOutput("pr_required", "false");
-    return;
-  }
-
-  console.log("::warning::Direct push to main blocked — opening release PR");
-  const branch = `chore/release-v${version}`;
-
-  run("git", ["fetch", "origin", "main"]);
-  const headBehindMain = runCapture("git", ["rev-list", "--count", `HEAD..origin/main`]);
-  const behindCount = headBehindMain.ok ? Number.parseInt(headBehindMain.output.trim(), 10) || 0 : 0;
-  if (behindCount > 0) {
-    console.log(`Rebasing release branch onto origin/main (${behindCount} commit(s) behind)`);
-    const rebase = runCapture("git", ["rebase", "origin/main"]);
-    if (!rebase.ok) {
-      console.error(`::error::Failed to rebase release branch onto main\n${rebase.output}`);
-      process.exit(1);
-    }
-  }
-
-  run("git", ["checkout", "-B", branch]);
-  const branchPush = runCapture("git", ["push", "origin", branch, "--force-with-lease"]);
-  if (!branchPush.ok) {
-    console.error(`::error::Failed to push release branch\n${branchPush.output}`);
-    process.exit(1);
-  }
-
-  const existingPr = runCapture("gh", [
-    "pr",
-    "list",
-    "--head",
-    branch,
-    "--state",
-    "open",
-    "--json",
-    "number,url",
-    "--jq",
-    ".[0]",
-  ]);
-  if (existingPr.ok && existingPr.output.trim()) {
-    try {
-      const prInfo = JSON.parse(existingPr.output.trim());
-      if (prInfo?.number) {
-        console.log(`::notice::Release PR already open: ${prInfo.url}`);
-        writeOutput("pr_required", "true");
-        return;
-      }
-    } catch {
-      // fall through to create
-    }
-  }
-
-  const pr = runCapture("gh", [
-    "pr",
-    "create",
-    "--base",
-    "main",
-    "--head",
-    branch,
-    "--title",
-    `chore: release v${version}`,
-    "--body",
-    `Automated release preparation from CI (highest live version + 1 ${bumpType}).\n\nMerge this PR to land \`${tag}\` on main, then publish from Mission Control → Deploy.`,
-  ]);
-  if (!pr.ok) {
-    if (/not permitted to create or approve pull requests/i.test(pr.output)) {
-      console.log(
-        `::warning::Could not open release PR automatically — enable workflow PR creation in repo settings or open one manually from ${branch}`,
-      );
-      writeOutput("pr_required", "true");
-      return;
-    }
-    console.error(`::error::Failed to open release PR\n${pr.output}`);
-    process.exit(1);
-  }
-  console.log(pr.output.trim());
-  writeOutput("pr_required", "true");
-}
-
-const githubToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
-
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const current = String(pkg.version).split("-")[0];
-const planRaw = run("node", ["scripts/compute-next-release-version.mjs", "--json", `--bump=${bumpType}`], {
-  capture: true,
-});
-const plan = JSON.parse(planRaw);
+const plan = await resolveCiVersion({ bump: bumpType });
 const recommended = plan.recommendedVersion;
 const tag = plan.recommendedTag;
 
@@ -174,8 +85,8 @@ if (!recommended || !tag) {
   process.exit(1);
 }
 
-if (current === recommended && (tagExists(tag) || remoteTagExists(tag))) {
-  console.log(`::notice::Release ${tag} already prepared — skipping tag workflow`);
+if (tagExists(tag) || remoteTagExists(tag)) {
+  console.log(`::notice::Release ${tag} already exists — skipping tag workflow`);
   writeOutput("tag", tag);
   writeOutput("prepared", "false");
   writeOutput("skipped", "true");
@@ -188,29 +99,17 @@ if (!dryRun) {
   run("git", ["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"]);
 }
 
-if (current !== recommended) {
-  console.log(`Bumping package.json ${current} → ${recommended}`);
-  run("npm", ["version", "--no-git-tag-version", recommended]);
-  const bumpedPkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const syncResult = await syncReleaseArtifactVersions(root, recommended, bumpedPkg, { githubToken });
-  console.log(
-    `Synced site artifacts (${syncResult.releaseStatus}, published ${syncResult.publishedReleaseVersion ?? "none"})`,
-  );
-  run("git", ["add", "package.json", "package-lock.json", "website/site-data.json", "website/seo.json", "website/index.html"]);
-  run("git", ["commit", "-m", `chore: release v${recommended}`]);
-}
-
+console.log(`Creating tag ${tag} (max live v${plan.maxAllVersion} + ${bumpType})`);
 if (!tagExists(tag)) {
-  console.log(`Creating tag ${tag}`);
   run("git", ["tag", tag]);
 }
 
 if (!dryRun) {
   pushTag(tag);
-  pushMainWithPrFallback(recommended, tag);
 }
 
-console.log(`::notice::Prepared release ${tag} (max live v${plan.maxAllVersion} + ${bumpType})`);
+console.log(`::notice::Prepared release tag ${tag} (max live v${plan.maxAllVersion} + ${bumpType})`);
 writeOutput("tag", tag);
 writeOutput("prepared", "true");
 writeOutput("skipped", "false");
+writeOutput("pr_required", "false");
