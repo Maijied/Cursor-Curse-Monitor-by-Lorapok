@@ -79,22 +79,59 @@
 
   /**
    * @param {Record<string, unknown>} data site-data.json payload
+   */
+  function resolveHeroDownloadStats(data) {
+    const breakdown = data?.downloads?.breakdown ?? {};
+    const canonical = breakdown.openVsxCanonical ?? data?.ovsx?.downloadCount ?? null;
+    const duplicate = breakdown.openVsxDuplicate ?? data?.ovsxDuplicate?.downloadCount ?? null;
+    const vscode = breakdown.vscodeMarketplace ?? data?.vscode?.downloadCount ?? null;
+    const github =
+      breakdown.githubAllAssets ??
+      data?.github?.totalReleaseDownloads ??
+      data?.github?.allAssetsDownloadCount ??
+      null;
+    const fullyVerified = data?.downloads?.verified === true;
+    const hasChannelData = canonical != null || duplicate != null || vscode != null;
+    const displayable = fullyVerified || hasChannelData;
+    const combined = Number(
+      data?.downloads?.openVsxCombined ?? (canonical != null && duplicate != null ? canonical + duplicate : canonical ?? 0),
+    );
+    const total = fullyVerified
+      ? Number(data?.downloads?.displayTotal ?? data?.downloads?.total ?? 0)
+      : displayable
+        ? (canonical ?? 0) + (duplicate ?? 0) + (vscode ?? 0) + (github ?? 0)
+        : null;
+
+    return {
+      displayable,
+      fullyVerified,
+      total,
+      combined,
+      canonical: canonical != null ? Number(canonical) : null,
+      duplicate: duplicate != null ? Number(duplicate) : null,
+      vscode: vscode != null ? Number(vscode) : null,
+      github: github != null ? Number(github) : null,
+    };
+  }
+
+  /**
+   * @param {Record<string, unknown>} data site-data.json payload
    * @param {{ verified?: boolean }} [options]
    */
   function renderHeroStats(data, options = {}) {
     const root = document.getElementById("hero-stats-dashboard");
     if (!root || !data) return;
 
-    const downloadsVerified = options.verified === true;
-    const breakdown = data.downloads?.breakdown ?? {};
-    const downloads = Number(data.downloads?.displayTotal ?? data.downloads?.total ?? 0);
+    const stats = resolveHeroDownloadStats(data);
+    const downloadsVerified = options.verified === true || stats.displayable;
+    const downloads = stats.total ?? 0;
     const visits = Number(data.visitors?.websiteVisits ?? 0);
     const engagement = Number(data.visitors?.totalEngagement ?? 0);
-    const canonical = Number(breakdown.openVsxCanonical ?? data.ovsx?.downloadCount ?? 0);
-    const duplicate = Number(breakdown.openVsxDuplicate ?? data.ovsxDuplicate?.downloadCount ?? 0);
-    const combined = Number(data.downloads?.openVsxCombined ?? canonical + duplicate);
-    const vscode = breakdown.vscodeMarketplace ?? data.vscode?.downloadCount ?? null;
-    const github = breakdown.githubAllAssets ?? data.github?.totalReleaseDownloads ?? null;
+    const canonical = stats.canonical ?? 0;
+    const duplicate = stats.duplicate ?? 0;
+    const combined = stats.combined;
+    const vscode = stats.vscode;
+    const github = stats.github;
 
     const maxScale = Math.max(
       downloadsVerified ? downloads : 0,
@@ -120,7 +157,7 @@
       tone: "vscode",
     });
     renderStatCount(root.querySelector("[data-hero-github]"), downloadsVerified ? github : null, {
-      verified: downloadsVerified,
+      verified: downloadsVerified && github != null,
       duration: 1150,
       tone: "github",
     });
@@ -165,13 +202,16 @@
     const status = document.getElementById("hero-stats-status");
     if (status) {
       status.textContent = downloadsVerified
-        ? `Community downloads ${downloads.toLocaleString()} total. Open VSX ${combined.toLocaleString()}.`
+        ? stats.fullyVerified
+          ? `Community downloads ${downloads.toLocaleString()} total. Open VSX ${combined.toLocaleString()}.`
+          : `Community downloads ${downloads.toLocaleString()} total (marketplace channels; GitHub pending).`
         : "Community download stats unavailable.";
     }
 
     root.classList.add("is-loaded");
   }
 
+  window.resolveHeroDownloadStats = resolveHeroDownloadStats;
   window.renderHeroStats = renderHeroStats;
   window.animateStatCount = animateStatCount;
 })();
