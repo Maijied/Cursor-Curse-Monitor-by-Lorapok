@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { logSystemEvent, readSystemLogs } from "../../functions/api/_shared/system-log.js";
 import {
   readSubscribers,
@@ -96,6 +96,7 @@ describe("kv scatter-gather", () => {
   });
 
   it("falls back to legacy logs when scatter list fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const legacy = [
       { id: "legacy-1", ts: "2026-01-01T00:00:00.000Z", source: "legacy", message: "fallback" },
     ];
@@ -108,9 +109,14 @@ describe("kv scatter-gather", () => {
         },
       },
     };
-    const logs = await readSystemLogs(env);
-    expect(logs).toHaveLength(1);
-    expect(logs[0].message).toBe("fallback");
+    try {
+      const logs = await readSystemLogs(env);
+      expect(logs).toHaveLength(1);
+      expect(logs[0].message).toBe("fallback");
+      expect(errorSpy).toHaveBeenCalledWith("readSystemLogs scatter list failed", expect.any(Error));
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 
   it("skips entity put when unchanged", async () => {
