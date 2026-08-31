@@ -80,8 +80,11 @@ const devFunctionsEnv = () => ({
   CRON_SECRET: process.env.CRON_SECRET,
 });
 
+const devKvEntries = new Map();
+
 const devKv = {
   get: async (key) => {
+    if (devKvEntries.has(key)) return devKvEntries.get(key);
     if (key === "subscribers") {
       return JSON.stringify(devStore.subscribers);
     }
@@ -100,6 +103,7 @@ const devKv = {
     return null;
   },
   put: async (key, value) => {
+    devKvEntries.set(key, value);
     if (key === "subscribers") {
       devStore.subscribers = JSON.parse(value);
     }
@@ -116,6 +120,18 @@ const devKv = {
       devStore.statsLiveCache = JSON.parse(value);
     }
   },
+  list: async ({ prefix = "", limit = 1000, cursor } = {}) => {
+    const keys = [...devKvEntries.keys()]
+      .filter((name) => name.startsWith(prefix))
+      .sort();
+    const start = cursor ? Number(cursor) || 0 : 0;
+    const slice = keys.slice(start, start + limit);
+    return {
+      keys: slice.map((name) => ({ name })),
+      list_complete: start + limit >= keys.length,
+      cursor: start + limit < keys.length ? String(start + limit) : undefined,
+    };
+  },
 };
 
 async function refreshDevBuiltinNotices() {
@@ -126,7 +142,9 @@ async function refreshDevBuiltinNotices() {
  * Reset the development store to its default notice and Discord configuration.
  */
 export async function resetDevStore() {
+  devKvEntries.clear();
   devStore.notice = { ...GENERATED_DEV_NOTICE };
+  devStore.subscribers = [];
   await refreshDevBuiltinNotices();
   devStore.discordConfig = {
     deploymentWebhookUrl: "",

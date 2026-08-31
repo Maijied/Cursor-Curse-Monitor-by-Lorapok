@@ -1,9 +1,11 @@
 import { logSystemEvent } from "./system-log.js";
 import { notifyDiscordFeedback } from "./discord-feedback-notify.js";
 import { normalizeEmail } from "./subscribers.js";
+import { putScatterRecord } from "./kv-scatter.js";
 
+/** @deprecated Legacy blob key — scatter keys used since 2026-09. */
 export const FEEDBACK_SUBMISSIONS_KEY = "feedback:submissions";
-const MAX_STORED = 500;
+export const FEEDBACK_ITEM_PREFIX = "feedback:item";
 const MESSAGE_MAX = 4000;
 
 const KINDS = new Set(["bug", "feature", "general"]);
@@ -27,21 +29,6 @@ function normalizeInstallId(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
     ? id.toLowerCase()
     : null;
-}
-
-/**
- * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
- */
-async function readFeedbackSubmissions(kv) {
-  if (!kv?.get) return [];
-  try {
-    const raw = await kv.get(FEEDBACK_SUBMISSIONS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
 }
 
 /**
@@ -81,13 +68,6 @@ export async function submitProductFeedback(env, input) {
     createdAt: new Date().toISOString(),
   };
 
-  const kv = env.ADMIN_KV;
-  if (kv?.get && kv?.put) {
-    const items = await readFeedbackSubmissions(kv);
-    items.unshift(record);
-    await kv.put(FEEDBACK_SUBMISSIONS_KEY, JSON.stringify(items.slice(0, MAX_STORED)));
-  }
-
   const kindLabel = kind === "bug" ? "Bug report" : kind === "feature" ? "Feature request" : "Feedback";
   const summaryLines = [
     `**${kindLabel}** from \`${source}\``,
@@ -112,6 +92,14 @@ export async function submitProductFeedback(env, input) {
     message,
   });
 
+  const kv = env.ADMIN_KV;
+  let stored = false;
+  if (kv?.put) {
+    stored = await putScatterRecord(kv, FEEDBACK_ITEM_PREFIX, record.id, record, {
+      ts: Date.parse(record.createdAt),
+    });
+  }
+
   await logSystemEvent(env, {
     source: "feedback",
     level: discord.ok || discord.skipped ? "info" : "warn",
@@ -127,7 +115,7 @@ export async function submitProductFeedback(env, input) {
   if (!discord.ok && !discord.skipped) {
     return {
       ok: true,
-      stored: true,
+      stored,
       discordDelivered: false,
       warning: "Feedback saved but Discord notification failed. Configure feedback webhook in Mission Control → Settings.",
       id: record.id,
@@ -136,7 +124,7 @@ export async function submitProductFeedback(env, input) {
 
   return {
     ok: true,
-    stored: true,
+    stored,
     discordDelivered: discord.ok,
     id: record.id,
     message: "Thanks — your feedback was sent to the community team.",

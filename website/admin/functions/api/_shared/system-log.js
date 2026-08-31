@@ -1,4 +1,7 @@
-const SYSTEM_LOG_KEY = "system:logs";
+import { listScatterRecords, putScatterRecord } from "./kv-scatter.js";
+
+const SYSTEM_LOG_PREFIX = "system:log";
+const LEGACY_SYSTEM_LOG_KEY = "system:logs";
 const MAX_ENTRIES = 500;
 
 /**
@@ -6,40 +9,44 @@ const MAX_ENTRIES = 500;
  * @param {{ level?: string; source: string; message: string; meta?: Record<string, unknown>; email?: string | null }} entry
  */
 export async function logSystemEvent(env, entry) {
-  if (!env?.ADMIN_KV?.get || !env?.ADMIN_KV?.put) return;
+  const kv = env?.ADMIN_KV;
+  if (!kv?.put) return;
 
   try {
-    const raw = await env.ADMIN_KV.get(SYSTEM_LOG_KEY);
-    let list = [];
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) list = parsed;
-    }
-
-    list.unshift({
-      id: crypto.randomUUID(),
-      ts: new Date().toISOString(),
-      level: entry.level ?? "info",
-      source: entry.source,
-      message: entry.message,
-      meta: entry.meta ?? {},
-      email: entry.email ?? null,
-    });
-
-    if (list.length > MAX_ENTRIES) list = list.slice(0, MAX_ENTRIES);
-    await env.ADMIN_KV.put(SYSTEM_LOG_KEY, JSON.stringify(list));
+    const id = crypto.randomUUID();
+    await putScatterRecord(
+      kv,
+      SYSTEM_LOG_PREFIX,
+      id,
+      {
+        id,
+        ts: new Date().toISOString(),
+        level: entry.level ?? "info",
+        source: entry.source,
+        message: entry.message,
+        meta: entry.meta ?? {},
+        email: entry.email ?? null,
+      },
+      { ts: Date.now() }
+    );
   } catch (err) {
     console.error("logSystemEvent failed", err);
   }
 }
 
+/** @param {Record<string, unknown>} env */
 export async function readSystemLogs(env) {
-  if (!env?.ADMIN_KV?.get) return [];
+  const kv = env?.ADMIN_KV;
+  if (!kv?.get) return [];
+
+  const scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_ENTRIES });
+  if (scatter.length) return scatter;
+
   try {
-    const raw = await env.ADMIN_KV.get(SYSTEM_LOG_KEY);
+    const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.slice(0, MAX_ENTRIES) : [];
   } catch {
     return [];
   }

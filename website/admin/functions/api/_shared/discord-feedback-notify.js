@@ -1,4 +1,3 @@
-import { logSystemEvent } from "./system-log.js";
 import { readDiscordConfig } from "./discord-config.js";
 import { buildDiscordFeedbackEmbed, getMessageBranding } from "./message-cards-runtime.js";
 
@@ -49,19 +48,11 @@ export async function notifyDiscordFeedback(env, payload = {}) {
       }),
     });
   } catch (error) {
-    const result = {
+    return {
       ok: false,
       status: 0,
       error: error instanceof Error ? error.message : "Discord feedback request failed",
     };
-    await logSystemEvent(env, {
-      source: "discord",
-      level: "error",
-      message: `Discord feedback failed: ${result.error}`,
-      meta: { kind: "feedback" },
-      email: payload.triggeredBy ? String(payload.triggeredBy) : null,
-    });
-    return result;
   }
 
   const result = res.ok
@@ -71,14 +62,6 @@ export async function notifyDiscordFeedback(env, payload = {}) {
         status: res.status,
         error: (await res.text().catch(() => "")).slice(0, 300) || `Discord returned ${res.status}`,
       };
-
-  await logSystemEvent(env, {
-    source: "discord",
-    level: result.ok ? "info" : "error",
-    message: result.ok ? "Discord feedback notification sent" : `Discord feedback failed: ${result.error}`,
-    meta: { kind: "feedback" },
-    email: payload.triggeredBy ? String(payload.triggeredBy) : null,
-  });
 
   return result;
 }
