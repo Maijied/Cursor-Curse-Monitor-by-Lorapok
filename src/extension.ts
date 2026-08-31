@@ -1,6 +1,6 @@
 import "./registerShared";
 import * as vscode from "vscode";
-import { applyComposerFallbackModel, cleanupMonitoringDbBackups, setRuntimeAppName } from "./cursorAuth";
+import { applyComposerFallbackModel, cleanupMonitoringDbBackups, formatBackupBytes, recoverMonitoringDbBackups, scanMonitoringDbBackups, setRuntimeAppName, shouldNotifyDbBackupWaste } from "./cursorAuth";
 import { reindexMissingConversations } from "./conversationReindex";
 import {
   DashboardViewProvider,
@@ -29,9 +29,40 @@ import { showExtensionInfo, sendFeedback } from "./productSupport";
 let monitor: UsageMonitorService | undefined;
 let securityMonitor: SecurityMonitorService | undefined;
 
+const DB_BACKUP_PROMPT_KEY = "cursorCurseMonitor.dbBackupPromptShown";
+
+async function maybePromptDbBackupRecovery(context: vscode.ExtensionContext): Promise<void> {
+  const scan = scanMonitoringDbBackups();
+  if (!shouldNotifyDbBackupWaste(scan)) {
+    return;
+  }
+  if (context.globalState.get<boolean>(DB_BACKUP_PROMPT_KEY)) {
+    return;
+  }
+
+  await context.globalState.update(DB_BACKUP_PROMPT_KEY, true);
+  NotificationProvider.show({
+    title: "Stale Database Backups Detected",
+    message: `${scan.count} leftover state.vscdb backup file(s) (${formatBackupBytes(scan.totalBytes)}) are using disk space. Remove them safely — your live Cursor data is untouched.`,
+    type: "warning",
+    duration: 12000,
+    actions: [
+      {
+        label: "Clean Up Now",
+        action: () => void vscode.commands.executeCommand("cursorCurseMonitor.recoverDbBackups"),
+      },
+      {
+        label: "Open Dashboard",
+        action: () => void vscode.commands.executeCommand("cursorCurseMonitor.openDashboard"),
+      },
+    ],
+  });
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   setRuntimeAppName(vscode.env.appName);
   cleanupMonitoringDbBackups();
+  void maybePromptDbBackupRecovery(context);
   monitor = new UsageMonitorService(context);
   monitor.start();
 
@@ -224,6 +255,36 @@ export function activate(context: vscode.ExtensionContext): void {
             action: () => void vscode.commands.executeCommand("workbench.action.reloadWindow"),
           },
         ],
+      });
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.recoverDbBackups", async () => {
+      const before = scanMonitoringDbBackups();
+      if (before.count === 0) {
+        NotificationProvider.show({
+          title: "No Stale Backups",
+          message: "No leftover state.vscdb backup files were found.",
+          type: "info",
+          duration: 5000,
+        });
+        return;
+      }
+
+      const result = recoverMonitoringDbBackups();
+      if (!result.success) {
+        NotificationProvider.show({
+          title: "Backup Cleanup Failed",
+          message: result.error || "Could not remove stale database backups.",
+          type: "error",
+          duration: 7000,
+        });
+        return;
+      }
+
+      NotificationProvider.show({
+        title: "Disk Space Recovered",
+        message: `Removed ${result.removed} stale backup file(s), freeing ${formatBackupBytes(result.freedBytes)}. Your live Cursor database was not modified.`,
+        type: "success",
+        duration: 9000,
       });
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.switchAccount", async (accountId?: string) => {

@@ -17,6 +17,7 @@ import {
   updateEditorSettings,
   type EditorSettings,
 } from "./editorSettings";
+import { scanMonitoringDbBackups, type DbBackupScanResult } from "./cursorAuth";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -82,6 +83,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     };
 
+    const pushBackupStats = () => {
+      if (!viewReady) {
+        return;
+      }
+      const payload: DbBackupScanResult = scanMonitoringDbBackups();
+      webviewView.webview.postMessage({ type: "dbBackupStats", payload });
+    };
+
     const deliverSnapshot = async (force = false) => {
       if (latestSnapshot) {
         push(latestSnapshot);
@@ -125,6 +134,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         }
       }
       void pushCommunityStats();
+      pushBackupStats();
     };
 
     const subscription = this.monitor.onDidUpdate(push);
@@ -188,6 +198,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       if (message.type === "reindexConversations") {
         await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
+      }
+      if (message.type === "recoverDbBackups") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.recoverDbBackups");
+        pushBackupStats();
       }
       if (message.type === "switchAccount" && typeof message.accountId === "string") {
         await vscode.commands.executeCommand("cursorCurseMonitor.switchAccount", message.accountId);
@@ -1231,6 +1245,14 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="value">Aug 10+ transcripts</span>
     </div>
     <button class="ghost" id="reindexBtn" style="margin-top:10px;width:100%">Reindex missing conversations</button>
+    <p class="muted" style="margin:14px 0 10px;font-size:11px;line-height:1.45">
+      Older extension builds could leave multi-gigabyte <span class="mono">state.vscdb.backup-*</span> files in globalStorage. Cleanup removes only those stale copies — your live Cursor database is never modified.
+    </p>
+    <div class="row" style="margin-top:0">
+      <span class="label">Stale DB backups</span>
+      <span class="value" id="dbBackupSummary">Scanning…</span>
+    </div>
+    <button class="ghost" id="recoverDbBackupsBtn" style="margin-top:10px;width:100%" disabled>Remove stale database backups</button>
   </section>
 
   <div class="subscribe-modal-overlay" id="settingsModal" aria-hidden="true">
@@ -1286,6 +1308,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <div class="subscribe-actions">
         <button type="button" class="primary" id="reindexConfirm" style="width:100%">Reindex now</button>
         <button type="button" class="ghost" id="reindexCancel" style="width:100%">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="subscribe-modal-overlay" id="recoverDbBackupsModal" aria-hidden="true">
+    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="recoverDbBackupsTitle" tabindex="-1">
+      <p class="cursor-missing-eyebrow" style="color:var(--warn)">Disk recovery</p>
+      <h2 id="recoverDbBackupsTitle" style="margin:0 0 8px;font-size:16px">Remove stale database backups?</h2>
+      <p class="muted" style="margin:0 0 10px;font-size:11px;line-height:1.5" id="recoverDbBackupsBody">
+        This deletes leftover <span class="mono">state.vscdb.backup-*</span> files only. Your live Cursor database and chat history stay intact.
+      </p>
+      <div class="subscribe-actions">
+        <button type="button" class="primary" id="recoverDbBackupsConfirm" style="width:100%">Remove backups now</button>
+        <button type="button" class="ghost" id="recoverDbBackupsCancel" style="width:100%">Cancel</button>
       </div>
     </div>
   </div>
@@ -1835,9 +1871,42 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       breakdown.textContent = parts.join(' · ');
     }
 
+    function formatBackupBytes(bytes) {
+      if (bytes >= 1024 * 1024 * 1024) {
+        return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+      }
+      if (bytes >= 1024 * 1024) {
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      }
+      return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+    }
+
+    function renderDbBackupStats(stats) {
+      var summary = document.getElementById('dbBackupSummary');
+      var btn = document.getElementById('recoverDbBackupsBtn');
+      var body = document.getElementById('recoverDbBackupsBody');
+      if (!summary || !btn) return;
+      if (!stats || stats.count === 0) {
+        summary.textContent = 'None found';
+        btn.disabled = true;
+        if (body) {
+          body.textContent = 'No stale state.vscdb backup files were found in globalStorage.';
+        }
+        return;
+      }
+      summary.textContent = stats.count + ' file(s) · ' + formatBackupBytes(stats.totalBytes);
+      btn.disabled = false;
+      if (body) {
+        body.textContent =
+          'Remove ' + stats.count + ' stale backup file(s) (' + formatBackupBytes(stats.totalBytes) + ')? ' +
+          'Only state.vscdb.backup-* copies are deleted — your live Cursor database stays intact.';
+      }
+    }
+
     window.addEventListener('message', function(event) {
       if (event.data?.type === 'snapshot') render(event.data.payload);
       if (event.data?.type === 'communityDownloads') renderCommunityStats(event.data.payload);
+      if (event.data?.type === 'dbBackupStats') renderDbBackupStats(event.data.payload);
       if (event.data?.type === 'subscribeResult') {
         var status = document.getElementById('subscribeStatus');
         var btn = document.getElementById('subscribeBtn');
@@ -1961,6 +2030,32 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         modal.setAttribute('aria-hidden', 'true');
       }
       vscode.postMessage({ type: 'reindexConversations' });
+    });
+    onClick('recoverDbBackupsBtn', function() {
+      var modal = document.getElementById('recoverDbBackupsModal');
+      if (modal) {
+        modal.classList.add('visible');
+        modal.setAttribute('aria-hidden', 'false');
+        var confirmBtn = document.getElementById('recoverDbBackupsConfirm');
+        if (confirmBtn) confirmBtn.focus();
+      }
+    });
+    onClick('recoverDbBackupsCancel', function() {
+      var modal = document.getElementById('recoverDbBackupsModal');
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+    onClick('recoverDbBackupsConfirm', function() {
+      var modal = document.getElementById('recoverDbBackupsModal');
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+      var btn = document.getElementById('recoverDbBackupsBtn');
+      if (btn) btn.disabled = true;
+      vscode.postMessage({ type: 'recoverDbBackups' });
     });
     function bindCollapse(toggleId) {
       var toggle = document.getElementById(toggleId);
