@@ -74,6 +74,7 @@ const devFunctionsEnv = () => ({
   ADMIN_KV: devKv,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
   SITE_DATA_URL: process.env.SITE_DATA_URL ?? "https://cursor.lorapok.tech/site-data.json",
+  ...(existsSync(siteDataPath) ? { SITE_DATA_FILE: siteDataPath } : {}),
   ANALYTICS_STATS_URL: process.env.ANALYTICS_STATS_URL,
   CRON_SECRET: process.env.CRON_SECRET,
 });

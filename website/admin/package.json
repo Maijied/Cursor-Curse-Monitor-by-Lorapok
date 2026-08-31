@@ -11,7 +11,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:scripts": "node --test scripts/lib/deploy-retry.test.mjs scripts/lib/mail-credentials.test.mjs scripts/lib/deploy-fast.test.mjs scripts/deploy-pages-ci.test.mjs",
+    "test:scripts": "node --test scripts/lib/deploy-retry.test.mjs scripts/lib/mail-credentials.test.mjs scripts/lib/deploy-fast.test.mjs scripts/deploy-pages-ci.test.mjs functions/api/_shared/site-data.test.mjs functions/api/_shared/notice-hydration.test.mjs",
     "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=cursor-monitor-admin",
     "build:fast": "node scripts/build-fast.mjs",
     "deploy:fast": "node scripts/deploy-pages-fast.mjs",

@@ -359,6 +359,7 @@ jobs:
         working-directory: website/admin
         env:
           ADMIN_MASTER_EMAIL: ${{ secrets.ADMIN_MASTER_EMAIL }}
+          SITE_DATA_FILE: ${{ github.workspace }}/website/site-data.json
         run: npm test
 
       - name: Lint admin panel
@@ -367,6 +368,8 @@ jobs:
 
       - name: Build admin panel
         working-directory: website/admin
+        env:
+          SITE_DATA_FILE: ${{ github.workspace }}/website/site-data.json
         run: npm run build
 
       - name: Assert admin static artifacts in dist
