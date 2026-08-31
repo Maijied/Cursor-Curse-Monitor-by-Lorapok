@@ -101,7 +101,7 @@ checkSvg("media/logo.svg", {
 checkSvg("media/extension-icon.svg", {
   viewBox: "0 0 128 128",
   mustHave: ["<svg"],
-  label: "IDE extension marketplace icon (SVG)",
+  label: "browser extension icon (SVG)",
 });
 checkSvg("media/icon.svg", {
   viewBox: "0 0 128 128",
@@ -110,9 +110,9 @@ checkSvg("media/icon.svg", {
 });
 
 // Marketplace PNGs
-checkPng("media/extension-icon.png", { label: "IDE extension icon (PNG)" });
-checkPng("media/icon.png", { label: "website icon (PNG)" });
-checkPng("media/logo.png", { label: "dashboard logo fallback (PNG)", minSize: 64 });
+checkPng("media/extension-icon.png", { label: "browser extension icon (PNG)" });
+checkPng("media/icon.png", { label: "website small icon (PNG)" });
+checkPng("media/logo.png", { label: "marketplace VSIX icon + brand PNG", minSize: 64 });
 
 // package.json references
 const pkg = JSON.parse(read("package.json"));
@@ -131,6 +131,9 @@ for (const [label, rel] of refs) {
     ok(`package.json ${label} → ${rel}`);
   } else if (rel.endsWith(".png")) {
     ok(`package.json ${label} → ${rel}`);
+    if (label === "package icon" && rel !== "media/logo.png") {
+      warn("package.json icon should be media/logo.png for marketplace mascot branding");
+    }
   }
 }
 
