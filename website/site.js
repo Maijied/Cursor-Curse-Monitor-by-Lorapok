@@ -600,6 +600,7 @@ function updateStructuredDataVersion(data) {
           if (entries.some((entry) => entry.isIntersecting)) {
             inlineSubscribeActive = true;
             cancelScheduledModal();
+            if (!modal.hidden) closeModal();
           }
         },
         { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
