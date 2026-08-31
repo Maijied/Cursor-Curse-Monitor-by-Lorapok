@@ -26,8 +26,8 @@ if (!resendKey) {
 }
 
 const resolvedMailEnv = await resolveLocalMailEnvAsync(mailEnv, adminDir);
-const { token } = await pickDeployToken(resolvedMailEnv);
-if (!token) {
+const { token, probe } = await pickDeployToken(resolvedMailEnv);
+if (!token || !probe?.ok) {
   console.error("No valid Cloudflare deploy token. Run: cd website/admin && npx wrangler login");
   process.exit(1);
 }

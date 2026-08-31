@@ -1,0 +1,50 @@
+name: Procedure on merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  finalize:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate procedure retrospective
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/procedure-finalize-pr.mjs --pr "${GITHUB_PR_NUMBER}"
+
+      - name: Upload retrospective artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: procedure-pr-${{ github.event.pull_request.number }}
+          path: procedure/pr-${{ github.event.pull_request.number }}_*_merged.md
+          if-no-files-found: error
+
+      - name: Commit retrospective to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add procedure/pr-${{ github.event.pull_request.number }}_*_merged.md
+          if git diff --cached --quiet; then
+            echo "No procedure file to commit"
+            exit 0
+          fi
+          git commit -m "docs(procedure): retrospective for PR #${{ github.event.pull_request.number }}"
+          git push

@@ -81,4 +81,14 @@ Goal: Write your final plan to the plan file (the only file you can edit).
 - Ensure that the plan file is concise enough to scan quickly, but detailed enough to execute effectively
 - Include the paths of critical files to be modified
 - Include a verification section describing how to test the changes end-to-end (run the code, use MCP tools, run tests)
+
+## Procedure tracking (after Phase 4)
+
+For non-trivial tasks, start execution tracking:
+
+```bash
+node scripts/procedure-init.mjs --title "<task title>" --plan plan/<your-plan>.md
+```
+
+Keep `procedure/{id}_{slug}.md` updated through merge. See `.cursor/rules/procedure-github-project.mdc`.
 </system-reminder>
