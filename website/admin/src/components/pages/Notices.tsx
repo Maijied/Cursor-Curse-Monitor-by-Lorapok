@@ -70,6 +70,15 @@ export default function Notices() {
     if (selected) setForm({ ...EMPTY, ...selected });
   }, []);
 
+  const loadTemplates = useCallback(async () => {
+    try {
+      const data = await fetchNoticeTemplates();
+      setTemplates(data.templates ?? []);
+    } catch {
+      setTemplates([]);
+    }
+  }, []);
+
   const loadNotices = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -83,12 +92,13 @@ export default function Notices() {
     }
   }, [applyCatalog]);
 
+  const reloadNoticesPage = useCallback(async () => {
+    await Promise.all([loadNotices(), loadTemplates()]);
+  }, [loadNotices, loadTemplates]);
+
   useEffect(() => {
-    void loadNotices();
-    fetchNoticeTemplates()
-      .then((data) => setTemplates(data.templates ?? []))
-      .catch(() => setTemplates([]));
-  }, [loadNotices]);
+    void reloadNoticesPage();
+  }, [reloadNoticesPage]);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -313,7 +323,7 @@ export default function Notices() {
         <ErrorState message={error} />
         <button
           type="button"
-          onClick={() => void loadNotices()}
+          onClick={() => void reloadNoticesPage()}
           className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm hover:bg-white/5"
         >
           Retry loading notices
