@@ -24,7 +24,7 @@
 
 | Item | Files | Acceptance |
 |------|-------|------------|
-| Vitest site-data path | `website/admin/src/setupTests.ts` | Local `npm test` uses `website/site-data.json`, no remote fetch |
+| Vitest site-data path | `website/admin/vite.config.ts` (`test.env.SITE_DATA_FILE`) | Local `npm test` uses `website/site-data.json`, no remote fetch |
 | packageVersion tests | `website/admin/src/lib/site-data.test.ts` | `0.0.0` → falls back to `version` |
 | Subscribe API tests | `website/admin/src/__tests__/subscribe-api.test.ts` | Consent, mailbox entry, subscriber list |
 | Dev probe parity | `website/admin/vite-dev-api.mjs` | `POST /api/subscribe` with `probe: true` matches production |
