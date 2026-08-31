@@ -18,7 +18,10 @@ export function tagsFromSiteData(data) {
 }
 
 export function packageVersionFromSiteData(data) {
-  return String(data?.packageVersion ?? data?.version ?? "").replace(/^v/, "");
+  const pkg = String(data?.packageVersion ?? "").replace(/^v/, "");
+  const version = String(data?.version ?? "").replace(/^v/, "");
+  if (pkg && pkg !== "0.0.0") return pkg;
+  return version || pkg;
 }
 
 export function liveTagFromSiteData(data) {

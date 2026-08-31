@@ -180,9 +180,27 @@ async function submitSubscribeRequest({ email, subscribeUrl, source }) {
     body: JSON.stringify({ email, source, consent: true }),
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || "Subscribe failed");
+  if (!response.ok) throw new Error(body.error || body.mailWarning || "Subscribe failed");
   markSubscribedEmail(email);
   return body;
+}
+
+function subscribeSuccessFeedback(body) {
+  if (body.emailed === false) {
+    return {
+      tone: "error",
+      title: "Subscribed, but email not delivered",
+      message:
+        body.mailWarning ||
+        body.message ||
+        "You're on the list, but the welcome email could not be sent. We'll retry when mail is restored.",
+    };
+  }
+  return {
+    tone: "success",
+    title: "You're subscribed!",
+    message: body.message || "Release notes will land in your inbox.",
+  };
 }
 
 /**
@@ -231,6 +249,13 @@ function updateStructuredDataVersion(data) {
     }
 
     const merged = { ...staticData, ...liveData };
+
+    if (liveData.packageVersion === "0.0.0" && staticData.packageVersion && staticData.packageVersion !== "0.0.0") {
+      merged.packageVersion = staticData.packageVersion;
+    }
+    if (liveData.version === "0.0.0" && staticData.version && staticData.version !== "0.0.0") {
+      merged.version = staticData.version;
+    }
 
     if (staticData.downloads?.verified === true && liveData.downloads?.verified !== true) {
       merged.downloads = {
@@ -486,12 +511,9 @@ function updateStructuredDataVersion(data) {
 
       try {
         const body = await submitSubscribeRequest({ email, subscribeUrl, source: "website" });
-        showSubscribeFeedback(message, {
-          tone: "success",
-          title: "You're subscribed!",
-          message: body.message || "Release notes will land in your inbox.",
-        });
-        form.reset();
+        const feedback = subscribeSuccessFeedback(body);
+        showSubscribeFeedback(message, feedback);
+        if (body.emailed !== false) form.reset();
         closeSubscribeModal();
       } catch (err) {
         showSubscribeFeedback(message, {
@@ -515,9 +537,24 @@ function updateStructuredDataVersion(data) {
     const submitBtn = $("#subscribe-modal-submit");
     const subscribeUrl = data?.social?.subscribe || "https://cursor-dev.lorapok.tech/api/subscribe";
     let modalTimer = null;
+    let inlineSubscribeActive = false;
+    const subscribeSection = document.getElementById("subscribe");
+    const inlineForm = document.getElementById("subscribe-form");
+
+    const cancelScheduledModal = () => {
+      if (modalTimer != null) {
+        window.clearTimeout(modalTimer);
+        modalTimer = null;
+      }
+    };
 
     const openModal = () => {
-      if (!shouldShowSubscribeModal()) return;
+      if (!shouldShowSubscribeModal() || inlineSubscribeActive) return;
+      if (subscribeSection) {
+        const rect = subscribeSection.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight * 0.85 && rect.bottom > window.innerHeight * 0.15;
+        if (inView) return;
+      }
       modal.hidden = false;
       document.body.classList.add("subscribe-modal-open");
       input?.focus();
@@ -552,6 +589,24 @@ function updateStructuredDataVersion(data) {
       modalTimer = window.setTimeout(openModal, SUBSCRIBE_PROMPT_DELAY_MS);
     }
 
+    inlineForm?.addEventListener("focusin", () => {
+      inlineSubscribeActive = true;
+      cancelScheduledModal();
+    });
+
+    if (subscribeSection && typeof IntersectionObserver === "function") {
+      const subscribeObserver = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            inlineSubscribeActive = true;
+            cancelScheduledModal();
+          }
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
+      );
+      subscribeObserver.observe(subscribeSection);
+    }
+
     if (!form || !input || !message) return;
 
     form.addEventListener("submit", async (event) => {
@@ -584,12 +639,9 @@ function updateStructuredDataVersion(data) {
 
       try {
         const body = await submitSubscribeRequest({ email, subscribeUrl, source: "website-modal" });
-        showSubscribeFeedback(message, {
-          tone: "success",
-          title: "You're subscribed!",
-          message: body.message || "We'll keep you posted on releases.",
-        });
-        window.setTimeout(closeModal, 1200);
+        const feedback = subscribeSuccessFeedback(body);
+        showSubscribeFeedback(message, feedback);
+        if (body.emailed !== false) window.setTimeout(closeModal, 1200);
       } catch (err) {
         showSubscribeFeedback(message, {
           tone: "error",
@@ -602,7 +654,7 @@ function updateStructuredDataVersion(data) {
     });
 
     window.addEventListener("beforeunload", () => {
-      if (modalTimer) window.clearTimeout(modalTimer);
+      cancelScheduledModal();
     });
   }
 

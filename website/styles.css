@@ -529,6 +529,8 @@ a:hover { color: #7cb8ff; }
 .hero-visual-stage {
   position: relative;
   padding: clamp(12px, 2vw, 20px) 0 8px;
+  isolation: isolate;
+  overflow: hidden;
 }
 .hero-orbit {
   position: absolute;
@@ -609,7 +611,7 @@ a:hover { color: #7cb8ff; }
 }
 .hero-visual-stage .hero-stats-dashboard {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 .hero-device {
   border: 1px solid rgba(77, 159, 255, 0.28);

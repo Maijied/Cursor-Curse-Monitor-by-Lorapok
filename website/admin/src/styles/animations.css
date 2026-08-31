@@ -189,10 +189,11 @@
   display: block;
 }
 
+/* Mermaid positions each node/cluster with an SVG transform attribute, which a CSS
+   transform would replace outright and collapse the layout. Animate opacity only. */
 .architecture-mermaid-animated .node,
 .architecture-mermaid-animated .cluster {
   opacity: 0;
-  transform: translateY(8px);
   animation: arch-node-in 0.65s ease forwards;
 }
 
@@ -216,7 +217,6 @@
 @keyframes arch-node-in {
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

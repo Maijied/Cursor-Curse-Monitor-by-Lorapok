@@ -167,3 +167,16 @@ export function formatCount(n: number | undefined | null): string {
   if (n == null) return "0";
   return n.toLocaleString();
 }
+
+/** Root package.json stays at 0.0.0 in git; resolved release version lives in `version`. */
+export function resolvePackageVersion(data: Pick<SiteData, "packageVersion" | "version">): string {
+  const pkg = String(data.packageVersion ?? "").replace(/^v/, "");
+  const version = String(data.version ?? "").replace(/^v/, "");
+  if (pkg && pkg !== "0.0.0") return pkg;
+  return version || pkg;
+}
+
+export function normalizeSiteData(data: SiteData): SiteData {
+  const packageVersion = resolvePackageVersion(data);
+  return packageVersion === data.packageVersion ? data : { ...data, packageVersion };
+}
