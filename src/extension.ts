@@ -1,6 +1,6 @@
 import "./registerShared";
 import * as vscode from "vscode";
-import { applyComposerFallbackModel, setRuntimeAppName } from "./cursorAuth";
+import { applyComposerFallbackModel, cleanupMonitoringDbBackups, setRuntimeAppName } from "./cursorAuth";
 import { reindexMissingConversations } from "./conversationReindex";
 import {
   DashboardViewProvider,
@@ -31,6 +31,7 @@ let securityMonitor: SecurityMonitorService | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
   setRuntimeAppName(vscode.env.appName);
+  cleanupMonitoringDbBackups();
   monitor = new UsageMonitorService(context);
   monitor.start();
 

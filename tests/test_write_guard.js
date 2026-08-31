@@ -39,19 +39,18 @@ async function run() {
   };
 
   require("ts-node").register({ transpileOnly: true });
-  const { applyComposerFallbackModel, createFullBackup } = require("../src/cursorAuth.ts");
+  const { applyComposerFallbackModel } = require("../src/cursorAuth.ts");
 
   const refused = await applyComposerFallbackModel();
   assert.strictEqual(refused.success, false);
   assert.match(String(refused.error), /still running|Quit/i);
 
   process.env.CURSOR_EDITOR_RUNNING = "0";
-  const bundle = createFullBackup(dbPath);
-  assert.ok(bundle);
-  assert.ok(bundle.files.some((f) => f.original === dbPath));
-
   const ok = await applyComposerFallbackModel();
   assert.strictEqual(ok.success, true);
+
+  const leftover = fs.readdirSync(__dirname).filter((f) => f.startsWith("mock-guard.vscdb.backup-"));
+  assert.strictEqual(leftover.length, 0, "successful write must not leave backup files");
 
   console.log("write-guard / backup test passed");
 }
