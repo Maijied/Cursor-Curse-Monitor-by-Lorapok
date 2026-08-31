@@ -13,7 +13,9 @@ const REACTIVE_KEY = REACTIVE_STORAGE_KEY;
 const DB_OPERATION_TIMEOUT_MS = 15_000;
 
 /** Stale backups older than this (ms) are cleaned up automatically. */
-const STALE_BACKUP_AGE_MS = 60 * 60 * 1000; // 1 hour
+const STALE_BACKUP_AGE_MS = 15 * 60 * 1000; // 15 minutes
+/** Never retain more than this many timestamped state.vscdb backups per DB. */
+const MAX_RETAINED_DB_BACKUPS = 1;
 
 type SqliteModule = typeof import("node:sqlite");
 type SqliteDb = InstanceType<SqliteModule["DatabaseSync"]>;
@@ -391,18 +393,26 @@ export function getCursorGlobalStoragePath(host?: EditorHost, appName?: string):
   }
 }
 
+/** Process name patterns used to block live DB writes while the editor is open. */
+export function editorProcessPatterns(host: EditorHost, product: string): string[] {
+  if (product === "Code") {
+    return ["Code.exe", "code", "Code - OSS", "code-oss"];
+  }
+  const productPatterns = [`${product}.exe`, product, product.toLowerCase()];
+  // Cursor forks (dCursor, etc.) still run the cursor binary — always include it.
+  if (host === "cursor" || product === "Cursor" || product === "dCursor") {
+    return ["Cursor.exe", "Cursor", "cursor", ...productPatterns];
+  }
+  return productPatterns;
+}
+
 /** True when the editor process that owns the DB appears to be running. */
 export function isEditorProcessRunning(host: EditorHost = detectEditorHost(), appName?: string): boolean {
   if (process.env.CURSOR_EDITOR_RUNNING === "1") return true;
   if (process.env.CURSOR_EDITOR_RUNNING === "0") return false;
 
   const product = resolveProductForPath(host, effectiveAppName(appName));
-  const patterns =
-    product === "Code"
-      ? ["Code.exe", "code", "Code - OSS", "code-oss"]
-      : product === "Cursor"
-        ? ["Cursor.exe", "Cursor", "cursor"]
-        : [`${product}.exe`, product, product.toLowerCase()];
+  const patterns = editorProcessPatterns(host, product);
 
   try {
     if (process.platform === "win32") {
@@ -576,6 +586,8 @@ function cleanupStaleBackups(dbPath: string): void {
     const basename = path.basename(dbPath);
     const entries = fs.readdirSync(dir);
     const now = Date.now();
+    const backups: Array<{ fullPath: string; mtimeMs: number }> = [];
+
     for (const entry of entries) {
       if (
         entry.startsWith(`${basename}.backup-`) ||
@@ -586,17 +598,34 @@ function cleanupStaleBackups(dbPath: string): void {
         const fullPath = path.join(dir, entry);
         try {
           const stats = fs.statSync(fullPath);
-          if (now - stats.mtimeMs > STALE_BACKUP_AGE_MS) {
-            fs.unlinkSync(fullPath);
-          }
+          backups.push({ fullPath, mtimeMs: stats.mtimeMs });
         } catch {
-          // Ignore individual cleanup failures
+          // Ignore individual stat failures
+        }
+      }
+    }
+
+    backups.sort((a, b) => b.mtimeMs - a.mtimeMs);
+    for (let index = 0; index < backups.length; index++) {
+      const { fullPath, mtimeMs } = backups[index]!;
+      const overRetention = index >= MAX_RETAINED_DB_BACKUPS;
+      const tooOld = now - mtimeMs > STALE_BACKUP_AGE_MS;
+      if (overRetention || tooOld) {
+        try {
+          fs.unlinkSync(fullPath);
+        } catch {
+          // Non-critical
         }
       }
     }
   } catch {
     // Non-critical
   }
+}
+
+/** Purge leftover state.vscdb backups for the monitoring DB (safe on extension startup). */
+export function cleanupMonitoringDbBackups(): void {
+  cleanupStaleBackups(getMonitoringStoragePath());
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -852,7 +881,7 @@ export async function applyComposerFallbackModel(): Promise<{
           error: `Post-write integrity check failed (${after.detail}). Restored backup.`,
         };
       }
-      // Keep backup for one session window (stale cleaner removes later).
+      cleanupFullBackup(backupBundle);
       return attemptResult;
     }
 
@@ -878,6 +907,7 @@ export async function applyComposerFallbackModel(): Promise<{
           error: `Post-write integrity check failed (${after.detail}). Restored backup.`,
         };
       }
+      cleanupFullBackup(backupBundle);
       return attemptResult;
     }
 
