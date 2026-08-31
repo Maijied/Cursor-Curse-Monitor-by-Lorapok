@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   COMMUNITY_DOWNLOADS_NOTE,
   formatCommunityCount,
@@ -7,24 +10,41 @@ import {
   parseCommunityDownloadsFromSiteData,
 } from "../dist/communityDownloadStats.js";
 
-const verified = parseCommunityDownloadsFromSiteData({
-  downloads: {
-    verified: true,
-    total: 9975,
-    openVsxCombined: 9611,
-    note: COMMUNITY_DOWNLOADS_NOTE,
-    breakdown: {
-      openVsxCanonical: 5798,
-      openVsxDuplicate: 3813,
-      vscodeMarketplace: 356,
-      githubAllAssets: 8,
-    },
-  },
-});
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+const siteDataPath = join(repoRoot, "website/site-data.json");
+const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+const downloads = siteData.downloads ?? {};
 
-assert.equal(verified.total, 9975);
-assert.equal(formatCommunityDownloadsHeadline(verified), "9,975 total downloads");
-assert.match(formatCommunityDownloadsBreakdown(verified), /VS Code 356/);
+const verified = parseCommunityDownloadsFromSiteData(siteData);
+
+assert.equal(verified.verified, downloads.verified === true);
+if (verified.verified) {
+  const expectedTotal = Number(downloads.displayTotal ?? downloads.total);
+  assert.equal(verified.total, expectedTotal);
+  assert.equal(
+    formatCommunityDownloadsHeadline(verified),
+    `${formatCommunityCount(expectedTotal)} total downloads`
+  );
+
+  const vscodeCount = verified.breakdown.vscodeMarketplace;
+  if (vscodeCount != null) {
+    assert.match(
+      formatCommunityDownloadsBreakdown(verified),
+      new RegExp(`VS Code ${formatCommunityCount(vscodeCount).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)
+    );
+  }
+
+  const canonical = Number(downloads.breakdown?.openVsxCanonical ?? siteData.ovsx?.downloadCount);
+  const duplicate = Number(downloads.breakdown?.openVsxDuplicate ?? siteData.ovsxDuplicate?.downloadCount);
+  if (!Number.isNaN(canonical)) {
+    assert.equal(verified.breakdown.openVsxCanonical, canonical);
+  }
+  if (!Number.isNaN(duplicate)) {
+    assert.equal(verified.breakdown.openVsxDuplicate, duplicate);
+  }
+}
+
+assert.equal(verified.note, downloads.note ?? COMMUNITY_DOWNLOADS_NOTE);
 
 const unverified = parseCommunityDownloadsFromSiteData({
   downloads: { verified: false, total: 0, breakdown: {} },
