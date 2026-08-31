@@ -56,5 +56,6 @@ export default defineConfig({
     setupFiles: resolve(rootDir, 'src/setupTests.ts'),
     hookTimeout: 30_000,
     testTimeout: 15_000,
+    env: existsSync(siteDataSrc) ? { SITE_DATA_FILE: siteDataSrc } : {},
   },
 })
