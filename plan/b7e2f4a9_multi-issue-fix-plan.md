@@ -1,7 +1,7 @@
 # Multi-issue fix & follow-up plan
 
-**Status:** PR #102 merged · PR #103 open  
-**Branch:** `chore/pr-102-followups` → [PR #103](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/103)  
+**Status:** PR #102 merged · PR #103 merged  
+**Branch:** `main` (follow-ups landed via [PR #103](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/103))  
 **Last updated:** 2026-08-31
 
 ---
@@ -20,7 +20,7 @@
 
 ---
 
-## 2. In PR #103 (automated follow-ups)
+## 2. Merged via PR #103 (automated follow-ups)
 
 | Item | Files | Acceptance |
 |------|-------|------------|
@@ -29,7 +29,7 @@
 | Subscribe API tests | `website/admin/src/__tests__/subscribe-api.test.ts` | Consent, mailbox entry, subscriber list |
 | Dev probe parity | `website/admin/vite-dev-api.mjs` | `POST /api/subscribe` with `probe: true` matches production |
 
-**CI gate:** Admin Panel CI green on PR #103.
+**CI gate:** Admin Panel CI green (verified on PR #103 merge deploy run).
 
 ---
 
