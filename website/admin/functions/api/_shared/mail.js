@@ -475,15 +475,6 @@ export async function sendMail(
     }
   }
 
-  if (!result.sent && isVerifiedDestinationSandboxError(result.reason) && resendConfigured(env)) {
-    try {
-      const resend = await sendViaResend(env, payload);
-      if (resend.sent) result = resend;
-    } catch (err) {
-      console.error("Resend priority fallback error", err);
-    }
-  }
-
   if (!result.sent && env.EMAIL?.send && !isVerifiedDestinationSandboxError(result.reason)) {
     try {
       result = await sendViaCloudflareBinding(env, payload);
@@ -493,6 +484,15 @@ export async function sendMail(
         sent: false,
         reason: err instanceof Error ? err.message : "EMAIL binding failed",
       };
+    }
+  }
+
+  if (!result.sent && isVerifiedDestinationSandboxError(result.reason) && resendConfigured(env)) {
+    try {
+      const resend = await sendViaResend(env, payload);
+      if (resend.sent) result = resend;
+    } catch (err) {
+      console.error("Resend sandbox fallback error", err);
     }
   }
 

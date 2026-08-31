@@ -859,6 +859,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     .footer-left { display: flex; align-items: center; gap: 6px; color: var(--muted); flex-wrap: wrap; }
     .footer-left a { color: var(--accent-2); text-decoration: none; font-weight: 600; font-size: 11px; }
     .footer-link {
+      width: auto;
+      margin: 0;
       background: none;
       border: none;
       padding: 0;

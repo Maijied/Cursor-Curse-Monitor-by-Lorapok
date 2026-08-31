@@ -31,23 +31,28 @@ export function FeedbackModal({ open, onClose, source = "browser-addon-modal" }:
     }
     setLoading(true);
     setStatus("");
-    const result = await sendExtensionFeedback({
-      kind,
-      message: trimmed,
-      source,
-      email: email.trim() || undefined,
-    });
-    setLoading(false);
-    if (!result.ok) {
-      setStatus(result.error || "Could not send feedback.");
-      return;
+    try {
+      const result = await sendExtensionFeedback({
+        kind,
+        message: trimmed,
+        source,
+        email: email.trim() || undefined,
+      });
+      if (!result.ok) {
+        setStatus(result.error || "Could not send feedback.");
+        return;
+      }
+      setStatus(result.warning || result.message || "Thanks!");
+      setMessage("");
+      window.setTimeout(() => {
+        setStatus("");
+        onClose();
+      }, 1400);
+    } catch {
+      setStatus("Could not send feedback. Try again.");
+    } finally {
+      setLoading(false);
     }
-    setStatus(result.warning || result.message || "Thanks!");
-    setMessage("");
-    window.setTimeout(() => {
-      setStatus("");
-      onClose();
-    }, 1400);
   };
 
   return (
