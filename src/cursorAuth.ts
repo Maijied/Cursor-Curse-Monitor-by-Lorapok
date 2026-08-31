@@ -101,7 +101,14 @@ export function shouldDiscoverProductInstall(productFolder: string, appName?: st
     return true;
   }
   const name = (effectiveAppName(appName) || "").toLowerCase();
-  return name.includes("dcursor");
+  if (name.includes("dcursor")) {
+    return true;
+  }
+  // dCursor-only machine: expose the install even when the host reports plain "Cursor".
+  if (!fs.existsSync(configDbPath("Cursor"))) {
+    return true;
+  }
+  return false;
 }
 
 function getConfigRoot(): string {
@@ -160,7 +167,7 @@ export function resolveProductDataFolder(appName?: string): string | null {
     return firstExistingProductDb(["Antigravity IDE", "Antigravity", "AGY"]) ?? "Antigravity IDE";
   }
   if (name.includes("cursor")) {
-    return "Cursor";
+    return firstExistingProductDb(["Cursor", "dCursor"]) ?? "Cursor";
   }
   if (name.includes("windsurf")) return "Windsurf";
   if (name.includes("vscodium") || name.includes("codium")) return "VSCodium";
@@ -450,7 +457,10 @@ export function getMonitoringProductFolder(): string {
 
   // Cursor-family host: bind local DB reads/writes to this editor's product folder only.
   if (fromName && fromName !== "Code") {
-    return fromName;
+    if (fs.existsSync(configDbPath(fromName))) {
+      return fromName;
+    }
+    return firstExistingProductDb(["dCursor", "Cursor", fromName]) ?? fromName;
   }
 
   const discovered = discoverCursorAuthInstalls();
@@ -582,6 +592,7 @@ function cleanupFullBackup(bundle: BackupBundle | null): void {
 
 type MonitoringDbBackupFile = { fullPath: string; size: number; mtimeMs: number };
 
+/** True when a globalStorage filename is a stale state.vscdb backup or temp copy. */
 function isMonitoringDbBackupEntry(entry: string, dbBasename: string): boolean {
   return (
     entry.startsWith(`${dbBasename}.backup-`) ||
@@ -591,6 +602,7 @@ function isMonitoringDbBackupEntry(entry: string, dbBasename: string): boolean {
   );
 }
 
+/** List backup/tmp companion files for one monitoring database path. */
 function listMonitoringDbBackupFiles(dbPath: string): MonitoringDbBackupFile[] {
   const dir = path.dirname(dbPath);
   const basename = path.basename(dbPath);
@@ -668,6 +680,7 @@ export function scanMonitoringDbBackups(): DbBackupScanResult {
   };
 }
 
+/** Human-readable size for backup recovery notifications and dashboard copy. */
 export function formatBackupBytes(bytes: number): string {
   if (bytes >= 1024 ** 3) {
     return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
@@ -678,6 +691,7 @@ export function formatBackupBytes(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
+/** Whether startup should warn about leftover backup files consuming significant disk space. */
 export function shouldNotifyDbBackupWaste(scan: DbBackupScanResult): boolean {
   return scan.count >= BACKUP_NOTIFY_MIN_COUNT || scan.totalBytes >= BACKUP_NOTIFY_MIN_BYTES;
 }
