@@ -580,31 +580,49 @@ function cleanupFullBackup(bundle: BackupBundle | null): void {
   }
 }
 
+type MonitoringDbBackupFile = { fullPath: string; size: number; mtimeMs: number };
+
+function isMonitoringDbBackupEntry(entry: string, dbBasename: string): boolean {
+  return (
+    entry.startsWith(`${dbBasename}.backup-`) ||
+    entry.startsWith(`${dbBasename}-wal.backup-`) ||
+    entry.startsWith(`${dbBasename}-shm.backup-`) ||
+    entry.startsWith(`${dbBasename}.tmp-`)
+  );
+}
+
+function listMonitoringDbBackupFiles(dbPath: string): MonitoringDbBackupFile[] {
+  const dir = path.dirname(dbPath);
+  const basename = path.basename(dbPath);
+  const backups: MonitoringDbBackupFile[] = [];
+
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(dir);
+  } catch {
+    return backups;
+  }
+
+  for (const entry of entries) {
+    if (!isMonitoringDbBackupEntry(entry, basename)) {
+      continue;
+    }
+    const fullPath = path.join(dir, entry);
+    try {
+      const stats = fs.statSync(fullPath);
+      backups.push({ fullPath, size: stats.size, mtimeMs: stats.mtimeMs });
+    } catch {
+      // Ignore individual stat failures
+    }
+  }
+
+  return backups;
+}
+
 function cleanupStaleBackups(dbPath: string): void {
   try {
-    const dir = path.dirname(dbPath);
-    const basename = path.basename(dbPath);
-    const entries = fs.readdirSync(dir);
     const now = Date.now();
-    const backups: Array<{ fullPath: string; mtimeMs: number }> = [];
-
-    for (const entry of entries) {
-      if (
-        entry.startsWith(`${basename}.backup-`) ||
-        entry.startsWith(`${basename}-wal.backup-`) ||
-        entry.startsWith(`${basename}-shm.backup-`) ||
-        entry.startsWith(`${basename}.tmp-`)
-      ) {
-        const fullPath = path.join(dir, entry);
-        try {
-          const stats = fs.statSync(fullPath);
-          backups.push({ fullPath, mtimeMs: stats.mtimeMs });
-        } catch {
-          // Ignore individual stat failures
-        }
-      }
-    }
-
+    const backups = listMonitoringDbBackupFiles(dbPath);
     backups.sort((a, b) => b.mtimeMs - a.mtimeMs);
     for (let index = 0; index < backups.length; index++) {
       const { fullPath, mtimeMs } = backups[index]!;
@@ -620,6 +638,76 @@ function cleanupStaleBackups(dbPath: string): void {
     }
   } catch {
     // Non-critical
+  }
+}
+
+export type DbBackupScanResult = {
+  count: number;
+  totalBytes: number;
+  directory: string;
+};
+
+export type DbBackupRecoveryResult = {
+  success: boolean;
+  removed: number;
+  freedBytes: number;
+  error?: string;
+};
+
+const BACKUP_NOTIFY_MIN_BYTES = 500 * 1024 * 1024;
+const BACKUP_NOTIFY_MIN_COUNT = 3;
+
+/** Scan leftover state.vscdb backup files for the monitoring DB. */
+export function scanMonitoringDbBackups(): DbBackupScanResult {
+  const dbPath = getMonitoringStoragePath();
+  const files = listMonitoringDbBackupFiles(dbPath);
+  return {
+    count: files.length,
+    totalBytes: files.reduce((sum, file) => sum + file.size, 0),
+    directory: path.dirname(dbPath),
+  };
+}
+
+export function formatBackupBytes(bytes: number): string {
+  if (bytes >= 1024 ** 3) {
+    return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+  }
+  if (bytes >= 1024 ** 2) {
+    return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  }
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+export function shouldNotifyDbBackupWaste(scan: DbBackupScanResult): boolean {
+  return scan.count >= BACKUP_NOTIFY_MIN_COUNT || scan.totalBytes >= BACKUP_NOTIFY_MIN_BYTES;
+}
+
+/** Remove all monitoring DB backup/tmp files (live state.vscdb is never touched). */
+export function recoverMonitoringDbBackups(): DbBackupRecoveryResult {
+  try {
+    const dbPath = getMonitoringStoragePath();
+    const files = listMonitoringDbBackupFiles(dbPath);
+    let removed = 0;
+    let freedBytes = 0;
+
+    for (const { fullPath, size } of files) {
+      try {
+        fs.unlinkSync(fullPath);
+        removed += 1;
+        freedBytes += size;
+      } catch {
+        // Continue with remaining files
+      }
+    }
+
+    return { success: true, removed, freedBytes };
+  } catch (error) {
+    return {
+      success: false,
+      removed: 0,
+      freedBytes: 0,
+      error: error instanceof Error ? error.message : "Backup recovery failed",
+    };
   }
 }
 
