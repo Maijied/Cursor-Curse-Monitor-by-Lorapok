@@ -43,6 +43,8 @@ if (rsvgAvailable) {
 }
 
 const copies = [
+  ["media/logo.svg", "media/icon.svg"],
+  ["media/logo.svg", "media/logo-animated.svg"],
   ["media/icon.png", "website/assets/icon.png"],
   ["media/logo.png", "website/assets/logo.png"],
   ["media/logo.svg", "website/assets/logo.svg"],

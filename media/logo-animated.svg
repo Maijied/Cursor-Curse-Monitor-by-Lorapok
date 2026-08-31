@@ -20,35 +20,46 @@
     </filter>
   </defs>
 
-  <circle cx="64" cy="64" r="58" stroke="url(#neonPanel)" stroke-width="2" stroke-opacity="0.35" fill="none" stroke-dasharray="8 6">
+  <!-- Token usage arc (Cursor connection ring) -->
+  <circle class="usage-ring" cx="64" cy="64" r="58" stroke="url(#neonPanel)" stroke-width="2" stroke-opacity="0.35" fill="none" stroke-dasharray="8 6">
     <animateTransform attributeName="transform" type="rotate" from="0 64 64" to="360 64 64" dur="24s" repeatCount="indefinite"/>
   </circle>
-  <circle cx="64" cy="64" r="54" stroke="#5b9dff" stroke-width="1.5" fill="none" opacity="0.5">
+  <circle class="usage-pulse" cx="64" cy="64" r="54" stroke="#5b9dff" stroke-width="1.5" fill="none" opacity="0.5">
     <animate attributeName="r" values="52;56;52" dur="2.5s" repeatCount="indefinite"/>
     <animate attributeName="opacity" values="0.25;0.55;0.25" dur="2.5s" repeatCount="indefinite"/>
   </circle>
 
+  <!-- Body segments -->
   <ellipse cx="64" cy="78" rx="34" ry="28" fill="url(#armor)" stroke="#4a5568" stroke-width="1.2"/>
   <ellipse cx="64" cy="52" rx="28" ry="24" fill="url(#armor)" stroke="#4a5568" stroke-width="1.2"/>
   <path d="M48 58 Q64 68 80 58" stroke="url(#neonPanel)" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Robotic legs -->
   <path d="M38 88 L32 102 M44 92 L38 108 M84 92 L90 108 M90 88 L96 102" stroke="#5b9dff" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Head -->
   <ellipse cx="64" cy="44" rx="26" ry="22" fill="url(#armor)" stroke="#5b9dff" stroke-width="1" opacity="0.9"/>
+
+  <!-- Eye sockets -->
   <ellipse cx="52" cy="42" rx="10" ry="11" fill="#0a0e14" stroke="#39ff14" stroke-width="1" opacity="0.9"/>
   <ellipse cx="76" cy="42" rx="10" ry="11" fill="#0a0e14" stroke="#39ff14" stroke-width="1" opacity="0.9"/>
-  <g filter="url(#glow)">
-    <circle cx="52" cy="42" r="7" fill="url(#eyeGlow)"/>
-    <circle cx="76" cy="42" r="7" fill="url(#eyeGlow)"/>
-    <circle cx="52" cy="42" r="3.5" fill="#39ff14">
+
+  <!-- Glowing eyes -->
+  <g class="eyes" filter="url(#glow)">
+    <circle class="eye-glow eye-left" cx="52" cy="42" r="7" fill="url(#eyeGlow)"/>
+    <circle class="eye-glow eye-right" cx="76" cy="42" r="7" fill="url(#eyeGlow)"/>
+    <circle class="pupil pupil-left" cx="52" cy="42" r="3.5" fill="#39ff14">
       <animate attributeName="cx" values="50;54;51;53;52" dur="4s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="76" cy="42" r="3.5" fill="#39ff14">
+    <circle class="pupil pupil-right" cx="76" cy="42" r="3.5" fill="#39ff14">
       <animate attributeName="cx" values="74;78;75;77;76" dur="4s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="50" cy="40" r="1.2" fill="white" opacity="0.9">
+    <circle class="eye-shine" cx="50" cy="40" r="1.2" fill="white" opacity="0.9">
       <animate attributeName="opacity" values="0.6;1;0.6" dur="1.8s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="74" cy="40" r="1.2" fill="white" opacity="0.9">
+    <circle class="eye-shine" cx="74" cy="40" r="1.2" fill="white" opacity="0.9">
       <animate attributeName="opacity" values="0.6;1;0.6" dur="1.8s" repeatCount="indefinite"/>
     </circle>
   </g>
+
 </svg>
