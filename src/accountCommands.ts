@@ -56,8 +56,8 @@ export async function promptPasteCursorToken(
   NotificationProvider.show({
     title: "Account added",
     message: added.email
-      ? `Now monitoring ${added.email}. Local Composer insights still come from this Cursor session.`
-      : "Now monitoring the saved login. Local Composer insights still come from this Cursor session.",
+      ? `Now monitoring ${added.email}. Token stored in this extension only — your IDE state.vscdb is not modified.`
+      : "Now monitoring the saved login. Token stored in this extension only — your IDE state.vscdb is not modified.",
     type: "success",
     duration: 5000,
   });
@@ -117,10 +117,10 @@ export async function promptSwitchCursorAccount(context: vscode.ExtensionContext
       label: account.label,
       description:
         account.source === "system"
-          ? "This editor session"
+          ? "This editor session (local DB for Composer insights)"
           : account.source === "discovered"
-            ? "Found on this computer"
-            : "Saved login",
+            ? "Read-only login from another install on this PC"
+            : "Saved token (extension secrets only)",
       accountId: account.id,
     })),
     {

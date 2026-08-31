@@ -50,10 +50,48 @@ const MONITORING_PRODUCT_PRIORITY = [
   "Trae",
   "Kiro",
   "Codex",
-];
+] as const;
 
-/** When false, skip auto-discovering a separate dCursor install (use saved accounts in main Cursor). */
+/** Plain VS Code hosts — never treat as Cursor auth sources (separate state.vscdb). */
+const VSCODE_HOST_PRODUCTS = new Set(["Code", "VSCodium", "Positron"]);
+
+function parseDiscoverProductsOverride(): Set<string> | null {
+  const raw = process.env.CCM_DISCOVER_PRODUCTS?.trim();
+  if (!raw) {
+    return null;
+  }
+  return new Set(
+    raw
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+  );
+}
+
+/** True when a product folder may appear in the account switcher as a discovered login. */
+export function isCursorAuthDiscoverableProduct(productFolder: string): boolean {
+  const override = parseDiscoverProductsOverride();
+  if (override) {
+    return override.has(productFolder);
+  }
+  if (VSCODE_HOST_PRODUCTS.has(productFolder)) {
+    return false;
+  }
+  return (MONITORING_PRODUCT_PRIORITY as readonly string[]).includes(productFolder);
+}
+
+/**
+ * Whether to expose another IDE install in the account switcher.
+ * Discovered installs are read-only; saved accounts live in extension secrets only.
+ */
 export function shouldDiscoverProductInstall(productFolder: string, appName?: string): boolean {
+  if (!isCursorAuthDiscoverableProduct(productFolder)) {
+    return false;
+  }
+  const hostProduct = resolveProductDataFolder(appName);
+  if (hostProduct === "Code" && productFolder === "Code") {
+    return false;
+  }
   if (process.env.CCM_INCLUDE_DCURSOR === "1") {
     return true;
   }
@@ -76,7 +114,7 @@ function getConfigRoot(): string {
 }
 
 function productSortScore(product: string): number {
-  const idx = MONITORING_PRODUCT_PRIORITY.indexOf(product);
+  const idx = (MONITORING_PRODUCT_PRIORITY as readonly string[]).indexOf(product);
   return idx >= 0 ? idx : 100;
 }
 
@@ -201,7 +239,7 @@ export function discoverCursorAuthInstalls(): DiscoveredCursorLogin[] {
     if (!auth.token) {
       continue;
     }
-    if (!shouldDiscoverProductInstall(productFolder)) {
+    if (!shouldDiscoverProductInstall(productFolder, effectiveAppName())) {
       continue;
     }
     results.push({
@@ -389,6 +427,8 @@ export function getMonitoringProductFolder(): string {
   }
   const appName = effectiveAppName();
   const host = detectEditorHost(appName);
+  const fromName = resolveProductDataFolder(appName);
+
   if (host === "vscode") {
     const discovered = discoverCursorAuthInstalls();
     const firstDiscovered = discovered[0];
@@ -397,10 +437,12 @@ export function getMonitoringProductFolder(): string {
     }
     return firstExistingProductDb(["Cursor", "dCursor"]) ?? "Cursor";
   }
-  const fromName = resolveProductDataFolder(appName);
-  if (fromName && fromName !== "Code" && fs.existsSync(configDbPath(fromName))) {
+
+  // Cursor-family host: bind local DB reads/writes to this editor's product folder only.
+  if (fromName && fromName !== "Code") {
     return fromName;
   }
+
   const discovered = discoverCursorAuthInstalls();
   const firstDiscovered = discovered[0];
   if (firstDiscovered) {
