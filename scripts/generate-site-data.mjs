@@ -578,7 +578,7 @@ const siteData = {
     vsixCommand: `cursor --install-extension ${vsixName}`,
     releasePatch: "./scripts/release.sh patch",
     releaseMinor: "./scripts/release.sh minor",
-    releaseTag: `./scripts/release.sh ${pkg.version}`,
+    releaseTag: `./scripts/release.sh ${version}`,
   },
   supportedIdes: {
     headline: SUPPORTED_IDE_WRAPPERS_HEADLINE,

@@ -99,8 +99,11 @@ export default function ApiExplorer() {
               {probed.length} of {API_CATALOG.length} probed · {passing} passing
             </p>
           </div>
-          <Badge variant={passing === probed.length && probed.length > 0 ? "synced" : "warn"} pulse={passing === probed.length}>
-            {probed.length ? `${passing}/${probed.length} OK` : "Running…"}
+          <Badge
+            variant={passing === probed.length && probed.length > 0 ? "synced" : probed.length > 0 ? "warn" : "neutral"}
+            pulse={runningAll || (probed.length > 0 && passing === probed.length)}
+          >
+            {runningAll ? "Running…" : probed.length > 0 ? `${passing}/${probed.length} OK` : "Not tested"}
           </Badge>
         </div>
       </Card>
