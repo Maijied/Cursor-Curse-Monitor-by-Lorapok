@@ -1672,6 +1672,12 @@ export function createDevApiMiddleware() {
             res.end(JSON.stringify({ error: "Valid email is required" }));
             return;
           }
+          if (parsed.probe === true) {
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.end(JSON.stringify({ ok: true, probed: true, message: "Probe OK" }));
+            return;
+          }
           if (parsed.consent !== true && parsed.consent !== "true") {
             res.statusCode = 400;
             res.setHeader("Content-Type", "application/json");
