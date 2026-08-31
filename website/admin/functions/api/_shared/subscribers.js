@@ -1,4 +1,11 @@
+import {
+  getScatterEntity,
+  listScatterEntities,
+  putScatterEntity,
+} from "./kv-scatter.js";
+
 export const SUBSCRIBERS_KEY = "subscribers";
+export const SUBSCRIBER_EMAIL_PREFIX = "subscriber:email";
 export const CONSENT_VERSION = "2026-08-25";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,7 +58,7 @@ function normalizeSubscriber(entry) {
 }
 
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
-export async function readSubscribers(kv) {
+async function readLegacySubscribers(kv) {
   if (!kv?.get) return [];
   try {
     const raw = await kv.get(SUBSCRIBERS_KEY);
@@ -64,6 +71,22 @@ export async function readSubscribers(kv) {
   }
 }
 
+/** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
+export async function readSubscribers(kv) {
+  if (!kv?.get) return [];
+
+  const scattered = (await listScatterEntities(kv, SUBSCRIBER_EMAIL_PREFIX, { limit: 1000 }))
+    .map(normalizeSubscriber)
+    .filter(Boolean);
+  const legacy = await readLegacySubscribers(kv);
+
+  const byEmail = new Map();
+  for (const row of legacy) byEmail.set(row.email, row);
+  for (const row of scattered) byEmail.set(row.email, row);
+
+  return [...byEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
+}
+
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv @param {SubscriberRecord[]} items */
 export async function writeSubscribers(kv, items) {
   if (!kv?.put) return false;
@@ -73,21 +96,25 @@ export async function writeSubscribers(kv, items) {
     if (!normalized) continue;
     byEmail.set(normalized.email, normalized);
   }
-  const sorted = [...byEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
-  await kv.put(SUBSCRIBERS_KEY, JSON.stringify(sorted));
+  await Promise.all(
+    [...byEmail.values()].map((row) => putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, row.email, row))
+  );
   return true;
 }
 
 /**
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
- * @param {{ email: string, source?: string, installId?: string | null, consentVersion?: string }} input
+ * @param {{ email: string; source?: string; installId?: string | null; consentVersion?: string }} input
  */
 export async function upsertSubscriber(kv, input) {
   const email = normalizeEmail(input.email);
   if (!email) return { ok: false, error: "Valid email is required" };
 
-  const subscribers = await readSubscribers(kv);
-  const existing = subscribers.find((row) => row.email === email);
+  let existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
+  if (!existing) {
+    existing = (await readLegacySubscribers(kv)).find((row) => row.email === email) ?? null;
+  }
+
   const next = {
     email,
     subscribedAt: existing?.subscribedAt ?? new Date().toISOString(),
@@ -96,11 +123,15 @@ export async function upsertSubscriber(kv, input) {
     consentVersion: input.consentVersion ?? CONSENT_VERSION,
   };
 
-  const merged = [next, ...subscribers.filter((row) => row.email !== email)];
-  const stored = await writeSubscribers(kv, merged);
-  if (!stored) return { ok: false, error: "Subscriber storage unavailable" };
+  const wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next);
+  if (!kv?.put) return { ok: false, error: "Subscriber storage unavailable" };
 
-  return { ok: true, subscriber: next, alreadySubscribed: Boolean(existing) };
+  return {
+    ok: true,
+    subscriber: next,
+    alreadySubscribed: Boolean(existing),
+    kvWriteSkipped: existing != null && wrote === false,
+  };
 }
 
 /** @param {SubscriberRecord[]} items */
