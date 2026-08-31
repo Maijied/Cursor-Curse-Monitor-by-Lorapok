@@ -39,15 +39,35 @@ export async function readSystemLogs(env) {
   const kv = env?.ADMIN_KV;
   if (!kv?.get) return [];
 
-  const scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_ENTRIES });
-  if (scatter.length) return scatter;
+  let scatter = [];
+  try {
+    scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_ENTRIES });
+  } catch (err) {
+    console.error("readSystemLogs scatter list failed", err);
+  }
 
+  let legacy = [];
   try {
     const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
-    if (!raw) return [];
+    if (!raw) return scatter.length ? scatter.slice(0, MAX_ENTRIES) : [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, MAX_ENTRIES) : [];
-  } catch {
-    return [];
+    if (Array.isArray(parsed)) legacy = parsed;
+  } catch (err) {
+    console.error("readSystemLogs legacy read failed", err);
+    return scatter.slice(0, MAX_ENTRIES);
   }
+
+  if (!scatter.length) return legacy.slice(0, MAX_ENTRIES);
+  if (!legacy.length) return scatter.slice(0, MAX_ENTRIES);
+
+  const merged = [...scatter, ...legacy]
+    .sort((a, b) => {
+      const tb = Date.parse(String(b.ts ?? "")) || 0;
+      const ta = Date.parse(String(a.ts ?? "")) || 0;
+      if (tb !== ta) return tb - ta;
+      return String(b.id ?? "").localeCompare(String(a.id ?? ""));
+    })
+    .slice(0, MAX_ENTRIES);
+
+  return merged;
 }

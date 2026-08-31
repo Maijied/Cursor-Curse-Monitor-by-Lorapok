@@ -4,7 +4,7 @@
 **Status:** in_progress (merge-ready, awaiting approval)  
 **Created:** 2026-09-01  
 **Plan:** [plan/b7e2f4a9_multi-issue-fix-plan.md](../plan/b7e2f4a9_multi-issue-fix-plan.md)  
-**Issue:** _Create with `gh issue create` or `node scripts/procedure-init.mjs` on next task_  
+**Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/105  
 **Branch:** `feat/feedback-testmail-cred-vault`  
 **PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/104
 

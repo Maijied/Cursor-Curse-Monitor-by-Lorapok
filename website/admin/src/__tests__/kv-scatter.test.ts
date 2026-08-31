@@ -82,6 +82,37 @@ describe("kv scatter-gather", () => {
     expect(logs).toHaveLength(1);
   });
 
+  it("merges legacy blob logs with scatter records during migration", async () => {
+    const store = new Map();
+    const legacy = [
+      { id: "legacy-1", ts: "2026-01-01T00:00:00.000Z", source: "legacy", message: "old" },
+    ];
+    store.set("system:logs", JSON.stringify(legacy));
+    const env = { ADMIN_KV: mockKv(store) };
+    await logSystemEvent(env, { source: "test", message: "new" });
+    const logs = await readSystemLogs(env);
+    expect(logs).toHaveLength(2);
+    expect(logs.map((row) => row.message).sort()).toEqual(["new", "old"]);
+  });
+
+  it("falls back to legacy logs when scatter list fails", async () => {
+    const legacy = [
+      { id: "legacy-1", ts: "2026-01-01T00:00:00.000Z", source: "legacy", message: "fallback" },
+    ];
+    const env = {
+      ADMIN_KV: {
+        get: async (key) => (key === "system:logs" ? JSON.stringify(legacy) : null),
+        put: async () => {},
+        list: async () => {
+          throw new Error("KV list unavailable");
+        },
+      },
+    };
+    const logs = await readSystemLogs(env);
+    expect(logs).toHaveLength(1);
+    expect(logs[0].message).toBe("fallback");
+  });
+
   it("skips entity put when unchanged", async () => {
     const store = new Map();
     const kv = mockKv(store);
