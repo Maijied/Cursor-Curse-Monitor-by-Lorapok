@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { SecurityFinding, StoredCursorAccount } from "@lorapok/cursor-monitor-shared";
 import { Footer } from "../components/Footer";
+import { FeedbackModal } from "../components/FeedbackModal";
 import { SecurityAlertModal } from "../components/SecurityAlertModal";
 import { scanPasteField } from "../lib/securityScan";
 import {
@@ -48,6 +49,7 @@ export function OptionsApp() {
   const [securityFindings, setSecurityFindings] = useState<SecurityFinding[]>([]);
   const [communityStats, setCommunityStats] = useState<CommunityDownloadStats | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const openDashboard = () => {
     setConnecting(true);
@@ -350,7 +352,8 @@ export function OptionsApp() {
         </p>
       </section>
 
-      <Footer />
+      <Footer onFeedbackClick={() => setShowFeedback(true)} />
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} source="browser-addon-options" />
     </div>
   );
 }

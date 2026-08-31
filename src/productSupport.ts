@@ -12,6 +12,7 @@ import {
   SUPPORT_EMAIL,
   VSCODE_MARKETPLACE_URL,
 } from "@lorapok/cursor-monitor-shared";
+import { FeedbackPanel } from "./feedbackPanel";
 
 function editorLabel(): string {
   const app = vscode.env.appName || "VS Code";
@@ -124,9 +125,14 @@ export async function sendFeedback(context: vscode.ExtensionContext): Promise<vo
   );
   if (!kindPick) return;
 
-  type ChannelItem = vscode.QuickPickItem & { channelAction: "email" | "github" | "admin" };
+  type ChannelItem = vscode.QuickPickItem & { channelAction: "discord" | "email" | "github" | "admin" };
   const channel = await vscode.window.showQuickPick<ChannelItem>(
     [
+      {
+        label: "$(comment-discussion) Send in-app (Discord + Mission Control)",
+        description: "Opens feedback form — synced with community Discord",
+        channelAction: "discord",
+      },
       {
         label: "$(mail) Email Lorapok support",
         description: SUPPORT_EMAIL,
@@ -145,10 +151,15 @@ export async function sendFeedback(context: vscode.ExtensionContext): Promise<vo
     ],
     {
       title: "How should we receive this?",
-      placeHolder: "Email is best for account-specific issues",
+      placeHolder: "In-app feedback posts to Discord and admin logs",
     }
   );
   if (!channel) return;
+
+  if (channel.channelAction === "discord") {
+    FeedbackPanel.show(context, kindPick.feedbackKind);
+    return;
+  }
 
   if (channel.channelAction === "email") {
     const mailto = buildFeedbackMailto({

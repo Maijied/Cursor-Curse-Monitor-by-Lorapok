@@ -1,0 +1,37 @@
+---
+description: Always load secrets from the Lorapok cred vault (pin 565087); never embed or push credentials
+alwaysApply: true
+---
+
+# Credential vault (mandatory)
+
+All API keys, tokens, passwords, and webhook URLs must come from the **cred vault** — never hardcode, commit, paste in chat, or push to GitHub / wrangler / CI logs.
+
+## Vault location
+
+- GPG store: `/mnt/NewVolume/Personal_Projects/cred/credentials.json.gpg`
+- Passphrase: repo `.cred-vault-passphrase` or `CRED_VAULT_PASSPHRASE` (vault pin **565087**)
+- CLI: `cred get cursor <key>` (namespace `cursor`)
+
+## Agent rules
+
+1. **Read** secrets only via `cred get`, `envWithCursorCloudflareSecrets()`, or `loadCursorCloudflareSecretsFromVault()` in `website/admin/scripts/lib/cred-vault-sync.mjs`.
+2. **Write** new secrets to the vault (encrypt in place); never add them to tracked files, `.env` commits, `wrangler.toml`, or GitHub Actions YAML.
+3. **Sync to Cloudflare/GitHub** using existing scripts (`setup-resend-secret.mjs`, `sync-mail-cred-vault.mjs`, `sync-stats-cron-cred-vault.mjs`) — scripts load from vault first, then call wrangler/gh.
+4. **Never** echo, log, or include secret values in PR descriptions, comments, or docs. Mask previews only (`4eddb***`).
+5. **Discord webhooks** and similar URLs live in **ADMIN_KV** (Mission Control Settings) or vault — not in source.
+
+## Common `cursor` vault keys
+
+| Key | Env / use |
+|-----|-----------|
+| `cloudflare_api_token` | `CLOUDFLARE_API_TOKEN` — Pages/Workers deploy |
+| `cloudflare_email_api_token` | `CLOUDFLARE_EMAIL_API_TOKEN` — outbound mail REST |
+| `cloudflare_account_id` | `CLOUDFLARE_ACCOUNT_ID` |
+| `resend_api_key` | `RESEND_API_KEY` — Pages secret via `setup-resend-secret.mjs` |
+| `testmail_api_key` | `TESTMAIL_API_KEY` — E2E inbox probes |
+| `testmail_namespace` | `TESTMAIL_NAMESPACE` |
+| `github_token` | `GITHUB_TOKEN` |
+| `cron_secret` | `CRON_SECRET` |
+
+Skip vault load only when explicitly testing without secrets: `CCM_SKIP_CRED_VAULT=1`.

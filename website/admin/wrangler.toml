@@ -6,6 +6,7 @@
 name = "cursor-monitor-admin"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-08-14"
+compatibility_flags = ["nodejs_compat"]
 
 # Lorapok Facility (f049faaf2f67549f5c58837479596a4a) — created 2026-08-16
 [[kv_namespaces]]

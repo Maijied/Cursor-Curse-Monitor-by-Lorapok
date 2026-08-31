@@ -9,6 +9,7 @@ import {
   getNoticeTemplates,
 } from "./functions/api/_shared/notice-catalog.js";
 import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
+import { submitProductFeedback } from "./functions/api/_shared/feedback-submit.js";
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
 import { validateMarketplaceDeploy } from "./functions/api/_shared/marketplace-tag-policy.js";
@@ -1655,6 +1656,51 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: error.message || "Broadcast failed" }));
         }
       });
+      return;
+    }
+
+    if (url === "/api/feedback" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          if (parsed.probe === true) {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.end(JSON.stringify({ ok: true, probed: true, message: "Probe OK" }));
+            return;
+          }
+          const result = await submitProductFeedback({ ADMIN_KV: devKv }, {
+            kind: parsed.kind,
+            message: parsed.message,
+            source: parsed.source,
+            version: parsed.version,
+            editor: parsed.editor,
+            installId: parsed.installId ?? parsed.install_id,
+            email: parsed.email,
+          });
+          res.statusCode = result.ok ? 200 : (result.status ?? 400);
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.end(JSON.stringify(result.ok ? result : { error: result.error }));
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.end(JSON.stringify({ error: error.message || "Feedback failed" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/feedback" && req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.end();
       return;
     }
 

@@ -8,6 +8,22 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+function kvLimitResponse(detail: string) {
+  return jsonResponse(
+    {
+      error: "Service temporarily unavailable",
+      detail,
+      retryAfter: "KV daily write limit reached — retry tomorrow or upgrade Cloudflare Workers plan.",
+    },
+    503,
+    CORS_HEADERS
+  );
+}
+
+function isKvLimitError(error: unknown) {
+  return String(error instanceof Error ? error.message : error).includes("KV put() limit");
+}
+
 function normalizeInstallId(value: unknown): string | null {
   const id = String(value ?? "").trim();
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
@@ -18,79 +34,91 @@ function normalizeInstallId(value: unknown): string | null {
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  let body;
   try {
-    body = await request.json();
-  } catch {
-    return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
-  }
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+    }
 
-  const email = normalizeEmail(body.email);
-  if (!email) {
-    return jsonResponse({ error: "Valid email is required" }, 400, CORS_HEADERS);
-  }
+    const email = normalizeEmail(body.email);
+    if (!email) {
+      return jsonResponse({ error: "Valid email is required" }, 400, CORS_HEADERS);
+    }
 
-  if (body.probe === true) {
-    return jsonResponse({ ok: true, probed: true, message: "Probe OK" }, 200, CORS_HEADERS);
-  }
+    if (body.probe === true) {
+      return jsonResponse({ ok: true, probed: true, message: "Probe OK" }, 200, CORS_HEADERS);
+    }
 
-  if (body.consent !== true && body.consent !== "true") {
-    return jsonResponse({ error: "Consent is required to subscribe" }, 400, CORS_HEADERS);
-  }
+    if (body.consent !== true && body.consent !== "true") {
+      return jsonResponse({ error: "Consent is required to subscribe" }, 400, CORS_HEADERS);
+    }
 
-  const upsert = await upsertSubscriber(env.ADMIN_KV, {
-    email,
-    source: String(body.source ?? "website").trim() || "website",
-    installId: normalizeInstallId(body.installId ?? body.install_id),
-    consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
-  });
-  if (!upsert.ok) {
-    return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
-  }
+    const upsert = await upsertSubscriber(env.ADMIN_KV, {
+      email,
+      source: String(body.source ?? "website").trim() || "website",
+      installId: normalizeInstallId(body.installId ?? body.install_id),
+      consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
+    });
+    if (!upsert.ok) {
+      return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
+    }
 
-  const alreadySubscribed = Boolean(upsert.alreadySubscribed);
-  const mailResult = await sendMail(env, {
-    to: email,
-    subject: "Subscribed to Cursor Curse Monitor updates",
-    html: buildSubscribeHtml({ email }),
-    text: `Thanks for subscribing, ${email}. We'll email you about important updates from Cursor Curse Monitor.`,
-    category: "subscribe",
-  });
+    const alreadySubscribed = Boolean(upsert.alreadySubscribed);
+    const mailResult = await sendMail(env, {
+      to: email,
+      subject: "Subscribed to Cursor Curse Monitor updates",
+      html: buildSubscribeHtml({ email }),
+      text: `Thanks for subscribing, ${email}. We'll email you about important updates from Cursor Curse Monitor.`,
+      category: "subscribe",
+    });
 
-  let message;
-  if (mailResult.sent) {
-    message = alreadySubscribed
-      ? "You're already subscribed — we resent the confirmation email."
-      : "You're subscribed! Check your inbox for a confirmation email.";
-  } else if (alreadySubscribed) {
-    message = "You're already on the list. We'll email you when there are updates.";
-  } else {
-    console.error("subscribe welcome email failed", mailResult.reason);
+    let message;
+    if (mailResult.sent) {
+      message = alreadySubscribed
+        ? "You're already subscribed — we resent the confirmation email."
+        : "You're subscribed! Check your inbox for a confirmation email.";
+    } else if (alreadySubscribed) {
+      message = "You're already on the list. We'll email you when there are updates.";
+    } else {
+      console.error("subscribe welcome email failed", mailResult.reason);
+      return jsonResponse(
+        {
+          ok: false,
+          error: "Welcome email could not be sent",
+          emailed: false,
+          alreadySubscribed: false,
+          message:
+            "You're on the list, but the welcome email could not be delivered right now. Please try again in a few minutes.",
+          mailWarning: mailResult.reason,
+        },
+        502,
+        CORS_HEADERS
+      );
+    }
+
     return jsonResponse(
       {
-        ok: false,
-        error: "Welcome email could not be sent",
-        emailed: false,
-        alreadySubscribed: false,
-        message:
-          "You're on the list, but the welcome email could not be delivered right now. Please try again in a few minutes.",
-        mailWarning: mailResult.reason,
+        ok: true,
+        emailed: mailResult.sent,
+        alreadySubscribed,
+        message,
       },
-      502,
+      200,
+      CORS_HEADERS
+    );
+  } catch (error) {
+    console.error("subscribe handler error", error);
+    if (isKvLimitError(error)) {
+      return kvLimitResponse(error instanceof Error ? error.message : "KV write limit exceeded");
+    }
+    return jsonResponse(
+      { error: "Subscribe failed", detail: error instanceof Error ? error.message : "Unknown error" },
+      500,
       CORS_HEADERS
     );
   }
-
-  return jsonResponse(
-    {
-      ok: true,
-      emailed: mailResult.sent,
-      alreadySubscribed,
-      message,
-    },
-    200,
-    CORS_HEADERS
-  );
 }
 
 export async function onRequestOptions() {

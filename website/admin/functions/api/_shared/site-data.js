@@ -1,33 +1,47 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
 const DEFAULT_SITE_DATA_URL = "https://cursor.lorapok.tech/site-data.json";
 
-const SHARED_DIR = dirname(fileURLToPath(import.meta.url));
+/** True only in real Node (tests/scripts), not Cloudflare Workers (even with nodejs_compat). */
+function isNodeRuntime() {
+  if (typeof WebSocketPair !== "undefined") return false;
+  return typeof process !== "undefined" && Boolean(process.versions?.node);
+}
 
-function localSiteDataCandidates(env) {
-  const paths = [];
-  const explicit =
+function explicitSiteDataFile(env) {
+  return (
     (typeof env?.SITE_DATA_FILE === "string" && env.SITE_DATA_FILE.trim()) ||
-    (typeof process !== "undefined" && process.env?.SITE_DATA_FILE?.trim()) ||
-    "";
-  if (explicit) paths.push(explicit);
-  paths.push(join(SHARED_DIR, "../../../../site-data.json"));
-  return paths;
+    (isNodeRuntime() && process.env?.SITE_DATA_FILE?.trim()) ||
+    ""
+  );
 }
 
 async function tryReadLocalSiteData(env) {
-  let fs;
+  if (!isNodeRuntime()) return null;
+
+  let readFileSync;
+  let existsSync;
+  let pathJoin;
+  let sharedDir;
   try {
-    fs = await import("node:fs");
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const url = await import("node:url");
+    readFileSync = fs.readFileSync;
+    existsSync = fs.existsSync;
+    pathJoin = path.join;
+    sharedDir = path.dirname(url.fileURLToPath(import.meta.url));
   } catch {
     return null;
   }
 
-  for (const candidate of localSiteDataCandidates(env)) {
-    if (!candidate || !fs.existsSync(candidate)) continue;
+  const paths = [];
+  const explicit = explicitSiteDataFile(env);
+  if (explicit) paths.push(explicit);
+  paths.push(pathJoin(sharedDir, "../../../../site-data.json"));
+
+  for (const candidate of paths) {
+    if (!candidate || !existsSync(candidate)) continue;
     try {
-      return JSON.parse(fs.readFileSync(candidate, "utf8"));
+      return JSON.parse(readFileSync(candidate, "utf8"));
     } catch {
       // try next candidate
     }
@@ -37,10 +51,9 @@ async function tryReadLocalSiteData(env) {
 
 function shouldPreferLocalSiteData(env) {
   return (
-    Boolean(env?.SITE_DATA_FILE) ||
-    Boolean(typeof process !== "undefined" && process.env?.SITE_DATA_FILE) ||
-    Boolean(typeof process !== "undefined" && process.env?.CI === "true") ||
-    Boolean(typeof process !== "undefined" && process.env?.NODE_ENV === "test") ||
+    Boolean(explicitSiteDataFile(env)) ||
+    Boolean(isNodeRuntime() && process.env?.CI === "true") ||
+    Boolean(isNodeRuntime() && process.env?.NODE_ENV === "test") ||
     env?.PREFER_LOCAL_SITE_DATA === "true" ||
     env?.PREFER_LOCAL_SITE_DATA === true
   );
@@ -54,7 +67,7 @@ export async function fetchSiteData(env = {}) {
 
   const url =
     env?.SITE_DATA_URL ??
-    (typeof process !== "undefined" ? process.env?.SITE_DATA_URL : undefined) ??
+    (isNodeRuntime() ? process.env?.SITE_DATA_URL : undefined) ??
     DEFAULT_SITE_DATA_URL;
 
   try {

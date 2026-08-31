@@ -86,7 +86,7 @@ Equivalent Loragent REST flow: `POST /zones/{zone_id}/email/routing/rules` with 
 
 1. `ccm-mail-relay` Worker via Pages `MAIL_RELAY` service binding
 2. Cloudflare Email REST API
-3. Resend (`RESEND_API_KEY`) fallback
+3. Resend (`RESEND_API_KEY`) fallback — use without Workers Paid: `node website/admin/scripts/setup-resend-secret.mjs`
 
 ### Local / repair (full stack)
 
@@ -166,3 +166,47 @@ Wiki: [Mailbox and Email](../wiki/Mailbox-and-Email.md) · Skill: `loragent-clou
 | `9109` / `10000` on Pages deploy | `CLOUDFLARE_API_TOKEN` in admin-production is invalid or lacks Pages Edit — refresh secret, rerun deploy-infra |
 | Job waits 3–7 min then fails auth | Old behavior retried bad tokens; update to latest CI (fail-fast probe) |
 | Inbound not arriving | Re-run `setup-email-addresses.mjs`; confirm destination verified |
+| `destination address is not a verified address` | **Workers Free** only sends to [verified destination addresses](https://developers.cloudflare.com/email-service/platform/limits/#verified-destination-addresses). Upgrade **Lorapok Facility** → Workers **Paid** ($5/mo), then **Email Service → Email Sending → Onboard Domain** for `lorapok.tech`. Or set `RESEND_API_KEY` on Pages as fallback. |
+| Wrangler `email sending enable` → `2036 Unauthorized` | Same as above — Email Sending subdomains API requires Workers Paid before onboarding. |
+
+---
+
+## 8. E2E subscribe testing with testmail.app
+
+[testmail.app](https://testmail.app/) receives mail at `{namespace}.{tag}@inbox.testmail.app` and exposes a JSON API to poll inboxes — useful for automated welcome-email checks. It does **not** send mail; CCM still uses Cloudflare/Resend for outbound.
+
+### Console setup (Lorapok Labs)
+
+1. Sign in at [testmail.app/console](https://testmail.app/console/).
+2. Note your **namespace** (e.g. `61z27`) — addresses look like `61z27.{tag}@inbox.testmail.app`.
+3. **API Keys** → create or copy key → store locally (never commit):
+
+```bash
+export TESTMAIL_API_KEY="..."          # from console → Copy API key
+export TESTMAIL_NAMESPACE="61z27"      # your namespace id
+```
+
+Optional cred vault keys: `testmail_api_key`, `testmail_namespace` (sync: `npm run mail:sync-testmail-vault --prefix website/admin`).
+
+### Manual check
+
+1. Subscribe on the site (or `POST /api/subscribe`) using e.g. `61z27.manual-test@inbox.testmail.app`.
+2. In the console, open **View Emails (JSON)** or use the [JSON API](https://testmail.app/docs/) with `&tag=manual-test`.
+
+### Automated probe
+
+Requires outbound mail to external addresses (**Resend** or Workers Paid):
+
+```bash
+npm run mail:testmail --prefix website/admin
+# or: node website/admin/scripts/probe-subscribe-testmail.mjs
+```
+
+The script subscribes with a unique tag, polls `https://api.testmail.app/api/json` with `livequery=true`, and prints From/Subject when the welcome email arrives.
+
+Against local dev API (no real send):
+
+```bash
+SUBSCRIBE_URL=http://127.0.0.1:5173/api/subscribe npm run dev   # separate terminal
+# vitest already covers dev mailbox: website/admin/src/__tests__/subscribe-api.test.ts
+```

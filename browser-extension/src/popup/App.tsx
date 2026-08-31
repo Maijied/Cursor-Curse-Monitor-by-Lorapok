@@ -4,6 +4,7 @@ import { AnimatedGauge } from "../components/AnimatedGauge";
 import { SpendChart } from "../components/SpendChart";
 import { Footer } from "../components/Footer";
 import { SubscribeModal } from "../components/SubscribeModal";
+import { FeedbackModal } from "../components/FeedbackModal";
 import { WhatsNewCard } from "../components/WhatsNewCard";
 import { fetchSnapshot, onSnapshot, requestRefresh } from "../lib/messaging";
 import { getSettings, setActiveAccount, updateSettings } from "../lib/storage";
@@ -24,6 +25,7 @@ export function App() {
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const connectPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -342,7 +344,8 @@ export function App() {
       )}
 
       <SubscribeModal />
-      <Footer />
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} source="browser-addon-popup" />
+      <Footer onFeedbackClick={() => setShowFeedback(true)} />
     </div>
   );
 }
