@@ -81,10 +81,19 @@ withIsolatedHome(path.join(__dirname, "mock-home-dcursor-only"), (auth) => {
   fs.mkdirSync(path.dirname(dcursorDb), { recursive: true });
   fs.writeFileSync(dcursorDb, "dcursor-only");
 
-  delete process.env.CCM_INCLUDE_DCURSOR;
-  assert.equal(auth.shouldDiscoverProductInstall("dCursor", "Cursor"), true);
-  assert.equal(auth.shouldDiscoverProductInstall("dCursor", "dCursor"), true);
-  assert.equal(auth.resolveProductDataFolder("Cursor"), "dCursor");
+  const previousIncludeDcursor = process.env.CCM_INCLUDE_DCURSOR;
+  try {
+    delete process.env.CCM_INCLUDE_DCURSOR;
+    assert.equal(auth.shouldDiscoverProductInstall("dCursor", "Cursor"), true);
+    assert.equal(auth.shouldDiscoverProductInstall("dCursor", "dCursor"), true);
+    assert.equal(auth.resolveProductDataFolder("Cursor"), "dCursor");
+  } finally {
+    if (previousIncludeDcursor === undefined) {
+      delete process.env.CCM_INCLUDE_DCURSOR;
+    } else {
+      process.env.CCM_INCLUDE_DCURSOR = previousIncludeDcursor;
+    }
+  }
 });
 
 withIsolatedHome(path.join(__dirname, "mock-home-both-cursor"), (auth) => {
@@ -101,10 +110,19 @@ withIsolatedHome(path.join(__dirname, "mock-home-both-cursor"), (auth) => {
     fs.writeFileSync(dbPath, product);
   }
 
-  delete process.env.CCM_INCLUDE_DCURSOR;
-  assert.equal(auth.shouldDiscoverProductInstall("dCursor", "Cursor"), false);
-  assert.equal(auth.shouldDiscoverProductInstall("dCursor", "dCursor"), true);
-  assert.equal(auth.resolveProductDataFolder("Cursor"), "Cursor");
+  const previousIncludeDcursor = process.env.CCM_INCLUDE_DCURSOR;
+  try {
+    delete process.env.CCM_INCLUDE_DCURSOR;
+    assert.equal(auth.shouldDiscoverProductInstall("dCursor", "Cursor"), false);
+    assert.equal(auth.shouldDiscoverProductInstall("dCursor", "dCursor"), true);
+    assert.equal(auth.resolveProductDataFolder("Cursor"), "Cursor");
+  } finally {
+    if (previousIncludeDcursor === undefined) {
+      delete process.env.CCM_INCLUDE_DCURSOR;
+    } else {
+      process.env.CCM_INCLUDE_DCURSOR = previousIncludeDcursor;
+    }
+  }
 });
 
 console.log("discover-products test passed");
