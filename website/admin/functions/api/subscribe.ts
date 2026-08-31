@@ -65,9 +65,20 @@ export async function onRequestPost(context) {
   } else if (alreadySubscribed) {
     message = "You're already on the list. We'll email you when there are updates.";
   } else {
-    message =
-      "You're on the list, but the welcome email could not be sent right now. We'll still notify you when outbound mail is restored.";
     console.error("subscribe welcome email failed", mailResult.reason);
+    return jsonResponse(
+      {
+        ok: false,
+        error: "Welcome email could not be sent",
+        emailed: false,
+        alreadySubscribed: false,
+        message:
+          "You're on the list, but the welcome email could not be delivered right now. Please try again in a few minutes.",
+        mailWarning: mailResult.reason,
+      },
+      502,
+      CORS_HEADERS
+    );
   }
 
   return jsonResponse(
@@ -76,7 +87,6 @@ export async function onRequestPost(context) {
       emailed: mailResult.sent,
       alreadySubscribed,
       message,
-      ...(mailResult.sent ? {} : { mailWarning: mailResult.reason }),
     },
     200,
     CORS_HEADERS

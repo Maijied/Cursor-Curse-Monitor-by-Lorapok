@@ -429,7 +429,7 @@ const deployTags = githubTagList.length > 0
   ? githubTagList
   : github?.tag
     ? [github.tag]
-    : [`v${pkg.version.replace(/^v/, "")}`];
+    : [`v${version.replace(/^v/, "")}`];
 
 const ovsx = ovsxCanonical ?? {
   namespace: OVSX_NS,
@@ -476,7 +476,7 @@ const siteData = {
   displayName: pkg.displayName,
   description: pkg.description,
   version,
-  packageVersion: pkg.version,
+  packageVersion: version,
   publishedReleaseVersion,
   releaseStatus,
   syncStatus,

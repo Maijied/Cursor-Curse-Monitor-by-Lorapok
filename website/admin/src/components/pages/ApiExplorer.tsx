@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Play, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
@@ -61,10 +61,6 @@ export default function ApiExplorer() {
     setRunningAll(false);
   }, [runProbe]);
 
-  useEffect(() => {
-    runAllSafe();
-  }, [runAllSafe]);
-
   const probed = API_CATALOG.filter((e) => results[e.id] && !results[e.id].loading);
   const passing = probed.filter((e) => results[e.id]?.ok).length;
 
@@ -72,7 +68,7 @@ export default function ApiExplorer() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="API Explorer"
-        description="Probe Mission Control and public API routes. Safe GET endpoints run automatically on load."
+        description="Probe Mission Control and public API routes. Nothing runs until you choose — use Test all safe or run an endpoint individually."
         action={
           <div className="flex flex-wrap gap-2">
             <LoadableButton

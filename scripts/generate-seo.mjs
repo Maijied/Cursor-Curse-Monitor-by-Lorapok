@@ -67,7 +67,7 @@ const vars = {
   displayName: pkg.displayName ?? pkg.name,
   version: siteData?.version ?? pkg.version,
   vsixUrl: siteData?.github?.vsixUrl ?? `${SITE_BASE}/releases/latest`,
-  packageVersion: pkg.version,
+  packageVersion: version,
   firefoxDownloadUrl: firefoxPublished
     ? (siteData?.browserExtension?.firefox?.url ?? siteData?.productContext?.firefoxUrl)
     : (siteData?.github?.releaseUrl ?? `${SITE_BASE}/`),
@@ -295,7 +295,7 @@ const seo = {
   title: indexMeta.title,
   description: indexMeta.description,
   version,
-  packageVersion: pkg.version,
+  packageVersion: version,
   canonical: indexMeta.canonical,
   syncStatus: siteData?.syncStatus ?? "unknown",
   keywords: indexMeta.keywords,

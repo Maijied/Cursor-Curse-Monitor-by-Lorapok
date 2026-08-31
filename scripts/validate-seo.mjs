@@ -85,7 +85,9 @@ if (!existsSync(seoPath)) {
   const seo = JSON.parse(readFileSync(seoPath, "utf8"));
   if (!seo.canonical?.startsWith("https://")) fail("seo.json canonical must be https URL");
   if (!seo.source?.includes("seo.yml")) warn("seo.json should declare website/seo.yml as source");
-  if (seo.packageVersion && seo.packageVersion !== pkg.version) {
+  // Root package.json stays at the 0.0.0 placeholder in git; the real version is
+  // resolved from live release channels at build time, so only compare once synced.
+  if (pkg.version !== "0.0.0" && seo.packageVersion && seo.packageVersion !== pkg.version) {
     fail(`seo.json packageVersion ${seo.packageVersion} does not match package.json ${pkg.version}`);
   }
   if (!seo.openGraph?.image?.startsWith("https://")) fail("seo.json openGraph.image must be absolute https URL");

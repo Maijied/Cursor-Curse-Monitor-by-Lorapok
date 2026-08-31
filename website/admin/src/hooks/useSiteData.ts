@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { SiteData } from "../lib/site-data";
+import { normalizeSiteData, type SiteData } from "../lib/site-data";
 
 function siteDataCandidates(): string[] {
   const preferred = import.meta.env.VITE_SITE_DATA_URL as string | undefined;
@@ -19,7 +19,7 @@ async function loadSiteData(): Promise<SiteData> {
         lastError = new Error(`Failed to load site data (${res.status})`);
         continue;
       }
-      return (await res.json()) as SiteData;
+      return normalizeSiteData((await res.json()) as SiteData);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error("Failed to load site data");
     }
