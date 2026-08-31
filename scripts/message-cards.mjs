@@ -10,9 +10,9 @@ import { buildProductContext } from "./lib-product-context.mjs";
 export function buildMessageBranding(ctx) {
   const site = ctx.homepage.replace(/\/$/, "");
   return {
-    mainLogoUrl: `${site}/assets/icon.png`,
+    mainLogoUrl: `${site}/assets/logo.png`,
     mainLogoAlt: ctx.displayName,
-    discordAvatarUrl: `${site}/assets/icon.png`,
+    discordAvatarUrl: `${site}/assets/logo.png`,
     discordAuthorName: "Lorapok Mission Control",
     discordFooterText: "cursor.lorapok.tech · Mission Control",
     emailTagline: "Cursor Curse Monitor · Mission Control",

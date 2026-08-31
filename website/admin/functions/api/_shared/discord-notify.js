@@ -97,7 +97,7 @@ export function buildDeploymentEmbed(payload, enrichment) {
     enrichment?.catalogBrand ?? getMessageCatalog().branding ?? {};
   const brand = enrichment?.brand ?? {};
   const avatarUrl =
-    brand.icon ?? catalogBrand.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png";
+    brand.icon ?? catalogBrand.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png";
   const authorName = catalogBrand.discordAuthorName ?? "Lorapok Mission Control";
   const footerText = catalogBrand.discordFooterText ?? "cursor.lorapok.tech · Mission Control";
 
@@ -242,7 +242,7 @@ export async function sendDiscordWebhook(webhookUrl, payload, enrichment, env) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       username: "Mission Control",
-      avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
+      avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
       embeds,
     }),
   });

@@ -36,8 +36,8 @@ export function mergeProductContext(baseCtx, siteData) {
   ctx.releaseUrl = `https://github.com/${repo}/releases/tag/v${releaseVersion}`;
   ctx.latestReleaseUrl = `https://github.com/${repo}/releases/latest`;
   ctx.homepage = homepage;
-  ctx.mainLogoUrl = `${homepage}/assets/icon.png`;
-  ctx.discordAvatarUrl = `${homepage}/assets/icon.png`;
+  ctx.mainLogoUrl = `${homepage}/assets/logo.png`;
+  ctx.discordAvatarUrl = `${homepage}/assets/logo.png`;
 
   if (siteData.releaseHighlights) {
     ctx.releaseHighlights = String(siteData.releaseHighlights);

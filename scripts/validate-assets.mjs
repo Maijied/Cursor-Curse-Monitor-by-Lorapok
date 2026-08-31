@@ -106,7 +106,7 @@ checkSvg("media/extension-icon.svg", {
 checkSvg("media/icon.svg", {
   viewBox: "0 0 128 128",
   mustHave: ["<svg"],
-  label: "website/marketing icon (SVG)",
+  label: "website favicon alias (SVG, synced from logo.svg)",
 });
 
 // Marketplace PNGs
@@ -150,6 +150,13 @@ if (existsSync(join(root, "website/assets/logo.svg"))) {
   const b = sha256("website/assets/logo.svg");
   if (a !== b) warn("website/assets/logo.svg out of sync — run npm run sync:icons");
   else ok("website logo.svg in sync");
+}
+
+if (existsSync(join(root, "website/assets/icon.svg"))) {
+  const logoHash = sha256("media/logo.svg");
+  const iconHash = sha256("website/assets/icon.svg");
+  if (logoHash !== iconHash) warn("website/assets/icon.svg should match logo.svg — run npm run sync:icons");
+  else ok("website favicon SVG matches animated logo");
 }
 
 console.log(`\n==> Done: ${errors} error(s), ${warnings} warning(s)`);

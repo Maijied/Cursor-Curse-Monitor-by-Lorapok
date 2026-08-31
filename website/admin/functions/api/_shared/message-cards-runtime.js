@@ -8,8 +8,8 @@ import { hydrateTemplateValue } from "./product-context-runtime.js";
 export function getMessageCatalog() {
   return embedded.messageCatalog ?? {
     branding: {
-      mainLogoUrl: embedded.ctx?.mainLogoUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
-      discordAvatarUrl: embedded.ctx?.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
+      mainLogoUrl: embedded.ctx?.mainLogoUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
+      discordAvatarUrl: embedded.ctx?.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
       discordAuthorName: "Lorapok Mission Control",
       discordFooterText: "cursor.lorapok.tech · Mission Control",
     },
