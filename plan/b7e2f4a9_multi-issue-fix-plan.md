@@ -48,14 +48,15 @@ Do these in production after deploy; check off when done.
 
 - [ ] **Hero** — Top-right animation does not overlap feature cards
 - [ ] **Subscribe** — Inline + modal: valid email + consent → success or clear mail error
-- [ ] **site-data.json** — `packageVersion` matches `version` on live URL
+- [x] **site-data.json** — `packageVersion` matches `version` on live URL *(verified 2026-08-31: `1.0.65` / `1.0.65`)*
 
 ### Mail pipeline
 
 - [ ] **Subscribe E2E** — New email → welcome in user inbox
 - [ ] **Mailbox** — Outbound subscribe row in Mission Control Mailbox
 - [ ] **Ops copy** — BCC/forward to ops inbox if configured (`MAIL_OPS_COPY`)
-- [ ] **Health** — `GET /api/health` → `mailConfigured: true`
+- [x] **Health** — `GET /api/health` → `mailConfigured: true` *(verified 2026-08-31: `cloudflare-relay`, relay bound)*
+- [x] **Subscribe probe** — `POST /api/subscribe` with `probe: true` → 200 *(verified 2026-08-31)*
 
 If mail fails: `node website/admin/scripts/repair-mail.mjs` (vault creds locally).
 
