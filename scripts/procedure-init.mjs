@@ -105,7 +105,9 @@ for (const label of labels) {
 }
 
 const issueResult = gh(issueArgs);
+let issueCreated = true;
 if (issueResult.status !== 0) {
+  issueCreated = false;
   console.warn("⚠ GitHub issue not created:", issueResult.stderr.trim() || issueResult.stdout.trim());
   console.warn("  Create manually: gh issue create --title", JSON.stringify(args.title));
 } else {
@@ -136,5 +138,9 @@ if (issueResult.status !== 0) {
 }
 
 if (!existsSync(filePath)) {
+  process.exit(1);
+}
+
+if (!issueCreated) {
   process.exit(1);
 }
