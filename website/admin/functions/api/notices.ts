@@ -22,11 +22,14 @@ export async function onRequestGet(context) {
   if (auth.error) return auth.error;
 
   const url = new URL(request.url);
-  if (url.searchParams.get("templates") === "1") {
-    return jsonResponse({ templates: await getNoticeTemplates(env) });
-  }
+  const templatesMode = url.searchParams.get("templates") === "1";
 
   try {
+    if (templatesMode) {
+      const templates = await getNoticeTemplates(env);
+      return jsonResponse({ templates });
+    }
+
     const catalog = await ensureCatalogSeeded(env);
     return jsonResponse({
       items: catalog.items.map(publicNoticeShape),

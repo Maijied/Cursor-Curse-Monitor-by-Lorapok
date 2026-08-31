@@ -1,0 +1,42 @@
+---
+description: Marketing site hero, stats card, subscribe form, and local preview for agents
+globs:
+  - website/**
+  - website/admin/src/components/pages/**
+---
+
+# Website & hero (agent instructions)
+
+## Files
+
+| Concern | Files |
+|---------|--------|
+| Hero HTML | `website/index.html` (`.hero`, `.hero-visual-stage`, `.hero-orbit`, `#hero-stats-dashboard`) |
+| Hero layout | `website/styles.css` |
+| Stats card | `website/stats-dashboard.css`, `website/stats-dashboard.js` |
+| Site data | `website/site-data.json` (generated: `npm run site:data`) |
+| Subscribe | `#subscribe-form` in `website/index.html`, handlers in `website/site.js` |
+
+## Hero layout invariants
+
+1. **No overlap:** orbit animation must not be obscured by the community stats card.
+2. **Desktop (≥900px):** grid places orbit left, stats right (`website/styles.css` `.hero-visual-stage`).
+3. **Mobile:** stack orbit then stats with gap; orbit keeps bottom padding for floating icons.
+4. **Compact stats:** hero card stays ≤ ~272px wide; secondary visit/engagement tiles stay small.
+
+## Preview
+
+```bash
+cd website && python3 -m http.server 8765
+```
+
+Use **Browser MCP** (`user-browsermcp`) on the user's Maizied Chrome tab to snapshot/screenshot the hero after CSS changes.
+
+## Admin notices (related)
+
+Notices UI: `website/admin/src/components/pages/Notices.tsx`.  
+API must tolerate corrupt KV catalog entries and KV write limits — see `website/admin/functions/api/_shared/notices.js`.
+
+## Skill
+
+Full workflow: `.agents/skills/lorapok-website-build/SKILL.md`

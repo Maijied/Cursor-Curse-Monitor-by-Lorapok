@@ -33,12 +33,30 @@ export { GENERATED_DEV_NOTICE, CONVERSATION_RECOVERY_NOTICE, ROLLBACK_NOTICE, ge
  * @param {Object} [env] - Optional environment used to load hydrated built-in notices.
  * @return {{items: Array, changed: boolean}} The merged notices and whether the collection changed.
  */
+function sanitizeCatalogItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.filter((item) => item && typeof item === "object");
+}
+
 export async function mergeBuiltinNotices(items, env) {
-  const builtins = env ? await getHydratedBuiltinNotices(env) : BUILTIN_NOTICES;
-  const next = [...items];
-  let changed = false;
+  let builtins = BUILTIN_NOTICES;
+  if (env) {
+    try {
+      builtins = await getHydratedBuiltinNotices(env);
+    } catch (error) {
+      console.warn("mergeBuiltinNotices: hydration failed — using embedded builtins", error);
+      builtins = BUILTIN_NOTICES;
+    }
+  }
+  if (!Array.isArray(builtins)) {
+    console.warn("mergeBuiltinNotices: hydrated builtins is not an array — using embedded snapshot");
+    builtins = BUILTIN_NOTICES;
+  }
+  const next = sanitizeCatalogItems(items);
+  let changed = next.length !== (Array.isArray(items) ? items.length : 0);
   for (const builtin of builtins) {
-    const index = next.findIndex((n) => n.id === builtin.id);
+    if (!builtin?.id) continue;
+    const index = next.findIndex((n) => n?.id === builtin.id);
     if (index < 0) {
       next.push({ ...builtin });
       changed = true;
@@ -150,8 +168,16 @@ export async function writeCatalog(env, catalog) {
  */
 export async function ensureCatalogSeeded(env) {
   const catalog = await readCatalog(env);
-  let items = [...catalog.items];
-  const { items: mergedItems, changed: builtinsAdded } = await mergeBuiltinNotices(items, env);
+  let items = sanitizeCatalogItems(catalog.items);
+  let mergedItems = items;
+  let builtinsAdded = false;
+  try {
+    const merged = await mergeBuiltinNotices(items, env);
+    mergedItems = merged.items;
+    builtinsAdded = merged.changed;
+  } catch (error) {
+    console.warn("ensureCatalogSeeded: mergeBuiltinNotices failed — using sanitized catalog", error);
+  }
   items = mergedItems;
   let changed = builtinsAdded || !catalog.seeded;
 
