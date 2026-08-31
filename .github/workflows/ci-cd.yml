@@ -472,7 +472,10 @@ jobs:
       && (
         (
           github.event_name == 'workflow_dispatch'
-          && inputs.deploy_admin == true
+          && (
+            startsWith(inputs.action_type, 'deploy-infra')
+            || inputs.deploy_admin == true
+          )
           && (
             startsWith(inputs.action_type, 'deploy-infra')
             || (
@@ -1160,7 +1163,10 @@ jobs:
       && needs.browser-extension-ci.result == 'success'
       && needs.admin-ci.result == 'success'
       && github.event_name == 'workflow_dispatch'
-      && inputs.deploy_website == true
+      && (
+        startsWith(inputs.action_type, 'deploy-infra')
+        || inputs.deploy_website == true
+      )
       && !startsWith(inputs.action_type, 'full-release')
       && (
         startsWith(inputs.action_type, 'deploy-infra')

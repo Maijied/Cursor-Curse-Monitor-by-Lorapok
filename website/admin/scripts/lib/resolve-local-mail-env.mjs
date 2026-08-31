@@ -11,11 +11,7 @@ export function resolveLocalMailEnv(baseEnv = process.env, adminDir) {
     const token = tryWranglerOAuthToken(adminDir);
     if (token) {
       console.log("Using wrangler OAuth token for CLOUDFLARE_API_TOKEN.");
-      env = {
-        ...env,
-        CLOUDFLARE_API_TOKEN: token,
-        ...(env.CLOUDFLARE_EMAIL_API_TOKEN?.trim() ? {} : { CLOUDFLARE_EMAIL_API_TOKEN: token }),
-      };
+      env = { ...env, CLOUDFLARE_API_TOKEN: token };
     }
   }
 

@@ -52,6 +52,18 @@ const MONITORING_PRODUCT_PRIORITY = [
   "Codex",
 ];
 
+/** When false, skip auto-discovering a separate dCursor install (use saved accounts in main Cursor). */
+export function shouldDiscoverProductInstall(productFolder: string, appName?: string): boolean {
+  if (process.env.CCM_INCLUDE_DCURSOR === "1") {
+    return true;
+  }
+  if (productFolder !== "dCursor") {
+    return true;
+  }
+  const name = (effectiveAppName(appName) || "").toLowerCase();
+  return name.includes("dcursor");
+}
+
 function getConfigRoot(): string {
   const home = os.homedir();
   if (process.platform === "darwin") {
@@ -187,6 +199,9 @@ export function discoverCursorAuthInstalls(): DiscoveredCursorLogin[] {
     }
     const auth = readAuthKeysAtPath(dbPath);
     if (!auth.token) {
+      continue;
+    }
+    if (!shouldDiscoverProductInstall(productFolder)) {
       continue;
     }
     results.push({
