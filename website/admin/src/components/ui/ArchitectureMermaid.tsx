@@ -74,12 +74,14 @@ export default function ArchitectureMermaid({
 
   return (
     <div
-      className={`architecture-mermaid-host rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] p-3 overflow-x-auto ${className}`}
+      className={`architecture-mermaid-host architecture-mermaid-host--framed rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] p-3 overflow-x-auto ${className}`}
     >
       {status === "loading" ? (
-        <p className="text-sm text-[var(--color-muted)] px-2 py-6 text-center" aria-live="polite">
-          Rendering architecture diagram…
-        </p>
+        <div className="architecture-mermaid-skeleton px-2 py-8" aria-live="polite">
+          <div className="architecture-mermaid-skeleton-line" />
+          <div className="architecture-mermaid-skeleton-line architecture-mermaid-skeleton-line--short" />
+          <p className="text-sm text-[var(--color-muted)] text-center mt-4">Rendering architecture diagram…</p>
+        </div>
       ) : null}
       {status === "error" ? (
         <p className="text-sm text-[var(--color-danger)] px-2 py-4">{error}</p>

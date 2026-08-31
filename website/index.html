@@ -803,16 +803,18 @@
           <p class="section-lead">No spam — just extension updates and important notices from Lorapok Labs.</p>
         </div>
         <form id="subscribe-form" class="subscribe-form" novalidate>
-          <label class="sr-only" for="subscribe-email">Email address</label>
-          <input type="email" id="subscribe-email" name="email" placeholder="you@example.com" required autocomplete="email" spellcheck="false" inputmode="email" />
-          <label class="subscribe-consent" for="subscribe-consent" style="display:flex;align-items:flex-start;gap:10px;max-width:520px;margin:12px auto 0;font-size:0.9rem;color:var(--muted)">
-            <input type="checkbox" id="subscribe-consent" name="consent" required style="margin-top:4px" />
+          <div class="subscribe-form-row">
+            <label class="sr-only" for="subscribe-email">Email address</label>
+            <input type="email" id="subscribe-email" name="email" placeholder="you@example.com" required autocomplete="email" spellcheck="false" inputmode="email" />
+            <button type="submit" class="btn primary btn-loadable" id="subscribe-form-submit">
+              <span class="subscribe-btn-label">Subscribe</span>
+              <span class="btn-larvae-loader" hidden aria-hidden="true"></span>
+            </button>
+          </div>
+          <label class="subscribe-consent" for="subscribe-consent">
+            <input type="checkbox" id="subscribe-consent" name="consent" required />
             <span>I agree to receive product updates and release notes from Lorapok Labs. Unsubscribe any time by replying to a message.</span>
           </label>
-          <button type="submit" class="btn primary btn-loadable" id="subscribe-form-submit">
-            <span class="subscribe-btn-label">Subscribe</span>
-            <span class="btn-larvae-loader" hidden aria-hidden="true"></span>
-          </button>
         </form>
         <p class="ccm-feedback" id="subscribe-message" role="status" aria-live="polite" hidden></p>
       </div>
