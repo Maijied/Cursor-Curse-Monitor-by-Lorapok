@@ -1,11 +1,71 @@
-const DEFAULT_SITE_DATA_URL =
-  "https://cursor.lorapok.tech/site-data.json";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-export async function fetchSiteData(env) {
-  const url = env?.SITE_DATA_URL ?? DEFAULT_SITE_DATA_URL;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error(`site-data fetch failed (${res.status})`);
-  return res.json();
+const DEFAULT_SITE_DATA_URL = "https://cursor.lorapok.tech/site-data.json";
+
+const SHARED_DIR = dirname(fileURLToPath(import.meta.url));
+
+function localSiteDataCandidates(env) {
+  const paths = [];
+  const explicit =
+    (typeof env?.SITE_DATA_FILE === "string" && env.SITE_DATA_FILE.trim()) ||
+    (typeof process !== "undefined" && process.env?.SITE_DATA_FILE?.trim()) ||
+    "";
+  if (explicit) paths.push(explicit);
+  paths.push(join(SHARED_DIR, "../../../../site-data.json"));
+  return paths;
+}
+
+async function tryReadLocalSiteData(env) {
+  let fs;
+  try {
+    fs = await import("node:fs");
+  } catch {
+    return null;
+  }
+
+  for (const candidate of localSiteDataCandidates(env)) {
+    if (!candidate || !fs.existsSync(candidate)) continue;
+    try {
+      return JSON.parse(fs.readFileSync(candidate, "utf8"));
+    } catch {
+      // try next candidate
+    }
+  }
+  return null;
+}
+
+function shouldPreferLocalSiteData(env) {
+  return (
+    Boolean(env?.SITE_DATA_FILE) ||
+    Boolean(typeof process !== "undefined" && process.env?.SITE_DATA_FILE) ||
+    Boolean(typeof process !== "undefined" && process.env?.CI === "true") ||
+    Boolean(typeof process !== "undefined" && process.env?.NODE_ENV === "test") ||
+    env?.PREFER_LOCAL_SITE_DATA === "true" ||
+    env?.PREFER_LOCAL_SITE_DATA === true
+  );
+}
+
+export async function fetchSiteData(env = {}) {
+  if (shouldPreferLocalSiteData(env)) {
+    const local = await tryReadLocalSiteData(env);
+    if (local) return local;
+  }
+
+  const url =
+    env?.SITE_DATA_URL ??
+    (typeof process !== "undefined" ? process.env?.SITE_DATA_URL : undefined) ??
+    DEFAULT_SITE_DATA_URL;
+
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error(`site-data fetch failed (${res.status})`);
+    return await res.json();
+  } catch (error) {
+    const local = await tryReadLocalSiteData(env);
+    if (local) return local;
+    throw error;
+  }
 }
 
 export function tagsFromSiteData(data) {
