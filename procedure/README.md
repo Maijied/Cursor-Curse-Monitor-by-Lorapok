@@ -22,7 +22,7 @@ Example: `procedure/e665770d_pr-104-feedback-testmail.md`
 
 1. **Start** — `node scripts/procedure-init.mjs --title "..." [--plan plan/foo.md] [--component admin]`
 2. **During work** — update Progress, Decisions, Blockers, Verification in the procedure file
-3. **On merge** — CI runs `procedure-finalize-pr.mjs` → `procedure/pr-{N}_*_merged.md` + PR comment + artifact
+3. **On merge** — CI runs `procedure-finalize-pr.mjs` → `procedure/pr-{N}_*_merged.md` + PR comment + artifact; commits to `main` or opens a docs PR when branch rules block direct push
 
 ## GitHub integration
 
