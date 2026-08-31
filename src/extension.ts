@@ -31,6 +31,7 @@ let securityMonitor: SecurityMonitorService | undefined;
 
 const DB_BACKUP_PROMPT_KEY = "cursorCurseMonitor.dbBackupPromptShown";
 
+/** One-time startup prompt when stale state.vscdb backups consume significant disk space. */
 async function maybePromptDbBackupRecovery(context: vscode.ExtensionContext): Promise<void> {
   const scan = scanMonitoringDbBackups();
   if (!shouldNotifyDbBackupWaste(scan)) {

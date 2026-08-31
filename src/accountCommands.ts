@@ -85,12 +85,12 @@ export async function promptAddCursorAccount(context: vscode.ExtensionContext): 
     [
       {
         label: "$(globe) Sign in with browser",
-        description: "Open cursor.com/dashboard — add accounts without a second Cursor install",
+        description: "Open cursor.com/dashboard — works in Cursor or dCursor without a second install",
         id: "browser",
       },
       {
         label: "$(key) Paste access token",
-        description: "Paste cursorAuth/accessToken (switch between multiple logins in one Cursor)",
+        description: "Switch between multiple logins saved in this extension (Cursor / dCursor)",
         id: "paste",
       },
     ],
