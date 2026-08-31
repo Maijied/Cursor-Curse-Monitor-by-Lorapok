@@ -8,7 +8,7 @@ const BRAND = {
   site: "https://cursor.lorapok.tech",
   admin: "https://cursor-dev.lorapok.tech",
   repo: `https://github.com/${GITHUB_REPO}`,
-  icon: "https://cursor.lorapok.tech/assets/icon.png",
+  icon: "https://cursor.lorapok.tech/assets/logo.png",
   banner: "https://cursor.lorapok.tech/assets/marketing/og-social-card.png",
   ovsx: "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
   vscode:

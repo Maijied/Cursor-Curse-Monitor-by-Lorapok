@@ -16,7 +16,7 @@ const ctx = buildProductContext(pkg);
 
 test("message catalog uses main logo branding", () => {
   const catalog = buildMessageCatalog(ctx);
-  assert.equal(catalog.branding.mainLogoUrl, `${ctx.homepage}/assets/icon.png`);
+  assert.equal(catalog.branding.mainLogoUrl, `${ctx.homepage}/assets/logo.png`);
   assert.ok(catalog.footers.discord.feedbackBlock.includes("GitHub Issues"));
   assert.ok(catalog.cards.length >= 15);
 });

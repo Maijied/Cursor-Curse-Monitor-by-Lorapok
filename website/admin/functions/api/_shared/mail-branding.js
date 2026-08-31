@@ -3,7 +3,7 @@ const SITE_BASE =
     ? process.env.SITE_BASE_URL.replace(/\/$/, "")
     : "https://cursor.lorapok.tech";
 
-const MAIN_LOGO_URL = `${SITE_BASE}/assets/icon.png`;
+const MAIN_LOGO_URL = `${SITE_BASE}/assets/logo.png`;
 
 /** @type {Record<string, { logoUrl: string; accentColor: string; badgeLabel: string; barGradient: string }>} */
 export const MAIL_BRANDING = {

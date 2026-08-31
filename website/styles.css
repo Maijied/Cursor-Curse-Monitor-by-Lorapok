@@ -551,6 +551,16 @@ a:hover { color: #7cb8ff; }
   background: radial-gradient(circle, rgba(124, 92, 255, 0.16), transparent 68%);
   animation: hero-orbit-pulse 5s ease-in-out infinite;
 }
+.hero-orbit-mascot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(76px, 14vw, 112px);
+  height: clamp(76px, 14vw, 112px);
+  transform: translate(-50%, -46%);
+  z-index: 1;
+  filter: drop-shadow(0 10px 28px rgba(57, 255, 20, 0.14));
+}
 .hero-orbit-icon {
   position: absolute;
   width: 52px;
@@ -2686,7 +2696,8 @@ a.ide-card:focus-visible {
   .ecosystem-rotation-pause { display: none; }
   .hero-orbit-ring,
   .hero-orbit-glow,
-  .hero-orbit-icon { animation: none !important; }
+  .hero-orbit-icon,
+  .hero-orbit-mascot { animation: none !important; }
   .supported-ides-section .ide-card,
   .supported-ides-section .ide-card:hover,
   .supported-ides-section .ide-card:active,

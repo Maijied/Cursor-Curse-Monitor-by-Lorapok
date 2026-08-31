@@ -27,7 +27,7 @@ export async function notifyDiscordFeedback(env, payload = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "Cursor Curse Monitor",
-        avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
+        avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
         embeds: [embed],
       }),
     });

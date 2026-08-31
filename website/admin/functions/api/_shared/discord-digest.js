@@ -133,7 +133,7 @@ export async function runDiscordDigest(env, options = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "Mission Control",
-        avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/icon.png",
+        avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
         embeds,
       }),
     });
