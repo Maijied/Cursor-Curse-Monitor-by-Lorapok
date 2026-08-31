@@ -70,18 +70,25 @@ export default function Notices() {
     if (selected) setForm({ ...EMPTY, ...selected });
   }, []);
 
+  const loadNotices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchNotices();
+      applyCatalog(data.items ?? []);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load notices");
+    } finally {
+      setLoading(false);
+    }
+  }, [applyCatalog]);
+
   useEffect(() => {
-    fetchNotices()
-      .then((data) => {
-        applyCatalog(data.items ?? []);
-        setError(null);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
+    void loadNotices();
     fetchNoticeTemplates()
       .then((data) => setTemplates(data.templates ?? []))
       .catch(() => setTemplates([]));
-  }, [applyCatalog]);
+  }, [loadNotices]);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -300,7 +307,20 @@ export default function Notices() {
   ];
 
   if (loading) return <ShimmerSkeleton className="h-64" />;
-  if (error) return <ErrorState message={error} />;
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <ErrorState message={error} />
+        <button
+          type="button"
+          onClick={() => void loadNotices()}
+          className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm hover:bg-white/5"
+        >
+          Retry loading notices
+        </button>
+      </div>
+    );
+  }
 
   const severityVariant = form.severity === "critical" ? "danger" : form.severity === "warning" ? "warn" : "neutral";
   const liveCount = items.filter((n) => n.enabled).length;
@@ -322,6 +342,50 @@ export default function Notices() {
           )
         }
       />
+
+      {templates.length > 0 ? (
+        <Card>
+          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">Notice templates</h3>
+          <p className="text-sm text-[var(--color-muted)] mb-4">
+            Start from a dynamic template — version strings and links hydrate from product context.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {templates.map((template) => {
+              const severity =
+                template.severity === "critical"
+                  ? "danger"
+                  : template.severity === "warning"
+                    ? "warn"
+                    : "neutral";
+              return (
+                <button
+                  key={template.templateId}
+                  type="button"
+                  onClick={() => loadTemplate(template.templateId)}
+                  className={`notice-template-card text-left rounded-xl border p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--color-accent)]/40 ${
+                    selectedTemplate === template.templateId
+                      ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
+                      : "border-[var(--color-border)] bg-[var(--color-bg-base)]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-medium text-[var(--color-text)]">{template.label}</span>
+                    <Badge variant={severity}>{template.severity}</Badge>
+                  </div>
+                  <p className="text-xs text-[var(--color-muted)] line-clamp-2">
+                    {template.shortMessage || template.message}
+                  </p>
+                  {template.category ? (
+                    <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)] mt-3">
+                      {template.category}
+                    </p>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      ) : null}
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -486,22 +550,40 @@ export default function Notices() {
 
         {showPreview && (
           <div
-            className={`mt-6 p-4 rounded-xl border ${
+            className={`notice-preview mt-6 overflow-hidden rounded-xl border ${
               form.severity === "critical"
-                ? "border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)]"
+                ? "border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)]"
                 : form.severity === "warning"
-                  ? "border-[color-mix(in_srgb,var(--color-warn)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-warn)_8%,transparent)]"
-                  : "border-[var(--color-border)] bg-[var(--color-bg-base)]"
+                  ? "border-[color-mix(in_srgb,var(--color-warn)_40%,transparent)]"
+                  : "border-[var(--color-border)]"
             }`}
           >
-            <p className="font-semibold text-[var(--color-text)] mb-1">{form.title || "Notice title"}</p>
-            <p className="text-sm text-[var(--color-muted)]">{form.shortMessage || form.message || "Notice message"}</p>
-            {(form.feedbackUrl || form.collaborateUrl) && (
-              <div className="flex gap-4 mt-3 text-sm">
-                {form.feedbackUrl && <span className="text-[var(--color-accent-2)]">Share feedback →</span>}
-                {form.collaborateUrl && <span className="text-[var(--color-accent-2)]">Collaborate →</span>}
-              </div>
-            )}
+            <div
+              className={`notice-preview-banner px-4 py-3 border-b ${
+                form.severity === "critical"
+                  ? "bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] border-[color-mix(in_srgb,var(--color-danger)_25%,transparent)]"
+                  : form.severity === "warning"
+                    ? "bg-[color-mix(in_srgb,var(--color-warn)_12%,transparent)] border-[color-mix(in_srgb,var(--color-warn)_25%,transparent)]"
+                    : "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border-[var(--color-border)]"
+              }`}
+            >
+              <p className="text-xs uppercase tracking-wider text-[var(--color-muted)] mb-1">Live site banner</p>
+              <p className="font-semibold text-[var(--color-text)]">{form.shortMessage || form.title || "Notice title"}</p>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-base)]">
+              <p className="font-semibold text-[var(--color-text)] mb-2">{form.title || "Notice title"}</p>
+              <p className="text-sm text-[var(--color-muted)] whitespace-pre-wrap">{form.message || "Notice message"}</p>
+              {(form.feedbackUrl || form.collaborateUrl) && (
+                <div className="flex flex-wrap gap-4 mt-4 text-sm">
+                  {form.feedbackUrl ? (
+                    <span className="text-[var(--color-accent-2)]">Share feedback →</span>
+                  ) : null}
+                  {form.collaborateUrl ? (
+                    <span className="text-[var(--color-accent-2)]">Collaborate →</span>
+                  ) : null}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

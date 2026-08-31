@@ -185,11 +185,8 @@ export async function ensureCatalogSeeded(env) {
     await writeCatalog(env, next);
     return next;
   } catch (error) {
-    if (!env?.ADMIN_KV?.put) {
-      console.warn("ensureCatalogSeeded: ADMIN_KV unavailable — returning read-only catalog");
-      return { seeded: false, items };
-    }
-    throw error;
+    console.warn("ensureCatalogSeeded: persist failed — returning in-memory catalog", error);
+    return { seeded: catalog.seeded, items };
   }
 }
 

@@ -528,16 +528,23 @@ a:hover { color: #7cb8ff; }
 }
 .hero-visual-stage {
   position: relative;
-  padding: clamp(12px, 2vw, 20px) 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: clamp(360px, 38vw, 440px);
+  padding: 8px 0 4px;
   isolation: isolate;
-  overflow: hidden;
+  overflow: visible;
 }
 .hero-orbit {
-  position: absolute;
-  inset: -8px -12px auto -12px;
-  height: min(420px, 52vw);
+  position: relative;
+  width: min(100%, 360px);
+  height: clamp(200px, 28vw, 260px);
+  margin: 0 auto;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
+  flex-shrink: 0;
 }
 .hero-orbit-ring {
   position: absolute;
@@ -612,6 +619,8 @@ a:hover { color: #7cb8ff; }
 .hero-visual-stage .hero-stats-dashboard {
   position: relative;
   z-index: 2;
+  width: min(100%, 292px);
+  margin: 0 auto;
 }
 .hero-device {
   border: 1px solid rgba(77, 159, 255, 0.28);
@@ -794,31 +803,31 @@ h1 {
 .hero-cta-primary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 .hero-install-btn {
   flex-direction: row;
   align-items: center;
-  gap: 12px;
-  min-height: 72px;
-  padding: 12px 14px;
+  gap: 10px;
+  min-height: 54px;
+  padding: 8px 12px;
 }
 .hero-install-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .hero-install-icon img,
 .hero-install-icon svg {
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
 }
 .hero-install-icon--brand {
   color: #ffb86b;
@@ -832,6 +841,15 @@ h1 {
   align-items: flex-start;
   gap: 2px;
   min-width: 0;
+}
+.hero-install-copy .btn-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.hero-install-copy small {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  opacity: 0.88;
 }
 .hero-cta-tertiary {
   display: flex;
@@ -1512,8 +1530,15 @@ h1 {
 .subscribe-inner .section-head { margin-inline: auto; }
 .subscribe-form {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 14px;
   margin-top: 24px;
+  text-align: left;
+}
+.subscribe-form-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
 }
 .subscribe-form input[type="email"] {
   flex: 1;
@@ -1528,15 +1553,28 @@ h1 {
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
+.subscribe-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 100%;
+}
+.subscribe-consent input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
 .subscribe-form input[type="email"]:focus,
 .subscribe-form input[type="email"]:focus-visible {
   border-color: rgba(77, 159, 255, 0.5);
   box-shadow: 0 0 0 3px rgba(77, 159, 255, 0.15);
 }
-.subscribe-form .btn { flex-shrink: 0; }
+.subscribe-form-row .btn { flex-shrink: 0; }
 @media (max-width: 520px) {
-  .subscribe-form { flex-direction: column; }
-  .subscribe-form .btn { width: 100%; }
+  .subscribe-form-row { flex-direction: column; }
+  .subscribe-form-row .btn { width: 100%; }
 }
 
 /* Newsletter modal */
