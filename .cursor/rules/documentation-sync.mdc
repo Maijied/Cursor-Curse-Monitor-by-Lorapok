@@ -1,0 +1,69 @@
+---
+description: Keep README, AGENTS.md, guides, wiki, architecture, and related docs in sync with code and infra changes
+alwaysApply: true
+---
+
+# Documentation sync
+
+When you change behavior, architecture, ops, or agent workflows, **update the docs that readers actually use** in the **same PR** (or immediately after merge for wiki-only follow-ups). Do not leave stale instructions behind.
+
+## Principle
+
+- **Necessary only** — update docs affected by your change; no drive-by rewrites or new markdown the user did not need.
+- **Same source of truth** — repo markdown is canonical; GitHub Wiki is a **mirror** of `docs/wiki/`.
+- **No secrets** — cred vault policy applies to all docs (see `.cursor/rules/cred-vault.mdc`).
+- **Track work** — non-trivial tasks still use `procedure/` per `.cursor/rules/procedure-github-project.mdc`.
+
+## What to update (by change type)
+
+| If you changed… | Update at minimum |
+|-----------------|-------------------|
+| **Monorepo layout, data flow, new service, KV/API contract** | `docs/wiki/Architecture.md`, relevant `docs/wiki/*.md`, `README.md` if user-visible |
+| **Build / test / dev / deploy commands** | `AGENTS.md`, component README if scoped (`website/admin/`, `browser-extension/`), `docs/wiki/Deployment.md` or `Installation.md` |
+| **Admin API, auth, mail, cron, Cloudflare** | `docs/guides/CLOUDFLARE_EMAIL_AND_ROUTING.md`, `docs/wiki/Admin-Panel.md`, `docs/wiki/Mailbox-and-Email.md`, `AGENTS.md` admin section |
+| **Browser or IDE extension UX / publish pipeline** | `AGENTS.md`, `docs/wiki/Installation.md`, marketplace/deploy docs if publish steps moved |
+| **User-facing features or fixes** | `CHANGELOG.md` (concise entry), `README.md` if marketed on the homepage |
+| **Agent rules, hooks, CI, procedure workflow** | `.cursor/rules/*.mdc`, `procedure/README.md`, linked workflow paths in `AGENTS.md` |
+| **Skills or global agent stack** | `.agents/skills/<skill>/SKILL.md`, run `node scripts/sync-global-agent-stack.mjs` when the skill is global |
+
+When unsure, grep `docs/`, `README.md`, and `AGENTS.md` for the old term or path and fix every hit that is now wrong.
+
+## Wiki (`docs/wiki/`)
+
+- **Source of truth:** `docs/wiki/*.md` in this repo (not the GitHub Wiki UI).
+- **Pages:** `Home.md`, `Architecture.md`, `Installation.md`, `Admin-Panel.md`, `Deployment.md`, `Mailbox-and-Email.md`, `Support.md`.
+- **After wiki edits:** run `node scripts/sync-github-wiki.mjs` when the user wants the live wiki updated (needs `gh` + wiki repo access). Mention in PR/procedure if sync was deferred.
+
+Keep `Home.md` quick-link table current when adding or renaming wiki pages.
+
+## Architecture & diagrams
+
+- Update **mermaid** or layout trees in `docs/wiki/Architecture.md` when components, bindings, schedules, or external services change.
+- Prefer updating an existing section over adding a parallel doc.
+
+## Guides vs wiki vs AGENTS.md
+
+| Audience | Location |
+|----------|----------|
+| Human operators (deep runbooks) | `docs/guides/` |
+| GitHub Wiki / general product docs | `docs/wiki/` |
+| AI agents & local dev smoke | `AGENTS.md` |
+| First impression / marketing | `README.md`, `website/` copy when the public site must match |
+
+Do not duplicate the same runbook in three places — link from wiki/README to the canonical guide.
+
+## PR checklist (docs)
+
+Before marking a task or PR done, confirm:
+
+1. [ ] Grep found no stale paths, env names, or commands for what you changed
+2. [ ] `AGENTS.md` still accurate for build/test/deploy you touched
+3. [ ] Wiki/architecture updated if structure or data flow changed
+4. [ ] `CHANGELOG.md` entry if the change is user-visible
+5. [ ] Procedure file **Progress / Decisions** updated for non-trivial work
+
+## Do not
+
+- Edit the plan file when the user said not to (e.g. attached `.plan.md` from Cursor plans).
+- Add markdown files the user did not need or that only repeat code comments.
+- Bump `package.json` versions in git — CI/CD handles dynamic versioning (`0.0.0` in repo).
