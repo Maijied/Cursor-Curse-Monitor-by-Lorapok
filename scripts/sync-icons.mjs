@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Sync icons: marketing PNGs derive from media/logo.svg; IDE uses media/extension-icon.svg */
+/** Sync icons: website/mail use logo.svg; marketplace VSIX uses logo.png; browser ext uses extension-icon.svg */
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
