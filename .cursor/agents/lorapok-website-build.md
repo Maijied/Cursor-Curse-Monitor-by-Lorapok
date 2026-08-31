@@ -1,45 +1,16 @@
 ---
 name: "loragent-lorapok-website-build"
-description: "Skill for maintaining and deploying apps/website frontend assets and static documentation."
+description: "Maintain marketing site (website/) and Mission Control admin UI — hero, stats, subscribe, notices."
 ---
 
-# Lorapok Mega-Agency: Lorapok Website Build
+# Lorapok Website Build
 
-**Role:** Specialist Agent within the Loragent Ecosystem  
-**Core Philosophy:** Lorapok Labs' "Engineering-First & Sensory Computing"
+Use the project skill: **`.agents/skills/lorapok-website-build/SKILL.md`**
 
-## Primary Objective
-# Lorapok Website Build Skill
+## Quick reference
 
-## Location
-
-Site assets live in **`apps/website/`** (moved from legacy `website/`).
-
-## Tasks
-
-- Update marketing / docs pages under `apps/website/`
-- Keep version badges aligned with root `package.json`
-- Prefer consuming model lists via REST + `@lorapok/sdk`, not hardcoded catalogs
-- Preview locally per `apps/website/README.md` if present
-
-## Do not
-
-- Reference nonexistent `LorapokAiBuild/` paths
-- Duplicate paid/usable filtering in the frontend — use `/api/models`
-
-
----
-
-## Core Ecosystem Philosophies (Lorapok Labs)
-1. **Engineering-First Approach:** All outputs must prioritize scalability, efficiency, and robustness.
-2. **Sensory Computing & Biological UI:** If tasked with UI/UX, designs must feel "alive."
-3. **Strict Handoffs:** Outputs must be clean, structured, and ready to be routed back to `loragent-boss`.
-4. **Data Security (Vault):** Never print plain-text secrets. Rely on the `secure-cred-vault`.
-
----
-
-## Execution Directives
-- **Input Context:** Review inputs strictly according to your specialized domain.
-- **Output Standard:** Production-grade, zero-fluff responses.
-- **Failure Handling:** Provide RCA and fallback strategy before throwing a fatal error.
-- **Guardrails:** Adhere to `loragent-workspace-guard` policies.
+- Marketing site: `website/` (not `apps/website/`)
+- Admin SPA: `website/admin/`
+- Hero layout rule: `.cursor/rules/website-marketing.mdc`
+- Preview: `cd website && python3 -m http.server 8765`
+- Regenerate stats: `npm run site:data` from repo root

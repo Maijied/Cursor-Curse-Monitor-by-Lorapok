@@ -528,14 +528,23 @@ a:hover { color: #7cb8ff; }
 }
 .hero-visual-stage {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 10px;
-  min-height: clamp(360px, 38vw, 440px);
-  padding: 8px 0 4px;
+  gap: clamp(18px, 2.8vw, 28px);
+  min-height: 0;
+  padding: 4px 0 0;
   isolation: isolate;
   overflow: visible;
+}
+@media (min-width: 900px) {
+  .hero-visual-stage {
+    grid-template-columns: minmax(0, 1.08fr) minmax(220px, 0.92fr);
+    grid-template-rows: auto;
+    gap: 10px 18px;
+    align-items: center;
+  }
 }
 .hero-orbit {
   position: relative;
@@ -543,8 +552,20 @@ a:hover { color: #7cb8ff; }
   height: clamp(200px, 28vw, 260px);
   margin: 0 auto;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
   flex-shrink: 0;
+  padding-bottom: 28px;
+}
+@media (min-width: 900px) {
+  .hero-orbit {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    width: min(100%, 340px);
+    height: clamp(220px, 24vw, 280px);
+    margin: 0;
+    padding-bottom: 16px;
+  }
 }
 .hero-orbit-ring {
   position: absolute;
@@ -618,9 +639,19 @@ a:hover { color: #7cb8ff; }
 }
 .hero-visual-stage .hero-stats-dashboard {
   position: relative;
-  z-index: 2;
-  width: min(100%, 292px);
+  z-index: 1;
+  width: min(100%, 272px);
   margin: 0 auto;
+}
+@media (min-width: 900px) {
+  .hero-visual-stage .hero-stats-dashboard {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    max-width: 272px;
+    justify-self: end;
+    margin: 0;
+  }
 }
 .hero-device {
   border: 1px solid rgba(77, 159, 255, 0.28);
@@ -809,8 +840,8 @@ h1 {
   flex-direction: row;
   align-items: center;
   gap: 10px;
-  min-height: 54px;
-  padding: 8px 12px;
+  min-height: 48px;
+  padding: 7px 11px;
 }
 .hero-install-icon {
   display: flex;

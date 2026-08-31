@@ -80,6 +80,8 @@ Rules:
 
 - **Canonical tree:** `.agents/skills/` (tracked; `.agents/skills/.gitignore` keeps API/credential skills local-only).
 - **Cursor path:** `.cursor/skills` is a symlink to `.agents/skills` so Cursor and Codex share one copy.
+- **Website / hero / admin UI:** `.agents/skills/lorapok-website-build/SKILL.md` and `.cursor/rules/website-marketing.mdc` — hero layout, stats card, subscribe form, notices API, local preview.
+- **PR review aliases:** use `pr-fix`, `pr-review`, `pr-annotate` (deprecated stubs `review-comment`, `review-pr`, `review-comment-on-pr` removed).
 
 ### Global agent skills
 
