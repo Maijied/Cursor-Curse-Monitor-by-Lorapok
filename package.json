@@ -306,6 +306,8 @@
     "security:deps:fix": "node scripts/dependency-security-remediate.mjs",
     "validate:reinstall": "node scripts/validate-reinstall.mjs",
     "admin:deploy:fast": "node website/admin/scripts/deploy-pages-fast.mjs",
+    "admin:mail:sync-vault": "node website/admin/scripts/sync-mail-on-main.mjs --vault",
+    "admin:mail:repair": "node website/admin/scripts/repair-mail.mjs",
     "admin:build:fast": "node website/admin/scripts/build-fast.mjs",
     "dev:smoke": "node scripts/dev-smoke.mjs",
     "dev:smoke:quick": "node scripts/dev-smoke.mjs --quick",
