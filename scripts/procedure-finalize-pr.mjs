@@ -131,5 +131,17 @@ if (process.env.GITHUB_ACTIONS === "true") {
     "",
     "Download the full retrospective from workflow artifacts.",
   ].join("\n");
-  gh(["pr", "comment", String(pr), "--repo", `${config.owner}/${config.repo}`, "--body", comment]);
+  const commentResult = gh([
+    "pr",
+    "comment",
+    String(pr),
+    "--repo",
+    `${config.owner}/${config.repo}`,
+    "--body",
+    comment,
+  ]);
+  if (commentResult.status !== 0) {
+    console.error(commentResult.stderr || commentResult.stdout);
+    process.exit(commentResult.status ?? 1);
+  }
 }

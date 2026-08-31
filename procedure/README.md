@@ -11,7 +11,7 @@ Living execution log for tasks — distinct from [`plan/`](../plan/), which hold
 
 ## Naming
 
-```
+```text
 procedure/{8hex}_{kebab-slug}.md
 procedure/pr-{number}_{kebab-slug}_merged.md   # auto-generated on merge
 ```

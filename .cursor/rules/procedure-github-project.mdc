@@ -11,15 +11,15 @@ Every **non-trivial** task (feature, bugfix spanning multiple files, infra, or P
 
 | Folder | When |
 |--------|------|
-| [`plan/`](../plan/) | **Before** coding — design and acceptance criteria |
-| [`procedure/`](../procedure/) | **During + after** — progress, decisions, verification, retrospective |
+| [`plan/`](../../plan/) | **Before** coding — design and acceptance criteria |
+| [`procedure/`](../../procedure/) | **During + after** — progress, decisions, verification, retrospective |
 
 Do not merge these roles into one file.
 
 ## On task start
 
 1. Run `node scripts/procedure-init.mjs --title "<short title>"` (add `--plan plan/foo.md`, `--component admin|extension|browser|website` when known).
-2. Or manually create `procedure/{8hex}_{kebab-slug}.md` from [`procedure/_template.md`](../procedure/_template.md).
+2. Or manually create `procedure/{8hex}_{kebab-slug}.md` from [`procedure/_template.md`](../../procedure/_template.md).
 3. Link the GitHub Issue in the procedure file; update **Progress** at each milestone.
 
 ## During work
@@ -33,7 +33,7 @@ Update the procedure file when:
 
 ## GitHub Project (optional)
 
-Config: [`procedure/project.json`](../procedure/project.json).
+Config: [`procedure/project.json`](../../procedure/project.json).
 
 - If `projectNumber` is set → `procedure-init.mjs` adds the issue to the board.
 - If null → **Issues-only** mode (default until user configures the board).
@@ -42,7 +42,7 @@ Requires: `gh auth refresh -s read:project,project`
 
 ## On PR merge
 
-CI ([`.github/workflows/procedure-on-merge.yml`](../.github/workflows/procedure-on-merge.yml)) or an agent runs:
+CI ([`.github/workflows/procedure-on-merge.yml`](../../.github/workflows/procedure-on-merge.yml)) or an agent runs:
 
 ```bash
 node scripts/procedure-finalize-pr.mjs --pr <number>

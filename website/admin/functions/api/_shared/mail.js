@@ -493,6 +493,10 @@ export async function sendMail(
       if (resend.sent) result = resend;
     } catch (err) {
       console.error("Resend sandbox fallback error", err);
+      result = {
+        sent: false,
+        reason: err instanceof Error ? err.message : "Resend sandbox fallback failed",
+      };
     }
   }
 

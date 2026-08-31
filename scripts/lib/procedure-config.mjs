@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const configPath = resolve(repoRoot, "procedure/project.json");
 
 /** @returns {{ owner: string; repo: string; projectNumber: number | null; projectUrl: string | null; defaultLabels: string[] }} */
