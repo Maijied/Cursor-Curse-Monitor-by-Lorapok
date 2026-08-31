@@ -202,6 +202,9 @@ export function loadCursorCloudflareSecretsFromVault() {
       accountId: String(cursor?.cloudflare_account_id ?? "").trim() || undefined,
       cronSecret: String(cursor?.cron_secret ?? "").trim() || undefined,
       githubToken,
+      resendApiKey: String(cursor?.resend_api_key ?? "").trim() || undefined,
+      testmailApiKey: String(cursor?.testmail_api_key ?? "").trim() || undefined,
+      testmailNamespace: String(cursor?.testmail_namespace ?? "").trim() || undefined,
     };
   }
   return null;
@@ -231,6 +234,41 @@ function resolveGithubTokenFromVault(vault) {
     if (token) return token;
   }
   return undefined;
+}
+
+/**
+ * Updates arbitrary cursor-scoped keys in the credential vault.
+ * @param {Record<string, string>} fields - Key/value pairs under vault.cursor
+ * @returns {{vaultUpdated: boolean, reason?: string}}
+ */
+export function syncCursorVaultKeys(fields) {
+  const candidates = readPassphraseCandidates();
+  if (!candidates.length) {
+    return { vaultUpdated: false, reason: "passphrase missing (.cred-vault-passphrase or CRED_VAULT_PASSPHRASE)" };
+  }
+
+  let vault = null;
+  let passphrase = "";
+  for (const candidate of candidates) {
+    vault = gpgDecrypt(candidate);
+    if (vault) {
+      passphrase = candidate;
+      break;
+    }
+  }
+  if (!vault) {
+    return { vaultUpdated: false, reason: "vault decrypt failed" };
+  }
+
+  vault.cursor = vault.cursor ?? {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined && value !== null) {
+      vault.cursor[key] = String(value);
+    }
+  }
+
+  const ok = gpgEncrypt(passphrase, vault);
+  return { vaultUpdated: ok, reason: ok ? undefined : "vault encrypt failed" };
 }
 
 /**
@@ -290,5 +328,10 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
       : {}),
     ...(loaded.cronSecret && !baseEnv.CRON_SECRET ? { CRON_SECRET: loaded.cronSecret } : {}),
     ...(loaded.githubToken && !baseEnv.GITHUB_TOKEN ? { GITHUB_TOKEN: loaded.githubToken } : {}),
+    ...(loaded.resendApiKey && !baseEnv.RESEND_API_KEY ? { RESEND_API_KEY: loaded.resendApiKey } : {}),
+    ...(loaded.testmailApiKey && !baseEnv.TESTMAIL_API_KEY ? { TESTMAIL_API_KEY: loaded.testmailApiKey } : {}),
+    ...(loaded.testmailNamespace && !baseEnv.TESTMAIL_NAMESPACE
+      ? { TESTMAIL_NAMESPACE: loaded.testmailNamespace }
+      : {}),
   };
 }

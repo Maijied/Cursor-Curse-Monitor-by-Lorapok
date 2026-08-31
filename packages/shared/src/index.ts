@@ -7,3 +7,4 @@ export * from "./platformAvailability";
 export * from "./supportedIdeWrappers";
 export * from "./communityDownloadStats";
 export * from "./productLinks";
+export * from "./feedback";

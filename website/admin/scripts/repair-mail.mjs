@@ -24,13 +24,13 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveLocalMailEnv } from "./lib/resolve-local-mail-env.mjs";
+import { resolveLocalMailEnvAsync } from "./lib/resolve-local-mail-env.mjs";
 import { requireDeployToken } from "./lib/mail-credentials.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(adminDir, "../..");
 
-const mailEnv = resolveLocalMailEnv(process.env, adminDir);
+const mailEnv = await resolveLocalMailEnvAsync(process.env, adminDir);
 
 function run(cmd, args, { cwd = adminDir, allowFail = false, env = mailEnv } = {}) {
   const result = spawnSync(cmd, args, { cwd, stdio: "inherit", env });

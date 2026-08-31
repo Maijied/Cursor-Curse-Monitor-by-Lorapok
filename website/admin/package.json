@@ -21,6 +21,8 @@
     "mail:sync-on-main": "node scripts/sync-mail-on-main.mjs",
     "mail:sync-vault": "node scripts/sync-mail-on-main.mjs --vault",
     "mail:test": "node scripts/test-admin-mail.mjs",
+    "mail:testmail": "node scripts/probe-subscribe-testmail.mjs",
+    "mail:sync-testmail-vault": "node scripts/sync-testmail-cred-vault.mjs",
     "stats:cron:sync-vault": "node scripts/sync-stats-cron-cred-vault.mjs",
     "github:sync-vault": "node scripts/sync-github-token-cred-vault.mjs"
   },

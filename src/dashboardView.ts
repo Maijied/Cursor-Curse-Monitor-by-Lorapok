@@ -196,6 +196,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         await deliverSnapshot(true);
         return;
       }
+      if (message.type === "sendFeedback") {
+        await vscode.commands.executeCommand("cursorCurseMonitor.sendFeedback");
+        return;
+      }
       if (message.type === "reindexConversations") {
         await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
       }
@@ -854,6 +858,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
     .footer-left { display: flex; align-items: center; gap: 6px; color: var(--muted); flex-wrap: wrap; }
     .footer-left a { color: var(--accent-2); text-decoration: none; font-weight: 600; font-size: 11px; }
+    .footer-link {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--accent-2);
+      font: inherit;
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
     .footer-dot { opacity: 0.35; }
     .footer-right { color: var(--muted); font-weight: 600; font-size: 11px; }
     .about-card {
@@ -1393,6 +1408,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>
       <span class="footer-dot">·</span>
       <a href="mailto:cursor.curse.help@lorapok.tech">Help</a>
+      <span class="footer-dot">·</span>
+      <button type="button" class="footer-link" id="feedbackBtn">Feedback</button>
       <span class="footer-dot">·</span>
       <a href="mailto:cursor.monitor@lorapok.tech">Updates</a>
     </div>
@@ -2006,6 +2023,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
     onClick('fallbackBtn', function() {
       vscode.postMessage({ type: 'applyFallback' });
+    });
+    onClick('feedbackBtn', function() {
+      vscode.postMessage({ type: 'sendFeedback' });
     });
     onClick('reindexBtn', function() {
       var modal = document.getElementById('reindexModal');

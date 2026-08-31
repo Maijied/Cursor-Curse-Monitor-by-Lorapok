@@ -25,6 +25,26 @@ const FROM_EMAIL = MAIL_MONITOR;
 const FROM_NAME = "Cursor Curse Monitor";
 const DEFAULT_ADMIN_URL = "https://cursor-dev.lorapok.tech";
 
+/** Clarify Cloudflare sandbox errors returned by EMAIL.send / REST. */
+function formatOutboundMailFailure(reason) {
+  const text = String(reason ?? "");
+  if (/verified address/i.test(text)) {
+    return (
+      "destination address is not a verified address. Cloudflare Email Sending on Workers Free only delivers to verified destination addresses. " +
+      "Configure RESEND_API_KEY on Pages (see website/admin/scripts/setup-resend-secret.mjs) or upgrade to Workers Paid."
+    );
+  }
+  return text;
+}
+
+function isVerifiedDestinationSandboxError(reason) {
+  return /verified address/i.test(String(reason ?? ""));
+}
+
+function resendConfigured(env) {
+  return typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim().length > 0;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -389,6 +409,11 @@ async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo 
     return { sent: false, reason: "RESEND_API_KEY not configured" };
   }
 
+  const resendFrom =
+    typeof env.RESEND_FROM === "string" && env.RESEND_FROM.trim()
+      ? env.RESEND_FROM.trim()
+      : `${coerceMailDisplayName(from.name, "Cursor Curse Monitor")} <${from.email}>`;
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -396,7 +421,7 @@ async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `${coerceMailDisplayName(from.name, "Cursor Curse Monitor")} <${from.email}>`,
+      from: resendFrom,
       to: [to],
       subject,
       html,
@@ -450,7 +475,16 @@ export async function sendMail(
     }
   }
 
-  if (!result.sent && env.EMAIL?.send) {
+  if (!result.sent && isVerifiedDestinationSandboxError(result.reason) && resendConfigured(env)) {
+    try {
+      const resend = await sendViaResend(env, payload);
+      if (resend.sent) result = resend;
+    } catch (err) {
+      console.error("Resend priority fallback error", err);
+    }
+  }
+
+  if (!result.sent && env.EMAIL?.send && !isVerifiedDestinationSandboxError(result.reason)) {
     try {
       result = await sendViaCloudflareBinding(env, payload);
     } catch (err) {
@@ -462,7 +496,7 @@ export async function sendMail(
     }
   }
 
-  if (!result.sent) {
+  if (!result.sent && !isVerifiedDestinationSandboxError(result.reason)) {
     try {
       const cf = await sendViaCloudflareRest(env, payload);
       if (cf.sent) result = cf;
@@ -491,7 +525,7 @@ export async function sendMail(
     const status = getMailTransportStatus(env);
     result = {
       sent: false,
-      reason: result.reason ?? status.hint ?? "No outbound email transport configured",
+      reason: formatOutboundMailFailure(result.reason ?? status.hint ?? "No outbound email transport configured"),
     };
   }
 

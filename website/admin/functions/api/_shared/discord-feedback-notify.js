@@ -5,7 +5,16 @@ import { buildDiscordFeedbackEmbed, getMessageBranding } from "./message-cards-r
 /**
  * Sends a feedback embed to the configured Discord webhook.
  * @param {Record<string, unknown>} env - The environment configuration.
- * @param {{ summary?: string; triggeredBy?: string | null }} [payload] - Optional feedback summary and triggering email.
+ * @param {{
+ *   summary?: string;
+ *   triggeredBy?: string | null;
+ *   kind?: string;
+ *   source?: string;
+ *   version?: string | null;
+ *   editor?: string | null;
+ *   installId?: string | null;
+ *   message?: string;
+ * }} [payload] - Optional feedback summary and metadata.
  * @return {Promise<{ok: boolean; status?: number; skipped?: boolean; reason?: string; error?: string}>} The webhook delivery result.
  */
 export async function notifyDiscordFeedback(env, payload = {}) {
@@ -16,8 +25,16 @@ export async function notifyDiscordFeedback(env, payload = {}) {
 
   const embed = await buildDiscordFeedbackEmbed(env);
   if (payload.summary) {
-    embed.description = String(payload.summary);
+    embed.description = String(payload.summary).slice(0, 4000);
   }
+
+  const fields = [];
+  if (payload.kind) fields.push({ name: "Kind", value: String(payload.kind), inline: true });
+  if (payload.source) fields.push({ name: "Source", value: String(payload.source), inline: true });
+  if (payload.version) fields.push({ name: "Version", value: String(payload.version), inline: true });
+  if (payload.editor) fields.push({ name: "Editor", value: String(payload.editor).slice(0, 200), inline: false });
+  if (payload.installId) fields.push({ name: "Install ID", value: `\`${payload.installId}\``, inline: false });
+  if (fields.length) embed.fields = fields;
 
   const branding = await getMessageBranding(env);
   let res;
@@ -58,7 +75,7 @@ export async function notifyDiscordFeedback(env, payload = {}) {
   await logSystemEvent(env, {
     source: "discord",
     level: result.ok ? "info" : "error",
-    message: result.ok ? "Discord feedback hook test sent" : `Discord feedback failed: ${result.error}`,
+    message: result.ok ? "Discord feedback notification sent" : `Discord feedback failed: ${result.error}`,
     meta: { kind: "feedback" },
     email: payload.triggeredBy ? String(payload.triggeredBy) : null,
   });

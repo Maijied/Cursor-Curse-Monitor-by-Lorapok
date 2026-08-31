@@ -28,6 +28,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "notice-put", path: "/notice", method: "PUT", auth: "admin", group: "Public", description: "Replace the active development notice" },
   { id: "notice-delete", path: "/notice", method: "DELETE", auth: "admin", group: "Public", description: "Disable the active development notice" },
   { id: "subscribe", path: "/subscribe", method: "POST", auth: "public", group: "Public", description: "Newsletter subscribe endpoint probe", safeProbe: true, sampleBody: { email: "probe@lorapok.tech", probe: true } },
+  { id: "feedback", path: "/feedback", method: "POST", auth: "public", group: "Public", description: "User feedback → Discord + admin logs", safeProbe: true, sampleBody: { probe: true } },
   { id: "analytics-stats", path: "/analytics/stats", method: "GET", auth: "public", group: "Stats", description: "Website visits + package clicks", safeProbe: true },
   { id: "analytics-visit", path: "/analytics/visit", method: "POST", auth: "public", group: "Stats", description: "Record a website visit or package click" },
   { id: "stats-readme-svg", path: "/stats/readme.svg", method: "GET", auth: "public", group: "Stats", description: "Live README download chart (SVG)", safeProbe: true },
