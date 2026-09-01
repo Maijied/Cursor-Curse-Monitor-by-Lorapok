@@ -257,6 +257,22 @@ export function renderWorkflow(mount, viewKey, reducedMotion) {
 }
 
 /**
+ * Redraw edges after the mount becomes visible (hidden tabs start at 0×0).
+ * @param {HTMLElement} mount
+ */
+export function relayoutWorkflow(mount) {
+  const root = mount.querySelector(".arch-flow");
+  if (!root) return;
+  const viewKey = root.dataset.flowView;
+  if (!viewKey) return;
+  const view = ARCHITECTURE_WORKFLOWS[viewKey];
+  if (!view) return;
+  const reduced = root.classList.contains("arch-flow--reduced");
+  drawEdges(/** @type {HTMLElement} */ (root), view, reduced);
+  mount.classList.add("is-visible");
+}
+
+/**
  * @param {HTMLElement} mount
  */
 export function restartWorkflowSimulation(mount) {
