@@ -31,6 +31,12 @@ import {
   sanitizeDiscordDigestConfigForClient,
 } from "./functions/api/_shared/discord-digest-config.js";
 import {
+  DEFAULT_SUBSCRIBE_CONFIG,
+  buildPublicSiteConfig,
+  isValidDiscordInviteUrl,
+  sanitizeSubscribeConfigForClient,
+} from "./functions/api/_shared/subscribe-config.js";
+import {
   GITHUB_CRON_JOBS,
   MANAGED_CRON_JOBS,
 } from "./functions/api/_shared/cron-jobs-registry.js";
@@ -69,6 +75,7 @@ const devStore = {
   },
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
+  subscribeConfig: { ...DEFAULT_SUBSCRIBE_CONFIG },
   statsLiveCache: null,
 };
 
@@ -92,6 +99,9 @@ const devKv = {
     if (key === "integrations:discord") {
       return JSON.stringify(devStore.discordConfig);
     }
+    if (key === "integrations:subscribe-prompt") {
+      return JSON.stringify(devStore.subscribeConfig);
+    }
     if (key === "integrations:stats-refresh") {
       return JSON.stringify(devStore.statsRefreshConfig);
     }
@@ -110,6 +120,9 @@ const devKv = {
     }
     if (key === "integrations:discord") {
       devStore.discordConfig = JSON.parse(value);
+    }
+    if (key === "integrations:subscribe-prompt") {
+      devStore.subscribeConfig = JSON.parse(value);
     }
     if (key === "integrations:stats-refresh") {
       devStore.statsRefreshConfig = JSON.parse(value);
@@ -154,6 +167,7 @@ export async function resetDevStore() {
     updatedAt: null,
     updatedBy: null,
   };
+  devStore.subscribeConfig = { ...DEFAULT_SUBSCRIBE_CONFIG };
 }
 
 void refreshDevBuiltinNotices();
@@ -831,6 +845,31 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/site-config" && req.method === "GET") {
+      buildPublicSiteConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Cache-Control", "public, max-age=60");
+          res.end(JSON.stringify({ ok: true, ...config, checkedAt: new Date().toISOString() }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "site-config unavailable" }));
+        });
+      return;
+    }
+
+    if (url === "/api/site-config" && req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.end();
+      return;
+    }
+
     if (url === "/api/site-data" && req.method === "GET") {
       readStatsLiveCache(devFunctionsEnv())
         .then((cache) => {
@@ -1023,6 +1062,70 @@ export function createDevApiMiddleware() {
               res.statusCode = 500;
               res.end(JSON.stringify({ error: err.message || "Discord notification failed" }));
             });
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/subscribe/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          config: sanitizeSubscribeConfigForClient(devStore.subscribeConfig),
+        })
+      );
+      return;
+    }
+
+    if (url === "/api/integrations/subscribe/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          if (
+            parsed.subscribeFallbackDiscordUrl !== undefined &&
+            parsed.subscribeFallbackDiscordUrl !== null &&
+            parsed.subscribeFallbackDiscordUrl !== "" &&
+            !isValidDiscordInviteUrl(String(parsed.subscribeFallbackDiscordUrl))
+          ) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Invalid Discord invite URL" }));
+            return;
+          }
+          devStore.subscribeConfig = {
+            ...devStore.subscribeConfig,
+            subscribeModalEnabled:
+              typeof parsed.subscribeModalEnabled === "boolean"
+                ? parsed.subscribeModalEnabled
+                : devStore.subscribeConfig.subscribeModalEnabled,
+            requireMailForSubscribe:
+              typeof parsed.requireMailForSubscribe === "boolean"
+                ? parsed.requireMailForSubscribe
+                : devStore.subscribeConfig.requireMailForSubscribe,
+            subscribeFallbackDiscordUrl:
+              parsed.subscribeFallbackDiscordUrl !== undefined
+                ? String(parsed.subscribeFallbackDiscordUrl ?? "").trim()
+                : devStore.subscribeConfig.subscribeFallbackDiscordUrl,
+            subscribeFallbackMode:
+              parsed.subscribeFallbackMode === "discord" || parsed.subscribeFallbackMode === "hidden"
+                ? parsed.subscribeFallbackMode
+                : devStore.subscribeConfig.subscribeFallbackMode,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          };
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeSubscribeConfigForClient(devStore.subscribeConfig),
+            })
+          );
         } catch {
           res.statusCode = 400;
           res.end(JSON.stringify({ error: "Invalid JSON" }));

@@ -21,6 +21,7 @@ Usage Discord footer + architecture website
 - [ ] Plan approved
 - [ ] Procedure + GitHub issue created
 - [x] Implementation started
+- [x] Subscribe mail gate — `GET /api/site-config`, Mission Control Settings card, site.js modal gate + Discord fallback
 - [x] Meta AI marketing images downloaded (61 assets → `website/assets/marketing/meta-ai/`)
 - [x] Three Cognitum visuals integrated on marketing site (hero ambient, architecture accent, gallery)
 - [ ] Tests passing

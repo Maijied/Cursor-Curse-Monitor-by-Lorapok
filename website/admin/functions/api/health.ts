@@ -2,6 +2,7 @@ import { jsonResponse } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { getMailTransportStatus } from "./_shared/mail.js";
 import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
+import { buildPublicSiteConfig } from "./_shared/subscribe-config.js";
 import {
   readStatsRefreshConfig,
   sanitizeStatsRefreshConfigForClient,
@@ -29,6 +30,7 @@ export async function onRequestGet(context) {
   }
 
   const mail = getMailTransportStatus(env);
+  const subscribeSite = await buildPublicSiteConfig(env);
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
   const discordDigest = sanitizeDiscordDigestConfigForClient(await readDiscordDigestConfig(env));
@@ -45,6 +47,9 @@ export async function onRequestGet(context) {
     mailRestConfigured: mail.restConfigured ?? false,
     mailResendConfigured: mail.resendConfigured ?? false,
     mailHint: mail.hint,
+    subscribeAvailable: subscribeSite.subscribeAvailable,
+    subscribeModalEnabled: subscribeSite.subscribeModalEnabled,
+    subscribeFallbackMode: subscribeSite.subscribeFallbackMode,
     discordConfigured: discordConfig.deploymentConfigured ?? discordConfig.configured,
     feedbackDiscordConfigured: discordConfig.feedbackConfigured,
     communityDiscordConfigured: discordConfig.communityConfigured,
