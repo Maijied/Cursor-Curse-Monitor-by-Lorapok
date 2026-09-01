@@ -5,8 +5,9 @@ import {
   listMailboxMessages,
   patchMailboxMessage,
 } from "./_shared/mailbox.js";
-import { buildComposeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
+import { buildComposeHtml, buildSubscribeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
 import { getMailTemplates } from "./_shared/mail-templates.js";
+import { testmailInboxAddress, resolveTestmailRuntimeConfig } from "./_shared/testmail-runtime.js";
 
 const COMPOSE_CATEGORIES = new Set([
   "compose",
@@ -94,6 +95,42 @@ export async function onRequestPost(context) {
     }
     const updated = await patchMailboxMessage(env, id, { read: true });
     const response = jsonResponse({ ok: Boolean(updated), message: updated });
+    return logAuthenticatedRequest(context, auth, response, startedAt);
+  }
+
+  if (action === "testmail-probe") {
+    const config = resolveTestmailRuntimeConfig(env);
+    if (!config.ok) {
+      const response = jsonResponse({ ok: false, error: config.error }, 503);
+      return logAuthenticatedRequest(context, auth, response, startedAt);
+    }
+
+    const tag = `ccm-mailbox-${Date.now()}`;
+    const to = testmailInboxAddress(config.namespace, tag);
+    const startedMs = Date.now() - 5_000;
+
+    const result = await sendMail(env, {
+      to,
+      subject: "Subscribed to Cursor Curse Monitor updates",
+      html: buildSubscribeHtml({ email: to }),
+      text: `Thanks for subscribing, ${to}. We'll email you about important updates from Cursor Curse Monitor.`,
+      category: "subscribe",
+      sentBy: auth.email,
+    });
+
+    const response = jsonResponse({
+      ok: result.sent,
+      emailed: result.sent,
+      tag,
+      to,
+      since: startedMs,
+      transport: result.transport,
+      mailboxId: result.mailboxId,
+      message: result.sent
+        ? `Subscribe welcome mail sent to ${to}. Poll testmail.app for tag "${tag}".`
+        : `Welcome mail failed: ${result.reason}`,
+      reason: result.sent ? undefined : result.reason,
+    });
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }
 
