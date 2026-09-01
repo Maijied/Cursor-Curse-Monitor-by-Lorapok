@@ -420,5 +420,9 @@
 
 @media (max-width: 720px) {
   .stats-grid { grid-template-columns: 1fr; }
-  .hero-channel-grid { grid-template-columns: 1fr; }
+  .hero-channel-grid,
+  .hero-stats-dashboard .hero-channel-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
