@@ -42,6 +42,7 @@ const SUBSCRIBE_KEYS = {
   snoozeUntil: "ccm-subscribe-snooze-until",
   declined: "ccm-subscribe-declined",
 };
+const WELCOME_KEY = "ccm_welcome_seen";
 const SUBSCRIBE_PROMPT_DELAY_MS = 30_000;
 const SUBSCRIBE_SNOOZE_ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -358,6 +359,7 @@ function updateStructuredDataVersion(data) {
   // Register local interactions before any network request. A slow data or
   // notice request must never make image previews feel unresponsive.
   initMobileNav();
+  initWelcomeBanner();
   initEcosystemTabs();
   initLightbox();
 
@@ -797,6 +799,22 @@ function updateStructuredDataVersion(data) {
     }
   }
 })();
+
+/**
+ * First-visit welcome banner — dismissed state stored in localStorage.
+ */
+function initWelcomeBanner() {
+  const banner = document.getElementById("welcome-banner");
+  const dismiss = document.getElementById("welcome-banner-dismiss");
+  if (!banner || !dismiss) return;
+  if (window.localStorage.getItem(WELCOME_KEY) === "1") return;
+
+  banner.hidden = false;
+  dismiss.addEventListener("click", () => {
+    window.localStorage.setItem(WELCOME_KEY, "1");
+    banner.hidden = true;
+  });
+}
 
 /**
  * Mobile hamburger menu — toggles `.nav-open` on `#nav-links`.
