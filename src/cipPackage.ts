@@ -64,6 +64,77 @@ export type CipImportResult = {
   backups: string[];
 };
 
+function validateCipRecord(record: unknown, index: number): string | null {
+  if (!record || typeof record !== "object") {
+    return `Record ${index} is not an object.`;
+  }
+  const entry = record as Partial<CipRecord>;
+  if (!entry.originalId || typeof entry.originalId !== "string") {
+    return `Record ${index} is missing originalId.`;
+  }
+  if (!entry.title || typeof entry.title !== "string") {
+    return `Record ${index} is missing title.`;
+  }
+  if (typeof entry.body !== "string") {
+    return `Record ${index} is missing body.`;
+  }
+  if (!Array.isArray(entry.turns) || entry.turns.length === 0) {
+    return `Record ${index} must include at least one turn.`;
+  }
+  for (let turnIndex = 0; turnIndex < entry.turns.length; turnIndex++) {
+    const turn = entry.turns[turnIndex];
+    if (!turn || typeof turn !== "object") {
+      return `Record ${index} turn ${turnIndex} is invalid.`;
+    }
+    if (turn.role !== "user" && turn.role !== "assistant") {
+      return `Record ${index} turn ${turnIndex} has invalid role.`;
+    }
+    if (typeof turn.text !== "string" || !turn.text.trim()) {
+      return `Record ${index} turn ${turnIndex} is missing text.`;
+    }
+    if (!Number.isFinite(Number(turn.createdAt))) {
+      return `Record ${index} turn ${turnIndex} has invalid createdAt.`;
+    }
+  }
+  if (!Number.isFinite(Number(entry.createdAt)) || !Number.isFinite(Number(entry.updatedAt))) {
+    return `Record ${index} has invalid timestamps.`;
+  }
+  return null;
+}
+
+/** Validate a parsed CIP package before import. */
+export function validateCipPackage(input: unknown): { ok: true; pkg: CipPackage } | { ok: false; error: string } {
+  if (!input || typeof input !== "object") {
+    return { ok: false, error: "Index package must be a JSON object." };
+  }
+  const pkg = input as Partial<CipPackage>;
+  if (!pkg.header || typeof pkg.header !== "object") {
+    return { ok: false, error: "Index package is missing header." };
+  }
+  if (pkg.header.cipVersion !== CIP_FORMAT_VERSION) {
+    return {
+      ok: false,
+      error: `Unsupported index package version (${String(pkg.header.cipVersion)}). Expected ${CIP_FORMAT_VERSION}.`,
+    };
+  }
+  if (pkg.header.sourceKind !== "agent-transcripts") {
+    return { ok: false, error: "Index package sourceKind must be agent-transcripts." };
+  }
+  if (!Array.isArray(pkg.records)) {
+    return { ok: false, error: "Index package is missing records array." };
+  }
+  if (pkg.records.length === 0) {
+    return { ok: false, error: "Index package contains no records." };
+  }
+  for (let index = 0; index < pkg.records.length; index++) {
+    const recordError = validateCipRecord(pkg.records[index], index);
+    if (recordError) {
+      return { ok: false, error: recordError };
+    }
+  }
+  return { ok: true, pkg: pkg as CipPackage };
+}
+
 function hashOwner(label: string, productFolder?: string): string {
   return crypto
     .createHash("sha256")
@@ -257,9 +328,9 @@ export async function importConversationIndexPackage(
   }
 
   onProgress?.({ phase: "preparing", message: "Reading index package…" });
-  let pkg: CipPackage;
+  let parsedJson: unknown;
   try {
-    pkg = JSON.parse(fs.readFileSync(source[0].fsPath, "utf8")) as CipPackage;
+    parsedJson = JSON.parse(fs.readFileSync(source[0].fsPath, "utf8"));
   } catch {
     return {
       success: false,
@@ -272,10 +343,11 @@ export async function importConversationIndexPackage(
     };
   }
 
-  if (!pkg?.header || !Array.isArray(pkg.records)) {
+  const validated = validateCipPackage(parsedJson);
+  if (!validated.ok) {
     return {
       success: false,
-      error: "Index package is missing header or records.",
+      error: validated.error,
       imported: 0,
       skipped: 0,
       searchIndexed: [],
@@ -283,9 +355,21 @@ export async function importConversationIndexPackage(
       backups: [],
     };
   }
+  const pkg = validated.pkg;
 
   const limit = policy.maxImportRecords > 0 ? policy.maxImportRecords : pkg.records.length;
   const records = pkg.records.slice(0, limit);
+  if (!records.length) {
+    return {
+      success: false,
+      error: "Import limit reduced the package to zero records.",
+      imported: 0,
+      skipped: 0,
+      searchIndexed: [],
+      sidebarRestored: [],
+      backups: [],
+    };
+  }
   const importBatchId = crypto.randomUUID();
   const workspacePath =
     vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? storage.globalStorageDir;
