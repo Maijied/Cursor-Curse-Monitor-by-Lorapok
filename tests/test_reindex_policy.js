@@ -37,10 +37,11 @@ async function run() {
       },
     }
   );
-  assert.notStrictEqual(
-    liveResult.error,
-    "Editor is still running. Quit Cursor/VS Code completely before reindexing — live database writes are disabled to protect your data.",
-    "live policy should not block on running editor"
+  assert.strictEqual(liveResult.success, false);
+  assert.match(
+    liveResult.error || "",
+    /Composer template missing/i,
+    "live policy should pass the editor-running gate and fail later"
   );
 
   const quitResult = await reindexMissingConversations(
