@@ -595,9 +595,32 @@ function restoreSidebar(
   return true;
 }
 
+export type ReindexProgressPhase =
+  | "preparing"
+  | "backup"
+  | "scan"
+  | "search"
+  | "sidebar"
+  | "done";
+
+export type ReindexProgressUpdate = {
+  phase: ReindexProgressPhase;
+  message: string;
+  current?: number;
+  total?: number;
+};
+
 export type ReindexOptions = {
   policy?: ReindexPolicy;
+  onProgress?: (update: ReindexProgressUpdate) => void;
 };
+
+function reportProgress(
+  onProgress: ReindexOptions["onProgress"],
+  update: ReindexProgressUpdate
+): void {
+  onProgress?.(update);
+}
 
 export async function reindexMissingConversations(
   extensionUri: vscode.Uri,
@@ -605,6 +628,8 @@ export async function reindexMissingConversations(
 ): Promise<ReindexResult> {
   const host = detectEditorHost(vscode.env.appName);
   const appName = vscode.env.appName;
+  const onProgress = options.onProgress;
+  reportProgress(onProgress, { phase: "preparing", message: "Loading reindex policy…" });
   const policy = options.policy ?? (await resolveReindexPolicy());
 
   if (!policy.reindexEnabled) {
@@ -634,6 +659,8 @@ export async function reindexMissingConversations(
   const stateDbPath = getCursorGlobalStoragePath(host, appName);
   const searchDbPath = getConversationSearchDbPath(host, appName);
   const templatePath = path.join(extensionUri.fsPath, "media", "composer-template.json");
+
+  reportProgress(onProgress, { phase: "preparing", message: "Validating Cursor databases…" });
 
   if (!fs.existsSync(templatePath)) {
     return {
@@ -670,13 +697,23 @@ export async function reindexMissingConversations(
   }
 
   const suffix = ".bak-pre-ccm-reindex";
+  reportProgress(onProgress, { phase: "backup", message: "Creating safety backups…" });
   const backups = [
     backupDb(stateDbPath, suffix),
     backupDb(searchDbPath, suffix),
   ].filter((item): item is string => Boolean(item));
 
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as Record<string, unknown>;
+  reportProgress(onProgress, { phase: "scan", message: "Scanning agent transcripts…" });
   const transcripts = discoverTranscripts(searchDbPath, host, appName);
+  reportProgress(onProgress, {
+    phase: "scan",
+    message:
+      transcripts.length === 0
+        ? "No missing transcripts found since Aug 10."
+        : `Checking ${transcripts.length} transcript(s)…`,
+    total: transcripts.length,
+  });
   const searchIndexed: string[] = [];
   const sidebarRestored: string[] = [];
   const skipped: string[] = [];
@@ -687,8 +724,22 @@ export async function reindexMissingConversations(
     const searchDb = new DatabaseSync(searchDbPath, { timeout: 10000 });
     try {
       searchDb.exec("BEGIN IMMEDIATE");
-      for (const parsed of transcripts) {
+      for (let index = 0; index < transcripts.length; index++) {
+        const parsed = transcripts[index]!;
         if (reindexSearch(searchDb, parsed)) searchIndexed.push(parsed.id);
+        if (
+          transcripts.length <= 12 ||
+          index === 0 ||
+          index === transcripts.length - 1 ||
+          (index + 1) % 4 === 0
+        ) {
+          reportProgress(onProgress, {
+            phase: "search",
+            message: `Rebuilding search index (${index + 1}/${transcripts.length})…`,
+            current: index + 1,
+            total: transcripts.length,
+          });
+        }
       }
       searchDb.exec("COMMIT");
     } catch (error) {
@@ -713,12 +764,26 @@ export async function reindexMissingConversations(
   const stateDb = new DatabaseSync(stateDbPath, { timeout: 15000 });
   try {
     stateDb.exec("BEGIN IMMEDIATE");
-    for (const parsed of transcripts) {
+    for (let index = 0; index < transcripts.length; index++) {
+      const parsed = transcripts[index]!;
       const restored = restoreSidebar(stateDb, template, parsed);
       if (restored) {
         sidebarRestored.push(parsed.id);
       } else if (!searchIndexed.includes(parsed.id)) {
         skipped.push(parsed.id);
+      }
+      if (
+        transcripts.length <= 12 ||
+        index === 0 ||
+        index === transcripts.length - 1 ||
+        (index + 1) % 4 === 0
+      ) {
+        reportProgress(onProgress, {
+          phase: "sidebar",
+          message: `Restoring sidebar chats (${index + 1}/${transcripts.length})…`,
+          current: index + 1,
+          total: transcripts.length,
+        });
       }
     }
     stateDb.exec("COMMIT");
@@ -739,6 +804,13 @@ export async function reindexMissingConversations(
     };
   }
   stateDb.close();
+
+  reportProgress(onProgress, {
+    phase: "done",
+    message: `Finished — indexed ${searchIndexed.length}, restored ${sidebarRestored.length}.`,
+    current: searchIndexed.length + sidebarRestored.length,
+    total: transcripts.length,
+  });
 
   return {
     success: true,

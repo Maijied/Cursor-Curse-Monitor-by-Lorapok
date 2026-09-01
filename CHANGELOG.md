@@ -8,7 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Conversation reindex** — live reindex from the dashboard works while the editor is open (backup-first); quit-first safety mode remains available via Mission Control policy
+- **Conversation reindex** — live reindex from the dashboard works while the editor is open (backup-first); quit-first safety mode remains available via Mission Control policy; dashboard shows a progress loader with phase updates
 - **Hero layout** — orbit and community stats side-by-side on desktop; no stats card overlap; compact secondary metrics
 - **Hero stats layout** — visits/engagement tiles sit in a two-column grid (was a three-column grid with two items)
 - **Screen readers** — announce verified community totals once after count-up, not during animation
@@ -25,6 +25,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Asset cache busting** — `site-data.json` includes `assets.buildId`; `npm run site:data` stamps `?v=` on local CSS/JS in HTML pages
 - **Discord community link** — public invite `https://discord.gg/bp42QAMC6` in `social.json`; footers on index, privacy, and terms load from `social-footer.js`
 - **Subscribe mail gate** — marketing site checks `GET /api/site-config` before showing the subscribe modal; Mission Control Settings card configures Discord fallback (`https://discord.gg/MaYRtaqef`) or hidden mode when outbound mail is unavailable
+- **Reindex policy (Mission Control)** — Settings card + `GET/PUT /api/integrations/reindex/config`; public fields on `GET /api/site-config` for IDE extension (`live` vs `quit-first`, enable/disable)
 - **Unified Lorapok footer** — `social.json` drives brand + community icons (GitHub, Discord, LinkedIn, X, labs, Mission Control) across marketing pages
 
 ### Fixed
