@@ -40,6 +40,7 @@ import {
   DEFAULT_CURSOR_INDEX_CONFIG,
   normalizeCursorIndexConfig,
   sanitizeCursorIndexConfigForClient,
+  validateCursorIndexPatch,
 } from "./functions/api/_shared/cursor-index-config.js";
 import {
   sanitizeReindexConfigForClient,
@@ -1167,14 +1168,11 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
-          if (
-            parsed.indexWritePolicy !== undefined &&
-            parsed.indexWritePolicy !== "live" &&
-            parsed.indexWritePolicy !== "quit-first"
-          ) {
+          const validationErrors = validateCursorIndexPatch(parsed);
+          if (validationErrors.length) {
             res.statusCode = 400;
             res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ error: "indexWritePolicy must be live or quit-first" }));
+            res.end(JSON.stringify({ error: validationErrors[0] }));
             return;
           }
           devStore.cursorIndexConfig = normalizeCursorIndexConfig({

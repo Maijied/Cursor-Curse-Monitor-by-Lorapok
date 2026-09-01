@@ -3,6 +3,7 @@ import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   readCursorIndexConfig,
   sanitizeCursorIndexConfigForClient,
+  validateCursorIndexPatch,
   writeCursorIndexConfig,
 } from "../../_shared/cursor-index-config.js";
 
@@ -44,19 +45,9 @@ export async function onRequestPut(context) {
     return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
   }
 
-  if (
-    body.indexWritePolicy !== undefined &&
-    body.indexWritePolicy !== "live" &&
-    body.indexWritePolicy !== "quit-first"
-  ) {
-    return jsonResponse({ error: "indexWritePolicy must be live or quit-first" }, 400, CORS_HEADERS);
-  }
-
-  const intFields = ["transcriptLookbackDays", "maxReindexRecords", "maxExportRecords", "maxImportRecords"];
-  for (const field of intFields) {
-    if (body[field] !== undefined && (!Number.isFinite(Number(body[field])) || Number(body[field]) < 0)) {
-      return jsonResponse({ error: `${field} must be a non-negative integer` }, 400, CORS_HEADERS);
-    }
+  const validationErrors = validateCursorIndexPatch(body);
+  if (validationErrors.length) {
+    return jsonResponse({ error: validationErrors[0] }, 400, CORS_HEADERS);
   }
 
   try {

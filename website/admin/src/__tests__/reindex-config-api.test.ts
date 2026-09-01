@@ -108,6 +108,50 @@ describe("cursor index policy integration APIs", () => {
     expect(data.transcriptLookbackDays).toBe(30);
   });
 
+  it("rejects float lookback days", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcriptLookbackDays: 7.5 }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/non-negative integer/i);
+  });
+
+  it("rejects lookback above 3650 days", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcriptLookbackDays: 4000 }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/at most 3650/i);
+  });
+
+  it("rejects non-boolean indexEnabled", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ indexEnabled: "yes" }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/boolean/i);
+  });
+
+  it("rejects record limit above 100000", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ maxReindexRecords: 100001 }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/at most 100000/i);
+  });
+
   it("legacy reindex route remains compatible", async () => {
     const res = await fetch(`${base}/api/integrations/reindex/config`);
     const data = await res.json();

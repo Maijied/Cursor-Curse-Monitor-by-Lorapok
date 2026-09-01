@@ -42,6 +42,60 @@ function clampInt(value, fallback, { min = 0, max = 100000 } = {}) {
 }
 
 /**
+ * @param {Record<string, unknown>} body
+ * @returns {string[]}
+ */
+export function validateCursorIndexPatch(body) {
+  const errors = [];
+  if (body == null || typeof body !== "object") {
+    return ["Request body must be a JSON object"];
+  }
+
+  if (
+    body.indexWritePolicy !== undefined &&
+    body.indexWritePolicy !== "live" &&
+    body.indexWritePolicy !== "quit-first"
+  ) {
+    errors.push("indexWritePolicy must be live or quit-first");
+  }
+
+  const intFields = [
+    { name: "transcriptLookbackDays", max: 3650 },
+    { name: "maxReindexRecords", max: 100000 },
+    { name: "maxExportRecords", max: 100000 },
+    { name: "maxImportRecords", max: 100000 },
+  ];
+
+  for (const { name, max } of intFields) {
+    if (body[name] === undefined) continue;
+    const num = Number(body[name]);
+    if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) {
+      errors.push(`${name} must be a non-negative integer`);
+      continue;
+    }
+    if (num > max) {
+      errors.push(`${name} must be at most ${max}`);
+    }
+  }
+
+  const boolFields = [
+    "indexEnabled",
+    "cipExportEnabled",
+    "cipImportEnabled",
+    "cipRequireSanitization",
+    "cipDedupeAcrossUsers",
+    "cipAllowCrossUserLocalImport",
+  ];
+  for (const field of boolFields) {
+    if (body[field] !== undefined && typeof body[field] !== "boolean") {
+      errors.push(`${field} must be a boolean`);
+    }
+  }
+
+  return errors;
+}
+
+/**
  * @param {Record<string, unknown>} parsed
  */
 export function normalizeCursorIndexConfig(parsed) {
