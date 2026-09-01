@@ -1,6 +1,10 @@
 import { ARCHITECTURE_WORKFLOWS } from "./shared/architecture-workflows.mjs";
 import { ARCHITECTURE_VIEW_KEYS } from "./shared/architecture-diagrams.mjs";
-import { renderWorkflow, restartWorkflowSimulation } from "./architecture-workflow-renderer.mjs";
+import {
+  renderWorkflow,
+  relayoutWorkflow,
+  restartWorkflowSimulation,
+} from "./architecture-workflow-renderer.mjs";
 
 /**
  * @param {HTMLElement} mount
@@ -65,14 +69,23 @@ function bindWorkflowRenders(section, reducedMotion) {
   const cleanups = new Map();
   const rendered = new Set();
 
+  const scheduleRelayout = (mount) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => relayoutWorkflow(mount));
+    });
+  };
+
   const renderMount = (mount) => {
     const key = mount.dataset.archDiagram;
     if (!key) return;
 
     if (rendered.has(key) && mount.querySelector(".arch-flow")) {
       restartWorkflowSimulation(mount);
-      requestAnimationFrame(() => mount.classList.add("is-visible"));
+      scheduleRelayout(mount);
       return;
+    }
+    if (rendered.has(key) && mount.querySelector(".architecture-diagram-skeleton")) {
+      rendered.delete(key);
     }
     if (rendered.has(key)) return;
 
@@ -86,6 +99,7 @@ function bindWorkflowRenders(section, reducedMotion) {
       cleanups.get(key)?.();
       const cleanup = renderWorkflow(mount, key, reducedMotion);
       cleanups.set(key, cleanup);
+      scheduleRelayout(mount);
     });
   };
 
@@ -103,8 +117,25 @@ function bindWorkflowRenders(section, reducedMotion) {
   section.addEventListener("architecture-tab", (event) => {
     const key = /** @type {CustomEvent<{ key: string }>} */ (event).detail?.key;
     const mount = mounts.find((m) => m.dataset.archDiagram === key);
-    if (mount) renderMount(mount);
+    if (mount) {
+      renderMount(mount);
+      scheduleRelayout(mount);
+    }
   });
+
+  const activeKey =
+    section.querySelector("[data-arch-panel].active")?.dataset.archPanel ??
+    section.querySelector("[data-arch-panel]:not([hidden])")?.dataset.archPanel ??
+    ARCHITECTURE_VIEW_KEYS[0];
+  const activeMount = mounts.find((m) => m.dataset.archDiagram === activeKey);
+  if (activeMount) {
+    renderMount(activeMount);
+    scheduleRelayout(activeMount);
+  }
+
+  if (location.hash === "#architecture" && activeMount) {
+    window.setTimeout(() => scheduleRelayout(activeMount), 120);
+  }
 }
 
 export function initArchitectureSection() {

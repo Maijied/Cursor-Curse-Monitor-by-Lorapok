@@ -3325,6 +3325,18 @@ a.ide-card:focus-visible {
   transform: translateY(0);
 }
 
+.architecture-load-fallback {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.architecture-load-fallback code {
+  font-size: 0.85em;
+}
+
 .architecture-diagram-skeleton {
   display: flex;
   flex-direction: column;

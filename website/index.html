@@ -937,8 +937,18 @@
   <script src="social-footer.js?v=105f5292a052" defer></script>
   <script src="site.js?v=105f5292a052" defer></script>
   <script type="module">
-    import { initArchitectureSection } from "./architecture.mjs";
-    initArchitectureSection();
+    const archFallback =
+      '<p class="architecture-load-fallback muted">Workflow diagrams require a local web server. From the <code>website/</code> folder run <code>python3 -m http.server 8765</code>, then open <code>http://localhost:8765</code> (not <code>file://</code>).</p>';
+    try {
+      const { initArchitectureSection } = await import("./architecture.mjs");
+      initArchitectureSection();
+    } catch (err) {
+      console.error("Architecture module failed to load", err);
+      document.querySelectorAll("[data-arch-diagram]").forEach((el) => {
+        el.innerHTML = archFallback;
+        el.classList.add("is-visible");
+      });
+    }
   </script>
 </body>
 </html>
