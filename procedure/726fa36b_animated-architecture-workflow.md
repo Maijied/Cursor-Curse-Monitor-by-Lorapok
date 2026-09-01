@@ -21,7 +21,7 @@ Deliver hybrid animated architecture, accurate Cursor usage/bonus/cap UI, Discor
 - [x] Plan approved
 - [x] Procedure + GitHub issue created (#109)
 - [x] Implementation started
-- [x] Tests passing (root `npm test`, `browser-ext:test`, `site:seo:validate`, badge/arch sync)
+- [x] Tests passing (root `npm test`, `browser-ext:test`, admin 116 tests, `site:seo:validate`, badge/arch sync)
 - [ ] PR opened
 - [ ] Review triaged
 - [ ] Merged
