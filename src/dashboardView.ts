@@ -18,8 +18,9 @@ import {
   type EditorSettings,
 } from "./editorSettings";
 import { scanMonitoringDbBackups, type DbBackupScanResult } from "./cursorAuth";
+import { getActiveAccountStoragePaths } from "./accountStore";
 import { reindexMissingConversations } from "./conversationReindex";
-import { resolveReindexPolicy } from "./reindexConfig";
+import { resolveCursorIndexPolicy } from "./cursorIndexConfig";
 import { notifyReindexResult } from "./reindexUi";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
@@ -95,7 +96,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     };
 
     const pushReindexPolicy = async () => {
-      const policy = await resolveReindexPolicy();
+      const policy = await resolveCursorIndexPolicy();
       if (!viewReady) return;
       webviewView.webview.postMessage({ type: "reindexPolicy", payload: policy });
     };
@@ -215,9 +216,24 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           type: "reindexProgress",
           payload: { phase: "preparing", message: "Starting conversation reindex…" },
         });
-        const policy = await resolveReindexPolicy(true);
+        const policy = await resolveCursorIndexPolicy(true);
+        const storage = await getActiveAccountStoragePaths(this.extensionContext);
+        if (!storage.ok) {
+          const blocked = {
+            success: false,
+            error: storage.error,
+            searchIndexed: [] as string[],
+            sidebarRestored: [] as string[],
+            skipped: [] as string[],
+            backups: [] as string[],
+          };
+          webviewView.webview.postMessage({ type: "reindexResult", payload: blocked });
+          notifyReindexResult(blocked, policy);
+          return;
+        }
         const result = await reindexMissingConversations(this.extensionUri, {
           policy,
+          storage: storage.paths,
           onProgress: (update) => {
             webviewView.webview.postMessage({ type: "reindexProgress", payload: update });
           },
@@ -1364,7 +1380,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     </p>
     <div class="row" style="margin-top:0">
       <span class="label">Conversation repair</span>
-      <span class="value">Aug 10+ transcripts</span>
+      <span class="value" id="reindexLookbackLabel">Policy-controlled lookback</span>
     </div>
     <button class="ghost" id="reindexBtn" style="margin-top:10px;width:100%">Reindex missing conversations</button>
     <p class="muted" style="margin:14px 0 10px;font-size:11px;line-height:1.45">
@@ -1443,7 +1459,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <p class="cursor-missing-eyebrow" style="color:var(--warn)">Data recovery</p>
       <h2 id="reindexTitle" style="margin:0 0 8px;font-size:16px">Reindex missing conversations?</h2>
       <p class="muted" style="margin:0 0 14px;font-size:11px;line-height:1.5" id="reindexPolicyBody">
-        This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward.
+        This rebuilds search indexes and restores orphaned agent chats using the lookback window set in Mission Control.
         A backup is created first. Live reindex runs while the editor is open unless Mission Control requires a full quit.
       </p>
       <div class="subscribe-actions">
@@ -2231,21 +2247,31 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       window.setTimeout(function() { setReindexLoading(false); }, 2600);
     }
 
+    function lookbackLabelFromPolicy(policy) {
+      var days = Number(policy && policy.transcriptLookbackDays);
+      if (!Number.isFinite(days) || days <= 0) return 'all available transcripts';
+      if (days === 1) return 'the last 1 day';
+      return 'the last ' + days + ' days';
+    }
+
     function applyReindexPolicy(policy) {
       var body = document.getElementById('reindexPolicyBody');
       var btn = document.getElementById('reindexBtn');
+      var lookback = document.getElementById('reindexLookbackLabel');
       if (!policy || typeof policy !== 'object') return;
+      var scope = lookbackLabelFromPolicy(policy);
+      if (lookback) lookback.textContent = scope;
       if (body) {
-        if (policy.reindexEnabled === false) {
-          body.textContent = 'Conversation reindex is disabled by Mission Control policy. Contact your admin to re-enable it.';
+        if (policy.indexEnabled === false || policy.reindexEnabled === false) {
+          body.textContent = 'Conversation indexing is disabled by Mission Control policy. Contact your admin to re-enable it.';
         } else if (policy.requireEditorQuit) {
-          body.innerHTML = 'This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward. <strong>Quit Cursor or VS Code completely</strong> before continuing — live database writes are blocked while the editor is running.';
+          body.innerHTML = 'This rebuilds search indexes and restores orphaned agent chats from ' + scope + '. <strong>Quit Cursor or VS Code completely</strong> before continuing — live database writes are blocked while the editor is running.';
         } else {
-          body.textContent = 'This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward. A backup is created first, then indexes are rebuilt while the editor stays open.';
+          body.textContent = 'This rebuilds search indexes and restores orphaned agent chats from ' + scope + '. A backup is created first, then indexes are rebuilt while the editor stays open.';
         }
       }
       if (btn) {
-        reindexPolicyDisabled = policy.reindexEnabled === false;
+        reindexPolicyDisabled = policy.indexEnabled === false || policy.reindexEnabled === false;
         btn.disabled = reindexPolicyDisabled;
         btn.style.opacity = reindexPolicyDisabled ? '0.55' : '1';
       }

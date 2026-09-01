@@ -13,7 +13,8 @@ import {
   resolveAgentProjectsRoot,
   validateDatabaseIntegrity,
 } from "./cursorAuth";
-import { resolveReindexPolicy, type ReindexPolicy } from "./reindexConfig";
+import { resolveCursorIndexPolicy, transcriptCutoffMs, type CursorIndexPolicy } from "./cursorIndexConfig";
+import type { ActiveAccountStoragePaths } from "./accountStore";
 
 type SqliteDb = InstanceType<typeof import("node:sqlite").DatabaseSync>;
 
@@ -38,7 +39,7 @@ type TranscriptTurn = {
   createdAt: number;
 };
 
-type ParsedTranscript = {
+export type ParsedTranscript = {
   id: string;
   path: string;
   title: string;
@@ -53,7 +54,6 @@ type ParsedTranscript = {
 const TS_RE = /<timestamp>([^<]+)<\/timestamp>/;
 const QUERY_RE = /<user_query>\s*([\s\S]*?)\s*<\/user_query>/;
 const TAG_RE = /<[^>]+>/g;
-const MIN_REINDEX_MS = Date.UTC(2026, 7, 9, 18, 0, 0); // Aug 10, 2026 UTC+6
 
 function loadSqlite(): typeof import("node:sqlite") {
   return require("node:sqlite") as typeof import("node:sqlite");
@@ -203,10 +203,11 @@ function inferWorkspacePath(
   return match?.workspacePath ?? null;
 }
 
-function discoverTranscripts(
+export function discoverTranscripts(
   searchDbPath: string,
   host: ReturnType<typeof detectEditorHost>,
-  appName: string
+  appName: string,
+  options: { minUpdatedAtMs?: number | null; maxRecords?: number } = {}
 ): ParsedTranscript[] {
   const projectsRoot = resolveAgentProjectsRoot(host, appName);
   const fallbackWorkspace = currentWorkspaceMeta(searchDbPath, host, appName);
@@ -230,12 +231,17 @@ function discoverTranscripts(
       if (!fs.existsSync(jsonlPath)) continue;
 
       const parsed = loadTranscript(jsonlPath, convId, workspace);
-      if (!parsed || parsed.updatedAt < MIN_REINDEX_MS) continue;
+      if (!parsed) continue;
+      if (options.minUpdatedAtMs != null && parsed.updatedAt < options.minUpdatedAtMs) continue;
       results.push(parsed);
     }
   }
 
-  return results.sort((a, b) => a.createdAt - b.createdAt);
+  const sorted = results.sort((a, b) => a.createdAt - b.createdAt);
+  if (options.maxRecords && options.maxRecords > 0) {
+    return sorted.slice(-options.maxRecords);
+  }
+  return sorted;
 }
 
 function loadTranscript(
@@ -499,10 +505,40 @@ function backupDb(dbPath: string, suffix: string): string | null {
   return backupPath;
 }
 
-function reindexSearch(db: SqliteDb, parsed: ParsedTranscript): boolean {
+export function indexConversationRecord(options: {
+  searchDb?: SqliteDb | null;
+  stateDb: SqliteDb;
+  template: Record<string, unknown>;
+  parsed: ParsedTranscript;
+  composerId?: string;
+  source?: "local" | "cip-import";
+  importMeta?: Record<string, unknown>;
+}): { searchIndexed: boolean; sidebarRestored: boolean } {
+  const composerId = options.composerId ?? options.parsed.id;
+  const source = options.source ?? "local";
+  let searchIndexed = false;
+  if (options.searchDb) {
+    searchIndexed = reindexSearch(options.searchDb, options.parsed, source, composerId);
+  }
+  const sidebarRestored = restoreSidebar(
+    options.stateDb,
+    options.template,
+    options.parsed,
+    composerId,
+    options.importMeta
+  );
+  return { searchIndexed, sidebarRestored };
+}
+
+function reindexSearch(
+  db: SqliteDb,
+  parsed: ParsedTranscript,
+  source: "local" | "cip-import" = "local",
+  composerId = parsed.id
+): boolean {
   const existing = db
     .prepare("SELECT 1 FROM conversations WHERE id = ?")
-    .get(parsed.id) as { 1?: number } | undefined;
+    .get(composerId) as { 1?: number } | undefined;
   if (existing) return false;
 
   const nextRowid =
@@ -522,10 +558,11 @@ function reindexSearch(db: SqliteDb, parsed: ParsedTranscript): boolean {
     `INSERT INTO conversations(
       fts_rowid, source, scope, id, title, branches,
       updated_at, is_archived, root_fingerprint, cache_fingerprint
-    ) VALUES (?, 'local', '', ?, ?, ?, ?, 0, ?, NULL)`
+    ) VALUES (?, ?, '', ?, ?, ?, ?, 0, ?, NULL)`
   ).run(
     nextRowid,
-    parsed.id,
+    source,
+    composerId,
     parsed.title,
     parsed.branch,
     parsed.updatedAt,
@@ -535,35 +572,41 @@ function reindexSearch(db: SqliteDb, parsed: ParsedTranscript): boolean {
     `INSERT INTO conversation_search_candidates(id, updated_at)
      VALUES (?, ?)
      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at`
-  ).run(parsed.id, parsed.updatedAt);
+  ).run(composerId, parsed.updatedAt);
   return true;
 }
 
 function restoreSidebar(
   db: SqliteDb,
   template: Record<string, unknown>,
-  parsed: ParsedTranscript
+  parsed: ParsedTranscript,
+  composerId = parsed.id,
+  importMeta?: Record<string, unknown>
 ): boolean {
   const headerExists = db
     .prepare("SELECT 1 FROM composerHeaders WHERE composerId = ?")
-    .get(parsed.id);
+    .get(composerId);
   const dataExists = db
     .prepare("SELECT 1 FROM cursorDiskKV WHERE key = ?")
-    .get(`composerData:${parsed.id}`);
+    .get(`composerData:${composerId}`);
   if (headerExists || dataExists) return false;
 
-  const { headers, bubbleRows } = buildBubbles(parsed.id, parsed.turns);
+  const { headers, bubbleRows } = buildBubbles(composerId, parsed.turns);
   const header = makeHeader(
-    parsed.id,
+    composerId,
     parsed.title,
     parsed.createdAt,
     parsed.updatedAt,
     parsed.branch,
     parsed.workspace
   );
+  if (importMeta) {
+    (header as Record<string, unknown>).importMeta = importMeta;
+    (header as Record<string, unknown>).subtitle = "Imported conversation index";
+  }
   const composerData = makeComposerData(
     template,
-    parsed.id,
+    composerId,
     parsed.createdAt,
     headers,
     parsed.workspace
@@ -575,7 +618,7 @@ function restoreSidebar(
       isArchived, isSubagent, recency, checkpointAt, value
     ) VALUES (?, ?, ?, ?, 0, 0, ?, NULL, ?)`
   ).run(
-    parsed.id,
+    composerId,
     parsed.workspace.workspaceId,
     parsed.createdAt,
     parsed.updatedAt,
@@ -583,7 +626,7 @@ function restoreSidebar(
     JSON.stringify(header)
   );
   db.prepare("INSERT INTO cursorDiskKV(key, value) VALUES (?, ?)").run(
-    `composerData:${parsed.id}`,
+    `composerData:${composerId}`,
     JSON.stringify(composerData)
   );
   for (const bubble of bubbleRows) {
@@ -611,7 +654,8 @@ export type ReindexProgressUpdate = {
 };
 
 export type ReindexOptions = {
-  policy?: ReindexPolicy;
+  policy?: CursorIndexPolicy;
+  storage?: ActiveAccountStoragePaths;
   onProgress?: (update: ReindexProgressUpdate) => void;
 };
 
@@ -629,14 +673,14 @@ export async function reindexMissingConversations(
   const host = detectEditorHost(vscode.env.appName);
   const appName = vscode.env.appName;
   const onProgress = options.onProgress;
-  reportProgress(onProgress, { phase: "preparing", message: "Loading reindex policy…" });
-  const policy = options.policy ?? (await resolveReindexPolicy());
+  reportProgress(onProgress, { phase: "preparing", message: "Loading index policy…" });
+  const policy = options.policy ?? (await resolveCursorIndexPolicy());
 
-  if (!policy.reindexEnabled) {
+  if (!policy.indexEnabled) {
     return {
       success: false,
       error:
-        "Conversation reindex is disabled by Mission Control policy. Ask your admin to re-enable it in Settings → Reindex policy.",
+        "Conversation indexing is disabled by Mission Control policy. Ask your admin to re-enable it in Settings → Cursor index.",
       searchIndexed: [],
       sidebarRestored: [],
       skipped: [],
@@ -656,8 +700,8 @@ export async function reindexMissingConversations(
     };
   }
 
-  const stateDbPath = getCursorGlobalStoragePath(host, appName);
-  const searchDbPath = getConversationSearchDbPath(host, appName);
+  const stateDbPath = options.storage?.stateDbPath ?? getCursorGlobalStoragePath(host, appName);
+  const searchDbPath = options.storage?.searchDbPath ?? getConversationSearchDbPath(host, appName);
   const templatePath = path.join(extensionUri.fsPath, "media", "composer-template.json");
 
   reportProgress(onProgress, { phase: "preparing", message: "Validating Cursor databases…" });
@@ -705,12 +749,16 @@ export async function reindexMissingConversations(
 
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as Record<string, unknown>;
   reportProgress(onProgress, { phase: "scan", message: "Scanning agent transcripts…" });
-  const transcripts = discoverTranscripts(searchDbPath, host, appName);
+  const minUpdatedAtMs = transcriptCutoffMs(policy);
+  const transcripts = discoverTranscripts(searchDbPath, host, appName, {
+    minUpdatedAtMs,
+    maxRecords: policy.maxReindexRecords > 0 ? policy.maxReindexRecords : undefined,
+  });
   reportProgress(onProgress, {
     phase: "scan",
     message:
       transcripts.length === 0
-        ? "No missing transcripts found since Aug 10."
+        ? "No transcripts matched the configured lookback window."
         : `Checking ${transcripts.length} transcript(s)…`,
     total: transcripts.length,
   });
@@ -726,7 +774,7 @@ export async function reindexMissingConversations(
       searchDb.exec("BEGIN IMMEDIATE");
       for (let index = 0; index < transcripts.length; index++) {
         const parsed = transcripts[index]!;
-        if (reindexSearch(searchDb, parsed)) searchIndexed.push(parsed.id);
+        if (reindexSearch(searchDb, parsed, "local", parsed.id)) searchIndexed.push(parsed.id);
         if (
           transcripts.length <= 12 ||
           index === 0 ||
@@ -766,7 +814,13 @@ export async function reindexMissingConversations(
     stateDb.exec("BEGIN IMMEDIATE");
     for (let index = 0; index < transcripts.length; index++) {
       const parsed = transcripts[index]!;
-      const restored = restoreSidebar(stateDb, template, parsed);
+      const { sidebarRestored: restored } = indexConversationRecord({
+        stateDb,
+        template,
+        parsed,
+        composerId: parsed.id,
+        source: "local",
+      });
       if (restored) {
         sidebarRestored.push(parsed.id);
       } else if (!searchIndexed.includes(parsed.id)) {

@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createServer } from "node:http";
 import { createDevApiMiddleware, resetDevStore } from "../../vite-dev-api.mjs";
 import {
+  buildPublicCursorIndexPolicy,
+  normalizeCursorIndexConfig,
+} from "../../functions/api/_shared/cursor-index-config.js";
+import {
   buildPublicReindexPolicy,
   normalizeReindexConfig,
 } from "../../functions/api/_shared/reindex-config.js";
@@ -22,7 +26,7 @@ function listen(handler) {
   });
 }
 
-describe("reindex policy integration APIs", () => {
+describe("cursor index policy integration APIs", () => {
   let server;
   let base;
 
@@ -37,7 +41,74 @@ describe("reindex policy integration APIs", () => {
     await new Promise((r) => server.close(r));
   });
 
-  it("returns default live reindex policy for admin GET", async () => {
+  it("returns default live cursor index policy for admin GET", async () => {
+    const res = await fetch(`${base}/api/integrations/cursor-index/config`);
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.config.indexEnabled).toBe(true);
+    expect(data.config.indexWritePolicy).toBe("live");
+    expect(data.config.transcriptLookbackDays).toBe(0);
+  });
+
+  it("saves lookback days and record limits", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transcriptLookbackDays: 14,
+        maxReindexRecords: 250,
+        maxExportRecords: 100,
+        maxImportRecords: 50,
+      }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(true);
+    expect(saved.config.transcriptLookbackDays).toBe(14);
+    expect(saved.config.maxReindexRecords).toBe(250);
+  });
+
+  it("saves quit-first write policy", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ indexWritePolicy: "quit-first" }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(true);
+    expect(saved.config.indexWritePolicy).toBe("quit-first");
+  });
+
+  it("rejects invalid write policy", async () => {
+    const save = await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ indexWritePolicy: "unsafe" }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/live or quit-first/i);
+  });
+
+  it("exposes cursor index policy on public site-config", async () => {
+    await fetch(`${base}/api/integrations/cursor-index/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        indexEnabled: false,
+        indexWritePolicy: "quit-first",
+        transcriptLookbackDays: 30,
+      }),
+    });
+    const res = await fetch(`${base}/api/site-config`);
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.indexEnabled).toBe(false);
+    expect(data.indexWritePolicy).toBe("quit-first");
+    expect(data.requireEditorQuit).toBe(true);
+    expect(data.transcriptLookbackDays).toBe(30);
+  });
+
+  it("legacy reindex route remains compatible", async () => {
     const res = await fetch(`${base}/api/integrations/reindex/config`);
     const data = await res.json();
     expect(res.ok).toBe(true);
@@ -45,43 +116,30 @@ describe("reindex policy integration APIs", () => {
     expect(data.config.reindexWritePolicy).toBe("live");
   });
 
-  it("saves quit-first reindex policy", async () => {
-    const save = await fetch(`${base}/api/integrations/reindex/config`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reindexWritePolicy: "quit-first" }),
-    });
-    const saved = await save.json();
-    expect(save.ok).toBe(true);
-    expect(saved.config.reindexWritePolicy).toBe("quit-first");
+  it("normalizeCursorIndexConfig defaults to live writes and all-time lookback", () => {
+    const normalized = normalizeCursorIndexConfig({});
+    expect(normalized.indexWritePolicy).toBe("live");
+    expect(normalized.indexEnabled).toBe(true);
+    expect(normalized.transcriptLookbackDays).toBe(0);
   });
 
-  it("rejects invalid reindex write policy", async () => {
-    const save = await fetch(`${base}/api/integrations/reindex/config`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reindexWritePolicy: "unsafe" }),
-    });
-    const saved = await save.json();
-    expect(save.ok).toBe(false);
-    expect(saved.error).toMatch(/live or quit-first/i);
+  it("buildPublicCursorIndexPolicy maps quit-first to requireEditorQuit", () => {
+    const policy = buildPublicCursorIndexPolicy(
+      normalizeCursorIndexConfig({ indexWritePolicy: "quit-first" })
+    );
+    expect(policy.requireEditorQuit).toBe(true);
   });
 
-  it("exposes reindex policy on public site-config", async () => {
-    await fetch(`${base}/api/integrations/reindex/config`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reindexEnabled: false, reindexWritePolicy: "quit-first" }),
-    });
-    const res = await fetch(`${base}/api/site-config`);
-    const data = await res.json();
-    expect(res.ok).toBe(true);
-    expect(data.reindexEnabled).toBe(false);
-    expect(data.reindexWritePolicy).toBe("quit-first");
-    expect(data.requireEditorQuit).toBe(true);
+  it("buildPublicSiteConfig includes cursor index fields", async () => {
+    const env = { ADMIN_KV: { get: async () => null, put: async () => {} } };
+    const config = await buildPublicSiteConfig(env);
+    expect(config.indexEnabled).toBe(true);
+    expect(config.indexWritePolicy).toBe("live");
+    expect(config.requireEditorQuit).toBe(false);
+    expect(config.transcriptLookbackDays).toBe(0);
   });
 
-  it("normalizeReindexConfig defaults to live writes", () => {
+  it("normalizeReindexConfig remains a thin alias", () => {
     const normalized = normalizeReindexConfig({});
     expect(normalized.reindexWritePolicy).toBe("live");
     expect(normalized.reindexEnabled).toBe(true);
@@ -92,13 +150,5 @@ describe("reindex policy integration APIs", () => {
       normalizeReindexConfig({ reindexWritePolicy: "quit-first" })
     );
     expect(policy.requireEditorQuit).toBe(true);
-  });
-
-  it("buildPublicSiteConfig includes reindex fields", async () => {
-    const env = { ADMIN_KV: { get: async () => null, put: async () => {} } };
-    const config = await buildPublicSiteConfig(env);
-    expect(config.reindexEnabled).toBe(true);
-    expect(config.reindexWritePolicy).toBe("live");
-    expect(config.requireEditorQuit).toBe(false);
   });
 });

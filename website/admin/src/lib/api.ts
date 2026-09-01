@@ -429,19 +429,37 @@ export async function putSubscribePromptConfigApi(payload: Partial<SubscribeProm
   return data as { ok: boolean; config: SubscribePromptConfig };
 }
 
-export type ReindexPolicyConfig = {
-  reindexEnabled: boolean;
-  reindexWritePolicy: "live" | "quit-first";
+export type CursorIndexPolicyConfig = {
+  indexEnabled: boolean;
+  indexWritePolicy: "live" | "quit-first";
+  cipExportEnabled: boolean;
+  cipImportEnabled: boolean;
+  transcriptLookbackDays: number;
+  maxReindexRecords: number;
+  maxExportRecords: number;
+  maxImportRecords: number;
+  cipRequireSanitization: boolean;
+  cipDedupeAcrossUsers: boolean;
+  cipAllowCrossUserLocalImport: boolean;
   updatedAt: string | null;
   updatedBy: string | null;
 };
 
-export async function fetchReindexPolicyConfigApi() {
-  return apiGet<{ ok: boolean; config: ReindexPolicyConfig }>("/integrations/reindex/config");
+/** @deprecated Use CursorIndexPolicyConfig */
+export type ReindexPolicyConfig = Pick<
+  CursorIndexPolicyConfig,
+  "updatedAt" | "updatedBy"
+> & {
+  reindexEnabled: boolean;
+  reindexWritePolicy: "live" | "quit-first";
+};
+
+export async function fetchCursorIndexPolicyConfigApi() {
+  return apiGet<{ ok: boolean; config: CursorIndexPolicyConfig }>("/integrations/cursor-index/config");
 }
 
-export async function putReindexPolicyConfigApi(payload: Partial<ReindexPolicyConfig>) {
-  const res = await fetch(`${API_BASE}/integrations/reindex/config`, {
+export async function putCursorIndexPolicyConfigApi(payload: Partial<CursorIndexPolicyConfig>) {
+  const res = await fetch(`${API_BASE}/integrations/cursor-index/config`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -450,8 +468,37 @@ export async function putReindexPolicyConfigApi(payload: Partial<ReindexPolicyCo
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to save reindex policy settings");
-  return data as { ok: boolean; config: ReindexPolicyConfig };
+  if (!res.ok) throw new Error(data.error || "Failed to save cursor index settings");
+  return data as { ok: boolean; config: CursorIndexPolicyConfig };
+}
+
+export async function fetchReindexPolicyConfigApi() {
+  const data = await fetchCursorIndexPolicyConfigApi();
+  return {
+    ok: data.ok,
+    config: {
+      reindexEnabled: data.config.indexEnabled,
+      reindexWritePolicy: data.config.indexWritePolicy,
+      updatedAt: data.config.updatedAt,
+      updatedBy: data.config.updatedBy,
+    } satisfies ReindexPolicyConfig,
+  };
+}
+
+export async function putReindexPolicyConfigApi(payload: Partial<ReindexPolicyConfig>) {
+  const result = await putCursorIndexPolicyConfigApi({
+    indexEnabled: payload.reindexEnabled,
+    indexWritePolicy: payload.reindexWritePolicy,
+  });
+  return {
+    ok: result.ok,
+    config: {
+      reindexEnabled: result.config.indexEnabled,
+      reindexWritePolicy: result.config.indexWritePolicy,
+      updatedAt: result.config.updatedAt,
+      updatedBy: result.config.updatedBy,
+    } satisfies ReindexPolicyConfig,
+  };
 }
 
 export type DeployRequest = {

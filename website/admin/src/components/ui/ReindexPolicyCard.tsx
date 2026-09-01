@@ -6,33 +6,51 @@ import Badge from "./Badge";
 import Notification from "./Notification";
 import { auth } from "../../lib/firebase";
 import {
-  fetchReindexPolicyConfigApi,
-  putReindexPolicyConfigApi,
-  type ReindexPolicyConfig,
+  fetchCursorIndexPolicyConfigApi,
+  putCursorIndexPolicyConfigApi,
+  type CursorIndexPolicyConfig,
 } from "../../lib/api";
 import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
- * Configure conversation reindex policy pushed to the IDE extension via GET /api/site-config.
+ * Configure unified cursor index policy pushed to the IDE extension via GET /api/site-config.
  */
 export default function ReindexPolicyCard() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [config, setConfig] = useState<ReindexPolicyConfig | null>(null);
+  const [config, setConfig] = useState<CursorIndexPolicyConfig | null>(null);
   const [form, setForm] = useState({
-    reindexEnabled: true,
-    reindexWritePolicy: "live" as "live" | "quit-first",
+    indexEnabled: true,
+    indexWritePolicy: "live" as "live" | "quit-first",
+    cipExportEnabled: true,
+    cipImportEnabled: true,
+    transcriptLookbackDays: 0,
+    maxReindexRecords: 5000,
+    maxExportRecords: 5000,
+    maxImportRecords: 5000,
+    cipRequireSanitization: true,
+    cipDedupeAcrossUsers: false,
+    cipAllowCrossUserLocalImport: false,
   });
 
   useEffect(() => {
-    fetchReindexPolicyConfigApi()
+    fetchCursorIndexPolicyConfigApi()
       .then((data) => {
         setConfig(data.config);
         setForm({
-          reindexEnabled: data.config.reindexEnabled,
-          reindexWritePolicy: data.config.reindexWritePolicy,
+          indexEnabled: data.config.indexEnabled,
+          indexWritePolicy: data.config.indexWritePolicy,
+          cipExportEnabled: data.config.cipExportEnabled,
+          cipImportEnabled: data.config.cipImportEnabled,
+          transcriptLookbackDays: data.config.transcriptLookbackDays,
+          maxReindexRecords: data.config.maxReindexRecords,
+          maxExportRecords: data.config.maxExportRecords,
+          maxImportRecords: data.config.maxImportRecords,
+          cipRequireSanitization: data.config.cipRequireSanitization,
+          cipDedupeAcrossUsers: data.config.cipDedupeAcrossUsers,
+          cipAllowCrossUserLocalImport: data.config.cipAllowCrossUserLocalImport,
         });
       })
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
@@ -48,14 +66,21 @@ export default function ReindexPolicyCard() {
     setSaving(true);
     setMessage(null);
     try {
-      const result = await putReindexPolicyConfigApi(form);
+      const result = await putCursorIndexPolicyConfigApi(form);
       setConfig(result.config);
-      setMessage({ type: "success", text: "Reindex policy saved." });
+      setMessage({ type: "success", text: "Cursor index policy saved." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
     }
     setSaving(false);
   };
+
+  const lookbackSummary =
+    form.transcriptLookbackDays <= 0
+      ? "All transcripts"
+      : form.transcriptLookbackDays === 1
+        ? "Last 1 day"
+        : `Last ${form.transcriptLookbackDays} days`;
 
   return (
     <Card>
@@ -63,19 +88,18 @@ export default function ReindexPolicyCard() {
         <div>
           <h3 className="font-semibold flex items-center gap-2">
             <Database size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
-            Conversation reindex
+            Cursor index
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Controls the dashboard “Reindex missing conversations” recovery tool in the IDE extension.
-            Extensions poll <code className="font-[family-name:var(--font-mono)]">GET /api/site-config</code> for
-            this policy.
+            Controls reindex, export, and import for the IDE extension on macOS, Windows, and Linux.
+            Extensions poll <code className="font-[family-name:var(--font-mono)]">GET /api/site-config</code>.
           </p>
         </div>
         {config && (
-          <Badge variant={config.reindexEnabled ? "synced" : "warn"}>
-            {config.reindexEnabled
-              ? config.reindexWritePolicy === "live"
-                ? "Live reindex"
+          <Badge variant={config.indexEnabled ? "synced" : "warn"}>
+            {config.indexEnabled
+              ? config.indexWritePolicy === "live"
+                ? "Live index"
                 : "Quit-first"
               : "Disabled"}
           </Badge>
@@ -86,47 +110,178 @@ export default function ReindexPolicyCard() {
 
       {loading ? (
         <div className="flex items-center gap-3 py-6 justify-center text-sm text-[var(--color-muted)]">
-          <LorapokLarvaeLoader size="sm" ariaLabel="Loading reindex settings" className="!flex-row !gap-3" />
-          <span>Loading reindex policy…</span>
+          <LorapokLarvaeLoader size="sm" ariaLabel="Loading cursor index settings" className="!flex-row !gap-3" />
+          <span>Loading cursor index policy…</span>
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-5">
           <label className="flex items-start gap-3 text-sm">
             <input
               type="checkbox"
-              checked={form.reindexEnabled}
-              onChange={(e) => setForm((prev) => ({ ...prev, reindexEnabled: e.target.checked }))}
+              checked={form.indexEnabled}
+              onChange={(e) => setForm((prev) => ({ ...prev, indexEnabled: e.target.checked }))}
               disabled={!isMaster}
               className="mt-1"
             />
             <span>
-              <span className="font-medium block">Allow conversation reindex</span>
+              <span className="font-medium block">Allow conversation indexing</span>
               <span className="text-[var(--color-muted)]">
-                When off, the extension hides the reindex action and blocks the command.
+                When off, the extension hides reindex/export/import actions and blocks the commands.
               </span>
             </span>
           </label>
 
           <div>
-            <label htmlFor="reindex-write-policy" className="block text-sm font-medium mb-2">
+            <label htmlFor="index-write-policy" className="block text-sm font-medium mb-2">
               Write policy
             </label>
             <select
-              id="reindex-write-policy"
-              value={form.reindexWritePolicy}
+              id="index-write-policy"
+              value={form.indexWritePolicy}
               onChange={(e) =>
                 setForm((prev) => ({
                   ...prev,
-                  reindexWritePolicy: e.target.value === "quit-first" ? "quit-first" : "live",
+                  indexWritePolicy: e.target.value === "quit-first" ? "quit-first" : "live",
                 }))
               }
-              disabled={!isMaster || !form.reindexEnabled}
+              disabled={!isMaster || !form.indexEnabled}
               className={inputClass}
             >
-              <option value="live">Live — reindex from dashboard while editor is open (backup first)</option>
-              <option value="quit-first">Quit-first — require fully quit editor before writing (safest)</option>
+              <option value="live">Live — write while editor is open (backup first)</option>
+              <option value="quit-first">Quit-first — require fully quit editor before writing</option>
             </select>
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="transcript-lookback-days" className="block text-sm font-medium mb-2">
+                Transcript lookback (days)
+              </label>
+              <input
+                id="transcript-lookback-days"
+                type="number"
+                min={0}
+                max={3650}
+                value={form.transcriptLookbackDays}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    transcriptLookbackDays: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+                disabled={!isMaster || !form.indexEnabled}
+                className={inputClass}
+              />
+              <p className="text-xs text-[var(--color-muted)] mt-1">{lookbackSummary}. Use 0 for all time.</p>
+            </div>
+            <div>
+              <label htmlFor="max-reindex-records" className="block text-sm font-medium mb-2">
+                Max records per reindex
+              </label>
+              <input
+                id="max-reindex-records"
+                type="number"
+                min={0}
+                max={100000}
+                value={form.maxReindexRecords}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    maxReindexRecords: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+                disabled={!isMaster || !form.indexEnabled}
+                className={inputClass}
+              />
+              <p className="text-xs text-[var(--color-muted)] mt-1">0 = unlimited.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={form.cipExportEnabled}
+                onChange={(e) => setForm((prev) => ({ ...prev, cipExportEnabled: e.target.checked }))}
+                disabled={!isMaster || !form.indexEnabled}
+                className="mt-1"
+              />
+              <span>
+                <span className="font-medium block">Allow export packages</span>
+                <span className="text-[var(--color-muted)]">Writes sanitized .cip.json files locally.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={form.cipImportEnabled}
+                onChange={(e) => setForm((prev) => ({ ...prev, cipImportEnabled: e.target.checked }))}
+                disabled={!isMaster || !form.indexEnabled}
+                className="mt-1"
+              />
+              <span>
+                <span className="font-medium block">Allow import packages</span>
+                <span className="text-[var(--color-muted)]">Merges into active account search + sidebar DBs.</span>
+              </span>
+            </label>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="max-export-records" className="block text-sm font-medium mb-2">
+                Max records per export
+              </label>
+              <input
+                id="max-export-records"
+                type="number"
+                min={0}
+                max={100000}
+                value={form.maxExportRecords}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    maxExportRecords: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+                disabled={!isMaster || !form.indexEnabled || !form.cipExportEnabled}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="max-import-records" className="block text-sm font-medium mb-2">
+                Max records per import
+              </label>
+              <input
+                id="max-import-records"
+                type="number"
+                min={0}
+                max={100000}
+                value={form.maxImportRecords}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    maxImportRecords: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+                disabled={!isMaster || !form.indexEnabled || !form.cipImportEnabled}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={form.cipRequireSanitization}
+              onChange={(e) => setForm((prev) => ({ ...prev, cipRequireSanitization: e.target.checked }))}
+              disabled={!isMaster || !form.indexEnabled}
+              className="mt-1"
+            />
+            <span>
+              <span className="font-medium block">Require secret sanitization on export</span>
+              <span className="text-[var(--color-muted)]">Redacts detected secrets before writing packages.</span>
+            </span>
+          </label>
 
           <div className="flex flex-wrap items-center gap-2">
             <button

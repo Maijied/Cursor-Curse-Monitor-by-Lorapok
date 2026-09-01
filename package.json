@@ -110,6 +110,16 @@
         "category": "Cursor Curse Monitor"
       },
       {
+        "command": "cursorCurseMonitor.exportIndexPackage",
+        "title": "Cursor Curse Monitor: Export Conversation Index Package",
+        "category": "Cursor Curse Monitor"
+      },
+      {
+        "command": "cursorCurseMonitor.importIndexPackage",
+        "title": "Cursor Curse Monitor: Import Conversation Index Package",
+        "category": "Cursor Curse Monitor"
+      },
+      {
         "command": "cursorCurseMonitor.recoverDbBackups",
         "title": "Cursor Curse Monitor: Remove Stale Database Backups",
         "category": "Cursor Curse Monitor"

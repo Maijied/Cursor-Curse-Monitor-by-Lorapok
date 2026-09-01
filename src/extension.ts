@@ -2,7 +2,9 @@ import "./registerShared";
 import * as vscode from "vscode";
 import { applyComposerFallbackModel, cleanupMonitoringDbBackups, formatBackupBytes, recoverMonitoringDbBackups, scanMonitoringDbBackups, setRuntimeAppName, shouldNotifyDbBackupWaste } from "./cursorAuth";
 import { reindexMissingConversations } from "./conversationReindex";
-import { resolveReindexPolicy } from "./reindexConfig";
+import { exportConversationIndexPackage, importConversationIndexPackage } from "./cipPackage";
+import { getActiveAccountStoragePaths } from "./accountStore";
+import { resolveCursorIndexPolicy } from "./cursorIndexConfig";
 import { notifyReindexResult } from "./reindexUi";
 import {
   DashboardViewProvider,
@@ -230,9 +232,90 @@ export function activate(context: vscode.ExtensionContext): void {
       await securityMonitor?.scanClipboard();
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.reindexConversations", async () => {
-      const policy = await resolveReindexPolicy(true);
-      const result = await reindexMissingConversations(context.extensionUri, { policy });
+      const policy = await resolveCursorIndexPolicy(true);
+      const storage = await getActiveAccountStoragePaths(context);
+      if (!storage.ok) {
+        NotificationProvider.show({
+          title: "Conversation Reindex Failed",
+          message: storage.error,
+          type: "error",
+          duration: 7000,
+        });
+        return;
+      }
+      const result = await reindexMissingConversations(context.extensionUri, {
+        policy,
+        storage: storage.paths,
+      });
       notifyReindexResult(result, policy);
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.exportIndexPackage", async () => {
+      const policy = await resolveCursorIndexPolicy(true);
+      const storage = await getActiveAccountStoragePaths(context);
+      if (!storage.ok) {
+        NotificationProvider.show({
+          title: "Export Failed",
+          message: storage.error,
+          type: "error",
+          duration: 7000,
+        });
+        return;
+      }
+      const result = await exportConversationIndexPackage(
+        context.extension.packageJSON.version ?? "0.0.0",
+        storage.paths,
+        policy
+      );
+      if (!result.success) {
+        NotificationProvider.show({
+          title: "Export Failed",
+          message: result.error || "Could not export conversation index package.",
+          type: "error",
+          duration: 7000,
+        });
+        return;
+      }
+      NotificationProvider.show({
+        title: "Index Package Exported",
+        message: `Saved ${result.recordCount} conversation(s) to ${result.path}.`,
+        type: "success",
+        duration: 9000,
+      });
+    }),
+    vscode.commands.registerCommand("cursorCurseMonitor.importIndexPackage", async () => {
+      const policy = await resolveCursorIndexPolicy(true);
+      const storage = await getActiveAccountStoragePaths(context);
+      if (!storage.ok) {
+        NotificationProvider.show({
+          title: "Import Failed",
+          message: storage.error,
+          type: "error",
+          duration: 7000,
+        });
+        return;
+      }
+      const result = await importConversationIndexPackage(context.extensionUri, storage.paths, policy);
+      if (!result.success) {
+        NotificationProvider.show({
+          title: "Import Failed",
+          message: result.error || "Could not import conversation index package.",
+          type: "error",
+          duration: 7000,
+        });
+        return;
+      }
+      NotificationProvider.show({
+        title: "Index Package Imported",
+        message: `Imported ${result.imported} conversation(s); ${result.skipped} skipped.`,
+        type: "success",
+        duration: 9000,
+        actions: [
+          {
+            label: "Reload Window",
+            action: () => void vscode.commands.executeCommand("workbench.action.reloadWindow"),
+          },
+        ],
+      });
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.recoverDbBackups", async () => {
       const before = scanMonitoringDbBackups();

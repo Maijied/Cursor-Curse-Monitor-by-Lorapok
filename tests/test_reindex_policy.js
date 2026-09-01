@@ -19,9 +19,21 @@ async function run() {
     { fsPath: __dirname },
     {
       policy: {
+        indexEnabled: true,
         reindexEnabled: true,
         reindexWritePolicy: "live",
+        indexWritePolicy: "live",
         requireEditorQuit: false,
+        cipExportEnabled: true,
+        cipImportEnabled: true,
+        transcriptLookbackDays: 0,
+        maxReindexRecords: 5000,
+        maxExportRecords: 5000,
+        maxImportRecords: 5000,
+        cipRequireSanitization: true,
+        cipDedupeAcrossUsers: false,
+        cipAllowCrossUserLocalImport: false,
+        cipEnabled: true,
       },
     }
   );
@@ -35,9 +47,21 @@ async function run() {
     { fsPath: __dirname },
     {
       policy: {
+        indexEnabled: true,
         reindexEnabled: true,
         reindexWritePolicy: "quit-first",
+        indexWritePolicy: "quit-first",
         requireEditorQuit: true,
+        cipExportEnabled: true,
+        cipImportEnabled: true,
+        transcriptLookbackDays: 0,
+        maxReindexRecords: 5000,
+        maxExportRecords: 5000,
+        maxImportRecords: 5000,
+        cipRequireSanitization: true,
+        cipDedupeAcrossUsers: false,
+        cipAllowCrossUserLocalImport: false,
+        cipEnabled: true,
       },
     }
   );
@@ -48,9 +72,21 @@ async function run() {
     { fsPath: __dirname },
     {
       policy: {
+        indexEnabled: false,
         reindexEnabled: false,
         reindexWritePolicy: "live",
+        indexWritePolicy: "live",
         requireEditorQuit: false,
+        cipExportEnabled: false,
+        cipImportEnabled: false,
+        transcriptLookbackDays: 0,
+        maxReindexRecords: 5000,
+        maxExportRecords: 5000,
+        maxImportRecords: 5000,
+        cipRequireSanitization: true,
+        cipDedupeAcrossUsers: false,
+        cipAllowCrossUserLocalImport: false,
+        cipEnabled: false,
       },
     }
   );

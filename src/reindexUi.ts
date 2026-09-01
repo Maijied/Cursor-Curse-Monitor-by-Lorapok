@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 import type { ReindexResult } from "./conversationReindex";
-import type { ReindexPolicy } from "./reindexConfig";
+import { lookbackLabel, type CursorIndexPolicy } from "./cursorIndexConfig";
 import { NotificationProvider } from "./notificationProvider";
 
-export function notifyReindexResult(result: ReindexResult, policy: ReindexPolicy): void {
+export function notifyReindexResult(result: ReindexResult, policy: CursorIndexPolicy): void {
   if (!result.success) {
     NotificationProvider.show({
       title: "Conversation Reindex Failed",
@@ -25,7 +25,7 @@ export function notifyReindexResult(result: ReindexResult, policy: ReindexPolicy
     message:
       indexed || restored
         ? `Indexed ${indexed} chat(s) for search and restored ${restored} to the sidebar. ${skipped} already present. ${reloadHint}`
-        : `No missing conversations found since Aug 10. ${skipped} chat(s) were already indexed.`,
+        : `No missing conversations found in ${lookbackLabel(policy)}. ${skipped} chat(s) were already indexed.`,
     type: "success",
     duration: 9000,
     actions: [
