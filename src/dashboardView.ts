@@ -18,6 +18,7 @@ import {
   type EditorSettings,
 } from "./editorSettings";
 import { scanMonitoringDbBackups, type DbBackupScanResult } from "./cursorAuth";
+import { resolveReindexPolicy } from "./reindexConfig";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -91,6 +92,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       webviewView.webview.postMessage({ type: "dbBackupStats", payload });
     };
 
+    const pushReindexPolicy = async () => {
+      const policy = await resolveReindexPolicy();
+      if (!viewReady) return;
+      webviewView.webview.postMessage({ type: "reindexPolicy", payload: policy });
+    };
+
     const deliverSnapshot = async (force = false) => {
       if (latestSnapshot) {
         push(latestSnapshot);
@@ -135,6 +142,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       void pushCommunityStats();
       pushBackupStats();
+      void pushReindexPolicy();
     };
 
     const subscription = this.monitor.onDidUpdate(push);
@@ -1378,9 +1386,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="reindexTitle" tabindex="-1">
       <p class="cursor-missing-eyebrow" style="color:var(--warn)">Data recovery</p>
       <h2 id="reindexTitle" style="margin:0 0 8px;font-size:16px">Reindex missing conversations?</h2>
-      <p class="muted" style="margin:0 0 14px;font-size:11px;line-height:1.5">
+      <p class="muted" style="margin:0 0 14px;font-size:11px;line-height:1.5" id="reindexPolicyBody">
         This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward.
-        <strong>Quit Cursor or VS Code completely</strong> before continuing — live database writes are blocked while the editor is running.
+        A backup is created first. Live reindex runs while the editor is open unless Mission Control requires a full quit.
       </p>
       <div class="subscribe-actions">
         <button type="button" class="primary" id="reindexConfirm" style="width:100%">Reindex now</button>
@@ -2043,6 +2051,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (event.data?.type === 'subscribeState') {
         applySubscribeState(event.data.payload);
       }
+      if (event.data?.type === 'reindexPolicy') {
+        applyReindexPolicy(event.data.payload);
+      }
       if (event.data?.type === 'editorSettings') {
         applyEditorSettingsForm(event.data.payload);
         var settingsStatus = document.getElementById('settingsStatus');
@@ -2055,6 +2066,25 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
     var subscribeModalTimer = null;
     var subscribePromptReady = false;
+
+    function applyReindexPolicy(policy) {
+      var body = document.getElementById('reindexPolicyBody');
+      var btn = document.getElementById('reindexBtn');
+      if (!policy || typeof policy !== 'object') return;
+      if (body) {
+        if (policy.reindexEnabled === false) {
+          body.textContent = 'Conversation reindex is disabled by Mission Control policy. Contact your admin to re-enable it.';
+        } else if (policy.requireEditorQuit) {
+          body.innerHTML = 'This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward. <strong>Quit Cursor or VS Code completely</strong> before continuing — live database writes are blocked while the editor is running.';
+        } else {
+          body.textContent = 'This rebuilds search indexes and restores orphaned agent chats from Aug 10 onward. A backup is created first, then indexes are rebuilt while the editor stays open.';
+        }
+      }
+      if (btn) {
+        btn.disabled = policy.reindexEnabled === false;
+        btn.style.opacity = policy.reindexEnabled === false ? '0.55' : '1';
+      }
+    }
 
     function applySubscribeState(state) {
       var modal = document.getElementById('subscribeModal');

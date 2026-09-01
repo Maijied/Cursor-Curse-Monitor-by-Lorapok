@@ -6,6 +6,7 @@ import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
 import DiscordCommunityCard from "../ui/DiscordCommunityCard";
 import SubscribePromptCard from "../ui/SubscribePromptCard";
+import ReindexPolicyCard from "../ui/ReindexPolicyCard";
 import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
 import { fetchHealth } from "../../lib/api";
@@ -47,6 +48,8 @@ export default function Settings() {
       <DiscordCommunityCard />
 
       <SubscribePromptCard />
+
+      <ReindexPolicyCard />
 
       <DiscordFeedbackCard />
 
