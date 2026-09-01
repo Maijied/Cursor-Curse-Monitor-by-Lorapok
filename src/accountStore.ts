@@ -12,6 +12,7 @@ import * as vscode from "vscode";
 import {
   discoverCursorAuthInstalls,
   getMonitoringProductFolder,
+  getProductStoragePaths,
   readAuthFromProduct,
   readCachedAccountEmail,
   readCursorAccessToken,
@@ -209,5 +210,41 @@ export async function resolveActiveAuth(context: vscode.ExtensionContext): Promi
     email: await readCachedAccountEmail(),
     source: "system",
     productFolder: monitoringProduct,
+  };
+}
+
+export type ActiveAccountStoragePaths = {
+  accountId: string;
+  accountLabel: string;
+  productFolder: string;
+  stateDbPath: string;
+  searchDbPath: string;
+  globalStorageDir: string;
+};
+
+export async function getActiveAccountStoragePaths(
+  context: vscode.ExtensionContext
+): Promise<{ ok: true; paths: ActiveAccountStoragePaths } | { ok: false; error: string }> {
+  const auth = await resolveActiveAuth(context);
+  if (!auth.productFolder) {
+    return {
+      ok: false,
+      error:
+        "This account has no local Cursor install on this machine. Switch to a system or discovered account before indexing.",
+    };
+  }
+  const storage = getProductStoragePaths(auth.productFolder);
+  const accounts = await listPublicAccounts(context);
+  const account = accounts.find((entry) => entry.id === auth.id);
+  return {
+    ok: true,
+    paths: {
+      accountId: auth.id,
+      accountLabel: account?.label ?? auth.email ?? auth.id,
+      productFolder: auth.productFolder,
+      stateDbPath: storage.stateDbPath,
+      searchDbPath: storage.searchDbPath,
+      globalStorageDir: storage.globalStorageDir,
+    },
   };
 }

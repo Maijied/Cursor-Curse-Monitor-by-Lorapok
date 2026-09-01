@@ -1,6 +1,6 @@
 import { putKvJsonIfChanged } from "./kv-put.js";
 import { getMailTransportStatus } from "./mail.js";
-import { buildPublicReindexPolicy, readReindexConfig } from "./reindex-config.js";
+import { buildPublicCursorIndexPolicy, readCursorIndexConfig } from "./cursor-index-config.js";
 
 const CONFIG_KEY = "integrations:subscribe-prompt";
 
@@ -104,7 +104,7 @@ export function sanitizeSubscribeConfigForClient(config) {
 export async function buildPublicSiteConfig(env) {
   const mail = getMailTransportStatus(env);
   const config = await readSubscribeConfig(env);
-  const reindexConfig = await readReindexConfig(env);
+  const indexConfig = await readCursorIndexConfig(env);
   const mailConfigured = mail.configured;
   const subscribeAvailable =
     config.subscribeModalEnabled &&
@@ -123,6 +123,6 @@ export async function buildPublicSiteConfig(env) {
       ? config.subscribeFallbackDiscordUrl
       : null,
     mailTransport: mail.configured ? mail.transport : "none",
-    ...buildPublicReindexPolicy(reindexConfig),
+    ...buildPublicCursorIndexPolicy(indexConfig),
   };
 }

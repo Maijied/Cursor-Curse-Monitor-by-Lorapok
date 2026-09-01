@@ -144,6 +144,19 @@ export function configDbPath(product: string): string {
   return path.join(home, ".config", product, "User", "globalStorage", "state.vscdb");
 }
 
+/** Cross-platform storage paths for a specific Cursor/VS Code product folder. */
+export function getProductStoragePaths(productFolder: string): {
+  productFolder: string;
+  globalStorageDir: string;
+  stateDbPath: string;
+  searchDbPath: string;
+} {
+  const stateDbPath = configDbPath(productFolder);
+  const globalStorageDir = path.dirname(stateDbPath);
+  const searchDbPath = path.join(globalStorageDir, "conversation-search.db");
+  return { productFolder, globalStorageDir, stateDbPath, searchDbPath };
+}
+
 function firstExistingProductDb(candidates: string[]): string | null {
   for (const product of candidates) {
     if (fs.existsSync(configDbPath(product))) {

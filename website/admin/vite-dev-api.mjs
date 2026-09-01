@@ -37,7 +37,11 @@ import {
   sanitizeSubscribeConfigForClient,
 } from "./functions/api/_shared/subscribe-config.js";
 import {
-  DEFAULT_REINDEX_CONFIG,
+  DEFAULT_CURSOR_INDEX_CONFIG,
+  normalizeCursorIndexConfig,
+  sanitizeCursorIndexConfigForClient,
+} from "./functions/api/_shared/cursor-index-config.js";
+import {
   sanitizeReindexConfigForClient,
 } from "./functions/api/_shared/reindex-config.js";
 import {
@@ -80,7 +84,7 @@ const devStore = {
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
   subscribeConfig: { ...DEFAULT_SUBSCRIBE_CONFIG },
-  reindexConfig: { ...DEFAULT_REINDEX_CONFIG },
+  cursorIndexConfig: { ...DEFAULT_CURSOR_INDEX_CONFIG },
   statsLiveCache: null,
 };
 
@@ -107,8 +111,8 @@ const devKv = {
     if (key === "integrations:subscribe-prompt") {
       return JSON.stringify(devStore.subscribeConfig);
     }
-    if (key === "integrations:reindex") {
-      return JSON.stringify(devStore.reindexConfig);
+    if (key === "integrations:cursor-index" || key === "integrations:reindex") {
+      return JSON.stringify(devStore.cursorIndexConfig);
     }
     if (key === "integrations:stats-refresh") {
       return JSON.stringify(devStore.statsRefreshConfig);
@@ -132,8 +136,8 @@ const devKv = {
     if (key === "integrations:subscribe-prompt") {
       devStore.subscribeConfig = JSON.parse(value);
     }
-    if (key === "integrations:reindex") {
-      devStore.reindexConfig = JSON.parse(value);
+    if (key === "integrations:cursor-index" || key === "integrations:reindex") {
+      devStore.cursorIndexConfig = JSON.parse(value);
     }
     if (key === "integrations:stats-refresh") {
       devStore.statsRefreshConfig = JSON.parse(value);
@@ -179,7 +183,7 @@ export async function resetDevStore() {
     updatedBy: null,
   };
   devStore.subscribeConfig = { ...DEFAULT_SUBSCRIBE_CONFIG };
-  devStore.reindexConfig = { ...DEFAULT_REINDEX_CONFIG };
+  devStore.cursorIndexConfig = { ...DEFAULT_CURSOR_INDEX_CONFIG };
 }
 
 void refreshDevBuiltinNotices();
@@ -1146,12 +1150,60 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/integrations/cursor-index/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          config: sanitizeCursorIndexConfigForClient(devStore.cursorIndexConfig),
+        })
+      );
+      return;
+    }
+
+    if (url === "/api/integrations/cursor-index/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          if (
+            parsed.indexWritePolicy !== undefined &&
+            parsed.indexWritePolicy !== "live" &&
+            parsed.indexWritePolicy !== "quit-first"
+          ) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "indexWritePolicy must be live or quit-first" }));
+            return;
+          }
+          devStore.cursorIndexConfig = normalizeCursorIndexConfig({
+            ...devStore.cursorIndexConfig,
+            ...parsed,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          });
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeCursorIndexConfigForClient(devStore.cursorIndexConfig),
+            })
+          );
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/integrations/reindex/config" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({
           ok: true,
-          config: sanitizeReindexConfigForClient(devStore.reindexConfig),
+          config: sanitizeReindexConfigForClient(devStore.cursorIndexConfig),
         })
       );
       return;
@@ -1173,24 +1225,24 @@ export function createDevApiMiddleware() {
             res.end(JSON.stringify({ error: "reindexWritePolicy must be live or quit-first" }));
             return;
           }
-          devStore.reindexConfig = {
-            ...devStore.reindexConfig,
-            reindexEnabled:
+          devStore.cursorIndexConfig = normalizeCursorIndexConfig({
+            ...devStore.cursorIndexConfig,
+            indexEnabled:
               typeof parsed.reindexEnabled === "boolean"
                 ? parsed.reindexEnabled
-                : devStore.reindexConfig.reindexEnabled,
-            reindexWritePolicy:
+                : devStore.cursorIndexConfig.indexEnabled,
+            indexWritePolicy:
               parsed.reindexWritePolicy === "live" || parsed.reindexWritePolicy === "quit-first"
                 ? parsed.reindexWritePolicy
-                : devStore.reindexConfig.reindexWritePolicy,
+                : devStore.cursorIndexConfig.indexWritePolicy,
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
-          };
+          });
           res.setHeader("Content-Type", "application/json");
           res.end(
             JSON.stringify({
               ok: true,
-              config: sanitizeReindexConfigForClient(devStore.reindexConfig),
+              config: sanitizeReindexConfigForClient(devStore.cursorIndexConfig),
             })
           );
         } catch {
