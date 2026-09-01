@@ -43,6 +43,7 @@ const SUBSCRIBE_KEYS = {
   declined: "ccm-subscribe-declined",
 };
 const WELCOME_KEY = "ccm_welcome_seen";
+const WELCOME_MODAL_DELAY_MS = 900;
 const SUBSCRIBE_PROMPT_DELAY_MS = 30_000;
 const SUBSCRIBE_SNOOZE_ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -801,19 +802,40 @@ function updateStructuredDataVersion(data) {
 })();
 
 /**
- * First-visit welcome banner — dismissed state stored in localStorage.
+ * First-visit welcome modal — dismissed state stored in localStorage (`ccm_welcome_seen`).
  */
 function initWelcomeBanner() {
-  const banner = document.getElementById("welcome-banner");
-  const dismiss = document.getElementById("welcome-banner-dismiss");
-  if (!banner || !dismiss) return;
+  const modal = document.getElementById("welcome-modal");
+  const dismiss = document.getElementById("welcome-modal-dismiss");
+  if (!modal || !dismiss) return;
   if (window.localStorage.getItem(WELCOME_KEY) === "1") return;
 
-  banner.hidden = false;
-  dismiss.addEventListener("click", () => {
+  const closeModal = () => {
     window.localStorage.setItem(WELCOME_KEY, "1");
-    banner.hidden = true;
+    modal.hidden = true;
+    document.body.classList.remove("welcome-modal-open");
+  };
+
+  const openModal = () => {
+    if (window.localStorage.getItem(WELCOME_KEY) === "1") return;
+    modal.hidden = false;
+    document.body.classList.add("welcome-modal-open");
+    dismiss.focus();
+  };
+
+  modal.querySelectorAll("[data-welcome-close]").forEach((el) => {
+    el.addEventListener("click", closeModal);
   });
+
+  document.getElementById("welcome-modal-discord")?.addEventListener("click", () => {
+    window.localStorage.setItem(WELCOME_KEY, "1");
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) closeModal();
+  });
+
+  window.setTimeout(openModal, WELCOME_MODAL_DELAY_MS);
 }
 
 /**
