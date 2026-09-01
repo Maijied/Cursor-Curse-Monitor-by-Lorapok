@@ -75,6 +75,9 @@ async function run() {
   const bonusMetrics = buildBudgetMetrics(bonusHeadroom, 20, 0, 80, false);
   assert.strictEqual(bonusMetrics.includedRemaining, 12420, "bonus units count toward remaining");
   assert.strictEqual(bonusMetrics.includedLimit, 14420, "total pool includes bonus");
+  assert.strictEqual(bonusMetrics.bonusRemaining, 12420);
+  assert.strictEqual(bonusMetrics.bonusUsed, 0);
+  assert.strictEqual(bonusMetrics.bonusLabel, "Agent credits");
   assert.ok(bonusMetrics.percentUsed < 100, "hero percent must not claim 100% when bonus remains");
   assert.strictEqual(bonusMetrics.usdBudgetActive, false, "personal cap is inactive without on-demand spend");
 

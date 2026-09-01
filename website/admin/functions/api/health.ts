@@ -47,6 +47,7 @@ export async function onRequestGet(context) {
     mailHint: mail.hint,
     discordConfigured: discordConfig.deploymentConfigured ?? discordConfig.configured,
     feedbackDiscordConfigured: discordConfig.feedbackConfigured,
+    communityDiscordConfigured: discordConfig.communityConfigured,
     statsRefreshEnabled: statsRefresh.enabled,
     statsRefreshIntervalMinutes: statsRefresh.intervalMinutes,
     statsRefreshLastRunAt: statsRefresh.lastRunAt,

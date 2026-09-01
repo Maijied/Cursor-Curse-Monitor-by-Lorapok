@@ -23,6 +23,8 @@ const {
   buildFeatureList,
   validateUsageSummary,
   validateStripeProfile,
+  detectStaleLimitBanner,
+  resolveUsagePlanPool,
 } = require("../packages/shared/src/cursorApi.ts");
 
 const {
@@ -221,6 +223,45 @@ test("cursorApi: buildBudgetMetrics calculates plan and custom USD budgets accur
   assert.strictEqual(metricsCustom.capUsd, 10);
   assert.strictEqual(metricsCustom.spentUsd, 8.5);
   assert.strictEqual(metricsCustom.thresholdReached, true);
+  assert.strictEqual(metricsCustom.usdBudgetActive, true);
+});
+
+test("cursorApi: bonus pool exposes agent credit fields and stale 100% banner", () => {
+  const summary = {
+    billingCycleStart: "2026-08-01T00:00:00Z",
+    billingCycleEnd: "2026-09-01T00:00:00Z",
+    membershipType: "Pro",
+    limitType: "Monthly",
+    isUnlimited: false,
+    autoModelSelectedDisplayMessage: "You have used 100% of your included quota",
+    individualUsage: {
+      plan: {
+        enabled: true,
+        used: 2000,
+        limit: 2000,
+        remaining: 0,
+        breakdown: { included: 2000, bonus: 12420, total: 14420 },
+        autoPercentUsed: 25,
+        apiPercentUsed: 66,
+        totalPercentUsed: 100,
+      },
+      onDemand: { enabled: false, used: 0, limit: null, remaining: null },
+    },
+  };
+
+  const pool = resolveUsagePlanPool(summary.individualUsage.plan);
+  const stale = detectStaleLimitBanner(summary, pool);
+  assert.strictEqual(stale.staleLimitBanner, true);
+  assert.ok(stale.staleLimitMessage.includes("agent credits"));
+
+  const metrics = buildBudgetMetrics(summary, 0, 0, 80, false);
+  assert.strictEqual(metrics.bonusRemaining, 12420);
+  assert.strictEqual(metrics.bonusUsed, 0);
+  assert.strictEqual(metrics.bonusLabel, "Agent credits");
+  assert.strictEqual(metrics.includedPoolRemaining, 0);
+  assert.ok(metrics.percentUsed < 100, "pool-aware hero percent must not claim 100%");
+  assert.strictEqual(metrics.staleLimitBanner, true);
+  assert.strictEqual(metrics.usdBudgetActive, false);
 });
 
 test("dashboardView: formatStatusBarText and formatStatusBarTooltip output correct content", () => {
@@ -278,6 +319,13 @@ test("dashboardView: formatStatusBarText and formatStatusBarTooltip output corre
       planBreakdownIncluded: 100,
       planBreakdownBonus: 0,
       planBreakdownTotal: 500,
+      includedPoolUsed: 100,
+      includedPoolRemaining: 400,
+      bonusUsed: 0,
+      bonusRemaining: 0,
+      bonusLabel: "",
+      staleLimitBanner: false,
+      staleLimitMessage: "",
       teamOnDemandEnabled: false,
       teamOnDemandSpendUsd: null,
     },

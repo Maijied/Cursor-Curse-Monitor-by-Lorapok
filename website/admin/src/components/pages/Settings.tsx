@@ -4,6 +4,7 @@ import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
+import DiscordCommunityCard from "../ui/DiscordCommunityCard";
 import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
 import { fetchHealth } from "../../lib/api";
@@ -38,9 +39,11 @@ export default function Settings() {
 
   return (
     <div className="space-y-6 animate-fade-slide-up">
-      <PageHeader title="Settings" description="User feedback hook, help & support, theme, connected services, and API health." />
+      <PageHeader title="Settings" description="Discord community, feedback hook, help & support, theme, connected services, and API health." />
 
       <HelpSupportCard />
+
+      <DiscordCommunityCard />
 
       <DiscordFeedbackCard />
 

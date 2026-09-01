@@ -21,6 +21,9 @@ export const VSCODE_MARKETPLACE_URL = PLATFORM_LINKS.vscode.url;
 export const OPEN_VSX_URL = PLATFORM_LINKS.openVsx.url;
 export const FIREFOX_AMO_URL = PLATFORM_LINKS.firefox.url;
 
+/** Public Discord community invite — safe to commit. */
+export const DISCORD_INVITE_URL = "https://discord.gg/bp42QAMC6";
+
 export type FeedbackKind = "bug" | "feature" | "general";
 
 export function buildFeedbackMailto(params: {

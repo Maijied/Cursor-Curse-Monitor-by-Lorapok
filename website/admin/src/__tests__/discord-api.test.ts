@@ -60,6 +60,31 @@ describe("discord integration APIs", () => {
     expect(saved.config.deploymentWebhookPreview).toContain("565087");
   });
 
+  it("saves a community discord webhook URL", async () => {
+    const save = await fetch(`${base}/api/integrations/discord/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        communityWebhookUrl: "https://discord.com/api/webhooks/999888777/communityhooktoken",
+      }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(true);
+    expect(saved.config.communityConfigured).toBe(true);
+    expect(saved.config.communityWebhookPreview).toContain("999888777");
+  });
+
+  it("skips community post when no webhook is saved", async () => {
+    const res = await fetch(`${base}/api/integrations/discord/community`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ summary: "test" }),
+    });
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.skipped).toBe(true);
+  });
+
   it("skips deployment status when no webhook is saved", async () => {
     const res = await fetch(`${base}/api/integrations/discord/deployment`, {
       method: "POST",

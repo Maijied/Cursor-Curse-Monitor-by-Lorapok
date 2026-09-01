@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { DashboardSnapshot, formatPercent } from "./cursorApi";
+import { DashboardSnapshot, DISCORD_INVITE_URL, formatPercent, SUPPORT_EMAIL } from "./cursorApi";
 import { UsageMonitorService } from "./usageMonitor";
 import { generateNonce } from "./utils";
 import { subscribeForProductUpdates, getSubscribePromptViewState, snoozeSubscribePrompt, declineSubscribePrompt } from "./updateSubscription";
@@ -621,6 +621,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     .row .value { font-weight: 600; text-align: right; }
     .gauge-wrap { display: flex; gap: 12px; align-items: center; }
     .semi-gauge { width: 118px; height: 70px; flex-shrink: 0; }
+    #gaugeArc { transition: stroke-dasharray .35s ease; }
+    .stale-banner {
+      margin: 0 0 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(245, 185, 66, 0.35);
+      background: rgba(245, 185, 66, 0.1);
+      color: var(--warn);
+      font-size: 11px;
+      line-height: 1.45;
+    }
     .gauge-center {
       margin-top: -28px;
       text-align: center;
@@ -1102,8 +1113,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         <span style="display:inline-block; width:16px; height:16px; vertical-align:middle;">${usageMeterSvg}</span>
         Included quota
       </p>
-      <span id="statusPill" class="pill ok">OK</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button type="button" class="icon-btn" id="usageHelpBtn" title="How usage is calculated" aria-label="Usage help">?</button>
+        <span id="statusPill" class="pill ok">OK</span>
+      </div>
     </div>
+    <div id="staleLimitBanner" class="stale-banner" style="display:none" role="status"></div>
     <div class="usage-big" id="usageBig" aria-live="polite">—%</div>
     <div class="usage-sub" id="usageSub">of included quota used</div>
     <div class="bar" role="progressbar" aria-label="Included quota usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="usageBarTrack">
@@ -1118,10 +1133,6 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="label">Remaining</span>
       <span class="value" id="remainingValue">—</span>
     </div>
-    <div class="row" id="bonusRow" style="display:none">
-      <span class="label">Included + bonus</span>
-      <span class="value" id="bonusValue">—</span>
-    </div>
     <div class="dual-meters">
       <div class="meter-row">
         <div class="meter-head"><span>Auto</span><strong id="autoPct">—%</strong></div>
@@ -1130,6 +1141,36 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <div class="meter-row">
         <div class="meter-head"><span>API</span><strong id="apiPct">—%</strong></div>
         <div class="meter-track" role="progressbar" aria-label="API usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="apiBarTrack"><div class="meter-fill" id="apiBar"></div></div>
+      </div>
+    </div>
+    <button type="button" class="section-toggle nested" id="usageBreakdownToggle" aria-expanded="true" aria-controls="usageBreakdownBody" aria-label="Toggle usage breakdown" style="margin-top:14px">
+      <span class="section-label section-toggle-label">Usage breakdown</span>
+      <span class="chevron" aria-hidden="true"></span>
+    </button>
+    <div class="collapsible-body" id="usageBreakdownBody">
+      <div class="row">
+        <span class="label">Included used</span>
+        <span class="value" id="includedPoolUsedVal">—</span>
+      </div>
+      <div class="row">
+        <span class="label">Included remaining</span>
+        <span class="value" id="includedPoolRemainingVal">—</span>
+      </div>
+      <div class="row" id="bonusBreakdownRow" style="display:none">
+        <span class="label" id="bonusBreakdownLabel">Agent credits</span>
+        <span class="value" id="bonusBreakdownVal">—</span>
+      </div>
+      <div class="row">
+        <span class="label">Auto model</span>
+        <span class="value" id="breakdownAutoVal">—</span>
+      </div>
+      <div class="row">
+        <span class="label">API model</span>
+        <span class="value" id="breakdownApiVal">—</span>
+      </div>
+      <div class="row">
+        <span class="label">Cycle reset</span>
+        <span class="value" id="breakdownResetVal">—</span>
       </div>
     </div>
   </section>
@@ -1175,11 +1216,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         </div>
       </div>
     </div>
-    <div class="row" style="margin-top:12px">
+    <div class="row" style="margin-top:12px" id="personalCapRow" hidden>
       <div>
-        <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Personal cap</div>
+        <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">On-demand cap</div>
         <div id="budgetCapBig" style="font-size:18px;font-weight:700;margin-top:2px">$0.00</div>
-        <div class="usage-sub" style="margin:0">USD · optional limit</div>
+        <div class="usage-sub" style="margin:0">USD · personal spend limit</div>
       </div>
       <button class="cap-edit-btn" id="editBudgetBtn" type="button" aria-expanded="false" aria-controls="budgetEdit">
         <span class="cap-icon" aria-hidden="true">✎</span>
@@ -1271,6 +1312,25 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     </div>
     <button class="ghost" id="recoverDbBackupsBtn" style="margin-top:10px;width:100%" disabled>Remove stale database backups</button>
   </section>
+
+  <div class="subscribe-modal-overlay" id="usageHelpModal" aria-hidden="true">
+    <div class="subscribe-modal-panel" role="dialog" aria-modal="true" aria-labelledby="usageHelpTitle" tabindex="-1">
+      <p class="cursor-missing-eyebrow">Usage guide</p>
+      <h2 id="usageHelpTitle" style="margin:0 0 8px;font-size:16px">How Cursor usage is calculated</h2>
+      <div class="muted" style="margin:0 0 14px;font-size:11px;line-height:1.55;text-align:left">
+        <p style="margin:0 0 10px"><strong>Included pool</strong> — your plan&apos;s base quota for the billing cycle.</p>
+        <p style="margin:0 0 10px"><strong>Agent credits (bonus)</strong> — extra gifted units Cursor adds on top of included. They count toward your total pool before you hit the limit.</p>
+        <p style="margin:0 0 10px"><strong>Auto / API %</strong> — how much of each model class you&apos;ve used. The hero meter uses the highest of pool %, Auto, or API.</p>
+        <p style="margin:0 0 10px"><strong>On-demand spend</strong> — optional USD billing when enabled. Personal cap editing is only available when on-demand is on or you have on-demand spend.</p>
+        <p style="margin:0"><strong>Why 100% can look stale</strong> — Cursor&apos;s API sometimes reports 100% on included quota while bonus credits remain. We show a warning when that happens.</p>
+      </div>
+      <div class="connect-actions">
+        <a class="ghost" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Join Discord</a>
+        <a class="ghost" href="mailto:${SUPPORT_EMAIL}" style="text-decoration:none;text-align:center">Email help</a>
+        <button type="button" class="primary" id="usageHelpClose">Got it</button>
+      </div>
+    </div>
+  </div>
 
   <div class="subscribe-modal-overlay" id="settingsModal" aria-hidden="true">
     <div class="subscribe-modal-panel settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
@@ -1410,6 +1470,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>
       <span class="footer-dot">·</span>
       <a href="mailto:cursor.curse.help@lorapok.tech">Help</a>
+      <span class="footer-dot">·</span>
+      <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener">Discord</a>
       <span class="footer-dot">·</span>
       <button type="button" class="footer-link" id="feedbackBtn">Feedback</button>
       <span class="footer-dot">·</span>
@@ -1772,13 +1834,41 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       document.getElementById('usedValue').textContent =
         formatUnits(b.includedUsed) + ' / ' + formatUnits(b.includedLimit) + ' units';
       document.getElementById('remainingValue').textContent = formatUnits(b.includedRemaining) + ' units';
-      if (b.planBreakdownBonus > 0) {
-        document.getElementById('bonusRow').style.display = 'flex';
-        document.getElementById('bonusValue').textContent =
-          formatUnits(b.planBreakdownIncluded) + ' included + ' + formatUnits(b.planBreakdownBonus) + ' bonus';
-      } else {
-        document.getElementById('bonusRow').style.display = 'none';
+
+      var staleBanner = document.getElementById('staleLimitBanner');
+      if (staleBanner) {
+        if (b.staleLimitBanner && b.staleLimitMessage) {
+          staleBanner.style.display = 'block';
+          staleBanner.textContent = b.staleLimitMessage;
+        } else {
+          staleBanner.style.display = 'none';
+          staleBanner.textContent = '';
+        }
       }
+
+      var includedPoolUsed = b.includedPoolUsed != null ? b.includedPoolUsed : b.includedUsed;
+      var includedPoolRemaining = b.includedPoolRemaining != null
+        ? b.includedPoolRemaining
+        : Math.max(0, (b.planBreakdownIncluded || b.includedLimit) - includedPoolUsed);
+      document.getElementById('includedPoolUsedVal').textContent =
+        formatUnits(includedPoolUsed) + ' / ' + formatUnits(b.planBreakdownIncluded || b.includedLimit);
+      document.getElementById('includedPoolRemainingVal').textContent =
+        formatUnits(includedPoolRemaining) + ' units';
+      var bonusRow = document.getElementById('bonusBreakdownRow');
+      if (bonusRow) {
+        if (b.planBreakdownBonus > 0) {
+          bonusRow.style.display = 'flex';
+          var bonusLabel = document.getElementById('bonusBreakdownLabel');
+          if (bonusLabel) bonusLabel.textContent = b.bonusLabel || 'Agent credits';
+          document.getElementById('bonusBreakdownVal').textContent =
+            formatUnits(b.bonusUsed || 0) + ' used · ' + formatUnits(b.bonusRemaining || 0) + ' left';
+        } else {
+          bonusRow.style.display = 'none';
+        }
+      }
+      document.getElementById('breakdownAutoVal').textContent = pct(b.autoPercentUsed) + '%';
+      document.getElementById('breakdownApiVal').textContent = pct(b.apiPercentUsed) + '%';
+      document.getElementById('breakdownResetVal').textContent = b.resetDateLabel + ' (' + b.daysUntilReset + 'd)';
 
       document.getElementById('autoPct').textContent = pct(b.autoPercentUsed) + '%';
       document.getElementById('apiPct').textContent = pct(b.apiPercentUsed) + '%';
@@ -1819,8 +1909,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       thresholdPill.style.display = b.thresholdReached ? 'inline-block' : 'none';
       thresholdPill.textContent = Math.round(threshold) + '% threshold';
 
-      document.getElementById('budgetCapBig').textContent = money(snapshot.customBudgetLimit || 0);
-      document.getElementById('budgetInput').value = snapshot.customBudgetLimit || '';
+      var personalCapRow = document.getElementById('personalCapRow');
+      if (personalCapRow) {
+        personalCapRow.hidden = !b.usdBudgetActive;
+      }
+      if (b.usdBudgetActive) {
+        document.getElementById('budgetCapBig').textContent = money(b.capUsd);
+        document.getElementById('budgetInput').value = snapshot.customBudgetLimit || b.capUsd || '';
+      } else {
+        var budgetEdit = document.getElementById('budgetEdit');
+        if (budgetEdit) budgetEdit.classList.remove('open');
+      }
 
       document.getElementById('resetText').textContent = 'Resets on ' + b.resetDateLabel;
       document.getElementById('cycleRange').textContent = b.cycleStartLabel + ' → ' + b.cycleEndLabel;
@@ -2099,6 +2198,23 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     bindCollapse('localInsightsToggle');
     bindCollapse('activeModelsToggle');
     bindCollapse('recentSessionsToggle');
+    bindCollapse('usageBreakdownToggle');
+    onClick('usageHelpBtn', function() {
+      var modal = document.getElementById('usageHelpModal');
+      if (modal) {
+        modal.classList.add('visible');
+        modal.setAttribute('aria-hidden', 'false');
+        var closeBtn = document.getElementById('usageHelpClose');
+        if (closeBtn) closeBtn.focus();
+      }
+    });
+    onClick('usageHelpClose', function() {
+      var modal = document.getElementById('usageHelpModal');
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
     onClick('subscribeBtn', function() {
       var email = document.getElementById('subscribeEmail').value || '';
       var consent = document.getElementById('subscribeConsent');
