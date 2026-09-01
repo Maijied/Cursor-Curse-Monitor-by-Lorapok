@@ -404,17 +404,6 @@ a:hover { color: #7cb8ff; }
   background: linear-gradient(165deg, #0a0f18 0%, var(--bg) 55%, #080b12 100%);
   overflow: hidden;
 }
-.hero-bg-marketing {
-  position: absolute;
-  inset: -8% -4%;
-  width: 108%;
-  height: 116%;
-  object-fit: cover;
-  object-position: 62% 38%;
-  opacity: 0.1;
-  filter: saturate(0.85) blur(1px);
-  pointer-events: none;
-}
 .hero-mesh {
   position: absolute;
   inset: 0;
@@ -3007,20 +2996,6 @@ a.ide-card:focus-visible {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-}
-
-.architecture-ambient-img,
-.architecture-ambient-art {
-  position: absolute;
-  top: 2%;
-  right: -2%;
-  width: min(42vw, 420px);
-  max-width: 100%;
-  opacity: 0.14;
-  filter: saturate(1.05) blur(0.2px);
-  mask-image: linear-gradient(135deg, #000 30%, transparent 88%);
-  object-fit: cover;
-  border-radius: 24px;
 }
 
 .architecture-ambient-glow {
