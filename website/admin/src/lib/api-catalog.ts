@@ -47,6 +47,8 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "discord-deployment", path: "/integrations/discord/deployment", method: "POST", auth: "admin", group: "Integrations", description: "Send a deployment status notification to Discord" },
   { id: "discord-feedback", path: "/integrations/discord/feedback", method: "POST", auth: "admin", group: "Integrations", description: "Send a user-feedback card to the feedback Discord webhook" },
   { id: "discord-community", path: "/integrations/discord/community", method: "POST", auth: "admin", group: "Integrations", description: "Send a community announcement test post to the community Discord webhook" },
+  { id: "mail-sync", path: "/integrations/mail/sync", method: "POST", auth: "admin", group: "Integrations", description: "Dispatch deploy-infra to repair outbound mail (relay + verify + Pages deploy)" },
+  { id: "mail-testmail", path: "/integrations/mail/testmail", method: "GET", auth: "admin", group: "Integrations", description: "Poll testmail.app inbox by tag for Mailbox E2E probe", safeProbe: true },
   { id: "subscribe-config", path: "/integrations/subscribe/config", method: "GET", auth: "admin", group: "Integrations", description: "Subscribe prompt + mail fallback settings", safeProbe: true },
   { id: "subscribe-config-put", path: "/integrations/subscribe/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save subscribe prompt Discord fallback and visibility" },
   { id: "stats-refresh-config", path: "/integrations/stats-refresh/config", method: "GET", auth: "admin", group: "Integrations", description: "Live download stats refresh settings", safeProbe: true },

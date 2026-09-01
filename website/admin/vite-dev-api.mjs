@@ -2082,6 +2082,39 @@ export function createDevApiMiddleware() {
             res.end(JSON.stringify({ ok: true, message: item }));
             return;
           }
+          if (action === "testmail-probe") {
+            const tag = `ccm-mailbox-${Date.now()}`;
+            const namespace = String(process.env.TESTMAIL_NAMESPACE ?? "dev").trim();
+            const to = `${namespace}.${tag}@inbox.testmail.app`;
+            const entry = {
+              id: crypto.randomUUID(),
+              direction: "outbound",
+              from: "cursor.monitor@lorapok.tech",
+              to,
+              subject: "Subscribed to Cursor Curse Monitor updates",
+              text: `Thanks for subscribing, ${to}.`,
+              status: "sent",
+              category: "subscribe",
+              ts: new Date().toISOString(),
+              sentBy: "dev@local",
+              error: null,
+              read: false,
+            };
+            devStore.mailbox.unshift(entry);
+            logDevActivity(req, 200);
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({
+              ok: true,
+              emailed: true,
+              tag,
+              to,
+              since: Date.now() - 5000,
+              transport: "dev-simulated",
+              message: `Dev: subscribe probe queued to ${to}`,
+              mailboxId: entry.id,
+            }));
+            return;
+          }
           const to = String(parsed.to ?? "dev@local").trim().toLowerCase();
           const subject = action === "test"
             ? "Cursor Curse Monitor — mailbox test"
@@ -2113,6 +2146,47 @@ export function createDevApiMiddleware() {
           res.end(JSON.stringify({ error: "Invalid payload" }));
         }
       });
+      return;
+    }
+
+    if (url === "/api/integrations/mail/sync" && req.method === "POST") {
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        ok: true,
+        message: "Dev: mail sync would dispatch deploy-infra (enable-mail + Pages redeploy).",
+        transport: { configured: true, transport: "dev-simulated", relayBound: true, resendConfigured: false },
+        recommendations: ["In production, Sync up runs GitHub Actions deploy-infra with deploy_admin=true."],
+        workflow: "ci-cd.yml",
+        deployAdmin: true,
+        deployWebsite: false,
+      }));
+      return;
+    }
+
+    if (url.startsWith("/api/integrations/mail/testmail") && req.method === "GET") {
+      const query = new URL(req.url ?? "", "http://localhost");
+      const tag = String(query.searchParams.get("tag") ?? "").trim();
+      if (!tag) {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: "tag query parameter is required" }));
+        return;
+      }
+      logDevActivity(req, 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        ok: true,
+        tag,
+        inbox: `dev.${tag}@inbox.testmail.app`,
+        count: 1,
+        received: true,
+        email: {
+          from: "cursor.monitor@lorapok.tech",
+          subject: "Subscribed to Cursor Curse Monitor updates",
+          preview: "Thanks for subscribing (dev simulated inbox).",
+        },
+      }));
       return;
     }
 
