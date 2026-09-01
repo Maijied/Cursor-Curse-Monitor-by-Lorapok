@@ -231,7 +231,7 @@ export default function Mailbox() {
       });
 
       let attempts = 0;
-      const poll = async () => {
+      const poll = async (): Promise<boolean> => {
         attempts += 1;
         try {
           const inbox = await pollTestmailInbox(tag, since);
@@ -245,7 +245,7 @@ export default function Mailbox() {
               message: "Testmail inbox polling returned an error.",
             });
             load();
-            return;
+            return true;
           }
           if (inbox.received && inbox.email) {
             if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
@@ -257,7 +257,7 @@ export default function Mailbox() {
               message: `Subject: ${inbox.email.subject ?? "(no subject)"} · From: ${inbox.email.from ?? "unknown"}`,
             });
             load();
-            return;
+            return true;
           }
           if (attempts >= 30) {
             if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
@@ -270,6 +270,7 @@ export default function Mailbox() {
                 "No welcome email in testmail.app after 90s. Run Sync up to repair transport, or configure RESEND_API_KEY for external delivery.",
             });
             load();
+            return true;
           }
         } catch (err: unknown) {
           if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
@@ -280,11 +281,21 @@ export default function Mailbox() {
             title: "Testmail poll failed",
             message: err instanceof Error ? err.message : "Testmail poll failed",
           });
+          return true;
         }
+        return false;
       };
 
-      await poll();
-      testmailPollRef.current = window.setInterval(poll, 3_000);
+      const finished = await poll();
+      if (!finished) {
+        testmailPollRef.current = window.setInterval(async () => {
+          const done = await poll();
+          if (done && testmailPollRef.current) {
+            window.clearInterval(testmailPollRef.current);
+            testmailPollRef.current = null;
+          }
+        }, 3_000);
+      }
     } catch (err: unknown) {
       setTestmailProbing(false);
       setNotice({

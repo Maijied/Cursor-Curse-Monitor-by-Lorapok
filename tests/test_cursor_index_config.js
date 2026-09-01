@@ -63,18 +63,27 @@ async function run() {
   delete process.env.CCM_TRANSCRIPT_LOOKBACK_DAYS;
   clearCursorIndexPolicyCache();
 
-  process.env.CCM_INDEX_ENABLED = "0";
-  const { resolveCursorIndexPolicy } = require("../src/cursorIndexConfig.ts");
-  const disabled = await resolveCursorIndexPolicy(true);
-  assert.strictEqual(disabled.indexEnabled, false);
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({}),
+  });
 
-  process.env.CCM_TRANSCRIPT_LOOKBACK_DAYS = "21";
-  const lookbackOverride = await resolveCursorIndexPolicy(true);
-  assert.strictEqual(lookbackOverride.transcriptLookbackDays, 21);
+  try {
+    process.env.CCM_INDEX_ENABLED = "0";
+    const { resolveCursorIndexPolicy } = require("../src/cursorIndexConfig.ts");
+    const disabled = await resolveCursorIndexPolicy(true);
+    assert.strictEqual(disabled.indexEnabled, false);
 
-  delete process.env.CCM_INDEX_ENABLED;
-  delete process.env.CCM_TRANSCRIPT_LOOKBACK_DAYS;
-  clearCursorIndexPolicyCache();
+    process.env.CCM_TRANSCRIPT_LOOKBACK_DAYS = "21";
+    const lookbackOverride = await resolveCursorIndexPolicy(true);
+    assert.strictEqual(lookbackOverride.transcriptLookbackDays, 21);
+  } finally {
+    global.fetch = originalFetch;
+    delete process.env.CCM_INDEX_ENABLED;
+    delete process.env.CCM_TRANSCRIPT_LOOKBACK_DAYS;
+    clearCursorIndexPolicyCache();
+  }
 
   Module._resolveFilename = originalResolveFilename;
   console.log("cursor-index-config test passed");
