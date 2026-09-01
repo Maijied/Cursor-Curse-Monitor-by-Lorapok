@@ -18,7 +18,9 @@ import {
   type EditorSettings,
 } from "./editorSettings";
 import { scanMonitoringDbBackups, type DbBackupScanResult } from "./cursorAuth";
+import { reindexMissingConversations } from "./conversationReindex";
 import { resolveReindexPolicy } from "./reindexConfig";
+import { notifyReindexResult } from "./reindexUi";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -209,7 +211,20 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         return;
       }
       if (message.type === "reindexConversations") {
-        await vscode.commands.executeCommand("cursorCurseMonitor.reindexConversations");
+        webviewView.webview.postMessage({
+          type: "reindexProgress",
+          payload: { phase: "preparing", message: "Starting conversation reindex…" },
+        });
+        const policy = await resolveReindexPolicy(true);
+        const result = await reindexMissingConversations(this.extensionUri, {
+          policy,
+          onProgress: (update) => {
+            webviewView.webview.postMessage({ type: "reindexProgress", payload: update });
+          },
+        });
+        webviewView.webview.postMessage({ type: "reindexResult", payload: result });
+        notifyReindexResult(result, policy);
+        return;
       }
       if (message.type === "recoverDbBackups") {
         await vscode.commands.executeCommand("cursorCurseMonitor.recoverDbBackups");
@@ -955,6 +970,47 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       vertical-align: middle;
     }
     @keyframes subscribeSpin { to { transform: rotate(360deg); } }
+    .reindex-loader-panel { text-align: left; }
+    .reindex-loader-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0 10px;
+      min-height: 28px;
+    }
+    .reindex-loader-row .spinner {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(124,92,255,.22);
+      border-top-color: var(--accent);
+      animation: ccm-spin 0.85s linear infinite;
+      flex-shrink: 0;
+    }
+    .reindex-loader-row.is-done .spinner,
+    .reindex-loader-row.is-error .spinner { display: none; }
+    .reindex-loader-row.is-error #reindexLoaderMessage { color: var(--danger, #ff6b6b); }
+    .reindex-loader-row.is-done #reindexLoaderMessage { color: var(--ok, #39ff14); }
+    .reindex-progress {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(124,92,255,.14);
+      overflow: hidden;
+      margin: 4px 0 10px;
+    }
+    .reindex-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2, #5b9dff));
+      transition: width 0.25s ease;
+    }
+    .reindex-loader-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
     .subscribe-hero {
       display: flex;
       gap: 12px;
@@ -1393,6 +1449,26 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <div class="subscribe-actions">
         <button type="button" class="primary" id="reindexConfirm" style="width:100%">Reindex now</button>
         <button type="button" class="ghost" id="reindexCancel" style="width:100%">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="subscribe-modal-overlay" id="reindexLoader" aria-hidden="true">
+    <div class="subscribe-modal-panel reindex-loader-panel" role="status" aria-live="polite" aria-busy="true">
+      <p class="cursor-missing-eyebrow" style="color:var(--warn)">Data recovery</p>
+      <h2 style="margin:0 0 4px;font-size:16px">Reindexing conversations…</h2>
+      <div class="reindex-loader-row" id="reindexLoaderRow">
+        <span class="spinner" id="reindexLoaderSpinner" aria-hidden="true"></span>
+        <span id="reindexLoaderMessage">Starting…</span>
+      </div>
+      <div class="reindex-progress" id="reindexProgressBar" hidden>
+        <div class="reindex-progress-fill" id="reindexProgressFill"></div>
+      </div>
+      <p class="muted" id="reindexLoaderHint" style="margin:0;font-size:11px;line-height:1.5">
+        Creating backups, then rebuilding search indexes and sidebar entries. This can take a minute on large workspaces.
+      </p>
+      <div class="reindex-loader-actions" id="reindexLoaderActions" hidden>
+        <button type="button" class="ghost" id="reindexLoaderClose" style="width:100%">Close</button>
       </div>
     </div>
   </div>
@@ -2054,6 +2130,12 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (event.data?.type === 'reindexPolicy') {
         applyReindexPolicy(event.data.payload);
       }
+      if (event.data?.type === 'reindexProgress') {
+        applyReindexProgress(event.data.payload);
+      }
+      if (event.data?.type === 'reindexResult') {
+        applyReindexResult(event.data.payload);
+      }
       if (event.data?.type === 'editorSettings') {
         applyEditorSettingsForm(event.data.payload);
         var settingsStatus = document.getElementById('settingsStatus');
@@ -2066,6 +2148,88 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
     var subscribeModalTimer = null;
     var subscribePromptReady = false;
+    var reindexPolicyDisabled = false;
+
+    function setReindexLoading(active, message, current, total) {
+      var overlay = document.getElementById('reindexLoader');
+      var row = document.getElementById('reindexLoaderRow');
+      var spinner = document.getElementById('reindexLoaderSpinner');
+      var msg = document.getElementById('reindexLoaderMessage');
+      var hint = document.getElementById('reindexLoaderHint');
+      var bar = document.getElementById('reindexProgressBar');
+      var fill = document.getElementById('reindexProgressFill');
+      var actions = document.getElementById('reindexLoaderActions');
+      var btn = document.getElementById('reindexBtn');
+      if (!overlay) return;
+      if (active) {
+        overlay.classList.add('visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        if (row) {
+          row.classList.remove('is-done', 'is-error');
+        }
+        if (spinner) spinner.style.display = '';
+        if (actions) actions.hidden = true;
+        if (hint) hint.hidden = false;
+        if (btn) btn.disabled = true;
+      } else {
+        overlay.classList.remove('visible');
+        overlay.setAttribute('aria-hidden', 'true');
+        if (btn) {
+          btn.disabled = reindexPolicyDisabled;
+          btn.style.opacity = reindexPolicyDisabled ? '0.55' : '1';
+        }
+        if (bar) bar.hidden = true;
+        if (fill) fill.style.width = '0%';
+      }
+      if (msg && message) msg.textContent = message;
+      if (bar && fill && typeof total === 'number' && total > 0) {
+        bar.hidden = false;
+        var pct = Math.max(4, Math.round(((current || 0) / total) * 100));
+        fill.style.width = pct + '%';
+      } else if (bar && active) {
+        bar.hidden = true;
+      }
+    }
+
+    function applyReindexProgress(payload) {
+      if (!payload || typeof payload !== 'object') return;
+      setReindexLoading(true, payload.message || 'Working…', payload.current, payload.total);
+    }
+
+    function applyReindexResult(payload) {
+      var row = document.getElementById('reindexLoaderRow');
+      var spinner = document.getElementById('reindexLoaderSpinner');
+      var msg = document.getElementById('reindexLoaderMessage');
+      var hint = document.getElementById('reindexLoaderHint');
+      var actions = document.getElementById('reindexLoaderActions');
+      if (!payload || typeof payload !== 'object') {
+        setReindexLoading(false);
+        return;
+      }
+      if (!payload.success) {
+        if (row) row.classList.add('is-error');
+        if (spinner) spinner.style.display = 'none';
+        if (msg) msg.textContent = payload.error || 'Reindex failed.';
+        if (hint) hint.hidden = true;
+        if (actions) actions.hidden = false;
+        return;
+      }
+      var indexed = Array.isArray(payload.searchIndexed) ? payload.searchIndexed.length : 0;
+      var restored = Array.isArray(payload.sidebarRestored) ? payload.sidebarRestored.length : 0;
+      var skipped = Array.isArray(payload.skipped) ? payload.skipped.length : 0;
+      if (row) row.classList.add('is-done');
+      if (spinner) spinner.style.display = 'none';
+      if (msg) {
+        msg.textContent = indexed || restored
+          ? 'Done — indexed ' + indexed + ', restored ' + restored + ' (' + skipped + ' already present).'
+          : 'Done — no missing conversations found.';
+      }
+      if (hint) {
+        hint.textContent = 'Reload the window if chats do not appear immediately.';
+        hint.hidden = false;
+      }
+      window.setTimeout(function() { setReindexLoading(false); }, 2600);
+    }
 
     function applyReindexPolicy(policy) {
       var body = document.getElementById('reindexPolicyBody');
@@ -2081,8 +2245,9 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         }
       }
       if (btn) {
-        btn.disabled = policy.reindexEnabled === false;
-        btn.style.opacity = policy.reindexEnabled === false ? '0.55' : '1';
+        reindexPolicyDisabled = policy.reindexEnabled === false;
+        btn.disabled = reindexPolicyDisabled;
+        btn.style.opacity = reindexPolicyDisabled ? '0.55' : '1';
       }
     }
 
@@ -2180,7 +2345,11 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         modal.classList.remove('visible');
         modal.setAttribute('aria-hidden', 'true');
       }
+      setReindexLoading(true, 'Starting conversation reindex…');
       vscode.postMessage({ type: 'reindexConversations' });
+    });
+    onClick('reindexLoaderClose', function() {
+      setReindexLoading(false);
     });
     onClick('recoverDbBackupsBtn', function() {
       var modal = document.getElementById('recoverDbBackupsModal');
