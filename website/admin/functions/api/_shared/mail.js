@@ -38,11 +38,22 @@ function formatOutboundMailFailure(reason) {
 }
 
 function isVerifiedDestinationSandboxError(reason) {
-  return /verified address/i.test(String(reason ?? ""));
+  const text = String(reason ?? "").toLowerCase();
+  return /verified address|verified destination|sandbox|only deliver|destination address is not/i.test(text);
 }
 
 function resendConfigured(env) {
   return typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim().length > 0;
+}
+
+/** External inboxes (Gmail, testmail) need Resend on Workers Free — Cloudflare sandbox blocks them. */
+export function prefersResendFirst(to, env) {
+  if (!resendConfigured(env)) return false;
+  const email = String(to ?? "").trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+  if (email.endsWith("@inbox.testmail.app")) return true;
+  if (!email.endsWith("@lorapok.tech")) return true;
+  return false;
 }
 
 function escapeHtml(value) {
@@ -463,7 +474,19 @@ export async function sendMail(
 
   let result = /** @type {{ sent: boolean; transport?: string; reason?: string }} */ ({ sent: false });
 
-  if (env.MAIL_RELAY?.fetch) {
+  if (prefersResendFirst(to, env)) {
+    try {
+      result = await sendViaResend(env, payload);
+    } catch (err) {
+      console.error("Resend primary delivery failed", err);
+      result = {
+        sent: false,
+        reason: err instanceof Error ? err.message : "Resend primary delivery failed",
+      };
+    }
+  }
+
+  if (!result.sent && env.MAIL_RELAY?.fetch) {
     try {
       result = await sendViaMailRelay(env, payload);
     } catch (err) {
@@ -514,10 +537,12 @@ export async function sendMail(
 
     if (!result.sent) {
       try {
-        const resend = await sendViaResend(env, payload);
-        if (resend.sent) result = resend;
-        else if (!result.reason || result.reason.includes("credentials missing")) {
-          result = resend;
+        if (!prefersResendFirst(to, env)) {
+          const resend = await sendViaResend(env, payload);
+          if (resend.sent) result = resend;
+          else if (!result.reason || result.reason.includes("credentials missing")) {
+            result = resend;
+          }
         }
       } catch (err) {
         console.error("Resend error", err);

@@ -1083,6 +1083,58 @@ export async function sendMailboxTest(to?: string) {
   return data as { ok: boolean; message?: string; transport?: string; reason?: string };
 }
 
+export async function syncMailTransport() {
+  const res = await fetch(`${API_BASE}/integrations/mail/sync`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Mail sync failed");
+  return data as {
+    ok: boolean;
+    message?: string;
+    recommendations?: string[];
+    transport?: { configured: boolean; transport: string; relayBound?: boolean; resendConfigured?: boolean };
+  };
+}
+
+export async function startMailboxTestmailProbe() {
+  const res = await fetch(`${API_BASE}/mailbox`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ action: "testmail-probe" }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Testmail probe failed");
+  return data as {
+    ok: boolean;
+    tag?: string;
+    to?: string;
+    since?: number;
+    transport?: string;
+    message?: string;
+    reason?: string;
+  };
+}
+
+export async function pollTestmailInbox(tag: string, since?: number) {
+  const params = new URLSearchParams({ tag });
+  if (since) params.set("since", String(since));
+  const res = await fetch(`${API_BASE}/integrations/mail/testmail?${params}`, {
+    headers: await authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Testmail poll failed");
+  return data as {
+    ok: boolean;
+    received?: boolean;
+    count?: number;
+    inbox?: string;
+    email?: { from?: string; subject?: string; preview?: string };
+  };
+}
+
 export async function markMailboxRead(id: string) {
   const res = await fetch(`${API_BASE}/mailbox`, {
     method: "POST",

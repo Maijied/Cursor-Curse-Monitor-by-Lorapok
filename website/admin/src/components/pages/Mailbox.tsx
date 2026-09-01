@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Mail, PenLine, RefreshCw, Send, Zap } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, CloudUpload, Mail, PenLine, RefreshCw, Send, Sparkles, Zap } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -16,12 +16,16 @@ import {
   fetchMailbox,
   fetchMailTemplates,
   markMailboxRead,
+  pollTestmailInbox,
   sendMailboxMessage,
   sendMailboxTest,
+  startMailboxTestmailProbe,
+  syncMailTransport,
   type MailboxMessage,
   type MailTemplate,
 } from "../../lib/api";
 import { auth } from "../../lib/firebase";
+import { isMasterAdmin } from "../../lib/admin-config";
 
 const PAGE_SIZE = 20;
 
@@ -76,6 +80,10 @@ export default function Mailbox() {
   const [selectedMailTemplate, setSelectedMailTemplate] = useState("");
   const [composeCategory, setComposeCategory] = useState("compose");
   const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
+  const [syncingMail, setSyncingMail] = useState(false);
+  const [testmailProbing, setTestmailProbing] = useState(false);
+  const testmailPollRef = useRef<number | null>(null);
+  const isMaster = isMasterAdmin(auth.currentUser?.email);
   const isWide = useMediaQuery("(min-width: 1280px)");
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -102,6 +110,12 @@ export default function Mailbox() {
     fetchMailTemplates()
       .then((data) => setMailTemplates(data.templates ?? []))
       .catch(() => setMailTemplates([]));
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
+    };
   }, []);
 
   const inputClass =
@@ -156,6 +170,117 @@ export default function Mailbox() {
       setNotice({ tone: "error", title: "Test failed", message: err instanceof Error ? err.message : "Test failed" });
     }
     setSending(false);
+  };
+
+  const handleSyncUp = async () => {
+    if (!isMaster) {
+      setNotice({
+        tone: "warning",
+        title: "Master admin only",
+        message: "Mail sync dispatches deploy-infra (enable-mail + Pages redeploy). Sign in as the master admin.",
+      });
+      return;
+    }
+    setSyncingMail(true);
+    setNotice(null);
+    try {
+      const res = await syncMailTransport();
+      const tips = res.recommendations?.length ? `\n\n${res.recommendations.join("\n")}` : "";
+      setNotice({
+        tone: res.ok ? "success" : "error",
+        title: res.ok ? "Mail sync started" : "Mail sync failed",
+        message: `${res.message ?? (res.ok ? "CI is repairing outbound mail." : "Could not dispatch workflow.")}${tips}`,
+      });
+      load();
+    } catch (err: unknown) {
+      setNotice({
+        tone: "error",
+        title: "Mail sync failed",
+        message: err instanceof Error ? err.message : "Mail sync failed",
+      });
+    }
+    setSyncingMail(false);
+  };
+
+  const handleTestmailE2E = async () => {
+    setTestmailProbing(true);
+    setNotice(null);
+    if (testmailPollRef.current) {
+      window.clearInterval(testmailPollRef.current);
+      testmailPollRef.current = null;
+    }
+    try {
+      const started = await startMailboxTestmailProbe();
+      if (!started.ok) {
+        setNotice({
+          tone: "error",
+          title: "Testmail probe failed",
+          message: started.reason ?? started.message ?? "Could not send welcome mail to testmail.app",
+        });
+        setTestmailProbing(false);
+        load();
+        return;
+      }
+
+      const tag = started.tag ?? "";
+      const since = started.since ?? Date.now() - 5_000;
+      setNotice({
+        tone: "info",
+        title: "Testmail probe sent",
+        message: `Waiting for ${started.to ?? "testmail inbox"} via ${started.transport ?? "transport"}…`,
+      });
+
+      let attempts = 0;
+      const poll = async () => {
+        attempts += 1;
+        try {
+          const inbox = await pollTestmailInbox(tag, since);
+          if (inbox.received && inbox.email) {
+            if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
+            testmailPollRef.current = null;
+            setTestmailProbing(false);
+            setNotice({
+              tone: "success",
+              title: "Testmail delivery confirmed",
+              message: `Subject: ${inbox.email.subject ?? "(no subject)"} · From: ${inbox.email.from ?? "unknown"}`,
+            });
+            load();
+            return;
+          }
+          if (attempts >= 30) {
+            if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
+            testmailPollRef.current = null;
+            setTestmailProbing(false);
+            setNotice({
+              tone: "error",
+              title: "Testmail timeout",
+              message:
+                "No welcome email in testmail.app after 90s. Run Sync up to repair transport, or configure RESEND_API_KEY for external delivery.",
+            });
+            load();
+          }
+        } catch (err: unknown) {
+          if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
+          testmailPollRef.current = null;
+          setTestmailProbing(false);
+          setNotice({
+            tone: "error",
+            title: "Testmail poll failed",
+            message: err instanceof Error ? err.message : "Testmail poll failed",
+          });
+        }
+      };
+
+      await poll();
+      testmailPollRef.current = window.setInterval(poll, 3_000);
+    } catch (err: unknown) {
+      setTestmailProbing(false);
+      setNotice({
+        tone: "error",
+        title: "Testmail probe failed",
+        message: err instanceof Error ? err.message : "Testmail probe failed",
+      });
+    }
   };
 
   const openMessage = async (row: MailboxMessage) => {
@@ -225,6 +350,20 @@ export default function Mailbox() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={syncingMail || sending}
+            onClick={handleSyncUp}
+            title={isMaster ? "Dispatch deploy-infra to repair outbound mail" : "Master admin only"}
+            className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-60 font-medium"
+          >
+            {syncingMail ? (
+              <LorapokLarvaeLoader size="xs" ariaLabel="Syncing mail transport" />
+            ) : (
+              <CloudUpload size={16} />
+            )}
+            {syncingMail ? "Syncing…" : "Sync up"}
+          </button>
           <input
             type="email"
             value={testTo}
@@ -234,12 +373,25 @@ export default function Mailbox() {
           />
           <button
             type="button"
-            disabled={sending}
+            disabled={sending || testmailProbing}
             onClick={handleTest}
             className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60"
           >
             {sending ? <LorapokLarvaeLoader size="xs" ariaLabel="Sending test email" /> : <Zap size={16} />}
             {sending ? "Sending…" : "Test"}
+          </button>
+          <button
+            type="button"
+            disabled={sending || testmailProbing}
+            onClick={handleTestmailE2E}
+            className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_35%,var(--color-border))] text-[var(--color-text)] font-medium hover:bg-white/5 disabled:opacity-60"
+          >
+            {testmailProbing ? (
+              <LorapokLarvaeLoader size="xs" ariaLabel="Running testmail probe" />
+            ) : (
+              <Sparkles size={16} className="text-[var(--color-accent)]" />
+            )}
+            {testmailProbing ? "Probing…" : "Testmail E2E"}
           </button>
         </div>
       </div>
