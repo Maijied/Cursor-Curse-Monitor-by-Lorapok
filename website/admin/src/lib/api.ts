@@ -402,6 +402,33 @@ export async function notifyDiscordCommunityApi(payload?: { summary?: string }) 
   return data as { ok: boolean; skipped?: boolean };
 }
 
+export type SubscribePromptConfig = {
+  subscribeModalEnabled: boolean;
+  requireMailForSubscribe: boolean;
+  subscribeFallbackDiscordUrl: string;
+  subscribeFallbackMode: "discord" | "hidden";
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export async function fetchSubscribePromptConfigApi() {
+  return apiGet<{ ok: boolean; config: SubscribePromptConfig }>("/integrations/subscribe/config");
+}
+
+export async function putSubscribePromptConfigApi(payload: Partial<SubscribePromptConfig>) {
+  const res = await fetch(`${API_BASE}/integrations/subscribe/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save subscribe prompt settings");
+  return data as { ok: boolean; config: SubscribePromptConfig };
+}
+
 export type DeployRequest = {
   target_tag: string;
   publish_market: "Both" | "Open VSX + Firefox AMO" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";

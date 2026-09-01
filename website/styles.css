@@ -1723,6 +1723,23 @@ h1 {
   border-block: 1px solid var(--border);
   padding: 64px 0;
 }
+
+.subscribe-discord-fallback {
+  margin: 0 auto 1.25rem;
+  max-width: 36rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 92, 255, 0.28);
+  background: rgba(124, 92, 255, 0.08);
+  text-align: center;
+}
+
+.subscribe-discord-fallback-lead {
+  margin: 0 0 0.85rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.95rem;
+}
+
 .subscribe-inner {
   max-width: 560px;
   margin-inline: auto;

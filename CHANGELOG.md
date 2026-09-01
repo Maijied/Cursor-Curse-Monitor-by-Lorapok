@@ -24,6 +24,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Hybrid architecture workflows** — marketing site architecture tabs now mirror full Mermaid topology (clients, deploy pipeline, edge cases, schedules) with glowing cards and animated packet flow; coverage guarded by `architecture-workflow-from-mermaid.mjs` tests
 - **Asset cache busting** — `site-data.json` includes `assets.buildId`; `npm run site:data` stamps `?v=` on local CSS/JS in HTML pages
 - **Discord community link** — public invite `https://discord.gg/bp42QAMC6` in `social.json`; footers on index, privacy, and terms load from `social-footer.js`
+- **Subscribe mail gate** — marketing site checks `GET /api/site-config` before showing the subscribe modal; Mission Control Settings card configures Discord fallback (`https://discord.gg/MaYRtaqef`) or hidden mode when outbound mail is unavailable
 - **Unified Lorapok footer** — `social.json` drives brand + community icons (GitHub, Discord, LinkedIn, X, labs, Mission Control) across marketing pages
 
 ### Fixed

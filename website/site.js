@@ -42,6 +42,8 @@ const SUBSCRIBE_KEYS = {
   snoozeUntil: "ccm-subscribe-snooze-until",
   declined: "ccm-subscribe-declined",
 };
+const SUBSCRIBE_CONFIG_CACHE_KEY = "ccm-subscribe-site-config";
+const SUBSCRIBE_CONFIG_CACHE_TTL_MS = 5 * 60 * 1000;
 const WELCOME_KEY = "ccm_welcome_seen";
 const WELCOME_MODAL_DELAY_MS = 900;
 const SUBSCRIBE_PROMPT_DELAY_MS = 30_000;
@@ -237,6 +239,92 @@ function subscribeSuccessFeedback(body) {
     title: "You're subscribed!",
     message: body.message || "Release notes will land in your inbox.",
   };
+}
+
+function readCachedSubscribeSiteConfig() {
+  try {
+    const raw = window.sessionStorage.getItem(SUBSCRIBE_CONFIG_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.checkedAt || !parsed?.expiresAt) return null;
+    if (Date.now() > Number(parsed.expiresAt)) return null;
+    return parsed.config ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedSubscribeSiteConfig(config) {
+  try {
+    window.sessionStorage.setItem(
+      SUBSCRIBE_CONFIG_CACHE_KEY,
+      JSON.stringify({
+        checkedAt: Date.now(),
+        expiresAt: Date.now() + SUBSCRIBE_CONFIG_CACHE_TTL_MS,
+        config,
+      })
+    );
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function resolveSiteConfigUrl(subscribeUrl) {
+  const base = String(subscribeUrl || "").replace(/\/api\/subscribe\/?$/, "");
+  return base ? `${base}/api/site-config` : null;
+}
+
+async function fetchSubscribeSiteConfig(subscribeUrl) {
+  const cached = readCachedSubscribeSiteConfig();
+  if (cached) return cached;
+
+  const siteConfigUrl = resolveSiteConfigUrl(subscribeUrl);
+  if (!siteConfigUrl) {
+    return { subscribeAvailable: true, subscribeFallbackMode: null, subscribeFallbackDiscordUrl: null };
+  }
+
+  try {
+    const response = await fetch(siteConfigUrl, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`site-config ${response.status}`);
+    const body = await response.json();
+    const config = {
+      mailConfigured: body.mailConfigured === true,
+      subscribeAvailable: body.subscribeAvailable !== false,
+      subscribeModalEnabled: body.subscribeModalEnabled !== false,
+      subscribeFallbackMode: body.subscribeFallbackMode ?? null,
+      subscribeFallbackDiscordUrl: body.subscribeFallbackDiscordUrl ?? null,
+    };
+    writeCachedSubscribeSiteConfig(config);
+    return config;
+  } catch {
+    return { subscribeAvailable: true, subscribeFallbackMode: null, subscribeFallbackDiscordUrl: null };
+  }
+}
+
+function ensureSubscribeDiscordFallback(subscribeSection, config) {
+  if (!subscribeSection || config?.subscribeFallbackMode !== "discord") return;
+  const inviteUrl = String(config.subscribeFallbackDiscordUrl || "").trim();
+  if (!inviteUrl) return;
+
+  let banner = subscribeSection.querySelector(".subscribe-discord-fallback");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.className = "subscribe-discord-fallback";
+    banner.setAttribute("role", "note");
+    const form = subscribeSection.querySelector(".subscribe-form");
+    if (form) subscribeSection.insertBefore(banner, form);
+    else subscribeSection.appendChild(banner);
+  }
+
+  banner.innerHTML = `
+    <p class="subscribe-discord-fallback-lead">Email updates are paused while outbound mail is restored.</p>
+    <a class="btn primary" href="${inviteUrl.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">
+      Join Lorapok Labs Family on Discord
+    </a>
+  `;
 }
 
 /**
@@ -604,6 +692,7 @@ function updateStructuredDataVersion(data) {
     let inlineSubscribeActive = false;
     const subscribeSection = document.getElementById("subscribe");
     const inlineForm = document.getElementById("subscribe-form");
+    let subscribeSiteConfig = { subscribeAvailable: true };
 
     const cancelScheduledModal = () => {
       if (modalTimer != null) {
@@ -613,6 +702,7 @@ function updateStructuredDataVersion(data) {
     };
 
     const openModal = () => {
+      if (!subscribeSiteConfig.subscribeAvailable) return;
       if (!shouldShowSubscribeModal() || inlineSubscribeActive) return;
       if (subscribeSection) {
         const rect = subscribeSection.getBoundingClientRect();
@@ -623,6 +713,26 @@ function updateStructuredDataVersion(data) {
       document.body.classList.add("subscribe-modal-open");
       input?.focus();
     };
+
+    const scheduleModalIfEligible = () => {
+      cancelScheduledModal();
+      if (!subscribeSiteConfig.subscribeAvailable || !shouldShowSubscribeModal()) return;
+      modalTimer = window.setTimeout(openModal, SUBSCRIBE_PROMPT_DELAY_MS);
+    };
+
+    void fetchSubscribeSiteConfig(subscribeUrl).then((config) => {
+      subscribeSiteConfig = config;
+      if (!config.subscribeAvailable) {
+        cancelScheduledModal();
+        if (config.subscribeFallbackMode === "discord" && subscribeSection) {
+          ensureSubscribeDiscordFallback(subscribeSection, config);
+          const inline = subscribeSection.querySelector(".subscribe-form");
+          if (inline) inline.hidden = true;
+        }
+        return;
+      }
+      scheduleModalIfEligible();
+    });
 
     const closeModal = () => {
       modal.hidden = true;
@@ -648,10 +758,6 @@ function updateStructuredDataVersion(data) {
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !modal.hidden) closeModal();
     });
-
-    if (shouldShowSubscribeModal()) {
-      modalTimer = window.setTimeout(openModal, SUBSCRIBE_PROMPT_DELAY_MS);
-    }
 
     inlineForm?.addEventListener("focusin", () => {
       inlineSubscribeActive = true;
