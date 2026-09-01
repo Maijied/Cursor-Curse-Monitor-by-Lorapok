@@ -295,8 +295,10 @@ export async function refreshStatsNowApi() {
 export type DiscordConfig = {
   deploymentConfigured: boolean;
   feedbackConfigured: boolean;
+  communityConfigured: boolean;
   deploymentWebhookPreview: string | null;
   feedbackWebhookPreview: string | null;
+  communityWebhookPreview: string | null;
   /** @deprecated use deploymentConfigured */
   configured: boolean;
   /** @deprecated use deploymentWebhookPreview */
@@ -323,6 +325,7 @@ export async function fetchDiscordConfigApi() {
 export async function putDiscordConfigApi(payload: {
   deploymentWebhookUrl?: string;
   feedbackWebhookUrl?: string;
+  communityWebhookUrl?: string;
   /** @deprecated use deploymentWebhookUrl */
   webhookUrl?: string;
 }) {
@@ -381,6 +384,21 @@ export async function notifyDiscordFeedbackApi(payload?: { summary?: string }) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok && !data.skipped) throw new Error(data.error || "Discord feedback notification failed");
+  return data as { ok: boolean; skipped?: boolean };
+}
+
+/** Sends a sample community post to the community Discord webhook. */
+export async function notifyDiscordCommunityApi(payload?: { summary?: string }) {
+  const res = await fetch(`${API_BASE}/integrations/discord/community`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload ?? {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && !data.skipped) throw new Error(data.error || "Discord community notification failed");
   return data as { ok: boolean; skipped?: boolean };
 }
 

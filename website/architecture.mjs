@@ -1,23 +1,24 @@
-import { ARCHITECTURE_VIEWS, ARCHITECTURE_VIEW_KEYS } from "./shared/architecture-diagrams.mjs";
-
-const MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+import { ARCHITECTURE_WORKFLOWS } from "./shared/architecture-workflows.mjs";
+import { ARCHITECTURE_VIEW_KEYS } from "./shared/architecture-diagrams.mjs";
+import { renderWorkflow, restartWorkflowSimulation } from "./architecture-workflow-renderer.mjs";
 
 /**
- * @param {string} src
+ * @param {HTMLElement} mount
  */
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
-    const el = document.createElement("script");
-    el.src = src;
-    el.async = true;
-    el.onload = () => resolve();
-    el.onerror = () => reject(new Error(`Failed to load ${src}`));
-    document.head.appendChild(el);
-  });
+function showDiagramSkeleton(mount) {
+  mount.innerHTML = `
+    <div class="architecture-diagram-skeleton" aria-live="polite">
+      <div class="architecture-diagram-skeleton-grid" aria-hidden="true">
+        <span class="architecture-diagram-skeleton-node"></span>
+        <span class="architecture-diagram-skeleton-node"></span>
+        <span class="architecture-diagram-skeleton-node architecture-diagram-skeleton-node--wide"></span>
+        <span class="architecture-diagram-skeleton-node"></span>
+      </div>
+      <div class="architecture-diagram-skeleton-line"></div>
+      <div class="architecture-diagram-skeleton-line architecture-diagram-skeleton-line--short"></div>
+      <p class="architecture-diagram-skeleton-label">Building workflow simulation…</p>
+    </div>`;
+  mount.classList.remove("is-visible");
 }
 
 /**
@@ -38,6 +39,11 @@ function initArchitectureTabs(root) {
       const active = panel.dataset.archPanel === key;
       panel.hidden = !active;
       panel.classList.toggle("active", active);
+      if (active) {
+        panel.classList.remove("architecture-panel--enter");
+        void panel.offsetWidth;
+        panel.classList.add("architecture-panel--enter");
+      }
     });
     root.dispatchEvent(new CustomEvent("architecture-tab", { detail: { key } }));
   };
@@ -50,65 +56,43 @@ function initArchitectureTabs(root) {
 }
 
 /**
- * @param {HTMLElement} mount
- * @param {string} diagram
- */
-async function renderDiagram(mount, diagram) {
-  // @ts-expect-error mermaid loaded from CDN
-  const mermaid = window.mermaid;
-  if (!mermaid?.render) throw new Error("Mermaid unavailable");
-
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: "dark",
-    securityLevel: "loose",
-    flowchart: { curve: "basis", htmlLabels: true, padding: 14 },
-    themeVariables: {
-      primaryColor: "#111827",
-      primaryTextColor: "#e8edf5",
-      primaryBorderColor: "#4d9fff",
-      lineColor: "#7c5cff",
-      secondaryColor: "#0c1018",
-      tertiaryColor: "#06080d",
-      fontFamily: "DM Sans, system-ui, sans-serif",
-    },
-  });
-
-  const id = `site-arch-${mount.dataset.archPanel ?? "diagram"}-${Date.now()}`;
-  const { svg } = await mermaid.render(id, diagram);
-  mount.innerHTML = svg;
-  const svgEl = mount.querySelector("svg");
-  if (svgEl) {
-    svgEl.classList.add("architecture-mermaid-svg", "architecture-mermaid-animated");
-    svgEl.setAttribute("role", "img");
-  }
-  requestAnimationFrame(() => mount.classList.add("is-visible"));
-}
-
-/**
  * @param {HTMLElement} section
+ * @param {boolean} reducedMotion
  */
-function bindDiagramRenders(section) {
+function bindWorkflowRenders(section, reducedMotion) {
   const mounts = [...section.querySelectorAll("[data-arch-diagram]")];
+  /** @type {Map<string, () => void>} */
+  const cleanups = new Map();
   const rendered = new Set();
 
-  const renderMount = async (mount) => {
+  const renderMount = (mount) => {
     const key = mount.dataset.archDiagram;
-    if (!key || rendered.has(key)) return;
-    const view = ARCHITECTURE_VIEWS[key];
-    if (!view) return;
-    rendered.add(key);
-    try {
-      await renderDiagram(mount, view.diagram);
-    } catch (err) {
-      mount.innerHTML = `<p class="architecture-error">${err instanceof Error ? err.message : "Diagram failed"}</p>`;
+    if (!key) return;
+
+    if (rendered.has(key) && mount.querySelector(".arch-flow")) {
+      restartWorkflowSimulation(mount);
+      requestAnimationFrame(() => mount.classList.add("is-visible"));
+      return;
     }
+    if (rendered.has(key)) return;
+
+    const view = ARCHITECTURE_WORKFLOWS[key];
+    if (!view) return;
+
+    rendered.add(key);
+    showDiagramSkeleton(mount);
+
+    requestAnimationFrame(() => {
+      cleanups.get(key)?.();
+      const cleanup = renderWorkflow(mount, key, reducedMotion);
+      cleanups.set(key, cleanup);
+    });
   };
 
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) void renderMount(/** @type {HTMLElement} */ (entry.target));
+        if (entry.isIntersecting) renderMount(/** @type {HTMLElement} */ (entry.target));
       });
     },
     { rootMargin: "120px 0px", threshold: 0.12 }
@@ -119,27 +103,18 @@ function bindDiagramRenders(section) {
   section.addEventListener("architecture-tab", (event) => {
     const key = /** @type {CustomEvent<{ key: string }>} */ (event).detail?.key;
     const mount = mounts.find((m) => m.dataset.archDiagram === key);
-    if (mount) void renderMount(mount);
+    if (mount) renderMount(mount);
   });
 }
 
-export async function initArchitectureSection() {
+export function initArchitectureSection() {
   const section = document.getElementById("architecture");
   if (!section) return;
 
   initArchitectureTabs(section);
 
-  const prefersReduced =
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (prefersReduced) section.classList.add("architecture-reduced-motion");
 
-  try {
-    await loadScript(MERMAID_CDN);
-    bindDiagramRenders(section);
-  } catch {
-    section.querySelectorAll("[data-arch-diagram]").forEach((mount) => {
-      mount.innerHTML =
-        '<p class="architecture-error">Architecture diagram could not load. See the <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#architecture">README</a>.</p>';
-    });
-  }
+  bindWorkflowRenders(section, prefersReduced);
 }

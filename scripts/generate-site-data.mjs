@@ -4,6 +4,7 @@
  * Run locally or in GitHub Pages CI so install commands stay up to date.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
@@ -13,6 +14,7 @@ import { buildProductContext } from "./lib-product-context.mjs";
 import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
 import { buildMailTemplates } from "./mail-templates.mjs";
 import { warnLiveChannelDrift } from "../website/admin/functions/api/_shared/version-plan.js";
+import { stampWebsiteHtml } from "./stamp-website-assets.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -471,8 +473,25 @@ const noticeTemplates = buildNoticeTemplates(productContext);
 const mailTemplates = buildMailTemplates(productContext);
 const defaultNotice = buildGeneratedCatalogNotice(productContext);
 
+const generatedAt = new Date().toISOString();
+const buildId = createHash("sha256").update(`${version}:${generatedAt}`).digest("hex").slice(0, 12);
+
+let socialLinks = null;
+const socialPath = join(root, "website", "social.json");
+if (existsSync(socialPath)) {
+  try {
+    socialLinks = JSON.parse(readFileSync(socialPath, "utf8"));
+  } catch {
+    socialLinks = null;
+  }
+}
+
 const siteData = {
-  generatedAt: new Date().toISOString(),
+  generatedAt,
+  assets: {
+    buildId,
+    cachePolicy: "static-assets-query-bust",
+  },
   displayName: pkg.displayName,
   description: pkg.description,
   version,
@@ -585,6 +604,14 @@ const siteData = {
     subline: SUPPORTED_IDE_WRAPPERS_SUBLINE,
     ides: SUPPORTED_IDE_WRAPPERS,
   },
+  social: socialLinks
+    ? {
+        subscribe: socialLinks.api?.subscribe ?? null,
+        discord: socialLinks.community?.discord ?? null,
+        labs: socialLinks.brand?.labs ?? null,
+        helpEmail: socialLinks.contact?.email ?? null,
+      }
+    : null,
 };
 
 const out = join(root, "website", "site-data.json");
@@ -592,9 +619,11 @@ writeFileSync(out, JSON.stringify(siteData, null, 2) + "\n");
 const visitorOut = join(root, "website", "visitor-stats.json");
 writeFileSync(visitorOut, JSON.stringify(siteData.visitors, null, 2) + "\n");
 execSync("node scripts/generate-readme-stats.mjs", { cwd: root, stdio: "inherit" });
+stampWebsiteHtml(buildId);
 console.log(`Wrote ${out}`);
 console.log(`Wrote ${visitorOut}`);
 console.log(`  Version:          ${version}`);
+console.log(`  Build ID:         ${buildId}`);
 console.log(`  Sync status:      ${syncStatus}`);
 console.log(`  Total downloads:  ${downloadTotals.verified ? downloadTotals.displayTotal.toLocaleString() : "unverified (missing live sources)"}`);
 console.log(`  Website visits:   ${visitors.websiteVisits ?? 0}`);

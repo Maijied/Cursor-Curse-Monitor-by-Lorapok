@@ -79,6 +79,16 @@ export interface BudgetMetrics {
   planBreakdownIncluded: number;
   planBreakdownBonus: number;
   planBreakdownTotal: number;
+  /** Units consumed from the included (non-bonus) pool. */
+  includedPoolUsed: number;
+  /** Units remaining in the included (non-bonus) pool. */
+  includedPoolRemaining: number;
+  bonusUsed: number;
+  bonusRemaining: number;
+  bonusLabel: string;
+  /** True when Cursor reports 100% but the combined pool still has headroom. */
+  staleLimitBanner: boolean;
+  staleLimitMessage: string;
   teamOnDemandEnabled: boolean;
   teamOnDemandSpendUsd: number | null;
 }
@@ -386,6 +396,35 @@ export function resolveUsagePlanPool(plan: UsagePlan): {
   return { included, bonus, total, used, remaining, percentUsed };
 }
 
+/** Detect when Cursor's totalPercentUsed or model messages say 100% but bonus/included headroom remains. */
+export function detectStaleLimitBanner(
+  usage: UsageSummary,
+  pool: ReturnType<typeof resolveUsagePlanPool>
+): { staleLimitBanner: boolean; staleLimitMessage: string } {
+  if (pool.remaining <= 0 || pool.total <= 0) {
+    return { staleLimitBanner: false, staleLimitMessage: "" };
+  }
+
+  const plan = usage.individualUsage.plan;
+  const autoMsg = (usage.autoModelSelectedDisplayMessage ?? "").toLowerCase();
+  const apiMsg = (usage.namedModelSelectedDisplayMessage ?? "").toLowerCase();
+  const apiSays100 =
+    plan.totalPercentUsed >= 100 ||
+    autoMsg.includes("100%") ||
+    apiMsg.includes("100%");
+
+  if (!apiSays100) {
+    return { staleLimitBanner: false, staleLimitMessage: "" };
+  }
+
+  const creditLabel = pool.bonus > 0 ? "agent credits" : "units";
+  const message =
+    `Cursor may show 100% even though your pool is not exhausted. ` +
+    `${pool.remaining.toLocaleString()} ${creditLabel} still available.`;
+
+  return { staleLimitBanner: true, staleLimitMessage: message };
+}
+
 export const USAGE_HISTORY_MAX = 90;
 export const USAGE_HISTORY_MIN_INTERVAL_MS = 8 * 60 * 60 * 1000;
 
@@ -438,11 +477,24 @@ export function buildBudgetMetrics(
   const includedPercent = exhaustedAll
     ? Math.max(100, plan.totalPercentUsed || pool.percentUsed)
     : pool.percentUsed;
-  const percentUsed = Math.max(
-    includedPercent,
-    plan.autoPercentUsed || 0,
-    plan.apiPercentUsed || 0
-  );
+  const percentUsed = exhaustedAll
+    ? Math.max(
+        includedPercent,
+        plan.autoPercentUsed || 0,
+        plan.apiPercentUsed || 0
+      )
+    : Math.max(
+        pool.percentUsed,
+        plan.autoPercentUsed || 0,
+        plan.apiPercentUsed || 0
+      );
+
+  const includedPoolUsed = Math.min(pool.used, pool.included);
+  const includedPoolRemaining = Math.max(0, pool.included - includedPoolUsed);
+  const bonusUsed = Math.max(0, pool.used - pool.included);
+  const bonusRemaining = Math.max(0, pool.bonus - bonusUsed);
+  const bonusLabel = pool.bonus > 0 ? "Agent credits" : "";
+  const stale = detectStaleLimitBanner(usage, pool);
 
   const thresholdReached =
     percentUsed >= thresholdPercent ||
@@ -456,6 +508,13 @@ export function buildBudgetMetrics(
     includedUsed: pool.used,
     includedLimit: pool.total,
     includedRemaining: pool.remaining,
+    includedPoolUsed,
+    includedPoolRemaining,
+    bonusUsed,
+    bonusRemaining,
+    bonusLabel,
+    staleLimitBanner: stale.staleLimitBanner,
+    staleLimitMessage: stale.staleLimitMessage,
     autoPercentUsed: plan.autoPercentUsed,
     apiPercentUsed: plan.apiPercentUsed,
     capUsd,

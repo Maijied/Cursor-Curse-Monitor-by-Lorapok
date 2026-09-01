@@ -63,6 +63,7 @@ const devStore = {
   discordConfig: {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
+    communityWebhookUrl: "",
     updatedAt: null,
     updatedBy: null,
   },
@@ -149,6 +150,7 @@ export async function resetDevStore() {
   devStore.discordConfig = {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
+    communityWebhookUrl: "",
     updatedAt: null,
     updatedBy: null,
   };
@@ -861,6 +863,7 @@ export function createDevApiMiddleware() {
           const current = devStore.discordConfig;
           let deploymentWebhookUrl = current.deploymentWebhookUrl ?? current.webhookUrl ?? "";
           let feedbackWebhookUrl = current.feedbackWebhookUrl ?? "";
+          let communityWebhookUrl = current.communityWebhookUrl ?? "";
 
           if (parsed.deploymentWebhookUrl !== undefined || parsed.webhookUrl !== undefined) {
             deploymentWebhookUrl = String(parsed.deploymentWebhookUrl ?? parsed.webhookUrl ?? "").trim();
@@ -878,10 +881,19 @@ export function createDevApiMiddleware() {
               return;
             }
           }
+          if (parsed.communityWebhookUrl !== undefined) {
+            communityWebhookUrl = String(parsed.communityWebhookUrl ?? "").trim();
+            if (communityWebhookUrl && !isValidDiscordWebhookUrl(communityWebhookUrl)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid community Discord webhook URL" }));
+              return;
+            }
+          }
 
           devStore.discordConfig = {
             deploymentWebhookUrl,
             feedbackWebhookUrl,
+            communityWebhookUrl,
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
           };
@@ -931,6 +943,47 @@ export function createDevApiMiddleware() {
           res.statusCode = 502;
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ error: "Discord feedback notification failed" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/discord/community" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        let parsed;
+        try {
+          parsed = JSON.parse(body || "{}");
+          if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Invalid JSON" }));
+            return;
+          }
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+          return;
+        }
+        try {
+          const { notifyDiscordCommunity } = await import("./functions/api/_shared/discord-community-notify.js");
+          const result = await notifyDiscordCommunity({ ADMIN_KV: devKv }, {
+            summary: parsed.summary,
+            triggeredBy: "dev@local",
+          });
+          res.setHeader("Content-Type", "application/json");
+          if (!result.ok && !result.skipped) {
+            res.statusCode = 502;
+            res.end(JSON.stringify({ error: result.error || "Discord community notification failed" }));
+            return;
+          }
+          res.end(JSON.stringify({ ok: true, skipped: result.skipped ?? false }));
+        } catch {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Discord community notification failed" }));
         }
       });
       return;
@@ -1303,6 +1356,7 @@ export function createDevApiMiddleware() {
             mailTransport: "dev-simulated",
             discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
             feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
+            communityDiscordConfigured: Boolean(devStore.discordConfig.communityWebhookUrl),
             siteDataUrl: "/site-data.json",
           }));
         })
@@ -1319,6 +1373,7 @@ export function createDevApiMiddleware() {
             mailTransport: "dev-simulated",
             discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
             feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
+            communityDiscordConfigured: Boolean(devStore.discordConfig.communityWebhookUrl),
             siteDataUrl: "/site-data.json",
           }));
         });

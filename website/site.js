@@ -3,6 +3,40 @@
  * Supports both Open VSX and VS Code Marketplace data.
  */
 
+/**
+ * Append ?v=buildId to same-origin static assets (CSS/JS/images).
+ * @param {string | undefined | null} buildId
+ */
+function applyAssetCacheBust(buildId) {
+  if (!buildId) return;
+  const suffix = `?v=${buildId}`;
+  const stamp = (url) => {
+    if (!url || url.startsWith("http") || url.startsWith("//") || url.startsWith("data:")) return url;
+    const base = url.split("?")[0];
+    return `${base}${suffix}`;
+  };
+
+  document.querySelectorAll('link[rel="stylesheet"][href]').forEach((el) => {
+    if (el instanceof HTMLLinkElement && el.href) {
+      const path = el.getAttribute("href");
+      if (path) el.setAttribute("href", stamp(path));
+    }
+  });
+
+  document.querySelectorAll("script[src]").forEach((el) => {
+    if (el instanceof HTMLScriptElement) {
+      const path = el.getAttribute("src");
+      if (path) el.setAttribute("src", stamp(path));
+    }
+  });
+
+  document.querySelectorAll("img[src]").forEach((el) => {
+    if (!(el instanceof HTMLImageElement)) return;
+    const path = el.getAttribute("src");
+    if (path && !path.includes("fonts.googleapis")) el.setAttribute("src", stamp(path));
+  });
+}
+
 const SUBSCRIBE_KEYS = {
   email: "ccm-subscribe-email",
   snoozeUntil: "ccm-subscribe-snooze-until",
@@ -244,9 +278,18 @@ function updateStructuredDataVersion(data) {
     const staticAt = staticData?.generatedAt ? Date.parse(String(staticData.generatedAt)) : 0;
     const liveAt = Date.parse(String(liveData.liveRefreshedAt ?? liveData.generatedAt ?? ""));
     if (!staticData) return liveData;
-    if (Number.isNaN(liveAt) || (!Number.isNaN(staticAt) && liveAt < staticAt)) {
-      return staticData;
-    }
+
+    const liveVerified = liveData.downloads?.verified === true;
+    const staticVerified = staticData.downloads?.verified === true;
+    const liveTotal = Number(liveData.downloads?.displayTotal ?? liveData.downloads?.total ?? 0);
+    const staticTotal = Number(staticData.downloads?.displayTotal ?? staticData.downloads?.total ?? 0);
+    const preferLiveDownloads =
+      liveVerified && (!staticVerified || liveTotal >= staticTotal || (!Number.isNaN(liveAt) && liveAt >= staticAt));
+
+    const useLiveEnvelope =
+      !Number.isNaN(liveAt) && (liveAt >= staticAt || preferLiveDownloads || liveData.liveRefreshedAt);
+
+    if (!useLiveEnvelope) return staticData;
 
     const merged = { ...staticData, ...liveData };
 
@@ -257,7 +300,16 @@ function updateStructuredDataVersion(data) {
       merged.version = staticData.version;
     }
 
-    if (staticData.downloads?.verified === true && liveData.downloads?.verified !== true) {
+    if (preferLiveDownloads && liveData.downloads) {
+      merged.downloads = {
+        ...staticData.downloads,
+        ...liveData.downloads,
+        breakdown: {
+          ...(staticData.downloads?.breakdown ?? {}),
+          ...(liveData.downloads?.breakdown ?? {}),
+        },
+      };
+    } else if (staticVerified && liveData.downloads?.verified !== true) {
       merged.downloads = {
         ...staticData.downloads,
         breakdown: {
@@ -277,9 +329,17 @@ function updateStructuredDataVersion(data) {
 
     const staticVisits = staticData.visitors?.websiteVisits;
     const liveVisits = liveData.visitors?.websiteVisits;
-    if (staticVisits != null && (liveVisits == null || Number(liveVisits) === 0)) {
+    if (liveVisits != null && Number(liveVisits) > Number(staticVisits ?? 0)) {
+      merged.visitors = { ...staticData.visitors, ...liveData.visitors };
+    } else if (staticVisits != null && (liveVisits == null || Number(liveVisits) === 0)) {
       merged.visitors = { ...liveData.visitors, ...staticData.visitors };
     }
+
+    merged.assets = {
+      ...(staticData.assets ?? {}),
+      ...(liveData.assets ?? {}),
+      buildId: staticData.assets?.buildId ?? liveData.assets?.buildId,
+    };
 
     return merged;
   }
@@ -326,6 +386,7 @@ function updateStructuredDataVersion(data) {
       : data?.downloads?.verified === true;
 
   if (data) {
+    applyAssetCacheBust(data.assets?.buildId);
     const setText = (sel, text) => {
       $$(sel).forEach((el) => { el.textContent = text; });
     };

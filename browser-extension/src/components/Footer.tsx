@@ -1,5 +1,5 @@
 import React from "react";
-import { formatAlsoAvailableOn } from "@lorapok/cursor-monitor-shared";
+import { DISCORD_INVITE_URL, formatAlsoAvailableOn } from "@lorapok/cursor-monitor-shared";
 
 declare const __EXTENSION_VERSION__: string;
 
@@ -26,6 +26,10 @@ export function Footer({ onFeedbackClick }: Props) {
           </>
         ) : null}
         <a href="mailto:cursor.curse.help@lorapok.tech">Help</a>
+        <span className="sep">·</span>
+        <a href={DISCORD_INVITE_URL} target="_blank" rel="noopener noreferrer">
+          Discord
+        </a>
         <span className="sep">·</span>
         <a href="mailto:cursor.monitor@lorapok.tech">Updates</a>
         <span className="version">v{__EXTENSION_VERSION__}</span>

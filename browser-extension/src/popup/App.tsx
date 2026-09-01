@@ -3,6 +3,7 @@ import type { DashboardSnapshot } from "@lorapok/cursor-monitor-shared";
 import { AnimatedGauge } from "../components/AnimatedGauge";
 import { SpendChart } from "../components/SpendChart";
 import { Footer } from "../components/Footer";
+import { UsageHelpModal } from "../components/UsageHelpModal";
 import { SubscribeModal } from "../components/SubscribeModal";
 import { FeedbackModal } from "../components/FeedbackModal";
 import { WhatsNewCard } from "../components/WhatsNewCard";
@@ -26,6 +27,8 @@ export function App() {
   const [budgetInput, setBudgetInput] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showUsageHelp, setShowUsageHelp] = useState(false);
+  const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [switching, setSwitching] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const connectPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -230,27 +233,33 @@ export function App() {
             />
             <div className="stats-row">
               <div className="stat-col">
-                <span className="stat-k">Budget cap</span>
-                <span className="stat-v">{b.hasUsdBudget ? money(b.capUsd) : `${b.includedLimit} u`}</span>
-                <button
-                  type="button"
-                  className={`cap-edit-btn${editingBudget ? " is-open" : ""}`}
-                  onClick={() => {
-                    setEditingBudget((open) => !open);
-                    if (!editingBudget) {
-                      setBudgetInput(String(b?.capUsd ?? snapshot.customBudgetLimit ?? 0));
-                    }
-                  }}
-                  aria-expanded={editingBudget}
-                >
-                  <span className="cap-icon" aria-hidden="true">✎</span>
-                  <span>Edit budget cap</span>
-                </button>
+                <span className="stat-k">{b.usdBudgetActive ? "Spend cap" : "Total pool"}</span>
+                <span className="stat-v">
+                  {b.usdBudgetActive ? money(b.capUsd) : `${b.includedLimit} u`}
+                </span>
+                {b.usdBudgetActive ? (
+                  <button
+                    type="button"
+                    className={`cap-edit-btn${editingBudget ? " is-open" : ""}`}
+                    onClick={() => {
+                      setEditingBudget((open) => !open);
+                      if (!editingBudget) {
+                        setBudgetInput(String(b.capUsd ?? snapshot.customBudgetLimit ?? 0));
+                      }
+                    }}
+                    aria-expanded={editingBudget}
+                  >
+                    <span className="cap-icon" aria-hidden="true">
+                      ✎
+                    </span>
+                    <span>Edit budget cap</span>
+                  </button>
+                ) : null}
               </div>
               <div className="stat-col">
-                <span className="stat-k">Amount left</span>
+                <span className="stat-k">{b.usdBudgetActive ? "Spend left" : "Quota left"}</span>
                 <span className="stat-v">
-                  {b.hasUsdBudget ? money(b.leftUsd) : `${b.includedRemaining} u`}
+                  {b.usdBudgetActive ? money(b.leftUsd) : `${b.includedRemaining} u`}
                 </span>
                 <span className="stat-sub">
                   {Math.max(0, 100 - Math.round(spendPercent))}% remaining
@@ -262,7 +271,7 @@ export function App() {
                 <span className="stat-sub">{b.daysUntilReset} days left</span>
               </div>
             </div>
-            {editingBudget && (
+            {editingBudget && b.usdBudgetActive && (
               <div className="budget-edit-panel open">
                 <label className="budget-edit-label" htmlFor="popup-budget-cap">
                   Personal budget cap (USD)
@@ -291,7 +300,36 @@ export function App() {
           </section>
 
           <section className="card">
-            <p className="section-label">Usage meters</p>
+            <div className="section-head-row">
+              <p className="section-label" style={{ margin: 0 }}>
+                Usage meters
+              </p>
+              <button
+                type="button"
+                className="usage-help-btn"
+                onClick={() => setShowUsageHelp(true)}
+                aria-label="Usage help"
+              >
+                ?
+              </button>
+            </div>
+            {b.staleLimitBanner && b.staleLimitMessage ? (
+              <p className="stale-banner" role="status">
+                {b.staleLimitMessage}
+              </p>
+            ) : null}
+            <div className="meter-row">
+              <div className="meter-head">
+                <span>Pool</span>
+                <strong>{Math.round(b.percentUsed)}%</strong>
+              </div>
+              <div className="meter-track">
+                <div
+                  className="meter-fill"
+                  style={{ width: `${Math.min(100, b.percentUsed)}%` }}
+                />
+              </div>
+            </div>
             <div className="meter-row">
               <div className="meter-head">
                 <span>Auto</span>
@@ -311,6 +349,48 @@ export function App() {
                   className="meter-fill api"
                   style={{ width: `${Math.min(100, b.apiPercentUsed)}%` }}
                 />
+              </div>
+            </div>
+            <button
+              type="button"
+              className="usage-breakdown-toggle"
+              aria-expanded={breakdownOpen}
+              aria-controls="usage-breakdown-body"
+              onClick={() => setBreakdownOpen((open) => !open)}
+            >
+              <span>Usage breakdown</span>
+              <span className="chevron" aria-hidden="true">
+                ▾
+              </span>
+            </button>
+            <div
+              id="usage-breakdown-body"
+              className="usage-breakdown-body"
+              hidden={!breakdownOpen}
+            >
+              <div className="row">
+                <span className="label">Included used</span>
+                <span className="value">
+                  {b.includedPoolUsed} / {b.planBreakdownIncluded || b.includedLimit} u
+                </span>
+              </div>
+              <div className="row">
+                <span className="label">Included remaining</span>
+                <span className="value">{b.includedPoolRemaining} u</span>
+              </div>
+              {b.planBreakdownBonus > 0 ? (
+                <div className="row">
+                  <span className="label">{b.bonusLabel || "Agent credits"}</span>
+                  <span className="value">
+                    {b.bonusUsed} used · {b.bonusRemaining} left
+                  </span>
+                </div>
+              ) : null}
+              <div className="row">
+                <span className="label">Cycle reset</span>
+                <span className="value">
+                  {b.resetDateLabel} ({b.daysUntilReset}d)
+                </span>
               </div>
             </div>
             <div className="row">
@@ -344,6 +424,7 @@ export function App() {
       )}
 
       <SubscribeModal />
+      <UsageHelpModal open={showUsageHelp} onClose={() => setShowUsageHelp(false)} />
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} source="browser-addon-popup" />
       <Footer onFeedbackClick={() => setShowFeedback(true)} />
     </div>

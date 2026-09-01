@@ -77,9 +77,9 @@ export default function DiscordFeedbackCard() {
             Discord feedback hook
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Optional channel for user-feedback prompts (GitHub Issues, Discussions, support links). This is{" "}
-            <strong className="text-[var(--color-text)]">not</strong> the deployment status webhook — configure that
-            on the Deployments page.
+            Optional channel for in-app user-feedback prompts (GitHub Issues, Discussions, support links).
+            For community building and announcements, use the <strong className="text-[var(--color-text)]">Discord community</strong> card above.
+            Deployment status webhooks are configured on the Deployments page.
           </p>
         </div>
         {config && (

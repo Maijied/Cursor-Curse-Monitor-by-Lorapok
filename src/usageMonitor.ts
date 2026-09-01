@@ -258,7 +258,9 @@ export class UsageMonitorService implements vscode.Disposable {
     }
     const next: UsageHistoryPoint = {
       t: Date.now(),
-      includedPercent: budget.percentUsed,
+      includedPercent: budget.usdBudgetActive
+        ? budget.budgetPercentUsed
+        : budget.percentUsed,
       auto: budget.autoPercentUsed,
       api: budget.apiPercentUsed,
       spentUsd: budget.spentUsd,

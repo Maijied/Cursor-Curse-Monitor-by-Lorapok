@@ -19,7 +19,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Design agent skills** — project copies of Anthropic `frontend-design`, Vercel web-interface guidelines + React best practices, AccessLint WCAG audit notes, and a Lorapok-brand frontend skill (does not replace live UI)
+- **Meta AI marketing assets** — Cognitum hero, architecture shield, and carousel overview saved under `website/assets/marketing/meta-ai/`; hero ambient texture, architecture section accent, and gallery Marketing filter on the public site
+- **Usage accuracy (IDE + browser)** — pool-aware hero percent, agent-credit breakdown, stale-100% banner when bonus remains, collapsible usage breakdown, help modal, and on-demand-only personal cap editing; `DISCORD_INVITE_URL` in shared product links
+- **Hybrid architecture workflows** — marketing site architecture tabs now mirror full Mermaid topology (clients, deploy pipeline, edge cases, schedules) with glowing cards and animated packet flow; coverage guarded by `architecture-workflow-from-mermaid.mjs` tests
+- **Asset cache busting** — `site-data.json` includes `assets.buildId`; `npm run site:data` stamps `?v=` on local CSS/JS in HTML pages
+- **Discord community link** — public invite `https://discord.gg/bp42QAMC6` in `social.json`; footers on index, privacy, and terms load from `social-footer.js`
+- **Unified Lorapok footer** — `social.json` drives brand + community icons (GitHub, Discord, LinkedIn, X, labs, Mission Control) across marketing pages
+
+### Fixed
+
+- **Live hero stats merge** — `site.js` prefers verified live `/api/site-data` download totals when fresher or higher than static `site-data.json`
+- **README badge drift** — `test_badge_site_data_sync.mjs` asserts `website/stats/badge.json` matches generated site-data totals
+
 - **Website build skill** — `lorapok-website-build` skill + `website-marketing` Cursor rule for hero, stats, subscribe, and notices workflows
 - **Marketing site design restore** — six PNG feature lightbox cards, IDE icon grid, ecosystem tab a11y controls, marquee pause, and showcase assets lost during main branch divergence (`ed438d9`, `0f5df41`)
 - **Admin Discord integration** — configurable deployment webhook in Settings, with notify-on-deploy API and completion watch

@@ -42,9 +42,11 @@ function normalizeStoredConfig(parsed) {
     parsed.deploymentWebhookUrl ?? parsed.webhookUrl ?? ""
   );
   const feedbackWebhookUrl = String(parsed.feedbackWebhookUrl ?? "");
+  const communityWebhookUrl = String(parsed.communityWebhookUrl ?? "");
   return {
     deploymentWebhookUrl,
     feedbackWebhookUrl,
+    communityWebhookUrl,
     updatedAt: parsed.updatedAt ?? null,
     updatedBy: parsed.updatedBy ?? null,
   };
@@ -59,6 +61,7 @@ export async function readDiscordConfig(env) {
   const empty = {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
+    communityWebhookUrl: "",
     updatedAt: null,
     updatedBy: null,
   };
@@ -75,7 +78,7 @@ export async function readDiscordConfig(env) {
 /**
  * Stores the Discord configuration in administrative key-value storage.
  * @param {Record<string, unknown>} env - The environment containing the administrative KV binding.
- * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; updatedAt: string; updatedBy: string }} config - The configuration to store.
+ * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; communityWebhookUrl?: string; updatedAt: string; updatedBy: string }} config - The configuration to store.
  * @throws {Error} If the administrative KV binding is unavailable.
  */
 export async function writeDiscordConfig(env, config) {
@@ -87,25 +90,31 @@ export async function writeDiscordConfig(env, config) {
 
 /**
  * Creates a client-safe summary of the configured Discord webhooks.
- * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; webhookUrl?: string; updatedAt?: string | null; updatedBy?: string | null }} config - The stored Discord configuration.
- * @return {{ deploymentConfigured: boolean; feedbackConfigured: boolean; deploymentWebhookPreview: string | null; feedbackWebhookPreview: string | null; configured: boolean; webhookPreview: string | null; updatedAt: string | null; updatedBy: string | null }} Configuration status, masked webhook previews, and update metadata.
+ * @param {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; communityWebhookUrl?: string; webhookUrl?: string; updatedAt?: string | null; updatedBy?: string | null }} config - The stored Discord configuration.
+ * @return {{ deploymentConfigured: boolean; feedbackConfigured: boolean; communityConfigured: boolean; deploymentWebhookPreview: string | null; feedbackWebhookPreview: string | null; communityWebhookPreview: string | null; configured: boolean; webhookPreview: string | null; updatedAt: string | null; updatedBy: string | null }} Configuration status, masked webhook previews, and update metadata.
  */
 export function sanitizeDiscordConfigForClient(config) {
   const deploymentWebhookUrl = String(
     config.deploymentWebhookUrl ?? config.webhookUrl ?? ""
   );
   const feedbackWebhookUrl = String(config.feedbackWebhookUrl ?? "");
+  const communityWebhookUrl = String(config.communityWebhookUrl ?? "");
   const deploymentConfigured = Boolean(
     deploymentWebhookUrl && isValidDiscordWebhookUrl(deploymentWebhookUrl)
   );
   const feedbackConfigured = Boolean(
     feedbackWebhookUrl && isValidDiscordWebhookUrl(feedbackWebhookUrl)
   );
+  const communityConfigured = Boolean(
+    communityWebhookUrl && isValidDiscordWebhookUrl(communityWebhookUrl)
+  );
   return {
     deploymentConfigured,
     feedbackConfigured,
+    communityConfigured,
     deploymentWebhookPreview: deploymentWebhookUrl ? maskWebhookUrl(deploymentWebhookUrl) : null,
     feedbackWebhookPreview: feedbackWebhookUrl ? maskWebhookUrl(feedbackWebhookUrl) : null,
+    communityWebhookPreview: communityWebhookUrl ? maskWebhookUrl(communityWebhookUrl) : null,
     /** @deprecated use deploymentConfigured */
     configured: deploymentConfigured,
     /** @deprecated use deploymentWebhookPreview */

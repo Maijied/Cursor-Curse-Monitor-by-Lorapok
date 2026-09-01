@@ -44,6 +44,7 @@ export async function onRequestPut(context) {
   const current = await readDiscordConfig(env);
   let deploymentWebhookUrl = current.deploymentWebhookUrl;
   let feedbackWebhookUrl = current.feedbackWebhookUrl;
+  let communityWebhookUrl = current.communityWebhookUrl;
 
   if (body.deploymentWebhookUrl !== undefined || body.webhookUrl !== undefined) {
     deploymentWebhookUrl = String(body.deploymentWebhookUrl ?? body.webhookUrl ?? "").trim();
@@ -59,13 +60,21 @@ export async function onRequestPut(context) {
     }
   }
 
+  if (body.communityWebhookUrl !== undefined) {
+    communityWebhookUrl = String(body.communityWebhookUrl ?? "").trim();
+    if (communityWebhookUrl && !isValidDiscordWebhookUrl(communityWebhookUrl)) {
+      return jsonResponse({ error: "Invalid community Discord webhook URL" }, 400);
+    }
+  }
+
   if (
     body.deploymentWebhookUrl === undefined &&
     body.webhookUrl === undefined &&
-    body.feedbackWebhookUrl === undefined
+    body.feedbackWebhookUrl === undefined &&
+    body.communityWebhookUrl === undefined
   ) {
     return jsonResponse(
-      { error: "deploymentWebhookUrl or feedbackWebhookUrl is required" },
+      { error: "deploymentWebhookUrl, feedbackWebhookUrl, or communityWebhookUrl is required" },
       400
     );
   }
@@ -73,6 +82,7 @@ export async function onRequestPut(context) {
   const next = {
     deploymentWebhookUrl,
     feedbackWebhookUrl,
+    communityWebhookUrl,
     updatedAt: new Date().toISOString(),
     updatedBy: auth.email,
   };
