@@ -2,6 +2,7 @@ import "./registerShared";
 import * as vscode from "vscode";
 import { applyComposerFallbackModel, cleanupMonitoringDbBackups, formatBackupBytes, recoverMonitoringDbBackups, scanMonitoringDbBackups, setRuntimeAppName, shouldNotifyDbBackupWaste } from "./cursorAuth";
 import { reindexMissingConversations } from "./conversationReindex";
+import { resolveReindexPolicy } from "./reindexConfig";
 import {
   DashboardViewProvider,
   formatStatusBarText,
@@ -228,7 +229,8 @@ export function activate(context: vscode.ExtensionContext): void {
       await securityMonitor?.scanClipboard();
     }),
     vscode.commands.registerCommand("cursorCurseMonitor.reindexConversations", async () => {
-      const result = await reindexMissingConversations(context.extensionUri);
+      const policy = await resolveReindexPolicy(true);
+      const result = await reindexMissingConversations(context.extensionUri, { policy });
       if (!result.success) {
         NotificationProvider.show({
           title: "Conversation Reindex Failed",
@@ -242,11 +244,14 @@ export function activate(context: vscode.ExtensionContext): void {
       const indexed = result.searchIndexed.length;
       const restored = result.sidebarRestored.length;
       const skipped = result.skipped.length;
+      const reloadHint = policy.requireEditorQuit
+        ? "Reload the window to refresh the chat list."
+        : "Reload the window if chats do not appear immediately.";
       NotificationProvider.show({
         title: "Conversation Recovery Complete",
         message:
           indexed || restored
-            ? `Indexed ${indexed} chat(s) for search and restored ${restored} to the sidebar. ${skipped} already present. Reload the window to refresh the chat list.`
+            ? `Indexed ${indexed} chat(s) for search and restored ${restored} to the sidebar. ${skipped} already present. ${reloadHint}`
             : `No missing conversations found since Aug 10. ${skipped} chat(s) were already indexed.`,
         type: "success",
         duration: 9000,

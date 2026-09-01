@@ -429,6 +429,31 @@ export async function putSubscribePromptConfigApi(payload: Partial<SubscribeProm
   return data as { ok: boolean; config: SubscribePromptConfig };
 }
 
+export type ReindexPolicyConfig = {
+  reindexEnabled: boolean;
+  reindexWritePolicy: "live" | "quit-first";
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export async function fetchReindexPolicyConfigApi() {
+  return apiGet<{ ok: boolean; config: ReindexPolicyConfig }>("/integrations/reindex/config");
+}
+
+export async function putReindexPolicyConfigApi(payload: Partial<ReindexPolicyConfig>) {
+  const res = await fetch(`${API_BASE}/integrations/reindex/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save reindex policy settings");
+  return data as { ok: boolean; config: ReindexPolicyConfig };
+}
+
 export type DeployRequest = {
   target_tag: string;
   publish_market: "Both" | "Open VSX + Firefox AMO" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO";

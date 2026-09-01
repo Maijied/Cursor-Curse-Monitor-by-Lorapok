@@ -13,6 +13,7 @@ import {
   resolveAgentProjectsRoot,
   validateDatabaseIntegrity,
 } from "./cursorAuth";
+import { resolveReindexPolicy, type ReindexPolicy } from "./reindexConfig";
 
 type SqliteDb = InstanceType<typeof import("node:sqlite").DatabaseSync>;
 
@@ -594,13 +595,31 @@ function restoreSidebar(
   return true;
 }
 
+export type ReindexOptions = {
+  policy?: ReindexPolicy;
+};
+
 export async function reindexMissingConversations(
-  extensionUri: vscode.Uri
+  extensionUri: vscode.Uri,
+  options: ReindexOptions = {}
 ): Promise<ReindexResult> {
   const host = detectEditorHost(vscode.env.appName);
   const appName = vscode.env.appName;
+  const policy = options.policy ?? (await resolveReindexPolicy());
 
-  if (isEditorProcessRunning(host, appName)) {
+  if (!policy.reindexEnabled) {
+    return {
+      success: false,
+      error:
+        "Conversation reindex is disabled by Mission Control policy. Ask your admin to re-enable it in Settings → Reindex policy.",
+      searchIndexed: [],
+      sidebarRestored: [],
+      skipped: [],
+      backups: [],
+    };
+  }
+
+  if (policy.requireEditorQuit && isEditorProcessRunning(host, appName)) {
     return {
       success: false,
       error:
