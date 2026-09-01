@@ -482,11 +482,14 @@ export async function sendMail(
       result = {
         sent: false,
         reason: err instanceof Error ? err.message : "Resend primary delivery failed",
+        transport: "resend",
       };
     }
   }
 
-  if (!result.sent && env.MAIL_RELAY?.fetch) {
+  const resendWasPrimary = prefersResendFirst(to, env);
+
+  if (!result.sent && env.MAIL_RELAY?.fetch && !resendWasPrimary) {
     try {
       result = await sendViaMailRelay(env, payload);
     } catch (err) {

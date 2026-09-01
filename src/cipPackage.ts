@@ -12,8 +12,8 @@ import {
   type ParsedTranscript,
   type ReindexProgressUpdate,
 } from "./conversationReindex";
-import { detectEditorHost, isEditorProcessRunning, validateDatabaseIntegrity } from "./cursorAuth";
-import { lookbackLabel, type CursorIndexPolicy } from "./cursorIndexConfig";
+import { detectEditorHost, isEditorProcessRunning, validateDatabaseIntegrity, createFullBackup } from "./cursorAuth";
+import { lookbackLabel, transcriptCutoffMs, type CursorIndexPolicy } from "./cursorIndexConfig";
 
 export const CIP_FORMAT_VERSION = 1;
 
@@ -210,10 +210,7 @@ export async function exportConversationIndexPackage(
 
   onProgress?.({ phase: "preparing", message: "Preparing export…" });
   const host = detectEditorHost(vscode.env.appName);
-  const minUpdatedAtMs =
-    policy.transcriptLookbackDays > 0
-      ? Date.now() - policy.transcriptLookbackDays * 24 * 60 * 60 * 1000
-      : null;
+  const minUpdatedAtMs = transcriptCutoffMs(policy);
   onProgress?.({ phase: "scan", message: `Scanning ${lookbackLabel(policy)}…` });
   const parsed = discoverTranscripts(storage.searchDbPath, host, vscode.env.appName, {
     minUpdatedAtMs,
@@ -225,8 +222,25 @@ export async function exportConversationIndexPackage(
 
   onProgress?.({ phase: "scan", message: "Sanitizing export records…", total: parsed.length });
   const records = parsed.map((entry) => parsedToCipRecord(entry, policy));
-  if (policy.cipRequireSanitization && records.some((record) => (record.redactions ?? 0) > 0)) {
-    onProgress?.({ phase: "scan", message: "Secrets redacted from export payload." });
+  if (policy.cipRequireSanitization) {
+    for (const record of records) {
+      const scanTarget = JSON.stringify({
+        title: record.title,
+        body: record.body,
+        turns: record.turns,
+      });
+      if (scanSecrets(scanTarget, { context: "workspace" }).length > 0) {
+        return {
+          success: false,
+          error:
+            "Export blocked: potential secrets remain after sanitization. Remove secrets from transcripts or ask your admin to adjust policy.",
+          recordCount: records.length,
+        };
+      }
+    }
+    if (records.some((record) => (record.redactions ?? 0) > 0)) {
+      onProgress?.({ phase: "scan", message: "Secrets redacted from export payload." });
+    }
   }
 
   const pkg: CipPackage = {
@@ -276,6 +290,48 @@ function cipRecordToParsed(record: CipRecord, workspacePath: string): ParsedTran
       fingerprint: "",
     },
   };
+}
+
+type SqliteDb = import("node:sqlite").DatabaseSync;
+
+function isDuplicateCipImport(
+  stateDb: SqliteDb,
+  contentHash: string,
+  sourceOwnerHash: string,
+  policy: CursorIndexPolicy,
+  batchSeen: Set<string>
+): boolean {
+  const batchKey = policy.cipDedupeAcrossUsers
+    ? contentHash
+    : `${sourceOwnerHash}:${contentHash}`;
+  if (batchSeen.has(batchKey)) return true;
+
+  const rows = stateDb
+    .prepare("SELECT value FROM composerHeaders WHERE value LIKE '%\"importMeta\"%'")
+    .all() as Array<{ value?: string }>;
+  for (const row of rows) {
+    if (!row.value) continue;
+    try {
+      const header = JSON.parse(row.value) as { importMeta?: { contentHash?: string; sourceOwnerHash?: string } };
+      const meta = header.importMeta;
+      if (!meta?.contentHash || meta.contentHash !== contentHash) continue;
+      if (policy.cipDedupeAcrossUsers) {
+        batchSeen.add(batchKey);
+        return true;
+      }
+      if (meta.sourceOwnerHash === sourceOwnerHash) {
+        batchSeen.add(batchKey);
+        return true;
+      }
+    } catch {
+      // ignore malformed header JSON
+    }
+  }
+  return false;
+}
+
+function backupBundlePaths(...bundles: Array<ReturnType<typeof createFullBackup>>): string[] {
+  return bundles.flatMap((bundle) => bundle?.files.map((file) => file.backup) ?? []);
 }
 
 export async function importConversationIndexPackage(
@@ -357,6 +413,25 @@ export async function importConversationIndexPackage(
   }
   const pkg = validated.pkg;
 
+  const localOwnerHash = hashOwner(storage.accountLabel, storage.productFolder);
+  const packageOwnerHash = pkg.header.ownerHash;
+  if (
+    packageOwnerHash &&
+    packageOwnerHash !== localOwnerHash &&
+    !policy.cipAllowCrossUserLocalImport
+  ) {
+    return {
+      success: false,
+      error:
+        "Package owner does not match the active account. Cross-user import is disabled by Mission Control policy.",
+      imported: 0,
+      skipped: 0,
+      searchIndexed: [],
+      sidebarRestored: [],
+      backups: [],
+    };
+  }
+
   const limit = policy.maxImportRecords > 0 ? policy.maxImportRecords : pkg.records.length;
   const records = pkg.records.slice(0, limit);
   if (!records.length) {
@@ -419,18 +494,10 @@ export async function importConversationIndexPackage(
   }
 
   onProgress?.({ phase: "backup", message: "Creating safety backups…" });
-  const suffix = ".bak-pre-ccm-import";
-  const backups: string[] = [];
-  if (fs.existsSync(storage.stateDbPath)) {
-    const backupPath = `${storage.stateDbPath}${suffix}`;
-    fs.copyFileSync(storage.stateDbPath, backupPath);
-    backups.push(backupPath);
-  }
-  if (fs.existsSync(storage.searchDbPath)) {
-    const backupPath = `${storage.searchDbPath}${suffix}`;
-    fs.copyFileSync(storage.searchDbPath, backupPath);
-    backups.push(backupPath);
-  }
+  const backups = backupBundlePaths(
+    createFullBackup(storage.stateDbPath),
+    fs.existsSync(storage.searchDbPath) ? createFullBackup(storage.searchDbPath) : null
+  );
 
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as Record<string, unknown>;
   const searchIndexed: string[] = [];
@@ -444,12 +511,28 @@ export async function importConversationIndexPackage(
     importBatchId,
     importedAt: new Date().toISOString(),
   };
+  const batchDedupeKeys = new Set<string>();
 
   const { DatabaseSync } = require("node:sqlite") as typeof import("node:sqlite");
-  const searchDb = fs.existsSync(storage.searchDbPath)
-    ? new DatabaseSync(storage.searchDbPath, { timeout: 10000 })
-    : null;
-  const stateDb = new DatabaseSync(storage.stateDbPath, { timeout: 15000 });
+  let searchDb: SqliteDb | null = null;
+  let stateDb: SqliteDb | null = null;
+  try {
+    if (fs.existsSync(storage.searchDbPath)) {
+      searchDb = new DatabaseSync(storage.searchDbPath, { timeout: 10000 });
+    }
+    stateDb = new DatabaseSync(storage.stateDbPath, { timeout: 15000 });
+  } catch (error) {
+    if (searchDb) searchDb.close();
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Could not open Cursor databases for import.",
+      imported: 0,
+      skipped: 0,
+      searchIndexed: [],
+      sidebarRestored: [],
+      backups,
+    };
+  }
 
   try {
     if (searchDb) searchDb.exec("BEGIN IMMEDIATE");
@@ -457,6 +540,13 @@ export async function importConversationIndexPackage(
 
     for (let index = 0; index < records.length; index++) {
       const record = records[index]!;
+      if (
+        isDuplicateCipImport(stateDb, record.contentHash, ownerHash, policy, batchDedupeKeys)
+      ) {
+        skipped++;
+        continue;
+      }
+
       const parsed = cipRecordToParsed(record, workspacePath);
       const composerId = crypto.randomUUID();
       const importMeta = {
@@ -474,6 +564,11 @@ export async function importConversationIndexPackage(
         source: "cip-import",
         importMeta,
       });
+
+      const batchKey = policy.cipDedupeAcrossUsers
+        ? record.contentHash
+        : `${ownerHash}:${record.contentHash}`;
+      batchDedupeKeys.add(batchKey);
 
       if (!didSearch && !didSidebar) {
         skipped++;
@@ -498,16 +593,16 @@ export async function importConversationIndexPackage(
       }
     }
 
-    if (searchDb) searchDb.exec("COMMIT");
     stateDb.exec("COMMIT");
+    if (searchDb) searchDb.exec("COMMIT");
   } catch (error) {
     try {
-      if (searchDb) searchDb.exec("ROLLBACK");
+      stateDb.exec("ROLLBACK");
     } catch {
       // ignore
     }
     try {
-      stateDb.exec("ROLLBACK");
+      if (searchDb) searchDb.exec("ROLLBACK");
     } catch {
       // ignore
     }

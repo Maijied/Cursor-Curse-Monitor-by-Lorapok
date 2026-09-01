@@ -1177,7 +1177,9 @@ export function createDevApiMiddleware() {
           }
           devStore.cursorIndexConfig = normalizeCursorIndexConfig({
             ...devStore.cursorIndexConfig,
-            ...parsed,
+            ...Object.fromEntries(
+              Object.entries(parsed).filter(([, value]) => value !== undefined)
+            ),
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
           });

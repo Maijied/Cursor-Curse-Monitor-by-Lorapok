@@ -498,11 +498,9 @@ function makeComposerData(
   return data;
 }
 
-function backupDb(dbPath: string, suffix: string): string | null {
-  if (!fs.existsSync(dbPath)) return null;
-  const backupPath = `${dbPath}${suffix}`;
-  fs.copyFileSync(dbPath, backupPath);
-  return backupPath;
+function backupDbPaths(dbPath: string): string[] {
+  const bundle = createFullBackup(dbPath);
+  return bundle?.files.map((file) => file.backup) ?? [];
 }
 
 export function indexConversationRecord(options: {
@@ -740,12 +738,8 @@ export async function reindexMissingConversations(
     };
   }
 
-  const suffix = ".bak-pre-ccm-reindex";
   reportProgress(onProgress, { phase: "backup", message: "Creating safety backups…" });
-  const backups = [
-    backupDb(stateDbPath, suffix),
-    backupDb(searchDbPath, suffix),
-  ].filter((item): item is string => Boolean(item));
+  const backups = [...backupDbPaths(stateDbPath), ...backupDbPaths(searchDbPath)];
 
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as Record<string, unknown>;
   reportProgress(onProgress, { phase: "scan", message: "Scanning agent transcripts…" });

@@ -51,8 +51,8 @@ export function normalizePolicy(raw: Record<string, unknown> | null | undefined)
       : "live";
   const indexEnabled =
     raw?.indexEnabled !== false && raw?.reindexEnabled !== false && raw?.cipEnabled !== false;
-  const cipExportEnabled = raw?.cipExportEnabled !== false;
-  const cipImportEnabled = raw?.cipImportEnabled !== false;
+  const cipExportEnabled = indexEnabled && raw?.cipExportEnabled !== false;
+  const cipImportEnabled = indexEnabled && raw?.cipImportEnabled !== false;
   const requireEditorQuit =
     typeof raw?.requireEditorQuit === "boolean"
       ? raw.requireEditorQuit
@@ -91,7 +91,9 @@ export function lookbackLabel(policy: CursorIndexPolicy): string {
 function readLocalOverride(): Partial<CursorIndexPolicy> {
   const config = vscode.workspace.getConfiguration("cursorCurseMonitor");
   const override: Partial<CursorIndexPolicy> = {};
-  const policy = config.get<CursorIndexWritePolicy | "default">("indexWritePolicy");
+  const policy =
+    config.get<CursorIndexWritePolicy | "default">("indexWritePolicy") ??
+    config.get<CursorIndexWritePolicy | "default">("reindexWritePolicy");
   if (policy === "live" || policy === "quit-first") {
     override.indexWritePolicy = policy;
     override.reindexWritePolicy = policy;

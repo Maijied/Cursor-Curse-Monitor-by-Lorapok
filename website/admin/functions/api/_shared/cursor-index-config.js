@@ -110,8 +110,8 @@ export function normalizeCursorIndexConfig(parsed) {
   return {
     indexEnabled,
     indexWritePolicy: writePolicy,
-    cipExportEnabled: parsed.cipExportEnabled !== false,
-    cipImportEnabled: parsed.cipImportEnabled !== false,
+    cipExportEnabled: indexEnabled && parsed.cipExportEnabled !== false,
+    cipImportEnabled: indexEnabled && parsed.cipImportEnabled !== false,
     transcriptLookbackDays: clampInt(parsed.transcriptLookbackDays, DEFAULT_CURSOR_INDEX_CONFIG.transcriptLookbackDays, {
       min: 0,
       max: 3650,
@@ -154,6 +154,18 @@ export async function readCursorIndexConfig(env) {
 }
 
 /**
+ * @param {Record<string, unknown>} patch
+ */
+function omitUndefinedPatch(patch) {
+  /** @type {Record<string, unknown>} */
+  const next = {};
+  for (const [key, value] of Object.entries(patch ?? {})) {
+    if (value !== undefined) next[key] = value;
+  }
+  return next;
+}
+
+/**
  * @param {Record<string, unknown>} env
  * @param {Record<string, unknown>} patch
  */
@@ -162,11 +174,12 @@ export async function writeCursorIndexConfig(env, patch) {
     throw new Error("ADMIN_KV binding not configured");
   }
   const current = await readCursorIndexConfig(env);
+  const sanitizedPatch = omitUndefinedPatch(patch);
   const next = normalizeCursorIndexConfig({
     ...current,
-    ...patch,
+    ...sanitizedPatch,
     updatedAt: new Date().toISOString(),
-    updatedBy: patch.updatedBy ?? current.updatedBy ?? null,
+    updatedBy: sanitizedPatch.updatedBy ?? current.updatedBy ?? null,
   });
   await putKvJsonIfChanged(env, CONFIG_KEY, next);
   return next;

@@ -231,15 +231,28 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           notifyReindexResult(blocked, policy);
           return;
         }
-        const result = await reindexMissingConversations(this.extensionUri, {
-          policy,
-          storage: storage.paths,
-          onProgress: (update) => {
-            webviewView.webview.postMessage({ type: "reindexProgress", payload: update });
-          },
-        });
-        webviewView.webview.postMessage({ type: "reindexResult", payload: result });
-        notifyReindexResult(result, policy);
+        try {
+          const result = await reindexMissingConversations(this.extensionUri, {
+            policy,
+            storage: storage.paths,
+            onProgress: (update) => {
+              webviewView.webview.postMessage({ type: "reindexProgress", payload: update });
+            },
+          });
+          webviewView.webview.postMessage({ type: "reindexResult", payload: result });
+          notifyReindexResult(result, policy);
+        } catch (err) {
+          const failed = {
+            success: false,
+            error: err instanceof Error ? err.message : "Reindex failed unexpectedly.",
+            searchIndexed: [] as string[],
+            sidebarRestored: [] as string[],
+            skipped: [] as string[],
+            backups: [] as string[],
+          };
+          webviewView.webview.postMessage({ type: "reindexResult", payload: failed });
+          notifyReindexResult(failed, policy);
+        }
         return;
       }
       if (message.type === "recoverDbBackups") {
