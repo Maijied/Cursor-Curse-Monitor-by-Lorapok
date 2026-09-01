@@ -105,7 +105,7 @@ export async function onRequestPost(context) {
       return logAuthenticatedRequest(context, auth, response, startedAt);
     }
 
-    const tag = `ccm-mailbox-${Date.now()}`;
+    const tag = `ccm-mailbox-${crypto.randomUUID()}`;
     const to = testmailInboxAddress(config.namespace, tag);
     const startedMs = Date.now() - 5_000;
 

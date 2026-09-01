@@ -14,7 +14,6 @@ import { pickDeployToken } from "./lib/mail-credentials.mjs";
 import { envWithCursorCloudflareSecrets } from "./lib/cred-vault-sync.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
 const project = "cursor-monitor-admin";
 
 const mailEnv = envWithCursorCloudflareSecrets(process.env);
@@ -29,6 +28,11 @@ if (!apiKey || !namespace) {
 }
 
 const resolvedMailEnv = await resolveLocalMailEnvAsync(mailEnv, adminDir);
+const accountId = String(resolvedMailEnv.CLOUDFLARE_ACCOUNT_ID ?? "").trim();
+if (!accountId) {
+  console.error("CLOUDFLARE_ACCOUNT_ID missing after resolveLocalMailEnvAsync.");
+  process.exit(1);
+}
 const { token, probe } = await pickDeployToken(resolvedMailEnv);
 if (!token || !probe?.ok) {
   console.error("No valid Cloudflare deploy token. Run: cd website/admin && npx wrangler login");

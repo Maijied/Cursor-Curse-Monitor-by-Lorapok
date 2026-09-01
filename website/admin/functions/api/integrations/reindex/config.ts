@@ -44,6 +44,10 @@ export async function onRequestPut(context) {
     return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
   }
 
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return jsonResponse({ error: "Request body must be a JSON object" }, 400, CORS_HEADERS);
+  }
+
   if (
     body.reindexWritePolicy !== undefined &&
     body.reindexWritePolicy !== "live" &&

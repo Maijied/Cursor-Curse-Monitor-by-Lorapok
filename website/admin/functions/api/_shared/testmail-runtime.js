@@ -53,6 +53,9 @@ export async function fetchTestmailInbox(opts) {
     if (!res.ok) {
       throw new Error(`testmail API ${res.status}: ${JSON.stringify(body).slice(0, 300)}`);
     }
+    if (body?.result && body.result !== "success") {
+      throw new Error(`testmail API error: ${String(body.result)}`);
+    }
     return body;
   }
   throw new Error("testmail API: too many redirects");

@@ -38,4 +38,24 @@ const publicPolicy = buildPublicCursorIndexPolicy(
 assert.strictEqual(publicPolicy.requireEditorQuit, true);
 assert.strictEqual(publicPolicy.cipEnabled, true);
 
+assert.strictEqual(
+  normalizeCursorIndexConfig({ indexEnabled: false, cipExportEnabled: true }).cipExportEnabled,
+  false
+);
+assert.strictEqual(
+  normalizeCursorIndexConfig({ indexEnabled: false, cipImportEnabled: true }).cipImportEnabled,
+  false
+);
+
+const preservedLookback = normalizeCursorIndexConfig({
+  ...normalizeCursorIndexConfig({ transcriptLookbackDays: 30 }),
+  ...Object.fromEntries(
+    Object.entries({ indexWritePolicy: "quit-first", transcriptLookbackDays: undefined }).filter(
+      ([, value]) => value !== undefined
+    )
+  ),
+});
+assert.strictEqual(preservedLookback.transcriptLookbackDays, 30);
+assert.strictEqual(preservedLookback.indexWritePolicy, "quit-first");
+
 console.log("cursor-index-config admin test passed");

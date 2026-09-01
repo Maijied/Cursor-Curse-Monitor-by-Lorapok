@@ -235,6 +235,18 @@ export default function Mailbox() {
         attempts += 1;
         try {
           const inbox = await pollTestmailInbox(tag, since);
+          if (inbox.ok === false) {
+            if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
+            testmailPollRef.current = null;
+            setTestmailProbing(false);
+            setNotice({
+              tone: "error",
+              title: "Testmail poll failed",
+              message: "Testmail inbox polling returned an error.",
+            });
+            load();
+            return;
+          }
           if (inbox.received && inbox.email) {
             if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
             testmailPollRef.current = null;

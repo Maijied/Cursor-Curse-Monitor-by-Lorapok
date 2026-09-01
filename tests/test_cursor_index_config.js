@@ -31,6 +31,15 @@ async function run() {
   assert.strictEqual(legacy.indexEnabled, false);
   assert.strictEqual(legacy.reindexEnabled, false);
 
+  const disabledCip = normalizePolicy({
+    indexEnabled: false,
+    cipExportEnabled: true,
+    cipImportEnabled: true,
+  });
+  assert.strictEqual(disabledCip.cipExportEnabled, false);
+  assert.strictEqual(disabledCip.cipImportEnabled, false);
+  assert.strictEqual(disabledCip.cipEnabled, false);
+
   const clamped = normalizePolicy({
     transcriptLookbackDays: 99999,
     maxReindexRecords: -5,

@@ -72,6 +72,20 @@ async function run() {
   assert.strictEqual(missingText.ok, false);
   assert.match(missingText.error, /missing text/i);
 
+  const wrongSource = validateCipPackage({
+    header: { cipVersion: CIP_FORMAT_VERSION, sourceKind: "other" },
+    records: [validRecord],
+  });
+  assert.strictEqual(wrongSource.ok, false);
+  assert.match(wrongSource.error, /sourceKind/i);
+
+  const badTimestamp = validateCipPackage({
+    header: { cipVersion: CIP_FORMAT_VERSION, sourceKind: "agent-transcripts" },
+    records: [{ ...validRecord, createdAt: Number.NaN }],
+  });
+  assert.strictEqual(badTimestamp.ok, false);
+  assert.match(badTimestamp.error, /invalid timestamps/i);
+
   Module._resolveFilename = originalResolveFilename;
   console.log("cip-validation test passed");
 }
