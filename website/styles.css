@@ -1819,7 +1819,8 @@ h1 {
   position: relative;
   width: min(100%, 460px);
   max-height: min(92vh, calc(100dvh - 40px - var(--safe-bottom)));
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
   padding: 30px 26px 24px;
   border-radius: var(--radius-lg);
@@ -1911,6 +1912,26 @@ h1 {
   background: rgba(255, 255, 255, 0.1);
 }
 body.welcome-modal-open { overflow: hidden; }
+
+@media (max-width: 520px) {
+  .welcome-modal {
+    padding: 12px;
+    padding-bottom: calc(12px + var(--safe-bottom));
+  }
+  .welcome-modal-panel {
+    padding: 24px 18px 20px;
+    max-height: min(94vh, calc(100dvh - 24px - var(--safe-bottom)));
+  }
+  .welcome-modal-panel h2 {
+    font-size: 1.28rem;
+  }
+  .welcome-modal-close {
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+  }
+}
 
 /* Newsletter modal */
 .subscribe-modal {
@@ -2059,8 +2080,8 @@ body.subscribe-modal-open { overflow: hidden; }
     padding-inline: 2px;
   }
   .footer-social a {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
   .footer-contact-fallback {
     margin-bottom: 8px;
@@ -3770,6 +3791,11 @@ a.ide-card:focus-visible {
 }
 
 @media (max-width: 720px) {
+  .architecture-tab {
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+  }
+
   .arch-flow-layout {
     grid-template-columns: 1fr;
   }
