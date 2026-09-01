@@ -3068,6 +3068,8 @@ a.ide-card:focus-visible {
   .error-orbit,
   .error-orbit img { animation: none; }
   .ecosystem-shot { animation: none; }
+  .author-visual-btn { animation: none; }
+  .author-visual-btn:hover { transform: none; }
   .ecosystem-rotation-pause { display: none; }
   .hero-orbit-ring,
   .hero-orbit-glow,
