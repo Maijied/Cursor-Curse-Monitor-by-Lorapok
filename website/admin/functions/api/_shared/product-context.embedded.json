@@ -1,11 +1,11 @@
 {
-  "version": "1.0.1",
+  "version": "0.0.0",
   "displayName": "Cursor Curse Monitor by Lorapok",
   "ctx": {
-    "version": "1.0.58",
-    "packageVersion": "1.0.1",
-    "releaseVersion": "1.0.58",
-    "publishedReleaseVersion": "1.0.58",
+    "version": "1.0.72",
+    "packageVersion": "0.0.0",
+    "releaseVersion": "1.0.72",
+    "publishedReleaseVersion": "1.0.72",
     "displayName": "Cursor Curse Monitor by Lorapok",
     "homepage": "https://cursor.lorapok.tech",
     "mainLogoUrl": "https://cursor.lorapok.tech/assets/logo.png",
@@ -16,13 +16,13 @@
     "website": "https://lorapok.tech",
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.58",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.72",
     "latestReleaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest",
     "firefoxUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
     "ovsxUrl": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "vscodeUrl": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
-    "releaseTag": "v1.0.58"
+    "releaseTag": "v1.0.72"
   },
   "messageCatalog": {
     "branding": {
@@ -69,7 +69,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "subscribe-welcome",
@@ -94,7 +94,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "support-response",
@@ -109,7 +109,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "warning-incident",
@@ -140,7 +140,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "critical-security",
@@ -168,7 +168,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "bugfix-release",
@@ -194,7 +194,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "feature-release",
@@ -224,7 +224,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "release-notes",
@@ -242,7 +242,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "mailbox-test",
@@ -251,7 +251,7 @@
         "channels": {
           "email": {
             "subject": "Cursor Curse Monitor — mailbox test",
-            "text": "This is a live delivery test from Mission Control at 2026-08-31T17:41:19.619Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
+            "text": "This is a live delivery test from Mission Control at 2026-09-02T18:23:27.909Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
             "variables": [
               "email"
             ]
@@ -259,7 +259,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "conversation-recovery",
@@ -274,7 +274,7 @@
             "severity": "info",
             "dismissible": true,
             "title": "Recover missing agent conversations",
-            "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
+            "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts in your configured lookback window are restored safely.",
             "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data."
           },
           "discord": {
@@ -284,7 +284,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "quota-warning",
@@ -307,7 +307,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "agent-editor-tip",
@@ -326,7 +326,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "beta-tester-invite",
@@ -354,7 +354,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "feedback-thanks",
@@ -374,7 +374,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "incident-resolved",
@@ -405,7 +405,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "rollback-incident",
@@ -430,7 +430,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "platform-availability",
@@ -449,7 +449,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "maintenance-window",
@@ -472,7 +472,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "amo-review-pending",
@@ -491,7 +491,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       },
       {
         "id": "telemetry-opt-in",
@@ -510,7 +510,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-08-31T17:41:19.619Z"
+        "updatedAt": "2026-09-02T18:23:27.909Z"
       }
     ]
   },
@@ -603,7 +603,7 @@
       "label": "Mailbox delivery test",
       "category": "test",
       "subject": "Cursor Curse Monitor — mailbox test",
-      "text": "This is a live delivery test from Mission Control at 2026-08-31T17:41:19.619Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
+      "text": "This is a live delivery test from Mission Control at 2026-09-02T18:23:27.909Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
       "variables": [
         "email"
       ]
@@ -654,7 +654,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "warning-incident",
@@ -670,7 +670,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "critical-security",
@@ -686,7 +686,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "bugfix-release",
@@ -702,7 +702,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "feature-release",
@@ -718,7 +718,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "conversation-recovery",
@@ -728,14 +728,14 @@
       "type": "feature",
       "dismissible": true,
       "title": "Recover missing agent conversations",
-      "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
+      "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts in your configured lookback window are restored safely.",
       "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "release",
       "id": "conversation-recovery-v0515",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "quota-warning",
@@ -751,7 +751,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "agent-editor-tip",
@@ -767,7 +767,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "beta-tester-invite",
@@ -783,7 +783,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "incident-resolved",
@@ -799,7 +799,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "rollback-incident",
@@ -816,7 +816,7 @@
       "enabled": false,
       "source": "rollback",
       "id": "rollback-recovery-notice",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "platform-availability",
@@ -832,7 +832,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "maintenance-window",
@@ -848,7 +848,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "amo-review-pending",
@@ -864,7 +864,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     },
     {
       "templateId": "telemetry-opt-in",
@@ -880,7 +880,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.909Z"
     }
   ],
   "builtinNotices": [
@@ -896,7 +896,7 @@
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": true,
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.908Z"
     },
     {
       "id": "conversation-recovery-v0515",
@@ -906,11 +906,11 @@
       "severity": "info",
       "title": "Recover missing agent conversations",
       "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
-      "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
+      "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts in your configured lookback window are restored safely.",
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": true,
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.908Z"
     },
     {
       "id": "rollback-recovery-notice",
@@ -924,7 +924,7 @@
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": false,
-      "updatedAt": "2026-08-31T17:41:19.619Z"
+      "updatedAt": "2026-09-02T18:23:27.908Z"
     }
   ],
   "generatedDevNotice": {
@@ -939,7 +939,7 @@
     "feedbackUrl": "{{feedbackUrl}}",
     "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": true,
-    "updatedAt": "2026-08-31T17:41:19.619Z"
+    "updatedAt": "2026-09-02T18:23:27.909Z"
   },
   "conversationRecoveryNotice": {
     "id": "conversation-recovery-v0515",
@@ -949,11 +949,11 @@
     "severity": "info",
     "title": "Recover missing agent conversations",
     "message": "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
-    "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts from Aug 10+ are restored safely.",
+    "shortMessage": "Lost chats after a worktree switch? Reindex from the dashboard — transcripts in your configured lookback window are restored safely.",
     "feedbackUrl": "{{feedbackUrl}}",
     "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": true,
-    "updatedAt": "2026-08-31T17:41:19.619Z"
+    "updatedAt": "2026-09-02T18:23:27.908Z"
   },
   "rollbackNotice": {
     "id": "rollback-recovery-notice",
@@ -967,6 +967,6 @@
     "feedbackUrl": "{{feedbackUrl}}",
     "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": false,
-    "updatedAt": "2026-08-31T17:41:19.619Z"
+    "updatedAt": "2026-09-02T18:23:27.908Z"
   }
 }
