@@ -109,4 +109,32 @@ describe("subscribe prompt integration APIs", () => {
     });
     expect(normalized.subscribeFallbackDiscordUrl).toBe("https://discord.gg/bp42QAMC6");
   });
+
+  it("uses community invite for subscribe fallback when subscribe URL was not explicitly configured", async () => {
+    const env = {
+      ADMIN_KV: {
+        data: new Map(),
+        async get(key) {
+          return this.data.get(key) ?? null;
+        },
+        async put(key, value) {
+          this.data.set(key, value);
+        },
+      },
+    };
+    await env.ADMIN_KV.put(
+      "integrations:discord",
+      JSON.stringify({ communityInviteUrl: "https://discord.gg/custom-family" })
+    );
+    await env.ADMIN_KV.put(
+      "integrations:subscribe-prompt",
+      JSON.stringify({ subscribeModalEnabled: true, requireMailForSubscribe: true })
+    );
+
+    const config = await buildPublicSiteConfig(env);
+    expect(config.discordInviteUrl).toBe("https://discord.gg/custom-family");
+    if (!config.mailConfigured) {
+      expect(config.subscribeFallbackDiscordUrl).toBe("https://discord.gg/custom-family");
+    }
+  });
 });

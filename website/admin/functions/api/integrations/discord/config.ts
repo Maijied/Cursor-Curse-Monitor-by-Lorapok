@@ -3,6 +3,7 @@ import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   isValidDiscordWebhookUrl,
   isValidDiscordInviteUrl,
+  DEFAULT_COMMUNITY_INVITE_URL,
   readDiscordConfig,
   sanitizeDiscordConfigForClient,
   writeDiscordConfig,
@@ -71,7 +72,9 @@ export async function onRequestPut(context) {
   let communityInviteUrl = current.communityInviteUrl;
   if (body.communityInviteUrl !== undefined) {
     communityInviteUrl = String(body.communityInviteUrl ?? "").trim();
-    if (communityInviteUrl && !isValidDiscordInviteUrl(communityInviteUrl)) {
+    if (!communityInviteUrl) {
+      communityInviteUrl = DEFAULT_COMMUNITY_INVITE_URL;
+    } else if (!isValidDiscordInviteUrl(communityInviteUrl)) {
       return jsonResponse({ error: "Invalid community Discord invite URL" }, 400);
     }
   }

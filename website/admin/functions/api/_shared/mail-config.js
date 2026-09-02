@@ -51,14 +51,25 @@ export function normalizeMailConfig(parsed) {
 }
 
 /**
+ * Strict KV read for writes — propagates storage and parse failures.
+ * @param {Record<string, unknown>} env
+ */
+async function readMailConfigFromKv(env) {
+  if (!env?.ADMIN_KV?.get) {
+    throw new Error("ADMIN_KV binding not configured");
+  }
+  const raw = await env.ADMIN_KV.get(CONFIG_KEY);
+  if (!raw) return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
+  return normalizeMailConfig(JSON.parse(raw));
+}
+
+/**
  * @param {Record<string, unknown>} env
  */
 export async function readMailConfig(env) {
   if (!env?.ADMIN_KV?.get) return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
   try {
-    const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-    if (!raw) return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
-    return normalizeMailConfig(JSON.parse(raw));
+    return await readMailConfigFromKv(env);
   } catch {
     return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
   }
@@ -72,7 +83,7 @@ export async function writeMailConfig(env, patch) {
   if (!env?.ADMIN_KV?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  const current = await readMailConfig(env);
+  const current = await readMailConfigFromKv(env);
   const next = normalizeMailConfig({
     ...current,
     ...patch,

@@ -41,7 +41,7 @@ export default function DiscordCommunityCard() {
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)] font-[family-name:var(--font-mono)] text-sm";
 
-  const activeInvite = config?.communityInviteUrl || inviteUrl || DISCORD_INVITE_URL;
+  const activeInvite = inviteUrl || config?.communityInviteUrl || DISCORD_INVITE_URL;
 
   const handleCopyInvite = async () => {
     try {

@@ -839,10 +839,6 @@ export async function reindexMissingConversations(
         // ignore rollback failure
       }
       searchDb.close();
-      const restoredWithoutSearch = sidebarRestored.filter((id) => !searchIndexed.includes(id));
-      for (const id of restoredWithoutSearch) {
-        if (!skipped.includes(id)) skipped.push(id);
-      }
       return {
         success: false,
         error:
@@ -857,8 +853,10 @@ export async function reindexMissingConversations(
     searchDb.close();
   }
 
-  for (const id of sidebarRestored) {
-    if (!searchIndexed.includes(id) && !skipped.includes(id)) skipped.push(id);
+  for (const parsed of transcripts) {
+    const id = parsed.id;
+    if (searchIndexed.includes(id) || sidebarRestored.includes(id)) continue;
+    if (!skipped.includes(id)) skipped.push(id);
   }
 
   reportProgress(onProgress, {

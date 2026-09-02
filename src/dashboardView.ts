@@ -2307,7 +2307,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         importBtn.disabled = active || cipImportDisabled;
         importBtn.textContent = active ? 'Working…' : 'Import .cip.json';
       }
-      if (reindexBtn && active) reindexBtn.disabled = true;
+      if (reindexBtn) {
+        reindexBtn.disabled = active || reindexPolicyDisabled;
+        reindexBtn.style.opacity = reindexBtn.disabled ? '0.55' : '1';
+      }
       if (message && active) {
         var err = document.getElementById('indexStorageError');
         if (err) {

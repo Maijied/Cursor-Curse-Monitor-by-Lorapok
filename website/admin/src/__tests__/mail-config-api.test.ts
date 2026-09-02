@@ -55,4 +55,26 @@ describe("mail config API", () => {
     expect(saved.config.productEmail).toBe("product@lorapok.tech");
     expect(saved.config.resendFirstExternal).toBe(false);
   });
+
+  it("rejects non-object JSON bodies", async () => {
+    const save = await fetch(`${base}/api/integrations/mail/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: "null",
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/JSON object/i);
+  });
+
+  it("rejects non-boolean resendFirstExternal values", async () => {
+    const save = await fetch(`${base}/api/integrations/mail/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resendFirstExternal: "false" }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/boolean/i);
+  });
 });
