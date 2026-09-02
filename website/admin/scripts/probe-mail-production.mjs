@@ -39,6 +39,11 @@ async function fetchJson(path) {
   try {
     data = JSON.parse(text);
   } catch {
+    if (res.status === 403) {
+      throw new Error(
+        `${path} HTTP 403 (Cloudflare or auth wall). Run from a network that can reach ${adminUrl}, or probe locally via npm run dev.`
+      );
+    }
     throw new Error(`${path} returned non-JSON (${res.status})`);
   }
   if (!res.ok) {

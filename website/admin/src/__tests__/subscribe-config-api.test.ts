@@ -100,6 +100,7 @@ describe("subscribe prompt integration APIs", () => {
       expect(config.subscribeFallbackMode).toBe("discord");
       expect(config.subscribeFallbackDiscordUrl).toContain("discord.gg/");
     }
+    expect(config.discordInviteUrl).toContain("discord.gg/");
   });
 
   it("normalizeSubscribeConfig falls back to default invite when invalid", () => {
