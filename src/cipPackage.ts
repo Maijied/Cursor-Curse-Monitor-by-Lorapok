@@ -415,21 +415,33 @@ export async function importConversationIndexPackage(
 
   const localOwnerHash = hashOwner(storage.accountLabel, storage.productFolder);
   const packageOwnerHash = pkg.header.ownerHash;
-  if (
-    packageOwnerHash &&
-    packageOwnerHash !== localOwnerHash &&
-    !policy.cipAllowCrossUserLocalImport
-  ) {
-    return {
-      success: false,
-      error:
-        "Package owner does not match the active account. Cross-user import is disabled by Mission Control policy.",
-      imported: 0,
-      skipped: 0,
-      searchIndexed: [],
-      sidebarRestored: [],
-      backups: [],
-    };
+  if (!policy.cipAllowCrossUserLocalImport) {
+    if (!packageOwnerHash) {
+      return {
+        success: false,
+        error:
+          "Package is missing ownerHash. Cross-account import is disabled by Mission Control policy.",
+        imported: 0,
+        skipped: 0,
+        searchIndexed: [],
+        sidebarRestored: [],
+        backups: [],
+      };
+    }
+    if (packageOwnerHash !== localOwnerHash) {
+      return {
+        success: false,
+        error:
+          "Package owner does not match the active account. Cross-user import is disabled by Mission Control policy.",
+        imported: 0,
+        skipped: 0,
+        searchIndexed: [],
+        sidebarRestored: [],
+        backups: [],
+      };
+    }
+  } else if (packageOwnerHash && packageOwnerHash !== localOwnerHash) {
+    // Cross-account import allowed — proceed with foreign owner hash.
   }
 
   const limit = policy.maxImportRecords > 0 ? policy.maxImportRecords : pkg.records.length;
@@ -540,6 +552,18 @@ export async function importConversationIndexPackage(
 
     for (let index = 0; index < records.length; index++) {
       const record = records[index]!;
+      const computedHash = recordHash({ title: record.title, turns: record.turns });
+      if (!record.contentHash || record.contentHash !== computedHash) {
+        return {
+          success: false,
+          error: `Record ${index} contentHash does not match title/turns (package may be tampered).`,
+          imported,
+          skipped,
+          searchIndexed,
+          sidebarRestored,
+          backups,
+        };
+      }
       if (
         isDuplicateCipImport(stateDb, record.contentHash, ownerHash, policy, batchDedupeKeys)
       ) {
