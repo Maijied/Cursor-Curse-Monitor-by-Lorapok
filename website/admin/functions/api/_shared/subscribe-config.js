@@ -55,13 +55,20 @@ export function normalizeSubscribeConfig(parsed) {
  * @param {Record<string, unknown>} env
  */
 export async function readSubscribeConfig(env) {
-  if (!env?.ADMIN_KV?.get) return { ...DEFAULT_SUBSCRIBE_CONFIG };
+  if (!env?.ADMIN_KV?.get) return { ...DEFAULT_SUBSCRIBE_CONFIG, subscribeFallbackDiscordUrlExplicit: false };
   try {
     const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-    if (!raw) return { ...DEFAULT_SUBSCRIBE_CONFIG };
-    return normalizeSubscribeConfig(JSON.parse(raw));
+    if (!raw) return { ...DEFAULT_SUBSCRIBE_CONFIG, subscribeFallbackDiscordUrlExplicit: false };
+    const parsed = JSON.parse(raw);
+    return {
+      ...normalizeSubscribeConfig(parsed),
+      subscribeFallbackDiscordUrlExplicit: Object.prototype.hasOwnProperty.call(
+        parsed,
+        "subscribeFallbackDiscordUrl"
+      ),
+    };
   } catch {
-    return { ...DEFAULT_SUBSCRIBE_CONFIG };
+    return { ...DEFAULT_SUBSCRIBE_CONFIG, subscribeFallbackDiscordUrlExplicit: false };
   }
 }
 
@@ -116,8 +123,9 @@ export async function buildPublicSiteConfig(env) {
     !subscribeAvailable && config.subscribeFallbackMode === "discord";
 
   const communityInviteUrl = discord.communityInviteUrl || DEFAULT_COMMUNITY_INVITE_URL;
-  const fallbackInvite =
-    config.subscribeFallbackDiscordUrl || communityInviteUrl;
+  const fallbackInvite = config.subscribeFallbackDiscordUrlExplicit
+    ? config.subscribeFallbackDiscordUrl || communityInviteUrl
+    : communityInviteUrl;
 
   return {
     mailConfigured,

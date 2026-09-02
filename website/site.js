@@ -274,6 +274,29 @@ function resolveSiteConfigUrl(subscribeUrl) {
   return base ? `${base}/api/site-config` : null;
 }
 
+function setWelcomeDiscordHref(inviteUrl) {
+  const link = document.getElementById("welcome-modal-discord");
+  if (!link || !(link instanceof HTMLAnchorElement)) return;
+  const url = String(inviteUrl || "").trim();
+  if (url) link.href = url;
+}
+
+async function fetchWelcomeDiscordInvite(subscribeUrl) {
+  const siteConfigUrl = resolveSiteConfigUrl(subscribeUrl);
+  if (!siteConfigUrl) return;
+  try {
+    const response = await fetch(siteConfigUrl, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) return;
+    const body = await response.json();
+    if (body.discordInviteUrl) setWelcomeDiscordHref(body.discordInviteUrl);
+  } catch {
+    /* offline / CORS */
+  }
+}
+
 async function fetchSubscribeSiteConfig(subscribeUrl) {
   const cached = readCachedSubscribeSiteConfig();
   if (cached) return cached;
@@ -296,7 +319,9 @@ async function fetchSubscribeSiteConfig(subscribeUrl) {
       subscribeModalEnabled: body.subscribeModalEnabled !== false,
       subscribeFallbackMode: body.subscribeFallbackMode ?? null,
       subscribeFallbackDiscordUrl: body.subscribeFallbackDiscordUrl ?? null,
+      discordInviteUrl: body.discordInviteUrl ?? null,
     };
+    if (config.discordInviteUrl) setWelcomeDiscordHref(config.discordInviteUrl);
     writeCachedSubscribeSiteConfig(config);
     return config;
   } catch {
@@ -470,6 +495,10 @@ function updateStructuredDataVersion(data) {
   } catch {
     // Static site-data.json is enough when Mission Control API is unreachable.
   }
+
+  void fetchWelcomeDiscordInvite(
+    data?.social?.subscribe || "https://cursor-dev.lorapok.tech/api/subscribe"
+  );
 
   const downloadsVerified =
     typeof window.resolveHeroDownloadStats === "function"
@@ -936,6 +965,8 @@ function initWelcomeBanner() {
   document.getElementById("welcome-modal-discord")?.addEventListener("click", () => {
     window.localStorage.setItem(WELCOME_KEY, "1");
   });
+
+  void fetchWelcomeDiscordInvite("https://cursor-dev.lorapok.tech/api/subscribe");
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !modal.hidden) closeModal();

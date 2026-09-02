@@ -242,7 +242,7 @@ export function buildMessageCards(ctx) {
           shortMessage:
             "Lost chats after a worktree switch? Reindex from the dashboard — transcripts in your configured lookback window are restored safely.",
           message:
-            "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. Quit the editor first — the tool rebuilds indexes from on-disk agent transcripts without deleting existing data.",
+            "If your agent sidebar lost chats after a worktree switch, branch change, or workspace path mismatch, open the CCM dashboard and run **Reindex missing conversations**. The tool rebuilds indexes from on-disk agent transcripts without deleting existing data. Quit the editor first only if Mission Control policy requires it.",
         },
         discord: {
           title: "🧠 Agent conversation recovery",

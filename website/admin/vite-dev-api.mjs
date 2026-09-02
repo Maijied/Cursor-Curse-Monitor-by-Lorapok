@@ -105,6 +105,9 @@ const devFunctionsEnv = () => ({
   ...(existsSync(siteDataPath) ? { SITE_DATA_FILE: siteDataPath } : {}),
   ANALYTICS_STATS_URL: process.env.ANALYTICS_STATS_URL,
   CRON_SECRET: process.env.CRON_SECRET,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  TESTMAIL_API_KEY: process.env.TESTMAIL_API_KEY,
+  TESTMAIL_NAMESPACE: process.env.TESTMAIL_NAMESPACE,
 });
 
 const devKvEntries = new Map();
@@ -966,7 +969,9 @@ export function createDevApiMiddleware() {
 
           if (parsed.communityInviteUrl !== undefined) {
             communityInviteUrl = String(parsed.communityInviteUrl ?? "").trim();
-            if (communityInviteUrl && !isValidDiscordInviteUrl(communityInviteUrl)) {
+            if (!communityInviteUrl) {
+              communityInviteUrl = DEFAULT_COMMUNITY_INVITE_URL;
+            } else if (!isValidDiscordInviteUrl(communityInviteUrl)) {
               res.statusCode = 400;
               res.end(JSON.stringify({ error: "Invalid community Discord invite URL" }));
               return;
@@ -1012,6 +1017,21 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
+          if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Request body must be a JSON object" }));
+            return;
+          }
+          if (
+            parsed.resendFirstExternal !== undefined &&
+            typeof parsed.resendFirstExternal !== "boolean"
+          ) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "resendFirstExternal must be a boolean" }));
+            return;
+          }
           devStore.mailConfig = normalizeMailConfig({
             ...devStore.mailConfig,
             ...parsed,

@@ -39,6 +39,10 @@ export async function onRequestPut(context) {
     return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return jsonResponse({ error: "Request body must be a JSON object" }, 400);
+  }
+
   const patch = /** @type {Record<string, unknown>} */ ({ updatedBy: auth.email });
 
   if (body.productEmail !== undefined) {
@@ -68,7 +72,10 @@ export async function onRequestPut(context) {
   if (body.supportFromName !== undefined) {
     patch.supportFromName = String(body.supportFromName ?? "").trim();
   }
-  if (typeof body.resendFirstExternal === "boolean") {
+  if (body.resendFirstExternal !== undefined) {
+    if (typeof body.resendFirstExternal !== "boolean") {
+      return jsonResponse({ error: "resendFirstExternal must be a boolean" }, 400);
+    }
     patch.resendFirstExternal = body.resendFirstExternal;
   }
 

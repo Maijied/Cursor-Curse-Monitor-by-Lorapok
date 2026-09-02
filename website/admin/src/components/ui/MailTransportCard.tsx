@@ -191,6 +191,19 @@ export default function MailTransportCard() {
                   className={inputClass}
                 />
               </div>
+              <div>
+                <label htmlFor="mail-support-name" className="block text-sm font-medium mb-2">
+                  Support display name
+                </label>
+                <input
+                  id="mail-support-name"
+                  type="text"
+                  value={form.supportFromName}
+                  onChange={(e) => setForm((p) => ({ ...p, supportFromName: e.target.value }))}
+                  disabled={!isMaster}
+                  className={inputClass}
+                />
+              </div>
             </div>
 
             <label className="flex items-start gap-3 text-sm">
