@@ -160,6 +160,17 @@ describe("cursor index policy integration APIs", () => {
     expect(data.config.reindexWritePolicy).toBe("live");
   });
 
+  it("legacy reindex PUT rejects null JSON body", async () => {
+    const save = await fetch(`${base}/api/integrations/reindex/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: "null",
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(false);
+    expect(saved.error).toMatch(/JSON object/i);
+  });
+
   it("normalizeCursorIndexConfig defaults to live writes and all-time lookback", () => {
     const normalized = normalizeCursorIndexConfig({});
     expect(normalized.indexWritePolicy).toBe("live");

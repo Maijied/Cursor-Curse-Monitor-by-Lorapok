@@ -26,6 +26,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Discord community link** — public invite `https://discord.gg/bp42QAMC6` in `social.json`; footers on index, privacy, and terms load from `social-footer.js`
 - **Subscribe mail gate** — marketing site checks `GET /api/site-config` before showing the subscribe modal; Mission Control Settings card configures Discord fallback (`https://discord.gg/MaYRtaqef`) or hidden mode when outbound mail is unavailable
 - **Reindex policy (Mission Control)** — Settings card + `GET/PUT /api/integrations/reindex/config`; public fields on `GET /api/site-config` for IDE extension (`live` vs `quit-first`, enable/disable)
+- **Unified Cursor index + CIP** — Mission Control controls lookback days, per-run record limits, export/import toggles, sanitization, dedupe, and cross-account import policy; IDE extension reindexes `conversation-search.db` + `state.vscdb`, exports/imports `.cip.json` packages, and shows policy-driven lookback in the dashboard
+- **Outbound mail repair (Mission Control)** — Resend-first routing for external/testmail inboxes, Mailbox sync-up workflow, and Testmail E2E delivery probe
 - **Unified Lorapok footer** — `social.json` drives brand + community icons (GitHub, Discord, LinkedIn, X, labs, Mission Control) across marketing pages
 
 ### Fixed
@@ -139,7 +141,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Conversation recovery** — `Reindex Missing Conversations` command rebuilds `conversation-search.db` and IDE sidebar entries from on-disk `agent-transcripts` (Aug 10 onward) without deleting existing chats
+- **Conversation recovery** — `Reindex Missing Conversations` rebuilds `conversation-search.db` and IDE sidebar entries from on-disk `agent-transcripts` using the Mission Control lookback window (0 = all time) without deleting existing chats
 - Dashboard **Data recovery** card with one-click reindex and reload guidance
 - Admin catalog preset **Recover Missing Agent Conversations** notice for the marketing-site top banner (enable from Mission Control → Notices)
 - Automatic DB backups before each reindex (`*.bak-pre-ccm-reindex`)

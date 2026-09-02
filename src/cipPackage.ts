@@ -594,7 +594,24 @@ export async function importConversationIndexPackage(
     }
 
     stateDb.exec("COMMIT");
-    if (searchDb) searchDb.exec("COMMIT");
+    try {
+      if (searchDb) searchDb.exec("COMMIT");
+    } catch (searchError) {
+      if (searchDb) searchDb.close();
+      stateDb.close();
+      return {
+        success: false,
+        error:
+          `Sidebar data committed for ${imported} conversation(s), but the search index commit failed. ` +
+          `Restore from backups if needed: ${backups.join(", ") || "none"}. ` +
+          (searchError instanceof Error ? searchError.message : "Search index commit failed."),
+        imported,
+        skipped,
+        searchIndexed,
+        sidebarRestored,
+        backups,
+      };
+    }
   } catch (error) {
     try {
       stateDb.exec("ROLLBACK");
