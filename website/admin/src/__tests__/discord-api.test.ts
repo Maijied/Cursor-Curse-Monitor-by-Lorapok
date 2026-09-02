@@ -60,6 +60,27 @@ describe("discord integration APIs", () => {
     expect(saved.config.deploymentWebhookPreview).toContain("565087");
   });
 
+  it("returns default community invite URL", async () => {
+    const res = await fetch(`${base}/api/integrations/discord/config`);
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.config.communityInviteUrl).toBe("https://discord.gg/bp42QAMC6");
+    expect(data.config.communityInviteConfigured).toBe(true);
+  });
+
+  it("saves Lorapok Labs Family invite URL", async () => {
+    const save = await fetch(`${base}/api/integrations/discord/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        communityInviteUrl: "https://discord.gg/testfamily",
+      }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(true);
+    expect(saved.config.communityInviteUrl).toBe("https://discord.gg/testfamily");
+  });
+
   it("saves a community discord webhook URL", async () => {
     const save = await fetch(`${base}/api/integrations/discord/config`, {
       method: "PUT",

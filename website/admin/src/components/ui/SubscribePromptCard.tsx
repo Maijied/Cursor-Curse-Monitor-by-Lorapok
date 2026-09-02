@@ -25,7 +25,7 @@ export default function SubscribePromptCard() {
     subscribeModalEnabled: true,
     requireMailForSubscribe: true,
     subscribeFallbackMode: "discord" as "discord" | "hidden",
-    subscribeFallbackDiscordUrl: "https://discord.gg/MaYRtaqef",
+    subscribeFallbackDiscordUrl: "https://discord.gg/bp42QAMC6",
   });
 
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function SubscribePromptCard() {
                   setForm((prev) => ({ ...prev, subscribeFallbackDiscordUrl: e.target.value }))
                 }
                 disabled={!isMaster}
-                placeholder="https://discord.gg/MaYRtaqef"
+                placeholder="https://discord.gg/bp42QAMC6"
                 className={inputClass}
               />
             </div>

@@ -105,6 +105,6 @@ describe("subscribe prompt integration APIs", () => {
     const normalized = normalizeSubscribeConfig({
       subscribeFallbackDiscordUrl: "not-a-url",
     });
-    expect(normalized.subscribeFallbackDiscordUrl).toBe("https://discord.gg/MaYRtaqef");
+    expect(normalized.subscribeFallbackDiscordUrl).toBe("https://discord.gg/bp42QAMC6");
   });
 });

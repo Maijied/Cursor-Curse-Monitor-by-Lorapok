@@ -17,10 +17,13 @@ import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
 import {
+  DEFAULT_COMMUNITY_INVITE_URL,
+  isValidDiscordInviteUrl,
   isValidDiscordWebhookUrl,
   sanitizeDiscordConfigForClient,
 } from "./functions/api/_shared/discord-config.js";
 import { notifyDiscordDeployment } from "./functions/api/_shared/discord-notify.js";
+import { getMailTransportStatus } from "./functions/api/_shared/mail.js";
 import {
   DEFAULT_STATS_REFRESH_CONFIG,
   readStatsLiveCache,
@@ -33,9 +36,13 @@ import {
 import {
   DEFAULT_SUBSCRIBE_CONFIG,
   buildPublicSiteConfig,
-  isValidDiscordInviteUrl,
   sanitizeSubscribeConfigForClient,
 } from "./functions/api/_shared/subscribe-config.js";
+import {
+  DEFAULT_MAIL_CONFIG,
+  normalizeMailConfig,
+  sanitizeMailConfigForClient,
+} from "./functions/api/_shared/mail-config.js";
 import {
   DEFAULT_CURSOR_INDEX_CONFIG,
   normalizeCursorIndexConfig,
@@ -79,9 +86,11 @@ const devStore = {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
+    communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: null,
     updatedBy: null,
   },
+  mailConfig: { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null },
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
   subscribeConfig: { ...DEFAULT_SUBSCRIBE_CONFIG },
@@ -109,6 +118,9 @@ const devKv = {
     if (key === "integrations:discord") {
       return JSON.stringify(devStore.discordConfig);
     }
+    if (key === "integrations:mail") {
+      return JSON.stringify(devStore.mailConfig);
+    }
     if (key === "integrations:subscribe-prompt") {
       return JSON.stringify(devStore.subscribeConfig);
     }
@@ -133,6 +145,9 @@ const devKv = {
     }
     if (key === "integrations:discord") {
       devStore.discordConfig = JSON.parse(value);
+    }
+    if (key === "integrations:mail") {
+      devStore.mailConfig = JSON.parse(value);
     }
     if (key === "integrations:subscribe-prompt") {
       devStore.subscribeConfig = JSON.parse(value);
@@ -180,9 +195,11 @@ export async function resetDevStore() {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
+    communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: null,
     updatedBy: null,
   };
+  devStore.mailConfig = { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
   devStore.subscribeConfig = { ...DEFAULT_SUBSCRIBE_CONFIG };
   devStore.cursorIndexConfig = { ...DEFAULT_CURSOR_INDEX_CONFIG };
 }
@@ -920,6 +937,7 @@ export function createDevApiMiddleware() {
           let deploymentWebhookUrl = current.deploymentWebhookUrl ?? current.webhookUrl ?? "";
           let feedbackWebhookUrl = current.feedbackWebhookUrl ?? "";
           let communityWebhookUrl = current.communityWebhookUrl ?? "";
+          let communityInviteUrl = current.communityInviteUrl ?? DEFAULT_COMMUNITY_INVITE_URL;
 
           if (parsed.deploymentWebhookUrl !== undefined || parsed.webhookUrl !== undefined) {
             deploymentWebhookUrl = String(parsed.deploymentWebhookUrl ?? parsed.webhookUrl ?? "").trim();
@@ -946,15 +964,71 @@ export function createDevApiMiddleware() {
             }
           }
 
+          if (parsed.communityInviteUrl !== undefined) {
+            communityInviteUrl = String(parsed.communityInviteUrl ?? "").trim();
+            if (communityInviteUrl && !isValidDiscordInviteUrl(communityInviteUrl)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid community Discord invite URL" }));
+              return;
+            }
+          }
+
           devStore.discordConfig = {
             deploymentWebhookUrl,
             feedbackWebhookUrl,
             communityWebhookUrl,
+            communityInviteUrl,
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
           };
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/mail/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          config: sanitizeMailConfigForClient(
+            devStore.mailConfig,
+            getMailTransportStatus(devFunctionsEnv()),
+            devFunctionsEnv()
+          ),
+        })
+      );
+      return;
+    }
+
+    if (url === "/api/integrations/mail/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          devStore.mailConfig = normalizeMailConfig({
+            ...devStore.mailConfig,
+            ...parsed,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+          });
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeMailConfigForClient(
+            devStore.mailConfig,
+            getMailTransportStatus(devFunctionsEnv()),
+            devFunctionsEnv()
+          ),
+            })
+          );
         } catch {
           res.statusCode = 400;
           res.end(JSON.stringify({ error: "Invalid JSON" }));

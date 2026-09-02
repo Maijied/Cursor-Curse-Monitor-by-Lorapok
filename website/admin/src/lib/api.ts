@@ -299,6 +299,8 @@ export type DiscordConfig = {
   deploymentWebhookPreview: string | null;
   feedbackWebhookPreview: string | null;
   communityWebhookPreview: string | null;
+  communityInviteUrl: string;
+  communityInviteConfigured: boolean;
   /** @deprecated use deploymentConfigured */
   configured: boolean;
   /** @deprecated use deploymentWebhookPreview */
@@ -326,6 +328,7 @@ export async function putDiscordConfigApi(payload: {
   deploymentWebhookUrl?: string;
   feedbackWebhookUrl?: string;
   communityWebhookUrl?: string;
+  communityInviteUrl?: string;
   /** @deprecated use deploymentWebhookUrl */
   webhookUrl?: string;
 }) {
@@ -427,6 +430,53 @@ export async function putSubscribePromptConfigApi(payload: Partial<SubscribeProm
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to save subscribe prompt settings");
   return data as { ok: boolean; config: SubscribePromptConfig };
+}
+
+export type MailTransportConfig = {
+  productEmail: string;
+  supportEmail: string;
+  opsBccEmail: string;
+  productFromName: string;
+  supportFromName: string;
+  resendFirstExternal: boolean;
+  transport: string;
+  transportConfigured: boolean;
+  relayBound: boolean;
+  restConfigured: boolean;
+  resendConfigured: boolean;
+  testmailConfigured: boolean;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export async function fetchMailTransportConfigApi() {
+  return apiGet<{ ok: boolean; config: MailTransportConfig }>("/integrations/mail/config");
+}
+
+export async function putMailTransportConfigApi(
+  payload: Partial<
+    Pick<
+      MailTransportConfig,
+      | "productEmail"
+      | "supportEmail"
+      | "opsBccEmail"
+      | "productFromName"
+      | "supportFromName"
+      | "resendFirstExternal"
+    >
+  >
+) {
+  const res = await fetch(`${API_BASE}/integrations/mail/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save mail settings");
+  return data as { ok: boolean; config: MailTransportConfig };
 }
 
 export type CursorIndexPolicyConfig = {

@@ -1,6 +1,7 @@
 import { putKvJsonIfChanged } from "./kv-put.js";
 import { getMailTransportStatus } from "./mail.js";
 import { buildPublicCursorIndexPolicy, readCursorIndexConfig } from "./cursor-index-config.js";
+import { DEFAULT_COMMUNITY_INVITE_URL, readDiscordConfig } from "./discord-config.js";
 
 const CONFIG_KEY = "integrations:subscribe-prompt";
 
@@ -12,7 +13,7 @@ const DISCORD_INVITE_RE =
 export const DEFAULT_SUBSCRIBE_CONFIG = {
   subscribeModalEnabled: true,
   requireMailForSubscribe: true,
-  subscribeFallbackDiscordUrl: "https://discord.gg/MaYRtaqef",
+  subscribeFallbackDiscordUrl: DEFAULT_COMMUNITY_INVITE_URL,
   subscribeFallbackMode: /** @type {SubscribeFallbackMode} */ ("discord"),
 };
 
@@ -104,6 +105,7 @@ export function sanitizeSubscribeConfigForClient(config) {
 export async function buildPublicSiteConfig(env) {
   const mail = getMailTransportStatus(env);
   const config = await readSubscribeConfig(env);
+  const discord = await readDiscordConfig(env);
   const indexConfig = await readCursorIndexConfig(env);
   const mailConfigured = mail.configured;
   const subscribeAvailable =
@@ -113,15 +115,18 @@ export async function buildPublicSiteConfig(env) {
   const showDiscordFallback =
     !subscribeAvailable && config.subscribeFallbackMode === "discord";
 
+  const communityInviteUrl = discord.communityInviteUrl || DEFAULT_COMMUNITY_INVITE_URL;
+  const fallbackInvite =
+    config.subscribeFallbackDiscordUrl || communityInviteUrl;
+
   return {
     mailConfigured,
     subscribeAvailable,
     subscribeModalEnabled: config.subscribeModalEnabled,
     requireMailForSubscribe: config.requireMailForSubscribe,
     subscribeFallbackMode: showDiscordFallback ? "discord" : config.subscribeFallbackMode,
-    subscribeFallbackDiscordUrl: showDiscordFallback
-      ? config.subscribeFallbackDiscordUrl
-      : null,
+    subscribeFallbackDiscordUrl: showDiscordFallback ? fallbackInvite : null,
+    discordInviteUrl: communityInviteUrl,
     mailTransport: mail.configured ? mail.transport : "none",
     ...buildPublicCursorIndexPolicy(indexConfig),
   };

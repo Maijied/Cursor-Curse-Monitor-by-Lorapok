@@ -5,6 +5,8 @@ import Badge from "../ui/Badge";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
 import DiscordCommunityCard from "../ui/DiscordCommunityCard";
+import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import MailTransportCard from "../ui/MailTransportCard";
 import SubscribePromptCard from "../ui/SubscribePromptCard";
 import ReindexPolicyCard from "../ui/ReindexPolicyCard";
 import CronSchedulesCard from "../ui/CronSchedulesCard";
@@ -41,17 +43,26 @@ export default function Settings() {
 
   return (
     <div className="space-y-6 animate-fade-slide-up">
-      <PageHeader title="Settings" description="Discord community, feedback hook, help & support, theme, connected services, and API health." />
+      <PageHeader title="Settings" description="Mail transport, Lorapok Labs Family Discord, subscribe prompts, cursor index, cron schedules, and API health." />
 
       <HelpSupportCard />
 
+      <MailTransportCard />
+
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold">Discord integrations</h2>
+        <p className="text-sm text-[var(--color-muted)]">
+          Lorapok Labs Family community hook, deployment status, and feedback prompts.
+        </p>
+      </div>
+
       <DiscordCommunityCard />
+      <DiscordIntegrationsCard />
+      <DiscordFeedbackCard />
 
       <SubscribePromptCard />
 
       <ReindexPolicyCard />
-
-      <DiscordFeedbackCard />
 
       <CronSchedulesCard />
 
