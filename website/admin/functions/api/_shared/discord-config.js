@@ -5,6 +5,12 @@ const CONFIG_KEY = "integrations:discord";
 const DISCORD_WEBHOOK_RE =
   /^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[\w-]+$/;
 
+const DISCORD_INVITE_RE =
+  /^https:\/\/(?:discord\.gg\/[\w-]+|discord\.com\/invite\/[\w-]+)$/i;
+
+/** Canonical Lorapok Labs Family invite — matches @lorapok/cursor-monitor-shared. */
+export const DEFAULT_COMMUNITY_INVITE_URL = "https://discord.gg/bp42QAMC6";
+
 /**
  * Determines whether a value is a valid Discord webhook URL.
  * @param {string} url - The value to validate.
@@ -14,6 +20,18 @@ export function isValidDiscordWebhookUrl(url) {
   if (!url || typeof url !== "string") return false;
   try {
     return DISCORD_WEBHOOK_RE.test(new URL(url.trim()).href);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {string} url
+ */
+export function isValidDiscordInviteUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  try {
+    return DISCORD_INVITE_RE.test(new URL(url.trim()).href);
   } catch {
     return false;
   }
@@ -43,10 +61,16 @@ function normalizeStoredConfig(parsed) {
   );
   const feedbackWebhookUrl = String(parsed.feedbackWebhookUrl ?? "");
   const communityWebhookUrl = String(parsed.communityWebhookUrl ?? "");
+  const communityInviteUrl = String(
+    parsed.communityInviteUrl ?? DEFAULT_COMMUNITY_INVITE_URL
+  ).trim();
   return {
     deploymentWebhookUrl,
     feedbackWebhookUrl,
     communityWebhookUrl,
+    communityInviteUrl: isValidDiscordInviteUrl(communityInviteUrl)
+      ? communityInviteUrl
+      : DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: parsed.updatedAt ?? null,
     updatedBy: parsed.updatedBy ?? null,
   };
@@ -62,6 +86,7 @@ export async function readDiscordConfig(env) {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
+    communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: null,
     updatedBy: null,
   };
@@ -99,6 +124,7 @@ export function sanitizeDiscordConfigForClient(config) {
   );
   const feedbackWebhookUrl = String(config.feedbackWebhookUrl ?? "");
   const communityWebhookUrl = String(config.communityWebhookUrl ?? "");
+  const communityInviteUrl = String(config.communityInviteUrl ?? DEFAULT_COMMUNITY_INVITE_URL);
   const deploymentConfigured = Boolean(
     deploymentWebhookUrl && isValidDiscordWebhookUrl(deploymentWebhookUrl)
   );
@@ -115,6 +141,8 @@ export function sanitizeDiscordConfigForClient(config) {
     deploymentWebhookPreview: deploymentWebhookUrl ? maskWebhookUrl(deploymentWebhookUrl) : null,
     feedbackWebhookPreview: feedbackWebhookUrl ? maskWebhookUrl(feedbackWebhookUrl) : null,
     communityWebhookPreview: communityWebhookUrl ? maskWebhookUrl(communityWebhookUrl) : null,
+    communityInviteUrl,
+    communityInviteConfigured: isValidDiscordInviteUrl(communityInviteUrl),
     /** @deprecated use deploymentConfigured */
     configured: deploymentConfigured,
     /** @deprecated use deploymentWebhookPreview */

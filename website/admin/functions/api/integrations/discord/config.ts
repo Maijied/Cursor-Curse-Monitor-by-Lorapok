@@ -2,6 +2,7 @@ import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   isValidDiscordWebhookUrl,
+  isValidDiscordInviteUrl,
   readDiscordConfig,
   sanitizeDiscordConfigForClient,
   writeDiscordConfig,
@@ -67,14 +68,23 @@ export async function onRequestPut(context) {
     }
   }
 
+  let communityInviteUrl = current.communityInviteUrl;
+  if (body.communityInviteUrl !== undefined) {
+    communityInviteUrl = String(body.communityInviteUrl ?? "").trim();
+    if (communityInviteUrl && !isValidDiscordInviteUrl(communityInviteUrl)) {
+      return jsonResponse({ error: "Invalid community Discord invite URL" }, 400);
+    }
+  }
+
   if (
     body.deploymentWebhookUrl === undefined &&
     body.webhookUrl === undefined &&
     body.feedbackWebhookUrl === undefined &&
-    body.communityWebhookUrl === undefined
+    body.communityWebhookUrl === undefined &&
+    body.communityInviteUrl === undefined
   ) {
     return jsonResponse(
-      { error: "deploymentWebhookUrl, feedbackWebhookUrl, or communityWebhookUrl is required" },
+      { error: "deploymentWebhookUrl, feedbackWebhookUrl, communityWebhookUrl, or communityInviteUrl is required" },
       400
     );
   }
@@ -83,6 +93,7 @@ export async function onRequestPut(context) {
     deploymentWebhookUrl,
     feedbackWebhookUrl,
     communityWebhookUrl,
+    communityInviteUrl,
     updatedAt: new Date().toISOString(),
     updatedBy: auth.email,
   };

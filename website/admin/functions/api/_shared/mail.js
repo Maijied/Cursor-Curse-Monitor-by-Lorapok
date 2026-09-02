@@ -14,14 +14,12 @@ import {
   toWorkerReplyTo,
 } from "./mail-normalize.js";
 import {
-  MAIL_HELP,
-  MAIL_MONITOR,
-  MAIL_OPS_COPY,
-  defaultMailBcc,
-  resolveMailFrom,
-} from "./mail-addresses.js";
+  defaultBccFromConfig,
+  readMailConfig,
+  resolveMailFromConfig,
+} from "./mail-config.js";
 
-const FROM_EMAIL = MAIL_MONITOR;
+const FROM_EMAIL = "cursor.monitor@lorapok.tech";
 const FROM_NAME = "Cursor Curse Monitor";
 const DEFAULT_ADMIN_URL = "https://cursor-dev.lorapok.tech";
 
@@ -47,7 +45,9 @@ function resendConfigured(env) {
 }
 
 /** External inboxes (Gmail, testmail) need Resend on Workers Free — Cloudflare sandbox blocks them. */
-export function prefersResendFirst(to, env) {
+export function prefersResendFirst(to, env, options = {}) {
+  const resendFirstExternal = options.resendFirstExternal !== false;
+  if (!resendFirstExternal) return false;
   if (!resendConfigured(env)) return false;
   const email = String(to ?? "").trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
@@ -459,9 +459,11 @@ export async function sendMail(
   env,
   { to, subject, html, text, category = "system", sentBy = null, from: fromOverride = null, bcc: bccOverride = null }
 ) {
+  const mailConfig = await readMailConfig(env);
   const textBody = text ?? subject;
-  const from = normalizeMailFromInput(fromOverride ?? resolveMailFrom(category));
-  const bcc = bccOverride ?? defaultMailBcc();
+  const from = normalizeMailFromInput(fromOverride ?? resolveMailFromConfig(mailConfig, category));
+  const bcc = bccOverride ?? defaultBccFromConfig(mailConfig);
+  const resendOpts = { resendFirstExternal: mailConfig.resendFirstExternal };
   const payload = {
     to,
     subject,
@@ -474,7 +476,7 @@ export async function sendMail(
 
   let result = /** @type {{ sent: boolean; transport?: string; reason?: string }} */ ({ sent: false });
 
-  if (prefersResendFirst(to, env)) {
+  if (prefersResendFirst(to, env, resendOpts)) {
     try {
       result = await sendViaResend(env, payload);
     } catch (err) {
@@ -487,7 +489,7 @@ export async function sendMail(
     }
   }
 
-  const resendWasPrimary = prefersResendFirst(to, env);
+  const resendWasPrimary = prefersResendFirst(to, env, resendOpts);
 
   if (!result.sent && env.MAIL_RELAY?.fetch && !resendWasPrimary) {
     try {
@@ -540,7 +542,7 @@ export async function sendMail(
 
     if (!result.sent) {
       try {
-        if (!prefersResendFirst(to, env)) {
+        if (!prefersResendFirst(to, env, resendOpts)) {
           const resend = await sendViaResend(env, payload);
           if (resend.sent) result = resend;
           else if (!result.reason || result.reason.includes("credentials missing")) {
@@ -575,7 +577,7 @@ export async function sendMail(
       sentBy,
       error: result.sent ? null : result.reason,
       read: false,
-      meta: { bcc, copyTo: MAIL_OPS_COPY },
+      meta: { bcc, copyTo: mailConfig.opsBccEmail },
     });
     mailboxId = recorded.id;
   } catch (err) {
