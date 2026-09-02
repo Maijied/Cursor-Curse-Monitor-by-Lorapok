@@ -20,6 +20,7 @@ import {
 import { scanMonitoringDbBackups, type DbBackupScanResult } from "./cursorAuth";
 import { getActiveAccountStoragePaths } from "./accountStore";
 import { reindexMissingConversations } from "./conversationReindex";
+import { exportConversationIndexPackage, importConversationIndexPackage } from "./cipPackage";
 import { resolveCursorIndexPolicy } from "./cursorIndexConfig";
 import { notifyReindexResult } from "./reindexUi";
 
@@ -97,8 +98,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
 
     const pushReindexPolicy = async () => {
       const policy = await resolveCursorIndexPolicy();
+      const storage = await getActiveAccountStoragePaths(this.extensionContext);
       if (!viewReady) return;
-      webviewView.webview.postMessage({ type: "reindexPolicy", payload: policy });
+      webviewView.webview.postMessage({
+        type: "indexContext",
+        payload: {
+          policy,
+          storage: storage.ok ? storage.paths : null,
+          storageError: storage.ok ? null : storage.error,
+        },
+      });
     };
 
     const deliverSnapshot = async (force = false) => {
@@ -252,6 +261,84 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           };
           webviewView.webview.postMessage({ type: "reindexResult", payload: failed });
           notifyReindexResult(failed, policy);
+        }
+        return;
+      }
+      if (message.type === "exportIndexPackage") {
+        webviewView.webview.postMessage({
+          type: "indexPackageProgress",
+          payload: { phase: "preparing", message: "Preparing export…" },
+        });
+        const policy = await resolveCursorIndexPolicy(true);
+        const storage = await getActiveAccountStoragePaths(this.extensionContext);
+        if (!storage.ok) {
+          webviewView.webview.postMessage({
+            type: "indexPackageResult",
+            payload: { success: false, error: storage.error, mode: "export" },
+          });
+          return;
+        }
+        try {
+          const result = await exportConversationIndexPackage(
+            this.extensionVersion,
+            storage.paths,
+            policy,
+            (update) => {
+              webviewView.webview.postMessage({ type: "indexPackageProgress", payload: update });
+            }
+          );
+          webviewView.webview.postMessage({
+            type: "indexPackageResult",
+            payload: { ...result, mode: "export" },
+          });
+        } catch (err) {
+          webviewView.webview.postMessage({
+            type: "indexPackageResult",
+            payload: {
+              success: false,
+              error: err instanceof Error ? err.message : "Export failed unexpectedly.",
+              mode: "export",
+            },
+          });
+        }
+        return;
+      }
+      if (message.type === "importIndexPackage") {
+        webviewView.webview.postMessage({
+          type: "indexPackageProgress",
+          payload: { phase: "preparing", message: "Preparing import…" },
+        });
+        const policy = await resolveCursorIndexPolicy(true);
+        const storage = await getActiveAccountStoragePaths(this.extensionContext);
+        if (!storage.ok) {
+          webviewView.webview.postMessage({
+            type: "indexPackageResult",
+            payload: { success: false, error: storage.error, mode: "import" },
+          });
+          return;
+        }
+        try {
+          const result = await importConversationIndexPackage(
+            this.extensionUri,
+            storage.paths,
+            policy,
+            (update) => {
+              webviewView.webview.postMessage({ type: "indexPackageProgress", payload: update });
+            }
+          );
+          webviewView.webview.postMessage({
+            type: "indexPackageResult",
+            payload: { ...result, mode: "import" },
+          });
+        } catch (err) {
+          webviewView.webview.postMessage({
+            type: "indexPackageResult",
+            payload: {
+              success: false,
+              error: err instanceof Error ? err.message : "Import failed unexpectedly.",
+              mode: "import",
+            },
+          });
         }
         return;
       }
@@ -1396,6 +1483,22 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <span class="value" id="reindexLookbackLabel">Policy-controlled lookback</span>
     </div>
     <button class="ghost" id="reindexBtn" style="margin-top:10px;width:100%">Reindex missing conversations</button>
+    <div id="indexPackageSection" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <p class="muted" style="margin:0 0 10px;font-size:11px;line-height:1.45">
+        Export or import a Cursor Index Package (<span class="mono">.cip.json</span>) for backup and cross-machine sync. Mission Control policy controls lookback and limits.
+      </p>
+      <div class="row" style="margin-top:0">
+        <span class="label">Active account</span>
+        <span class="value mono" id="indexAccountLabel">—</span>
+      </div>
+      <p class="muted mono" id="indexStateDbPath" style="margin:6px 0 0;font-size:10px;line-height:1.45;word-break:break-all"></p>
+      <p class="muted mono" id="indexSearchDbPath" style="margin:4px 0 10px;font-size:10px;line-height:1.45;word-break:break-all"></p>
+      <p class="muted" id="indexStorageError" style="margin:0 0 10px;font-size:11px;line-height:1.45;color:var(--danger,#ff6b6b);display:none"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ghost" id="exportIndexBtn" style="flex:1;min-width:9rem" disabled>Export .cip.json</button>
+        <button class="ghost" id="importIndexBtn" style="flex:1;min-width:9rem" disabled>Import .cip.json</button>
+      </div>
+    </div>
     <p class="muted" style="margin:14px 0 10px;font-size:11px;line-height:1.45">
       Older extension builds could leave multi-gigabyte <span class="mono">state.vscdb.backup-*</span> files in globalStorage. Cleanup removes only those stale copies — your live Cursor database is never modified.
     </p>
@@ -2156,8 +2259,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (event.data?.type === 'subscribeState') {
         applySubscribeState(event.data.payload);
       }
+      if (event.data?.type === 'indexContext') {
+        applyIndexContext(event.data.payload);
+      }
       if (event.data?.type === 'reindexPolicy') {
         applyReindexPolicy(event.data.payload);
+      }
+      if (event.data?.type === 'indexPackageProgress') {
+        applyIndexPackageProgress(event.data.payload);
+      }
+      if (event.data?.type === 'indexPackageResult') {
+        applyIndexPackageResult(event.data.payload);
       }
       if (event.data?.type === 'reindexProgress') {
         applyReindexProgress(event.data.payload);
@@ -2178,6 +2290,98 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     var subscribeModalTimer = null;
     var subscribePromptReady = false;
     var reindexPolicyDisabled = false;
+    var cipExportDisabled = true;
+    var cipImportDisabled = true;
+    var indexPackageBusy = false;
+
+    function setIndexPackageLoading(active, message) {
+      var exportBtn = document.getElementById('exportIndexBtn');
+      var importBtn = document.getElementById('importIndexBtn');
+      var reindexBtn = document.getElementById('reindexBtn');
+      indexPackageBusy = active;
+      if (exportBtn) {
+        exportBtn.disabled = active || cipExportDisabled;
+        exportBtn.textContent = active ? 'Working…' : 'Export .cip.json';
+      }
+      if (importBtn) {
+        importBtn.disabled = active || cipImportDisabled;
+        importBtn.textContent = active ? 'Working…' : 'Import .cip.json';
+      }
+      if (reindexBtn && active) reindexBtn.disabled = true;
+      if (message && active) {
+        var err = document.getElementById('indexStorageError');
+        if (err) {
+          err.style.display = 'block';
+          err.style.color = 'var(--muted)';
+          err.textContent = message;
+        }
+      }
+    }
+
+    function applyIndexPackageProgress(payload) {
+      if (!payload || typeof payload !== 'object') return;
+      setIndexPackageLoading(true, payload.message || 'Working…');
+    }
+
+    function applyIndexPackageResult(payload) {
+      setIndexPackageLoading(false);
+      var err = document.getElementById('indexStorageError');
+      if (!payload || typeof payload !== 'object') return;
+      if (!err) return;
+      err.style.display = 'block';
+      if (!payload.success) {
+        err.style.color = 'var(--danger,#ff6b6b)';
+        err.textContent = payload.error || (payload.mode === 'import' ? 'Import failed.' : 'Export failed.');
+        return;
+      }
+      err.style.color = 'var(--ok,#39ff14)';
+      if (payload.mode === 'export') {
+        err.textContent = 'Exported ' + (payload.recordCount || 0) + ' conversation(s) to ' + (payload.path || 'file') + '.';
+      } else {
+        err.textContent =
+          'Imported ' + (payload.imported || 0) + ' conversation(s); ' + (payload.skipped || 0) + ' skipped.';
+      }
+    }
+
+    function applyIndexContext(ctx) {
+      if (!ctx || typeof ctx !== 'object') return;
+      if (ctx.policy) applyReindexPolicy(ctx.policy);
+      var account = document.getElementById('indexAccountLabel');
+      var statePath = document.getElementById('indexStateDbPath');
+      var searchPath = document.getElementById('indexSearchDbPath');
+      var err = document.getElementById('indexStorageError');
+      var exportBtn = document.getElementById('exportIndexBtn');
+      var importBtn = document.getElementById('importIndexBtn');
+      var policy = ctx.policy || {};
+      cipExportDisabled = policy.cipExportEnabled === false;
+      cipImportDisabled = policy.cipImportEnabled === false;
+      if (exportBtn) {
+        exportBtn.disabled = indexPackageBusy || cipExportDisabled || !ctx.storage;
+        exportBtn.style.opacity = cipExportDisabled ? '0.55' : '1';
+      }
+      if (importBtn) {
+        importBtn.disabled = indexPackageBusy || cipImportDisabled || !ctx.storage;
+        importBtn.style.opacity = cipImportDisabled ? '0.55' : '1';
+      }
+      if (!ctx.storage) {
+        if (account) account.textContent = '—';
+        if (statePath) statePath.textContent = '';
+        if (searchPath) searchPath.textContent = '';
+        if (err && ctx.storageError) {
+          err.style.display = 'block';
+          err.style.color = 'var(--muted)';
+          err.textContent = ctx.storageError;
+        }
+        return;
+      }
+      if (err && !indexPackageBusy) {
+        err.style.display = 'none';
+        err.textContent = '';
+      }
+      if (account) account.textContent = ctx.storage.accountLabel || ctx.storage.accountId || '—';
+      if (statePath) statePath.textContent = 'state: ' + (ctx.storage.stateDbPath || '—');
+      if (searchPath) searchPath.textContent = 'search: ' + (ctx.storage.searchDbPath || '—');
+    }
 
     function setReindexLoading(active, message, current, total) {
       var overlay = document.getElementById('reindexLoader');
@@ -2386,6 +2590,16 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       setReindexLoading(true, 'Starting conversation reindex…');
       vscode.postMessage({ type: 'reindexConversations' });
+    });
+    onClick('exportIndexBtn', function() {
+      if (indexPackageBusy || cipExportDisabled) return;
+      setIndexPackageLoading(true, 'Starting export…');
+      vscode.postMessage({ type: 'exportIndexPackage' });
+    });
+    onClick('importIndexBtn', function() {
+      if (indexPackageBusy || cipImportDisabled) return;
+      setIndexPackageLoading(true, 'Starting import…');
+      vscode.postMessage({ type: 'importIndexPackage' });
     });
     onClick('reindexLoaderClose', function() {
       setReindexLoading(false);
