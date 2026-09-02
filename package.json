@@ -283,6 +283,17 @@
           "default": "default",
           "description": "Optional local override for reindex write policy."
         },
+        "cursorCurseMonitor.indexWritePolicy": {
+          "type": "string",
+          "enum": ["default", "live", "quit-first"],
+          "enumDescriptions": [
+            "Follow Mission Control policy from GET /api/site-config (recommended).",
+            "Allow reindex from the dashboard while the editor is open (creates backups first).",
+            "Require Cursor/VS Code to be fully quit before reindexing (safest)."
+          ],
+          "default": "default",
+          "description": "Alias for cursorCurseMonitor.reindexWritePolicy (cursor index write policy override)."
+        },
         "cursorCurseMonitor.securityScanEnabled": {
           "type": "boolean",
           "default": true,

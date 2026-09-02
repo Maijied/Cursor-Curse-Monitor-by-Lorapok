@@ -283,6 +283,41 @@ export default function ReindexPolicyCard() {
             </span>
           </label>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={form.cipDedupeAcrossUsers}
+                onChange={(e) => setForm((prev) => ({ ...prev, cipDedupeAcrossUsers: e.target.checked }))}
+                disabled={!isMaster || !form.indexEnabled || !form.cipImportEnabled}
+                className="mt-1"
+              />
+              <span>
+                <span className="font-medium block">Dedupe imports across owners</span>
+                <span className="text-[var(--color-muted)]">
+                  Skip records whose content hash already exists from any prior import.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={form.cipAllowCrossUserLocalImport}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, cipAllowCrossUserLocalImport: e.target.checked }))
+                }
+                disabled={!isMaster || !form.indexEnabled || !form.cipImportEnabled}
+                className="mt-1"
+              />
+              <span>
+                <span className="font-medium block">Allow cross-account package import</span>
+                <span className="text-[var(--color-muted)]">
+                  Permits importing .cip.json files exported from another Cursor account on this machine.
+                </span>
+              </span>
+            </label>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"

@@ -58,6 +58,13 @@ async function run() {
   assert.strictEqual(emptyRecords.ok, false);
   assert.match(emptyRecords.error, /no records/i);
 
+  const nonArrayRecords = validateCipPackage({
+    header: { cipVersion: CIP_FORMAT_VERSION, sourceKind: "agent-transcripts" },
+    records: "nope",
+  });
+  assert.strictEqual(nonArrayRecords.ok, false);
+  assert.match(nonArrayRecords.error, /missing records/i);
+
   const invalidTurn = validateCipPackage({
     header: { cipVersion: CIP_FORMAT_VERSION, sourceKind: "agent-transcripts" },
     records: [{ ...validRecord, turns: [{ role: "system", text: "nope", createdAt: 1 }] }],
