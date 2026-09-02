@@ -85,6 +85,7 @@ describe("subscribe prompt integration APIs", () => {
     const data = await res.json();
     expect(res.ok).toBe(true);
     expect(typeof data.mailConfigured).toBe("boolean");
+    expect(data.discordInviteUrl).toBe("https://discord.gg/bp42QAMC6");
     expect(typeof data.subscribeAvailable).toBe("boolean");
     expect(data).not.toHaveProperty("RESEND_API_KEY");
     expect(data).not.toHaveProperty("webhookUrl");

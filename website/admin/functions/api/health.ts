@@ -53,6 +53,7 @@ export async function onRequestGet(context) {
     discordConfigured: discordConfig.deploymentConfigured ?? discordConfig.configured,
     feedbackDiscordConfigured: discordConfig.feedbackConfigured,
     communityDiscordConfigured: discordConfig.communityConfigured,
+    communityDiscordInviteUrl: discordConfig.communityInviteUrl,
     statsRefreshEnabled: statsRefresh.enabled,
     statsRefreshIntervalMinutes: statsRefresh.intervalMinutes,
     statsRefreshLastRunAt: statsRefresh.lastRunAt,

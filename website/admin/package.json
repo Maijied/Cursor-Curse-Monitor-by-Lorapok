@@ -22,6 +22,8 @@
     "mail:sync-vault": "node scripts/sync-mail-on-main.mjs --vault",
     "mail:test": "node scripts/test-admin-mail.mjs",
     "mail:testmail": "node scripts/probe-subscribe-testmail.mjs",
+    "mail:probe-production": "node scripts/probe-mail-production.mjs",
+    "mail:probe-production:e2e": "node scripts/probe-mail-production.mjs --e2e",
     "mail:sync-testmail-vault": "node scripts/sync-testmail-cred-vault.mjs",
     "mail:setup-testmail-pages": "node scripts/setup-testmail-pages-secret.mjs",
     "stats:cron:sync-vault": "node scripts/sync-stats-cron-cred-vault.mjs",
