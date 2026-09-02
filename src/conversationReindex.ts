@@ -762,47 +762,6 @@ export async function reindexMissingConversations(
 
   const { DatabaseSync } = loadSqlite();
 
-  if (fs.existsSync(searchDbPath)) {
-    const searchDb = new DatabaseSync(searchDbPath, { timeout: 10000 });
-    try {
-      searchDb.exec("BEGIN IMMEDIATE");
-      for (let index = 0; index < transcripts.length; index++) {
-        const parsed = transcripts[index]!;
-        if (reindexSearch(searchDb, parsed, "local", parsed.id)) searchIndexed.push(parsed.id);
-        if (
-          transcripts.length <= 12 ||
-          index === 0 ||
-          index === transcripts.length - 1 ||
-          (index + 1) % 4 === 0
-        ) {
-          reportProgress(onProgress, {
-            phase: "search",
-            message: `Rebuilding search index (${index + 1}/${transcripts.length})…`,
-            current: index + 1,
-            total: transcripts.length,
-          });
-        }
-      }
-      searchDb.exec("COMMIT");
-    } catch (error) {
-      try {
-        searchDb.exec("ROLLBACK");
-      } catch {
-        // ignore rollback failure
-      }
-      searchDb.close();
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Search reindex failed.",
-        searchIndexed,
-        sidebarRestored,
-        skipped,
-        backups,
-      };
-    }
-    searchDb.close();
-  }
-
   const stateDb = new DatabaseSync(stateDbPath, { timeout: 15000 });
   try {
     stateDb.exec("BEGIN IMMEDIATE");
@@ -817,8 +776,6 @@ export async function reindexMissingConversations(
       });
       if (restored) {
         sidebarRestored.push(parsed.id);
-      } else if (!searchIndexed.includes(parsed.id)) {
-        skipped.push(parsed.id);
       }
       if (
         transcripts.length <= 12 ||
@@ -852,6 +809,57 @@ export async function reindexMissingConversations(
     };
   }
   stateDb.close();
+
+  if (fs.existsSync(searchDbPath)) {
+    const searchDb = new DatabaseSync(searchDbPath, { timeout: 10000 });
+    try {
+      searchDb.exec("BEGIN IMMEDIATE");
+      for (let index = 0; index < transcripts.length; index++) {
+        const parsed = transcripts[index]!;
+        if (reindexSearch(searchDb, parsed, "local", parsed.id)) searchIndexed.push(parsed.id);
+        if (
+          transcripts.length <= 12 ||
+          index === 0 ||
+          index === transcripts.length - 1 ||
+          (index + 1) % 4 === 0
+        ) {
+          reportProgress(onProgress, {
+            phase: "search",
+            message: `Rebuilding search index (${index + 1}/${transcripts.length})…`,
+            current: index + 1,
+            total: transcripts.length,
+          });
+        }
+      }
+      searchDb.exec("COMMIT");
+    } catch (error) {
+      try {
+        searchDb.exec("ROLLBACK");
+      } catch {
+        // ignore rollback failure
+      }
+      searchDb.close();
+      const restoredWithoutSearch = sidebarRestored.filter((id) => !searchIndexed.includes(id));
+      for (const id of restoredWithoutSearch) {
+        if (!skipped.includes(id)) skipped.push(id);
+      }
+      return {
+        success: false,
+        error:
+          (error instanceof Error ? error.message : "Search reindex failed.") +
+          " Sidebar entries were saved; search index may be incomplete until you reindex again.",
+        searchIndexed,
+        sidebarRestored,
+        skipped,
+        backups,
+      };
+    }
+    searchDb.close();
+  }
+
+  for (const id of sidebarRestored) {
+    if (!searchIndexed.includes(id) && !skipped.includes(id)) skipped.push(id);
+  }
 
   reportProgress(onProgress, {
     phase: "done",
