@@ -12,8 +12,6 @@ import {
 
 export type PipelineJob = WorkflowJob;
 
-export { getJobStepState, getPipelineActiveIndex };
-
 type DeployPipelineStepsProps = {
   jobs: PipelineJob[];
 };

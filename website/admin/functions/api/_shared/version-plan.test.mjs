@@ -22,6 +22,7 @@ const channels = [
 ];
 
 assert.equal(maxVersionFromChannels(channels), "1.0.3");
+assert.equal(maxVersionFromGitTags(["v1.0.70", "v1.0.71", "v1.0.R1"]), "1.0.71");
 
 const plan = buildVersionPlan({
   packageVersion: "1.0.1",

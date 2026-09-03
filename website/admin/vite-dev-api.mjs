@@ -58,7 +58,7 @@ import {
   MANAGED_CRON_JOBS,
 } from "./functions/api/_shared/cron-jobs-registry.js";
 import { runDiscordDigest } from "./functions/api/_shared/discord-digest.js";
-import { fetchSiteDataWithLiveCache, mergeSiteDataWithLiveCache, runStatsRefresh } from "./functions/api/_shared/stats-refresh.js";
+import { mergeSiteDataWithLiveCache, runStatsRefresh } from "./functions/api/_shared/stats-refresh.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -321,48 +321,6 @@ async function dispatchCiCdWorkflow(inputs, successMessage) {
     message: successMessage,
     workflow: "ci-cd.yml",
     ...inputs,
-  };
-}
-
-async function dispatchGithubWorkflow(workflowId, body, successMessage) {
-  const targetTag = body.target_tag ?? body.tag;
-  const publishMarket = mapPublishMarket(body.publish_market ?? body.market);
-  const releaseChannel = mapReleaseChannel(body.release_channel ?? body.channel);
-  if (!targetTag) throw new Error("target_tag is required");
-  if (!publishMarket) throw new Error("Invalid publish_market");
-  if (!releaseChannel) throw new Error("Invalid release_channel");
-
-  const githubToken = loadGithubToken();
-  if (!githubToken) throw new Error("GITHUB_TOKEN not configured in website/admin/.env");
-
-  const githubRes = await fetch(
-    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${githubToken}`,
-        "User-Agent": "cursor-usage-monitor-dev",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      body: JSON.stringify({
-        ref: "main",
-        inputs: { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
-      }),
-    }
-  );
-
-  if (!githubRes.ok) {
-    throw new Error(`Failed to trigger ${workflowId} (${githubRes.status})`);
-  }
-
-  return {
-    success: true,
-    message: successMessage,
-    workflow: workflowId,
-    target_tag: targetTag,
-    publish_market: publishMarket,
-    release_channel: releaseChannel,
   };
 }
 
@@ -810,7 +768,7 @@ export function createDevApiMiddleware() {
         res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
         res.setHeader("Cache-Control", "public, max-age=300");
         res.end(renderReadmeStatsSvg(stats));
-      } catch (err) {
+      } catch {
         res.statusCode = 503;
         res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
         res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="80"><text x="12" y="40" fill="#fff">stats unavailable</text></svg>`);

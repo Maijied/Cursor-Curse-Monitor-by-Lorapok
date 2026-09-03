@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getJobStepState, getPipelineActiveIndex } from "./DeployPipelineSteps";
+import { getJobStepState, getPipelineActiveIndex } from "../../lib/workflow-jobs";
 
 describe("DeployPipelineSteps helpers", () => {
   it("marks running job as active", () => {
