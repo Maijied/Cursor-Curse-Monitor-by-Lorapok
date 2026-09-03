@@ -88,10 +88,14 @@ export async function fetchMarketplaceSync() {
 export async function fetchVersionPlan(
   bump: "patch" | "minor" | "major" = "patch",
   mode: "release" | "rollback" = "release",
+  targetTag?: string,
 ) {
-  return apiGet<VersionPlan>(
-    `/version/plan?bump=${encodeURIComponent(bump)}&mode=${encodeURIComponent(mode)}`,
-  );
+  const params = new URLSearchParams({
+    bump,
+    mode,
+  });
+  if (targetTag) params.set("target_tag", targetTag);
+  return apiGet<VersionPlan>(`/version/plan?${params.toString()}`);
 }
 
 export async function fetchDiscussionsApi() {
@@ -557,11 +561,13 @@ export type DeployRequest = {
   release_channel: "Production" | "Beta (Pre-release)";
   deploy_admin?: boolean;
   deploy_website?: boolean;
+  deploy_extension?: boolean;
 };
 
 export type InfraDeployRequest = {
   deploy_admin?: boolean;
   deploy_website?: boolean;
+  deploy_extension?: boolean;
 };
 
 export type ReleaseRequest = {
@@ -1147,6 +1153,38 @@ export async function syncMailTransport() {
     recommendations?: string[];
     transport?: { configured: boolean; transport: string; relayBound?: boolean; resendConfigured?: boolean };
   };
+}
+
+export type MailSetupStatus = {
+  transport: {
+    configured: boolean;
+    transport: string;
+    relayBound: boolean;
+    restConfigured: boolean;
+    resendConfigured: boolean;
+    hint?: string;
+  };
+  identities: {
+    productEmail: string;
+    supportEmail: string;
+    opsBccEmail: string;
+    productFromName: string;
+    supportFromName: string;
+    resendFirstExternal: boolean;
+    testmailConfigured: boolean;
+    updatedAt: string | null;
+    updatedBy: string | null;
+  };
+  recommendations: string[];
+  subscribeAvailable: boolean;
+  subscribeModalEnabled: boolean;
+  requireMailForSubscribe: boolean;
+  mailConfigured: boolean;
+  checkedAt: string;
+};
+
+export async function fetchMailSetupStatusApi() {
+  return apiGet<{ ok: boolean } & MailSetupStatus>("/integrations/mail/status");
 }
 
 export async function startMailboxTestmailProbe() {

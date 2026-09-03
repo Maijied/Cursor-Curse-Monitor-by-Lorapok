@@ -14,7 +14,7 @@ import {
   filterTagsForChannel,
   formatTagLabel,
 } from "../../lib/release-version";
-import { validateMarketplaceDeploy } from "../../lib/marketplace-deploy-policy";
+import { validateMarketplaceDeploy, marketIncludesAmo } from "../../lib/marketplace-deploy-policy";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
@@ -57,13 +57,38 @@ export default function Deployments() {
   >("Open VSX + Firefox AMO");
   const [deployAdmin, setDeployAdmin] = useState(false);
   const [deployWebsite, setDeployWebsite] = useState(true);
+  const [deployExtension, setDeployExtension] = useState(true);
+  const productionMarketRef = useRef<typeof market>("Open VSX + Firefox AMO");
+  const prevChannelRef = useRef<"beta" | "production">(channel);
 
   useEffect(() => {
     if (mode === "deploy") {
       setDeployAdmin(false);
       setDeployWebsite(true);
+      setDeployExtension(true);
+    } else if (mode === "rollback") {
+      setDeployExtension(true);
+    } else if (mode === "infra") {
+      setDeployExtension(false);
     }
   }, [mode]);
+
+  useEffect(() => {
+    const prev = prevChannelRef.current;
+    prevChannelRef.current = channel;
+
+    if (channel === "beta") {
+      setMarket((current) => {
+        if (marketIncludesAmo(current)) {
+          productionMarketRef.current = current;
+          return "Open VSX";
+        }
+        return current;
+      });
+    } else if (prev === "beta" && channel === "production") {
+      setMarket(productionMarketRef.current);
+    }
+  }, [channel]);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
   const [displayLiveTag, setDisplayLiveTag] = useState<string | null>(null);
@@ -149,7 +174,8 @@ export default function Deployments() {
     setVersionPlanError(null);
     try {
       const planMode = mode === "rollback" ? "rollback" : "release";
-      const plan = await fetchVersionPlan("patch", planMode);
+      const targetForPlan = mode === "rollback" && selectedTag ? selectedTag : undefined;
+      const plan = await fetchVersionPlan("patch", planMode, targetForPlan);
       setVersionPlan(plan);
     } catch (err: unknown) {
       setVersionPlan(null);
@@ -157,7 +183,7 @@ export default function Deployments() {
     } finally {
       setVersionPlanLoading(false);
     }
-  }, [mode]);
+  }, [mode, selectedTag]);
 
   useEffect(() => {
     if (isMaster) void runVersionCheck();
@@ -255,6 +281,7 @@ export default function Deployments() {
       release_channel: releaseChannel,
       deploy_admin: deployAdmin,
       deploy_website: deployWebsite,
+      deploy_extension: deployExtension,
     };
     try {
       if (mode === "rollback") {
@@ -282,7 +309,7 @@ export default function Deployments() {
     !deployPolicyError &&
     (mode === "infra"
       ? deployAdmin || deployWebsite
-      : Boolean(selectedTag) && filteredTags.includes(selectedTag) && !deployBlocked);
+      : Boolean(selectedTag) && filteredTags.includes(selectedTag) && !deployBlocked && (deployExtension || deployWebsite));
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -613,15 +640,26 @@ export default function Deployments() {
               id="target-market"
               value={market}
               onChange={(e) => setMarket(e.target.value as typeof market)}
-              disabled={formLocked}
+              disabled={formLocked || channel === "beta"}
               className={inputClass}
             >
-              <option value="Open VSX + Firefox AMO">Open VSX + Firefox AMO (default — no VS Code)</option>
-              <option value="Both">All Marketplaces (VS Code + Open VSX + Firefox AMO)</option>
+              <option value="Open VSX + Firefox AMO" disabled={channel === "beta"}>
+                Open VSX + Firefox AMO (default — no VS Code)
+              </option>
+              <option value="Both" disabled={channel === "beta"}>
+                All Marketplaces (VS Code + Open VSX + Firefox AMO)
+              </option>
               <option value="VS Code Marketplace">VS Code Marketplace</option>
               <option value="Open VSX">Open VSX (canonical lorapok-labs)</option>
-              <option value="Firefox AMO">Firefox Add-ons (AMO)</option>
+              <option value="Firefox AMO" disabled={channel === "beta"}>
+                Firefox Add-ons (AMO)
+              </option>
             </select>
+            {channel === "beta" ? (
+              <p className="mt-2 text-xs text-[var(--color-muted)]">
+                Beta uses Open VSX pre-release only — Firefox AMO options are disabled.
+              </p>
+            ) : null}
           </div>
           ) : null}
 
@@ -677,6 +715,17 @@ export default function Deployments() {
                 />
                 Marketing site (cursor.lorapok.tech)
               </label>
+              {mode !== "infra" ? (
+                <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                  <input
+                    type="checkbox"
+                    checked={deployExtension}
+                    onChange={(e) => setDeployExtension(e.target.checked)}
+                    disabled={formLocked}
+                  />
+                  IDE extension (marketplaces)
+                </label>
+              ) : null}
             </div>
             {mode === "deploy" ? (
               <p className="text-xs text-[var(--color-muted)] mt-2">

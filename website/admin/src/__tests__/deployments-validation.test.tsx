@@ -102,11 +102,13 @@ describe("Deployments validation UI", () => {
     expect(screen.getByText(/Firefox AMO is not available on beta/i)).toBeInTheDocument();
   });
 
-  it("blocks deploy when beta channel is selected with default AMO market", async () => {
+  it("auto-switches market to Open VSX on beta channel so deploy is allowed", async () => {
     render(<Deployments />);
     const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
     fireEvent.click(betaRadio);
+    const marketSelect = await screen.findByLabelText("Publish Market");
+    await waitFor(() => expect(marketSelect).toHaveValue("Open VSX"));
     const submit = await screen.findByRole("button", { name: /publish to marketplaces/i });
-    expect(submit).toBeDisabled();
+    expect(submit).not.toBeDisabled();
   });
 });

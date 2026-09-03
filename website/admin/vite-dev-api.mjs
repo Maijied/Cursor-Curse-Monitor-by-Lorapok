@@ -43,6 +43,7 @@ import {
   normalizeMailConfig,
   sanitizeMailConfigForClient,
 } from "./functions/api/_shared/mail-config.js";
+import { buildMailSyncRecommendations } from "./functions/api/_shared/mail-sync.js";
 import {
   DEFAULT_CURSOR_INDEX_CONFIG,
   normalizeCursorIndexConfig,
@@ -1006,6 +1007,52 @@ export function createDevApiMiddleware() {
             getMailTransportStatus(devFunctionsEnv()),
             devFunctionsEnv()
           ),
+        })
+      );
+      return;
+    }
+
+    if (url === "/api/integrations/mail/status" && req.method === "GET") {
+      const transport = getMailTransportStatus(devFunctionsEnv());
+      const sanitized = sanitizeMailConfigForClient(
+        devStore.mailConfig,
+        transport,
+        devFunctionsEnv()
+      );
+      const subscribeConfig = devStore.subscribeConfig ?? DEFAULT_SUBSCRIBE_CONFIG;
+      const mailConfigured = transport.configured;
+      const subscribeAvailable =
+        subscribeConfig.subscribeModalEnabled &&
+        (!subscribeConfig.requireMailForSubscribe || mailConfigured);
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          checkedAt: new Date().toISOString(),
+          transport: {
+            configured: transport.configured,
+            transport: transport.transport ?? "none",
+            relayBound: transport.relayBound ?? false,
+            restConfigured: transport.restConfigured ?? false,
+            resendConfigured: transport.resendConfigured ?? false,
+            hint: transport.hint,
+          },
+          identities: {
+            productEmail: sanitized.productEmail,
+            supportEmail: sanitized.supportEmail,
+            opsBccEmail: sanitized.opsBccEmail,
+            productFromName: sanitized.productFromName,
+            supportFromName: sanitized.supportFromName,
+            resendFirstExternal: sanitized.resendFirstExternal,
+            testmailConfigured: sanitized.testmailConfigured,
+            updatedAt: sanitized.updatedAt,
+            updatedBy: sanitized.updatedBy,
+          },
+          recommendations: buildMailSyncRecommendations(transport),
+          mailConfigured,
+          subscribeAvailable,
+          subscribeModalEnabled: subscribeConfig.subscribeModalEnabled,
+          requireMailForSubscribe: subscribeConfig.requireMailForSubscribe,
         })
       );
       return;
