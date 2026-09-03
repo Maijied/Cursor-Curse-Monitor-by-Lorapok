@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cursor Curse Monitor by Lorapok",
-  "version": "0.0.0",
+  "version": "1.0.R2",
   "description": "Live usage and budget tracker in your browser — quota, Auto/API meters, billing cycle, and spend alerts.",
   "author": {
     "name": "Mohammad Maizied Hasan Majumder",

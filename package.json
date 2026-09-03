@@ -6,7 +6,7 @@
   ],
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
-  "version": "0.0.0",
+  "version": "1.0.R2",
   "publisher": "LorapokLabs",
   "license": "GPL-3.0-or-later",
   "icon": "media/logo.png",
@@ -274,7 +274,11 @@
         },
         "cursorCurseMonitor.reindexWritePolicy": {
           "type": "string",
-          "enum": ["default", "live", "quit-first"],
+          "enum": [
+            "default",
+            "live",
+            "quit-first"
+          ],
           "enumDescriptions": [
             "Follow Mission Control policy from GET /api/site-config (recommended).",
             "Allow reindex from the dashboard while the editor is open (creates backups first).",
@@ -285,7 +289,11 @@
         },
         "cursorCurseMonitor.indexWritePolicy": {
           "type": "string",
-          "enum": ["default", "live", "quit-first"],
+          "enum": [
+            "default",
+            "live",
+            "quit-first"
+          ],
           "enumDescriptions": [
             "Follow Mission Control policy from GET /api/site-config (recommended).",
             "Allow reindex from the dashboard while the editor is open (creates backups first).",
