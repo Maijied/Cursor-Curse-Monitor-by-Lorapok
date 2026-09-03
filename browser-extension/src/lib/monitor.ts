@@ -2,6 +2,7 @@ import {
   appendUsageHistory,
   buildBudgetMetrics,
   buildFeatureList,
+  buildUsageAnalytics,
   DashboardSnapshot,
   fetchStripeProfile,
   fetchUsageSummary,
@@ -58,10 +59,24 @@ export async function refreshSnapshot(): Promise<DashboardSnapshot> {
     );
     snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
     snapshot.history = recordHistory(snapshot, await getHistory());
+    snapshot.usageAnalytics = buildUsageAnalytics({
+      budget: snapshot.budget,
+      usage: snapshot.usage,
+      history: snapshot.history,
+      onDemandSpendUsd: snapshot.onDemandSpendUsd,
+    });
     await saveHistory(snapshot.history);
   } catch (error) {
-    snapshot.error =
-      error instanceof Error ? error.message : "Unknown refresh error";
+    const base = error instanceof Error ? error.message : "Unknown refresh error";
+    const email = active?.email ?? settings.email;
+    if (base.includes("401") && email) {
+      snapshot.error = `Token expired for ${email}. Re-paste your access token in Options or sign in at cursor.com.`;
+    } else if (base.includes("401")) {
+      snapshot.error =
+        "Access token expired or invalid. Re-paste your token in Options or sign in at cursor.com.";
+    } else {
+      snapshot.error = base;
+    }
   }
 
   await saveSnapshot(snapshot);

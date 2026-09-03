@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { DashboardSnapshot, DISCORD_INVITE_URL, formatPercent, SUPPORT_EMAIL } from "./cursorApi";
+import { DashboardSnapshot, DISCORD_INVITE_URL, formatPercent, SUPPORT_EMAIL, buildUsageAnalytics, type UsageGroupBy, type UsageRangePreset } from "./cursorApi";
 import { UsageMonitorService } from "./usageMonitor";
 import { generateNonce } from "./utils";
 import { subscribeForProductUpdates, getSubscribePromptViewState, snoozeSubscribePrompt, declineSubscribePrompt } from "./updateSubscription";
@@ -18,11 +18,12 @@ import {
   type EditorSettings,
 } from "./editorSettings";
 import { scanMonitoringDbBackups, type DbBackupScanResult } from "./cursorAuth";
-import { getActiveAccountStoragePaths } from "./accountStore";
+import { getActiveAccountStoragePaths, resolveActiveAuth } from "./accountStore";
 import { reindexMissingConversations } from "./conversationReindex";
 import { exportConversationIndexPackage, importConversationIndexPackage } from "./cipPackage";
 import { resolveCursorIndexPolicy } from "./cursorIndexConfig";
 import { notifyReindexResult } from "./reindexUi";
+import { readDailyStatsSeries } from "./cursorLocalStore";
 
 export class DashboardViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "cursorCurseMonitor.dashboard";
@@ -188,6 +189,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       email?: string;
       accountId?: string;
       settings?: Partial<EditorSettings>;
+      range?: string;
+      groupBy?: string;
     }) => {
       if (message.type === "ready") {
         if (viewReady) {
@@ -347,8 +350,13 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         pushBackupStats();
       }
       if (message.type === "switchAccount" && typeof message.accountId === "string") {
-        await vscode.commands.executeCommand("cursorCurseMonitor.switchAccount", message.accountId);
-        void deliverSnapshot(true);
+        webviewView.webview.postMessage({ type: "accountSyncStart" });
+        try {
+          await vscode.commands.executeCommand("cursorCurseMonitor.switchAccount", message.accountId);
+          await deliverSnapshot(true);
+        } finally {
+          webviewView.webview.postMessage({ type: "accountSyncEnd" });
+        }
         return;
       }
       if (message.type === "addAccount") {
@@ -408,6 +416,30 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       if (message.type === "getSubscribeState") {
         const state = await getSubscribePromptViewState(this.extensionContext);
         webviewView.webview.postMessage({ type: "subscribeState", payload: state });
+      }
+      if (message.type === "usageAnalyticsPrefs") {
+        const snap = this.monitor.getSnapshot();
+        if (!snap) return;
+        const auth = await resolveActiveAuth(this.extensionContext);
+        const rangePresets: UsageRangePreset[] = ["7d", "30d", "cycle", "mtd"];
+        const groupPresets: UsageGroupBy[] = ["autoApi", "surface", "model"];
+        const range = rangePresets.includes(message.range as UsageRangePreset)
+          ? (message.range as UsageRangePreset)
+          : "7d";
+        const groupBy = groupPresets.includes(message.groupBy as UsageGroupBy)
+          ? (message.groupBy as UsageGroupBy)
+          : "autoApi";
+        const analytics = buildUsageAnalytics({
+          budget: snap.budget,
+          usage: snap.usage,
+          history: snap.history,
+          local: snap.local,
+          dailySeries: readDailyStatsSeries(auth?.productFolder),
+          onDemandSpendUsd: snap.onDemandSpendUsd,
+          range,
+          groupBy,
+        });
+        webviewView.webview.postMessage({ type: "usageAnalytics", payload: analytics });
       }
     });
 
@@ -650,6 +682,71 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       font-size: 11px;
       padding: 0 8px;
     }
+    .account-switcher.is-syncing select {
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    .account-sync-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--accent-2);
+      font-weight: 600;
+    }
+    .account-sync-indicator[hidden] { display: none !important; }
+    .account-sync-spinner {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(124, 92, 255, 0.25);
+      border-top-color: var(--accent-2);
+      animation: account-sync-spin 0.8s linear infinite;
+    }
+    @keyframes account-sync-spin {
+      to { transform: rotate(360deg); }
+    }
+    .usage-analytics-card { display: flex; flex-direction: column; gap: 10px; }
+    .usage-analytics-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .usage-range-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .usage-chip {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .usage-chip.active { color: var(--text); border-color: var(--accent); background: rgba(91,157,255,.12); }
+    .usage-kpi-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .usage-kpi {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      min-width: 0;
+    }
+    .usage-kpi-k { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .usage-kpi-v { font-size: 12px; font-weight: 800; display: block; margin-top: 2px; }
+    .usage-controls { display: flex; align-items: center; gap: 8px; }
+    .usage-group-label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .usage-group-select {
+      flex: 1; height: 28px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--panel); color: var(--text); font: inherit; font-size: 11px; padding: 0 8px;
+    }
+    .usage-chart-wrap { position: relative; }
+    .usage-stacked-chart { width: 100%; height: 120px; display: block; }
+    .usage-chart-tooltip {
+      position: absolute; top: 4px; right: 4px; background: rgba(7,9,15,.94);
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 10px; pointer-events: none;
+    }
+    .usage-tooltip-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
+    .usage-legend { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 6px; }
+    .usage-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+    .usage-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
     .sr-only {
       position: absolute;
       width: 1px;
@@ -688,6 +785,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       .subscribe-btn-loading::after { animation: none !important; }
       .section-toggle .chevron { transition: none; }
       .collapsible-body { animation: none; }
+      .account-sync-spinner { animation: none !important; }
     }
     .connected {
       display: none;
@@ -1270,6 +1368,10 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         <span class="account-switcher-label" id="accountSwitcherLabel">Cursor login</span>
         <label class="sr-only" for="accountSelect">Switch Cursor account for usage stats</label>
         <select id="accountSelect" aria-label="Switch Cursor account for usage stats"></select>
+        <span class="account-sync-indicator" id="accountSyncIndicator" hidden role="status" aria-live="polite">
+          <span class="account-sync-spinner" aria-hidden="true"></span>
+          <span>Syncing…</span>
+        </span>
         <button type="button" class="icon-btn" id="addAccountBtn" title="Add another Cursor login" aria-label="Add another Cursor login">+</button>
         <button type="button" class="icon-btn" id="removeAccountBtn" title="Remove saved login" aria-label="Remove saved login">−</button>
         <p class="account-switcher-hint" id="accountSwitcherHint" hidden>
@@ -1467,10 +1569,35 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     </div>
   </section>
 
-  <section class="card">
-    <p class="section-label">Cycle trend</p>
-    <div id="sparkEmpty" class="muted">Trend builds as usage is polled.</div>
-    <svg class="spark" id="sparkSvg" viewBox="0 0 220 52" preserveAspectRatio="none" style="display:none"></svg>
+  <section class="card usage-analytics-card" id="usageAnalyticsCard">
+    <div class="usage-analytics-head">
+      <p class="section-label" style="margin:0">Your usage</p>
+      <div class="usage-range-chips" role="tablist" aria-label="Date range">
+        <button type="button" class="usage-chip active" data-range="7d">7D</button>
+        <button type="button" class="usage-chip" data-range="30d">30D</button>
+        <button type="button" class="usage-chip" data-range="cycle">CYCLE</button>
+        <button type="button" class="usage-chip" data-range="mtd">MTD</button>
+      </div>
+    </div>
+    <div class="usage-kpi-row">
+      <div class="usage-kpi"><span class="usage-kpi-k" id="usageKpiTotalLabel">Total</span><strong class="usage-kpi-v" id="usageKpiTotal">—</strong></div>
+      <div class="usage-kpi"><span class="usage-kpi-k" id="usageKpiIncludedLabel">Included</span><strong class="usage-kpi-v" id="usageKpiIncluded">—</strong></div>
+      <div class="usage-kpi"><span class="usage-kpi-k" id="usageKpiOnDemandLabel">On-demand</span><strong class="usage-kpi-v" id="usageKpiOnDemand">—</strong></div>
+    </div>
+    <div class="usage-controls">
+      <span class="usage-group-label">Group by</span>
+      <select class="usage-group-select" id="usageGroupBy" aria-label="Group usage by">
+        <option value="autoApi">Auto / API</option>
+        <option value="surface">Tab / Composer</option>
+        <option value="model">Model</option>
+      </select>
+    </div>
+    <div id="usageChartEmpty" class="muted">Trend builds as usage is polled.</div>
+    <div class="usage-chart-wrap" id="usageChartWrap" hidden>
+      <svg class="usage-stacked-chart" id="usageStackedSvg" viewBox="0 0 360 120" preserveAspectRatio="none"></svg>
+      <div class="usage-chart-tooltip" id="usageChartTooltip" hidden></div>
+    </div>
+    <div class="usage-legend" id="usageLegend"></div>
   </section>
 
   <section class="card">
@@ -1750,6 +1877,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     function renderSpark(points, threshold) {
       const svg = document.getElementById('sparkSvg');
       const empty = document.getElementById('sparkEmpty');
+      if (!svg || !empty) return;
       if (!points || points.length < 2) {
         svg.style.display = 'none';
         empty.style.display = 'block';
@@ -1770,6 +1898,104 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
         '<line x1="' + pad + '" y1="' + threshY.toFixed(1) + '" x2="' + (w - pad) + '" y2="' + threshY.toFixed(1) +
         '" stroke="#f5b942" stroke-dasharray="4 4" stroke-width="1" opacity="0.7"></line>' +
         '<path d="' + d + '" fill="none" stroke="#5b9dff" stroke-width="2"></path>';
+    }
+
+    var usageAnalyticsPrefs = { range: '7d', groupBy: 'autoApi' };
+
+    function buildStackedPaths(layers, pointCount, yMax) {
+      var width = 360, height = 120, paddingX = 8, paddingY = 12;
+      var chartW = width - paddingX * 2, chartH = height - paddingY * 2;
+      var totals = [];
+      var i, j, layer, bottom, top, cumulative = [];
+      for (i = 0; i < pointCount; i++) {
+        var sum = 0;
+        for (j = 0; j < layers.length; j++) sum += layers[j].values[i] || 0;
+        totals.push(sum);
+      }
+      var maxY = yMax || Math.max.apply(null, totals.concat([1]));
+      function xAt(idx) { return paddingX + (idx / (pointCount - 1)) * chartW; }
+      function yAt(val) { return paddingY + chartH - (Math.max(0, val) / maxY) * chartH; }
+      var paths = [];
+      cumulative = Array(pointCount).fill(0);
+      for (j = 0; j < layers.length; j++) {
+        layer = layers[j];
+        var topY = [], bottomY = [];
+        for (i = 0; i < pointCount; i++) {
+          bottom = cumulative[i] || 0;
+          top = bottom + (layer.values[i] || 0);
+          cumulative[i] = top;
+          bottomY.push(yAt(bottom));
+          topY.push(yAt(top));
+        }
+        var lineD = 'M ' + xAt(0).toFixed(1) + ' ' + topY[0].toFixed(1);
+        for (i = 1; i < pointCount; i++) {
+          var x0 = xAt(i - 1), x1 = xAt(i), mx = (x0 + x1) / 2;
+          lineD += ' C ' + mx.toFixed(1) + ' ' + topY[i - 1].toFixed(1) + ', ' + mx.toFixed(1) + ' ' + topY[i].toFixed(1) + ', ' + x1.toFixed(1) + ' ' + topY[i].toFixed(1);
+        }
+        var areaD = lineD;
+        for (i = pointCount - 1; i >= 0; i--) areaD += ' L ' + xAt(i).toFixed(1) + ' ' + bottomY[i].toFixed(1);
+        areaD += ' Z';
+        paths.push({ id: layer.id, label: layer.label, color: layer.color, areaD: areaD });
+      }
+      var tops = totals.map(function(total, idx) { return { x: xAt(idx), y: yAt(total), total: total }; });
+      return { paths: paths, tops: tops, width: width, height: height, paddingY: paddingY };
+    }
+
+    function renderUsageAnalytics(analytics) {
+      var empty = document.getElementById('usageChartEmpty');
+      var wrap = document.getElementById('usageChartWrap');
+      var svg = document.getElementById('usageStackedSvg');
+      var legend = document.getElementById('usageLegend');
+      var tooltip = document.getElementById('usageChartTooltip');
+      if (!empty || !wrap || !svg || !legend) return;
+      if (!analytics || !analytics.kpi) {
+        empty.style.display = 'block';
+        empty.textContent = 'Trend builds as usage is polled.';
+        wrap.hidden = true;
+        legend.innerHTML = '';
+        return;
+      }
+      document.getElementById('usageKpiTotalLabel').textContent = analytics.kpi.totalLabel || 'Total';
+      document.getElementById('usageKpiTotal').textContent = analytics.kpi.totalValue || '—';
+      document.getElementById('usageKpiIncludedLabel').textContent = analytics.kpi.includedLabel || 'Included';
+      document.getElementById('usageKpiIncluded').textContent = analytics.kpi.includedValue || '—';
+      document.getElementById('usageKpiOnDemandLabel').textContent = analytics.kpi.onDemandLabel || 'On-demand';
+      document.getElementById('usageKpiOnDemand').textContent = analytics.kpi.onDemandValue || '—';
+
+      var chips = document.querySelectorAll('.usage-chip[data-range]');
+      chips.forEach(function(chip) {
+        chip.classList.toggle('active', chip.getAttribute('data-range') === analytics.range);
+      });
+      var groupSel = document.getElementById('usageGroupBy');
+      if (groupSel) groupSel.value = analytics.groupBy || 'autoApi';
+
+      if (!analytics.points || analytics.points.length < 2 || !analytics.layers || !analytics.layers.length) {
+        empty.style.display = 'block';
+        empty.textContent = analytics.emptyMessage || 'Trend builds as usage is polled.';
+        wrap.hidden = true;
+        legend.innerHTML = '';
+        return;
+      }
+      empty.style.display = 'none';
+      wrap.hidden = false;
+      var geom = buildStackedPaths(analytics.layers, analytics.points.length, analytics.yMax);
+      var svgHtml = '';
+      geom.paths.forEach(function(path) {
+        svgHtml += '<path d="' + path.areaD + '" fill="' + path.color + '" fill-opacity="0.28" stroke="' + path.color + '" stroke-width="1"></path>';
+      });
+      svg.innerHTML = svgHtml;
+      legend.innerHTML = analytics.layers.map(function(layer) {
+        return '<span class="usage-legend-item"><span class="usage-legend-dot" style="background:' + escHtml(layer.color) + '"></span>' + escHtml(layer.label) + '</span>';
+      }).join('');
+      if (tooltip) tooltip.hidden = true;
+    }
+
+    function requestUsageAnalyticsRefresh() {
+      vscode.postMessage({
+        type: 'usageAnalyticsPrefs',
+        range: usageAnalyticsPrefs.range,
+        groupBy: usageAnalyticsPrefs.groupBy,
+      });
     }
 
     function setProgressTrack(track, value) {
@@ -1894,6 +2120,19 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
+    function setAccountSyncLoading(active) {
+      var wrap = document.querySelector('.account-switcher');
+      var indicator = document.getElementById('accountSyncIndicator');
+      var sel = document.getElementById('accountSelect');
+      var addBtn = document.getElementById('addAccountBtn');
+      var removeBtn = document.getElementById('removeAccountBtn');
+      if (wrap) wrap.classList.toggle('is-syncing', !!active);
+      if (indicator) indicator.hidden = !active;
+      if (sel) sel.disabled = !!active;
+      if (addBtn) addBtn.disabled = !!active;
+      if (removeBtn) removeBtn.disabled = !!active || (removeBtn && removeBtn.disabled);
+    }
+
     var snapshotReceived = Boolean(bootSnapshot);
 
     function render(snapshot) {
@@ -2016,7 +2255,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
             ? 'Sign in to Cursor and refresh'
             : 'Waiting for usage data…';
         }
-        renderSpark(snapshot.history || [], editorSettings.warnAtPercent ?? 80);
+        renderUsageAnalytics(snapshot.usageAnalytics);
         return;
       }
 
@@ -2171,7 +2410,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           : 'Usage is at ' + Math.round(hero) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.')
         : "You're in control. We'll notify you before you reach your cap.";
 
-      renderSpark(snapshot.history || [], threshold);
+      renderUsageAnalytics(snapshot.usageAnalytics);
 
       var mascot = document.getElementById('mascotLogo');
       if (mascot) {
@@ -2238,7 +2477,15 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
 
     window.addEventListener('message', function(event) {
-      if (event.data?.type === 'snapshot') render(event.data.payload);
+      if (event.data?.type === 'snapshot') {
+        setAccountSyncLoading(false);
+        render(event.data.payload);
+      }
+      if (event.data?.type === 'accountSyncStart') setAccountSyncLoading(true);
+      if (event.data?.type === 'accountSyncEnd') setAccountSyncLoading(false);
+      if (event.data?.type === 'usageAnalytics') {
+        renderUsageAnalytics(event.data.payload);
+      }
       if (event.data?.type === 'communityDownloads') renderCommunityStats(event.data.payload);
       if (event.data?.type === 'dbBackupStats') renderDbBackupStats(event.data.payload);
       if (event.data?.type === 'subscribeResult') {
@@ -2557,9 +2804,23 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       var sel = document.getElementById('accountSelect');
       vscode.postMessage({ type: 'removeAccount', accountId: sel && sel.value ? sel.value : undefined });
     });
+    document.querySelectorAll('.usage-chip[data-range]').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        usageAnalyticsPrefs.range = chip.getAttribute('data-range') || '7d';
+        requestUsageAnalyticsRefresh();
+      });
+    });
+    var usageGroupByEl = document.getElementById('usageGroupBy');
+    if (usageGroupByEl) {
+      usageGroupByEl.addEventListener('change', function() {
+        usageAnalyticsPrefs.groupBy = usageGroupByEl.value || 'autoApi';
+        requestUsageAnalyticsRefresh();
+      });
+    }
     var accountSelect = document.getElementById('accountSelect');
     if (accountSelect) {
       accountSelect.addEventListener('change', function() {
+        setAccountSyncLoading(true);
         vscode.postMessage({ type: 'switchAccount', accountId: accountSelect.value });
       });
     }

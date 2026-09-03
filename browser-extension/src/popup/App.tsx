@@ -1,7 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DashboardSnapshot } from "@lorapok/cursor-monitor-shared";
+import {
+  buildUsageAnalytics,
+  type UsageGroupBy,
+  type UsageRangePreset,
+} from "@lorapok/cursor-monitor-shared";
 import { AnimatedGauge } from "../components/AnimatedGauge";
-import { SpendChart } from "../components/SpendChart";
+import { UsageAnalyticsChart } from "../components/UsageAnalyticsChart";
 import { Footer } from "../components/Footer";
 import { UsageHelpModal } from "../components/UsageHelpModal";
 import { SubscribeModal } from "../components/SubscribeModal";
@@ -31,6 +36,8 @@ export function App() {
   const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [switching, setSwitching] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [usageRange, setUsageRange] = useState<UsageRangePreset>("7d");
+  const [usageGroupBy, setUsageGroupBy] = useState<UsageGroupBy>("autoApi");
   const connectPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -132,6 +139,18 @@ export function App() {
       ? `${b.includedUsed} / ${b.includedLimit} u`
       : "—";
 
+  const usageAnalytics = useMemo(() => {
+    if (!snapshot?.budget) return null;
+    return buildUsageAnalytics({
+      budget: snapshot.budget,
+      usage: snapshot.usage,
+      history: snapshot.history,
+      onDemandSpendUsd: snapshot.onDemandSpendUsd,
+      range: usageRange,
+      groupBy: usageGroupBy,
+    });
+  }, [snapshot, usageRange, usageGroupBy]);
+
   return (
     <div className={`popup-root${blocked ? " cursor-missing" : ""}${loading ? " is-loading" : ""}`}>
       {loading && (
@@ -200,7 +219,7 @@ export function App() {
       </header>
 
       {((snapshot?.accounts && snapshot.accounts.length > 0) || switching) && (
-        <div className="account-switcher">
+        <div className={`account-switcher${switching ? " is-syncing" : ""}`}>
           <label htmlFor="popup-account">Cursor account</label>
           <select
             id="popup-account"
@@ -208,6 +227,7 @@ export function App() {
             disabled={switching}
             onChange={(e) => void switchAccount(e.target.value)}
             aria-label="Switch Cursor account"
+            aria-busy={switching}
           >
             {(snapshot?.accounts ?? []).map((account) => (
               <option key={account.id} value={account.id}>
@@ -215,7 +235,13 @@ export function App() {
               </option>
             ))}
           </select>
-          {snapshot?.email && <p className="account-email">{snapshot.email}</p>}
+          {switching ? (
+            <p className="account-sync-status" role="status" aria-live="polite">
+              <span className="account-sync-spinner" aria-hidden="true" />
+              Syncing account…
+            </p>
+          ) : null}
+          {snapshot?.email && !switching ? <p className="account-email">{snapshot.email}</p> : null}
         </div>
       )}
 
@@ -295,9 +321,11 @@ export function App() {
             )}
           </section>
 
-          <section className="card">
-            <SpendChart points={snapshot.history ?? []} threshold={b.thresholdPercent} />
-          </section>
+          <UsageAnalyticsChart
+            analytics={usageAnalytics}
+            onRangeChange={setUsageRange}
+            onGroupByChange={setUsageGroupBy}
+          />
 
           <section className="card">
             <div className="section-head-row">

@@ -93,6 +93,8 @@ export interface BudgetMetrics {
   teamOnDemandSpendUsd: number | null;
 }
 
+import type { UsageAnalyticsView } from "./usageAnalytics";
+
 export interface UsageHistoryPoint {
   t: number;
   includedPercent: number;
@@ -127,6 +129,8 @@ export interface DashboardSnapshot {
   discoveredLoginCount?: number;
   /** vscode.env.appName from the host editor. */
   editorAppName?: string;
+  /** Derived chart/KPI view for usage analytics (range + group-by). */
+  usageAnalytics?: UsageAnalyticsView | null;
 }
 
 export interface DailyCodeStats {
@@ -305,6 +309,9 @@ export async function fetchUsageSummary(token: string): Promise<UsageSummary> {
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Usage API failed (401)");
+    }
     throw new Error(`Usage API failed (${response.status})`);
   }
 
