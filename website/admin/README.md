@@ -157,7 +157,7 @@ Public Firebase config ships in `.env` for local auth. Production secrets are se
 | `SITE_DATA_URL` | Marketing `site-data.json` URL |
 | `VITE_MARKETING_SITE_URL` | **Back to website** link target |
 | `CLOUDFLARE_EMAIL_API_TOKEN` | Outbound mail via Cloudflare Email Sending (Pages secret) |
-| `RESEND_API_KEY` | Optional fallback outbound mail provider |
+| `RESEND_API_KEY` | Primary outbound transport for external recipients on Workers Free (via Resend REST API) |
 
 KV namespace IDs belong in `wrangler.toml`.
 

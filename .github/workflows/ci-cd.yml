@@ -558,6 +558,22 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node scripts/enable-mail.mjs
 
+      - name: Sync Resend API key to Pages (optional)
+        if: github.event_name == 'workflow_dispatch' && steps.mail_setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: website/admin
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+        run: |
+          if [ -z "${RESEND_API_KEY:-}" ]; then
+            echo "::notice::RESEND_API_KEY not set in admin-production — skip Pages Resend secret sync"
+            exit 0
+          fi
+          node scripts/setup-resend-secret.mjs
+
       - name: Verify outbound mail transport before Pages deploy
         id: mail_verify
         if: github.event_name == 'workflow_dispatch' && steps.mail_setup.outcome == 'success'
@@ -567,6 +583,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_EMAIL_API_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           MAIL_RELAY_EXISTS_SETUP: ${{ steps.mail_setup.outputs.relay_exists }}
         run: node scripts/verify-mail-transport.mjs
 

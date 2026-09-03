@@ -84,9 +84,22 @@ Equivalent Loragent REST flow: `POST /zones/{zone_id}/email/routing/rules` with 
 
 **Transport priority** (see `website/admin/functions/api/_shared/mail.js`):
 
-1. `ccm-mail-relay` Worker via Pages `MAIL_RELAY` service binding
-2. Cloudflare Email REST API
-3. Resend (`RESEND_API_KEY`) fallback — use without Workers Paid: `node website/admin/scripts/setup-resend-secret.mjs`
+### Workers Free (recommended: Resend)
+
+Cloudflare Email Sending on **Workers Free** only delivers to [verified destination addresses](https://developers.cloudflare.com/email-service/platform/limits/#verified-destination-addresses), not arbitrary subscribers. Use **Resend** for external mail:
+
+1. Verify `lorapok.tech` in [Resend → Domains](https://resend.com/domains) (SPF/DKIM DNS in Cloudflare).
+2. Set Pages secrets: `node website/admin/scripts/setup-resend-secret.mjs` (reads cred vault `cursor/resend_api_key`).
+3. Keep **Resend-first for external recipients** enabled in Mission Control mail settings (default).
+
+When `RESEND_API_KEY` is set, `sendMail()` uses Resend **first** for any non-`@lorapok.tech` recipient (subscribers, Gmail tests, testmail.app).
+
+### Full transport cascade
+
+1. **Resend** (`RESEND_API_KEY`) — primary for external recipients when `resendFirstExternal` is true (default)
+2. `ccm-mail-relay` Worker via Pages `MAIL_RELAY` service binding — `@lorapok.tech` and fallback
+3. Cloudflare Email REST API (`CLOUDFLARE_EMAIL_API_TOKEN`)
+4. Resend again on sandbox / verified-destination errors
 
 ### Local / repair (full stack)
 
