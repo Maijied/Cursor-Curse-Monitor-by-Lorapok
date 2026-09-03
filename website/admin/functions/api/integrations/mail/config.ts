@@ -2,10 +2,12 @@ import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   isValidMailAddress,
+  isValidSendingDomain,
   readMailConfig,
   sanitizeMailConfigForClient,
   writeMailConfig,
 } from "../../_shared/mail-config.js";
+import { buildMailSetupInstructions } from "../../_shared/mail-setup-instructions.js";
 import { getMailTransportStatus } from "../../_shared/mail.js";
 
 /**
@@ -18,7 +20,11 @@ export async function onRequestGet(context) {
 
   const config = await readMailConfig(env);
   const transport = getMailTransportStatus(env);
-  return jsonResponse({ ok: true, config: sanitizeMailConfigForClient(config, transport, env) });
+  return jsonResponse({
+    ok: true,
+    config: sanitizeMailConfigForClient(config, transport, env),
+    setupInstructions: buildMailSetupInstructions(config, transport),
+  });
 }
 
 /**
@@ -78,6 +84,28 @@ export async function onRequestPut(context) {
     }
     patch.resendFirstExternal = body.resendFirstExternal;
   }
+  if (body.workersFreeMode !== undefined) {
+    if (typeof body.workersFreeMode !== "boolean") {
+      return jsonResponse({ error: "workersFreeMode must be a boolean" }, 400);
+    }
+    patch.workersFreeMode = body.workersFreeMode;
+  }
+  if (body.sendingDomain !== undefined) {
+    const domain = String(body.sendingDomain ?? "").trim().toLowerCase();
+    if (!isValidSendingDomain(domain)) {
+      return jsonResponse({ error: "Invalid sending domain" }, 400);
+    }
+    patch.sendingDomain = domain;
+  }
+  if (body.resendFromOverride !== undefined) {
+    patch.resendFromOverride = String(body.resendFromOverride ?? "").trim();
+  }
+  if (body.resendDomainVerified !== undefined) {
+    if (typeof body.resendDomainVerified !== "boolean") {
+      return jsonResponse({ error: "resendDomainVerified must be a boolean" }, 400);
+    }
+    patch.resendDomainVerified = body.resendDomainVerified;
+  }
 
   if (
     body.productEmail === undefined &&
@@ -85,7 +113,11 @@ export async function onRequestPut(context) {
     body.opsBccEmail === undefined &&
     body.productFromName === undefined &&
     body.supportFromName === undefined &&
-    body.resendFirstExternal === undefined
+    body.resendFirstExternal === undefined &&
+    body.workersFreeMode === undefined &&
+    body.sendingDomain === undefined &&
+    body.resendFromOverride === undefined &&
+    body.resendDomainVerified === undefined
   ) {
     return jsonResponse({ error: "At least one mail setting is required" }, 400);
   }
@@ -93,7 +125,11 @@ export async function onRequestPut(context) {
   try {
     const config = await writeMailConfig(env, patch);
     const transport = getMailTransportStatus(env);
-    return jsonResponse({ ok: true, config: sanitizeMailConfigForClient(config, transport, env) });
+    return jsonResponse({
+      ok: true,
+      config: sanitizeMailConfigForClient(config, transport, env),
+      setupInstructions: buildMailSetupInstructions(config, transport),
+    });
   } catch (err) {
     return jsonResponse({ error: formatKvPutError(err) }, 503);
   }

@@ -39,21 +39,30 @@ describe("mail config API", () => {
     expect(data.config.productEmail).toBe("cursor.monitor@lorapok.tech");
     expect(data.config.supportEmail).toBe("cursor.curse.help@lorapok.tech");
     expect(data.config.resendFirstExternal).toBe(true);
+    expect(data.config.workersFreeMode).toBe(true);
+    expect(data.config.sendingDomain).toBe("lorapok.tech");
+    expect(data.setupInstructions.steps.length).toBeGreaterThan(0);
   });
 
-  it("saves mail identity overrides", async () => {
+  it("saves mail identity and Resend settings", async () => {
     const save = await fetch(`${base}/api/integrations/mail/config`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         productEmail: "product@lorapok.tech",
         resendFirstExternal: false,
+        workersFreeMode: true,
+        sendingDomain: "mail.lorapok.tech",
+        resendFromOverride: "Test <test@mail.lorapok.tech>",
+        resendDomainVerified: true,
       }),
     });
     const saved = await save.json();
     expect(save.ok).toBe(true);
     expect(saved.config.productEmail).toBe("product@lorapok.tech");
     expect(saved.config.resendFirstExternal).toBe(false);
+    expect(saved.config.sendingDomain).toBe("mail.lorapok.tech");
+    expect(saved.config.resendDomainVerified).toBe(true);
   });
 
   it("rejects non-object JSON bodies", async () => {
@@ -84,7 +93,9 @@ describe("mail config API", () => {
     expect(res.ok).toBe(true);
     expect(data.transport).toBeDefined();
     expect(data.identities.productEmail).toBe("cursor.monitor@lorapok.tech");
-    expect(Array.isArray(data.recommendations)).toBe(true);
+    expect(data.identities.sendingDomain).toBe("lorapok.tech");
+    expect(data.setupInstructions).toBeDefined();
+    expect(Array.isArray(data.setupInstructions.steps)).toBe(true);
     expect(typeof data.subscribeAvailable).toBe("boolean");
   });
 });

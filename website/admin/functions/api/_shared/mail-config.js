@@ -18,7 +18,22 @@ export const DEFAULT_MAIL_CONFIG = {
   productFromName: FROM_NAME_MONITOR,
   supportFromName: FROM_NAME_HELP,
   resendFirstExternal: true,
+  workersFreeMode: true,
+  sendingDomain: "lorapok.tech",
+  resendFromOverride: "",
+  resendDomainVerified: false,
 };
+
+const DOMAIN_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
+
+/**
+ * @param {string} domain
+ */
+export function isValidSendingDomain(domain) {
+  const value = String(domain ?? "").trim().toLowerCase();
+  if (!value || value.length > 253) return false;
+  return DOMAIN_RE.test(value);
+}
 
 /**
  * @param {string} email
@@ -45,6 +60,12 @@ export function normalizeMailConfig(parsed) {
     supportFromName: String(parsed.supportFromName ?? DEFAULT_MAIL_CONFIG.supportFromName).trim() ||
       DEFAULT_MAIL_CONFIG.supportFromName,
     resendFirstExternal: parsed.resendFirstExternal !== false,
+    workersFreeMode: parsed.workersFreeMode !== false,
+    sendingDomain: isValidSendingDomain(parsed.sendingDomain)
+      ? String(parsed.sendingDomain).trim().toLowerCase()
+      : DEFAULT_MAIL_CONFIG.sendingDomain,
+    resendFromOverride: String(parsed.resendFromOverride ?? "").trim(),
+    resendDomainVerified: parsed.resendDomainVerified === true,
     updatedAt: parsed.updatedAt ?? null,
     updatedBy: parsed.updatedBy ?? null,
   };
@@ -138,6 +159,11 @@ export function sanitizeMailConfigForClient(config, transport, env) {
     productFromName: config.productFromName,
     supportFromName: config.supportFromName,
     resendFirstExternal: config.resendFirstExternal,
+    workersFreeMode: config.workersFreeMode,
+    sendingDomain: config.sendingDomain,
+    resendFromOverride: config.resendFromOverride,
+    resendDomainVerified: config.resendDomainVerified,
+    resendFromEnvConfigured: Boolean(String(env?.RESEND_FROM ?? "").trim()),
     transport: transport.transport ?? "none",
     transportConfigured: transport.configured,
     relayBound: transport.relayBound ?? false,
