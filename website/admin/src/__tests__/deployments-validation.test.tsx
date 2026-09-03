@@ -99,16 +99,29 @@ describe("Deployments validation UI", () => {
     expect(optionValues).not.toContain("v1.0.34-dev.5");
     expect(optionValues).toContain("v1.0.51");
     expect(screen.getByText(/Beta channel/i)).toBeInTheDocument();
-    expect(screen.getByText(/Firefox AMO is not available on beta/i)).toBeInTheDocument();
+    expect(screen.getByText(/CI may skip Firefox AMO/i)).toBeInTheDocument();
   });
 
-  it("auto-switches market to Open VSX on beta channel so deploy is allowed", async () => {
+  it("defaults to All Marketplaces and keeps every market option on beta channel", async () => {
+    render(<Deployments />);
+    const marketSelect = await screen.findByLabelText("Publish Market");
+    expect(marketSelect).toHaveValue("Both");
+    const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
+    fireEvent.click(betaRadio);
+    await waitFor(() => expect(marketSelect).toHaveValue("Both"));
+    const options = Array.from(marketSelect.querySelectorAll("option")).map((o) => o.getAttribute("value"));
+    expect(options).toEqual(
+      expect.arrayContaining(["Both", "VS Code Marketplace", "Open VSX", "Firefox AMO", "Open VSX + Firefox AMO"])
+    );
+    const submit = await screen.findByRole("button", { name: /publish to marketplaces/i });
+    expect(submit).not.toBeDisabled();
+  });
+
+  it("auto-selects the next prepared tag on beta channel", async () => {
     render(<Deployments />);
     const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
     fireEvent.click(betaRadio);
-    const marketSelect = await screen.findByLabelText("Publish Market");
-    await waitFor(() => expect(marketSelect).toHaveValue("Open VSX"));
-    const submit = await screen.findByRole("button", { name: /publish to marketplaces/i });
-    expect(submit).not.toBeDisabled();
+    const select = await screen.findByLabelText("Deploy tag");
+    await waitFor(() => expect(select).toHaveValue("v1.0.35"));
   });
 });

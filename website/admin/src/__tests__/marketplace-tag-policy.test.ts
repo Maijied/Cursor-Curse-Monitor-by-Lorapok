@@ -22,19 +22,21 @@ describe("marketplace-tag-policy", () => {
     expect(isMarketplaceSemverTag("v1.0.34-beta.0")).toBe(false);
   });
 
-  it("blocks beta channel when Firefox AMO is in the publish market", () => {
-    const result = validateMarketplaceDeploy({
-      targetTag: "v1.0.51",
-      releaseChannel: "Beta (Pre-release)",
-      publishMarket: "Open VSX + Firefox AMO",
-    });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toMatch(/Firefox AMO/i);
-    }
-  });
-
-  it("allows beta channel for VS Code / Open VSX only markets", () => {
+  it("allows beta channel for any publish market (CI may skip AMO on pre-release)", () => {
+    expect(
+      validateMarketplaceDeploy({
+        targetTag: "v1.0.51",
+        releaseChannel: "Beta (Pre-release)",
+        publishMarket: "Open VSX + Firefox AMO",
+      }).ok
+    ).toBe(true);
+    expect(
+      validateMarketplaceDeploy({
+        targetTag: "v1.0.51",
+        releaseChannel: "Beta (Pre-release)",
+        publishMarket: "Both",
+      }).ok
+    ).toBe(true);
     expect(
       validateMarketplaceDeploy({
         targetTag: "v1.0.51",

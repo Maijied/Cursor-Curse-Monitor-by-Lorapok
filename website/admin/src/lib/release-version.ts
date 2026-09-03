@@ -126,3 +126,25 @@ export function defaultTagSelection(
   if (liveTag && tags.includes(liveTag)) return liveTag;
   return tags[0] ?? "";
 }
+
+/**
+ * Next deploy tag: prepared/suggested tag (+1 patch) when available, never the live tag alone.
+ */
+export function defaultDeployTag(
+  tags: string[],
+  liveTag: string | null,
+  preparedTag: string | null
+): string {
+  if (preparedTag && tags.includes(preparedTag)) return preparedTag;
+  return defaultTagSelection(tags, liveTag, preparedTag);
+}
+
+/**
+ * Default rollback source: newest semver tag that is not the live tag or an R-release.
+ */
+export function defaultRollbackSourceTag(tags: string[], liveTag: string | null): string {
+  const semverSources = tags.filter((tag) => !isRollbackReleaseTag(tag) && tag !== liveTag);
+  if (semverSources.length > 0) return semverSources[0];
+  const nonLive = tags.filter((tag) => tag !== liveTag);
+  return nonLive[0] ?? tags[0] ?? "";
+}

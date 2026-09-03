@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   bumpVersion,
+  defaultDeployTag,
+  defaultRollbackSourceTag,
   defaultTagSelection,
   effectiveVersionBase,
   filterTagsForChannel,
