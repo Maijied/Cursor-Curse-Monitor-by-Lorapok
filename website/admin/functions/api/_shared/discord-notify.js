@@ -111,19 +111,6 @@ export function buildDeploymentEmbed(payload, enrichment) {
   if (payload.triggeredBy) fields.push({ name: "Triggered by", value: String(payload.triggeredBy), inline: true });
   if (payload.duration) fields.push({ name: "Duration", value: String(payload.duration), inline: true });
 
-  if (Array.isArray(payload.jobs) && payload.jobs.length > 0) {
-    const lines = payload.jobs
-      .map((job) => {
-        const name = job.name ?? "Job";
-        const state = job.conclusion ?? job.status ?? "unknown";
-        return `${jobIcon(job)} **${name}** — ${state}`;
-      })
-      .join("\n");
-    fields.push({ name: "Pipeline", value: lines.slice(0, 1024), inline: false });
-  }
-
-  appendEnrichmentFields(fields, payload, enrichment);
-
   const descriptionParts = [status.brandLine];
   if (payload.summary) descriptionParts.push(String(payload.summary));
   if (status.color === COLORS.success) {
@@ -131,6 +118,8 @@ export function buildDeploymentEmbed(payload, enrichment) {
     const hint = footers.discord?.deploySuccessHint;
     if (hint) descriptionParts.push(hint);
   }
+
+  appendEnrichmentSections(descriptionParts, payload, enrichment);
 
   /** @type {Record<string, unknown>} */
   const embed = {
@@ -151,9 +140,6 @@ export function buildDeploymentEmbed(payload, enrichment) {
 
   if (payload.runUrl) embed.url = String(payload.runUrl);
   embed.thumbnail = { url: avatarUrl };
-  if (status.color === COLORS.success && brand?.banner) {
-    embed.image = { url: brand.banner };
-  }
 
   return embed;
 }
@@ -205,38 +191,50 @@ export function buildCompactStatsBlock(enrichment) {
 }
 
 /**
- * Merges enrichment sections into the primary deployment embed fields.
- * @param {Array<{ name: string; value: string; inline?: boolean }>} fields
+ * Appends pipeline and enrichment sections to the embed description (one Discord card body).
+ * @param {string[]} sections
  * @param {Record<string, unknown>} payload
  * @param {Record<string, unknown>|null|undefined} enrichment
  */
-export function appendEnrichmentFields(fields, payload, enrichment) {
+export function appendEnrichmentSections(sections, payload, enrichment) {
+  if (Array.isArray(payload.jobs) && payload.jobs.length > 0) {
+    const lines = payload.jobs
+      .map((job) => {
+        const name = job.name ?? "Job";
+        const state = job.conclusion ?? job.status ?? "unknown";
+        return `${jobIcon(job)} **${name}** — ${state}`;
+      })
+      .join("\n");
+    sections.push(`**Pipeline**\n${lines.slice(0, 1800)}`);
+  }
+
   if (!enrichment || payload.phase === "started") return;
 
   const marketplace = buildCompactMarketplaceSummary(enrichment);
-  if (marketplace) {
-    fields.push({ name: "📦 Release sync", value: marketplace, inline: false });
-  }
+  if (marketplace) sections.push(`**Release sync**\n${marketplace}`);
 
   const stats = buildCompactStatsBlock(enrichment);
-  if (stats) {
-    fields.push({ name: "📊 Reach & engagement", value: stats, inline: false });
-  }
+  if (stats) sections.push(`**Reach & engagement**\n${stats}`);
 
   if (enrichment.changelog && payload.conclusion !== "cancelled") {
-    fields.push({
-      name: "📝 What's new",
-      value: truncateDiscordText(String(enrichment.changelog), 1024),
-      inline: false,
-    });
+    sections.push(`**What's new**\n${truncateDiscordText(String(enrichment.changelog), 1200)}`);
   }
 
   if (enrichment.quickLinks) {
-    fields.push({
-      name: "🔗 Links",
-      value: truncateDiscordText(String(enrichment.quickLinks), 1024),
-      inline: false,
-    });
+    sections.push(`**Links**\n${truncateDiscordText(String(enrichment.quickLinks), 900)}`);
+  }
+}
+
+/**
+ * @deprecated Use {@link appendEnrichmentSections} — enrichment lives in the embed description now.
+ */
+export function appendEnrichmentFields(fields, payload, enrichment) {
+  const sections = [];
+  appendEnrichmentSections(sections, payload, enrichment);
+  for (const section of sections) {
+    const [heading, ...rest] = section.split("\n");
+    const name = heading.replace(/^\*\*|\*\*$/g, "");
+    fields.push({ name, value: rest.join("\n").slice(0, 1024), inline: false });
   }
 }
 

@@ -1,7 +1,6 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
 import { validateMarketplaceDeploy } from "./marketplace-tag-policy.js";
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
-import { notifyDiscordDeployment } from "./discord-notify.js";
 import { scheduleDiscordDeploymentCompletionWatch } from "./discord-deployment-watch.js";
 import { fetchSiteData, liveTagFromSiteData } from "./site-data.js";
 
@@ -70,20 +69,6 @@ async function dispatchWorkflow(env, workflowId, inputs, successMessage, fields,
   }
 
   if (notifyContext) {
-    notifyDiscordDeployment(env, {
-      phase: "started",
-      actionType: inputs.action_type,
-      tag: inputs.target_tag ?? notifyContext.tag ?? null,
-      channel: inputs.release_channel ?? null,
-      market: inputs.publish_market ?? null,
-      triggeredBy: notifyContext.triggeredBy ?? null,
-      branch: "main",
-      summary: successMessage,
-      runUrl: notifyContext.runUrl ?? null,
-    }).catch((error) => {
-      console.error("Discord started notification failed", error);
-    });
-
     scheduleDiscordDeploymentCompletionWatch(pagesContext, env, {
       actionType: inputs.action_type,
       tag: inputs.target_tag ?? notifyContext.tag ?? null,

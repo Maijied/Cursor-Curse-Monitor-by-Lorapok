@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Bell, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
-import DiscordDeploymentPreview from "./DiscordDeploymentPreview";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import { auth } from "../../lib/firebase";
@@ -92,8 +91,9 @@ export default function DiscordIntegrationsCard() {
             Discord deployment hook
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Channel webhook for deploy, rollback, and infra pipeline status. User feedback links use a separate hook in
-            Settings. Posts ship as one compact status card with pipeline, marketplace sync, downloads, changelog, and links.
+            Channel webhook for deploy, rollback, and infra pipeline status. Mission Control posts
+            <strong className="text-[var(--color-text)]"> one compact card per run</strong> when the workflow
+            finishes (pipeline, marketplace sync, downloads, changelog, and links).
           </p>
         </div>
         {config && (
@@ -151,8 +151,6 @@ export default function DiscordIntegrationsCard() {
           {!isMaster && (
             <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>
           )}
-
-          <DiscordDeploymentPreview />
         </form>
       )}
     </Card>
