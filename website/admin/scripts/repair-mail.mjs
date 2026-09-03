@@ -4,11 +4,11 @@
  *
  * 1. enable-mail.mjs — relay worker + Pages email secret (credential split)
  * 2. npm run build — fresh admin dist
- * 3. wrangler pages deploy — activate MAIL_RELAY service binding
+ * 3. wrangler pages deploy — activate MAIL_RELAY service binding (from wrangler.toml [[services]])
  * 4. verify-mail-setup.mjs — probe REST token (optional sanity check)
  *
- * CI/CD: every push to `main` runs `enable-mail.mjs` + Pages deploy in admin-deploy job.
- * Use this script only for manual repair when CI is blocked or secrets need re-sync.
+ * CI/CD: push to `main` skips enable-mail (rate limits); run workflow_dispatch deploy-infra
+ * for full mail repair, or use this script when health shows mailRelayBound=false.
  *
  * Local (preferred — no cred CLI):
  *   npm ci && npm ci --prefix website/admin

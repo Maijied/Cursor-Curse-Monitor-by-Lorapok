@@ -161,7 +161,7 @@ Wiki: [Mailbox and Email](../wiki/Mailbox-and-Email.md) · Skill: `loragent-clou
 |---------|-----|
 | HTTP 401 on send | Refresh `CLOUDFLARE_EMAIL_API_TOKEN`; redeploy Pages |
 | Code 10203 | Enable Email Sending; onboard `lorapok.tech` |
-| Health shows `cloudflare-rest` + 401 | `MAIL_RELAY` missing — run `repair-mail.mjs` |
+| Health shows `cloudflare-rest` + 401 | `MAIL_RELAY` missing on Pages — run `repair-mail.mjs` or **deploy-infra** (do not add binding manually; `wrangler.toml` `[[services]]` applies it on deploy) |
 | CI slow / rate limited | Use push for code-only changes; use deploy-infra for mail |
 | `9109` / `10000` on Pages deploy | `CLOUDFLARE_API_TOKEN` in admin-production is invalid or lacks Pages Edit — refresh secret, rerun deploy-infra |
 | Job waits 3–7 min then fails auth | Old behavior retried bad tokens; update to latest CI (fail-fast probe) |
