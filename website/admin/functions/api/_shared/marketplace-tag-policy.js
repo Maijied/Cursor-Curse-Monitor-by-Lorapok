@@ -99,7 +99,7 @@ export function isBetaChannel(releaseChannel) {
  * @param {PublishMarket} params.publishMarket - Marketplace targeted by the deployment.
  * @returns {{ ok: true } | { ok: false, error: string }} A success result or a descriptive validation error.
  */
-export function validateMarketplaceDeploy({ targetTag, releaseChannel, publishMarket }) {
+export function validateMarketplaceDeploy({ targetTag }) {
   if (!isValidMarketplaceTag(targetTag)) {
     return {
       ok: false,

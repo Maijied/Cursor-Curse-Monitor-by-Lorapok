@@ -73,7 +73,6 @@ describe("Deployments validation UI", () => {
   });
 
   it("keeps a manually selected deploy tag instead of snapping back to the prepared tag", async () => {
-    const { useDeployRuntime } = await import("../context/DeployRuntimeContext");
     render(<Deployments />);
 
     const select = await screen.findByLabelText("Deploy tag");

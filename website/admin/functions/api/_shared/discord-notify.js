@@ -2,7 +2,6 @@ import { logSystemEvent } from "./system-log.js";
 import { readDiscordConfig } from "./discord-config.js";
 import { buildDeployEnrichment, truncateDiscordText } from "./discord-deploy-context.js";
 import {
-  getChannelFooters,
   getMessageBranding,
   getMessageCatalog,
 } from "./message-cards-runtime.js";
