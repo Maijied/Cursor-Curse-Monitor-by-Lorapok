@@ -18,7 +18,7 @@ export const STATS_README_SVG_KEY = README_SVG_KEY;
 export const STATS_BADGES_BUNDLE_KEY = "stats:badges-bundle";
 
 export const DEFAULT_STATS_REFRESH_CONFIG = {
-  enabled: false,
+  enabled: true,
   intervalMinutes: 5,
   ...CRON_RUN_DEFAULTS,
 };

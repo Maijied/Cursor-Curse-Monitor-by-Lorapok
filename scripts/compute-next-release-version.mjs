@@ -54,12 +54,14 @@ const plan = args.rollback
       packageVersion: siteData.version,
       channels,
       existingTags,
+      targetTag: process.env.TARGET_TAG ?? null,
     })
   : buildVersionPlan({
       packageVersion: siteData.version,
       channels,
       bumpType: args.bump,
       latestGitTag,
+      existingTags,
     });
 
 const payload = {

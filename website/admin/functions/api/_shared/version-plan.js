@@ -71,15 +71,25 @@ export function nextRollbackVersion(maxVersion, existingTags = []) {
   return { recommendedVersion: version, recommendedTag: `v${version}` };
 }
 
+/** Highest semver from git release tags (ignores rollback R-tags). */
+export function maxVersionFromGitTags(existingTags = []) {
+  const versions = existingTags.map((t) => normalizeSemver(t)).filter(Boolean);
+  return versions.length ? versions.sort(compareSemver).at(-1) : null;
+}
+
 /**
  * @param {object} input
  * @param {string} input.packageVersion
  * @param {Array<{id:string,label:string,version:string|null,warn?:boolean}>} input.channels
  * @param {string[]} [input.existingTags]
+ * @param {string|null} [input.targetTag] Rollback source tag — used when live APIs are unreachable.
  */
-export function buildRollbackPlan({ packageVersion, channels, existingTags = [] }) {
+export function buildRollbackPlan({ packageVersion, channels, existingTags = [], targetTag = null }) {
   const packageCore = normalizeSemver(packageVersion);
-  const maxAll = maxVersionFromChannels(channels) ?? packageCore;
+  const targetCore = normalizeSemver(targetTag);
+  let maxAll = maxVersionFromChannels(channels) ?? packageCore;
+  if (!maxAll) maxAll = maxVersionFromGitTags(existingTags);
+  if (!maxAll && targetCore) maxAll = targetCore;
   const rollback = maxAll ? nextRollbackVersion(maxAll, existingTags) : null;
   const recommendedVersion = rollback?.recommendedVersion ?? null;
   const recommendedTag = rollback?.recommendedTag ?? null;
@@ -139,9 +149,10 @@ export function buildRollbackPlan({ packageVersion, channels, existingTags = [] 
  * @param {"patch"|"minor"|"major"} [input.bumpType]
  * @param {string|null} [input.latestGitTag]
  */
-export function buildVersionPlan({ packageVersion, channels, bumpType = "patch", latestGitTag = null }) {
+export function buildVersionPlan({ packageVersion, channels, bumpType = "patch", latestGitTag = null, existingTags = [] }) {
   const packageCore = normalizeSemver(packageVersion);
-  const maxAll = maxVersionFromChannels(channels) ?? packageCore;
+  let maxAll = maxVersionFromChannels(channels) ?? packageCore;
+  if (!maxAll) maxAll = maxVersionFromGitTags(existingTags);
   const recommendedVersion = maxAll ? bumpSemver(maxAll, bumpType) : null;
   const recommendedTag = recommendedVersion ? `v${recommendedVersion}` : null;
   const gitTagCore = normalizeSemver(latestGitTag);

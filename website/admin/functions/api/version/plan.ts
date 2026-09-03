@@ -29,18 +29,22 @@ export async function onRequestGet(context) {
   const existingTags = await fetchGitTagNames({ githubToken: env.GITHUB_TOKEN });
   const latestGitTag = channels.find((c) => c.id === "git-tag")?.version ?? null;
 
+  const targetTag = url.searchParams.get("target_tag") ?? url.searchParams.get("tag");
+
   const plan =
     planMode === "rollback"
       ? buildRollbackPlan({
           packageVersion: packageVersionFromSiteData(siteData),
           channels,
           existingTags,
+          targetTag,
         })
       : buildVersionPlan({
           packageVersion: packageVersionFromSiteData(siteData),
           channels,
           bumpType,
           latestGitTag,
+          existingTags,
         });
 
   return jsonResponse({
