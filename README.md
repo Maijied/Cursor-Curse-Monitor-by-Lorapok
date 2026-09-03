@@ -35,10 +35,10 @@
 
   <p align="center">
     <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">
-      <img src="https://cursor-dev.lorapok.tech/api/stats/readme.svg" alt="Community download stats chart" width="720" />
+      <img src="website/readme-stats.png" alt="Community download stats chart" width="720" />
     </a>
   </p>
-  <p><sub>📊 <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">Live download chart</a> · refreshed every 5 min from marketplace APIs · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a> · <a href="https://cursor-dev.lorapok.tech/api/site-data">Mission Control overlay</a></sub></p>
+  <p><sub>📊 <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">Live download chart (SVG)</a> · refreshed every 5 min from marketplace APIs · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a> · <a href="https://cursor-dev.lorapok.tech/api/site-data">Mission Control overlay</a></sub></p>
 
 </div>
 
