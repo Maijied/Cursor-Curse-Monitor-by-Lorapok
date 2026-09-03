@@ -5,6 +5,8 @@ const withResend = { RESEND_API_KEY: "re_test" };
 const withoutResend = {};
 
 assert.equal(prefersResendFirst("user@gmail.com", withResend), true);
+assert.equal(prefersResendFirst("user@gmail.com", withResend, { workersFreeMode: false, resendFirstExternal: false }), false);
+assert.equal(prefersResendFirst("user@gmail.com", withResend, { workersFreeMode: true, resendFirstExternal: false }), true);
 assert.equal(prefersResendFirst("61z27.tag@inbox.testmail.app", withResend), true);
 assert.equal(prefersResendFirst("cursor.monitor@lorapok.tech", withResend), false);
 assert.equal(prefersResendFirst("user@gmail.com", withoutResend), false);

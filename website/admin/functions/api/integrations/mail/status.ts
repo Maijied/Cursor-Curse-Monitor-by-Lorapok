@@ -1,5 +1,6 @@
 import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import { buildMailSyncRecommendations } from "../../_shared/mail-sync.js";
+import { buildMailSetupInstructions } from "../../_shared/mail-setup-instructions.js";
 import { readMailConfig, sanitizeMailConfigForClient } from "../../_shared/mail-config.js";
 import { getMailTransportStatus } from "../../_shared/mail.js";
 import { buildPublicSiteConfig } from "../../_shared/subscribe-config.js";
@@ -15,7 +16,8 @@ export async function onRequestGet(context) {
   const transport = getMailTransportStatus(env);
   const config = await readMailConfig(env);
   const sanitized = sanitizeMailConfigForClient(config, transport, env);
-  const recommendations = buildMailSyncRecommendations(transport);
+  const recommendations = buildMailSyncRecommendations(transport, config);
+  const setupInstructions = buildMailSetupInstructions(config, transport);
   const subscribeSite = await buildPublicSiteConfig(env);
 
   return jsonResponse({
@@ -36,10 +38,16 @@ export async function onRequestGet(context) {
       productFromName: sanitized.productFromName,
       supportFromName: sanitized.supportFromName,
       resendFirstExternal: sanitized.resendFirstExternal,
+      workersFreeMode: sanitized.workersFreeMode,
+      sendingDomain: sanitized.sendingDomain,
+      resendFromOverride: sanitized.resendFromOverride,
+      resendDomainVerified: sanitized.resendDomainVerified,
+      resendFromEnvConfigured: sanitized.resendFromEnvConfigured,
       testmailConfigured: sanitized.testmailConfigured,
       updatedAt: sanitized.updatedAt,
       updatedBy: sanitized.updatedBy,
     },
+    setupInstructions,
     recommendations,
     mailConfigured: subscribeSite.mailConfigured,
     subscribeAvailable: subscribeSite.subscribeAvailable,

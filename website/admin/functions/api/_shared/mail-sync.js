@@ -1,14 +1,18 @@
 import { dispatchInfraWorkflow } from "./deploy-workflow.js";
+import { readMailConfig } from "./mail-config.js";
 import { getMailTransportStatus } from "./mail.js";
 
 /**
  * Build actionable mail repair hints for Mission Control UI.
  * @param {ReturnType<typeof getMailTransportStatus>} transport
+ * @param {ReturnType<import("./mail-config.js").normalizeMailConfig>} [mailConfig]
  */
-export function buildMailSyncRecommendations(transport) {
+export function buildMailSyncRecommendations(transport, mailConfig = {}) {
   const steps = [];
+  const workersFree = mailConfig.workersFreeMode !== false;
+  const domain = mailConfig.sendingDomain || "lorapok.tech";
 
-  if (!transport.relayBound) {
+  if (!transport.relayBound && !workersFree) {
     steps.push(
       "Sync up dispatches deploy-infra (admin only) to run enable-mail.mjs, verify transport, and redeploy Pages so MAIL_RELAY binds."
     );
@@ -16,7 +20,13 @@ export function buildMailSyncRecommendations(transport) {
 
   if (!transport.resendConfigured) {
     steps.push(
-      "Configure RESEND_API_KEY for external subscribers on Workers Free (Gmail, testmail.app): verify lorapok.tech in Resend, then run node website/admin/scripts/setup-resend-secret.mjs"
+      workersFree
+        ? `Workers Free: configure RESEND_API_KEY for subscriber mail — verify ${domain} in Resend, then run node website/admin/scripts/setup-resend-secret.mjs`
+        : "Configure RESEND_API_KEY for external recipients (Gmail, testmail.app): node website/admin/scripts/setup-resend-secret.mjs"
+    );
+  } else if (workersFree && !mailConfig.resendDomainVerified) {
+    steps.push(
+      `Confirm ${domain} is verified in Resend (SPF/DKIM DNS), then enable "Resend domain verified" in Settings → Outbound mail.`
     );
   }
 
@@ -26,7 +36,7 @@ export function buildMailSyncRecommendations(transport) {
 
   if (!transport.configured) {
     steps.push(
-      "No outbound transport detected. After Sync up completes, send a branded test from this page or run node website/admin/scripts/repair-mail.mjs locally."
+      "No outbound transport detected. After Sync up completes, send a branded test from Mailbox or run node website/admin/scripts/repair-mail.mjs locally."
     );
   }
 
@@ -41,7 +51,7 @@ export function buildMailSyncRecommendations(transport) {
  */
 export async function syncUpMailTransport(env, pagesContext, triggeredBy) {
   const transport = getMailTransportStatus(env);
-  const recommendations = buildMailSyncRecommendations(transport);
+  const recommendations = buildMailSyncRecommendations(transport, await readMailConfig(env));
 
   const dispatch = await dispatchInfraWorkflow(
     env,

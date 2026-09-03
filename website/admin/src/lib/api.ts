@@ -443,6 +443,11 @@ export type MailTransportConfig = {
   productFromName: string;
   supportFromName: string;
   resendFirstExternal: boolean;
+  workersFreeMode: boolean;
+  sendingDomain: string;
+  resendFromOverride: string;
+  resendDomainVerified: boolean;
+  resendFromEnvConfigured: boolean;
   transport: string;
   transportConfigured: boolean;
   relayBound: boolean;
@@ -453,8 +458,31 @@ export type MailTransportConfig = {
   updatedBy: string | null;
 };
 
+export type MailSetupInstructionStep = {
+  id: string;
+  title: string;
+  description: string;
+  link?: string;
+  command?: string;
+  done: boolean;
+};
+
+export type MailSetupInstructions = {
+  guidePath: string;
+  workersFreeMode: boolean;
+  sendingDomain: string;
+  resendConfigured: boolean;
+  resendDomainVerified: boolean;
+  summary: string;
+  steps: MailSetupInstructionStep[];
+  secretsNote: string;
+  configurableInAdmin: string[];
+};
+
 export async function fetchMailTransportConfigApi() {
-  return apiGet<{ ok: boolean; config: MailTransportConfig }>("/integrations/mail/config");
+  return apiGet<{ ok: boolean; config: MailTransportConfig; setupInstructions: MailSetupInstructions }>(
+    "/integrations/mail/config"
+  );
 }
 
 export async function putMailTransportConfigApi(
@@ -467,6 +495,10 @@ export async function putMailTransportConfigApi(
       | "productFromName"
       | "supportFromName"
       | "resendFirstExternal"
+      | "workersFreeMode"
+      | "sendingDomain"
+      | "resendFromOverride"
+      | "resendDomainVerified"
     >
   >
 ) {
@@ -480,7 +512,7 @@ export async function putMailTransportConfigApi(
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to save mail settings");
-  return data as { ok: boolean; config: MailTransportConfig };
+  return data as { ok: boolean; config: MailTransportConfig; setupInstructions: MailSetupInstructions };
 }
 
 export type CursorIndexPolicyConfig = {
@@ -1171,10 +1203,16 @@ export type MailSetupStatus = {
     productFromName: string;
     supportFromName: string;
     resendFirstExternal: boolean;
+    workersFreeMode: boolean;
+    sendingDomain: string;
+    resendFromOverride: string;
+    resendDomainVerified: boolean;
+    resendFromEnvConfigured: boolean;
     testmailConfigured: boolean;
     updatedAt: string | null;
     updatedBy: string | null;
   };
+  setupInstructions: MailSetupInstructions;
   recommendations: string[];
   subscribeAvailable: boolean;
   subscribeModalEnabled: boolean;

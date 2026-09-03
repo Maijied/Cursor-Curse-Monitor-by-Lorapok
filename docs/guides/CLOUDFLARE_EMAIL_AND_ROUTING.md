@@ -164,7 +164,7 @@ node website/admin/scripts/repair-mail.mjs
 | `sync-mail-on-main.mjs` | Local vault → secrets + enable + verify |
 | `verify-mail-setup.mjs` | Probe email token only |
 
-Wiki: [Mailbox and Email](../wiki/Mailbox-and-Email.md) · Skill: `loragent-cloudflare-mail-master`.
+See also: [RESEND_WORKERS_FREE_SETUP.md](./RESEND_WORKERS_FREE_SETUP.md) · [Mailbox and Email](../wiki/Mailbox-and-Email.md)
 
 ---
 

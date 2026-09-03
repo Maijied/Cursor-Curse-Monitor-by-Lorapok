@@ -15,7 +15,10 @@ import {
   type MailSetupStatus,
 } from "../../lib/api";
 
-const MAIL_DOCS_URL =
+const RESEND_GUIDE_URL =
+  "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/guides/RESEND_WORKERS_FREE_SETUP.md";
+
+const CLOUDFLARE_MAIL_DOCS_URL =
   "https://developers.cloudflare.com/email-routing/email-workers/send-email-workers/";
 
 type StepState = "done" | "pending" | "warn";
@@ -111,6 +114,7 @@ export default function MailSetupChecklist() {
   const transportDone = status?.transport.configured ?? false;
   const relayDone = status?.transport.relayBound ?? false;
   const resendDone = status?.transport.resendConfigured ?? false;
+  const domainVerified = status?.identities.resendDomainVerified ?? false;
   const subscribeOk = !status?.requireMailForSubscribe || status?.mailConfigured;
 
   return (
@@ -145,15 +149,24 @@ export default function MailSetupChecklist() {
           <li className="flex gap-3">
             {stepIcon("done")}
             <div>
-              <p className="font-medium text-[var(--color-text)]">1. Review Cloudflare Email Sending docs</p>
+              <p className="font-medium text-[var(--color-text)]">1. Read Resend + Workers Free setup guide</p>
               <p className="text-[var(--color-muted)] mt-1">
-                Understand relay binding, REST fallback, and Resend for external inboxes.
+                {status.setupInstructions?.summary ??
+                  "Configure Resend for external subscribers; Cloudflare relay remains for @lorapok.tech."}
               </p>
               <a
-                href={MAIL_DOCS_URL}
+                href={RESEND_GUIDE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 mt-2 text-[var(--color-accent-2)] hover:underline"
+              >
+                Resend setup guide <ExternalLink size={14} />
+              </a>
+              <a
+                href={CLOUDFLARE_MAIL_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-2 ml-4 text-[var(--color-muted)] hover:underline"
               >
                 Cloudflare Email docs <ExternalLink size={14} />
               </a>
@@ -161,9 +174,39 @@ export default function MailSetupChecklist() {
           </li>
 
           <li className="flex gap-3">
+            {stepIcon(resendDone && domainVerified ? "done" : resendDone ? "warn" : "warn")}
+            <div className="flex-1">
+              <p className="font-medium text-[var(--color-text)]">
+                2. Resend domain ({status.identities.sendingDomain})
+              </p>
+              <p className="text-[var(--color-muted)] mt-1">
+                Verify domain in Resend, then mark <strong>Resend domain verified</strong> in Outbound mail settings.
+              </p>
+              <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+                {[
+                  ["Workers Free mode", status.identities.workersFreeMode],
+                  ["Resend-first external", status.identities.resendFirstExternal],
+                  ["Resend API key", resendDone],
+                  ["Domain verified (admin)", domainVerified],
+                ].map(([label, ok]) => (
+                  <div
+                    key={String(label)}
+                    className="flex justify-between items-center gap-2 rounded-xl border border-[var(--color-border)] px-3 py-2"
+                  >
+                    <dt className="text-[var(--color-muted)]">{label}</dt>
+                    <dd>
+                      <Badge variant={ok ? "synced" : "warn"}>{ok ? "On" : "Off"}</Badge>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </li>
+
+          <li className="flex gap-3">
             {stepIcon(transportDone ? "done" : "warn")}
             <div className="flex-1">
-              <p className="font-medium text-[var(--color-text)]">2. Transport secrets &amp; relay binding</p>
+              <p className="font-medium text-[var(--color-text)]">3. Transport secrets &amp; relay binding</p>
               <dl className="mt-2 grid gap-2 sm:grid-cols-2">
                 {[
                   ["MAIL_RELAY bound", relayDone],
@@ -191,7 +234,7 @@ export default function MailSetupChecklist() {
           <li className="flex gap-3">
             {stepIcon(relayDone ? "done" : "warn")}
             <div className="flex-1 space-y-2">
-              <p className="font-medium text-[var(--color-text)]">3. Sync up (repair relay + redeploy admin)</p>
+              <p className="font-medium text-[var(--color-text)]">4. Sync up (repair relay + redeploy admin)</p>
               {status.recommendations.length > 0 ? (
                 <ul className="list-disc pl-5 text-[var(--color-muted)] space-y-1">
                   {status.recommendations.map((rec) => (
@@ -217,7 +260,7 @@ export default function MailSetupChecklist() {
           <li className="flex gap-3">
             {stepIcon(transportDone ? "done" : "pending")}
             <div className="flex-1 space-y-2">
-              <p className="font-medium text-[var(--color-text)]">4. Verify delivery</p>
+              <p className="font-medium text-[var(--color-text)]">5. Verify delivery</p>
               <div className="flex flex-wrap gap-2">
                 <LoadableButton
                   type="button"
@@ -244,7 +287,7 @@ export default function MailSetupChecklist() {
           <li className="flex gap-3">
             {stepIcon(subscribeOk ? "done" : "warn")}
             <div>
-              <p className="font-medium text-[var(--color-text)]">5. Subscribe gate</p>
+              <p className="font-medium text-[var(--color-text)]">6. Subscribe gate</p>
               <p className="text-[var(--color-muted)] mt-1">
                 Modal {status.subscribeModalEnabled ? "enabled" : "disabled"}
                 {status.requireMailForSubscribe ? " · mail required for subscribe" : " · mail optional"}

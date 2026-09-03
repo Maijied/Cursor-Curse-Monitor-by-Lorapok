@@ -41,9 +41,11 @@ import {
 } from "./functions/api/_shared/subscribe-config.js";
 import {
   DEFAULT_MAIL_CONFIG,
+  isValidSendingDomain,
   normalizeMailConfig,
   sanitizeMailConfigForClient,
 } from "./functions/api/_shared/mail-config.js";
+import { buildMailSetupInstructions } from "./functions/api/_shared/mail-setup-instructions.js";
 import { buildMailSyncRecommendations } from "./functions/api/_shared/mail-sync.js";
 import {
   DEFAULT_CURSOR_INDEX_CONFIG,
@@ -974,15 +976,17 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/integrations/mail/config" && req.method === "GET") {
+      const transport = getMailTransportStatus(devFunctionsEnv());
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({
           ok: true,
           config: sanitizeMailConfigForClient(
             devStore.mailConfig,
-            getMailTransportStatus(devFunctionsEnv()),
+            transport,
             devFunctionsEnv()
           ),
+          setupInstructions: buildMailSetupInstructions(devStore.mailConfig, transport),
         })
       );
       return;
@@ -1020,11 +1024,17 @@ export function createDevApiMiddleware() {
             productFromName: sanitized.productFromName,
             supportFromName: sanitized.supportFromName,
             resendFirstExternal: sanitized.resendFirstExternal,
+            workersFreeMode: sanitized.workersFreeMode,
+            sendingDomain: sanitized.sendingDomain,
+            resendFromOverride: sanitized.resendFromOverride,
+            resendDomainVerified: sanitized.resendDomainVerified,
+            resendFromEnvConfigured: sanitized.resendFromEnvConfigured,
             testmailConfigured: sanitized.testmailConfigured,
             updatedAt: sanitized.updatedAt,
             updatedBy: sanitized.updatedBy,
           },
-          recommendations: buildMailSyncRecommendations(transport),
+          setupInstructions: buildMailSetupInstructions(devStore.mailConfig, transport),
+          recommendations: buildMailSyncRecommendations(transport, devStore.mailConfig),
           mailConfigured,
           subscribeAvailable,
           subscribeModalEnabled: subscribeConfig.subscribeModalEnabled,
@@ -1055,6 +1065,27 @@ export function createDevApiMiddleware() {
             res.end(JSON.stringify({ error: "resendFirstExternal must be a boolean" }));
             return;
           }
+          if (parsed.workersFreeMode !== undefined && typeof parsed.workersFreeMode !== "boolean") {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "workersFreeMode must be a boolean" }));
+            return;
+          }
+          if (parsed.sendingDomain !== undefined && !isValidSendingDomain(parsed.sendingDomain)) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Invalid sending domain" }));
+            return;
+          }
+          if (
+            parsed.resendDomainVerified !== undefined &&
+            typeof parsed.resendDomainVerified !== "boolean"
+          ) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "resendDomainVerified must be a boolean" }));
+            return;
+          }
           devStore.mailConfig = normalizeMailConfig({
             ...devStore.mailConfig,
             ...parsed,
@@ -1066,10 +1097,14 @@ export function createDevApiMiddleware() {
             JSON.stringify({
               ok: true,
               config: sanitizeMailConfigForClient(
-            devStore.mailConfig,
-            getMailTransportStatus(devFunctionsEnv()),
-            devFunctionsEnv()
-          ),
+                devStore.mailConfig,
+                getMailTransportStatus(devFunctionsEnv()),
+                devFunctionsEnv()
+              ),
+              setupInstructions: buildMailSetupInstructions(
+                devStore.mailConfig,
+                getMailTransportStatus(devFunctionsEnv())
+              ),
             })
           );
         } catch {

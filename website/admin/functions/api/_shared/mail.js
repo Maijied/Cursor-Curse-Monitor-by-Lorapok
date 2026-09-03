@@ -46,8 +46,9 @@ function resendConfigured(env) {
 
 /** External inboxes (Gmail, testmail) need Resend on Workers Free — Cloudflare sandbox blocks them. */
 export function prefersResendFirst(to, env, options = {}) {
+  const workersFreeMode = options.workersFreeMode !== false;
   const resendFirstExternal = options.resendFirstExternal !== false;
-  if (!resendFirstExternal) return false;
+  if (!workersFreeMode && !resendFirstExternal) return false;
   if (!resendConfigured(env)) return false;
   const email = String(to ?? "").trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
@@ -348,7 +349,7 @@ async function sendViaCloudflareBinding(env, { to, subject, html, text, from, bc
   return { sent: true, transport: "cloudflare-binding" };
 }
 
-async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, replyTo }) {
+async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, replyTo }, mailConfig = null) {
   const { accountId, token } = readCloudflareMailCredentials(env);
   if (!accountId || !token) {
     return { sent: false, reason: "Cloudflare Email REST credentials missing" };
@@ -386,7 +387,7 @@ async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, 
 
     // If Resend API key is configured as a fallback, attempt sending via Resend
     if (typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim()) {
-      const fallbackResult = await sendViaResend(env, { to, subject, html, text });
+      const fallbackResult = await sendViaResend(env, { to, subject, html, text, from, bcc, replyTo }, mailConfig);
       if (fallbackResult.sent) {
         return {
           sent: true,
@@ -414,16 +415,18 @@ async function sendViaCloudflareRest(env, { to, subject, html, text, from, bcc, 
   return { sent: true, transport: "cloudflare-rest" };
 }
 
-async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo }) {
+async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo }, mailConfig = null) {
   const resendKey = typeof env.RESEND_API_KEY === "string" ? env.RESEND_API_KEY.trim() : "";
   if (!resendKey) {
     return { sent: false, reason: "RESEND_API_KEY not configured" };
   }
 
+  const envFrom = typeof env.RESEND_FROM === "string" ? env.RESEND_FROM.trim() : "";
+  const kvFrom = mailConfig && typeof mailConfig.resendFromOverride === "string" ? mailConfig.resendFromOverride.trim() : "";
   const resendFrom =
-    typeof env.RESEND_FROM === "string" && env.RESEND_FROM.trim()
-      ? env.RESEND_FROM.trim()
-      : `${coerceMailDisplayName(from.name, "Cursor Curse Monitor")} <${from.email}>`;
+    envFrom ||
+    kvFrom ||
+    `${coerceMailDisplayName(from.name, "Cursor Curse Monitor")} <${from.email}>`;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -463,7 +466,10 @@ export async function sendMail(
   const textBody = text ?? subject;
   const from = normalizeMailFromInput(fromOverride ?? resolveMailFromConfig(mailConfig, category));
   const bcc = bccOverride ?? defaultBccFromConfig(mailConfig);
-  const resendOpts = { resendFirstExternal: mailConfig.resendFirstExternal };
+  const resendOpts = {
+    resendFirstExternal: mailConfig.resendFirstExternal,
+    workersFreeMode: mailConfig.workersFreeMode,
+  };
   const payload = {
     to,
     subject,
@@ -478,7 +484,7 @@ export async function sendMail(
 
   if (prefersResendFirst(to, env, resendOpts)) {
     try {
-      result = await sendViaResend(env, payload);
+      result = await sendViaResend(env, payload, mailConfig);
     } catch (err) {
       console.error("Resend primary delivery failed", err);
       result = {
@@ -517,7 +523,7 @@ export async function sendMail(
 
   if (!result.sent && isVerifiedDestinationSandboxError(result.reason) && resendConfigured(env)) {
     try {
-      const resend = await sendViaResend(env, payload);
+      const resend = await sendViaResend(env, payload, mailConfig);
       if (resend.sent) result = resend;
     } catch (err) {
       console.error("Resend sandbox fallback error", err);
@@ -530,7 +536,7 @@ export async function sendMail(
 
   if (!result.sent && !isVerifiedDestinationSandboxError(result.reason)) {
     try {
-      const cf = await sendViaCloudflareRest(env, payload);
+      const cf = await sendViaCloudflareRest(env, payload, mailConfig);
       if (cf.sent) result = cf;
       else if (!result.reason) result = cf;
     } catch (err) {
@@ -543,7 +549,7 @@ export async function sendMail(
     if (!result.sent) {
       try {
         if (!prefersResendFirst(to, env, resendOpts)) {
-          const resend = await sendViaResend(env, payload);
+          const resend = await sendViaResend(env, payload, mailConfig);
           if (resend.sent) result = resend;
           else if (!result.reason || result.reason.includes("credentials missing")) {
             result = resend;
