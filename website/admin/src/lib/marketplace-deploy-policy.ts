@@ -114,7 +114,7 @@ export function validateMarketplaceDeploy(params: {
   releaseChannel: ReleaseChannel;
   publishMarket: PublishMarket;
 }): { ok: true } | { ok: false; error: string } {
-  const { targetTag, releaseChannel, publishMarket } = params;
+  const { targetTag } = params;
   if (!isValidMarketplaceTag(targetTag)) {
     return {
       ok: false,

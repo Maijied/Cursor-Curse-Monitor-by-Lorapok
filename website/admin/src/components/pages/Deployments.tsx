@@ -12,7 +12,6 @@ import { useSiteData } from "../../hooks/useSiteData";
 import {
   defaultDeployTag,
   defaultRollbackSourceTag,
-  defaultTagSelection,
   filterTagsForChannel,
   formatTagLabel,
 } from "../../lib/release-version";
