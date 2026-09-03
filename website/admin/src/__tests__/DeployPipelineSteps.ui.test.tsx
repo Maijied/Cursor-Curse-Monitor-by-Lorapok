@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it } from "vitest";
-import DeployPipelineSteps from "./DeployPipelineSteps";
+import DeployPipelineSteps from "../components/ui/DeployPipelineSteps";
 
 beforeAll(() => {
   class ResizeObserverMock {
@@ -8,7 +8,7 @@ beforeAll(() => {
     unobserve() {}
     disconnect() {}
   }
-  global.ResizeObserver = ResizeObserverMock as typeof ResizeObserver;
+  globalThis.ResizeObserver = ResizeObserverMock as typeof ResizeObserver;
 });
 
 describe("DeployPipelineSteps UI", () => {
