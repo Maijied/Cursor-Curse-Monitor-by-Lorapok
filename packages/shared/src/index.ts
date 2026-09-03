@@ -1,4 +1,6 @@
 export * from "./cursorApi";
+export * from "./usageAnalytics";
+export * from "./usageChart";
 export * from "./cursorAccounts";
 export * from "./securityTypes";
 export * from "./scanSecrets";

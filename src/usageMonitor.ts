@@ -11,13 +11,14 @@ import {
   appendUsageHistory,
   buildBudgetMetrics,
   buildFeatureList,
+  buildUsageAnalytics,
   DashboardSnapshot,
   fetchStripeProfile,
   fetchUsageSummary,
   isLimitExceeded,
   UsageHistoryPoint,
 } from "./cursorApi";
-import { emptyLocalInsights, readLocalInsights } from "./cursorLocalStore";
+import { emptyLocalInsights, readDailyStatsSeries, readLocalInsights } from "./cursorLocalStore";
 import { NotificationProvider } from "./notificationProvider";
 import { listPublicAccounts, resolveActiveAuth } from "./accountStore";
 
@@ -177,6 +178,14 @@ export class UsageMonitorService implements vscode.Disposable {
       );
       snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
       snapshot.history = this.recordHistory(snapshot);
+      snapshot.usageAnalytics = buildUsageAnalytics({
+        budget: snapshot.budget,
+        usage: snapshot.usage,
+        history: snapshot.history,
+        local: snapshot.local,
+        dailySeries: readDailyStatsSeries(auth.productFolder),
+        onDemandSpendUsd: snapshot.onDemandSpendUsd,
+      });
 
       const percent = snapshot.budget.percentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {
@@ -244,8 +253,16 @@ export class UsageMonitorService implements vscode.Disposable {
         this.fallbackAppliedThisCycle = false;
       }
     } catch (error) {
-      snapshot.error =
+      const base =
         error instanceof Error ? error.message : "Unknown refresh error";
+      if (base.includes("401") && auth.email) {
+        snapshot.error = `Token expired for ${auth.email}. Re-paste your access token in Options, sign in at cursor.com, or switch to another account.`;
+      } else if (base.includes("401")) {
+        snapshot.error =
+          "Access token expired or invalid. Re-paste your token in Options or sign in at cursor.com.";
+      } else {
+        snapshot.error = base;
+      }
     }
 
     this.publish(snapshot);

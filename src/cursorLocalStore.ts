@@ -235,6 +235,41 @@ export function dailyStatsRowIsToday(
   return dateFromKey === today;
 }
 
+/** All daily stats rows sorted by date (IDE local DB). */
+export function readDailyStatsSeries(productFolder?: string): DailyCodeStats[] {
+  const dbPath = productFolder
+    ? getProductStoragePath(productFolder)
+    : getMonitoringStoragePath();
+  if (!fs.existsSync(dbPath)) {
+    return [];
+  }
+
+  try {
+    return withReadOnlyCursorDbAtPath(dbPath, (db) => {
+      const rows = db
+        .prepare("SELECT key, value FROM ItemTable WHERE key LIKE ?")
+        .all(`${DAILY_STATS_PREFIX}%`) as Array<{ key?: string; value?: string }>;
+
+      const out: DailyCodeStats[] = [];
+      for (const row of rows) {
+        if (typeof row.value !== "string") continue;
+        const stats = parseDailyStats(row.value);
+        if (!stats) continue;
+        const dateKey =
+          normalizeDailyStatsDate(stats.date) ??
+          extractDailyStatsDateFromKey(String(row.key ?? ""));
+        if (dateKey) {
+          stats.date = dateKey;
+        }
+        out.push(stats);
+      }
+      return out.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    });
+  } catch {
+    return [];
+  }
+}
+
 /** Privacy-safe local insights: stats, models, session titles. Never reads chat bodies. */
 export function readLocalInsights(productFolder?: string): LocalInsights {
   const empty = emptyLocalInsights();

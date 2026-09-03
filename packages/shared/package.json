@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p ./",
-    "test": "node ../../tests/test_budget_metrics.js && node src/communityDownloadStats.test.mjs"
+    "test": "node ../../tests/test_budget_metrics.js && node src/communityDownloadStats.test.mjs && node src/usageAnalytics.test.mjs && node src/usageChart.test.mjs"
   },
   "files": [
     "dist"
