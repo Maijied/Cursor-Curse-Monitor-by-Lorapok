@@ -70,6 +70,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "stats-refresh-now", path: "/stats/refresh", method: "POST", auth: "admin", group: "Integrations", description: "Manually refresh live marketplace download stats" },
   { id: "stats-refresh-cron", path: "/cron/stats-refresh", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for live stats refresh (CRON_SECRET)" },
   { id: "discord-digest-cron", path: "/cron/discord-digest", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for Discord download digest (CRON_SECRET)" },
+  { id: "resend-vault-bootstrap-cron", path: "/cron/resend-vault-bootstrap", method: "GET", auth: "cron", group: "Integrations", description: "Cron hook to read RESEND_API_KEY for cred vault sync (CRON_SECRET)" },
   { id: "notices", path: "/notices", method: "GET", auth: "admin", group: "Admin", description: "Admin notices catalog", safeProbe: true },
   { id: "notices-post", path: "/notices", method: "POST", auth: "admin", group: "Admin", description: "Create a catalog notice" },
   { id: "notices-put", path: "/notices", method: "PUT", auth: "admin", group: "Admin", description: "Update a catalog notice" },
