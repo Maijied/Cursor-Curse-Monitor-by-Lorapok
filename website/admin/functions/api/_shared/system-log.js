@@ -1,8 +1,21 @@
 import { listScatterRecords, putScatterRecord } from "./kv-scatter.js";
+import { MAX_SYSTEM_LOG_ENTRIES, SYSTEM_LOG_TTL_SECONDS } from "./kv-limits.js";
 
 const SYSTEM_LOG_PREFIX = "system:log";
 const LEGACY_SYSTEM_LOG_KEY = "system:logs";
-const MAX_ENTRIES = 500;
+
+/**
+ * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
+ */
+async function dropLegacySystemLogBlob(kv) {
+  if (!kv?.get || !kv?.delete) return;
+  try {
+    const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
+    if (raw) await kv.delete(LEGACY_SYSTEM_LOG_KEY);
+  } catch (err) {
+    console.error("dropLegacySystemLogBlob failed", err);
+  }
+}
 
 /**
  * @param {Record<string, unknown>} env
@@ -27,7 +40,7 @@ export async function logSystemEvent(env, entry) {
         meta: entry.meta ?? {},
         email: entry.email ?? null,
       },
-      { ts: Date.now() }
+      { ts: Date.now(), expirationTtl: SYSTEM_LOG_TTL_SECONDS }
     );
   } catch (err) {
     console.error("logSystemEvent failed", err);
@@ -41,7 +54,7 @@ export async function readSystemLogs(env) {
 
   let scatter = [];
   try {
-    scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_ENTRIES });
+    scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_SYSTEM_LOG_ENTRIES });
   } catch (err) {
     console.error("readSystemLogs scatter list failed", err);
   }
@@ -49,16 +62,17 @@ export async function readSystemLogs(env) {
   let legacy = [];
   try {
     const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
-    if (!raw) return scatter.length ? scatter.slice(0, MAX_ENTRIES) : [];
+    if (!raw) return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) legacy = parsed;
+    void dropLegacySystemLogBlob(kv);
   } catch (err) {
     console.error("readSystemLogs legacy read failed", err);
-    return scatter.slice(0, MAX_ENTRIES);
+    return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
   }
 
-  if (!scatter.length) return legacy.slice(0, MAX_ENTRIES);
-  if (!legacy.length) return scatter.slice(0, MAX_ENTRIES);
+  if (!scatter.length) return legacy.slice(0, MAX_SYSTEM_LOG_ENTRIES);
+  if (!legacy.length) return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
 
   const merged = [...scatter, ...legacy]
     .sort((a, b) => {
@@ -67,7 +81,7 @@ export async function readSystemLogs(env) {
       if (tb !== ta) return tb - ta;
       return String(b.id ?? "").localeCompare(String(a.id ?? ""));
     })
-    .slice(0, MAX_ENTRIES);
+    .slice(0, MAX_SYSTEM_LOG_ENTRIES);
 
   return merged;
 }

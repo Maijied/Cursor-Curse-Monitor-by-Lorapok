@@ -4,7 +4,7 @@ import { runStatsRefresh, verifyCronSecret } from "../_shared/stats-refresh.js";
 
 /**
  * Cron entry — secured via CRON_SECRET (X-Cron-Secret or Bearer).
- * Cloudflare Worker ccm-stats-cron calls this every minute; refresh runs when due.
+ * Cloudflare Worker ccm-stats-cron calls this on a 15-minute schedule; refresh runs when due.
  */
 export async function onRequestPost(context) {
   const { request, env } = context;
