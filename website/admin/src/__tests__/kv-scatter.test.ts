@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { logApiActivity, readApiActivity } from "../../functions/api/_shared/activity-log.js";
+import { recordMailboxMessage, listMailboxMessages } from "../../functions/api/_shared/mailbox.js";
 import { logSystemEvent, readSystemLogs } from "../../functions/api/_shared/system-log.js";
 import {
   readSubscribers,
@@ -18,6 +20,9 @@ function mockKv(store = new Map()) {
     put: async (key, value) => {
       store.set(key, value);
     },
+    delete: async (key) => {
+      store.delete(key);
+    },
     list: async ({ prefix = "", limit = 1000 } = {}) => ({
       keys: [...store.keys()]
         .filter((name) => name.startsWith(prefix))
@@ -33,6 +38,50 @@ describe("kv scatter-gather", () => {
     const older = reverseSortToken(1_000);
     const newer = reverseSortToken(2_000);
     expect(newer.localeCompare(older)).toBeLessThan(0);
+  });
+
+  it("appends API activity with scatter keys and drops legacy aggregate on read", async () => {
+    const store = new Map();
+    store.set(
+      "api:activity",
+      JSON.stringify([{ id: "legacy", ts: "2026-01-01T00:00:00.000Z", method: "GET", path: "/old", status: 200, latencyMs: 1 }])
+    );
+    const env = { ADMIN_KV: mockKv(store) };
+    await logApiActivity(env, { method: "POST", path: "/api/deploy", status: 202, latencyMs: 12, email: "admin@test" });
+    expect([...store.keys()].filter((k) => k.startsWith("api:activity:"))).toHaveLength(1);
+    const rows = await readApiActivity(env);
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    expect(store.has("api:activity")).toBe(false);
+  });
+
+  it("trims mailbox blob payload size", async () => {
+    const store = new Map();
+    const env = { ADMIN_KV: mockKv(store) };
+    const entry = await recordMailboxMessage(env, {
+      direction: "outbound",
+      from: "cursor.monitor@lorapok.tech",
+      to: "user@example.com",
+      subject: "Welcome",
+      text: "hello",
+      html: "<p>".repeat(10_000),
+      status: "sent",
+      category: "subscribe",
+    });
+    expect(entry.html).toBe("");
+    await recordMailboxMessage(env, {
+      direction: "outbound",
+      from: "cursor.monitor@lorapok.tech",
+      to: "another@example.com",
+      subject: "Second",
+      text: "world",
+      html: "<p>".repeat(10_000),
+      status: "sent",
+      category: "subscribe",
+    });
+    const items = await listMailboxMessages(env, {});
+    expect(items).toHaveLength(2);
+    const parsed = JSON.parse(store.get("mailbox:messages") ?? "[]");
+    expect(JSON.stringify(parsed).length).toBeLessThan(20_000);
   });
 
   it("appends system logs with one put per event", async () => {

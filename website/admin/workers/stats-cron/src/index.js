@@ -1,5 +1,5 @@
 /**
- * Calls Mission Control cron endpoints on a schedule (every minute; server enforces intervals).
+ * Calls Mission Control cron endpoints on a schedule (every 15 minutes; server enforces intervals).
  */
 export default {
   async scheduled(_event, env) {

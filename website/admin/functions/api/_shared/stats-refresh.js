@@ -236,17 +236,19 @@ export async function runStatsRefresh(env, options = {}) {
     at: snapshot.refreshedAt,
   });
 
-  await logSystemEvent(env, {
-    source: "stats-refresh",
-    level: "info",
-    message: `Live stats refreshed (${options.triggeredBy ?? "manual"})`,
-    meta: {
-      verified: downloads.verified,
-      displayTotal: downloads.displayTotal,
-      durationMs,
-      syncStatus: marketplaceSync.syncStatus,
-    },
-  });
+  if (statsChanged) {
+    await logSystemEvent(env, {
+      source: "stats-refresh",
+      level: "info",
+      message: `Live stats refreshed (${options.triggeredBy ?? "manual"})`,
+      meta: {
+        verified: downloads.verified,
+        displayTotal: downloads.displayTotal,
+        durationMs,
+        syncStatus: marketplaceSync.syncStatus,
+      },
+    });
+  }
 
   return { ok: true, snapshot, durationMs, statsChanged };
   } catch (err) {

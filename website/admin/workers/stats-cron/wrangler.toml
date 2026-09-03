@@ -5,7 +5,7 @@ account_id = "f049faaf2f67549f5c58837479596a4a"
 workers_dev = false
 
 [triggers]
-crons = ["* * * * *"]
+crons = ["*/15 * * * *"]
 
 [vars]
 ADMIN_PUBLIC_URL = "https://cursor-dev.lorapok.tech"

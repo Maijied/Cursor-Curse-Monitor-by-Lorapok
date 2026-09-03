@@ -1,21 +1,7 @@
 import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
-import { logAuthenticatedRequest } from "./_shared/activity-log.js";
+import { logAuthenticatedRequest, readApiActivity } from "./_shared/activity-log.js";
 import { listMailboxMessages } from "./_shared/mailbox.js";
 import { readSystemLogs } from "./_shared/system-log.js";
-
-const ACTIVITY_KEY = "api:activity";
-
-async function readActivity(env) {
-  if (!env.ADMIN_KV?.get) return [];
-  try {
-    const raw = await env.ADMIN_KV.get(ACTIVITY_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
 
 function normalizeApiRow(row) {
   return {
@@ -120,7 +106,7 @@ export async function onRequestGet(context) {
   const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "25", 10) || 25));
 
   const [apiRows, mailRows, systemRows] = await Promise.all([
-    readActivity(env),
+    readApiActivity(env),
     listMailboxMessages(env, {}),
     readSystemLogs(env),
   ]);

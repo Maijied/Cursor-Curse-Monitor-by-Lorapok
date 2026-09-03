@@ -1,19 +1,5 @@
 import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
-import { logAuthenticatedRequest } from "./_shared/activity-log.js";
-
-const ACTIVITY_KEY = "api:activity";
-
-async function readActivity(env) {
-  if (!env.ADMIN_KV?.get) return [];
-  try {
-    const raw = await env.ADMIN_KV.get(ACTIVITY_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+import { logAuthenticatedRequest, readApiActivity } from "./_shared/activity-log.js";
 
 function applyFilters(items, params) {
   let filtered = items;
@@ -57,7 +43,7 @@ export async function onRequestGet(context) {
   const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
   const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "25", 10) || 25));
 
-  const all = applyFilters(await readActivity(env), url.searchParams);
+  const all = applyFilters(await readApiActivity(env), url.searchParams);
   const total = all.length;
   const start = (page - 1) * limit;
   const items = all.slice(start, start + limit).map((row) => ({

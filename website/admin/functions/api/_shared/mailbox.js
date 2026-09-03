@@ -1,5 +1,12 @@
+import {
+  MAX_MAILBOX_HTML_CHARS,
+  MAX_MAILBOX_MESSAGES,
+  MAX_MAILBOX_TEXT_CHARS,
+  truncateStoredText,
+} from "./kv-limits.js";
+import { putKvJsonIfChanged } from "./kv-put.js";
+
 const MAILBOX_KEY = "mailbox:messages";
-const MAX_MESSAGES = 500;
 
 /**
  * @typedef {Object} MailboxMessage
@@ -18,6 +25,19 @@ const MAX_MESSAGES = 500;
  * @property {boolean} read
  */
 
+/**
+ * @param {Partial<MailboxMessage>} message
+ */
+function slimMailboxEntry(message) {
+  return {
+    ...message,
+    subject: truncateStoredText(message.subject, 500),
+    text: truncateStoredText(message.text, MAX_MAILBOX_TEXT_CHARS),
+    html: truncateStoredText(message.html, MAX_MAILBOX_HTML_CHARS),
+    error: message.error ? truncateStoredText(message.error, 500) : null,
+  };
+}
+
 async function readAll(env) {
   if (!env?.ADMIN_KV?.get) return [];
   try {
@@ -30,11 +50,17 @@ async function readAll(env) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} env
+ * @param {MailboxMessage[]} messages
+ */
 async function writeAll(env, messages) {
   if (!env?.ADMIN_KV?.put) return false;
-  const trimmed = messages.slice(0, MAX_MESSAGES);
-  await env.ADMIN_KV.put(MAILBOX_KEY, JSON.stringify(trimmed));
-  return true;
+  const trimmed = messages
+    .sort((a, b) => Date.parse(String(b.ts ?? "")) - Date.parse(String(a.ts ?? "")))
+    .slice(0, MAX_MAILBOX_MESSAGES)
+    .map((row) => slimMailboxEntry(row));
+  return putKvJsonIfChanged(env, MAILBOX_KEY, trimmed);
 }
 
 /**
@@ -42,7 +68,7 @@ async function writeAll(env, messages) {
  * @param {Partial<MailboxMessage> & Pick<MailboxMessage, "direction" | "from" | "to" | "subject" | "text" | "status" | "category">} message
  */
 export async function recordMailboxMessage(env, message) {
-  const entry = {
+  const entry = slimMailboxEntry({
     id: crypto.randomUUID(),
     direction: message.direction,
     from: message.from,
@@ -56,7 +82,7 @@ export async function recordMailboxMessage(env, message) {
     sentBy: message.sentBy ?? null,
     error: message.error ?? null,
     read: Boolean(message.read),
-  };
+  });
 
   const list = await readAll(env);
   list.unshift(entry);
@@ -94,7 +120,7 @@ export async function listMailboxMessages(env, filters = {}) {
     );
   }
 
-  return items;
+  return items.slice(0, MAX_MAILBOX_MESSAGES);
 }
 
 /**
@@ -111,12 +137,15 @@ export async function patchMailboxMessage(env, id, patch) {
     list[index] = { ...list[index], read: patch.read };
   }
 
-  await writeAll(env, list);
+  const wrote = await writeAll(env, list);
+  if (!wrote && typeof patch.read === "boolean") {
+    return list[index];
+  }
   return list[index];
 }
 
 export async function getMailboxStats(env) {
-  const items = await readAll(env);
+  const items = await listMailboxMessages(env, {});
   return {
     total: items.length,
     unread: items.filter((m) => !m.read).length,
