@@ -36,6 +36,15 @@ describe("workflow-jobs", () => {
     expect(getPipelineActiveIndex(jobs)).toBe(2);
   });
 
+  it("prefers in_progress over an earlier queued job", () => {
+    const jobs = [
+      { id: 1, name: "A", status: "completed", conclusion: "success" },
+      { id: 2, name: "B", status: "queued", conclusion: null },
+      { id: 3, name: "C", status: "in_progress", conclusion: null },
+    ];
+    expect(getPipelineActiveIndex(jobs)).toBe(2);
+  });
+
   it("extracts marketplace targets from deploy job steps", () => {
     const targets = extractMarketplaceTargets({
       id: 1,

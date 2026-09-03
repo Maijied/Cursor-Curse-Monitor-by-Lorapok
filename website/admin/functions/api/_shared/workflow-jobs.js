@@ -1,13 +1,16 @@
 export const WORKFLOW_JOB_ORDER = [
+  "Resolve Version (Live Marketplaces)",
   "Build & Validate (Root Extension)",
   "SEO & Metadata Pipeline",
   "Browser Extension CI",
   "Admin Panel CI",
   "Prepare Release Tag (push to main)",
+  "Admin Deploy Gate",
   "Prepare & Tag Release",
   "Deploy to Marketplaces",
   "Deploy Admin Panel",
   "Deploy Marketing Website",
+  "Test Results Summary",
 ];
 
 /** @param {Array<{ name: string }>} jobs */
