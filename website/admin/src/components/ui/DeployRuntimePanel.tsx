@@ -155,10 +155,10 @@ export default function DeployRuntimePanel({
 
   return (
     <div className={`space-y-4 ${embedded ? "" : "mt-6"}`}>
-      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
-        <Terminal size={18} className="text-[var(--color-accent)]" />
-        Deployment runtime
-        {targetTag && <span className="text-[var(--color-muted)] font-normal">· {targetTag}</span>}
+      <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
+        <Terminal size={18} className="text-[var(--color-accent)] shrink-0" />
+        Deployment progress
+        {targetTag ? <span className="font-normal text-[var(--color-muted)]">· {targetTag}</span> : null}
       </div>
 
       {displayError && <Notification tone="error" message={displayError} />}

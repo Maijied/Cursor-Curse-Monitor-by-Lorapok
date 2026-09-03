@@ -8,7 +8,7 @@ describe("DeployPipelineSteps helpers", () => {
     ).toBe("active");
   });
 
-  it("places larvae on running job", () => {
+  it("tracks the in-progress job as the active pipeline index", () => {
     const jobs = [
       { id: 1, name: "A", status: "completed", conclusion: "success" },
       { id: 2, name: "B", status: "in_progress", conclusion: null },
@@ -17,7 +17,7 @@ describe("DeployPipelineSteps helpers", () => {
     expect(getPipelineActiveIndex(jobs)).toBe(1);
   });
 
-  it("advances larvae to next pending after successes", () => {
+  it("advances the active index to the next pending job after successes", () => {
     const jobs = [
       { id: 1, name: "A", status: "completed", conclusion: "success" },
       { id: 2, name: "B", status: "completed", conclusion: "success" },
@@ -35,7 +35,7 @@ describe("DeployPipelineSteps helpers", () => {
     expect(getPipelineActiveIndex(jobs)).toBe(2);
   });
 
-  it("rests larvae on last step when all succeed", () => {
+  it("rests on the last step when all jobs succeed", () => {
     const jobs = [
       { id: 1, name: "A", status: "completed", conclusion: "success" },
       { id: 2, name: "B", status: "completed", conclusion: "success" },
