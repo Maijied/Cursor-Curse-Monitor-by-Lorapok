@@ -87,7 +87,9 @@ export default function DeployPipelineSteps({ jobs: rawJobs }: DeployPipelineSte
     const activeEl = stepRefs.current[activeIndex];
     if (!activeEl || allDone) return;
 
-    activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    if (typeof activeEl.scrollIntoView === "function") {
+      activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
     const t1 = window.setTimeout(measure, 150);
     const t2 = window.setTimeout(measure, 450);
     return () => {
