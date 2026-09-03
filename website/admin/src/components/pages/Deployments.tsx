@@ -10,11 +10,13 @@ import {
 import { useDeployRuntime } from "../../context/DeployRuntimeContext";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
+  defaultDeployTag,
+  defaultRollbackSourceTag,
   defaultTagSelection,
   filterTagsForChannel,
   formatTagLabel,
 } from "../../lib/release-version";
-import { validateMarketplaceDeploy, marketIncludesAmo } from "../../lib/marketplace-deploy-policy";
+import { validateMarketplaceDeploy } from "../../lib/marketplace-deploy-policy";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
@@ -54,12 +56,11 @@ export default function Deployments() {
   const [selectedTag, setSelectedTag] = useState("");
   const [market, setMarket] = useState<
     "Both" | "Open VSX + Firefox AMO" | "Open VSX" | "VS Code Marketplace" | "Firefox AMO"
-  >("Open VSX + Firefox AMO");
+  >("Both");
   const [deployAdmin, setDeployAdmin] = useState(false);
   const [deployWebsite, setDeployWebsite] = useState(true);
   const [deployExtension, setDeployExtension] = useState(true);
-  const productionMarketRef = useRef<typeof market>("Open VSX + Firefox AMO");
-  const prevChannelRef = useRef<"beta" | "production">(channel);
+  const tagTouchedRef = useRef(false);
 
   useEffect(() => {
     if (mode === "deploy") {
@@ -71,23 +72,11 @@ export default function Deployments() {
     } else if (mode === "infra") {
       setDeployExtension(false);
     }
+    tagTouchedRef.current = false;
   }, [mode]);
 
   useEffect(() => {
-    const prev = prevChannelRef.current;
-    prevChannelRef.current = channel;
-
-    if (channel === "beta") {
-      setMarket((current) => {
-        if (marketIncludesAmo(current)) {
-          productionMarketRef.current = current;
-          return "Open VSX";
-        }
-        return current;
-      });
-    } else if (prev === "beta" && channel === "production") {
-      setMarket(productionMarketRef.current);
-    }
+    tagTouchedRef.current = false;
   }, [channel]);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [tagsWarning, setTagsWarning] = useState<string | null>(null);
@@ -102,11 +91,14 @@ export default function Deployments() {
   const applyTagSelection = useCallback(
     (tagNames: string[], nextLiveTag: string | null, nextSuggestedTag: string | null) => {
       setSelectedTag((prev) => {
-        if (prev && tagNames.includes(prev)) return prev;
-        return defaultTagSelection(tagNames, nextLiveTag, nextSuggestedTag);
+        if (tagTouchedRef.current && prev && tagNames.includes(prev)) return prev;
+        if (mode === "rollback") {
+          return defaultRollbackSourceTag(tagNames, nextLiveTag);
+        }
+        return defaultDeployTag(tagNames, nextLiveTag, nextSuggestedTag);
       });
     },
-    []
+    [mode]
   );
 
   const loadTags = useCallback(() => {
@@ -159,15 +151,39 @@ export default function Deployments() {
     [tags, channel, mode]
   );
 
+  const preparedTag = versionPlan?.recommendedTag ?? suggestedTag ?? latestTag;
+
   useEffect(() => {
     if (filteredTags.length === 0) {
       if (selectedTag) setSelectedTag("");
       return;
     }
     if (selectedTag && !filteredTags.includes(selectedTag)) {
-      setSelectedTag(defaultTagSelection(filteredTags, liveTag, suggestedTag));
+      tagTouchedRef.current = false;
+      setSelectedTag(
+        mode === "rollback"
+          ? defaultRollbackSourceTag(filteredTags, liveTag)
+          : defaultDeployTag(filteredTags, liveTag, preparedTag ?? suggestedTag)
+      );
     }
-  }, [channel, filteredTags, liveTag, suggestedTag, selectedTag]);
+  }, [channel, filteredTags, liveTag, suggestedTag, selectedTag, mode, preparedTag]);
+
+  useEffect(() => {
+    if (mode === "infra" || tagTouchedRef.current) return;
+    if (filteredTags.length === 0) return;
+
+    if (mode === "rollback") {
+      const next = defaultRollbackSourceTag(filteredTags, liveTag);
+      if (next && next !== selectedTag) setSelectedTag(next);
+      return;
+    }
+
+    const nextPrepared = preparedTag ?? suggestedTag;
+    if (!nextPrepared || !filteredTags.includes(nextPrepared)) return;
+    if (!selectedTag || selectedTag === liveTag) {
+      setSelectedTag(nextPrepared);
+    }
+  }, [mode, channel, preparedTag, suggestedTag, filteredTags, liveTag, selectedTag]);
 
   const runVersionCheck = useCallback(async () => {
     setVersionPlanLoading(true);
@@ -190,7 +206,6 @@ export default function Deployments() {
   }, [isMaster, runVersionCheck]);
 
   const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
-  const preparedTag = versionPlan?.recommendedTag ?? suggestedTag ?? latestTag;
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
   const deployBlocked = mode === "deploy" && isLiveSelected;
   const deployPolicy =
@@ -553,8 +568,8 @@ export default function Deployments() {
             <p className="mt-2 text-[var(--color-text)]">
               <strong>Beta channel</strong> sets VS Code / Open VSX <em>pre-release</em> flags at publish time.
               Tags stay <code className="font-mono text-xs">vMAJOR.MINOR.PATCH</code> (no{" "}
-              <code className="font-mono text-xs">-beta</code> suffix). Firefox AMO is not available on beta — use
-              Production for AMO.
+              <code className="font-mono text-xs">-beta</code> suffix). Any market can be selected; CI may skip Firefox
+              AMO for pre-releases.
             </p>
           ) : null}
         </div>
@@ -609,7 +624,16 @@ export default function Deployments() {
               <label htmlFor="target-tag" className="block text-sm font-medium mb-2 text-[var(--color-muted)]">
                 {mode === "rollback" ? "Rollback to tag (source)" : "Deploy tag"}
               </label>
-              <select id="target-tag" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className={inputClass} disabled={formLocked}>
+              <select
+                id="target-tag"
+                value={selectedTag}
+                onChange={(e) => {
+                  tagTouchedRef.current = true;
+                  setSelectedTag(e.target.value);
+                }}
+                className={inputClass}
+                disabled={formLocked}
+              >
                 {filteredTags.length === 0 && <option value="">No tags in list</option>}
                 {filteredTags.map((t) => (
                   <option key={t} value={t}>
@@ -618,10 +642,18 @@ export default function Deployments() {
                   </option>
                 ))}
               </select>
-              {mode === "deploy" && preparedTag ? (
+              {(mode === "deploy" || channel === "beta") && preparedTag ? (
                 <p className="mt-2 text-xs text-[var(--color-muted)]">
-                  Prepared on last push to main:{" "}
+                  Next tag (+1 patch):{" "}
                   <span className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">{preparedTag}</span>
+                </p>
+              ) : null}
+              {mode === "rollback" && versionPlan?.recommendedTag ? (
+                <p className="mt-2 text-xs text-[var(--color-muted)]">
+                  New rollback release:{" "}
+                  <span className="font-[family-name:var(--font-mono)] text-[var(--color-accent-2)]">
+                    {versionPlan.recommendedTag}
+                  </span>
                 </p>
               ) : null}
             </div>
@@ -640,26 +672,18 @@ export default function Deployments() {
               id="target-market"
               value={market}
               onChange={(e) => setMarket(e.target.value as typeof market)}
-              disabled={formLocked || channel === "beta"}
+              disabled={formLocked}
               className={inputClass}
             >
-              <option value="Open VSX + Firefox AMO" disabled={channel === "beta"}>
-                Open VSX + Firefox AMO (default — no VS Code)
-              </option>
-              <option value="Both" disabled={channel === "beta"}>
-                All Marketplaces (VS Code + Open VSX + Firefox AMO)
-              </option>
-              <option value="VS Code Marketplace">VS Code Marketplace</option>
-              <option value="Open VSX">Open VSX (canonical lorapok-labs)</option>
-              <option value="Firefox AMO" disabled={channel === "beta"}>
-                Firefox Add-ons (AMO)
-              </option>
+              <option value="Both">All Marketplaces (VS Code + Open VSX + Firefox AMO)</option>
+              <option value="Open VSX + Firefox AMO">Open VSX + Firefox AMO (no VS Code)</option>
+              <option value="VS Code Marketplace">VS Code Marketplace only</option>
+              <option value="Open VSX">Open VSX only (canonical lorapok-labs)</option>
+              <option value="Firefox AMO">Firefox Add-ons (AMO) only</option>
             </select>
-            {channel === "beta" ? (
-              <p className="mt-2 text-xs text-[var(--color-muted)]">
-                Beta uses Open VSX pre-release only — Firefox AMO options are disabled.
-              </p>
-            ) : null}
+            <p className="mt-2 text-xs text-[var(--color-muted)]">
+              Pick one marketplace for a single-target publish, or All Marketplaces for the full release.
+            </p>
           </div>
           ) : null}
 

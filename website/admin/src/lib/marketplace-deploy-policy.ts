@@ -121,12 +121,5 @@ export function validateMarketplaceDeploy(params: {
       error: `Tag ${targetTag} is not valid for marketplace publish. Use vMAJOR.MINOR.PATCH or rollback vMAJOR.MINOR.Rn (minimum v0.5.5). CI-only tags (-dev, -pr, -beta) cannot be published.`,
     };
   }
-  if (releaseChannel === "Beta (Pre-release)" && marketIncludesAmo(publishMarket)) {
-    return {
-      ok: false,
-      error:
-        "Firefox AMO has no pre-release channel in this pipeline. Use Production channel or choose a market without Firefox AMO.",
-    };
-  }
   return { ok: true };
 }

@@ -107,13 +107,5 @@ export function validateMarketplaceDeploy({ targetTag, releaseChannel, publishMa
     };
   }
 
-  if (isBetaChannel(releaseChannel) && marketIncludesAmo(publishMarket)) {
-    return {
-      ok: false,
-      error:
-        "Firefox AMO has no pre-release channel in this pipeline. Use Production channel or choose a market without Firefox AMO.",
-    };
-  }
-
   return { ok: true };
 }
