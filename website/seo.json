@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-09-03T01:04:08.204Z",
+  "generatedAt": "2026-08-29T22:03:54.123Z",
   "source": "website/seo.yml",
   "siteBase": "https://cursor.lorapok.tech",
   "title": "Cursor Curse Monitor by Lorapok — Live usage dashboard",
   "description": "Live included quota, Auto/API meters, budget tracking, and a local credential scanner. Browser extension for Firefox and Chrome. Works in VS Code–based AI IDEs via Open VSX or the Marketplace. Private to your login — data stays local.",
-  "version": "1.0.75",
-  "packageVersion": "1.0.75",
+  "version": "1.0.59",
+  "packageVersion": "1.0.59",
   "canonical": "https://cursor.lorapok.tech/",
-  "syncStatus": "synced",
+  "syncStatus": "release-candidate",
   "keywords": [
     "usage monitor",
     "AI IDE",
@@ -64,7 +64,7 @@
     "openVsxCanonical": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "openVsxDuplicate": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "vscode": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.75"
+    "github": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.57"
   },
   "structuredData": {
     "@context": "https://schema.org",
@@ -80,8 +80,8 @@
           "priceCurrency": "USD"
         },
         "featureList": "Usage dashboard, security scanner, local insights, budget tracking, multi-account switching",
-        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.75/cursor-curse-monitor-by-lorapok-1.0.75.vsix",
-        "softwareVersion": "1.0.75",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.57/cursor-curse-monitor-by-lorapok-1.0.57.vsix",
+        "softwareVersion": "1.0.57",
         "author": {
           "@type": "Person",
           "name": "Mohammad Maizied Hasan Majumder",
@@ -104,7 +104,7 @@
           "priceCurrency": "USD"
         },
         "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
-        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.75",
+        "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.57",
         "publisher": {
           "@type": "Organization",
           "name": "Lorapok Labs",
