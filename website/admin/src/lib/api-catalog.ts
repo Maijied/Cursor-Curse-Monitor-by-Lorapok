@@ -49,6 +49,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "discord-community", path: "/integrations/discord/community", method: "POST", auth: "admin", group: "Integrations", description: "Send a community announcement test post to the community Discord webhook" },
   { id: "mail-config", path: "/integrations/mail/config", method: "GET", auth: "admin", group: "Integrations", description: "Outbound mail identities and transport status", safeProbe: true },
   { id: "mail-config-put", path: "/integrations/mail/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save outbound mail identities and routing preferences" },
+  { id: "mail-status", path: "/integrations/mail/status", method: "GET", auth: "admin", group: "Integrations", description: "Mail setup readiness checklist aggregate", safeProbe: true },
   { id: "mail-sync", path: "/integrations/mail/sync", method: "POST", auth: "admin", group: "Integrations", description: "Dispatch deploy-infra to repair outbound mail (relay + verify + Pages deploy)" },
   { id: "mail-testmail", path: "/integrations/mail/testmail", method: "GET", auth: "admin", group: "Integrations", description: "Poll testmail.app inbox by tag for Mailbox E2E probe", safeProbe: true },
   { id: "subscribe-config", path: "/integrations/subscribe/config", method: "GET", auth: "admin", group: "Integrations", description: "Subscribe prompt + mail fallback settings", safeProbe: true },

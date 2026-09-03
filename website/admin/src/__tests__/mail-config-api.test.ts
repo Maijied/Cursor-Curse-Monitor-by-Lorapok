@@ -77,4 +77,14 @@ describe("mail config API", () => {
     expect(save.ok).toBe(false);
     expect(saved.error).toMatch(/boolean/i);
   });
+
+  it("returns mail setup status aggregate", async () => {
+    const res = await fetch(`${base}/api/integrations/mail/status`);
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.transport).toBeDefined();
+    expect(data.identities.productEmail).toBe("cursor.monitor@lorapok.tech");
+    expect(Array.isArray(data.recommendations)).toBe(true);
+    expect(typeof data.subscribeAvailable).toBe("boolean");
+  });
 });

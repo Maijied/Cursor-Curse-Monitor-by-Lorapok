@@ -6,6 +6,7 @@ import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
 import DiscordCommunityCard from "../ui/DiscordCommunityCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import MailSetupChecklist from "../ui/MailSetupChecklist";
 import MailTransportCard from "../ui/MailTransportCard";
 import SubscribePromptCard from "../ui/SubscribePromptCard";
 import ReindexPolicyCard from "../ui/ReindexPolicyCard";
@@ -46,6 +47,8 @@ export default function Settings() {
       <PageHeader title="Settings" description="Mail transport, Lorapok Labs Family Discord, subscribe prompts, cursor index, cron schedules, and API health." />
 
       <HelpSupportCard />
+
+      <MailSetupChecklist />
 
       <MailTransportCard />
 
