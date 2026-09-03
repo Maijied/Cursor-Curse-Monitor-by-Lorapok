@@ -96,6 +96,7 @@ describe("mail config API", () => {
     expect(data.identities.sendingDomain).toBe("lorapok.tech");
     expect(data.setupInstructions).toBeDefined();
     expect(Array.isArray(data.setupInstructions.steps)).toBe(true);
+    expect(Array.isArray(data.recommendations)).toBe(true);
     expect(typeof data.subscribeAvailable).toBe("boolean");
   });
 });
