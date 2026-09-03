@@ -469,9 +469,15 @@ const downloadBreakdown = {
 };
 
 const productContext = buildProductContext(pkg, { publishedReleaseVersion });
-const noticeTemplates = buildNoticeTemplates(productContext);
-const mailTemplates = buildMailTemplates(productContext);
-const defaultNotice = buildGeneratedCatalogNotice(productContext);
+const releaseHighlights = String(process.env.CCM_RELEASE_HIGHLIGHTS ?? "").trim() || [
+  "• Browser account switch stays on your chosen login when cursor.com refreshes cookies",
+  "• External subscribe mail uses Resend on Workers Free when configured",
+  "• Usage accuracy, Discord community links, and marketing site polish",
+].join("\n");
+const noticeContext = { ...productContext, releaseHighlights };
+const noticeTemplates = buildNoticeTemplates(noticeContext);
+const mailTemplates = buildMailTemplates(noticeContext);
+const defaultNotice = buildGeneratedCatalogNotice(noticeContext, { releaseHighlights });
 
 const generatedAt = new Date().toISOString();
 const buildId = createHash("sha256").update(`${version}:${generatedAt}`).digest("hex").slice(0, 12);
@@ -508,7 +514,8 @@ const siteData = {
   repository: `https://github.com/${REPO}`,
   author: pkg.author,
   company: pkg.company ?? null,
-  productContext,
+  productContext: noticeContext,
+  releaseHighlights,
   notice: defaultNotice,
   noticeTemplates: noticeTemplates.map(({ templateId, label, category, severity, type }) => ({
     templateId,

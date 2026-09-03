@@ -33,6 +33,7 @@ export class UsageMonitorService implements vscode.Disposable {
   private lastRefreshTime = 0;
   private warnedAtThreshold = false;
   private fallbackAppliedThisCycle = false;
+  private lastActiveAccountId: string | undefined;
   private readonly listeners = new Set<SnapshotListener>();
 
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -109,6 +110,11 @@ export class UsageMonitorService implements vscode.Disposable {
     const warnAtPercent = config.get<number>("warnAtPercent", 80);
 
     const auth = await resolveActiveAuth(this.context);
+    if (auth.id !== this.lastActiveAccountId) {
+      this.warnedAtThreshold = false;
+      this.fallbackAppliedThisCycle = false;
+      this.lastActiveAccountId = auth.id;
+    }
     const accounts = await listPublicAccounts(this.context);
     const discoveredLogins = discoverCursorAuthInstalls();
     const dbMissing = !monitoringDbExists() && !auth.token;

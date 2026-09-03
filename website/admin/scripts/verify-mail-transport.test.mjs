@@ -6,21 +6,25 @@ import { fileURLToPath } from "node:url";
 const script = resolve(dirname(fileURLToPath(import.meta.url)), "verify-mail-transport.mjs");
 
 function run(env) {
+  const merged = {
+    ...process.env,
+    GITHUB_ACTIONS: "true",
+    CLOUDFLARE_API_TOKEN: "test-deploy-token",
+    CLOUDFLARE_ACCOUNT_ID: "f049faaf2f67549f5c58837479596a4a",
+    MAIL_RELAY_EXISTS_SETUP: "false",
+    CCM_SKIP_CRED_VAULT: "1",
+    ...env,
+  };
+  if (env.CLOUDFLARE_EMAIL_API_TOKEN === "") {
+    delete merged.CLOUDFLARE_EMAIL_API_TOKEN;
+  }
   return spawnSync(process.execPath, [script], {
     encoding: "utf8",
-    env: {
-      ...process.env,
-      GITHUB_ACTIONS: "true",
-      CLOUDFLARE_API_TOKEN: "test-deploy-token",
-      CLOUDFLARE_ACCOUNT_ID: "f049faaf2f67549f5c58837479596a4a",
-      MAIL_RELAY_EXISTS_SETUP: "false",
-      CLOUDFLARE_EMAIL_API_TOKEN: "",
-      ...env,
-    },
+    env: merged,
   });
 }
 
-const resendOnly = run({ RESEND_API_KEY: "re_test_key" });
+const resendOnly = run({ RESEND_API_KEY: "re_test_key", CLOUDFLARE_EMAIL_API_TOKEN: "" });
 assert.equal(resendOnly.status, 0, resendOnly.stderr || resendOnly.stdout);
 assert.match(resendOnly.stdout, /Resend is configured/i);
 

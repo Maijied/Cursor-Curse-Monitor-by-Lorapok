@@ -21,17 +21,20 @@ const out = join(root, "website/admin/functions/api/_shared/product-context.embe
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const siteDataPath = join(root, "website", "site-data.json");
 let publishedReleaseVersion = null;
+let releaseHighlights = "";
 if (existsSync(siteDataPath)) {
   try {
     const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
     publishedReleaseVersion = siteData.publishedReleaseVersion ?? null;
+    releaseHighlights = String(siteData.releaseHighlights ?? "").trim();
   } catch {
     publishedReleaseVersion = null;
+    releaseHighlights = "";
   }
 }
-const ctx = buildProductContext(pkg, { publishedReleaseVersion });
+const ctx = buildProductContext(pkg, { publishedReleaseVersion, releaseHighlights });
 const builtinNotices = buildBuiltinNotices(pkg);
-const generatedDevNotice = buildGeneratedCatalogNotice(ctx);
+const generatedDevNotice = buildGeneratedCatalogNotice(ctx, { releaseHighlights });
 const noticeTemplates = buildNoticeTemplates(ctx);
 const mailTemplates = buildMailTemplates(ctx);
 const messageCatalog = buildMessageCatalog(ctx);

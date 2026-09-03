@@ -17,6 +17,10 @@ assert(storage.includes("accounts"), "storage must persist multiple accounts");
 assert(storage.includes("migrateLegacyToken"), "storage must migrate the previous single token");
 assert(storage.includes("cursor-curse-monitor@lorapok.tech"), "storage must recognize production Firefox extension id");
 assert(worker.includes("saveToken"), "captured dashboard tokens must upsert a saved account");
+assert(storage.includes("SaveTokenOptions"), "saveToken must accept passive vs explicit activation");
+assert(storage.includes("shouldActivate"), "saveToken must preserve manual activeAccountId when not activating");
+assert(options.includes("setActive: true"), "options add-account flow must explicitly activate pasted token");
+assert(worker.includes("warnedAtThreshold = false"), "account switch must reset usage warning state");
 assert(!storage.includes("console.log"), "storage must not log settings");
 
 console.log("test_accounts.js: OK");

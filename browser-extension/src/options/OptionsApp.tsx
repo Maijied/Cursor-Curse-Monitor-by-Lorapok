@@ -110,7 +110,7 @@ export function OptionsApp() {
       return;
     }
     if (token.trim()) {
-      await saveToken(token.trim());
+      await saveToken(token.trim(), undefined, { setActive: true });
     }
     await updateSettings({
       customBudgetLimit: Number(budget) || 0,

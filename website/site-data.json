@@ -57,8 +57,10 @@
     "firefoxUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
     "ovsxUrl": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "vscodeUrl": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok"
+    "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
+    "releaseHighlights": "• Browser account switch stays on your chosen login when cursor.com refreshes cookies\n• External subscribe mail uses Resend on Workers Free when configured\n• Usage accuracy, Discord community links, and marketing site polish"
   },
+  "releaseHighlights": "• Browser account switch stays on your chosen login when cursor.com refreshes cookies\n• External subscribe mail uses Resend on Workers Free when configured\n• Usage accuracy, Discord community links, and marketing site polish",
   "notice": {
     "id": "generated-dev-notice",
     "source": "generated",
@@ -66,8 +68,8 @@
     "type": "feature",
     "severity": "info",
     "title": "What's new in Cursor Curse Monitor v1.0.72",
-    "shortMessage": "v1.0.72 adds dashboard settings, shared notification cards, and polish across Mission Control.",
-    "message": "Cursor Curse Monitor v1.0.72 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.72",
+    "shortMessage": "• Browser account switch stays on your chosen login when cursor.com refreshes cookies",
+    "message": "Cursor Curse Monitor v1.0.72 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.72\n\n• Browser account switch stays on your chosen login when cursor.com refreshes cookies\n• External subscribe mail uses Resend on Workers Free when configured\n• Usage accuracy, Discord community links, and marketing site polish",
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,

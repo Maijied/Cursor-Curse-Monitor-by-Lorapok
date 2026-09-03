@@ -18,9 +18,11 @@ export function buildNoticeTemplates(ctx) {
 }
 
 /** Default generated catalog notice — synced into KV; disabled until admin enables. */
-export function buildGeneratedCatalogNotice(ctx) {
+export function buildGeneratedCatalogNotice(ctx, options = {}) {
   const templates = buildNoticeTemplates(ctx);
   const feature = templates.find((t) => t.templateId === "feature-release");
+  const highlights = String(options.releaseHighlights ?? ctx.releaseHighlights ?? "").trim();
+  const highlightBlock = highlights ? `\n\n${highlights}` : "";
   if (feature) {
     return {
       id: "generated-dev-notice",
@@ -29,8 +31,8 @@ export function buildGeneratedCatalogNotice(ctx) {
       type: feature.type,
       severity: feature.severity,
       title: feature.title,
-      shortMessage: feature.shortMessage,
-      message: feature.message,
+      shortMessage: highlights ? highlights.split("\n")[0] : feature.shortMessage,
+      message: `${feature.message}${highlightBlock}`,
       feedbackUrl: feature.feedbackUrl,
       collaborateUrl: feature.collaborateUrl,
       dismissible: feature.dismissible,
@@ -38,15 +40,18 @@ export function buildGeneratedCatalogNotice(ctx) {
     };
   }
 
+  const version = ctx.releaseVersion ?? ctx.version;
   return {
     id: "generated-dev-notice",
     source: "generated",
     enabled: false,
     type: "development",
     severity: "info",
-    title: `${ctx.displayName} v${ctx.releaseVersion ?? ctx.version}`,
-    shortMessage: `v${ctx.releaseVersion ?? ctx.version} is live on GitHub Releases with website polish and Mission Control improvements.`,
-    message: `${ctx.displayName} v${ctx.releaseVersion ?? ctx.version} is the current release from Lorapok Labs.\n\nInstall or update: ${ctx.releaseUrl}\nGet help: ${ctx.supportEmail}`,
+    title: `${ctx.displayName} v${version}`,
+    shortMessage: highlights
+      ? highlights.split("\n")[0]
+      : `v${version} is live on GitHub Releases with website polish and Mission Control improvements.`,
+    message: `${ctx.displayName} v${version} is the current release from Lorapok Labs.\n\nInstall or update: ${ctx.releaseUrl}\nGet help: ${ctx.supportEmail}${highlightBlock}`,
     feedbackUrl: ctx.feedbackUrl,
     collaborateUrl: ctx.collaborateUrl,
     dismissible: true,

@@ -1,12 +1,13 @@
 # PR #104 — in-app feedback, testmail, cred-vault, KV scatter
 
 **Procedure ID:** `e665770d`  
-**Status:** in_progress (merge-ready, awaiting approval)  
+**Status:** completed (merged 2026-08-31)  
 **Created:** 2026-09-01  
 **Plan:** [plan/b7e2f4a9_multi-issue-fix-plan.md](../plan/b7e2f4a9_multi-issue-fix-plan.md)  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/105  
 **Branch:** `feat/feedback-testmail-cred-vault`  
-**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/104
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/104  
+**Follow-up PR:** _fix/unified-account-mail-issues (account sync + Resend ops)_
 
 ---
 
@@ -26,8 +27,9 @@ Ship in-app feedback (IDE + browser), testmail subscribe probes, cred-vault gove
 - [x] CodeRabbit triage rule
 - [x] Procedure governance rule + scripts + merge workflow
 - [x] CodeRabbit review threads triaged (5 resolved on PR)
-- [ ] PR merged (blocked: branch protection / approval)
-- [ ] Post-merge verification (Tier C)
+- [x] PR merged (2026-08-31)
+- [x] Post-merge retrospective: [pr-104_*_merged.md](./pr-104_feat-in-app-feedback-testmail-probes-cred-vault-_merged.md)
+- [x] Closed via follow-up PR fixing account-switch sync + Resend production sync
 
 ---
 
