@@ -16,7 +16,7 @@ export function buildMailSyncRecommendations(transport) {
 
   if (!transport.resendConfigured) {
     steps.push(
-      "Configure RESEND_API_KEY for external recipients (Gmail, testmail.app): node website/admin/scripts/setup-resend-secret.mjs"
+      "Configure RESEND_API_KEY for external subscribers on Workers Free (Gmail, testmail.app): verify lorapok.tech in Resend, then run node website/admin/scripts/setup-resend-secret.mjs"
     );
   }
 

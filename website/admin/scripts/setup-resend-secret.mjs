@@ -59,4 +59,4 @@ if (resendFrom) {
   console.log("Tip: set RESEND_FROM when your Resend domain is verified (default uses product From in mail.js).");
 }
 
-console.log("\nResend fallback is configured. Subscribe welcome emails will use Resend when Cloudflare sandbox blocks the recipient.");
+console.log("\nResend is configured. External welcome emails use Resend first when resendFirstExternal is enabled (default).");

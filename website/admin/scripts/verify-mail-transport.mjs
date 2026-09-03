@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * CI gate: outbound mail must have ccm-mail-relay and/or valid REST email token.
+ * CI gate: outbound mail must have ccm-mail-relay, valid REST email token, and/or Resend.
  * Used by admin-deploy job (same checks as repair-mail step 4, without Pages deploy).
  */
 import { relayWorkerProbeExists } from "./lib/deploy-retry.mjs";
@@ -37,6 +37,13 @@ if (inCi) {
   }
 }
 let restOk = false;
+const resendConfigured = Boolean(String(process.env.RESEND_API_KEY ?? "").trim());
+
+if (resendConfigured) {
+  console.log("✓ RESEND_API_KEY is set (primary for external recipients on Workers Free)");
+} else {
+  console.warn("ℹ️  RESEND_API_KEY not set — external subscribers need Resend or Workers Paid");
+}
 
 if (emailToken) {
   const probe = await probeEmailSendingToken(emailToken, accountId);
@@ -58,6 +65,7 @@ if (relayExists) {
 
 setGithubActionsOutput("relay_exists", relayExists ? "true" : "false");
 setGithubActionsOutput("rest_ok", restOk ? "true" : "false");
+setGithubActionsOutput("resend_configured", resendConfigured ? "true" : "false");
 
 if (relayExists) {
   console.log("::notice::Outbound mail: ccm-mail-relay is available (preferred transport).");
@@ -69,13 +77,20 @@ if (restOk) {
   process.exit(0);
 }
 
+if (resendConfigured) {
+  console.log("::notice::Outbound mail: Resend is configured (Workers Free / external subscribers).");
+  process.exit(0);
+}
+
 console.error(
-  "::error::Outbound mail is not configured: ccm-mail-relay is missing and CLOUDFLARE_EMAIL_API_TOKEN is absent or lacks Email Sending permission."
+  "::error::Outbound mail is not configured: ccm-mail-relay is missing, CLOUDFLARE_EMAIL_API_TOKEN is absent or invalid, and RESEND_API_KEY is not set."
 );
-console.error("One-time: sync cred vault → GitHub admin-production secrets, then merge to main:");
+console.error("Workers Free: set RESEND_API_KEY on Pages — node website/admin/scripts/setup-resend-secret.mjs");
+console.error("Or sync cred vault → GitHub admin-production secrets:");
 console.error(
   '  gh secret set CLOUDFLARE_EMAIL_API_TOKEN --env admin-production --body "$(cred get cursor cloudflare_email_api_token)"'
 );
+console.error('  gh secret set RESEND_API_KEY --env admin-production --body "$(cred get cursor resend_api_key)"');
 console.error("Or locally: node website/admin/scripts/repair-mail.mjs");
 if (inCi) {
   console.warn(

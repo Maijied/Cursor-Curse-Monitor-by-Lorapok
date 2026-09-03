@@ -3,6 +3,7 @@
  * Restore Mission Control outbound mail end-to-end.
  *
  * 1. enable-mail.mjs — relay worker + Pages email secret (credential split)
+ * 1b. setup-resend-secret.mjs — optional Resend Pages secret (Workers Free / external mail)
  * 2. npm run build — fresh admin dist
  * 3. wrangler pages deploy — activate MAIL_RELAY service binding (from wrangler.toml [[services]])
  * 4. verify-mail-setup.mjs — probe REST token (optional sanity check)
@@ -50,10 +51,13 @@ try {
   process.exit(1);
 }
 
-console.log("Step 1/4 — enable-mail (relay worker + Pages email secret)…");
+console.log("Step 1/5 — enable-mail (relay worker + Pages email secret)…");
 run(process.execPath, [resolve(adminDir, "scripts/enable-mail.mjs")]);
 
-console.log("\nStep 2/4 — build shared package + admin panel…");
+console.log("\nStep 1b/5 — sync Resend secret (optional, Workers Free external mail)…");
+run(process.execPath, [resolve(adminDir, "scripts/setup-resend-secret.mjs")], { allowFail: true });
+
+console.log("\nStep 2/5 — build shared package + admin panel…");
 
 const sharedLink = resolve(adminDir, "node_modules/@lorapok/cursor-monitor-shared");
 const sharedTypes = resolve(repoRoot, "packages/shared/dist/index.d.ts");
@@ -66,7 +70,7 @@ if (!existsSync(sharedLink) || !existsSync(sharedTypes)) {
 run("npm", ["run", "build", "-w", "@lorapok/cursor-monitor-shared"], { cwd: repoRoot });
 run("npm", ["run", "build"], { cwd: adminDir });
 
-console.log("\nStep 3/4 — deploy Pages (activates MAIL_RELAY binding in wrangler.toml)…");
+console.log("\nStep 3/5 — deploy Pages (activates MAIL_RELAY binding in wrangler.toml)…");
 const deployed = run(
   "npx",
   [
@@ -87,8 +91,8 @@ if (!deployed) {
   process.exit(1);
 }
 
-console.log("\nStep 4/4 — verify email token (REST path)…");
+console.log("\nStep 4/5 — verify email token (REST path)…");
 run(process.execPath, [resolve(adminDir, "scripts/verify-mail-setup.mjs")], { allowFail: true });
 
 console.log("\nDone. Open Mission Control → Mailbox → Send branded test email.");
-console.log("Health should show mailTransport=cloudflare-relay when MAIL_RELAY is bound.");
+console.log("Health should show mailTransport=cloudflare-relay when MAIL_RELAY is bound, or resend when only RESEND_API_KEY is set.");
