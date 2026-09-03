@@ -40,7 +40,7 @@ describe("kv scatter-gather", () => {
     expect(newer.localeCompare(older)).toBeLessThan(0);
   });
 
-  it("appends API activity with scatter keys and drops legacy aggregate on read", async () => {
+  it("appends API activity with scatter keys and snapshots legacy aggregate on read", async () => {
     const store = new Map();
     store.set(
       "api:activity",
@@ -51,37 +51,43 @@ describe("kv scatter-gather", () => {
     expect([...store.keys()].filter((k) => k.startsWith("api:activity:"))).toHaveLength(1);
     const rows = await readApiActivity(env);
     expect(rows.length).toBeGreaterThanOrEqual(2);
-    expect(store.has("api:activity")).toBe(false);
+    expect(store.has("api:activity")).toBe(true);
+    expect([...store.keys()].filter((k) => k.startsWith("backup:point:"))).toHaveLength(1);
   });
 
-  it("trims mailbox blob payload size", async () => {
+  it("creates a backup point before mailbox compaction", async () => {
     const store = new Map();
     const env = { ADMIN_KV: mockKv(store) };
+    const html = "<p>".repeat(100);
     const entry = await recordMailboxMessage(env, {
       direction: "outbound",
       from: "cursor.monitor@lorapok.tech",
       to: "user@example.com",
       subject: "Welcome",
       text: "hello",
-      html: "<p>".repeat(10_000),
+      html,
       status: "sent",
       category: "subscribe",
     });
-    expect(entry.html).toBe("");
+    expect(entry.html).toBe(html);
     await recordMailboxMessage(env, {
       direction: "outbound",
       from: "cursor.monitor@lorapok.tech",
       to: "another@example.com",
       subject: "Second",
       text: "world",
-      html: "<p>".repeat(10_000),
+      html: "<p>second</p>",
       status: "sent",
       category: "subscribe",
     });
     const items = await listMailboxMessages(env, {});
     expect(items).toHaveLength(2);
-    const parsed = JSON.parse(store.get("mailbox:messages") ?? "[]");
-    expect(JSON.stringify(parsed).length).toBeLessThan(20_000);
+    expect([...store.keys()].filter((k) => k.startsWith("backup:point:"))).toHaveLength(1);
+    const backupRaw = [...store.entries()].find(([key]) => key.startsWith("backup:point:"))?.[1];
+    expect(backupRaw).toBeTruthy();
+    const envelope = JSON.parse(String(backupRaw));
+    expect(envelope.sourceKey).toBe("mailbox:messages");
+    expect(envelope.payload).toContain("user@example.com");
   });
 
   it("appends system logs with one put per event", async () => {
