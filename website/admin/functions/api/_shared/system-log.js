@@ -1,3 +1,4 @@
+import { ensureKvBackupPoint } from "./kv-backup.js";
 import { listScatterRecords, putScatterRecord } from "./kv-scatter.js";
 import { MAX_SYSTEM_LOG_ENTRIES, SYSTEM_LOG_TTL_SECONDS } from "./kv-limits.js";
 
@@ -5,15 +6,21 @@ const SYSTEM_LOG_PREFIX = "system:log";
 const LEGACY_SYSTEM_LOG_KEY = "system:logs";
 
 /**
+ * Snapshot legacy blob before scatter migration (never deletes source).
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
+ * @param {string} [triggeredBy]
  */
-async function dropLegacySystemLogBlob(kv) {
-  if (!kv?.get || !kv?.delete) return;
+async function backupLegacySystemLogIfPresent(kv, triggeredBy = "system-log") {
+  if (!kv?.get) return;
   try {
     const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
-    if (raw) await kv.delete(LEGACY_SYSTEM_LOG_KEY);
+    if (!raw) return;
+    await ensureKvBackupPoint(kv, LEGACY_SYSTEM_LOG_KEY, {
+      reason: "system-log-legacy-snapshot",
+      triggeredBy,
+    });
   } catch (err) {
-    console.error("dropLegacySystemLogBlob failed", err);
+    console.error("backupLegacySystemLogIfPresent failed", err);
   }
 }
 
@@ -26,6 +33,7 @@ export async function logSystemEvent(env, entry) {
   if (!kv?.put) return;
 
   try {
+    await backupLegacySystemLogIfPresent(kv, "logSystemEvent");
     const id = crypto.randomUUID();
     await putScatterRecord(
       kv,
@@ -65,7 +73,7 @@ export async function readSystemLogs(env) {
     if (!raw) return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) legacy = parsed;
-    void dropLegacySystemLogBlob(kv);
+    void backupLegacySystemLogIfPresent(kv, "readSystemLogs");
   } catch (err) {
     console.error("readSystemLogs legacy read failed", err);
     return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);

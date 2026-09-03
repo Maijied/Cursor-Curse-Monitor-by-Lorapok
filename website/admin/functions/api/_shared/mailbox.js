@@ -4,6 +4,7 @@ import {
   MAX_MAILBOX_TEXT_CHARS,
   truncateStoredText,
 } from "./kv-limits.js";
+import { backupKvBeforeWrite } from "./kv-backup.js";
 import { putKvJsonIfChanged } from "./kv-put.js";
 
 const MAILBOX_KEY = "mailbox:messages";
@@ -60,6 +61,11 @@ async function writeAll(env, messages) {
     .sort((a, b) => Date.parse(String(b.ts ?? "")) - Date.parse(String(a.ts ?? "")))
     .slice(0, MAX_MAILBOX_MESSAGES)
     .map((row) => slimMailboxEntry(row));
+  const serialized = JSON.stringify(trimmed);
+  await backupKvBeforeWrite(env.ADMIN_KV, MAILBOX_KEY, serialized, {
+    reason: "mailbox-compaction",
+    triggeredBy: "writeAll",
+  });
   return putKvJsonIfChanged(env, MAILBOX_KEY, trimmed);
 }
 

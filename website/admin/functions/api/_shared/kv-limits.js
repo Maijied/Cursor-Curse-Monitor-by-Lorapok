@@ -1,8 +1,8 @@
 /** Shared KV retention limits — keep blobs small and scatter TTLs aligned. */
 
 export const MAX_MAILBOX_MESSAGES = 200;
-export const MAX_MAILBOX_TEXT_CHARS = 2_000;
-export const MAX_MAILBOX_HTML_CHARS = 0;
+export const MAX_MAILBOX_TEXT_CHARS = 50_000;
+export const MAX_MAILBOX_HTML_CHARS = 100_000;
 
 export const MAX_SYSTEM_LOG_ENTRIES = 500;
 export const MAX_API_ACTIVITY_ENTRIES = 500;

@@ -2,21 +2,28 @@ import {
   API_ACTIVITY_TTL_SECONDS,
   MAX_API_ACTIVITY_ENTRIES,
 } from "./kv-limits.js";
+import { ensureKvBackupPoint } from "./kv-backup.js";
 import { listScatterRecords, putScatterRecord } from "./kv-scatter.js";
 
 const ACTIVITY_PREFIX = "api:activity";
 const LEGACY_ACTIVITY_KEY = "api:activity";
 
 /**
+ * Snapshot legacy aggregate before scatter migration (never deletes source).
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
+ * @param {string} [triggeredBy]
  */
-async function dropLegacyActivityAggregate(kv) {
-  if (!kv?.get || !kv?.delete) return;
+async function backupLegacyActivityIfPresent(kv, triggeredBy = "activity-log") {
+  if (!kv?.get) return;
   try {
     const raw = await kv.get(LEGACY_ACTIVITY_KEY);
-    if (raw) await kv.delete(LEGACY_ACTIVITY_KEY);
+    if (!raw) return;
+    await ensureKvBackupPoint(kv, LEGACY_ACTIVITY_KEY, {
+      reason: "activity-legacy-snapshot",
+      triggeredBy,
+    });
   } catch (err) {
-    console.error("dropLegacyActivityAggregate failed", err);
+    console.error("backupLegacyActivityIfPresent failed", err);
   }
 }
 
@@ -43,7 +50,7 @@ export async function readApiActivity(env, options = {}) {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) legacy = parsed;
-      void dropLegacyActivityAggregate(kv);
+      void backupLegacyActivityIfPresent(kv, "readApiActivity");
     }
   } catch (err) {
     console.error("readApiActivity legacy read failed", err);
@@ -71,6 +78,7 @@ export async function logApiActivity(env, entry) {
   if (!kv?.put) return;
 
   try {
+    await backupLegacyActivityIfPresent(kv, "logApiActivity");
     const id = crypto.randomUUID();
     await putScatterRecord(
       kv,
