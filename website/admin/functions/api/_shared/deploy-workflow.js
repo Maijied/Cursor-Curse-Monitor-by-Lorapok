@@ -150,6 +150,7 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
 
   const deployAdmin = body.deploy_admin === true || body.deploy_admin === "true";
   const deployWebsite = body.deploy_website !== false && body.deploy_website !== "false";
+  const deployExtension = body.deploy_extension !== false && body.deploy_extension !== "false";
 
   let rollbackSourceTag = notifyContext?.rollbackSourceTag ?? null;
   if (!rollbackSourceTag) {
@@ -170,6 +171,7 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
       release_channel: releaseChannel,
       deploy_admin: deployAdmin ? "true" : "false",
       deploy_website: deployWebsite ? "true" : "false",
+      deploy_extension: deployExtension ? "true" : "false",
     },
     successMessage,
     { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
@@ -196,6 +198,10 @@ export async function dispatchRollbackWorkflow(env, body, successMessage, notify
     return jsonResponse({ error: policy.error }, 400);
   }
 
+  const deployAdmin = bodyFlag(body, "deploy_admin", false);
+  const deployWebsite = bodyFlag(body, "deploy_website", false);
+  const deployExtension = bodyFlag(body, "deploy_extension", true);
+
   const response = await dispatchWorkflow(
     env,
     WORKFLOW_ID,
@@ -204,6 +210,9 @@ export async function dispatchRollbackWorkflow(env, body, successMessage, notify
       target_tag: targetTag,
       publish_market: publishMarket,
       release_channel: releaseChannel,
+      deploy_admin: deployAdmin ? "true" : "false",
+      deploy_website: deployWebsite ? "true" : "false",
+      deploy_extension: deployExtension ? "true" : "false",
     },
     successMessage,
     { target_tag: targetTag, publish_market: publishMarket, release_channel: releaseChannel },
@@ -251,6 +260,8 @@ const VERSION_TYPE_INPUTS = {
 export async function dispatchInfraWorkflow(env, body, successMessage, notifyContext, pagesContext) {
   const deployAdmin = bodyFlag(body, "deploy_admin", true);
   const deployWebsite = bodyFlag(body, "deploy_website", true);
+  const deployExtension = bodyFlag(body, "deploy_extension", false);
+
   return dispatchWorkflow(
     env,
     WORKFLOW_ID,
@@ -260,6 +271,7 @@ export async function dispatchInfraWorkflow(env, body, successMessage, notifyCon
       release_channel: "Production",
       deploy_admin: deployAdmin ? "true" : "false",
       deploy_website: deployWebsite ? "true" : "false",
+      deploy_extension: deployExtension ? "true" : "false",
     },
     successMessage,
     { deploy_admin: deployAdmin, deploy_website: deployWebsite },

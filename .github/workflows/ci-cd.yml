@@ -93,6 +93,11 @@ on:
         required: false
         type: boolean
         default: false
+      deploy_extension:
+        description: "Publish IDE extension to selected marketplaces"
+        required: false
+        type: boolean
+        default: true
 
 concurrency:
   group: cicd-${{ github.ref }}
@@ -453,7 +458,7 @@ jobs:
             echo "deploy_admin=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          PATTERN='^(website/admin/|packages/shared/|scripts/generate-(site-data|seo)\.mjs|website/assets/mail/)'
+          PATTERN='^(website/admin/|packages/shared/|scripts/generate-(site-data|seo)\.mjs|website/assets/mail/|website/site-data\.json|website/seo\.json|website/stats/|website/visitor-stats\.json)'
           if git diff --name-only "$BEFORE" "$AFTER" | grep -qE "$PATTERN"; then
             echo "deploy_admin=true" >> "$GITHUB_OUTPUT"
           else
@@ -468,12 +473,25 @@ jobs:
     name: Deploy Admin Panel
     runs-on: ubuntu-latest
     timeout-minutes: 18
-    needs: [admin-ci, release-prep, deploy, prepare-tag-on-push, admin-deploy-gate]
+    needs: [admin-ci, prepare-tag-on-push, admin-deploy-gate, release-prep]
     if: >-
       always()
       && needs.admin-ci.result == 'success'
       && (
         (
+          github.event_name == 'push'
+          && github.ref == 'refs/heads/main'
+          && !contains(github.event.head_commit.message, 'chore(seo):')
+          && (
+            needs.prepare-tag-on-push.result == 'success' ||
+            needs.prepare-tag-on-push.result == 'skipped'
+          )
+          && (
+            needs.admin-deploy-gate.result == 'skipped' ||
+            needs.admin-deploy-gate.outputs.deploy_admin == 'true'
+          )
+        )
+        || (
           github.event_name == 'workflow_dispatch'
           && (
             startsWith(inputs.action_type, 'deploy-infra')
@@ -486,28 +504,9 @@ jobs:
               && needs.release-prep.result == 'success'
             )
             || (
-              (
-                needs.release-prep.result == 'success' ||
-                needs.release-prep.result == 'skipped'
-              )
-              && (
-                needs.deploy.result == 'success' ||
-                needs.deploy.result == 'skipped'
-              )
+              needs.release-prep.result == 'success' ||
+              needs.release-prep.result == 'skipped'
             )
-          )
-        )
-        || (
-          github.event_name == 'push'
-          && github.ref == 'refs/heads/main'
-          && !contains(github.event.head_commit.message, 'chore(seo):')
-          && (
-            needs.prepare-tag-on-push.result == 'success' ||
-            needs.prepare-tag-on-push.result == 'skipped'
-          )
-          && (
-            needs.admin-deploy-gate.result == 'skipped' ||
-            needs.admin-deploy-gate.outputs.deploy_admin == 'true'
           )
         )
       )
@@ -592,7 +591,10 @@ jobs:
       - name: Deploy stats cron worker (cred → CRON_SECRET)
         if: >-
           steps.pages_deploy.outcome == 'success'
-          && github.event_name == 'workflow_dispatch'
+          && (
+            github.event_name == 'workflow_dispatch'
+            || github.event_name == 'push'
+          )
         continue-on-error: true
         working-directory: website/admin
         env:
@@ -796,7 +798,7 @@ jobs:
 
             # Rollback tag: v{major}.{minor}.R{n} from highest live version across all channels
             EXISTING_TAGS="$(git tag -l)"
-            ROLLBACK_PLAN=$(EXISTING_TAGS="$EXISTING_TAGS" node scripts/compute-next-release-version.mjs --json --rollback)
+            ROLLBACK_PLAN=$(TARGET_TAG="$TARGET_TAG" EXISTING_TAGS="$EXISTING_TAGS" node scripts/compute-next-release-version.mjs --json --rollback)
             NEW_VERSION=$(echo "$ROLLBACK_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
             TAG=$(echo "$ROLLBACK_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedTag||'')")
             MAX_LIVE=$(echo "$ROLLBACK_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
@@ -810,14 +812,18 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -A
-            git commit -m "chore: rollback to $TARGET_TAG (released as $TAG)"
+            if git diff --staged --quiet; then
+              echo "::notice::No file changes after restore from $TARGET_TAG — skipping main commit"
+            else
+              git commit -m "chore: rollback to $TARGET_TAG (released as $TAG)"
+              git push origin main
+            fi
             if git rev-parse "$TAG" >/dev/null 2>&1; then
               echo "Tag $TAG already exists — skipping tag creation"
             else
               git tag "$TAG"
               git push origin "$TAG"
             fi
-            git push origin main
           else
             BUMP_TYPE=$(echo "$VERSION_TYPE" | awk '{print $1}')
             CHANNEL="$RELEASE_CHANNEL"
@@ -887,6 +893,7 @@ jobs:
       && needs.admin-ci.result == 'success'
       && github.event_name == 'workflow_dispatch'
       && !startsWith(inputs.action_type, 'deploy-infra')
+      && inputs.deploy_extension != false
       && (
         !startsWith(inputs.action_type, 'full-release')
         || inputs.release_channel == 'Beta (Pre-release)'
@@ -1073,6 +1080,7 @@ jobs:
 
       - name: Publish to Open VSX (LorapokLabs duplicate — keep for existing installs)
         if: steps.config.outputs.do_ovsx == 'true'
+        continue-on-error: true
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
@@ -1174,6 +1182,7 @@ jobs:
       && (
         startsWith(inputs.action_type, 'deploy-infra')
         || needs.deploy.result == 'success'
+        || needs.deploy.result == 'skipped'
       )
     runs-on: ubuntu-latest
     environment:

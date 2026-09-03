@@ -5,6 +5,7 @@ import {
   bumpSemver,
   compareSemver,
   maxVersionFromChannels,
+  maxVersionFromGitTags,
   nextRollbackVersion,
   parseRollbackVersion,
   warnLiveChannelDrift,
@@ -52,6 +53,24 @@ const rollbackPlan = buildRollbackPlan({
 
 assert.equal(rollbackPlan.recommendedTag, "v1.0.R2");
 assert.equal(rollbackPlan.planMode, "rollback");
+
+const gitTagFallback = buildRollbackPlan({
+  packageVersion: null,
+  channels: [{ id: "vscode", label: "VS Code", version: null }],
+  existingTags: ["v1.0.70", "v1.0.71"],
+  targetTag: "v1.0.70",
+});
+assert.equal(gitTagFallback.maxAllVersion, "1.0.71");
+assert.equal(gitTagFallback.recommendedTag, "v1.0.R1");
+
+const targetTagFallback = buildRollbackPlan({
+  packageVersion: null,
+  channels: [],
+  existingTags: [],
+  targetTag: "v1.0.55",
+});
+assert.equal(targetTagFallback.maxAllVersion, "1.0.55");
+assert.equal(targetTagFallback.recommendedTag, "v1.0.R1");
 
 const warnings = [];
 warnLiveChannelDrift({
