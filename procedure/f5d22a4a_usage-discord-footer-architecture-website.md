@@ -1,32 +1,32 @@
 # Usage Discord footer + architecture website
 
 **Procedure ID:** `f5d22a4a`  
-**Status:** in_progress  
+**Status:** completed (landed on main; follow-up PR for account sync + notice refresh)  
 **Created:** 2026-09-01  
 **Plan:** _none_  
-**Issue:** __ISSUE_PENDING__  
-**Branch:** _TBD_  
-**PR:** _TBD_
+**Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/109  
+**Branch:** `feat/usage-discord-footer-arch` → merged to `main`  
+**PR:** _fix/unified-account-mail-issues_
 
 ---
 
 ## Objective
 
-Usage Discord footer + architecture website
+Usage Discord footer + architecture website + usage accuracy + subscribe mail gate.
 
 ---
 
 ## Progress
 
-- [ ] Plan approved
-- [ ] Procedure + GitHub issue created
+- [x] Plan approved
+- [x] Procedure + GitHub issue created (#109)
 - [x] Implementation started
 - [x] Subscribe mail gate — `GET /api/site-config`, Mission Control Settings card, site.js modal gate + Discord fallback
 - [x] Meta AI marketing images downloaded (61 assets → `website/assets/marketing/meta-ai/`)
 - [x] Three Cognitum visuals integrated on marketing site (hero ambient, architecture accent, gallery)
-- [ ] Tests passing
-- [ ] PR opened
-- [ ] Review triaged
+- [x] Tests passing (admin vitest + browser-ext tests)
+- [x] PR opened (`fix/unified-account-mail-issues`)
+- [ ] Review triaged (autopilot)
 - [ ] Merged
 - [ ] Post-merge verification
 

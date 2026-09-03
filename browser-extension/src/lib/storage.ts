@@ -157,17 +157,27 @@ export async function updateSettings(
   });
 }
 
-export async function saveToken(token: string, email?: string | null): Promise<void> {
+export interface SaveTokenOptions {
+  /** When true, switch to the upserted account. Passive cookie/page capture should leave false. */
+  setActive?: boolean;
+}
+
+export async function saveToken(
+  token: string,
+  email?: string | null,
+  options?: SaveTokenOptions
+): Promise<void> {
   await withSerializedSettingsWrite(async () => {
     const { settings: current } = await readSettingsFromStorage();
     const result = upsertSavedAccount(current.accounts, token, email);
-    const added = result.accounts.find((account) => account.id === result.id);
+    const shouldActivate =
+      options?.setActive === true ||
+      !current.activeAccountId ||
+      current.activeAccountId === result.id;
     const next = withDerivedAuth({
       ...current,
       accounts: result.accounts,
-      activeAccountId: result.id,
-      accessToken: added?.token ?? token,
-      email: added?.email ?? email ?? null,
+      activeAccountId: shouldActivate ? result.id : current.activeAccountId,
     });
     await persistSettings(next);
   });

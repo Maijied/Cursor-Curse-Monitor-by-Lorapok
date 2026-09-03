@@ -109,6 +109,13 @@ async function scheduleAlarm(): Promise<void> {
 
 browser.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.settings) {
+    const oldActive = (changes.settings.oldValue as { activeAccountId?: string | null } | undefined)
+      ?.activeAccountId;
+    const newActive = (changes.settings.newValue as { activeAccountId?: string | null } | undefined)
+      ?.activeAccountId;
+    if (oldActive !== newActive) {
+      warnedAtThreshold = false;
+    }
     void scheduleAlarm();
     void scheduleHeartbeatAlarm();
     void runRefresh();

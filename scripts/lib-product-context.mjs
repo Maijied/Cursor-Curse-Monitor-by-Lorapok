@@ -14,6 +14,9 @@ export function buildProductContext(pkg = {}, options = {}) {
     : null;
   /** User-facing install/release version (observed GitHub release when ahead of package). */
   const releaseVersion = publishedReleaseVersion ?? packageVersion;
+  const releaseHighlights = options.releaseHighlights
+    ? String(options.releaseHighlights).trim()
+    : "";
   const repo =
     pkg.repository?.url?.match(/github\.com\/([^/]+\/[^/.]+)/)?.[1] ?? DEFAULT_REPO;
   const homepage = (pkg.homepage ?? "https://cursor.lorapok.tech/").replace(/\/$/, "");
@@ -42,5 +45,6 @@ export function buildProductContext(pkg = {}, options = {}) {
     vscodeUrl:
       "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
     repo,
+    releaseHighlights,
   };
 }
