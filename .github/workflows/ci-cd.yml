@@ -608,27 +608,6 @@ jobs:
         run: |
           echo "::warning::Cloudflare Pages deploy did not succeed — CI continues. Rerun workflow_dispatch deploy-infra after rate limits clear, or refresh CLOUDFLARE_API_TOKEN in admin-production."
 
-      - name: Notify Discord (admin deploy)
-        if: always()
-        continue-on-error: true
-        env:
-          DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
-          GITHUB_SERVER_URL: ${{ github.server_url }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          ACTION_TYPE: ${{ github.event.inputs.action_type || github.event_name }}
-        run: |
-          CONCLUSION=success
-          if [ "${{ steps.pages_deploy.outcome }}" != "success" ]; then
-            CONCLUSION=failure
-          fi
-          node scripts/discord-deployment-notify.mjs \
-            --conclusion "$CONCLUSION" \
-            --target "Deploy Admin Panel" \
-            --action-type "$ACTION_TYPE" \
-            --deploy-url "https://cursor-dev.lorapok.tech/"
-
   # ───────────────────────────────────────────────────────────────────────────
   # 5. SEO AUDIT, REFRESH & PROTECTED BRANCH PR CREATION
   # ───────────────────────────────────────────────────────────────────────────
@@ -1238,27 +1217,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Notify Discord (marketing website)
-        if: always()
-        continue-on-error: true
-        env:
-          DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
-          GITHUB_SERVER_URL: ${{ github.server_url }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          ACTION_TYPE: ${{ github.event.inputs.action_type || github.event_name }}
-        run: |
-          CONCLUSION=success
-          if [ "${{ steps.deployment.outcome }}" != "success" ]; then
-            CONCLUSION=failure
-          fi
-          node scripts/discord-deployment-notify.mjs \
-            --conclusion "$CONCLUSION" \
-            --target "Deploy Marketing Website" \
-            --action-type "$ACTION_TYPE" \
-            --deploy-url "https://cursor.lorapok.tech/"
 
   # ───────────────────────────────────────────────────────────────────────────
   # 9. CI TEST SUMMARY (PR + main push — visible in Actions summary tab)

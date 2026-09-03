@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   appendEnrichmentFields,
+  appendEnrichmentSections,
   buildCompactMarketplaceSummary,
   buildCompactStatsBlock,
   buildDeploymentEmbed,
@@ -33,7 +34,7 @@ describe("buildDeploymentEmbed", () => {
         branch: "main",
         summary: "Deployment triggered successfully",
       },
-      sampleEnrichment
+      sampleEnrichment,
     );
 
     expect(embed.title).toBe("🚀 Deployment started");
@@ -42,10 +43,10 @@ describe("buildDeploymentEmbed", () => {
     expect(embed.fields.some((f) => f.name === "Version" && f.value === "`v0.7.2`")).toBe(true);
     expect(embed.fields.some((f) => f.name === "Action" && f.value === "Publish tag")).toBe(true);
     expect(String(embed.description)).toContain("Deployment triggered successfully");
-    expect(embed.fields.some((f) => f.name === "📦 Release sync")).toBe(false);
+    expect(String(embed.description)).not.toContain("Release sync");
   });
 
-  it("formats a successful completion embed with pipeline jobs and banner image", () => {
+  it("formats a successful completion embed with pipeline jobs in the description", () => {
     const embed = buildDeploymentEmbed(
       {
         phase: "completed",
@@ -60,17 +61,15 @@ describe("buildDeploymentEmbed", () => {
         ],
         duration: "4m 12s",
       },
-      sampleEnrichment
+      sampleEnrichment,
     );
 
     expect(embed.title).toBe("✅ Deployment succeeded");
     expect(embed.url).toBe("https://github.com/example/actions/runs/1");
-    expect(embed.image).toMatchObject({
-      url: "https://cursor.lorapok.tech/assets/marketing/og-social-card.png",
-    });
-    const pipeline = embed.fields.find((f) => f.name === "Pipeline");
-    expect(pipeline?.value).toContain("✅ **CI**");
-    expect(pipeline?.value).toContain("⏭️ **Deploy Marketing Website**");
+    expect(embed.image).toBeUndefined();
+    expect(String(embed.description)).toContain("**Pipeline**");
+    expect(String(embed.description)).toContain("✅ **CI**");
+    expect(String(embed.description)).toContain("⏭️ **Deploy Marketing Website**");
   });
 
   it("formats a failure embed", () => {
@@ -87,7 +86,7 @@ describe("buildDeploymentEmbed", () => {
 });
 
 describe("buildDeploymentEmbeds", () => {
-  it("returns one consolidated embed with all enrichment sections", () => {
+  it("returns exactly one Discord embed with all enrichment in the description", () => {
     const embeds = buildDeploymentEmbeds(
       {
         phase: "completed",
@@ -95,16 +94,17 @@ describe("buildDeploymentEmbeds", () => {
         actionType: "full-release",
         tag: "v1.0.31",
       },
-      sampleEnrichment
+      sampleEnrichment,
     );
 
     expect(embeds).toHaveLength(1);
-    const embed = embeds[0];
-    expect(embed.title).toBe("✅ Deployment succeeded");
-    expect(embed.fields.some((field) => field.name === "📦 Release sync")).toBe(true);
-    expect(embed.fields.some((field) => field.name === "📊 Reach & engagement")).toBe(true);
-    expect(embed.fields.some((field) => field.name === "📝 What's new")).toBe(true);
-    expect(embed.fields.some((field) => field.name === "🔗 Links")).toBe(true);
+    const description = String(embeds[0].description);
+    expect(embeds[0].title).toBe("✅ Deployment succeeded");
+    expect(description).toContain("**Release sync**");
+    expect(description).toContain("**Reach & engagement**");
+    expect(description).toContain("**What's new**");
+    expect(description).toContain("**Links**");
+    expect(embeds[0].fields?.some((field) => field.name === "📦 Release sync")).toBe(false);
   });
 
   it("skips enrichment sections when enrichment is unavailable", () => {
@@ -143,19 +143,27 @@ describe("compact enrichment formatters", () => {
     expect(stats).toContain("Visits ······· 128");
   });
 
-  it("appendEnrichmentFields adds compact sections to an existing field list", () => {
-    const fields = [{ name: "Action", value: "Full release", inline: true }];
-    appendEnrichmentFields(
-      fields,
-      { phase: "completed", conclusion: "success" },
+  it("appendEnrichmentSections adds compact sections to the description body", () => {
+    const sections = ["Brand line"];
+    appendEnrichmentSections(
+      sections,
+      {
+        phase: "completed",
+        conclusion: "success",
+        jobs: [{ name: "Deploy Admin Panel", conclusion: "success" }],
+      },
       sampleEnrichment,
     );
-    expect(fields.map((field) => field.name)).toEqual([
-      "Action",
-      "📦 Release sync",
-      "📊 Reach & engagement",
-      "📝 What's new",
-      "🔗 Links",
-    ]);
+    expect(sections.join("\n")).toContain("**Pipeline**");
+    expect(sections.join("\n")).toContain("**Release sync**");
+    expect(sections.join("\n")).toContain("**Reach & engagement**");
+    expect(sections.join("\n")).toContain("**What's new**");
+    expect(sections.join("\n")).toContain("**Links**");
+  });
+
+  it("appendEnrichmentFields remains compatible for legacy callers", () => {
+    const fields = [{ name: "Action", value: "Full release", inline: true }];
+    appendEnrichmentFields(fields, { phase: "completed", conclusion: "success" }, sampleEnrichment);
+    expect(fields.length).toBeGreaterThan(1);
   });
 });
