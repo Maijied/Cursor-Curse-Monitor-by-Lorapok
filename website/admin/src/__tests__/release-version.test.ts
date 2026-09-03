@@ -38,6 +38,14 @@ describe("release-version", () => {
     expect(defaultTagSelection(["v0.5.8", "v0.5.9"], "v0.5.9", null)).toBe("v0.5.9");
   });
 
+  it("defaultDeployTag prefers prepared tag over live tag", () => {
+    expect(defaultDeployTag(["v1.0.31", "v1.0.35"], "v1.0.31", "v1.0.35")).toBe("v1.0.35");
+  });
+
+  it("defaultRollbackSourceTag skips live and rollback R tags", () => {
+    expect(defaultRollbackSourceTag(["v1.0.51", "v1.0.31", "v1.0.R1"], "v1.0.31")).toBe("v1.0.51");
+  });
+
   it("effectiveVersionBase picks higher of live tag vs package.json", () => {
     expect(effectiveVersionBase("v0.5.18", "1.0.3")).toBe("v1.0.3");
     expect(effectiveVersionBase("v1.0.3", "1.0.3")).toBe("v1.0.3");
