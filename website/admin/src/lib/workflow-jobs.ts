@@ -11,27 +11,33 @@ export type WorkflowJob = {
 export type StepState = "success" | "failed" | "active" | "pending" | "skipped";
 
 export const WORKFLOW_JOB_ORDER = [
+  "Resolve Version (Live Marketplaces)",
   "Build & Validate (Root Extension)",
   "SEO & Metadata Pipeline",
   "Browser Extension CI",
   "Admin Panel CI",
   "Prepare Release Tag (push to main)",
+  "Admin Deploy Gate",
   "Prepare & Tag Release",
   "Deploy to Marketplaces",
   "Deploy Admin Panel",
   "Deploy Marketing Website",
+  "Test Results Summary",
 ] as const;
 
 const JOB_ABBREVIATIONS: Record<string, string> = {
+  "Resolve Version (Live Marketplaces)": "Resolve",
   "Build & Validate (Root Extension)": "Build",
   "SEO & Metadata Pipeline": "SEO",
   "Browser Extension CI": "Browser CI",
   "Admin Panel CI": "Admin CI",
   "Prepare Release Tag (push to main)": "Tag prep",
+  "Admin Deploy Gate": "Admin gate",
   "Prepare & Tag Release": "Release prep",
   "Deploy to Marketplaces": "Marketplaces",
   "Deploy Admin Panel": "Admin deploy",
   "Deploy Marketing Website": "Website",
+  "Test Results Summary": "Summary",
 };
 
 export type MarketplaceTarget = {
@@ -105,12 +111,25 @@ export function getWorkflowStepState(step: { status: string; conclusion: string 
 
 export function getPipelineActiveIndex(jobs: WorkflowJob[]): number {
   if (!jobs.length) return 0;
-  const running = jobs.findIndex(
+
+  const inProgress = jobs.findIndex(
+    (job) => job.conclusion !== "skipped" && job.status === "in_progress",
+  );
+  if (inProgress >= 0) return inProgress;
+
+  const failed = jobs.findIndex(
+    (job) => job.conclusion === "failure" || job.conclusion === "cancelled",
+  );
+  if (failed >= 0) return failed;
+
+  const queued = jobs.findIndex(
     (job) =>
       job.conclusion !== "skipped" &&
-      (job.status === "in_progress" || (job.status === "queued" && job.conclusion == null)),
+      job.status === "queued" &&
+      job.conclusion == null,
   );
-  if (running >= 0) return running;
+  if (queued >= 0) return queued;
+
   const lastSuccess = jobs.reduce(
     (acc, job, index) => (job.conclusion === "success" ? index : acc),
     -1,
