@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Check, Circle, Loader2, Minus, X } from "lucide-react";
-import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
+import { useMemo, useState } from "react";
+import { Check, ChevronDown, ChevronRight, Circle, Loader2, Minus, X } from "lucide-react";
 import {
   getJobStepState,
   getPipelineActiveIndex,
+  getPipelineSummary,
   shortJobName,
   sortWorkflowJobs,
+  stepStateLabel,
   type StepState,
   type WorkflowJob,
 } from "../../lib/workflow-jobs";
@@ -18,210 +19,164 @@ type DeployPipelineStepsProps = {
   jobs: PipelineJob[];
 };
 
-const TRACK_INSET_PX = 24;
-
-function isBrowserJob(name: string): boolean {
-  return /firefox|chrome|amo|browser|web-ext/i.test(name);
+function StateIcon({ state }: { state: StepState }) {
+  if (state === "success") return <Check size={16} strokeWidth={2.5} aria-hidden="true" />;
+  if (state === "failed") return <X size={16} strokeWidth={2.5} aria-hidden="true" />;
+  if (state === "skipped") return <Minus size={14} aria-hidden="true" />;
+  if (state === "active") return <Loader2 size={16} className="animate-spin" aria-hidden="true" />;
+  return <Circle size={12} strokeWidth={2} aria-hidden="true" />;
 }
 
-function isJobSettled(job: PipelineJob): boolean {
-  return job.status === "completed" || job.conclusion != null;
+function stateTone(state: StepState, isCurrent: boolean): string {
+  if (state === "success") {
+    return "border-[color-mix(in_srgb,var(--color-neon)_30%,transparent)] text-[var(--color-neon)]";
+  }
+  if (state === "failed") {
+    return "border-[color-mix(in_srgb,var(--color-danger)_35%,transparent)] text-[var(--color-danger)]";
+  }
+  if (state === "skipped") {
+    return "border-[var(--color-border)] text-[var(--color-muted)] opacity-70";
+  }
+  if (isCurrent) {
+    return "border-[color-mix(in_srgb,var(--color-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)]";
+  }
+  return "border-[var(--color-border)] text-[var(--color-muted)]";
+}
+
+function StepRow({
+  job,
+  state,
+  isCurrent,
+  stepNumber,
+}: {
+  job: WorkflowJob;
+  state: StepState;
+  isCurrent: boolean;
+  stepNumber: number;
+}) {
+  const shortName = shortJobName(job.name);
+  const showFullName = shortName !== job.name;
+
+  return (
+    <li
+      className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors duration-300 ${stateTone(state, isCurrent)} ${
+        isCurrent ? "shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]" : "bg-[var(--color-bg-base)]/40"
+      }`}
+      aria-current={isCurrent ? "step" : undefined}
+    >
+      <div
+        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${stateTone(state, isCurrent)}`}
+      >
+        <StateIcon state={state} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className={`text-sm ${isCurrent ? "font-semibold text-[var(--color-text)]" : "font-medium text-[var(--color-text)]"}`}>
+            <span className="text-[var(--color-muted)] font-[family-name:var(--font-mono)] text-xs mr-2">
+              {stepNumber}
+            </span>
+            {shortName}
+          </p>
+          <span className="text-[10px] font-semibold uppercase tracking-wide">{stepStateLabel(state)}</span>
+        </div>
+        {showFullName ? <p className="mt-0.5 text-xs text-[var(--color-muted)]">{job.name}</p> : null}
+      </div>
+    </li>
+  );
 }
 
 export default function DeployPipelineSteps({ jobs: rawJobs }: DeployPipelineStepsProps) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [larvaeLeft, setLarvaeLeft] = useState(TRACK_INSET_PX);
-  const [progressWidth, setProgressWidth] = useState(0);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const jobs = useMemo(() => sortWorkflowJobs(rawJobs), [rawJobs]);
+  const summary = useMemo(() => getPipelineSummary(jobs), [jobs]);
   const activeIndex = useMemo(() => getPipelineActiveIndex(jobs), [jobs]);
-  const completedCount = useMemo(
-    () => jobs.filter((job) => job.conclusion === "success").length,
+
+  const completedJobs = useMemo(
+    () => jobs.filter((job) => getJobStepState(job) === "success"),
     [jobs],
   );
-  const skippedCount = useMemo(
-    () => jobs.filter((job) => job.conclusion === "skipped").length,
-    [jobs],
-  );
-  const failedCount = useMemo(
-    () => jobs.filter((job) => job.conclusion === "failure" || job.conclusion === "cancelled").length,
-    [jobs],
-  );
-  const allDone = jobs.length > 0 && jobs.every(isJobSettled);
+  const hideCompleted =
+    completedJobs.length > 2 && !showCompleted && summary.phase !== "done" && summary.phase !== "error";
 
-  const measure = useCallback(() => {
-    const track = trackRef.current;
-    if (!track || !jobs.length) return;
+  if (!jobs.length || !summary) return null;
 
-    const activeEl = stepRefs.current[activeIndex] ?? stepRefs.current[0];
-    if (!activeEl) return;
-
-    const trackRect = track.getBoundingClientRect();
-    const stepRect = activeEl.getBoundingClientRect();
-    const centerX = stepRect.left + stepRect.width / 2 - trackRect.left;
-    setLarvaeLeft(Math.max(TRACK_INSET_PX, centerX));
-
-    const lastSuccess = jobs.reduce(
-      (acc, job, index) => (job.conclusion === "success" ? index : acc),
-      -1,
-    );
-    if (lastSuccess < 0) {
-      setProgressWidth(0);
-      return;
-    }
-    const successEl = stepRefs.current[lastSuccess];
-    if (!successEl) return;
-    const successRect = successEl.getBoundingClientRect();
-    const progressEnd = successRect.left + successRect.width / 2 - trackRect.left;
-    setProgressWidth(Math.max(0, progressEnd - TRACK_INSET_PX));
-  }, [jobs, activeIndex]);
-
-  useLayoutEffect(() => {
-    measure();
-    const frame = requestAnimationFrame(() => measure());
-    return () => cancelAnimationFrame(frame);
-  }, [measure]);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const observer = new ResizeObserver(() => measure());
-    observer.observe(track);
-    stepRefs.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-    track.addEventListener("scroll", measure, { passive: true });
-    window.addEventListener("resize", measure);
-    return () => {
-      observer.disconnect();
-      track.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
-    };
-  }, [measure, jobs.length]);
-
-  if (!jobs.length) return null;
+  const progressPct = summary.total > 0 ? Math.round((summary.completed / summary.total) * 100) : 0;
 
   return (
     <div className="deploy-pipeline rounded-2xl border border-[color-mix(in_srgb,var(--color-accent)_22%,transparent)] bg-[linear-gradient(165deg,color-mix(in_srgb,var(--color-bg-elevated)_92%,transparent),color-mix(in_srgb,var(--color-bg-base)_98%,transparent))] p-4 sm:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-accent-2)]">
-            Pipeline
-          </p>
-          <p className="text-sm text-[var(--color-muted)]">
-            {allDone
-              ? failedCount > 0
-                ? "Run finished with errors"
-                : "All jobs completed"
-              : `Step ${Math.min(activeIndex + 1, jobs.length)} of ${jobs.length}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs font-[family-name:var(--font-mono)] text-[var(--color-muted)]">
-          <span className="inline-flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--color-neon)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-neon)_8%,transparent)] px-2 py-0.5 text-[var(--color-neon)]">
-            {completedCount} done
-          </span>
-          {skippedCount > 0 ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-base)] px-2 py-0.5">
-              {skippedCount} skip
-            </span>
-          ) : null}
-          {failedCount > 0 ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)] px-2 py-0.5 text-[var(--color-danger)]">
-              {failedCount} failed
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <div ref={trackRef} className="relative overflow-x-auto pt-10 pb-2">
-        <div className="min-w-[min(100%,42rem)] px-2">
-          <div
-            className="pointer-events-none absolute left-6 right-6 top-[3.35rem] h-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-border)_80%,transparent)]"
-            aria-hidden="true"
-          />
-          <div
-            className="deploy-pipeline-progress pointer-events-none absolute top-[3.35rem] h-0.5 rounded-full bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-neon)] to-[var(--color-accent-2)]"
-            style={{
-              left: TRACK_INSET_PX,
-              width: progressWidth > 0 ? `${progressWidth}px` : 0,
-            }}
-            aria-hidden="true"
-          />
-
-          <div
-            className="deploy-pipeline-larvae pointer-events-none absolute top-0 z-20"
-            style={{ left: larvaeLeft }}
-            aria-hidden="true"
-          >
-            <div className="deploy-pipeline-larvae-glow" />
-            <LorapokLarvaeLoader size="sm" ariaLabel="Pipeline progress" />
+      <div className="mb-4 space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-accent-2)]">
+              {summary.phase === "done"
+                ? "Complete"
+                : summary.phase === "error"
+                  ? "Needs attention"
+                  : "Now running"}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-[var(--color-text)]">{summary.title}</p>
+            <p className="mt-0.5 text-sm text-[var(--color-muted)]">{summary.subtitle}</p>
           </div>
+          <div className="text-right text-xs font-[family-name:var(--font-mono)] text-[var(--color-muted)]">
+            <p>
+              Step {Math.min(summary.activeIndex + 1, summary.total)} / {summary.total}
+            </p>
+            <p className="mt-0.5">{summary.completed} done</p>
+          </div>
+        </div>
 
-          <ol className="relative z-10 flex items-start justify-between gap-1 sm:gap-2">
-            {jobs.map((job, index) => {
-              const state: StepState = getJobStepState(job);
-              const browser = isBrowserJob(job.name);
-              const isActive = index === activeIndex && !allDone;
-
-              return (
-                <li key={job.id} className="flex min-w-[4.5rem] max-w-[7rem] flex-1 flex-col items-center">
-                  <div
-                    ref={(el) => {
-                      stepRefs.current[index] = el;
-                    }}
-                    className={`deploy-pipeline-step relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-500 ${
-                      state === "success"
-                        ? "border-[var(--color-neon)] bg-[color-mix(in_srgb,var(--color-neon)_12%,transparent)] text-[var(--color-neon)] shadow-[0_0_18px_rgba(57,255,20,0.25)]"
-                        : state === "failed"
-                          ? "border-[var(--color-danger)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger)]"
-                          : state === "skipped"
-                            ? "border-[var(--color-border)] bg-[var(--color-bg-base)] text-[var(--color-muted)] opacity-60"
-                            : isActive
-                              ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-[var(--color-accent)] shadow-[0_0_22px_rgba(124,92,255,0.35)] deploy-pipeline-step-active"
-                              : browser
-                                ? "border-[color-mix(in_srgb,var(--color-warn)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-warn)_6%,transparent)] text-[var(--color-warn)]"
-                                : "border-[var(--color-border)] bg-[var(--color-bg-base)] text-[var(--color-muted)]"
-                    }`}
-                  >
-                    {state === "success" ? (
-                      <Check size={18} strokeWidth={2.5} aria-hidden="true" />
-                    ) : state === "failed" ? (
-                      <X size={18} strokeWidth={2.5} aria-hidden="true" />
-                    ) : state === "skipped" ? (
-                      <Minus size={16} aria-hidden="true" />
-                    ) : state === "active" ? (
-                      <Loader2 size={18} className="animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Circle size={14} strokeWidth={2} aria-hidden="true" />
-                    )}
-                    {isActive ? <span className="deploy-pipeline-step-ring" aria-hidden="true" /> : null}
-                  </div>
-                  <p
-                    className={`mt-2 w-full px-0.5 text-center text-[10px] leading-tight sm:text-[11px] ${
-                      isActive ? "font-medium text-[var(--color-text)]" : "text-[var(--color-muted)]"
-                    }`}
-                    title={job.name}
-                  >
-                    {shortJobName(job.name)}
-                  </p>
-                  <p className="mt-0.5 text-[9px] uppercase tracking-wide text-[var(--color-muted)] opacity-80">
-                    {state === "success"
-                      ? "done"
-                      : state === "failed"
-                        ? job.conclusion ?? "failed"
-                        : state === "skipped"
-                          ? "skip"
-                          : state === "active"
-                            ? "running"
-                            : "queued"}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
+        <div className="space-y-1.5" aria-hidden="true">
+          <div className="h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-border)_80%,transparent)]">
+            <div
+              className="deploy-pipeline-progress h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-neon)] transition-[width] duration-500 ease-out"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-[var(--color-muted)]">{progressPct}% of workflow jobs finished</p>
         </div>
       </div>
+
+      {hideCompleted ? (
+        <button
+          type="button"
+          onClick={() => setShowCompleted(true)}
+          className="mb-3 flex w-full items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] px-3 py-2 text-left text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+        >
+          <ChevronRight size={16} aria-hidden="true" />
+          Show {completedJobs.length} completed earlier step{completedJobs.length === 1 ? "" : "s"}
+        </button>
+      ) : null}
+
+      {showCompleted && completedJobs.length > 2 ? (
+        <button
+          type="button"
+          onClick={() => setShowCompleted(false)}
+          className="mb-3 flex w-full items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)] px-3 py-2 text-left text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+        >
+          <ChevronDown size={16} aria-hidden="true" />
+          Hide completed steps
+        </button>
+      ) : null}
+
+      <ol className="space-y-2" aria-label="Deployment pipeline steps">
+        {jobs.map((job, index) => {
+          const state = getJobStepState(job);
+          if (hideCompleted && state === "success" && index < activeIndex) {
+            return null;
+          }
+          const isCurrent = index === activeIndex && summary.phase !== "done" && summary.phase !== "error";
+          return (
+            <StepRow
+              key={job.id}
+              job={job}
+              state={state}
+              isCurrent={isCurrent}
+              stepNumber={index + 1}
+            />
+          );
+        })}
+      </ol>
     </div>
   );
 }

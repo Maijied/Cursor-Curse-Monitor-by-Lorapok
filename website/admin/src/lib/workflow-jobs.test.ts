@@ -3,6 +3,7 @@ import {
   extractMarketplaceTargets,
   getJobStepState,
   getPipelineActiveIndex,
+  getPipelineSummary,
   sortWorkflowJobs,
 } from "./workflow-jobs";
 
@@ -69,5 +70,16 @@ describe("workflow-jobs", () => {
     });
 
     expect(targets.map((t) => t.id)).toEqual(["amo"]);
+  });
+
+  it("summarizes the active pipeline step for the UI headline", () => {
+    const summary = getPipelineSummary([
+      { id: 1, name: "Build & Validate (Root Extension)", status: "completed", conclusion: "success" },
+      { id: 2, name: "Deploy to Marketplaces", status: "in_progress", conclusion: null },
+      { id: 3, name: "Deploy Admin Panel", status: "queued", conclusion: null },
+    ]);
+    expect(summary?.phase).toBe("running");
+    expect(summary?.title).toBe("Marketplaces");
+    expect(summary?.activeIndex).toBe(1);
   });
 });

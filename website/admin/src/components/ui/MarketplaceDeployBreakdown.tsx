@@ -3,6 +3,7 @@ import {
   countMarketplaceProgress,
   extractMarketplaceTargets,
   findMarketplaceJob,
+  getJobStepState,
   type MarketplaceTarget,
   type StepState,
   type WorkflowJob,
@@ -92,8 +93,10 @@ function TargetRow({ target, isLast }: { target: MarketplaceTarget; isLast: bool
 
 export default function MarketplaceDeployBreakdown({ jobs, targetTag }: MarketplaceDeployBreakdownProps) {
   const marketplaceJob = findMarketplaceJob(jobs);
+  const marketplaceState = marketplaceJob ? getJobStepState(marketplaceJob) : "pending";
   const targets = extractMarketplaceTargets(marketplaceJob);
   if (!targets.length) return null;
+  if (marketplaceState === "pending") return null;
 
   const progress = countMarketplaceProgress(targets);
   const jobState = marketplaceJob?.conclusion ?? marketplaceJob?.status ?? "pending";

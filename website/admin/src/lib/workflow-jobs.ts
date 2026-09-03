@@ -123,6 +123,102 @@ export function shortJobName(name: string): string {
   return JOB_ABBREVIATIONS[name] ?? name;
 }
 
+export type PipelineSummary = {
+  phase: "running" | "waiting" | "done" | "error";
+  title: string;
+  subtitle: string;
+  activeJobName: string | null;
+  activeIndex: number;
+  total: number;
+  completed: number;
+  failed: number;
+};
+
+export function stepStateLabel(state: StepState): string {
+  switch (state) {
+    case "success":
+      return "Done";
+    case "failed":
+      return "Failed";
+    case "skipped":
+      return "Skipped";
+    case "active":
+      return "Running";
+    default:
+      return "Waiting";
+  }
+}
+
+/**
+ * Human-readable headline for the deployment pipeline UI.
+ */
+export function getPipelineSummary(jobs: WorkflowJob[]): PipelineSummary | null {
+  if (!jobs.length) return null;
+  const sorted = sortWorkflowJobs(jobs);
+  const total = sorted.length;
+  const completed = sorted.filter((job) => job.conclusion === "success").length;
+  const failed = sorted.filter(
+    (job) => job.conclusion === "failure" || job.conclusion === "cancelled",
+  ).length;
+  const activeIndex = getPipelineActiveIndex(sorted);
+  const activeJob = sorted[activeIndex] ?? null;
+  const allDone = sorted.every((job) => job.status === "completed" || job.conclusion != null);
+
+  if (failed > 0) {
+    const failedJob = sorted.find(
+      (job) => job.conclusion === "failure" || job.conclusion === "cancelled",
+    );
+    return {
+      phase: "error",
+      title: `Stopped at ${shortJobName(failedJob?.name ?? "pipeline step")}`,
+      subtitle: failedJob?.name ?? "A workflow job failed or was cancelled.",
+      activeJobName: failedJob?.name ?? null,
+      activeIndex,
+      total,
+      completed,
+      failed,
+    };
+  }
+
+  if (allDone) {
+    return {
+      phase: "done",
+      title: "Deployment finished",
+      subtitle: `${completed} of ${total} jobs completed successfully.`,
+      activeJobName: null,
+      activeIndex,
+      total,
+      completed,
+      failed,
+    };
+  }
+
+  const activeState = activeJob ? getJobStepState(activeJob) : "pending";
+  if (activeState === "active") {
+    return {
+      phase: "running",
+      title: shortJobName(activeJob!.name),
+      subtitle: activeJob!.name,
+      activeJobName: activeJob!.name,
+      activeIndex,
+      total,
+      completed,
+      failed,
+    };
+  }
+
+  return {
+    phase: "waiting",
+    title: shortJobName(activeJob?.name ?? "Next step"),
+    subtitle: activeJob?.name ?? "Waiting for the next workflow job to start.",
+    activeJobName: activeJob?.name ?? null,
+    activeIndex,
+    total,
+    completed,
+    failed,
+  };
+}
+
 export function findMarketplaceJob(jobs: WorkflowJob[]): WorkflowJob | undefined {
   return jobs.find((job) => /deploy to marketplaces/i.test(job.name));
 }
