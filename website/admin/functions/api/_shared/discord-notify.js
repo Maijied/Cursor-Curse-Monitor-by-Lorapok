@@ -122,6 +122,8 @@ export function buildDeploymentEmbed(payload, enrichment) {
     fields.push({ name: "Pipeline", value: lines.slice(0, 1024), inline: false });
   }
 
+  appendEnrichmentFields(fields, payload, enrichment);
+
   const descriptionParts = [status.brandLine];
   if (payload.summary) descriptionParts.push(String(payload.summary));
   if (status.color === COLORS.success) {
@@ -157,58 +159,98 @@ export function buildDeploymentEmbed(payload, enrichment) {
 }
 
 /**
- * Build supplemental Discord embeds from available deployment enrichment data.
- * @param {Record<string, unknown>} payload - Deployment data used to determine embed status.
- * @param {Record<string, unknown>|null|undefined} enrichment - Optional marketplace, download, engagement, changelog, and link data.
- * @returns {Array<Record<string, unknown>>} Up to nine supplemental embeds.
+ * @param {Array<{ name: string; value: string }>} fields
+ * @param {string} name
+ * @returns {string}
  */
-export function buildSupplementalEmbeds(payload, enrichment) {
-  if (!enrichment) return [];
+function pickFieldValue(fields, name) {
+  return fields.find((field) => field.name === name)?.value ?? "—";
+}
 
-  const status = resolveStatus(payload);
-  const embeds = [];
+/**
+ * Compact marketplace sync summary for a single embed field.
+ * @param {Record<string, unknown>|null|undefined} enrichment
+ * @returns {string|null}
+ */
+export function buildCompactMarketplaceSummary(enrichment) {
+  const marketplaceFields = enrichment?.marketplaceFields;
+  if (!Array.isArray(marketplaceFields) || marketplaceFields.length === 0) return null;
 
-  if (enrichment.marketplaceFields?.length) {
-    embeds.push({
-      title: "📦 Marketplace & release records",
-      color: COLORS.info,
-      fields: enrichment.marketplaceFields,
-    });
-  }
+  const lines = [
+    `Package ${pickFieldValue(marketplaceFields, "Package")} · GitHub ${pickFieldValue(marketplaceFields, "GitHub release")} · Sync ${pickFieldValue(marketplaceFields, "Sync status")}`,
+    `Open VSX ${pickFieldValue(marketplaceFields, "Open VSX")} · Duplicate ${pickFieldValue(marketplaceFields, "Open VSX duplicate")} · VSCE ${pickFieldValue(marketplaceFields, "VS Code Marketplace")}`,
+    `Firefox ${pickFieldValue(marketplaceFields, "Firefox AMO")} · Release ${pickFieldValue(marketplaceFields, "Release status")} · Published ${pickFieldValue(marketplaceFields, "Published version")}`,
+  ];
 
+  return truncateDiscordText(lines.join("\n"), 1024);
+}
+
+/**
+ * @param {Record<string, unknown>|null|undefined} enrichment
+ * @returns {string|null}
+ */
+export function buildCompactStatsBlock(enrichment) {
+  if (!enrichment) return null;
+
+  const parts = [];
   if (enrichment.downloadBreakdown) {
-    embeds.push({
-      title: "📊 Download breakdown",
-      color: COLORS.info,
-      description: enrichment.downloadBreakdown,
-    });
+    parts.push(String(enrichment.downloadBreakdown).replace(/^```\n?|\n?```$/g, "").trim());
   }
-
   if (enrichment.engagement) {
-    embeds.push({
-      title: "🌐 Website engagement",
-      color: COLORS.info,
-      description: enrichment.engagement,
-    });
+    parts.push(String(enrichment.engagement).replace(/^```\n?|\n?```$/g, "").trim());
+  }
+  if (!parts.length) return null;
+
+  return truncateDiscordText(`\`\`\`\n${parts.join("\n\n")}\n\`\`\``, 1024);
+}
+
+/**
+ * Merges enrichment sections into the primary deployment embed fields.
+ * @param {Array<{ name: string; value: string; inline?: boolean }>} fields
+ * @param {Record<string, unknown>} payload
+ * @param {Record<string, unknown>|null|undefined} enrichment
+ */
+export function appendEnrichmentFields(fields, payload, enrichment) {
+  if (!enrichment || payload.phase === "started") return;
+
+  const marketplace = buildCompactMarketplaceSummary(enrichment);
+  if (marketplace) {
+    fields.push({ name: "📦 Release sync", value: marketplace, inline: false });
   }
 
-  if (enrichment.changelog) {
-    embeds.push({
-      title: "📝 Changelog",
-      color: status.color,
-      description: truncateDiscordText(enrichment.changelog, 4096),
+  const stats = buildCompactStatsBlock(enrichment);
+  if (stats) {
+    fields.push({ name: "📊 Reach & engagement", value: stats, inline: false });
+  }
+
+  if (enrichment.changelog && payload.conclusion !== "cancelled") {
+    fields.push({
+      name: "📝 What's new",
+      value: truncateDiscordText(String(enrichment.changelog), 1024),
+      inline: false,
     });
   }
 
   if (enrichment.quickLinks) {
-    embeds.push({
-      title: "🔗 Quick links",
-      color: COLORS.info,
-      description: enrichment.quickLinks,
+    fields.push({
+      name: "🔗 Links",
+      value: truncateDiscordText(String(enrichment.quickLinks), 1024),
+      inline: false,
     });
   }
+}
 
-  return embeds.slice(0, 9);
+/**
+ * Build supplemental Discord embeds from available deployment enrichment data.
+ * @deprecated Consolidated into {@link buildDeploymentEmbed}; kept for compatibility.
+ * @param {Record<string, unknown>} payload - Deployment data used to determine embed status.
+ * @param {Record<string, unknown>|null|undefined} enrichment - Optional marketplace, download, engagement, changelog, and link data.
+ * @returns {Array<Record<string, unknown>>} Always empty — enrichment is merged into the primary embed.
+ */
+export function buildSupplementalEmbeds(payload, enrichment) {
+  void payload;
+  void enrichment;
+  return [];
 }
 
 /**
@@ -218,10 +260,7 @@ export function buildSupplementalEmbeds(payload, enrichment) {
  * @returns {Array<Record<string, unknown>>}
  */
 export function buildDeploymentEmbeds(payload, enrichment) {
-  return [buildDeploymentEmbed(payload, enrichment), ...buildSupplementalEmbeds(payload, enrichment)].slice(
-    0,
-    10
-  );
+  return [buildDeploymentEmbed(payload, enrichment)];
 }
 
 /**
