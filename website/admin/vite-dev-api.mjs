@@ -16,6 +16,7 @@ import { validateMarketplaceDeploy } from "./functions/api/_shared/marketplace-t
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
 import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
+import { resolveBadgeKind } from "./functions/api/_shared/badge-endpoint.js";
 import {
   DEFAULT_COMMUNITY_INVITE_URL,
   isValidDiscordInviteUrl,
@@ -777,7 +778,7 @@ export function createDevApiMiddleware() {
     }
 
     if (url.startsWith("/api/stats/badge.json") && req.method === "GET") {
-      const kind = new URL(req.url ?? "", "http://localhost").searchParams.get("kind") ?? "total";
+      const kind = resolveBadgeKind(new URL(req.url ?? "", "http://localhost").searchParams.get("kind"));
       try {
         const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
         const stats = buildReadmeStatsFromSiteData(siteData);
@@ -787,6 +788,23 @@ export function createDevApiMiddleware() {
       } catch {
         res.statusCode = 503;
         res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ schemaVersion: 1, label: "downloads", message: "unavailable", color: "lightgrey" }));
+      }
+      return;
+    }
+
+    const shieldsBadgeMatch = url.match(/^\/api\/stats\/shields\/([^/?]+)\.svg$/);
+    if (shieldsBadgeMatch && req.method === "GET") {
+      const kind = resolveBadgeKind(shieldsBadgeMatch[1]);
+      try {
+        const siteData = JSON.parse(readFileSync(siteDataPath, "utf8"));
+        const stats = buildReadmeStatsFromSiteData(siteData);
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.setHeader("Cache-Control", "public, max-age=300");
+        res.end(JSON.stringify(renderShieldsBadge(stats, kind)));
+      } catch {
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
         res.end(JSON.stringify({ schemaVersion: 1, label: "downloads", message: "unavailable", color: "lightgrey" }));
       }
       return;

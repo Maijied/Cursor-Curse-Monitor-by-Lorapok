@@ -27,18 +27,18 @@
 
   <p>
     <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest"><img src="https://img.shields.io/github/v/release/Maijied/Cursor-Curse-Monitor-by-Lorapok?label=Latest%20Release" alt="Latest Release" /></a>
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge.json" alt="Total downloads (live)" />
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-openvsx.json" alt="Open VSX canonical downloads" />
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-openvsx-total.json" alt="Open VSX total downloads" />
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/main/website/stats/badge-vscode.json" alt="VS Code Marketplace downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/shields/total.svg" alt="Total downloads (live)" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/shields/openvsx.svg" alt="Open VSX canonical downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/shields/openvsx-total.svg" alt="Open VSX total downloads" />
+    <img src="https://img.shields.io/endpoint?url=https://cursor-dev.lorapok.tech/api/stats/shields/vscode.svg" alt="VS Code Marketplace downloads" />
   </p>
 
   <p align="center">
-    <a href="https://cursor.lorapok.tech/site-data.json">
-      <img src="https://cursor.lorapok.tech/readme-stats.png" alt="Community download stats chart" width="720" />
+    <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">
+      <img src="https://cursor-dev.lorapok.tech/api/stats/readme.svg" alt="Community download stats chart" width="720" />
     </a>
   </p>
-  <p><sub>📊 <a href="https://cursor.lorapok.tech/readme-stats.png">Download chart</a> · counts synced from marketplace APIs in CI · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a> · live overlay from <a href="https://cursor-dev.lorapok.tech/api/site-data">Mission Control</a></sub></p>
+  <p><sub>📊 <a href="https://cursor-dev.lorapok.tech/api/stats/readme.svg">Live download chart</a> · refreshed every 5 min from marketplace APIs · <a href="https://cursor.lorapok.tech/site-data.json">site-data.json</a> · <a href="https://cursor-dev.lorapok.tech/api/site-data">Mission Control overlay</a></sub></p>
 
 </div>
 
@@ -86,7 +86,7 @@ flowchart LR
 | **Browser extension** | Popup budget tracker + paste guard (Firefox AMO, Chrome zip) |
 | **Mission Control** | Deploy, rollback, notices, mailbox, team access |
 | **Production Deployment** | `ci-cd.yml` — CI, tag prep, marketplaces, Pages deploy |
-| **Marketing site** | Static GitHub Pages + generated `site-data.json` |
+| **Marketing site** | Static GitHub Pages + generated `site-data.json` + live stats overlay |
 
 ### Schedules & Discord
 
@@ -115,7 +115,7 @@ flowchart TB
   subgraph stats["Live download stats"]
     Refresh["runStatsRefresh"]
     Cache["stats:live-cache"]
-    Public["GET /api/site-data · badge.json"]
+    Public["GET /api/site-data · shields/*.svg · readme.svg"]
   end
 
   subgraph discord["Discord notifications"]
