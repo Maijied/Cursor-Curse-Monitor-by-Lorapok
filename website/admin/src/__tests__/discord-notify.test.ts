@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  appendEnrichmentFields,
+  buildCompactMarketplaceSummary,
+  buildCompactStatsBlock,
   buildDeploymentEmbed,
   buildDeploymentEmbeds,
   buildSupplementalEmbeds,
@@ -39,6 +42,7 @@ describe("buildDeploymentEmbed", () => {
     expect(embed.fields.some((f) => f.name === "Version" && f.value === "`v0.7.2`")).toBe(true);
     expect(embed.fields.some((f) => f.name === "Action" && f.value === "Publish tag")).toBe(true);
     expect(String(embed.description)).toContain("Deployment triggered successfully");
+    expect(embed.fields.some((f) => f.name === "📦 Release sync")).toBe(false);
   });
 
   it("formats a successful completion embed with pipeline jobs and banner image", () => {
@@ -83,7 +87,7 @@ describe("buildDeploymentEmbed", () => {
 });
 
 describe("buildDeploymentEmbeds", () => {
-  it("returns primary plus supplemental embeds with breakdown and changelog", () => {
+  it("returns one consolidated embed with all enrichment sections", () => {
     const embeds = buildDeploymentEmbeds(
       {
         phase: "completed",
@@ -94,16 +98,64 @@ describe("buildDeploymentEmbeds", () => {
       sampleEnrichment
     );
 
-    expect(embeds.length).toBeGreaterThan(3);
-    expect(embeds[0].title).toBe("✅ Deployment succeeded");
-    expect(embeds.some((embed) => embed.title === "📦 Marketplace & release records")).toBe(true);
-    expect(embeds.some((embed) => embed.title === "📊 Download breakdown")).toBe(true);
-    expect(embeds.some((embed) => embed.title === "📝 Changelog")).toBe(true);
-    expect(embeds.some((embed) => embed.title === "🔗 Quick links")).toBe(true);
+    expect(embeds).toHaveLength(1);
+    const embed = embeds[0];
+    expect(embed.title).toBe("✅ Deployment succeeded");
+    expect(embed.fields.some((field) => field.name === "📦 Release sync")).toBe(true);
+    expect(embed.fields.some((field) => field.name === "📊 Reach & engagement")).toBe(true);
+    expect(embed.fields.some((field) => field.name === "📝 What's new")).toBe(true);
+    expect(embed.fields.some((field) => field.name === "🔗 Links")).toBe(true);
   });
 
-  it("skips supplemental embeds when enrichment is unavailable", () => {
+  it("skips enrichment sections when enrichment is unavailable", () => {
     expect(buildSupplementalEmbeds({ phase: "started" }, null)).toEqual([]);
     expect(buildDeploymentEmbeds({ phase: "started" }, null)).toHaveLength(1);
+    expect(buildDeploymentEmbeds({ phase: "completed", conclusion: "success" }, null)[0].fields).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: "Action" })]),
+    );
+  });
+});
+
+describe("compact enrichment formatters", () => {
+  it("builds a compact marketplace summary from field rows", () => {
+    const summary = buildCompactMarketplaceSummary({
+      marketplaceFields: [
+        { name: "Package", value: "`1.0.26` ✅" },
+        { name: "GitHub release", value: "`v1.0.31` ⚠️" },
+        { name: "Sync status", value: "ahead" },
+        { name: "Open VSX", value: "`1.0.29` ⚠️" },
+        { name: "Open VSX duplicate", value: "`1.0.29` ⚠️" },
+        { name: "VS Code Marketplace", value: "`1.0.29` ⚠️" },
+        { name: "Firefox AMO", value: "pending AMO ⚠️" },
+        { name: "Release status", value: "candidate" },
+        { name: "Published version", value: "`1.0.31`" },
+      ],
+    });
+
+    expect(summary).toContain("Package `1.0.26` ✅");
+    expect(summary).toContain("Open VSX `1.0.29` ⚠️");
+    expect(summary).toContain("Firefox pending AMO ⚠️");
+  });
+
+  it("merges download and engagement blocks into one stats field", () => {
+    const stats = buildCompactStatsBlock(sampleEnrichment);
+    expect(stats).toContain("Total ········· 9,975");
+    expect(stats).toContain("Visits ······· 128");
+  });
+
+  it("appendEnrichmentFields adds compact sections to an existing field list", () => {
+    const fields = [{ name: "Action", value: "Full release", inline: true }];
+    appendEnrichmentFields(
+      fields,
+      { phase: "completed", conclusion: "success" },
+      sampleEnrichment,
+    );
+    expect(fields.map((field) => field.name)).toEqual([
+      "Action",
+      "📦 Release sync",
+      "📊 Reach & engagement",
+      "📝 What's new",
+      "🔗 Links",
+    ]);
   });
 });
