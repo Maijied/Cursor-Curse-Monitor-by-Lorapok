@@ -12,7 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Hero layout** — orbit and community stats side-by-side on desktop; no stats card overlap; compact secondary metrics
 - **Hero stats layout** — visits/engagement tiles sit in a two-column grid (was a three-column grid with two items)
 - **Screen readers** — announce verified community totals once after count-up, not during animation
-- **README download badges** — serve Shields.io endpoint JSON from `website/stats/` on GitHub raw (admin API blocked by Cloudflare bot challenges); show `unavailable` when marketplace sources are not verified — never zero-filled placeholders
+- **README download badges** — live Shields.io endpoints at `/api/stats/shields/*.svg` (JSON body, bot-safe path) plus `/api/stats/readme.svg` chart; committed `website/stats/*.json` remains CI/marketplace fallback
 - **Marketing site stat meters** — only render download totals when `site-data.json` marks them verified; otherwise show em dash
 - **Grand download total** — sum Open VSX (both namespaces) + VS Code `downloadCount` + GitHub releases (~9.6k+); hero UI leads with total, then channel breakdown
 - **VS Code Marketplace stats** — use gallery `downloadCount` (updates on version publish), not unique `install` count

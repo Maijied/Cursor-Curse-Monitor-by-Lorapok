@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Writes website/readme-stats.svg and Shields.io badge JSON from site-data.json.
- * Static files are served from GitHub raw so shields.io avoids Cloudflare bot challenges.
+ * Committed artifacts back GitHub raw / marketing fallbacks; README uses live
+ * Mission Control routes (/api/stats/shields/*.svg, /api/stats/readme.svg).
  * When marketplace sources are unverified, badges/charts show unavailable — never zero-filled.
  */
 import { execFileSync } from "node:child_process";
