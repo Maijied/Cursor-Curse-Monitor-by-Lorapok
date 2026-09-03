@@ -1,13 +1,7 @@
 import { createServer, type Server } from "node:http";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 // @ts-expect-error local dev middleware (JS)
 import { createDevApiMiddleware } from "../../vite-dev-api.mjs";
 import { loadSiteDataFixture } from "./site-data";
-
-const adminRoot = dirname(fileURLToPath(import.meta.url));
-const siteDataPath = resolve(adminRoot, "../../../site-data.json");
 
 export type TestDataServer = {
   apiBase: string;
@@ -26,7 +20,7 @@ export function startTestDataServer(): Promise<TestDataServer> {
 
     if (path === "/site-data.json") {
       res.setHeader("Content-Type", "application/json");
-      res.end(readFileSync(siteDataPath, "utf8"));
+      res.end(JSON.stringify(siteData));
       return;
     }
 
