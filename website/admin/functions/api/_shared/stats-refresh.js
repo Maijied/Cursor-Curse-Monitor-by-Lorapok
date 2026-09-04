@@ -214,18 +214,26 @@ export async function runStatsRefresh(env, options = {}) {
   if (statsChanged) {
     await putKvJsonIfChanged(env, STATS_REFRESH_CACHE_KEY, snapshot);
 
-    const mergedSiteData = mergeSiteDataWithLiveCache(base, snapshot);
-    const readmeStats = buildReadmeStatsFromSiteData(mergedSiteData);
-    const badgeBundle = {
-      total: renderShieldsBadge(readmeStats, "total"),
-      openvsx: renderShieldsBadge(readmeStats, "openvsx"),
-      "openvsx-total": renderShieldsBadge(readmeStats, "openvsx-total"),
-      vscode: renderShieldsBadge(readmeStats, "vscode"),
-    };
-    await Promise.all([
-      putKvStringIfChanged(env, STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats)),
-      putKvJsonIfChanged(env, STATS_BADGES_BUNDLE_KEY, badgeBundle),
-    ]);
+    const prevTotal = previous?.downloads?.displayTotal;
+    const nextTotal = snapshot.downloads?.displayTotal;
+    const displayTotalChanged = prevTotal !== nextTotal;
+    const syncStatusChanged =
+      previous?.marketplaceSync?.syncStatus !== snapshot.marketplaceSync?.syncStatus;
+
+    if (displayTotalChanged || syncStatusChanged) {
+      const mergedSiteData = mergeSiteDataWithLiveCache(base, snapshot);
+      const readmeStats = buildReadmeStatsFromSiteData(mergedSiteData);
+      const badgeBundle = {
+        total: renderShieldsBadge(readmeStats, "total"),
+        openvsx: renderShieldsBadge(readmeStats, "openvsx"),
+        "openvsx-total": renderShieldsBadge(readmeStats, "openvsx-total"),
+        vscode: renderShieldsBadge(readmeStats, "vscode"),
+      };
+      await Promise.all([
+        putKvStringIfChanged(env, STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats)),
+        putKvJsonIfChanged(env, STATS_BADGES_BUNDLE_KEY, badgeBundle),
+      ]);
+    }
   }
 
   const durationMs = Date.now() - started;

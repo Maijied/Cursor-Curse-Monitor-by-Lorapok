@@ -178,14 +178,18 @@ export class UsageMonitorService implements vscode.Disposable {
       );
       snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
       snapshot.history = this.recordHistory(snapshot);
-      snapshot.usageAnalytics = buildUsageAnalytics({
-        budget: snapshot.budget,
-        usage: snapshot.usage,
-        history: snapshot.history,
-        local: snapshot.local,
-        dailySeries: readDailyStatsSeries(auth.productFolder),
-        onDemandSpendUsd: snapshot.onDemandSpendUsd,
-      });
+      try {
+        snapshot.usageAnalytics = buildUsageAnalytics({
+          budget: snapshot.budget,
+          usage: snapshot.usage,
+          history: snapshot.history,
+          local: snapshot.local,
+          dailySeries: readDailyStatsSeries(auth.productFolder),
+          onDemandSpendUsd: snapshot.onDemandSpendUsd,
+        });
+      } catch {
+        snapshot.usageAnalytics = null;
+      }
 
       const percent = snapshot.budget.percentUsed;
       if (percent >= warnAtPercent && !this.warnedAtThreshold && percent < 100) {

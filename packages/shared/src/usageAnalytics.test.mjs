@@ -65,4 +65,27 @@ assert.ok(empty);
 assert.equal(empty.points.length, 0);
 assert.match(empty.emptyMessage ?? "", /Trend builds/);
 
+const stacked = buildUsageAnalytics({
+  budget,
+  usage,
+  history: [
+    { t: now - 86400000, auto: 60, api: 50, includedPercent: 70 },
+    { t: now, auto: 70, api: 45, includedPercent: 85 },
+  ],
+});
+assert.ok(stacked);
+assert.equal(stacked.yMax, 115);
+
+const surfaceMissing = buildUsageAnalytics({ budget, usage, history, groupBy: "surface" });
+assert.ok(surfaceMissing);
+assert.equal(surfaceMissing.groupBy, "surface");
+assert.equal(surfaceMissing.points.length, 0);
+assert.match(surfaceMissing.emptyMessage ?? "", /daily stats/i);
+
+const modelMissing = buildUsageAnalytics({ budget, usage, history, groupBy: "model" });
+assert.ok(modelMissing);
+assert.equal(modelMissing.groupBy, "model");
+assert.equal(modelMissing.points.length, 0);
+assert.match(modelMissing.emptyMessage ?? "", /model breakdown/i);
+
 console.log("usageAnalytics.test.mjs: OK");

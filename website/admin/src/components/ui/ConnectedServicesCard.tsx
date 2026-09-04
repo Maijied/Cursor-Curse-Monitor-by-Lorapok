@@ -5,7 +5,7 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Card from "./Card";
 import Badge from "./Badge";
 import { auth } from "../../lib/firebase";
-import { fetchHealth } from "../../lib/api";
+import { fetchHealth, fetchSyncStatus } from "../../lib/api";
 
 type ServiceStatus = "connected" | "disconnected" | "checking";
 
@@ -51,6 +51,7 @@ export default function ConnectedServicesCard() {
 
       try {
         const health = await fetchHealth();
+        const sync = await fetchSyncStatus().catch(() => null);
         next.push({
           id: "github",
           label: "GitHub API",
@@ -75,6 +76,19 @@ export default function ConnectedServicesCard() {
             ? "Webhook set — deploy status posts to Discord"
             : "Not set — add a channel webhook on Deployments",
         });
+        if (sync) {
+          const statsOk = sync.stats.cache.fresh && !sync.stats.kvQuotaHit;
+          next.push({
+            id: "stats-cron",
+            label: "Live stats cron",
+            status: statsOk ? "connected" : sync.stats.kvQuotaHit ? "disconnected" : "checking",
+            detail: sync.stats.kvQuotaHit
+              ? sync.hint ?? "KV daily write limit reached"
+              : sync.stats.cache.refreshedAt
+                ? `Refreshed ${sync.stats.cache.ageSeconds ?? "?"}s ago · total ${sync.stats.cache.displayTotal ?? "—"}`
+                : sync.stats.lastRunError ?? "No cache yet",
+          });
+        }
       } catch {
         next.push({
           id: "github",

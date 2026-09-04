@@ -77,7 +77,8 @@ export async function promptLoginWithBrowser(
   if (choice === "Paste token") {
     return promptPasteCursorToken(context);
   }
-  return false;
+  // User may have signed into Cursor locally or via the browser extension — refresh to pick up changes.
+  return true;
 }
 
 export async function promptAddCursorAccount(context: vscode.ExtensionContext): Promise<boolean> {

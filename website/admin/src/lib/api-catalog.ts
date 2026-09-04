@@ -22,6 +22,7 @@ export type ApiCatalogEntry = {
 
 export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "health", path: "/health", method: "GET", auth: "public", group: "Public", description: "GitHub + env health check", safeProbe: true },
+  { id: "sync-status", path: "/sync/status", method: "GET", auth: "admin", group: "Admin", description: "Aggregated sync health (GitHub, mail, live stats cache)", safeProbe: true },
   { id: "site-data", path: "/site-data", method: "GET", auth: "public", group: "Public", description: "Live marketing site-data.json proxy", safeProbe: true },
   { id: "notice-get", path: "/notice", method: "GET", auth: "public", group: "Public", description: "Active public development notice", safeProbe: true },
   { id: "notice-post", path: "/notice", method: "POST", auth: "admin", group: "Public", description: "Publish the active development notice" },

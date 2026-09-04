@@ -173,6 +173,7 @@ export async function saveToken(
     const shouldActivate =
       options?.setActive === true ||
       !current.activeAccountId ||
+      !current.accessToken ||
       current.activeAccountId === result.id;
     const next = withDerivedAuth({
       ...current,

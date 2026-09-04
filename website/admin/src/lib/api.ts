@@ -69,6 +69,40 @@ export async function fetchHealth() {
   }>("/health", false);
 }
 
+export type SyncStatusPayload = {
+  ok: boolean;
+  overall: "online" | "degraded" | "offline";
+  checkedAt: string;
+  github: { ok: boolean };
+  adminKv: { configured: boolean };
+  mail: {
+    configured: boolean;
+    transport: string | null;
+    relayBound?: boolean;
+    resendConfigured?: boolean;
+  };
+  stats: {
+    enabled: boolean;
+    intervalMinutes: number;
+    lastRunAt: string | null;
+    lastRunOk: boolean | null;
+    lastRunError: string | null;
+    kvQuotaHit: boolean;
+    cache: {
+      refreshedAt: string | null;
+      ageSeconds: number | null;
+      fresh: boolean;
+      displayTotal: number | null;
+      syncStatus: string | null;
+    };
+  };
+  hint: string | null;
+};
+
+export async function fetchSyncStatus() {
+  return apiGet<SyncStatusPayload>("/sync/status");
+}
+
 export async function fetchReleases() {
   return apiGet<{ releases: Release[] }>("/releases");
 }

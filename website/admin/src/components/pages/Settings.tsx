@@ -12,6 +12,7 @@ import SubscribePromptCard from "../ui/SubscribePromptCard";
 import ReindexPolicyCard from "../ui/ReindexPolicyCard";
 import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
+import CloudEnvironmentsCard from "../ui/CloudEnvironmentsCard";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailabilityLabel } from "../../lib/download-stats";
@@ -68,6 +69,8 @@ export default function Settings() {
       <ReindexPolicyCard />
 
       <CronSchedulesCard />
+
+      <CloudEnvironmentsCard />
 
       <Card>
         <h3 className="font-semibold mb-4">Theme</h3>

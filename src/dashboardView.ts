@@ -361,14 +361,17 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       }
       if (message.type === "addAccount") {
         await vscode.commands.executeCommand("cursorCurseMonitor.addAccount");
+        await deliverSnapshot(true);
         return;
       }
       if (message.type === "loginWithBrowser") {
         await vscode.commands.executeCommand("cursorCurseMonitor.loginWithBrowser");
+        await deliverSnapshot(true);
         return;
       }
       if (message.type === "pasteToken") {
         await vscode.commands.executeCommand("cursorCurseMonitor.pasteToken");
+        await deliverSnapshot(true);
         return;
       }
       if (message.type === "removeAccount") {
@@ -376,6 +379,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           "cursorCurseMonitor.removeAccount",
           typeof message.accountId === "string" ? message.accountId : undefined
         );
+        await deliverSnapshot(true);
         return;
       }
       if (message.type === "subscribeUpdates" && typeof message.email === "string") {
@@ -2255,7 +2259,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
             ? 'Sign in to Cursor and refresh'
             : 'Waiting for usage data…';
         }
-        renderUsageAnalytics(snapshot.usageAnalytics);
+        requestUsageAnalyticsRefresh();
         return;
       }
 
@@ -2410,7 +2414,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           : 'Usage is at ' + Math.round(hero) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.')
         : "You're in control. We'll notify you before you reach your cap.";
 
-      renderUsageAnalytics(snapshot.usageAnalytics);
+      requestUsageAnalyticsRefresh();
 
       var mascot = document.getElementById('mascotLogo');
       if (mascot) {
