@@ -13,15 +13,32 @@ import ReindexPolicyCard from "../ui/ReindexPolicyCard";
 import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
 import CloudEnvironmentsCard from "../ui/CloudEnvironmentsCard";
+import FirebaseConfigCard from "../ui/FirebaseConfigCard";
+import GitHubConfigCard from "../ui/GitHubConfigCard";
+import CloudflareConfigCard from "../ui/CloudflareConfigCard";
+import SettingsTabNav, { persistSettingsTab, readSettingsTab, type SettingsTabId } from "../ui/SettingsTabNav";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailabilityLabel } from "../../lib/download-stats";
 
+const TABS: { id: SettingsTabId; label: string }[] = [
+  { id: "general", label: "General" },
+  { id: "mail", label: "Mail" },
+  { id: "discord", label: "Discord" },
+  { id: "firebase", label: "Firebase" },
+  { id: "github", label: "GitHub" },
+  { id: "cloudflare", label: "Cloudflare" },
+  { id: "automation", label: "Automation" },
+  { id: "cloud-dev", label: "Cloud dev" },
+  { id: "services", label: "Services" },
+];
+
 /**
- * Renders the application settings page with theme controls, integrations, environment details, and API health information.
+ * Renders the application settings page with tabbed service sections.
  */
 export default function Settings() {
   const { data: siteData } = useSiteData();
+  const [tab, setTab] = useState<SettingsTabId>(() => readSettingsTab());
   const [health, setHealth] = useState<
     (Awaited<ReturnType<typeof fetchHealth>> & {
       githubTokenConfigured?: boolean;
@@ -41,204 +58,236 @@ export default function Settings() {
     localStorage.setItem("admin-theme", theme);
   }, [theme]);
 
+  const onTabChange = (next: SettingsTabId) => {
+    setTab(next);
+    persistSettingsTab(next);
+  };
+
   const ext = siteData?.browserExtension;
 
   return (
     <div className="space-y-6 animate-fade-slide-up">
-      <PageHeader title="Settings" description="Mail transport, Lorapok Labs Family Discord, subscribe prompts, cursor index, cron schedules, and API health." />
+      <PageHeader
+        title="Settings"
+        description="Configure mail, Discord, Firebase, GitHub, Cloudflare, automation, and platform health — secrets sync to GitHub admin-production."
+      />
 
-      <HelpSupportCard />
+      <SettingsTabNav tabs={TABS} active={tab} onChange={onTabChange} />
 
-      <MailSetupChecklist />
-
-      <MailTransportCard />
-
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Discord integrations</h2>
-        <p className="text-sm text-[var(--color-muted)]">
-          Lorapok Labs Family community hook, deployment status, and feedback prompts.
-        </p>
-      </div>
-
-      <DiscordCommunityCard />
-      <DiscordIntegrationsCard />
-      <DiscordFeedbackCard />
-
-      <SubscribePromptCard />
-
-      <ReindexPolicyCard />
-
-      <CronSchedulesCard />
-
-      <CloudEnvironmentsCard />
-
-      <Card>
-        <h3 className="font-semibold mb-4">Theme</h3>
-        <div className="flex gap-3">
-          {(["dark", "light"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setTheme(value)}
-              className={`px-4 py-2 rounded-xl border capitalize transition-all ${
-                theme === value
-                  ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]"
-                  : "border-[var(--color-border)] text-[var(--color-muted)] hover:bg-white/5"
-              }`}
-            >
-              {value}
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      <ConnectedServicesCard />
-
-      <Card>
-        <h3 className="font-semibold mb-4">Environment</h3>
-        <dl className="space-y-3 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-[var(--color-muted)] shrink-0">Admin URL</dt>
-            <dd className="font-[family-name:var(--font-mono)] text-xs text-right break-all">
-              {health?.adminPublicUrl ?? "https://cursor-dev.lorapok.tech"}
-            </dd>
-          </div>
-          {siteData && (
-            <>
+      {tab === "general" && (
+        <>
+          <HelpSupportCard />
+          <Card>
+            <h3 className="font-semibold mb-4">Theme</h3>
+            <div className="flex gap-3">
+              {(["dark", "light"] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTheme(value)}
+                  className={`px-4 py-2 rounded-xl border capitalize transition-all ${
+                    theme === value
+                      ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]"
+                      : "border-[var(--color-border)] text-[var(--color-muted)] hover:bg-white/5"
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </Card>
+          <Card>
+            <h3 className="font-semibold mb-4">Environment</h3>
+            <dl className="space-y-3 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-[var(--color-muted)]">Total downloads</dt>
-                <dd className="text-right">
-                  <span className="font-semibold text-[var(--color-neon)]">
-                    {formatDownloadCount(getDisplayDownloadTotal(siteData))}
-                  </span>
-                  <span className="block text-[10px] text-[var(--color-muted)] mt-0.5">
-                    {downloadStatsAvailabilityLabel(siteData)}
-                  </span>
+                <dt className="text-[var(--color-muted)] shrink-0">Admin URL</dt>
+                <dd className="font-[family-name:var(--font-mono)] text-xs text-right break-all">
+                  {health?.adminPublicUrl ?? "https://cursor-dev.lorapok.tech"}
                 </dd>
               </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-[var(--color-muted)]">Site data synced</dt>
-                <dd>{new Date(siteData.generatedAt).toLocaleString()}</dd>
-              </div>
-            </>
-          )}
-          {ext && (
-            <>
-              <div className="flex justify-between items-center gap-4">
-                <dt className="text-[var(--color-muted)]">Firefox AMO</dt>
-                <dd>
-                  <Badge variant={ext.firefox?.published ? "synced" : "warn"}>
-                    {ext.firefox?.published ? `v${ext.version ?? "—"} live` : "Pending"}
-                  </Badge>
-                </dd>
-              </div>
-              <div className="flex justify-between items-center gap-4">
-                <dt className="text-[var(--color-muted)]">Chrome Web Store</dt>
-                <dd>
-                  <Badge variant="warn">Zip only — not published</Badge>
-                </dd>
-              </div>
-            </>
-          )}
-        </dl>
-      </Card>
-
-      <Card>
-        <h3 className="font-semibold mb-4">API Health</h3>
-        {health ? (
-          <dl className="space-y-3 text-sm">
-            <div className="flex justify-between items-center">
-              <dt className="text-[var(--color-muted)]">GitHub API</dt>
-              <dd><Badge variant={health.checks.github ? "synced" : "danger"}>{health.checks.github ? "OK" : "Down"}</Badge></dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-[var(--color-muted)]">Firebase project</dt>
-              <dd className="font-[family-name:var(--font-mono)]">{health.firebaseProject}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-[var(--color-muted)]">Last check</dt>
-              <dd>{new Date(health.checks.timestamp).toLocaleString()}</dd>
-            </div>
-            {health.githubTokenConfigured != null && (
-              <div className="flex justify-between items-center">
-                <dt className="text-[var(--color-muted)]">GitHub token (server)</dt>
-                <dd><Badge variant={health.githubTokenConfigured ? "synced" : "warn"}>{health.githubTokenConfigured ? "Configured" : "Missing"}</Badge></dd>
-              </div>
-            )}
-            {health.adminKvConfigured != null && (
-              <div className="flex justify-between items-center">
-                <dt className="text-[var(--color-muted)]">Admin KV (team sync)</dt>
-                <dd><Badge variant={health.adminKvConfigured ? "synced" : "warn"}>{health.adminKvConfigured ? "Configured" : "Use ADMIN_EMAILS"}</Badge></dd>
-              </div>
-            )}
-            {health.mailConfigured != null && (
-              <div className="flex justify-between items-center">
-                <dt className="text-[var(--color-muted)]">Mailbox transport</dt>
-                <dd>
-                  <Badge
-                    variant={
-                      !health.mailConfigured
-                        ? "warn"
-                        : health.mailRelayBound
-                          ? "synced"
-                          : health.mailTransport === "cloudflare-rest"
+              {siteData && (
+                <>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-[var(--color-muted)]">Total downloads</dt>
+                    <dd className="text-right">
+                      <span className="font-semibold text-[var(--color-neon)]">
+                        {formatDownloadCount(getDisplayDownloadTotal(siteData))}
+                      </span>
+                      <span className="block text-[10px] text-[var(--color-muted)] mt-0.5">
+                        {downloadStatsAvailabilityLabel(siteData)}
+                      </span>
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-[var(--color-muted)]">Site data synced</dt>
+                    <dd>{new Date(siteData.generatedAt).toLocaleString()}</dd>
+                  </div>
+                </>
+              )}
+              {ext && (
+                <>
+                  <div className="flex justify-between items-center gap-4">
+                    <dt className="text-[var(--color-muted)]">Firefox AMO</dt>
+                    <dd>
+                      <Badge variant={ext.firefox?.published ? "synced" : "warn"}>
+                        {ext.firefox?.published ? `v${ext.version ?? "—"} live` : "Pending"}
+                      </Badge>
+                    </dd>
+                  </div>
+                  <div className="flex justify-between items-center gap-4">
+                    <dt className="text-[var(--color-muted)]">Chrome Web Store</dt>
+                    <dd>
+                      <Badge variant="warn">Zip only — not published</Badge>
+                    </dd>
+                  </div>
+                </>
+              )}
+            </dl>
+          </Card>
+          <Card>
+            <h3 className="font-semibold mb-4">API Health</h3>
+            {health ? (
+              <dl className="space-y-3 text-sm">
+                <div className="flex justify-between items-center">
+                  <dt className="text-[var(--color-muted)]">GitHub API</dt>
+                  <dd>
+                    <Badge variant={health.checks.github ? "synced" : "danger"}>
+                      {health.checks.github ? "OK" : "Down"}
+                    </Badge>
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-[var(--color-muted)]">Firebase project</dt>
+                  <dd className="font-[family-name:var(--font-mono)]">{health.firebaseProject}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-[var(--color-muted)]">Last check</dt>
+                  <dd>{new Date(health.checks.timestamp).toLocaleString()}</dd>
+                </div>
+                {health.githubTokenConfigured != null && (
+                  <div className="flex justify-between items-center">
+                    <dt className="text-[var(--color-muted)]">GitHub token (server)</dt>
+                    <dd>
+                      <Badge variant={health.githubTokenConfigured ? "synced" : "warn"}>
+                        {health.githubTokenConfigured ? "Configured" : "Missing"}
+                      </Badge>
+                    </dd>
+                  </div>
+                )}
+                {health.adminKvConfigured != null && (
+                  <div className="flex justify-between items-center">
+                    <dt className="text-[var(--color-muted)]">Admin KV (team sync)</dt>
+                    <dd>
+                      <Badge variant={health.adminKvConfigured ? "synced" : "warn"}>
+                        {health.adminKvConfigured ? "Configured" : "Use ADMIN_EMAILS"}
+                      </Badge>
+                    </dd>
+                  </div>
+                )}
+                {health.mailConfigured != null && (
+                  <div className="flex justify-between items-center">
+                    <dt className="text-[var(--color-muted)]">Mailbox transport</dt>
+                    <dd>
+                      <Badge
+                        variant={
+                          !health.mailConfigured
                             ? "warn"
-                            : "synced"
-                    }
-                  >
-                    {health.mailConfigured ? health.mailTransport ?? "configured" : "Not configured"}
-                  </Badge>
-                </dd>
-              </div>
+                            : health.mailRelayBound
+                              ? "synced"
+                              : health.mailTransport === "cloudflare-rest"
+                                ? "warn"
+                                : "synced"
+                        }
+                      >
+                        {health.mailConfigured ? health.mailTransport ?? "configured" : "Not configured"}
+                      </Badge>
+                    </dd>
+                  </div>
+                )}
+                {health.mailHint &&
+                  (health.mailConfigured ? health.mailTransport === "cloudflare-rest" && !health.mailRelayBound : true) && (
+                    <p className="text-xs text-[var(--color-muted)] pt-1">{health.mailHint}</p>
+                  )}
+                {health.cronSecretConfigured != null && (
+                  <div className="flex justify-between items-center">
+                    <dt className="text-[var(--color-muted)]">Cron secret (worker)</dt>
+                    <dd>
+                      <Badge variant={health.cronSecretConfigured ? "synced" : "warn"}>
+                        {health.cronSecretConfigured ? "Configured" : "Missing"}
+                      </Badge>
+                    </dd>
+                  </div>
+                )}
+                {health.statsRefreshEnabled != null && (
+                  <div className="flex justify-between items-center gap-4">
+                    <dt className="text-[var(--color-muted)]">Stats refresh cron</dt>
+                    <dd>
+                      <Badge variant={health.statsRefreshEnabled ? "synced" : "warn"}>
+                        {health.statsRefreshEnabled
+                          ? `Every ${health.statsRefreshIntervalMinutes ?? "?"} min`
+                          : "Paused"}
+                      </Badge>
+                    </dd>
+                  </div>
+                )}
+                {health.discordDigestEnabled != null && (
+                  <div className="flex justify-between items-center gap-4">
+                    <dt className="text-[var(--color-muted)]">Discord digest cron</dt>
+                    <dd>
+                      <Badge variant={health.discordDigestEnabled ? "synced" : "warn"}>
+                        {health.discordDigestEnabled
+                          ? `Every ${health.discordDigestIntervalMinutes ?? "?"} min`
+                          : "Paused"}
+                      </Badge>
+                    </dd>
+                  </div>
+                )}
+                {health.siteDataUrl && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-[var(--color-muted)] shrink-0">Site data URL</dt>
+                    <dd className="font-[family-name:var(--font-mono)] text-xs text-right break-all">{health.siteDataUrl}</dd>
+                  </div>
+                )}
+              </dl>
+            ) : (
+              <p className="text-sm text-[var(--color-muted)]">Health check unavailable in this environment.</p>
             )}
-            {health.mailHint && (health.mailConfigured ? health.mailTransport === "cloudflare-rest" && !health.mailRelayBound : true) && (
-              <p className="text-xs text-[var(--color-muted)] pt-1">{health.mailHint}</p>
-            )}
-            {health.cronSecretConfigured != null && (
-              <div className="flex justify-between items-center">
-                <dt className="text-[var(--color-muted)]">Cron secret (worker)</dt>
-                <dd>
-                  <Badge variant={health.cronSecretConfigured ? "synced" : "warn"}>
-                    {health.cronSecretConfigured ? "Configured" : "Missing"}
-                  </Badge>
-                </dd>
-              </div>
-            )}
-            {health.statsRefreshEnabled != null && (
-              <div className="flex justify-between items-center gap-4">
-                <dt className="text-[var(--color-muted)]">Stats refresh cron</dt>
-                <dd>
-                  <Badge variant={health.statsRefreshEnabled ? "synced" : "warn"}>
-                    {health.statsRefreshEnabled
-                      ? `Every ${health.statsRefreshIntervalMinutes ?? "?"} min`
-                      : "Paused"}
-                  </Badge>
-                </dd>
-              </div>
-            )}
-            {health.discordDigestEnabled != null && (
-              <div className="flex justify-between items-center gap-4">
-                <dt className="text-[var(--color-muted)]">Discord digest cron</dt>
-                <dd>
-                  <Badge variant={health.discordDigestEnabled ? "synced" : "warn"}>
-                    {health.discordDigestEnabled
-                      ? `Every ${health.discordDigestIntervalMinutes ?? "?"} min`
-                      : "Paused"}
-                  </Badge>
-                </dd>
-              </div>
-            )}
-            {health.siteDataUrl && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-[var(--color-muted)] shrink-0">Site data URL</dt>
-                <dd className="font-[family-name:var(--font-mono)] text-xs text-right break-all">{health.siteDataUrl}</dd>
-              </div>
-            )}
-          </dl>
-        ) : (
-          <p className="text-sm text-[var(--color-muted)]">Health check unavailable in this environment.</p>
-        )}
-      </Card>
+          </Card>
+        </>
+      )}
+
+      {tab === "mail" && (
+        <>
+          <MailSetupChecklist />
+          <MailTransportCard />
+        </>
+      )}
+
+      {tab === "discord" && (
+        <>
+          <p className="text-sm text-[var(--color-muted)] -mt-2">
+            Lorapok Labs Family community hook, deployment status, and feedback prompts.
+          </p>
+          <DiscordCommunityCard />
+          <DiscordIntegrationsCard />
+          <DiscordFeedbackCard />
+        </>
+      )}
+
+      {tab === "firebase" && <FirebaseConfigCard />}
+      {tab === "github" && <GitHubConfigCard />}
+      {tab === "cloudflare" && <CloudflareConfigCard />}
+
+      {tab === "automation" && (
+        <>
+          <SubscribePromptCard />
+          <ReindexPolicyCard />
+          <CronSchedulesCard />
+        </>
+      )}
+
+      {tab === "cloud-dev" && <CloudEnvironmentsCard />}
+      {tab === "services" && <ConnectedServicesCard />}
     </div>
   );
 }

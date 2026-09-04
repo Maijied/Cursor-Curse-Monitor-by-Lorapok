@@ -62,6 +62,23 @@ import {
 } from "./functions/api/_shared/cron-jobs-registry.js";
 import { runDiscordDigest } from "./functions/api/_shared/discord-digest.js";
 import { mergeSiteDataWithLiveCache, runStatsRefresh } from "./functions/api/_shared/stats-refresh.js";
+import {
+  isCompleteFirebaseConfig,
+  normalizeFirebaseConfig,
+  readFirebaseConfig,
+  sanitizeFirebaseConfigForClient,
+  toPublicFirebaseClientConfig,
+} from "./functions/api/_shared/firebase-config.js";
+import {
+  normalizeGithubIntegrationConfig,
+  readGithubIntegrationConfig,
+  sanitizeGithubIntegrationForClient,
+} from "./functions/api/_shared/github-integration-config.js";
+import {
+  normalizeCloudflareIntegrationConfig,
+  readCloudflareIntegrationConfig,
+  sanitizeCloudflareIntegrationForClient,
+} from "./functions/api/_shared/cloudflare-integration-config.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -99,6 +116,9 @@ const devStore = {
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
   subscribeConfig: { ...DEFAULT_SUBSCRIBE_CONFIG },
   cursorIndexConfig: { ...DEFAULT_CURSOR_INDEX_CONFIG },
+  firebaseConfig: null,
+  githubIntegration: normalizeGithubIntegrationConfig({}),
+  cloudflareIntegration: normalizeCloudflareIntegrationConfig({}),
   statsLiveCache: null,
 };
 
@@ -112,6 +132,16 @@ const devFunctionsEnv = () => ({
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   TESTMAIL_API_KEY: process.env.TESTMAIL_API_KEY,
   TESTMAIL_NAMESPACE: process.env.TESTMAIL_NAMESPACE,
+  VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY,
+  VITE_FIREBASE_AUTH_DOMAIN: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  VITE_FIREBASE_PROJECT_ID: process.env.VITE_FIREBASE_PROJECT_ID,
+  VITE_FIREBASE_STORAGE_BUCKET: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  VITE_FIREBASE_MESSAGING_SENDER_ID: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID,
+  VITE_FIREBASE_MEASUREMENT_ID: process.env.VITE_FIREBASE_MEASUREMENT_ID,
+  FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ?? process.env.VITE_FIREBASE_PROJECT_ID,
+  CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
+  ADMIN_PUBLIC_URL: process.env.ADMIN_PUBLIC_URL,
 });
 
 const devKvEntries = new Map();
@@ -140,6 +170,15 @@ const devKv = {
     if (key === "integrations:discord-digest") {
       return JSON.stringify(devStore.discordDigestConfig);
     }
+    if (key === "integrations:firebase") {
+      return devStore.firebaseConfig ? JSON.stringify(devStore.firebaseConfig) : null;
+    }
+    if (key === "integrations:github") {
+      return JSON.stringify(devStore.githubIntegration);
+    }
+    if (key === "integrations:cloudflare") {
+      return JSON.stringify(devStore.cloudflareIntegration);
+    }
     if (key === "stats:live-cache") {
       return devStore.statsLiveCache ? JSON.stringify(devStore.statsLiveCache) : null;
     }
@@ -167,6 +206,15 @@ const devKv = {
     }
     if (key === "integrations:discord-digest") {
       devStore.discordDigestConfig = JSON.parse(value);
+    }
+    if (key === "integrations:firebase") {
+      devStore.firebaseConfig = JSON.parse(value);
+    }
+    if (key === "integrations:github") {
+      devStore.githubIntegration = JSON.parse(value);
+    }
+    if (key === "integrations:cloudflare") {
+      devStore.cloudflareIntegration = JSON.parse(value);
     }
     if (key === "stats:live-cache") {
       devStore.statsLiveCache = JSON.parse(value);
@@ -967,6 +1015,188 @@ export function createDevApiMiddleware() {
           };
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/firebase-config" && req.method === "GET") {
+      readFirebaseConfig(devFunctionsEnv())
+        .then((config) => {
+          const client = toPublicFirebaseClientConfig(config);
+          res.setHeader("Content-Type", "application/json");
+          if (!client) {
+            res.statusCode = 503;
+            res.end(JSON.stringify({ ok: false, error: "Firebase is not configured" }));
+            return;
+          }
+          res.end(JSON.stringify({ ok: true, config: client }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/firebase/config" && req.method === "GET") {
+      readFirebaseConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeFirebaseConfigForClient(config) }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/firebase/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = (await readFirebaseConfig(devFunctionsEnv())) ?? normalizeFirebaseConfig({});
+          const next = normalizeFirebaseConfig({
+            ...current,
+            apiKey: parsed.apiKey !== undefined ? String(parsed.apiKey ?? "").trim() : current.apiKey,
+            authDomain: parsed.authDomain !== undefined ? String(parsed.authDomain ?? "").trim() : current.authDomain,
+            projectId: parsed.projectId !== undefined ? String(parsed.projectId ?? "").trim() : current.projectId,
+            storageBucket:
+              parsed.storageBucket !== undefined ? String(parsed.storageBucket ?? "").trim() : current.storageBucket,
+            messagingSenderId:
+              parsed.messagingSenderId !== undefined
+                ? String(parsed.messagingSenderId ?? "").trim()
+                : current.messagingSenderId,
+            appId: parsed.appId !== undefined ? String(parsed.appId ?? "").trim() : current.appId,
+            measurementId:
+              parsed.measurementId !== undefined ? String(parsed.measurementId ?? "").trim() : current.measurementId,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+            githubSecretsSyncedAt: new Date().toISOString(),
+          });
+          if (!isCompleteFirebaseConfig(next)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Incomplete Firebase config" }));
+            return;
+          }
+          devStore.firebaseConfig = next;
+          await devKv.put("integrations:firebase", JSON.stringify(next));
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeFirebaseConfigForClient(next) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/github/config" && req.method === "GET") {
+      readGithubIntegrationConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeGithubIntegrationForClient(config, devFunctionsEnv(), []),
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/github/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = await readGithubIntegrationConfig(devFunctionsEnv());
+          const next = normalizeGithubIntegrationConfig({
+            repository: parsed.repository !== undefined ? String(parsed.repository ?? "").trim() : current.repository,
+            secretsEnvironment:
+              parsed.secretsEnvironment !== undefined
+                ? String(parsed.secretsEnvironment ?? "").trim()
+                : current.secretsEnvironment,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+            githubSecretsSyncedAt: current.githubSecretsSyncedAt,
+          });
+          devStore.githubIntegration = next;
+          await devKv.put("integrations:github", JSON.stringify(next));
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeGithubIntegrationForClient(next, devFunctionsEnv(), []),
+            })
+          );
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/cloudflare/config" && req.method === "GET") {
+      readCloudflareIntegrationConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeCloudflareIntegrationForClient(config, devFunctionsEnv(), []),
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/cloudflare/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = await readCloudflareIntegrationConfig(devFunctionsEnv());
+          const next = normalizeCloudflareIntegrationConfig({
+            ...current,
+            accountId: parsed.accountId !== undefined ? String(parsed.accountId ?? "").trim() : current.accountId,
+            pagesProjectName:
+              parsed.pagesProjectName !== undefined
+                ? String(parsed.pagesProjectName ?? "").trim()
+                : current.pagesProjectName,
+            adminPublicUrl:
+              parsed.adminPublicUrl !== undefined ? String(parsed.adminPublicUrl ?? "").trim() : current.adminPublicUrl,
+            siteDataUrl: parsed.siteDataUrl !== undefined ? String(parsed.siteDataUrl ?? "").trim() : current.siteDataUrl,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+            githubSecretsSyncedAt: new Date().toISOString(),
+          });
+          devStore.cloudflareIntegration = next;
+          await devKv.put("integrations:cloudflare", JSON.stringify(next));
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeCloudflareIntegrationForClient(next, devFunctionsEnv(), []),
+            })
+          );
         } catch {
           res.statusCode = 400;
           res.end(JSON.stringify({ error: "Invalid JSON" }));

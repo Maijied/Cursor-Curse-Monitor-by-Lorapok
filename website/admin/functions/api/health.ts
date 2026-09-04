@@ -1,6 +1,7 @@
 import { jsonResponse } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { getMailTransportStatus } from "./_shared/mail.js";
+import { readFirebaseConfig } from "./_shared/firebase-config.js";
 import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
 import { buildPublicSiteConfig } from "./_shared/subscribe-config.js";
 import {
@@ -30,6 +31,7 @@ export async function onRequestGet(context) {
   }
 
   const mail = getMailTransportStatus(env);
+  const firebaseConfig = await readFirebaseConfig(env);
   const subscribeSite = await buildPublicSiteConfig(env);
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
@@ -38,7 +40,7 @@ export async function onRequestGet(context) {
   return jsonResponse({
     ok: checks.github,
     checks,
-    firebaseProject: env.FIREBASE_PROJECT_ID ?? "cursor-curse-by-lorapok",
+    firebaseProject: firebaseConfig?.projectId ?? env.FIREBASE_PROJECT_ID ?? "cursor-curse-by-lorapok",
     githubTokenConfigured: Boolean(env.GITHUB_TOKEN),
     adminKvConfigured: Boolean(env.ADMIN_KV),
     mailConfigured: mail.configured,

@@ -1354,3 +1354,107 @@ export async function inviteAdminEmail(email: string) {
   if (!res.ok) throw new Error(data.error || "Invite failed");
   return data;
 }
+
+export type FirebaseIntegrationConfig = {
+  configured: boolean;
+  apiKeyPreview: string | null;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  githubSecretsSyncedAt: string | null;
+};
+
+export type GithubIntegrationConfig = {
+  repository: string;
+  secretsEnvironment: string;
+  tokenConfigured: boolean;
+  secretsPresent: string[];
+  updatedAt: string | null;
+  updatedBy: string | null;
+  githubSecretsSyncedAt: string | null;
+};
+
+export type CloudflareIntegrationConfig = {
+  accountId: string;
+  accountIdPreview: string | null;
+  pagesProjectName: string;
+  adminPublicUrl: string;
+  siteDataUrl: string;
+  apiTokenConfigured: boolean;
+  emailApiTokenConfigured: boolean;
+  cronSecretConfigured: boolean;
+  resendApiKeyConfigured: boolean;
+  secretsPresent: string[];
+  updatedAt: string | null;
+  updatedBy: string | null;
+  githubSecretsSyncedAt: string | null;
+};
+
+export async function fetchFirebaseConfigApi() {
+  return apiGet<{ ok: boolean; config: FirebaseIntegrationConfig }>("/integrations/firebase/config");
+}
+
+export async function putFirebaseConfigApi(payload: Record<string, string | boolean | undefined>) {
+  const res = await fetch(`${API_BASE}/integrations/firebase/config`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save Firebase settings");
+  return data as {
+    ok: boolean;
+    config: FirebaseIntegrationConfig;
+    githubSecretsSyncedAt?: string | null;
+    githubSyncWarning?: string | null;
+  };
+}
+
+export async function fetchGithubConfigApi() {
+  return apiGet<{ ok: boolean; config: GithubIntegrationConfig }>("/integrations/github/config");
+}
+
+export async function putGithubConfigApi(payload: {
+  repository?: string;
+  secretsEnvironment?: string;
+  githubToken?: string;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/github/config`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save GitHub settings");
+  return data as {
+    ok: boolean;
+    config: GithubIntegrationConfig;
+    githubSecretsSyncedAt?: string | null;
+    githubSyncWarning?: string | null;
+  };
+}
+
+export async function fetchCloudflareConfigApi() {
+  return apiGet<{ ok: boolean; config: CloudflareIntegrationConfig }>("/integrations/cloudflare/config");
+}
+
+export async function putCloudflareConfigApi(payload: Record<string, string | boolean | undefined>) {
+  const res = await fetch(`${API_BASE}/integrations/cloudflare/config`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save Cloudflare settings");
+  return data as {
+    ok: boolean;
+    config: CloudflareIntegrationConfig;
+    githubSecretsSyncedAt?: string | null;
+    githubSyncWarning?: string | null;
+  };
+}
