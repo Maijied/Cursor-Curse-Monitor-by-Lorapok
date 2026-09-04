@@ -186,6 +186,56 @@ export function syncCursorCronSecret(cronSecret) {
 }
 
 /**
+ * @param {Record<string, unknown>} vault
+ */
+function resolveCloudflareApiTokenFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
+  const candidates = [
+    cursor.cloudfare_account_access,
+    cursor.cloudflare_account_access,
+    cursor.cloudflare_api_token,
+    cloudflare.api_token,
+    cloudflare.account_api_token,
+    cursor.cloudflare_oauth_token,
+  ];
+  for (const value of candidates) {
+    const token = String(value ?? "").trim();
+    if (token) return token;
+  }
+  return undefined;
+}
+
+/**
+ * @param {Record<string, unknown>} vault
+ */
+function resolveCloudflareEmailTokenFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
+  const candidates = [
+    cursor.cloudflare_email_api_token,
+    cloudflare.email_api_token,
+    resolveCloudflareApiTokenFromVault(vault),
+  ];
+  for (const value of candidates) {
+    const token = String(value ?? "").trim();
+    if (token) return token;
+  }
+  return undefined;
+}
+
+/**
+ * @param {Record<string, unknown>} vault
+ */
+function resolveCloudflareAccountIdFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
+  return (
+    String(cursor.cloudflare_account_id ?? cloudflare.account_id ?? "").trim() || undefined
+  );
+}
+
+/**
  * Loads Cursor Cloudflare credentials and a GitHub token from the credential vault.
  * @return {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} The normalized credentials, or `null` if no usable vault is found.
  */
@@ -194,12 +244,16 @@ export function loadCursorCloudflareSecretsFromVault() {
   for (const candidate of candidates) {
     const vault = gpgDecrypt(candidate);
     const cursor = vault?.cursor;
-    if (!cursor && !vault?.titi && !vault?.github) continue;
+    if (!cursor && !vault?.titi && !vault?.github && !vault?.cloudflare) continue;
     const githubToken = resolveGithubTokenFromVault(vault);
+    const apiToken = resolveCloudflareApiTokenFromVault(vault);
+    const emailToken = resolveCloudflareEmailTokenFromVault(vault);
+    const accountId = resolveCloudflareAccountIdFromVault(vault);
+    if (!apiToken && !emailToken && !accountId && !githubToken) continue;
     return {
-      apiToken: String(cursor?.cloudflare_api_token ?? "").trim() || undefined,
-      emailToken: String(cursor?.cloudflare_email_api_token ?? "").trim() || undefined,
-      accountId: String(cursor?.cloudflare_account_id ?? "").trim() || undefined,
+      apiToken,
+      emailToken,
+      accountId,
       cronSecret: String(cursor?.cron_secret ?? "").trim() || undefined,
       githubToken,
       resendApiKey: String(cursor?.resend_api_key ?? "").trim() || undefined,
