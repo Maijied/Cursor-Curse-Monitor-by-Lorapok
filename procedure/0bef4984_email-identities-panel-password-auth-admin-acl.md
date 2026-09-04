@@ -38,7 +38,7 @@
 - [x] AUTH-07 requirePermission on mutating + key read routes
 - [x] AUTH-09 ACL audit log (`acl-audit.js`, Logs ACL filter)
 - [x] AUTH-10 RBAC matrix + non-master `requirePermission` smoke tests
-- [ ] PR opened
+- [x] PR opened ([#121](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/121))
 - [ ] Merged
 - [ ] Post-merge verification
 
