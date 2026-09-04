@@ -20,7 +20,7 @@ function providerBadge(provider: CloudProvider) {
     );
   }
   return (
-    <Badge variant="muted" className="!text-[10px]">
+    <Badge variant="neutral" className="!text-[10px]">
       Other
     </Badge>
   );
