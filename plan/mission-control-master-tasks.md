@@ -150,7 +150,6 @@
 | MAIL-04 | Refresh `CLOUDFLARE_EMAIL_API_TOKEN` | **blocked** | sync-mail 403 — needs new token in Cloudflare dashboard |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **next** | if external mail needed |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
-| MAIL-07 | Mail sync workflow polling in UI | **next** | Reliability C |
 | MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
 
 ---
