@@ -83,7 +83,7 @@
 | CF-02 | Public `GET /api/firebase-config` | **done** | smoke 200 production |
 | CF-03 | `ccm-mail-relay` worker deploy | **next** | `repair-mail.mjs` |
 | CF-04 | `deploy-infra` workflow_dispatch for full mail | **next** | docs/guides |
-| CF-05 | Production deploy after `a42a7480` | **done** | fast deploy 2026-09-05; routes return JSON |
+| CF-05 | Production deploy after settings phases | **done** | fast deploy 2026-09-05; D1 + KV UX live at cursor-dev.lorapok.tech |
 | CF-06 | Fix `firebase-config.ts` import paths (Pages bundle) | **done** | `pages-functions-imports.test.mjs` |
 
 ---
@@ -221,7 +221,7 @@
 | SET-02 | Phased completion `settings-phases-complete.md` | **done** | Phases 0–4 |
 | SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex |
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
-| SET-05 | Production smoke (login + tabs) | **partial** | `/api/firebase-config` **200**; login UI smoke manual |
+| SET-05 | Production smoke (login + tabs) | **partial** | health + firebase-config + D1 **200/ok**; login UI smoke manual |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
 
 ---
@@ -229,10 +229,9 @@
 ## Recommended **next** queue (priority order)
 
 1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
-2. **KV-09 / STAT-06** — Wait for KV UTC reset OR disable stats in Settings → Automation
+2. **KV-09 / STAT-06** — Wait for KV UTC reset OR pause stats in Settings → Automation
 3. **R2-02** — R2 bucket + binding for badge/SVG blobs
 4. **DC-03** — Discord webhooks in production KV
-5. Deploy Mission Control (pick up ADMIN_D1 + D1 log writes)
 
 ---
 
