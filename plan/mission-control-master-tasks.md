@@ -70,8 +70,8 @@
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | R2-01 | Design: `stats:readme-svg` + badge blobs to R2 | **deferred** | Reliability plan B3 option B |
-| R2-02 | R2 bucket + binding | **next** | wrangler + cred vault |
-| R2-03 | Read path in stats refresh + shields API | **next** | After R2-02 |
+| R2-02 | R2 bucket + binding | **blocked** | Enable R2 in CF dashboard → `create-r2-stats-bucket.mjs` → uncomment `wrangler.toml` |
+| R2-03 | Read path in stats refresh + shields API | **done** | `r2-stats.js` + stats-refresh/badge/readme.svg R2-first |
 
 ---
 
@@ -147,7 +147,7 @@
 | MAIL-01 | Mail transport card + Settings tab | **done** | themed |
 | MAIL-02 | 60s polling on mail card | **done** | `useIntervalRefresh` |
 | MAIL-03 | FieldHelp on sending domain | **done** | Phase 2 |
-| MAIL-04 | Refresh `CLOUDFLARE_EMAIL_API_TOKEN` | **blocked** | sync-mail 403 — needs new token in Cloudflare dashboard |
+| MAIL-04 | Refresh `CLOUDFLARE_EMAIL_API_TOKEN` | **partial** | GH deploy token synced via OAuth; vault `cloudflare_api_token` invalid (1000) — store long-lived Pages+Workers token |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **next** | if external mail needed |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
 | MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
@@ -228,9 +228,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
-2. **KV-09 / STAT-06** — Wait for KV UTC reset OR pause stats in Settings → Automation
-3. **R2-02** — R2 bucket + binding for badge/SVG blobs
+1. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
+2. **MAIL-04** — Store valid long-lived API token in cred vault (`cloudflare_api_token` currently invalid)
+3. **KV-09 / STAT-06** — KV UTC reset or pause stats
 4. **DC-03** — Discord webhooks in production KV
 
 ---
@@ -240,7 +240,8 @@
 | Blocker | Unblocks |
 |---------|----------|
 | KV daily quota exhausted | STAT-06, STAT-07, KV-09 |
-| `CLOUDFLARE_EMAIL_API_TOKEN` expired | MAIL-04, mail send probe |
+| `cloudflare_api_token` invalid in vault | MAIL-04 vault sync — use Pages+Workers Edit token; GH synced via wrangler OAuth |
+| R2 not enabled on account | R2-02 bucket creation (code 10042) |
 | Discord webhooks not in KV | DC-03, community notifications |
 
 ---

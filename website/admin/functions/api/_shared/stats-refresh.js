@@ -12,6 +12,7 @@ import {
 } from "./stats-refresh-config.js";
 import { recordCronJobRun } from "./cron-schedule.js";
 import { formatKvPutError, putKvJsonIfChanged, putKvStringIfChanged } from "./kv-put.js";
+import { writeStatsArtifactsR2 } from "./r2-stats.js";
 import { isKvQuotaError, isKvWritesPaused, nextUtcQuotaResetIso } from "./kv-quota.js";
 import { logSystemEvent } from "./system-log.js";
 import {
@@ -238,10 +239,14 @@ export async function runStatsRefresh(env, options = {}) {
         "openvsx-total": renderShieldsBadge(readmeStats, "openvsx-total"),
         vscode: renderShieldsBadge(readmeStats, "vscode"),
       };
-      await Promise.all([
-        putKvStringIfChanged(env, STATS_README_SVG_KEY, renderReadmeStatsSvg(readmeStats)),
-        putKvJsonIfChanged(env, STATS_BADGES_BUNDLE_KEY, badgeBundle),
-      ]);
+      const svg = renderReadmeStatsSvg(readmeStats);
+      const r2Written = await writeStatsArtifactsR2(env, { svg, badgeBundle });
+      if (!r2Written) {
+        await Promise.all([
+          putKvStringIfChanged(env, STATS_README_SVG_KEY, svg),
+          putKvJsonIfChanged(env, STATS_BADGES_BUNDLE_KEY, badgeBundle),
+        ]);
+      }
     }
   }
 

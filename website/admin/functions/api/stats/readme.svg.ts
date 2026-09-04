@@ -1,5 +1,6 @@
 import { fetchSiteDataWithLiveCache } from "../_shared/stats-refresh.js";
 import { STATS_README_SVG_KEY } from "../_shared/stats-refresh-config.js";
+import { getStatsR2Text, STATS_R2_README_KEY } from "../_shared/r2-stats.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg } from "../_shared/readme-stats.js";
 
 const CACHE_HEADERS = {
@@ -11,7 +12,9 @@ const CACHE_HEADERS = {
 export async function onRequestGet(context) {
   const { env } = context;
   try {
-    const cachedSvg = env.ADMIN_KV?.get ? await env.ADMIN_KV.get(STATS_README_SVG_KEY) : null;
+    const cachedSvg =
+      (await getStatsR2Text(env, STATS_R2_README_KEY)) ??
+      (env.ADMIN_KV?.get ? await env.ADMIN_KV.get(STATS_README_SVG_KEY) : null);
     if (cachedSvg) {
       return new Response(cachedSvg, { status: 200, headers: CACHE_HEADERS });
     }

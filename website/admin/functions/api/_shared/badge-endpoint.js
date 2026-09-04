@@ -1,4 +1,5 @@
 import { fetchSiteDataWithLiveCache } from "./stats-refresh.js";
+import { readStatsBadgesR2 } from "./r2-stats.js";
 import {
   buildReadmeStatsFromSiteData,
   renderShieldsBadge,
@@ -45,6 +46,11 @@ export function resolveBadgeKind(raw) {
  * @param {"total"|"openvsx"|"openvsx-total"|"vscode"} kind
  */
 export async function buildBadgePayload(env, kind) {
+  const r2Bundle = await readStatsBadgesR2(env);
+  if (r2Bundle?.[kind]) {
+    return { status: 200, body: r2Bundle[kind] };
+  }
+
   if (env.ADMIN_KV?.get) {
     const bundleRaw = await env.ADMIN_KV.get(BADGE_BUNDLE_KEY);
     if (bundleRaw) {

@@ -20,6 +20,11 @@ binding = "ADMIN_D1"
 database_name = "ccm-admin-d1"
 database_id = "c38fc653-be43-4222-976b-da5ab829107a"
 
+# Phase 2 blobs — after enabling R2 in dashboard + `node scripts/create-r2-stats-bucket.mjs`, add:
+# [[r2_buckets]]
+# binding = "STATS_R2"
+# bucket_name = "ccm-admin-stats"
+
 # Pages Functions use REST mail (CLOUDFLARE_EMAIL_API_TOKEN). send_email binding is Workers-only.
 # Mission Control calls ccm-mail-relay via service binding (preferred — no REST token needed).
 

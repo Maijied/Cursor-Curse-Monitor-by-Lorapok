@@ -24,6 +24,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **ADMIN_D1 binding** — Cloudflare D1 `ccm-admin-d1` for Phase 2 logs/subscribers (`website/admin/d1/schema.sql`); health probes on `/api/health` and Infrastructure card
 - **Connected Services Firebase health** — distinguishes client bootstrap availability from signed-in session
 - **System logs on D1** — `logSystemEvent` writes to `ADMIN_D1` when bound (skips KV scatter); migration script `migrate-system-logs-to-d1.mjs`
+- **STATS_R2 read/write path** — stats refresh and badge/readme endpoints prefer R2 when bound; KV fallback until bucket is provisioned
+- **`sync-cloudflare-cred-vault.mjs`** — push vault Cloudflare tokens to GitHub/Pages with wrangler OAuth fallback
 
 ### Fixed
 
