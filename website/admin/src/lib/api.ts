@@ -104,6 +104,21 @@ export type SyncStatusPayload = {
     };
   };
   hint: string | null;
+  services?: Array<{
+    id: string;
+    label: string;
+    used: number;
+    limit: number | null;
+    dailyUsed: number;
+    dailyLimit: number | null;
+    remaining: number | null;
+    quotaAvailable: boolean;
+    available: boolean;
+    configured: boolean;
+    probeOk: boolean | null;
+    fallbackTo: string[];
+  }>;
+  servicesUpdatedAt?: string | null;
 };
 
 export async function fetchSyncStatus() {
@@ -1414,6 +1429,8 @@ export type ResendIntegrationConfig = {
   resendDomainVerified: boolean;
   resendFirstExternal: boolean;
   workersFreeMode: boolean;
+  monthlyEmailLimit: number;
+  dailyEmailLimit: number;
   resendApiKeyConfigured: boolean;
   resendFromConfigured: boolean;
   secretsPresent: string[];
@@ -1438,7 +1455,7 @@ export async function fetchResendConfigApi() {
   return apiGet<{ ok: boolean; config: ResendIntegrationConfig }>("/integrations/resend/config");
 }
 
-export async function putResendConfigApi(payload: Record<string, string | boolean | undefined>) {
+export async function putResendConfigApi(payload: Record<string, string | boolean | number | undefined>) {
   const res = await fetch(`${API_BASE}/integrations/resend/config`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...(await authHeaders()) },

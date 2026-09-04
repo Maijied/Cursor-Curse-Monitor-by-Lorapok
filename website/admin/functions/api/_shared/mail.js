@@ -18,6 +18,13 @@ import {
   readMailConfig,
   resolveMailFromConfig,
 } from "./mail-config.js";
+import {
+  getServiceCounts,
+  incrementServiceUsage,
+  isServiceQuotaAvailable,
+  readServiceUsage,
+  resolveServiceLimits,
+} from "./service-usage.js";
 
 const FROM_EMAIL = "cursor.monitor@lorapok.tech";
 const FROM_NAME = "Cursor Curse Monitor";
@@ -453,6 +460,26 @@ async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo 
   return { sent: true, transport: "resend" };
 }
 
+async function canSendViaResend(env, mailConfig = null) {
+  if (!resendConfigured(env)) return { ok: false, reason: "RESEND_API_KEY not configured" };
+  const limits = await resolveServiceLimits(env);
+  const usage = await readServiceUsage(env);
+  const counts = getServiceCounts(usage, "resend");
+  if (!isServiceQuotaAvailable("resend", limits, counts)) {
+    const monthly = limits.resend.monthlyLimit;
+    const daily = limits.resend.dailyLimit;
+    return {
+      ok: false,
+      reason: `Resend quota reached (${counts.monthly}/${monthly ?? "∞"} monthly, ${counts.daily}/${daily ?? "∞"} daily) — falling back to next transport`,
+      quotaExceeded: true,
+    };
+  }
+  if (mailConfig?.resendDomainVerified === false && mailConfig?.workersFreeMode !== false) {
+    return { ok: true };
+  }
+  return { ok: true };
+}
+
 /**
  * @param {Record<string, unknown>} env
  * @param {{ to: string; subject: string; html: string; text?: string; category?: string; sentBy?: string | null }} opts
@@ -480,24 +507,44 @@ export async function sendMail(
     replyTo: from.replyTo ?? from.email,
   };
 
-  let result = /** @type {{ sent: boolean; transport?: string; reason?: string }} */ ({ sent: false });
+  let result = /** @type {{ sent: boolean; transport?: string; reason?: string; quotaExceeded?: boolean }} */ ({
+    sent: false,
+  });
 
-  if (prefersResendFirst(to, env, resendOpts)) {
-    try {
-      result = await sendViaResend(env, payload, mailConfig);
-    } catch (err) {
-      console.error("Resend primary delivery failed", err);
+  const wantsResendFirst = prefersResendFirst(to, env, resendOpts);
+  if (wantsResendFirst) {
+    const resendGate = await canSendViaResend(env, mailConfig);
+    if (resendGate.ok) {
+      try {
+        result = await sendViaResend(env, payload, mailConfig);
+        if (result.sent) {
+          try {
+            await incrementServiceUsage(env, "resend", 1);
+          } catch (err) {
+            console.error("incrementServiceUsage(resend) failed", err);
+          }
+        }
+      } catch (err) {
+        console.error("Resend primary delivery failed", err);
+        result = {
+          sent: false,
+          reason: err instanceof Error ? err.message : "Resend primary delivery failed",
+          transport: "resend",
+        };
+      }
+    } else {
       result = {
         sent: false,
-        reason: err instanceof Error ? err.message : "Resend primary delivery failed",
+        reason: resendGate.reason ?? "Resend unavailable",
         transport: "resend",
+        quotaExceeded: resendGate.quotaExceeded === true,
       };
     }
   }
 
-  const resendWasPrimary = prefersResendFirst(to, env, resendOpts);
+  const resendWasPrimary = wantsResendFirst;
 
-  if (!result.sent && env.MAIL_RELAY?.fetch && !resendWasPrimary) {
+  if (!result.sent && env.MAIL_RELAY?.fetch) {
     try {
       result = await sendViaMailRelay(env, payload);
     } catch (err) {
@@ -522,15 +569,25 @@ export async function sendMail(
   }
 
   if (!result.sent && isVerifiedDestinationSandboxError(result.reason) && resendConfigured(env)) {
-    try {
-      const resend = await sendViaResend(env, payload, mailConfig);
-      if (resend.sent) result = resend;
-    } catch (err) {
-      console.error("Resend sandbox fallback error", err);
-      result = {
-        sent: false,
-        reason: err instanceof Error ? err.message : "Resend sandbox fallback failed",
-      };
+    const resendGate = await canSendViaResend(env, mailConfig);
+    if (resendGate.ok) {
+      try {
+        const resend = await sendViaResend(env, payload, mailConfig);
+        if (resend.sent) {
+          result = resend;
+          try {
+            await incrementServiceUsage(env, "resend", 1);
+          } catch (err) {
+            console.error("incrementServiceUsage(resend) failed", err);
+          }
+        }
+      } catch (err) {
+        console.error("Resend sandbox fallback error", err);
+        result = {
+          sent: false,
+          reason: err instanceof Error ? err.message : "Resend sandbox fallback failed",
+        };
+      }
     }
   }
 
@@ -549,10 +606,19 @@ export async function sendMail(
     if (!result.sent) {
       try {
         if (!prefersResendFirst(to, env, resendOpts)) {
-          const resend = await sendViaResend(env, payload, mailConfig);
-          if (resend.sent) result = resend;
-          else if (!result.reason || result.reason.includes("credentials missing")) {
-            result = resend;
+          const resendGate = await canSendViaResend(env, mailConfig);
+          if (resendGate.ok) {
+            const resend = await sendViaResend(env, payload, mailConfig);
+            if (resend.sent) {
+              result = resend;
+              try {
+                await incrementServiceUsage(env, "resend", 1);
+              } catch (err) {
+                console.error("incrementServiceUsage(resend) failed", err);
+              }
+            } else if (!result.reason || result.reason.includes("credentials missing")) {
+              result = resend;
+            }
           }
         }
       } catch (err) {

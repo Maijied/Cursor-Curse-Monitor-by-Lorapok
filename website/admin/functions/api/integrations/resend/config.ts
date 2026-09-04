@@ -81,6 +81,20 @@ export async function onRequestPut(context) {
     }
     patch.workersFreeMode = body.workersFreeMode;
   }
+  if (body.monthlyEmailLimit !== undefined) {
+    const n = Number(body.monthlyEmailLimit);
+    if (!Number.isFinite(n) || n < 1 || n > 100000) {
+      return jsonResponse({ error: "monthlyEmailLimit must be between 1 and 100000" }, 400);
+    }
+    patch.monthlyEmailLimit = Math.round(n);
+  }
+  if (body.dailyEmailLimit !== undefined) {
+    const n = Number(body.dailyEmailLimit);
+    if (!Number.isFinite(n) || n < 1 || n > 10000) {
+      return jsonResponse({ error: "dailyEmailLimit must be between 1 and 10000" }, 400);
+    }
+    patch.dailyEmailLimit = Math.round(n);
+  }
 
   const secretPayload = resendSecretsToGithubMap({
     resendApiKey: body.resendApiKey !== undefined ? String(body.resendApiKey ?? "").trim() : undefined,

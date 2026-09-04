@@ -43,4 +43,15 @@ export const MANAGED_CRON_JOBS = [
     intervalDefault: 1440,
     intervalUnit: "minutes",
   },
+  {
+    id: "service-usage-sync",
+    label: "Service quota sync",
+    description:
+      "Probes Resend, Cloudflare mail relay, and REST transports; refreshes used/limit counters for Settings and broadcast fallback.",
+    workerEndpoint: "/api/cron/service-usage-sync",
+    intervalMin: 15,
+    intervalMax: 1440,
+    intervalDefault: 60,
+    intervalUnit: "minutes",
+  },
 ];

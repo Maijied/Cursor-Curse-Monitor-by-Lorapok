@@ -1,5 +1,6 @@
 import { buildNoticeHtml, sendMail } from "./mail.js";
 import { readSubscribers } from "./subscribers.js";
+import { estimateBroadcastResendCapacity } from "./service-usage.js";
 
 /**
  * Send a notice-style email to every opt-in subscriber.
@@ -18,12 +19,15 @@ export async function broadcastToSubscribers(env, input) {
     return { ok: true, sent: 0, failed: 0, total: 0, message: "No subscribers to email." };
   }
 
+  const capacity = await estimateBroadcastResendCapacity(env, subscribers.length);
+
   const severity = String(input.severity ?? "info");
   const feedbackUrl = String(input.feedbackUrl ?? "").trim();
   const html = buildNoticeHtml({ title, message, severity, feedbackUrl });
   const subject = title;
 
   let sent = 0;
+  let fallbackUsed = 0;
   let failed = 0;
   const results = [];
 
@@ -38,8 +42,18 @@ export async function broadcastToSubscribers(env, input) {
     });
     if (result.sent) sent += 1;
     else failed += 1;
-    results.push({ email: row.email, sent: result.sent, reason: result.reason ?? null });
+    if (result.sent && result.transport && result.transport !== "resend") fallbackUsed += 1;
+    results.push({
+      email: row.email,
+      sent: result.sent,
+      reason: result.reason ?? null,
+      transport: result.transport ?? null,
+    });
   }
+
+  const quotaNote = capacity.willUseFallback
+    ? ` Resend quota allows ${capacity.resendSlots}/${capacity.recipientCount} via Resend; ${capacity.fallbackCount} may use Cloudflare relay/fallback.`
+    : "";
 
   return {
     ok: failed === 0,
@@ -47,9 +61,11 @@ export async function broadcastToSubscribers(env, input) {
     failed,
     total: subscribers.length,
     results,
+    capacity,
+    fallbackUsed,
     message:
       failed === 0
-        ? `Emailed ${sent} subscriber(s). A copy was BCC'd to ops.`
-        : `Sent ${sent}, failed ${failed} of ${subscribers.length}.`,
+        ? `Emailed ${sent} subscriber(s). A copy was BCC'd to ops.${quotaNote}`
+        : `Sent ${sent}, failed ${failed} of ${subscribers.length}.${quotaNote}`,
   };
 }

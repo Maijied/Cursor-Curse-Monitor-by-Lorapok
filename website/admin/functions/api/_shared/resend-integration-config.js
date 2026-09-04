@@ -13,6 +13,14 @@ export function normalizeResendIntegrationConfig(parsed) {
     resendFirstExternal: parsed.resendFirstExternal !== false,
     workersFreeMode: parsed.workersFreeMode !== false,
     sendingDomain: String(parsed.sendingDomain ?? "lorapok.tech").trim().toLowerCase(),
+    monthlyEmailLimit:
+      typeof parsed.monthlyEmailLimit === "number" && parsed.monthlyEmailLimit > 0
+        ? parsed.monthlyEmailLimit
+        : 3000,
+    dailyEmailLimit:
+      typeof parsed.dailyEmailLimit === "number" && parsed.dailyEmailLimit > 0
+        ? parsed.dailyEmailLimit
+        : 100,
     updatedAt: parsed.updatedAt ?? null,
     updatedBy: parsed.updatedBy ?? null,
     githubSecretsSyncedAt: parsed.githubSecretsSyncedAt ?? null,
@@ -77,6 +85,8 @@ export function sanitizeResendIntegrationForClient(config, env, secretNames = []
     resendDomainVerified: config.resendDomainVerified,
     resendFirstExternal: config.resendFirstExternal,
     workersFreeMode: config.workersFreeMode,
+    monthlyEmailLimit: config.monthlyEmailLimit ?? 3000,
+    dailyEmailLimit: config.dailyEmailLimit ?? 100,
     resendApiKeyConfigured: Boolean(String(env?.RESEND_API_KEY ?? "").trim()),
     resendFromConfigured: Boolean(resendFromEnv),
     secretsPresent: secretNames,

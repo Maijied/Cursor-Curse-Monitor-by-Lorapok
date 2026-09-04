@@ -10,6 +10,7 @@ import {
 import { formatKvPutError } from "../_shared/kv-put.js";
 import { isKvQuotaError, isKvWritesPaused, kvQuotaKind } from "../_shared/kv-quota.js";
 import { probeAdminD1 } from "../_shared/d1-admin.js";
+import { buildServiceQuotaSnapshot } from "../_shared/service-usage.js";
 
 /**
  * Aggregated sync health for Mission Control polling (admin auth).
@@ -46,11 +47,18 @@ export async function onRequestGet(context) {
   const kvQuotaHit = Boolean((lastError && isKvQuotaError(lastError)) || kvWritesPaused);
   const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : kvWritesPaused ? "write" : null;
   const adminD1 = await probeAdminD1(env);
+  const serviceQuotas = await buildServiceQuotaSnapshot(env, {
+    resendConfigured: mail.resendConfigured ?? false,
+    relayBound: mail.relayBound ?? false,
+    restConfigured: mail.restConfigured ?? false,
+  });
 
   let overall: "online" | "degraded" | "offline" = "online";
   if (!githubOk || !env.ADMIN_KV) {
     overall = "offline";
   } else if (!mail.configured || !cacheFresh || kvQuotaHit) {
+    overall = "degraded";
+  } else if (serviceQuotas.services.some((s) => s.id === "resend" && s.configured && !s.quotaAvailable)) {
     overall = "degraded";
   }
 
@@ -88,6 +96,8 @@ export async function onRequestGet(context) {
         syncStatus: cache?.marketplaceSync?.syncStatus ?? null,
       },
     },
+    services: serviceQuotas.services,
+    servicesUpdatedAt: serviceQuotas.updatedAt,
     hint: kvQuotaHit
       ? kvWritesPaused
         ? `KV writes paused until ${writesPausedUntil} (UTC). Automatic stats refresh is skipped to protect the daily quota.`

@@ -15,7 +15,7 @@ export default {
       Accept: "application/json",
     };
 
-    const endpoints = ["/api/cron/stats-refresh", "/api/cron/discord-digest"];
+    const endpoints = ["/api/cron/stats-refresh", "/api/cron/discord-digest", "/api/cron/service-usage-sync"];
 
     for (const path of endpoints) {
       try {

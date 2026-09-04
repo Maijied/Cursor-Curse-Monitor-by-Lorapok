@@ -14,7 +14,8 @@ const LINKS = {
 export default function MarketplaceConfigCard() {
   const { data: siteData } = useSiteData();
   const ext = siteData?.browserExtension;
-  const ide = siteData?.vscodeExtension;
+  const ideVersion = siteData?.vscode?.version ?? siteData?.ovsx?.version ?? ext?.version;
+  const ideDownloads = siteData?.vscode?.downloadCount ?? siteData?.ovsx?.downloadCount ?? siteData?.downloads?.total;
 
   return (
     <Card>
@@ -33,12 +34,12 @@ export default function MarketplaceConfigCard() {
         <div className="rounded-xl border border-[var(--color-border)] p-4 space-y-2">
           <div className="flex justify-between items-center gap-2">
             <dt className="font-medium">IDE extension (Open VSX / VS Marketplace)</dt>
-            <Badge variant={ide?.published ? "synced" : "warn"}>
-              {ide?.published ? `v${ide.version ?? ext?.version ?? "—"}` : "Check CI"}
+            <Badge variant={ideVersion ? "synced" : "warn"}>
+              {ideVersion ? `v${ideVersion}` : "Check CI"}
             </Badge>
           </div>
           <dd className="text-[var(--color-muted)] text-xs">
-            Downloads: {ide?.downloads ?? siteData?.stats?.vscodeDownloads ?? "—"}
+            Downloads: {ideDownloads ?? "—"}
           </dd>
           <dd className="flex flex-wrap gap-3 pt-1">
             <a href={LINKS.openVsx} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-accent-2)] hover:underline inline-flex items-center gap-1">

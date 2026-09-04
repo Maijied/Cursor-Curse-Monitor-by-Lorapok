@@ -6,7 +6,7 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
 import { auth } from "../../lib/firebase";
-import { fetchResendConfigApi, putResendConfigApi, type ResendIntegrationConfig } from "../../lib/api";
+import { fetchResendConfigApi, fetchSyncStatus, putResendConfigApi, type ResendIntegrationConfig } from "../../lib/api";
 import { isMasterAdmin } from "../../lib/admin-config";
 
 const RESEND_GUIDE_URL =
@@ -18,6 +18,7 @@ export default function ResendConfigCard() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [config, setConfig] = useState<ResendIntegrationConfig | null>(null);
+  const [usage, setUsage] = useState<{ used: number; limit: number | null; dailyUsed: number; dailyLimit: number | null } | null>(null);
   const [form, setForm] = useState({
     sendingDomain: "lorapok.tech",
     resendFromOverride: "",
@@ -26,12 +27,23 @@ export default function ResendConfigCard() {
     resendFirstExternal: true,
     workersFreeMode: true,
     resendDomainVerified: false,
+    monthlyEmailLimit: 3000,
+    dailyEmailLimit: 100,
   });
 
   useEffect(() => {
-    fetchResendConfigApi()
-      .then((data) => {
+    Promise.all([fetchResendConfigApi(), fetchSyncStatus().catch(() => null)])
+      .then(([data, sync]) => {
         setConfig(data.config);
+        const resendSvc = sync?.services?.find((s) => s.id === "resend");
+        if (resendSvc) {
+          setUsage({
+            used: resendSvc.used,
+            limit: resendSvc.limit,
+            dailyUsed: resendSvc.dailyUsed,
+            dailyLimit: resendSvc.dailyLimit,
+          });
+        }
         setForm({
           sendingDomain: data.config.sendingDomain,
           resendFromOverride: data.config.resendFromOverride,
@@ -40,6 +52,8 @@ export default function ResendConfigCard() {
           resendFirstExternal: data.config.resendFirstExternal,
           workersFreeMode: data.config.workersFreeMode,
           resendDomainVerified: data.config.resendDomainVerified,
+          monthlyEmailLimit: data.config.monthlyEmailLimit ?? 3000,
+          dailyEmailLimit: data.config.dailyEmailLimit ?? 100,
         });
       })
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
@@ -55,12 +69,14 @@ export default function ResendConfigCard() {
     setSaving(true);
     setMessage(null);
     try {
-      const payload: Record<string, string | boolean> = {
+      const payload: Record<string, string | boolean | number> = {
         sendingDomain: form.sendingDomain.trim(),
         resendFromOverride: form.resendFromOverride.trim(),
         resendFirstExternal: form.resendFirstExternal,
         workersFreeMode: form.workersFreeMode,
         resendDomainVerified: form.resendDomainVerified,
+        monthlyEmailLimit: form.monthlyEmailLimit,
+        dailyEmailLimit: form.dailyEmailLimit,
       };
       if (form.resendApiKey.trim()) payload.resendApiKey = form.resendApiKey.trim();
       if (form.resendFrom.trim()) payload.resendFrom = form.resendFrom.trim();
@@ -94,8 +110,7 @@ export default function ResendConfigCard() {
             Resend
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Workers Free external mail (Gmail, testmail.app). Secrets sync to GitHub{" "}
-            <code className="text-xs">admin-production</code>; Pages picks them up on deploy-infra.
+            Workers Free external mail (Gmail, testmail.app). When Resend quota is exhausted or down, mail falls back to Cloudflare relay/REST automatically.
           </p>
           <a
             href={RESEND_GUIDE_URL}
@@ -132,8 +147,55 @@ export default function ResendConfigCard() {
                   </dd>
                 </div>
               ))}
+              {usage && (
+                <>
+                  <div className="flex justify-between items-center gap-2 rounded-xl border border-[var(--color-border)] px-3 py-2 sm:col-span-2">
+                    <dt className="text-[var(--color-muted)]">Monthly sends (Resend)</dt>
+                    <dd className="font-[family-name:var(--font-mono)] text-xs">
+                      {usage.used} / {usage.limit ?? "∞"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between items-center gap-2 rounded-xl border border-[var(--color-border)] px-3 py-2 sm:col-span-2">
+                    <dt className="text-[var(--color-muted)]">Daily sends (Resend)</dt>
+                    <dd className="font-[family-name:var(--font-mono)] text-xs">
+                      {usage.dailyUsed} / {usage.dailyLimit ?? "∞"}
+                    </dd>
+                  </div>
+                </>
+              )}
             </dl>
           )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="resend-monthly-limit" className="block text-sm font-medium mb-1.5">
+                Monthly email limit
+              </label>
+              <input
+                id="resend-monthly-limit"
+                type="number"
+                min={1}
+                className={inputClass}
+                value={form.monthlyEmailLimit}
+                onChange={(e) => setForm((p) => ({ ...p, monthlyEmailLimit: Number(e.target.value) || 3000 }))}
+                disabled={!isMaster}
+              />
+            </div>
+            <div>
+              <label htmlFor="resend-daily-limit" className="block text-sm font-medium mb-1.5">
+                Daily email limit
+              </label>
+              <input
+                id="resend-daily-limit"
+                type="number"
+                min={1}
+                className={inputClass}
+                value={form.dailyEmailLimit}
+                onChange={(e) => setForm((p) => ({ ...p, dailyEmailLimit: Number(e.target.value) || 100 }))}
+                disabled={!isMaster}
+              />
+            </div>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
