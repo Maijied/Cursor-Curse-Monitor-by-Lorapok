@@ -1,4 +1,4 @@
-import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
+import { verifyAdminRequest, jsonResponse, requirePermission } from "../_shared/auth.js";
 import { fetchSiteData, packageVersionFromSiteData } from "../_shared/site-data.js";
 import { fetchLiveChannels } from "../_shared/live-channels.js";
 
@@ -6,6 +6,8 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const readDenied = requirePermission(auth, "integrations.read");
+  if (readDenied) return readDenied;
 
   let siteData;
   try {

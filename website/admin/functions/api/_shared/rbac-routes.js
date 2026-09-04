@@ -1,0 +1,49 @@
+/**
+ * Route → permission mapping for AUTH-07 (keep in sync with handlers).
+ * Used by rbac-routes.test.mjs — not imported at runtime.
+ */
+export const MUTATING_ROUTE_PERMISSIONS = {
+  "POST /deploy": "deploy.run",
+  "POST /release": "deploy.run",
+  "POST /rollback": "deploy.run",
+  "POST /deploy-infra": "deploy.infra",
+  "POST /integrations/mail/sync": "deploy.infra",
+  "PUT /integrations/discord/config": "integrations.write",
+  "PUT /integrations/cloudflare/config": "integrations.write",
+  "PUT /integrations/github/config": "integrations.write",
+  "PUT /integrations/firebase/config": "integrations.write",
+  "PUT /integrations/resend/config": "integrations.write",
+  "PUT /integrations/email-identities/config": "settings.write",
+  "POST /integrations/email-identities/provision": "mail.provision",
+  "PUT /integrations/testmail/config": "integrations.write",
+  "PUT /integrations/mail/config": "settings.write",
+  "PUT /integrations/subscribe/config": "settings.write",
+  "PUT /integrations/reindex/config": "settings.write",
+  "PUT /integrations/cursor-index/config": "settings.write",
+  "PUT /integrations/stats-refresh/config": "settings.write",
+  "PUT /integrations/cron-jobs/config": "settings.write",
+  "PUT /community/config": "integrations.write",
+  "POST /integrations/discord/deployment": "integrations.write",
+  "POST /integrations/discord/community": "integrations.write",
+  "POST /integrations/discord/feedback": "integrations.write",
+  "POST /integrations/discord/digest/test": "integrations.write",
+  "POST /notices": "notices.write",
+  "PUT /notices": "notices.write",
+  "DELETE /notices": "notices.write",
+  "POST /notice": "notices.write",
+  "DELETE /notice": "notices.write",
+  "POST /mailbox": "mail.send",
+  "POST /subscribers/broadcast": "subscribers.write",
+  "POST /stats/refresh": "settings.write",
+  "POST /admins": "team.manage",
+  "PUT /auth/rbac": "team.manage",
+  "PUT /auth/profile": "profile.write",
+};
+
+export const READ_ROUTE_PERMISSIONS = {
+  "GET /logs": "logs.read",
+  "GET /activity": "logs.read",
+  "GET /mailbox": "mail.read",
+  "GET /sync/status": "settings.read",
+  "GET /integrations/email-identities/config": "settings.read",
+};

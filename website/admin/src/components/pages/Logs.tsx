@@ -50,14 +50,15 @@ export default function Logs() {
   const [error, setError] = useState<string | null>(null);
 
   const [type, setType] = useState("all");
+  const [source, setSource] = useState("");
   const [method, setMethod] = useState("");
   const [status, setStatus] = useState("");
   const [email, setEmail] = useState("");
   const [query, setQuery] = useState("");
 
   const filters = useMemo(
-    () => ({ type, method, status, email, q: query }),
-    [type, method, status, email, query]
+    () => ({ type, source, method, status, email, q: query }),
+    [type, source, method, status, email, query]
   );
 
   const load = useCallback(() => {
@@ -114,6 +115,17 @@ export default function Logs() {
               <Filter size={18} className="text-[var(--color-accent)]" />
               Filters
             </h3>
+            <button
+              type="button"
+              onClick={() => {
+                setType("system");
+                setSource("acl");
+                setPage(1);
+              }}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-[var(--color-border)] hover:bg-white/5"
+            >
+              ACL changes
+            </button>
             <button
               type="button"
               onClick={load}

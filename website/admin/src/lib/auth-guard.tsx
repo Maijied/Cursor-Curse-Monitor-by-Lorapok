@@ -1,10 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { auth, db } from "./firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { isMasterAdmin, MASTER_ADMIN } from "./admin-config";
+import { auth } from "./firebase";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { LarvaeLoaderPanel } from "../components/ui/LorapokLarvaeLoader";
+import PinUnlockOverlay from "../components/ui/PinUnlockOverlay";
+import {
+  clearPinUnlockSession,
+  isPinUnlockSession,
+  pinEnabledForEmail,
+} from "./pin-unlock";
+import { AuthProvider } from "./auth-context";
+import { fetchAuthMe } from "./api";
+import { MASTER_ADMIN } from "./admin-config";
 
 export { MASTER_ADMIN };
 
@@ -16,24 +23,22 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pinUnlocked, setPinUnlocked] = useState(() => isPinUnlockSession());
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u?.email) {
-        if (isMasterAdmin(u.email)) {
-          setIsAuthorized(true);
-        } else {
-          try {
-            const q = query(collection(db, "admins"), where("email", "==", u.email));
-            const querySnapshot = await getDocs(q);
-            setIsAuthorized(!querySnapshot.empty);
-          } catch (e) {
-            console.error("Error checking admin status:", e);
-            setIsAuthorized(false);
-          }
-        }
-      } else {
+      if (!u?.email) {
+        setIsAuthorized(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await fetchAuthMe();
+        setIsAuthorized(true);
+      } catch (e) {
+        console.error("Admin authorization check failed:", e);
         setIsAuthorized(false);
       }
       setLoading(false);
@@ -74,5 +79,21 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  return <>{children}</>;
+  const needsPin = pinEnabledForEmail(user.email) && !pinUnlocked;
+
+  return (
+    <AuthProvider user={user}>
+      {needsPin ? (
+        <PinUnlockOverlay
+          email={user.email ?? ""}
+          onUnlocked={() => setPinUnlocked(true)}
+          onUseFullSignIn={() => {
+            clearPinUnlockSession();
+            void signOut(auth);
+          }}
+        />
+      ) : null}
+      {children}
+    </AuthProvider>
+  );
 }

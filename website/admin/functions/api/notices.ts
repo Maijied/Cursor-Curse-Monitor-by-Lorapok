@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/auth.js";
 import {
   DEFAULT_NOTICE,
   activeFromCatalog,
@@ -45,6 +45,8 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "notices.write");
+  if (denied) return denied;
 
   try {
     const body = await request.json();
@@ -67,6 +69,8 @@ export async function onRequestPut(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "notices.write");
+  if (denied) return denied;
 
   try {
     const body = await request.json();
@@ -119,6 +123,8 @@ export async function onRequestDelete(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "notices.write");
+  if (denied) return denied;
 
   const id = new URL(request.url).searchParams.get("id")?.trim();
   if (!id) return jsonResponse({ error: "id is required" }, 400);

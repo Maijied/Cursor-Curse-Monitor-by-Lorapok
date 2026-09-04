@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 
 export type SettingsTabId =
   | "general"
+  | "profile"
   | "mail"
+  | "identities"
   | "resend"
   | "testmail"
   | "discord"
@@ -27,7 +29,9 @@ export function readSettingsTab(): SettingsTabId {
   const raw = localStorage.getItem(STORAGE_KEY);
   const allowed: SettingsTabId[] = [
     "general",
+    "profile",
     "mail",
+    "identities",
     "resend",
     "testmail",
     "discord",

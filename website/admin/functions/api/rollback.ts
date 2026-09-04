@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest, requireMasterAdmin } from "./_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/auth.js";
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import { dispatchRollbackWorkflow } from "./_shared/deploy-workflow.js";
 
@@ -14,8 +14,8 @@ export async function onRequestPost(context) {
 
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
-  const masterOnly = requireMasterAdmin(auth);
-  if (masterOnly) return masterOnly;
+  const denied = requirePermission(auth, "deploy.run");
+  if (denied) return denied;
 
   try {
     const body = await request.json();

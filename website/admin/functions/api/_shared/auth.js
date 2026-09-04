@@ -1,5 +1,6 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getAllowedAdminEmails, getMasterEmail } from "./admins.js";
+import { buildAdminAuthContext, roleHasPermission } from "./rbac.js";
 import { GITHUB_REPO } from "./repo-constants.js";
 
 const DEFAULT_PROJECT_ID = "cursor-curse-by-lorapok";
@@ -40,7 +41,15 @@ export async function verifyAdminRequest(request, env) {
       return { error: jsonResponse({ error: "Forbidden" }, 403) };
     }
 
-    return { email, isMaster: email === getMasterEmail(env) };
+    const isMaster = email === getMasterEmail(env);
+    const ctx = await buildAdminAuthContext(env, email, isMaster);
+    return {
+      email: ctx.email,
+      isMaster: ctx.isMaster,
+      role: ctx.role,
+      permissions: ctx.permissions,
+      hasPermission: ctx.hasPermission,
+    };
   } catch {
     return { error: jsonResponse({ error: "Authentication failed" }, 401) };
   }
@@ -81,6 +90,12 @@ export function requireMasterAdmin(auth) {
     return { error: jsonResponse({ error: "Master admin only" }, 403) };
   }
   return null;
+}
+
+export function requirePermission(auth, permission) {
+  if (auth?.isMaster || auth?.hasPermission?.(permission)) return null;
+  if (roleHasPermission(auth?.permissions ?? [], permission)) return null;
+  return jsonResponse({ error: "Forbidden", permission, role: auth?.role ?? "unknown" }, 403);
 }
 
 export { jsonResponse };

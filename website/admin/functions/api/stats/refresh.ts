@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
 import { formatKvPutError } from "../_shared/kv-put.js";
 import { runStatsRefresh } from "../_shared/stats-refresh.js";
 
@@ -16,6 +16,8 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "settings.write");
+  if (denied) return denied;
 
   try {
     const result = await runStatsRefresh(env, { triggeredBy: auth.email ?? "admin", force: true });

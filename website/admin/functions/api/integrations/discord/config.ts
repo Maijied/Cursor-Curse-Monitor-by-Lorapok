@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   isValidDiscordWebhookUrl,
@@ -16,6 +16,8 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const readDenied = requirePermission(auth, "integrations.read");
+  if (readDenied) return readDenied;
 
   const config = await readDiscordConfig(env);
   return jsonResponse({ ok: true, config: sanitizeDiscordConfigForClient(config) });
@@ -32,9 +34,8 @@ export async function onRequestPut(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
-  if (!auth.isMaster) {
-    return jsonResponse({ error: "Master admin only" }, 403);
-  }
+  const denied = requirePermission(auth, "integrations.write");
+  if (denied) return denied;
 
   let body;
   try {

@@ -70,6 +70,7 @@ Zone: **lorapok.tech** → DNS → Records → Add record.
 | 1 DKIM | TXT | `resend._domainkey.mail` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC05QD+Yq0y/5sStusbuo15ULIp5Xuqmqdfn583/+Zlpmgv7VUWV2jlsrQLL60s1xBG/K40zK2wrsSnp5CibJAEX0PlUuTMKENi6qP0qFDHsQC2RCgHiVnZkUeI06wU8XY9Vr074OqV8ALZcocgbso7EbitqzZBK3qKmBEs4fSHSQIDAQAB` | — | DNS only |
 | 2 SPF MX | MX | `send.mail` | `feedback-smtp.eu-west-1.amazonses.com` | 10 | DNS only |
 | 3 SPF TXT | TXT | `send.mail` | `v=spf1 include:amazonses.com ~all` | — | DNS only |
+| 4 Inbound MX | MX | `mail` | `inbound-smtp.eu-west-1.amazonaws.com` | 10 | DNS only |
 
 **Possible conflicts**
 

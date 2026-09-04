@@ -22,6 +22,12 @@ export type ApiCatalogEntry = {
 
 export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "health", path: "/health", method: "GET", auth: "public", group: "Public", description: "GitHub + env health check", safeProbe: true },
+  { id: "auth-invite-check", path: "/auth/invite-check", method: "GET", auth: "public", group: "Public", description: "Pre-auth invite gate for allowlisted admin emails", safeProbe: true },
+  { id: "auth-me", path: "/auth/me", method: "GET", auth: "admin", group: "Admin", description: "Current user role, permissions, and profile summary", safeProbe: true },
+  { id: "auth-profile-get", path: "/auth/profile", method: "GET", auth: "admin", group: "Admin", description: "User profile preferences and PIN verifier status", safeProbe: true },
+  { id: "auth-profile-put", path: "/auth/profile", method: "PUT", auth: "admin", group: "Admin", description: "Update display name or PIN verifier backup" },
+  { id: "auth-rbac-get", path: "/auth/rbac", method: "GET", auth: "admin", group: "Admin", description: "Team RBAC snapshot (master only)", safeProbe: true },
+  { id: "auth-rbac-put", path: "/auth/rbac", method: "PUT", auth: "admin", group: "Admin", description: "Assign admin/operator/viewer role" },
   { id: "sync-status", path: "/sync/status", method: "GET", auth: "admin", group: "Admin", description: "Aggregated sync health (GitHub, mail, live stats cache)", safeProbe: true },
   { id: "site-data", path: "/site-data", method: "GET", auth: "public", group: "Public", description: "Live marketing site-data.json proxy", safeProbe: true },
   { id: "notice-get", path: "/notice", method: "GET", auth: "public", group: "Public", description: "Active public development notice", safeProbe: true },
@@ -64,6 +70,9 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "discord-feedback", path: "/integrations/discord/feedback", method: "POST", auth: "admin", group: "Integrations", description: "Send a user-feedback card to the feedback Discord webhook" },
   { id: "discord-community", path: "/integrations/discord/community", method: "POST", auth: "admin", group: "Integrations", description: "Send a community announcement test post to the community Discord webhook" },
   { id: "mail-config", path: "/integrations/mail/config", method: "GET", auth: "admin", group: "Integrations", description: "Outbound mail identities and transport status", safeProbe: true },
+  { id: "email-identities-config", path: "/integrations/email-identities/config", method: "GET", auth: "admin", group: "Integrations", description: "@lorapok.tech routing identities and forward targets", safeProbe: true },
+  { id: "email-identities-config-put", path: "/integrations/email-identities/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save default ops forward and identity metadata" },
+  { id: "email-identities-provision", path: "/integrations/email-identities/provision", method: "POST", auth: "admin", group: "Integrations", description: "Provision Cloudflare Email Routing forward rule (mail.provision)" },
   { id: "mail-config-put", path: "/integrations/mail/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save outbound mail identities and routing preferences" },
   { id: "mail-status", path: "/integrations/mail/status", method: "GET", auth: "admin", group: "Integrations", description: "Mail setup readiness checklist aggregate", safeProbe: true },
   { id: "mail-sync", path: "/integrations/mail/sync", method: "POST", auth: "admin", group: "Integrations", description: "Dispatch deploy-infra to repair outbound mail (relay + verify + Pages deploy)" },

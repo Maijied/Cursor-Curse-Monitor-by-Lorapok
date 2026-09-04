@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
 import { notifyDiscordFeedback } from "../../_shared/discord-feedback-notify.js";
 
 /** Sends a sample feedback card to the configured feedback webhook (master admin test). */
@@ -6,9 +6,8 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
-  if (!auth.isMaster) {
-    return jsonResponse({ error: "Master admin only" }, 403);
-  }
+  const denied = requirePermission(auth, "integrations.write");
+  if (denied) return denied;
 
   let body: Record<string, unknown> = {};
   try {

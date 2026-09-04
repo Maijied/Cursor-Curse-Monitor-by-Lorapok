@@ -1,19 +1,20 @@
 import {
   addStoredAdminEmail,
-  isMasterEmail,
+  getMasterEmail,
   listStoredAdminEmails,
   removeStoredAdminEmail,
 } from "./_shared/admins.js";
-import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/auth.js";
+import { assignAdminRole, readRbacMap, removeAdminRole, resolveAdminRole } from "./_shared/rbac.js";
+import { logAllowlistAdd, logAllowlistRemove } from "./_shared/acl-audit.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
-  if (!isMasterEmail(env, auth.email)) {
-    return jsonResponse({ error: "Only the master admin can list API admins" }, 403);
-  }
+  const denied = requirePermission(auth, "team.manage");
+  if (denied) return denied;
 
   const emails = await listStoredAdminEmails(env);
   return jsonResponse({ emails, source: env.ADMIN_KV ? "kv" : "env" });
@@ -24,9 +25,8 @@ export async function onRequestPost(context) {
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
 
-  if (!isMasterEmail(env, auth.email)) {
-    return jsonResponse({ error: "Only the master admin can modify API admins" }, 403);
-  }
+  const denied = requirePermission(auth, "team.manage");
+  if (denied) return denied;
 
   try {
     const body = await request.json();
@@ -47,12 +47,29 @@ export async function onRequestPost(context) {
       );
     }
 
+    const normalized = email.trim().toLowerCase();
+    if (normalized === getMasterEmail(env)) {
+      return jsonResponse({ error: "Cannot modify master admin via API" }, 400);
+    }
+
+    const rbacMap = await readRbacMap(env);
+    const previousRole = rbacMap[normalized] ?? (await resolveAdminRole(env, normalized, false));
+
     const emails =
       action === "remove"
-        ? await removeStoredAdminEmail(env, email)
-        : await addStoredAdminEmail(env, email);
+        ? await removeStoredAdminEmail(env, normalized)
+        : await addStoredAdminEmail(env, normalized);
 
-    return jsonResponse({ ok: true, emails, action });
+    const role = String(body.role ?? "admin").trim().toLowerCase();
+    if (action === "remove") {
+      await removeAdminRole(env, normalized);
+      await logAllowlistRemove(env, { actor: auth.email, target: normalized, previousRole });
+    } else {
+      await assignAdminRole(env, normalized, role);
+      await logAllowlistAdd(env, { actor: auth.email, target: normalized, role });
+    }
+
+    return jsonResponse({ ok: true, emails, action, role: action === "remove" ? null : role });
   } catch (err) {
     return jsonResponse({ error: err instanceof Error ? err.message : "Server error" }, 500);
   }

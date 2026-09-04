@@ -26,6 +26,21 @@ import {
 import { notifyDiscordDeployment } from "./functions/api/_shared/discord-notify.js";
 import { getMailTransportStatus } from "./functions/api/_shared/mail.js";
 import {
+  assignAdminRole,
+  buildAdminAuthContext,
+  buildRbacTeamSnapshot,
+  readRbacMap,
+  removeAdminRole,
+  resolveAdminRole,
+} from "./functions/api/_shared/rbac.js";
+import {
+  logAllowlistAdd,
+  logAllowlistRemove,
+  logRoleAssignment,
+  logRoleClear,
+} from "./functions/api/_shared/acl-audit.js";
+import { sanitizeProfileForClient } from "./functions/api/_shared/user-profile.js";
+import {
   DEFAULT_STATS_REFRESH_CONFIG,
   readStatsLiveCache,
   sanitizeStatsRefreshConfigForClient,
@@ -85,6 +100,16 @@ import {
   writeResendIntegrationMeta,
 } from "./functions/api/_shared/resend-integration-config.js";
 import {
+  readEmailIdentitiesConfig,
+  sanitizeEmailIdentitiesForClient,
+  upsertIdentity,
+  validateIdentityLocalPart,
+  writeEmailIdentitiesConfig,
+} from "./functions/api/_shared/email-identities-config.js";
+import { provisionIdentityRouting } from "./functions/api/_shared/cloudflare-email-routing.js";
+import { isValidMailAddress } from "./functions/api/_shared/mail-config.js";
+import { readSystemLogs } from "./functions/api/_shared/system-log.js";
+import {
   normalizeTestmailIntegrationConfig,
   readTestmailIntegrationConfig,
   sanitizeTestmailIntegrationForClient,
@@ -130,6 +155,7 @@ const devStore = {
   firebaseConfig: null,
   githubIntegration: normalizeGithubIntegrationConfig({}),
   cloudflareIntegration: normalizeCloudflareIntegrationConfig({}),
+  userProfiles: {},
   statsLiveCache: null,
 };
 
@@ -1304,6 +1330,111 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/integrations/email-identities/config" && req.method === "GET") {
+      readEmailIdentitiesConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeEmailIdentitiesForClient(config) }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/email-identities/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = await readEmailIdentitiesConfig(devFunctionsEnv());
+          let next = { ...current };
+          if (parsed.opsForwardTo !== undefined) {
+            const forwardTo = String(parsed.opsForwardTo ?? "").trim().toLowerCase();
+            if (!isValidMailAddress(forwardTo)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid ops forward address" }));
+              return;
+            }
+            next.opsForwardTo = forwardTo;
+          }
+          next.updatedAt = new Date().toISOString();
+          next.updatedBy = "dev@local";
+          await writeEmailIdentitiesConfig(devFunctionsEnv(), next);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeEmailIdentitiesForClient(next) }));
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/email-identities/provision" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const localCheck = validateIdentityLocalPart(parsed?.localPart);
+          if (!localCheck.ok) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: localCheck.error }));
+            return;
+          }
+          const config = await readEmailIdentitiesConfig(devFunctionsEnv());
+          const forwardTo = String(parsed?.forwardTo ?? config.opsForwardTo).trim().toLowerCase();
+          if (!isValidMailAddress(forwardTo)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Valid forwardTo email is required" }));
+            return;
+          }
+          const localPart = localCheck.value;
+          const address = `${localPart}@${config.domain}`;
+          const provision =
+            parsed?.dryRun === true
+              ? {
+                  simulated: true,
+                  routingStatus: "pending",
+                  cloudflareRuleId: null,
+                  message: "Dry run — no Cloudflare API call",
+                }
+              : await provisionIdentityRouting(devFunctionsEnv(), {
+                  address,
+                  forwardTo,
+                  ruleName: localPart.replace(/\./g, "-"),
+                });
+          let next = upsertIdentity(config, localPart, {
+            displayName: String(parsed?.displayName ?? localPart).trim().slice(0, 80) || localPart,
+            category: String(parsed?.category ?? "custom").toLowerCase(),
+            forwardTo,
+            enabled: true,
+            routingStatus: provision.routingStatus,
+            cloudflareRuleId: provision.cloudflareRuleId,
+            provisionedAt: new Date().toISOString(),
+          });
+          next = { ...next, updatedAt: new Date().toISOString(), updatedBy: "dev@local" };
+          await writeEmailIdentitiesConfig(devFunctionsEnv(), next);
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              provision,
+              identity: sanitizeEmailIdentitiesForClient(next).identities.find((i) => i.localPart === localPart),
+              config: sanitizeEmailIdentitiesForClient(next),
+            })
+          );
+        } catch (err) {
+          res.statusCode = 502;
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Provision failed" }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/integrations/testmail/config" && req.method === "GET") {
       readTestmailIntegrationConfig(devFunctionsEnv())
         .then((config) => {
@@ -2245,8 +2376,164 @@ export function createDevApiMiddleware() {
           if (action === "remove") emails = emails.filter((e) => e !== email);
           else if (!emails.includes(email)) emails.push(email);
           emails = writeDevAdminEmails(emails);
+          const role = String(parsed.role ?? "admin").trim().toLowerCase();
+          const env = devFunctionsEnv();
+          const actor = "dev@local";
+          void (async () => {
+            try {
+              const rbacMap = await readRbacMap(env);
+              const previousExplicit = rbacMap[email] ?? null;
+              const previousEffective = await resolveAdminRole(env, email, false);
+              if (action === "remove") {
+                await removeAdminRole(env, email);
+                await logAllowlistRemove(env, {
+                  actor,
+                  target: email,
+                  previousRole: previousExplicit ?? previousEffective,
+                });
+              } else {
+                await assignAdminRole(env, email, role);
+                await logAllowlistAdd(env, { actor, target: email, role });
+              }
+            } catch (err) {
+              console.warn("dev rbac sync failed:", err);
+            }
+          })();
           res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, emails, action }));
+          res.end(JSON.stringify({ ok: true, emails, action, role: action === "remove" ? null : role }));
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
+        }
+      });
+      return;
+    }
+
+    if (url.startsWith("/api/auth/invite-check") && req.method === "GET") {
+      const parsedUrl = new URL(req.url ?? "", "http://localhost");
+      const email = String(parsedUrl.searchParams.get("email") ?? "").trim().toLowerCase();
+      const master = "mdshuvo40@gmail.com";
+      const allowed = new Set([master, ...readDevAdminEmails()]);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ invited: Boolean(email && allowed.has(email)) }));
+      return;
+    }
+
+    if (url === "/api/auth/rbac" && req.method === "GET") {
+      void (async () => {
+        const snapshot = await buildRbacTeamSnapshot(devFunctionsEnv());
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ ok: true, ...snapshot }));
+      })().catch((err) => {
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
+      });
+      return;
+    }
+
+    if (url === "/api/auth/rbac" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        void (async () => {
+          const parsed = JSON.parse(body || "{}");
+          const email = String(parsed.email ?? "").trim().toLowerCase();
+          const env = devFunctionsEnv();
+          const actor = "dev@local";
+          const rbacMap = await readRbacMap(env);
+          const previousExplicit = rbacMap[email] ?? null;
+          const previousEffective = await resolveAdminRole(env, email, false);
+          if (parsed.clear === true) {
+            await removeAdminRole(env, email);
+            await logRoleClear(env, {
+              actor,
+              target: email,
+              previousRole: previousExplicit ?? previousEffective,
+            });
+          } else {
+            const role = String(parsed.role ?? "admin").trim().toLowerCase();
+            await assignAdminRole(env, email, role);
+            await logRoleAssignment(env, {
+              actor,
+              target: email,
+              role,
+              previousRole: previousExplicit ?? (previousEffective !== role ? previousEffective : null),
+            });
+          }
+          const snapshot = await buildRbacTeamSnapshot(env);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, ...snapshot }));
+        })().catch((err) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
+        });
+      });
+      return;
+    }
+
+    if (url === "/api/auth/me" && req.method === "GET") {
+      void (async () => {
+        const email = "mdshuvo40@gmail.com";
+        const ctx = await buildAdminAuthContext(devFunctionsEnv(), email, true);
+        const profile = devStore.userProfiles[email] ?? null;
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            ok: true,
+            user: {
+              email,
+              role: ctx.role,
+              permissions: ctx.permissions,
+              isMaster: true,
+              profile: sanitizeProfileForClient(profile),
+            },
+          })
+        );
+      })().catch((err) => {
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
+      });
+      return;
+    }
+
+    if (url === "/api/auth/profile" && req.method === "GET") {
+      const email = "mdshuvo40@gmail.com";
+      const profile = devStore.userProfiles[email] ?? null;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, profile: sanitizeProfileForClient(profile) }));
+      return;
+    }
+
+    if (url === "/api/auth/profile" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const email = "mdshuvo40@gmail.com";
+          const current = devStore.userProfiles[email] ?? {};
+          const next = {
+            ...current,
+            email,
+            updatedAt: new Date().toISOString(),
+          };
+          if (parsed.displayNameOverride !== undefined) {
+            next.displayNameOverride = String(parsed.displayNameOverride ?? "").trim().slice(0, 80);
+          }
+          if (parsed.clearPin === true) {
+            next.pinHash = "";
+            next.pinSalt = "";
+          } else if (parsed.pinHash && parsed.pinSalt) {
+            next.pinHash = String(parsed.pinHash);
+            next.pinSalt = String(parsed.pinSalt);
+          }
+          devStore.userProfiles[email] = next;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, profile: sanitizeProfileForClient(next) }));
         } catch (err) {
           res.statusCode = 500;
           res.setHeader("Content-Type", "application/json");
@@ -2715,57 +3002,83 @@ export function createDevApiMiddleware() {
       const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
       const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));
       const type = query.searchParams.get("type");
-      const merged = [
-        ...devStore.activity.map((row) => ({
-          id: `api-${row.ts}-${row.path}`,
-          type: "api",
-          ts: row.ts,
-          level: row.status >= 500 ? "error" : row.status >= 400 ? "warn" : "info",
-          source: "api",
-          method: row.method,
-          path: row.path,
-          status: row.status,
-          latencyMs: row.latencyMs,
-          email: row.email,
-          message: `${row.method} ${row.path} → ${row.status}`,
-        })),
-        ...devStore.mailbox.map((row) => ({
-          id: `mail-${row.id}`,
-          type: "mail",
-          ts: row.ts,
-          level: row.status === "failed" ? "error" : "info",
-          source: "mailbox",
-          status: row.status,
-          email: row.to,
-          subject: row.subject,
-          message: `${row.direction} ${row.category}: ${row.subject}`,
-        })),
-        ...devStore.systemLogs.map((row) => ({
-          id: `sys-${row.id}`,
-          type: "system",
-          ts: row.ts,
-          level: row.level,
-          source: row.source,
-          email: row.email,
-          message: row.message,
-        })),
-      ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-      const filtered = type && type !== "all" ? merged.filter((r) => r.type === type) : merged;
-      const start = (page - 1) * limit;
-      logDevActivity(req, 200);
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        items: filtered.slice(start, start + limit),
-        page,
-        limit,
-        total: filtered.length,
-        totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
-        counts: {
-          api: devStore.activity.length,
-          mail: devStore.mailbox.length,
-          system: devStore.systemLogs.length,
-        },
-      }));
+      const source = query.searchParams.get("source");
+      const emailFilter = query.searchParams.get("email")?.trim().toLowerCase();
+      const q = query.searchParams.get("q")?.trim().toLowerCase();
+      void (async () => {
+        const scatterSystem = await readSystemLogs(devFunctionsEnv());
+        const merged = [
+          ...devStore.activity.map((row) => ({
+            id: `api-${row.ts}-${row.path}`,
+            type: "api",
+            ts: row.ts,
+            level: row.status >= 500 ? "error" : row.status >= 400 ? "warn" : "info",
+            source: "api",
+            method: row.method,
+            path: row.path,
+            status: row.status,
+            latencyMs: row.latencyMs,
+            email: row.email,
+            message: `${row.method} ${row.path} → ${row.status}`,
+          })),
+          ...devStore.mailbox.map((row) => ({
+            id: `mail-${row.id}`,
+            type: "mail",
+            ts: row.ts,
+            level: row.status === "failed" ? "error" : "info",
+            source: "mailbox",
+            status: row.status,
+            email: row.to,
+            subject: row.subject,
+            message: `${row.direction} ${row.category}: ${row.subject}`,
+          })),
+          ...scatterSystem.map((row) => ({
+            id: `sys-${row.id}`,
+            type: "system",
+            ts: row.ts,
+            level: row.level,
+            source: row.source,
+            email: row.email,
+            message: row.message,
+          })),
+          ...devStore.systemLogs.map((row) => ({
+            id: `sys-${row.id}`,
+            type: "system",
+            ts: row.ts,
+            level: row.level,
+            source: row.source,
+            email: row.email,
+            message: row.message,
+          })),
+        ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+        let filtered = merged;
+        if (type && type !== "all") filtered = filtered.filter((r) => r.type === type);
+        if (source) filtered = filtered.filter((r) => String(r.source ?? "") === source);
+        if (emailFilter) {
+          filtered = filtered.filter((r) => String(r.email ?? "").toLowerCase().includes(emailFilter));
+        }
+        if (q) {
+          filtered = filtered.filter((r) => String(r.message ?? "").toLowerCase().includes(q));
+        }
+        const start = (page - 1) * limit;
+        logDevActivity(req, 200);
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({
+          items: filtered.slice(start, start + limit),
+          page,
+          limit,
+          total: filtered.length,
+          totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
+          counts: {
+            api: devStore.activity.length,
+            mail: devStore.mailbox.length,
+            system: scatterSystem.length + devStore.systemLogs.length,
+          },
+        }));
+      })().catch((err) => {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
+      });
       return;
     }
 
