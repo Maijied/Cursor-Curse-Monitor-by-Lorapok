@@ -3,8 +3,16 @@
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
 **Last updated:** 2026-09-05  
-**Branch:** `main` (local ops + script pending commit)  
-**CI:** green on last push
+**Branch:** `main`  
+**CI:** green (last push `00e4a7e2`)
+
+---
+
+## Epic in progress
+
+| Epic | Issue | Plan | Procedure |
+|------|-------|------|-----------|
+| Email identities + password auth + admin ACL | [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120) | `plan/b8e4f2a1_email-identities-auth-acl-plan.md` | `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` |
 
 ---
 
@@ -25,11 +33,11 @@
 | Cloudflare D1 | 0 | 4 | 0 |
 | Cloudflare R2 | 0 | 3 | 0 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
-| Firebase | 6 | 1 | 0 |
+| Firebase | 6 | 5 | 0 |
 | GitHub | 5 | 2 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
 | Google Cloud (GCP) | 2 | 3 | 0 |
-| Mail (Resend + CF Email) | 3 | 4 | 1 |
+| Mail (Resend + CF Email) | 3 | 8 | 1 |
 | Discord | 3 | 3 | 0 |
 | Stats / Cron | 6 | 2 | 1 |
 | IDE extension | 4 | 2 | 0 |
@@ -100,6 +108,16 @@
 | FB-06 | Connected Services Firebase row health | **done** | bootstrap + session in Connected Services |
 | FB-07 | Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback) | **done** | `sync-firebase-pages-secrets.mjs` |
 | FB-08 | KV `integrations:firebase` re-seeded production | **done** | `seed-firebase-kv.mjs` 2026-09-05 |
+| AUTH-01 | RBAC + email-identities architecture sign-off | **next** | `b8e4f2a1` plan; permission matrix doc |
+| AUTH-02 | Enable Firebase Email/Password + invite-only gate | **next** | Console + authorized domains |
+| AUTH-03 | Login UI: email/password fields + validation (zxcvbn) | **next** | `Login.tsx`; min 12 chars policy |
+| AUTH-04 | Password reset + lockout messaging for allowlisted admins | **next** | Firebase `sendPasswordResetEmail` |
+| AUTH-05 | `GET /api/auth/me` — role + permissions for SPA | **next** | replaces binary master check in UI |
+| AUTH-06 | KV `admin-rbac` store + role assignment API | **next** | master PUT; migrate `admin-emails` |
+| AUTH-07 | `requirePermission()` on all mutating API routes | **next** | deploy, settings, mail, team, cron |
+| AUTH-08 | Team page: assign roles (master/admin/operator/viewer) | **next** | align Firestore + KV RBAC |
+| AUTH-09 | ACL audit log (role/email changes) | **next** | D1 or KV scatter + Activity page |
+| AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **next** | 403 on forbidden actions |
 
 ---
 
@@ -150,7 +168,11 @@
 | MAIL-04 | Refresh Cloudflare deploy + email credentials | **done** | Global API Key deploy via `CLOUDFLARE_API_KEY`+`CLOUDFLARE_EMAIL`; CI decrypts gpg vault (`CRED_STORE_GPG_BASE64`+pin); Settings → Cloudflare rotates GH secrets |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **done** | Pages + GH `RESEND_API_KEY` synced |
 | MAIL-06 | Resend quota + transport fallback + broadcast capacity | **done** | `service-usage.js`, cron `service-usage-sync`, Settings Resend limits |
-| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **in_progress** | Cloudflare DNS (DKIM/SPF); cred vault `resend_from` + `resend_sending_domain` |
+| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **in_progress** | Cloudflare DNS added; verify in Resend + Settings |
+| MAIL-09 | Design: Email identities Settings API + KV schema | **next** | `b8e4f2a1` plan Phase 0 |
+| MAIL-10 | Settings **Email identities** tab — list/create `@lorapok.tech` | **next** | Cloudflare Email Routing API; master-only |
+| MAIL-11 | Forward rules + display names sync (`setup-email-addresses` parity) | **next** | product/support/ops categories |
+| MAIL-12 | Identity provision tests + FieldHelp + api-catalog | **next** | vitest + `pages-functions-imports` |
 | QUOTA-01 | Service used/limit in `/api/sync/status` | **done** | Resend, Cloudflare Email, mail relay |
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
@@ -228,15 +250,20 @@
 | SET-05 | Production smoke (login + tabs) | **partial** | health + firebase-config + D1 **200/ok**; login UI smoke manual |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
 | SET-07 | Per-service Settings tabs (Resend, testmail, cred vault, marketplace) | **done** | `ResendConfigCard`, `TestmailConfigCard`, `CredVaultConfigCard`, `MarketplaceConfigCard` |
+| SET-08 | Settings tab: **Email identities** (`@lorapok.tech` provision) | **next** | `EmailIdentitiesCard`; MAIL-09–12 |
+| SET-09 | Settings + nav gated by RBAC permissions | **next** | AUTH-05, AUTH-08 |
+| SET-10 | Production smoke: password login + role-restricted UI | **next** | after AUTH-02–08 |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
-2. **KV-09 / STAT-06** — KV UTC reset or pause stats
-3. **DC-03** — Discord webhooks in production KV
+1. **MAIL-07** — Verify `mail.lorapok.tech` in Resend → Settings → Resend domain verified → test to `imaizied@gmail.com`
+2. **MAIL-09 / AUTH-01** — Epic [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120): email identities API design + RBAC sign-off
+3. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
+4. **KV-09 / STAT-06** — KV UTC reset or pause stats
+5. **DC-03** — Discord webhooks in production KV
 
 ---
 
@@ -256,4 +283,5 @@
 - `plan/settings-tabs-secrets-plan.md` — acceptance [x] all
 - `plan/f2a8c3e1_reliability-sync-kv-settings-plan.md` — reliability Phases A–E (partial)
 - `procedure/2b7b880d_settings-tabs-secrets.md`
-- `procedure/c6c42bab_reliability-sync-kv-settings.md`
+- `plan/b8e4f2a1_email-identities-auth-acl-plan.md` — email identities Settings panel, password auth, RBAC/ACL
+- `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` — epic procedure ([#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120))
