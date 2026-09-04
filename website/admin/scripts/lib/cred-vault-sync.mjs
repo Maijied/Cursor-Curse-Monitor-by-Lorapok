@@ -298,6 +298,27 @@ function resolveCloudflareAccountEmailFromVault(vault) {
 }
 
 /**
+ * @param {Record<string, unknown>} vault
+ * @returns {string|undefined}
+ */
+function resolveResendApiKeyFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const resend = /** @type {Record<string, unknown>} */ (vault?.resend ?? {});
+  const candidates = [
+    cursor.resend_api_key,
+    resend.resend_api_key,
+    resend.resend_api,
+    resend.resent_api,
+  ];
+  for (const value of candidates) {
+    const key = String(value ?? "").trim();
+    if (key.startsWith("re_")) return key;
+  }
+  const fallback = String(cursor.resend_api_key ?? "").trim();
+  return fallback || undefined;
+}
+
+/**
  * Loads Cursor Cloudflare credentials and a GitHub token from the credential vault.
  * @return {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} The normalized credentials, or `null` if no usable vault is found.
  */
@@ -325,7 +346,7 @@ export function loadCursorCloudflareSecretsFromVault() {
     globalApiEmail,
     cronSecret: String(cursor.cron_secret ?? "").trim() || undefined,
     githubToken,
-    resendApiKey: String(cursor.resend_api_key ?? "").trim() || undefined,
+    resendApiKey: resolveResendApiKeyFromVault(vault),
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
     testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
   };
