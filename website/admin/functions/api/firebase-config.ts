@@ -1,5 +1,5 @@
-import { jsonResponse } from "../_shared/auth.js";
-import { readFirebaseConfig, toPublicFirebaseClientConfig } from "../_shared/firebase-config.js";
+import { jsonResponse } from "./_shared/auth.js";
+import { readFirebaseConfig, toPublicFirebaseClientConfig } from "./_shared/firebase-config.js";
 
 /**
  * Public Firebase web client config (no secrets — keys are browser-exposed by design).

@@ -83,7 +83,8 @@
 | CF-02 | Public `GET /api/firebase-config` | **done** | smoke 200 production |
 | CF-03 | `ccm-mail-relay` worker deploy | **next** | `repair-mail.mjs` |
 | CF-04 | `deploy-infra` workflow_dispatch for full mail | **next** | docs/guides |
-| CF-05 | Production deploy after `a42a7480` | **in_progress** | CI run on main |
+| CF-05 | Production deploy after `a42a7480` | **done** | fast deploy 2026-09-05; routes return JSON |
+| CF-06 | Fix `firebase-config.ts` import paths (Pages bundle) | **done** | `pages-functions-imports.test.mjs` |
 
 ---
 
@@ -218,20 +219,20 @@
 | SET-02 | Phased completion `settings-phases-complete.md` | **done** | Phases 0–4 |
 | SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex |
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
-| SET-05 | Production smoke (login + tabs) | **next** | after CF-05 deploy |
+| SET-05 | Production smoke (login + tabs) | **partial** | API routes OK; `/api/firebase-config` 503 until KV seed or Pages secrets |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **CF-05** — Confirm CI deploy green; smoke `/api/firebase-config` + Settings
+1. **FB-06 / SET-05** — Seed `integrations:firebase` in KV (or add `VITE_FIREBASE_*` Pages secrets) so login works
 2. **MAIL-04** — Refresh Cloudflare email token (unblocks mail 401)
 3. **KV-09 / STAT-06** — Pause stats cron in Settings until KV reset OR wait UTC
 4. **KV-06** — `writesPausedUntil` guard in stats refresh
 5. **GH-04 / MAIL-07** — Mail sync workflow polling
 6. **KV-08** — Architecture.md stats storage section
-7. **D1-02** — D1 binding design (when ready for Phase 2 storage)
+7. **D1-02** — D1 binding design (Phase 2 storage)
 
 ---
 
