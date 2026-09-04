@@ -117,7 +117,7 @@
 | AUTH-07 | `requirePermission()` on all mutating API routes | **done** | deploy, settings, mail, integrations, notices, team |
 | AUTH-08 | Team page: assign roles (master/admin/operator/viewer) | **done** | `Team.tsx` role dropdown + invite role |
 | AUTH-09 | ACL audit log (role/email changes) | **done** | `acl-audit.js` → system log; Logs → ACL filter |
-| AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **partial** | `rbac-routes.test.mjs` route map |
+| AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **done** | `rbac-matrix.test.mjs` + `src/__tests__/rbac-matrix.test.ts` |
 | AUTH-11 | Profile tab + quick-unlock PIN (Settings) | **done** | `ProfileSettingsCard`, `pin-unlock.ts`, KV verifier backup |
 
 ---
@@ -260,9 +260,8 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **AUTH-10** — Production smoke for non-master RBAC paths
-2. **MAIL-11** — `setup-email-addresses.mjs` parity / bulk identity sync
-3. **MAIL-07** — Verify `mail.lorapok.tech` in Resend
+1. **MAIL-11** — `setup-email-addresses.mjs` parity / bulk identity sync
+2. **MAIL-07** — Verify `mail.lorapok.tech` in Resend
 3. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
 4. **KV-09 / STAT-06** — KV UTC reset or pause stats
 5. **DC-03** — Discord webhooks in production KV
