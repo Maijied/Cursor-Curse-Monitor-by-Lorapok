@@ -1,6 +1,13 @@
 import { ensureKvBackupPoint } from "./kv-backup.js";
 import { listScatterRecords, putScatterRecord } from "./kv-scatter.js";
 import { MAX_SYSTEM_LOG_ENTRIES, SYSTEM_LOG_TTL_SECONDS } from "./kv-limits.js";
+import {
+  insertSystemLogD1,
+  isAdminD1Available,
+  mergeSystemLogEntries,
+  normalizeSystemLogEntry,
+  readSystemLogsD1,
+} from "./d1-system-log.js";
 
 const SYSTEM_LOG_PREFIX = "system:log";
 const LEGACY_SYSTEM_LOG_KEY = "system:logs";
@@ -25,10 +32,47 @@ async function backupLegacySystemLogIfPresent(kv, triggeredBy = "system-log") {
 }
 
 /**
+ * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
+ */
+async function readLegacySystemLogs(kv) {
+  if (!kv?.get) return [];
+  try {
+    const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    void backupLegacySystemLogIfPresent(kv, "readSystemLogs");
+    return parsed.map((row) => normalizeSystemLogEntry(row));
+  } catch (err) {
+    console.error("readSystemLogs legacy read failed", err);
+    return [];
+  }
+}
+
+/**
+ * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
+ */
+async function readScatterSystemLogs(kv) {
+  if (!kv?.get) return [];
+  try {
+    const scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_SYSTEM_LOG_ENTRIES });
+    return scatter.map((row) => normalizeSystemLogEntry(row));
+  } catch (err) {
+    console.error("readSystemLogs scatter list failed", err);
+    return [];
+  }
+}
+
+/**
  * @param {Record<string, unknown>} env
  * @param {{ level?: string; source: string; message: string; meta?: Record<string, unknown>; email?: string | null }} entry
  */
 export async function logSystemEvent(env, entry) {
+  if (isAdminD1Available(env)) {
+    const ok = await insertSystemLogD1(env, entry);
+    if (ok) return;
+  }
+
   const kv = env?.ADMIN_KV;
   if (!kv?.put) return;
 
@@ -39,7 +83,7 @@ export async function logSystemEvent(env, entry) {
       kv,
       SYSTEM_LOG_PREFIX,
       id,
-      {
+      normalizeSystemLogEntry({
         id,
         ts: new Date().toISOString(),
         level: entry.level ?? "info",
@@ -47,7 +91,7 @@ export async function logSystemEvent(env, entry) {
         message: entry.message,
         meta: entry.meta ?? {},
         email: entry.email ?? null,
-      },
+      }),
       { ts: Date.now(), expirationTtl: SYSTEM_LOG_TTL_SECONDS }
     );
   } catch (err) {
@@ -58,38 +102,16 @@ export async function logSystemEvent(env, entry) {
 /** @param {Record<string, unknown>} env */
 export async function readSystemLogs(env) {
   const kv = env?.ADMIN_KV;
-  if (!kv?.get) return [];
+  const d1Logs = isAdminD1Available(env) ? await readSystemLogsD1(env) : null;
+  const scatter = await readScatterSystemLogs(kv);
+  const legacy = await readLegacySystemLogs(kv);
 
-  let scatter = [];
-  try {
-    scatter = await listScatterRecords(kv, SYSTEM_LOG_PREFIX, { limit: MAX_SYSTEM_LOG_ENTRIES });
-  } catch (err) {
-    console.error("readSystemLogs scatter list failed", err);
-  }
-
-  let legacy = [];
-  try {
-    const raw = await kv.get(LEGACY_SYSTEM_LOG_KEY);
-    if (!raw) return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) legacy = parsed;
-    void backupLegacySystemLogIfPresent(kv, "readSystemLogs");
-  } catch (err) {
-    console.error("readSystemLogs legacy read failed", err);
-    return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
+  if (d1Logs) {
+    return mergeSystemLogEntries(d1Logs, scatter, legacy);
   }
 
   if (!scatter.length) return legacy.slice(0, MAX_SYSTEM_LOG_ENTRIES);
   if (!legacy.length) return scatter.slice(0, MAX_SYSTEM_LOG_ENTRIES);
 
-  const merged = [...scatter, ...legacy]
-    .sort((a, b) => {
-      const tb = Date.parse(String(b.ts ?? "")) || 0;
-      const ta = Date.parse(String(a.ts ?? "")) || 0;
-      if (tb !== ta) return tb - ta;
-      return String(b.id ?? "").localeCompare(String(a.id ?? ""));
-    })
-    .slice(0, MAX_SYSTEM_LOG_ENTRIES);
-
-  return merged;
+  return mergeSystemLogEntries(scatter, legacy);
 }

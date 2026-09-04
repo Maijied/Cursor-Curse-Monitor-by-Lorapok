@@ -60,7 +60,7 @@
 |----|------|--------|----------------|
 | D1-01 | Design: move scatter logs / subscriber index off KV | **deferred** | Reliability plan Phase 2 |
 | D1-02 | Add D1 binding in `wrangler.toml` | **done** | `ccm-admin-d1` + `d1/schema.sql` |
-| D1-03 | Migration script KV → D1 for `system:log:*` | **next** | After D1-02 |
+| D1-03 | Migration script KV → D1 for `system:log:*` | **done** | `migrate-system-logs-to-d1.mjs` + runtime D1 writes |
 | D1-04 | Admin queries / health for D1 connectivity | **done** | `/api/health`, `/api/sync/status`, Infrastructure card |
 
 ---
@@ -230,9 +230,9 @@
 
 1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
 2. **KV-09 / STAT-06** — Wait for KV UTC reset OR disable stats in Settings → Automation
-3. **D1-03** — Migration script KV → D1 for `system:log:*`
-4. **R2-02** — R2 bucket + binding for badge/SVG blobs
-5. **DC-03** — Discord webhooks in production KV
+3. **R2-02** — R2 bucket + binding for badge/SVG blobs
+4. **DC-03** — Discord webhooks in production KV
+5. Deploy Mission Control (pick up ADMIN_D1 + D1 log writes)
 
 ---
 

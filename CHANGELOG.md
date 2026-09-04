@@ -23,6 +23,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **FieldHelp tooltips** — contextual help on Mail sending domain, Discord webhook, subscribe fallback, reindex cap, and cron intervals
 - **ADMIN_D1 binding** — Cloudflare D1 `ccm-admin-d1` for Phase 2 logs/subscribers (`website/admin/d1/schema.sql`); health probes on `/api/health` and Infrastructure card
 - **Connected Services Firebase health** — distinguishes client bootstrap availability from signed-in session
+- **System logs on D1** — `logSystemEvent` writes to `ADMIN_D1` when bound (skips KV scatter); migration script `migrate-system-logs-to-d1.mjs`
 
 ### Fixed
 

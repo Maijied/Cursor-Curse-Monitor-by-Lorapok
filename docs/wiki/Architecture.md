@@ -115,6 +115,8 @@ Live download stats and Mission Control config today live in **Cloudflare KV** (
 
 **Optimizations shipped (Phase B1):** badge/readme writes only when verified totals change; scatter log skipped on unchanged refresh; KV quota errors set `writesPausedUntil` and skip automatic cron until UTC reset. Settings → **General → Infrastructure** shows estimated write budget, last run outcome, and a master-only pause shortcut.
 
+**System logs (D1-03):** when `ADMIN_D1` is bound, new `logSystemEvent` writes go to `system_logs` (no KV scatter `put`). Reads merge D1 + remaining KV scatter/legacy during transition. One-time backfill: `node website/admin/scripts/migrate-system-logs-to-d1.mjs`.
+
 ### Storage roadmap
 
 | Store | Best for | Status |

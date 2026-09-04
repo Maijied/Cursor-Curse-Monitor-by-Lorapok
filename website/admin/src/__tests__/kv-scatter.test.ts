@@ -101,6 +101,27 @@ describe("kv scatter-gather", () => {
     expect(logs.map((row) => row.message).sort()).toEqual(["first", "second"]);
   });
 
+  it("writes system logs to D1 without KV scatter when ADMIN_D1 is bound", async () => {
+    const store = new Map();
+    const d1Rows = [];
+    const env = {
+      ADMIN_KV: mockKv(store),
+      ADMIN_D1: {
+        prepare: () => ({
+          bind: (...args) => ({
+            run: async () => {
+              d1Rows.push(args);
+            },
+          }),
+        }),
+      },
+    };
+    await logSystemEvent(env, { source: "test", message: "d1-only" });
+    expect([...store.keys()].filter((k) => k.startsWith("system:log:"))).toHaveLength(0);
+    expect(d1Rows).toHaveLength(1);
+    expect(d1Rows[0][4]).toBe("d1-only");
+  });
+
   it("stores subscribers per email without rewriting a blob", async () => {
     const store = new Map();
     const kv = mockKv(store);
