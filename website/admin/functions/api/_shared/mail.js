@@ -542,8 +542,6 @@ export async function sendMail(
     }
   }
 
-  const resendWasPrimary = wantsResendFirst;
-
   if (!result.sent && env.MAIL_RELAY?.fetch) {
     try {
       result = await sendViaMailRelay(env, payload);
