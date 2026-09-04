@@ -18,9 +18,11 @@ import FirebaseConfigCard from "../ui/FirebaseConfigCard";
 import GitHubConfigCard from "../ui/GitHubConfigCard";
 import CloudflareConfigCard from "../ui/CloudflareConfigCard";
 import ResendConfigCard from "../ui/ResendConfigCard";
+import EmailIdentitiesCard from "../ui/EmailIdentitiesCard";
 import TestmailConfigCard from "../ui/TestmailConfigCard";
 import CredVaultConfigCard from "../ui/CredVaultConfigCard";
 import MarketplaceConfigCard from "../ui/MarketplaceConfigCard";
+import ProfileSettingsCard from "../ui/ProfileSettingsCard";
 import SettingsTabNav, { persistSettingsTab, readSettingsTab, type SettingsTabId } from "../ui/SettingsTabNav";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
@@ -28,7 +30,9 @@ import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailability
 
 const TABS: { id: SettingsTabId; label: string }[] = [
   { id: "general", label: "General" },
+  { id: "profile", label: "Profile" },
   { id: "mail", label: "Mail" },
+  { id: "identities", label: "Email identities" },
   { id: "resend", label: "Resend" },
   { id: "testmail", label: "Testmail" },
   { id: "discord", label: "Discord" },
@@ -266,6 +270,8 @@ export default function Settings() {
         </>
       )}
 
+      {tab === "profile" && <ProfileSettingsCard />}
+
       {tab === "mail" && (
         <>
           <MailSetupChecklist />
@@ -273,6 +279,7 @@ export default function Settings() {
         </>
       )}
 
+      {tab === "identities" && <EmailIdentitiesCard />}
       {tab === "resend" && <ResendConfigCard />}
       {tab === "testmail" && <TestmailConfigCard />}
 

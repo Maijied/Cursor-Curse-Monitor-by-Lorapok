@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/auth.js";
 import { logAuthenticatedRequest } from "./_shared/activity-log.js";
 import {
   getMailboxStats,
@@ -34,6 +34,8 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const readDenied = requirePermission(auth, "mail.read");
+  if (readDenied) return readDenied;
 
   const url = new URL(request.url);
   if (url.searchParams.get("templates") === "1") {
@@ -86,6 +88,18 @@ export async function onRequestPost(context) {
   }
 
   const action = String(body.action ?? "send");
+
+  if (action === "mark-read") {
+    const readDenied = requirePermission(auth, "mail.read");
+    if (readDenied) {
+      return logAuthenticatedRequest(context, auth, readDenied, startedAt);
+    }
+  } else {
+    const sendDenied = requirePermission(auth, "mail.send");
+    if (sendDenied) {
+      return logAuthenticatedRequest(context, auth, sendDenied, startedAt);
+    }
+  }
 
   if (action === "mark-read") {
     const id = String(body.id ?? "").trim();

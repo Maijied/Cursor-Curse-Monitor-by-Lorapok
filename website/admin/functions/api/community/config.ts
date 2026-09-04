@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
 
 const CONFIG_KEY = "community:config";
 const CORS_HEADERS = {
@@ -41,9 +41,10 @@ export async function onRequestPut(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
-  if (!auth.isMaster) {
-    return jsonResponse({ error: "Master admin only" }, 403);
-  }
+  const readDenied = requirePermission(auth, "integrations.read");
+  if (readDenied) return readDenied;
+  const denied = requirePermission(auth, "integrations.write");
+  if (denied) return denied;
   if (!env.ADMIN_KV?.put) {
     return jsonResponse({ error: "ADMIN_KV binding not configured" }, 503);
   }

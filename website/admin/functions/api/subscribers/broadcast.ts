@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
 import { logAuthenticatedRequest } from "../_shared/activity-log.js";
 import { broadcastToSubscribers } from "../_shared/subscriber-broadcast.js";
 
@@ -7,6 +7,8 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "subscribers.write");
+  if (denied) return logAuthenticatedRequest(context, auth, denied, startedAt);
 
   let body;
   try {

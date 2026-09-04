@@ -5,10 +5,13 @@ import {
   isSignInWithEmailLink,
   sendSignInLinkToEmail,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ExternalLink, LogIn, Mail, Sparkles } from "lucide-react";
+import { CheckCircle2, ExternalLink, KeyRound, LogIn, Mail, Sparkles } from "lucide-react";
 import LorapokLarvaeLoader, { LarvaeLoaderPanel } from "./ui/LorapokLarvaeLoader";
 import {
   configureAuthPersistence,
@@ -16,12 +19,18 @@ import {
 } from "../lib/auth-session";
 import BackToWebsiteButton from "./ui/BackToWebsiteButton";
 import { MARKETING_SITE_URL } from "../lib/marketing-site";
+import { fetchAuthInviteCheck } from "../lib/api";
+import { passwordStrengthColor, validatePassword } from "../lib/password-policy";
 
 export default function Login() {
   const [email, setEmail] = useState(() => localStorage.getItem("emailForSignIn") ?? "");
   const [confirmEmail, setConfirmEmail] = useState("");
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [rememberMe, setRememberMe] = useState(getRememberMePreference);
+  const [authMode, setAuthMode] = useState<"magic" | "password">("magic");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [setupPassword, setSetupPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
   const [message, setMessage] = useState("");
@@ -114,6 +123,13 @@ export default function Login() {
       handleCodeInApp: true,
     };
     try {
+      const invite = await fetchAuthInviteCheck(email.trim());
+      if (!invite.invited) {
+        setMessageTone("error");
+        setMessage("This email is not on the Mission Control invite list. Contact the master admin.");
+        setLoading(false);
+        return;
+      }
       await configureAuthPersistence(auth, rememberMe);
       await sendSignInLinkToEmail(auth, email.trim(), actionCodeSettings);
       window.localStorage.setItem("emailForSignIn", email.trim());
@@ -127,6 +143,121 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  const ensureInvited = async (address: string) => {
+    const invite = await fetchAuthInviteCheck(address);
+    if (!invite.invited) {
+      setMessageTone("error");
+      setMessage("This email is not on the Mission Control invite list. Contact the master admin.");
+      return false;
+    }
+    return true;
+  };
+
+  const handlePasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const address = email.trim();
+    if (!address || !password) return;
+
+    setLoading(true);
+    setMessageTone("info");
+    setMessage("");
+    try {
+      if (!(await ensureInvited(address))) return;
+      await configureAuthPersistence(auth, rememberMe);
+      await signInWithEmailAndPassword(auth, address, password);
+      setMessageTone("success");
+      setMessage("Authenticated! Redirecting to Mission Control…");
+      navigate("/dashboard", { replace: true });
+    } catch (err: unknown) {
+      const firebaseErr = err as { code?: string; message?: string };
+      if (firebaseErr?.code === "auth/user-not-found" || firebaseErr?.code === "auth/invalid-credential") {
+        setSetupPassword(true);
+        setMessageTone("info");
+        setMessage("No password is set for this invite yet. Create one below (min 12 characters).");
+      } else if (firebaseErr?.code === "auth/operation-not-allowed") {
+        setMessageTone("error");
+        setMessage("Email/password sign-in is not enabled in Firebase Console (Authentication → Sign-in method → Email/Password).");
+      } else if (firebaseErr?.code === "auth/too-many-requests") {
+        setMessageTone("error");
+        setMessage("Too many attempts. Wait a few minutes or use Google / magic link.");
+      } else {
+        setMessageTone("error");
+        setMessage(firebaseErr?.message || "Password sign-in failed.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const address = email.trim();
+    const check = validatePassword(password);
+    if (!check.ok) {
+      setMessageTone("error");
+      setMessage(check.errors.join(" · "));
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setMessageTone("error");
+      setMessage("Password confirmation does not match.");
+      return;
+    }
+
+    setLoading(true);
+    setMessageTone("info");
+    setMessage("");
+    try {
+      if (!(await ensureInvited(address))) return;
+      await configureAuthPersistence(auth, rememberMe);
+      await createUserWithEmailAndPassword(auth, address, password);
+      setMessageTone("success");
+      setMessage("Password created. Redirecting to Mission Control…");
+      navigate("/dashboard", { replace: true });
+    } catch (err: unknown) {
+      const firebaseErr = err as { code?: string; message?: string };
+      if (firebaseErr?.code === "auth/email-already-in-use") {
+        setSetupPassword(false);
+        setMessageTone("error");
+        setMessage("Account already exists — use Sign in with password instead.");
+      } else if (firebaseErr?.code === "auth/operation-not-allowed") {
+        setMessageTone("error");
+        setMessage("Email/password sign-in is not enabled in Firebase Console.");
+      } else {
+        setMessageTone("error");
+        setMessage(firebaseErr?.message || "Could not create password.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    const address = email.trim();
+    if (!address) {
+      setMessageTone("error");
+      setMessage("Enter your admin email first.");
+      return;
+    }
+    setLoading(true);
+    setMessageTone("info");
+    setMessage("");
+    try {
+      if (!(await ensureInvited(address))) return;
+      await sendPasswordResetEmail(auth, address, { url: `${window.location.origin}/login` });
+      setMessageTone("success");
+      setMessage(`Password reset email sent to ${address}.`);
+    } catch (err: unknown) {
+      const firebaseErr = err as { code?: string; message?: string };
+      setMessageTone("error");
+      setMessage(firebaseErr?.message || "Could not send reset email.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const passwordCheck = validatePassword(password);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none text-[var(--color-text)] transition-shadow";
@@ -257,11 +388,40 @@ export default function Login() {
               <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-[var(--color-border)]" />
                 <span className="flex-shrink-0 mx-3 text-[var(--color-muted)] text-[11px] uppercase tracking-wider">
-                  or email link
+                  or email
                 </span>
                 <div className="flex-grow border-t border-[var(--color-border)]" />
               </div>
 
+              <div className="mt-3 flex rounded-xl border border-[var(--color-border)] p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("magic");
+                    setSetupPassword(false);
+                  }}
+                  className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+                    authMode === "magic"
+                      ? "bg-[var(--color-accent)] text-white"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                >
+                  Magic link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("password")}
+                  className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+                    authMode === "password"
+                      ? "bg-[var(--color-accent)] text-white"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                >
+                  Password
+                </button>
+              </div>
+
+              {authMode === "magic" ? (
               <form onSubmit={handleEmailLinkSignIn} className="mt-3 flex flex-col gap-3">
                 <div>
                   <label htmlFor="login-email" className="block text-xs font-medium mb-1 text-[var(--color-muted)]">
@@ -287,6 +447,94 @@ export default function Login() {
                   {loading ? "Sending link…" : "Send Magic Sign-In Link"}
                 </button>
               </form>
+              ) : (
+              <form
+                onSubmit={(e) => void (setupPassword ? handlePasswordSetup(e) : handlePasswordSignIn(e))}
+                className="mt-3 flex flex-col gap-3"
+              >
+                <div>
+                  <label htmlFor="login-email-pw" className="block text-xs font-medium mb-1 text-[var(--color-muted)]">
+                    Admin email
+                  </label>
+                  <input
+                    id="login-email-pw"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className={inputClass}
+                    placeholder="mdshuvo40@gmail.com"
+                    autoComplete="email"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="login-password" className="block text-xs font-medium mb-1 text-[var(--color-muted)]">
+                    {setupPassword ? "New password" : "Password"}
+                  </label>
+                  <input
+                    id="login-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className={inputClass}
+                    autoComplete={setupPassword ? "new-password" : "current-password"}
+                    minLength={12}
+                  />
+                  {password ? (
+                    <p className="mt-1 text-[11px]" style={{ color: passwordStrengthColor(passwordCheck.score) }}>
+                      Strength: {passwordCheck.label}
+                      {passwordCheck.errors.length ? ` — ${passwordCheck.errors.join(", ")}` : ""}
+                    </p>
+                  ) : null}
+                </div>
+                {setupPassword ? (
+                  <div>
+                    <label htmlFor="login-password-confirm" className="block text-xs font-medium mb-1 text-[var(--color-muted)]">
+                      Confirm password
+                    </label>
+                    <input
+                      id="login-password-confirm"
+                      type="password"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      required
+                      className={inputClass}
+                      autoComplete="new-password"
+                      minLength={12}
+                    />
+                  </div>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 shadow-md text-sm"
+                >
+                  {loading ? (
+                    <LorapokLarvaeLoader size="sm" ariaLabel="Signing in" />
+                  ) : (
+                    <KeyRound size={16} aria-hidden="true" />
+                  )}
+                  {loading
+                    ? setupPassword
+                      ? "Creating password…"
+                      : "Signing in…"
+                    : setupPassword
+                    ? "Create password & sign in"
+                    : "Sign in with password"}
+                </button>
+                {!setupPassword ? (
+                  <button
+                    type="button"
+                    onClick={() => void handlePasswordReset()}
+                    disabled={loading}
+                    className="text-xs text-[var(--color-muted)] hover:text-[var(--color-accent-2)] transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                ) : null}
+              </form>
+              )}
             </>
           )}
 

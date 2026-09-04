@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
 import { buildMailSyncRecommendations } from "../../_shared/mail-sync.js";
 import { buildMailSetupInstructions } from "../../_shared/mail-setup-instructions.js";
 import { readMailConfig, sanitizeMailConfigForClient } from "../../_shared/mail-config.js";
@@ -12,6 +12,8 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const readDenied = requirePermission(auth, "mail.read");
+  if (readDenied) return readDenied;
 
   const transport = getMailTransportStatus(env);
   const config = await readMailConfig(env);

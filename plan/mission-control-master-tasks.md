@@ -108,16 +108,17 @@
 | FB-06 | Connected Services Firebase row health | **done** | bootstrap + session in Connected Services |
 | FB-07 | Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback) | **done** | `sync-firebase-pages-secrets.mjs` |
 | FB-08 | KV `integrations:firebase` re-seeded production | **done** | `seed-firebase-kv.mjs` 2026-09-05 |
-| AUTH-01 | RBAC + email-identities architecture sign-off | **next** | `b8e4f2a1` plan; permission matrix doc |
-| AUTH-02 | Enable Firebase Email/Password + invite-only gate | **next** | Console + authorized domains |
-| AUTH-03 | Login UI: email/password fields + validation (zxcvbn) | **next** | `Login.tsx`; min 12 chars policy |
-| AUTH-04 | Password reset + lockout messaging for allowlisted admins | **next** | Firebase `sendPasswordResetEmail` |
-| AUTH-05 | `GET /api/auth/me` — role + permissions for SPA | **next** | replaces binary master check in UI |
-| AUTH-06 | KV `admin-rbac` store + role assignment API | **next** | master PUT; migrate `admin-emails` |
-| AUTH-07 | `requirePermission()` on all mutating API routes | **next** | deploy, settings, mail, team, cron |
-| AUTH-08 | Team page: assign roles (master/admin/operator/viewer) | **next** | align Firestore + KV RBAC |
-| AUTH-09 | ACL audit log (role/email changes) | **next** | D1 or KV scatter + Activity page |
-| AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **next** | 403 on forbidden actions |
+| AUTH-01 | RBAC + email-identities architecture sign-off | **done** | `plan/AUTH-01-rbac-matrix.md`; `rbac.js` + `GET /api/auth/me` |
+| AUTH-02 | Enable Firebase Email/Password + invite-only gate | **done** | Console step documented; `GET /api/auth/invite-check` + Login gate |
+| AUTH-03 | Login UI: email/password fields + validation (zxcvbn) | **done** | `Login.tsx` + `password-policy.ts` (min 12 + strength score) |
+| AUTH-04 | Password reset + lockout messaging for allowlisted admins | **done** | `sendPasswordResetEmail` + too-many-requests copy |
+| AUTH-05 | `GET /api/auth/me` — role + permissions for SPA | **done** | `AuthProvider` + `auth-guard` via `fetchAuthMe` |
+| AUTH-06 | KV `admin-rbac` store + role assignment API | **done** | `GET/PUT /api/auth/rbac`; `/admins` syncs roles |
+| AUTH-07 | `requirePermission()` on all mutating API routes | **done** | deploy, settings, mail, integrations, notices, team |
+| AUTH-08 | Team page: assign roles (master/admin/operator/viewer) | **done** | `Team.tsx` role dropdown + invite role |
+| AUTH-09 | ACL audit log (role/email changes) | **done** | `acl-audit.js` → system log; Logs → ACL filter |
+| AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **partial** | `rbac-routes.test.mjs` route map |
+| AUTH-11 | Profile tab + quick-unlock PIN (Settings) | **done** | `ProfileSettingsCard`, `pin-unlock.ts`, KV verifier backup |
 
 ---
 
@@ -168,11 +169,11 @@
 | MAIL-04 | Refresh Cloudflare deploy + email credentials | **done** | Global API Key deploy via `CLOUDFLARE_API_KEY`+`CLOUDFLARE_EMAIL`; CI decrypts gpg vault (`CRED_STORE_GPG_BASE64`+pin); Settings → Cloudflare rotates GH secrets |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **done** | Pages + GH `RESEND_API_KEY` synced |
 | MAIL-06 | Resend quota + transport fallback + broadcast capacity | **done** | `service-usage.js`, cron `service-usage-sync`, Settings Resend limits |
-| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **in_progress** | Cloudflare DNS added; verify in Resend + Settings |
-| MAIL-09 | Design: Email identities Settings API + KV schema | **next** | `b8e4f2a1` plan Phase 0 |
-| MAIL-10 | Settings **Email identities** tab — list/create `@lorapok.tech` | **next** | Cloudflare Email Routing API; master-only |
-| MAIL-11 | Forward rules + display names sync (`setup-email-addresses` parity) | **next** | product/support/ops categories |
-| MAIL-12 | Identity provision tests + FieldHelp + api-catalog | **next** | vitest + `pages-functions-imports` |
+| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **in_progress** | DKIM/SPF + inbound MX in Cloudflare; verify in Resend |
+| MAIL-09 | Design: Email identities Settings API + KV schema | **done** | `email-identities-config.js`, GET/PUT config |
+| MAIL-10 | Settings **Email identities** tab — list/create `@lorapok.tech` | **done** | `EmailIdentitiesCard`; provision via CF Email Routing |
+| MAIL-11 | Forward rules + display names sync (`setup-email-addresses` parity) | **next** | bulk sync CLI parity |
+| MAIL-12 | Identity provision tests + FieldHelp + api-catalog | **partial** | tests + catalog; FieldHelp deferred |
 | QUOTA-01 | Service used/limit in `/api/sync/status` | **done** | Resend, Cloudflare Email, mail relay |
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
@@ -243,14 +244,14 @@
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| SET-01 | Tabbed Settings (13 tabs) | **done** | General, Mail, Resend, Testmail, Discord, Firebase, GitHub, Cloudflare, Cred vault, Marketplace, Automation, Cloud dev, Services |
+| SET-01 | Tabbed Settings (14 tabs) | **done** | General, Profile, Mail, Resend, Testmail, Discord, Firebase, GitHub, Cloudflare, Cred vault, Marketplace, Automation, Cloud dev, Services |
 | SET-02 | Phased completion `settings-phases-complete.md` | **done** | Phases 0–4 |
 | SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex, Resend, Testmail |
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
 | SET-05 | Production smoke (login + tabs) | **partial** | health + firebase-config + D1 **200/ok**; login UI smoke manual |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
 | SET-07 | Per-service Settings tabs (Resend, testmail, cred vault, marketplace) | **done** | `ResendConfigCard`, `TestmailConfigCard`, `CredVaultConfigCard`, `MarketplaceConfigCard` |
-| SET-08 | Settings tab: **Email identities** (`@lorapok.tech` provision) | **next** | `EmailIdentitiesCard`; MAIL-09–12 |
+| SET-08 | Settings tab: **Email identities** (`@lorapok.tech` provision) | **done** | `EmailIdentitiesCard`; MAIL-09–10 |
 | SET-09 | Settings + nav gated by RBAC permissions | **next** | AUTH-05, AUTH-08 |
 | SET-10 | Production smoke: password login + role-restricted UI | **next** | after AUTH-02–08 |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
@@ -259,8 +260,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-07** — Verify `mail.lorapok.tech` in Resend → Settings → Resend domain verified → test to `imaizied@gmail.com`
-2. **MAIL-09 / AUTH-01** — Epic [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120): email identities API design + RBAC sign-off
+1. **AUTH-10** — Production smoke for non-master RBAC paths
+2. **MAIL-11** — `setup-email-addresses.mjs` parity / bulk identity sync
+3. **MAIL-07** — Verify `mail.lorapok.tech` in Resend
 3. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
 4. **KV-09 / STAT-06** — KV UTC reset or pause stats
 5. **DC-03** — Discord webhooks in production KV

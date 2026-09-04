@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../../../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../../../_shared/auth.js";
 import { runDiscordDigest } from "../../../_shared/discord-digest.js";
 
 /**
@@ -8,9 +8,8 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
-  if (!auth.isMaster) {
-    return jsonResponse({ error: "Master admin only" }, 403);
-  }
+  const denied = requirePermission(auth, "integrations.write");
+  if (denied) return denied;
 
   const result = await runDiscordDigest(env, {
     triggeredBy: auth.email ?? "manual",

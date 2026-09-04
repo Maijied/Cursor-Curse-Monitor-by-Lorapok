@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/auth.js";
 import { logAuthenticatedRequest, readApiActivity } from "./_shared/activity-log.js";
 
 function applyFilters(items, params) {
@@ -38,6 +38,8 @@ export async function onRequestGet(context) {
 
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "logs.read");
+  if (denied) return denied;
 
   const url = new URL(request.url);
   const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);

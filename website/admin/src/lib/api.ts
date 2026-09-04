@@ -811,7 +811,11 @@ export type CommunityConfig = {
   updatedBy: string | null;
 };
 
-export async function syncAdminAccess(payload: { email: string; action: "add" | "remove" }) {
+export async function syncAdminAccess(payload: {
+  email: string;
+  action: "add" | "remove";
+  role?: "admin" | "operator" | "viewer";
+}) {
   const res = await fetch(`${API_BASE}/admins`, {
     method: "POST",
     headers: {
@@ -823,6 +827,77 @@ export async function syncAdminAccess(payload: { email: string; action: "add" | 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Admin sync failed");
   return data;
+}
+
+export type AuthMeResponse = {
+  ok: boolean;
+  user: {
+    email: string;
+    role: string;
+    permissions: string[];
+    isMaster: boolean;
+    profile: {
+      pinConfigured: boolean;
+      displayNameOverride?: string;
+      updatedAt?: string;
+    };
+  };
+};
+
+export async function fetchAuthMe() {
+  return apiGet<AuthMeResponse>("/auth/me");
+}
+
+export async function fetchAuthInviteCheck(email: string) {
+  const params = new URLSearchParams({ email: email.trim().toLowerCase() });
+  return apiGet<{ invited: boolean }>(`/auth/invite-check?${params}`, false);
+}
+
+export type RbacMember = {
+  email: string;
+  role: string;
+  source: "env" | "kv" | "default";
+};
+
+export type RbacTeamResponse = {
+  ok: boolean;
+  members: RbacMember[];
+  assignments: { email: string; role: string }[];
+};
+
+export async function fetchRbacTeam() {
+  return apiGet<RbacTeamResponse>("/auth/rbac");
+}
+
+export async function putRbacRole(payload: { email: string; role?: string; clear?: boolean }) {
+  const res = await fetch(`${API_BASE}/auth/rbac`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "RBAC update failed");
+  return data as RbacTeamResponse;
+}
+
+export async function putAuthProfile(payload: {
+  displayNameOverride?: string;
+  pinHash?: string;
+  pinSalt?: string;
+  pinPlain?: string;
+  clearPin?: boolean;
+}) {
+  const res = await fetch(`${API_BASE}/auth/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Profile update failed");
+  return data as { ok: boolean; profile: AuthMeResponse["user"]["profile"] };
 }
 
 export async function triggerInfraDeploy(payload: InfraDeployRequest = {}) {
@@ -1450,6 +1525,67 @@ export type TestmailIntegrationConfig = {
   updatedBy: string | null;
   githubSecretsSyncedAt: string | null;
 };
+
+export type EmailIdentityRow = {
+  id: string;
+  localPart: string;
+  email: string;
+  displayName: string;
+  category: string;
+  forwardTo: string;
+  enabled: boolean;
+  routingStatus: string;
+  cloudflareRuleId: string | null;
+  provisionedAt: string | null;
+};
+
+export type EmailIdentitiesConfig = {
+  domain: string;
+  opsForwardTo: string;
+  identities: EmailIdentityRow[];
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export async function fetchEmailIdentitiesConfigApi() {
+  return apiGet<{ ok: boolean; config: EmailIdentitiesConfig }>("/integrations/email-identities/config");
+}
+
+export async function putEmailIdentitiesConfigApi(payload: {
+  opsForwardTo?: string;
+  identities?: Array<Partial<EmailIdentityRow>>;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/email-identities/config`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save email identities");
+  return data as { ok: boolean; config: EmailIdentitiesConfig };
+}
+
+export async function provisionEmailIdentityApi(payload: {
+  localPart: string;
+  displayName?: string;
+  forwardTo?: string;
+  category?: string;
+  dryRun?: boolean;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/email-identities/provision`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to provision identity");
+  return data as {
+    ok: boolean;
+    provision: { message?: string; routingStatus?: string; simulated?: boolean };
+    identity?: EmailIdentityRow;
+    config: EmailIdentitiesConfig;
+  };
+}
 
 export async function fetchResendConfigApi() {
   return apiGet<{ ok: boolean; config: ResendIntegrationConfig }>("/integrations/resend/config");

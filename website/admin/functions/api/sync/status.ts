@@ -1,4 +1,4 @@
-import { jsonResponse, verifyAdminRequest } from "../_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
 import { githubFetch } from "../_shared/github.js";
 import { getMailTransportStatus } from "../_shared/mail.js";
 import {
@@ -19,6 +19,8 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "settings.read");
+  if (denied) return denied;
 
   const now = Date.now();
   let githubOk = false;
