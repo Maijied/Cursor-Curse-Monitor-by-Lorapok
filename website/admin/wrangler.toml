@@ -14,6 +14,12 @@ binding = "ADMIN_KV"
 id = "8a29ab111ed0488297e12725072e9a10"
 preview_id = "1555368c415e40a7b7e591784f1dc22c"
 
+# Phase 2 storage — system logs + subscriber index (see website/admin/d1/schema.sql)
+[[d1_databases]]
+binding = "ADMIN_D1"
+database_name = "ccm-admin-d1"
+database_id = "c38fc653-be43-4222-976b-da5ab829107a"
+
 # Pages Functions use REST mail (CLOUDFLARE_EMAIL_API_TOKEN). send_email binding is Workers-only.
 # Mission Control calls ccm-mail-relay via service binding (preferred — no REST token needed).
 

@@ -21,6 +21,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Infrastructure status card** — Settings → General shows live sync health from `/api/sync/status` with KV read/write quota detection, estimated write budget per refresh, last run outcome, and master-only pause shortcut when quota is hit
 - **Settings integration polling** — Mail, Cron, Discord, Subscribe, Reindex, and Connected Services cards refresh every 60s without a full page reload
 - **FieldHelp tooltips** — contextual help on Mail sending domain, Discord webhook, subscribe fallback, reindex cap, and cron intervals
+- **ADMIN_D1 binding** — Cloudflare D1 `ccm-admin-d1` for Phase 2 logs/subscribers (`website/admin/d1/schema.sql`); health probes on `/api/health` and Infrastructure card
+- **Connected Services Firebase health** — distinguishes client bootstrap availability from signed-in session
 
 ### Fixed
 

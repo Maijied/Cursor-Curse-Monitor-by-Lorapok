@@ -50,6 +50,10 @@ export async function fetchHealth() {
     ok: boolean;
     checks: { github: boolean; timestamp: string };
     firebaseProject?: string;
+    firebaseConfigured?: boolean;
+    adminD1Configured?: boolean;
+    adminD1Ok?: boolean;
+    adminD1Error?: string | null;
     mailConfigured?: boolean;
     mailTransport?: string;
     mailRelayBound?: boolean;
@@ -75,6 +79,7 @@ export type SyncStatusPayload = {
   checkedAt: string;
   github: { ok: boolean };
   adminKv: { configured: boolean };
+  adminD1?: { configured: boolean; ok: boolean; error: string | null };
   mail: {
     configured: boolean;
     transport: string | null;

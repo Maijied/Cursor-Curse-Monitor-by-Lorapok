@@ -40,18 +40,44 @@ export default function ConnectedServicesCard() {
 
     async function check() {
       const next: ServiceRow[] = [];
-
       const user = auth.currentUser;
-      next.push({
-        id: "firebase",
-        label: "Firebase Auth",
-        status: user ? "connected" : "disconnected",
-        detail: user?.email ?? "Not signed in",
-      });
+
+      let health: Awaited<ReturnType<typeof fetchHealth>> | null = null;
+      let sync: Awaited<ReturnType<typeof fetchSyncStatus>> | null = null;
 
       try {
-        const health = await fetchHealth();
-        const sync = await fetchSyncStatus().catch(() => null);
+        health = await fetchHealth();
+        sync = await fetchSyncStatus().catch(() => null);
+      } catch {
+        health = null;
+      }
+
+      const firebaseConfigured = health?.firebaseConfigured ?? false;
+      const firebaseProject = health?.firebaseProject ?? "cursor-curse-by-lorapok";
+      if (!firebaseConfigured) {
+        next.push({
+          id: "firebase",
+          label: "Firebase Auth",
+          status: "disconnected",
+          detail: "Client bootstrap unavailable — check Settings → Firebase or Pages secrets",
+        });
+      } else if (user) {
+        next.push({
+          id: "firebase",
+          label: "Firebase Auth",
+          status: "connected",
+          detail: `${user.email} · project ${firebaseProject}`,
+        });
+      } else {
+        next.push({
+          id: "firebase",
+          label: "Firebase Auth",
+          status: "disconnected",
+          detail: `Bootstrap OK · project ${firebaseProject} · sign in required`,
+        });
+      }
+
+      if (health) {
         next.push({
           id: "github",
           label: "GitHub API",
@@ -88,8 +114,21 @@ export default function ConnectedServicesCard() {
                 ? `Refreshed ${sync.stats.cache.ageSeconds ?? "?"}s ago · total ${sync.stats.cache.displayTotal ?? "—"}`
                 : sync.stats.lastRunError ?? "No cache yet",
           });
+          if (sync.adminD1) {
+            const d1 = sync.adminD1;
+            next.push({
+              id: "admin-d1",
+              label: "Admin D1",
+              status: !d1.configured ? "checking" : d1.ok ? "connected" : "disconnected",
+              detail: !d1.configured
+                ? "Binding not deployed yet"
+                : d1.ok
+                  ? "Schema ready · logs/subscribers (Phase 2)"
+                  : d1.error ?? "D1 probe failed",
+            });
+          }
         }
-      } catch {
+      } else {
         next.push({
           id: "github",
           label: "GitHub API",

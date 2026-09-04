@@ -9,6 +9,7 @@ import {
 } from "../_shared/stats-refresh-config.js";
 import { formatKvPutError } from "../_shared/kv-put.js";
 import { isKvQuotaError, isKvWritesPaused, kvQuotaKind } from "../_shared/kv-quota.js";
+import { probeAdminD1 } from "../_shared/d1-admin.js";
 
 /**
  * Aggregated sync health for Mission Control polling (admin auth).
@@ -44,6 +45,7 @@ export async function onRequestGet(context) {
   const kvWritesPaused = isKvWritesPaused(writesPausedUntil, now);
   const kvQuotaHit = Boolean((lastError && isKvQuotaError(lastError)) || kvWritesPaused);
   const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : kvWritesPaused ? "write" : null;
+  const adminD1 = await probeAdminD1(env);
 
   let overall: "online" | "degraded" | "offline" = "online";
   if (!githubOk || !env.ADMIN_KV) {
@@ -58,6 +60,11 @@ export async function onRequestGet(context) {
     checkedAt: new Date(now).toISOString(),
     github: { ok: githubOk },
     adminKv: { configured: Boolean(env.ADMIN_KV) },
+    adminD1: {
+      configured: adminD1.configured,
+      ok: adminD1.ok,
+      error: adminD1.error ?? null,
+    },
     mail: {
       configured: mail.configured,
       transport: mail.transport ?? null,

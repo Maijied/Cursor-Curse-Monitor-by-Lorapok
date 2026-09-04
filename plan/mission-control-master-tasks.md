@@ -59,9 +59,9 @@
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | D1-01 | Design: move scatter logs / subscriber index off KV | **deferred** | Reliability plan Phase 2 |
-| D1-02 | Add D1 binding in `wrangler.toml` | **next** | Needs CF dashboard namespace |
+| D1-02 | Add D1 binding in `wrangler.toml` | **done** | `ccm-admin-d1` + `d1/schema.sql` |
 | D1-03 | Migration script KV → D1 for `system:log:*` | **next** | After D1-02 |
-| D1-04 | Admin queries / health for D1 connectivity | **next** | Settings → Infrastructure |
+| D1-04 | Admin queries / health for D1 connectivity | **done** | `/api/health`, `/api/sync/status`, Infrastructure card |
 
 ---
 
@@ -97,7 +97,7 @@
 | FB-03 | GH `admin-production` `VITE_FIREBASE_*` sync on save | **done** | Settings → Firebase tab |
 | FB-04 | CI build from GH secrets | **done** | `ci-cd.yml` |
 | FB-05 | Vitest `firebase-config.test.ts` | **done** | 8/8 phase tests |
-| FB-06 | Connected Services Firebase row health | **next** | Reliability D3 |
+| FB-06 | Connected Services Firebase row health | **done** | bootstrap + session in Connected Services |
 | FB-07 | Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback) | **done** | `sync-firebase-pages-secrets.mjs` |
 | FB-08 | KV `integrations:firebase` re-seeded production | **done** | `seed-firebase-kv.mjs` 2026-09-05 |
 
@@ -230,9 +230,9 @@
 
 1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
 2. **KV-09 / STAT-06** — Wait for KV UTC reset OR disable stats in Settings → Automation
-3. **D1-02** — D1 binding design (Phase 2 storage)
-4. **FB-06** — Connected Services Firebase health row
-5. **R2-02** — R2 bucket + binding for badge/SVG blobs
+3. **D1-03** — Migration script KV → D1 for `system:log:*`
+4. **R2-02** — R2 bucket + binding for badge/SVG blobs
+5. **DC-03** — Discord webhooks in production KV
 
 ---
 

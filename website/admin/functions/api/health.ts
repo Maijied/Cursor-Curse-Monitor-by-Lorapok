@@ -1,7 +1,8 @@
 import { jsonResponse } from "./_shared/auth.js";
 import { githubFetch } from "./_shared/github.js";
 import { getMailTransportStatus } from "./_shared/mail.js";
-import { readFirebaseConfig } from "./_shared/firebase-config.js";
+import { readFirebaseConfig, isCompleteFirebaseConfig } from "./_shared/firebase-config.js";
+import { probeAdminD1 } from "./_shared/d1-admin.js";
 import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
 import { buildPublicSiteConfig } from "./_shared/subscribe-config.js";
 import {
@@ -32,6 +33,8 @@ export async function onRequestGet(context) {
 
   const mail = getMailTransportStatus(env);
   const firebaseConfig = await readFirebaseConfig(env);
+  const firebaseConfigured = Boolean(firebaseConfig && isCompleteFirebaseConfig(firebaseConfig));
+  const adminD1 = await probeAdminD1(env);
   const subscribeSite = await buildPublicSiteConfig(env);
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
@@ -41,6 +44,10 @@ export async function onRequestGet(context) {
     ok: checks.github,
     checks,
     firebaseProject: firebaseConfig?.projectId ?? env.FIREBASE_PROJECT_ID ?? "cursor-curse-by-lorapok",
+    firebaseConfigured,
+    adminD1Configured: adminD1.configured,
+    adminD1Ok: adminD1.ok,
+    adminD1Error: adminD1.error ?? null,
     githubTokenConfigured: Boolean(env.GITHUB_TOKEN),
     adminKvConfigured: Boolean(env.ADMIN_KV),
     mailConfigured: mail.configured,

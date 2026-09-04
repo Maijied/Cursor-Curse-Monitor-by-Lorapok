@@ -100,6 +100,31 @@ export default function InfrastructureStatusCard() {
               </Badge>
             </dd>
           </div>
+          {sync.adminD1 ? (
+            <div className="flex justify-between gap-4 items-start">
+              <dt className="text-[var(--color-muted)]">Admin D1</dt>
+              <dd className="text-right max-w-[65%]">
+                <Badge
+                  variant={
+                    !sync.adminD1.configured ? "warn" : sync.adminD1.ok ? "synced" : "danger"
+                  }
+                >
+                  {!sync.adminD1.configured
+                    ? "Not bound"
+                    : sync.adminD1.ok
+                      ? "Connected"
+                      : "Error"}
+                </Badge>
+                {sync.adminD1.configured ? (
+                  <span className="block text-[10px] text-[var(--color-muted)] mt-0.5">
+                    {sync.adminD1.ok
+                      ? "ccm-admin-d1 · Phase 2 logs/subscribers"
+                      : sync.adminD1.error ?? "Probe failed"}
+                  </span>
+                ) : null}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4 items-center">
             <dt className="text-[var(--color-muted)]">Stats cache</dt>
             <dd className="text-right">

@@ -121,7 +121,7 @@ Live download stats and Mission Control config today live in **Cloudflare KV** (
 |-------|----------|--------|
 | **KV** | Small JSON config blobs, hot stats cache | **Production** — current path |
 | **R2** | Large blobs (`stats:readme-svg`, badge assets) | **Phase 2** — removes 2+ KV puts per refresh when totals change |
-| **D1** | Append-heavy data (`system:log:*`, subscriber index) | **Phase 2** — SQL queries, less scatter-write pressure |
+| **D1** | Append-heavy data (`system:log:*`, subscriber index) | **Phase 2** — `ADMIN_D1` binding (`ccm-admin-d1`) provisioned; KV migration pending |
 | **GitHub `site-data.json`** | Marketing fallback when APIs unreachable | **Production** — weekly GHA + manual regen; not real-time |
 | **GCP / Azure** | Optional off-site backup of stats snapshots | **Deferred** — export via GHA cron, not runtime dual-write |
 
