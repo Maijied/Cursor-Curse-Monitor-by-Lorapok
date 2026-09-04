@@ -3,7 +3,7 @@
 **Procedure ID:** `2b7b880d`  
 **Status:** in_progress  
 **Created:** 2026-09-04  
-**Plan:** plan/settings-tabs-secrets-plan.md  
+**Plan:** plan/settings-tabs-secrets-plan.md (+ `plan/mission-control-master-tasks.md`)  
 **Issue:** __ISSUE_PENDING__  
 **Branch:** _local (uncommitted)_  
 **PR:** _TBD_

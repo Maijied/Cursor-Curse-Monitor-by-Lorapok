@@ -63,8 +63,8 @@
 | Step | Deliverable | Verify | Done |
 |------|-------------|--------|------|
 | 5.1 | Git commit | secretlint + governance | [ ] |
-| 5.2 | Push `main` | `git push` | [ ] |
-| 5.3 | Deploy admin (user or CI) | `/api/firebase-config` 200 | [ ] |
+| 5.2 | Push `main` | `git push` | [x] |
+| 5.3 | Deploy admin (user or CI) | `/api/firebase-config` 200 | [ ] in_progress |
 | 5.4 | Production smoke | Login + Settings tabs | [ ] |
 
 ---
