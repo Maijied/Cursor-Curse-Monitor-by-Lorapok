@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mail, Plus, Save } from "lucide-react";
+import { Mail, Plus, RefreshCw, Save } from "lucide-react";
 import Card from "./Card";
 import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
@@ -8,6 +8,7 @@ import {
   fetchEmailIdentitiesConfigApi,
   provisionEmailIdentityApi,
   putEmailIdentitiesConfigApi,
+  syncEmailIdentitiesApi,
   type EmailIdentitiesConfig,
   type EmailIdentityRow,
 } from "../../lib/api";
@@ -23,6 +24,7 @@ export default function EmailIdentitiesCard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [provisioning, setProvisioning] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [config, setConfig] = useState<EmailIdentitiesConfig | null>(null);
   const [opsForwardTo, setOpsForwardTo] = useState("");
@@ -64,6 +66,24 @@ export default function EmailIdentitiesCard() {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
     }
     setSaving(false);
+  };
+
+  const handleSyncAll = async () => {
+    if (!canProvision) return;
+    setSyncing(true);
+    setMessage(null);
+    try {
+      const result = await syncEmailIdentitiesApi();
+      setConfig(result.config);
+      const { provisioned, reused, failed } = result.summary;
+      setMessage({
+        type: failed > 0 ? "error" : "success",
+        text: `Sync complete — ${provisioned} created, ${reused} reused, ${failed} failed.`,
+      });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Sync failed" });
+    }
+    setSyncing(false);
   };
 
   const handleProvision = async (e: React.FormEvent) => {
@@ -136,6 +156,17 @@ export default function EmailIdentitiesCard() {
               Updated {new Date(config.updatedAt).toLocaleString()}
               {config.updatedBy ? ` by ${config.updatedBy}` : ""}
             </p>
+          ) : null}
+          {canProvision ? (
+            <button
+              type="button"
+              onClick={() => void handleSyncAll()}
+              disabled={syncing}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm font-medium hover:bg-white/5 disabled:opacity-50"
+            >
+              <RefreshCw size={16} aria-hidden="true" className={syncing ? "animate-spin" : ""} />
+              {syncing ? "Syncing…" : "Sync all identities"}
+            </button>
           ) : null}
         </div>
 

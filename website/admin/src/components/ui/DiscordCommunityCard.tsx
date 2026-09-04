@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useEffect, useState } from "react";
 import { Copy, ExternalLink, MessageCircle, Save, Send } from "lucide-react";
 import { DISCORD_INVITE_URL } from "@lorapok/cursor-monitor-shared";
@@ -5,20 +6,19 @@ import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
-import { auth } from "../../lib/firebase";
 import {
   fetchDiscordConfigApi,
   notifyDiscordCommunityApi,
   putDiscordConfigApi,
   type DiscordConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
  * Lorapok Labs Family — public invite link and outbound announcement webhook.
  */
 export default function DiscordCommunityCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -55,7 +55,7 @@ export default function DiscordCommunityCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -75,7 +75,7 @@ export default function DiscordCommunityCard() {
   };
 
   const handleTest = async () => {
-    if (!isMaster || !config?.communityConfigured) return;
+    if (!canWrite || !config?.communityConfigured) return;
     setTesting(true);
     setMessage(null);
     try {
@@ -130,7 +130,7 @@ export default function DiscordCommunityCard() {
                 type="url"
                 value={inviteUrl}
                 onChange={(e) => setInviteUrl(e.target.value)}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 placeholder={DISCORD_INVITE_URL}
                 className={`${inputClass} flex-1 min-w-[16rem]`}
               />
@@ -163,7 +163,7 @@ export default function DiscordCommunityCard() {
               type="password"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
               placeholder={
                 config?.communityWebhookPreview
                   ? `Saved: ${config.communityWebhookPreview}`
@@ -182,7 +182,7 @@ export default function DiscordCommunityCard() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              disabled={!isMaster || saving}
+              disabled={!canWrite || saving}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
             >
               <Save size={16} aria-hidden="true" />
@@ -191,7 +191,7 @@ export default function DiscordCommunityCard() {
             <button
               type="button"
               onClick={handleTest}
-              disabled={!isMaster || testing || !config?.communityConfigured}
+              disabled={!canWrite || testing || !config?.communityConfigured}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
             >
               <Send size={16} aria-hidden="true" />
@@ -199,7 +199,7 @@ export default function DiscordCommunityCard() {
             </button>
           </div>
 
-          {!isMaster && <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>}
+          {!canWrite && <p className="text-xs text-[var(--color-warn)]">Requires integrations.write permission.</p>}
         </form>
       )}
     </Card>

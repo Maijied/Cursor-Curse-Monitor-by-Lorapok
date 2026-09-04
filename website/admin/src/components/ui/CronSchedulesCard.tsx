@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useCallback, useEffect, useState } from "react";
 import { Clock, PauseCircle, RefreshCw, Save, Send } from "lucide-react";
 import Card from "./Card";
@@ -6,7 +7,6 @@ import LoadableButton from "./LoadableButton";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchCronJobsConfigApi,
@@ -18,7 +18,6 @@ import {
   type DiscordDigestConfig,
   type StatsRefreshConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 import { formatDownloadCount } from "../../lib/download-stats";
 
 function formatInterval(minutes: number) {
@@ -32,7 +31,8 @@ function formatInterval(minutes: number) {
  * Unified cron schedules — Cloudflare worker jobs (editable) + GitHub Actions (read-only).
  */
 export default function CronSchedulesCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("settings.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,7 +89,7 @@ export default function CronSchedulesCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -125,7 +125,7 @@ export default function CronSchedulesCard() {
   };
 
   const handlePauseStatsForQuota = async () => {
-    if (!isMaster) return;
+    if (!canWrite) return;
     setPausingStats(true);
     setMessage(null);
     try {
@@ -208,7 +208,7 @@ export default function CronSchedulesCard() {
         >
           <p className="font-medium text-[var(--color-danger)] mb-1">KV quota — stats refresh affected</p>
           <p>{kvWarning}</p>
-          {isMaster && statsEnabled ? (
+          {canWrite && statsEnabled ? (
             <button
               type="button"
               disabled={pausingStats}
@@ -249,7 +249,7 @@ export default function CronSchedulesCard() {
                 type="checkbox"
                 checked={statsEnabled}
                 onChange={(e) => setStatsEnabled(e.target.checked)}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 className="rounded border-[var(--color-border)]"
               />
               <span>Enable automatic refresh</span>
@@ -266,7 +266,7 @@ export default function CronSchedulesCard() {
                 step={1}
                 value={statsInterval}
                 onChange={(e) => setStatsInterval(Number(e.target.value))}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 className={inputClass}
               />
               <FieldHelp label="Stats interval" className="mt-2">
@@ -302,7 +302,7 @@ export default function CronSchedulesCard() {
                 type="checkbox"
                 checked={digestEnabled}
                 onChange={(e) => setDigestEnabled(e.target.checked)}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 className="rounded border-[var(--color-border)]"
               />
               <span>Enable scheduled Discord digest</span>
@@ -319,7 +319,7 @@ export default function CronSchedulesCard() {
                 step={60}
                 value={digestInterval}
                 onChange={(e) => setDigestInterval(Number(e.target.value))}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 className={inputClass}
               />
               <FieldHelp label="Digest interval" className="mt-2">
@@ -331,7 +331,7 @@ export default function CronSchedulesCard() {
                 type="checkbox"
                 checked={digestRefreshFirst}
                 onChange={(e) => setDigestRefreshFirst(e.target.checked)}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 className="rounded border-[var(--color-border)]"
               />
               <span>Refresh live stats before sending</span>
@@ -341,13 +341,13 @@ export default function CronSchedulesCard() {
                 type="checkbox"
                 checked={digestIncludeChangelog}
                 onChange={(e) => setDigestIncludeChangelog(e.target.checked)}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 className="rounded border-[var(--color-border)]"
               />
               <span>Include latest changelog section</span>
             </label>
             {data ? renderRunMeta(data.discordDigest) : null}
-            {isMaster ? (
+            {canWrite ? (
               <LoadableButton
                 type="button"
                 onClick={handleSendDigest}
@@ -394,7 +394,7 @@ export default function CronSchedulesCard() {
             </p>
           ) : null}
 
-          {isMaster ? (
+          {canWrite ? (
             <LoadableButton
               type="submit"
               loading={saving}

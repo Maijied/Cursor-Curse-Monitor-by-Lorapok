@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useCallback, useEffect, useState } from "react";
 import { Mail, Save } from "lucide-react";
 import Card from "./Card";
@@ -5,20 +6,19 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchSubscribePromptConfigApi,
   putSubscribePromptConfigApi,
   type SubscribePromptConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
  * Configure subscribe modal gating and Discord fallback when outbound mail is unavailable.
  */
 export default function SubscribePromptCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("settings.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -56,7 +56,7 @@ export default function SubscribePromptCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -103,7 +103,7 @@ export default function SubscribePromptCard() {
               type="checkbox"
               checked={form.subscribeModalEnabled}
               onChange={(e) => setForm((prev) => ({ ...prev, subscribeModalEnabled: e.target.checked }))}
-              disabled={!isMaster}
+              disabled={!canWrite}
               className="mt-1"
             />
             <span>
@@ -119,7 +119,7 @@ export default function SubscribePromptCard() {
               type="checkbox"
               checked={form.requireMailForSubscribe}
               onChange={(e) => setForm((prev) => ({ ...prev, requireMailForSubscribe: e.target.checked }))}
-              disabled={!isMaster}
+              disabled={!canWrite}
               className="mt-1"
             />
             <span>
@@ -143,7 +143,7 @@ export default function SubscribePromptCard() {
                   subscribeFallbackMode: e.target.value === "hidden" ? "hidden" : "discord",
                 }))
               }
-              disabled={!isMaster}
+              disabled={!canWrite}
               className={inputClass}
             >
               <option value="discord">Show Discord community CTA</option>
@@ -163,7 +163,7 @@ export default function SubscribePromptCard() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, subscribeFallbackDiscordUrl: e.target.value }))
                 }
-                disabled={!isMaster}
+                disabled={!canWrite}
                 placeholder="https://discord.gg/bp42QAMC6"
                 className={inputClass}
               />
@@ -176,13 +176,13 @@ export default function SubscribePromptCard() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              disabled={!isMaster || saving}
+              disabled={!canWrite || saving}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
             >
               <Save size={16} aria-hidden="true" />
               {saving ? "Saving…" : "Save settings"}
             </button>
-            {!isMaster && <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>}
+            {!canWrite && <p className="text-xs text-[var(--color-warn)]">Requires settings.write permission.</p>}
           </div>
         </form>
       )}

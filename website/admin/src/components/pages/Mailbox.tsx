@@ -25,7 +25,7 @@ import {
   type MailTemplate,
 } from "../../lib/api";
 import { auth } from "../../lib/firebase";
-import { isMasterAdmin } from "../../lib/admin-config";
+import { useAuthSession } from "../../lib/auth-context";
 
 const PAGE_SIZE = 20;
 
@@ -83,7 +83,8 @@ export default function Mailbox() {
   const [syncingMail, setSyncingMail] = useState(false);
   const [testmailProbing, setTestmailProbing] = useState(false);
   const testmailPollRef = useRef<number | null>(null);
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canSyncInfra = hasPermission("deploy.infra");
   const isWide = useMediaQuery("(min-width: 1280px)");
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -173,11 +174,11 @@ export default function Mailbox() {
   };
 
   const handleSyncUp = async () => {
-    if (!isMaster) {
+    if (!canSyncInfra) {
       setNotice({
         tone: "warning",
-        title: "Master admin only",
-        message: "Mail sync dispatches deploy-infra (enable-mail + Pages redeploy). Sign in as the master admin.",
+        title: "Permission required",
+        message: "Mail sync dispatches deploy-infra (enable-mail + Pages redeploy). Requires deploy.infra permission.",
       });
       return;
     }
@@ -377,7 +378,7 @@ export default function Mailbox() {
             type="button"
             disabled={syncingMail || sending}
             onClick={handleSyncUp}
-            title={isMaster ? "Dispatch deploy-infra to repair outbound mail" : "Master admin only"}
+            title={canSyncInfra ? "Dispatch deploy-infra to repair outbound mail" : "Requires deploy.infra permission"}
             className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-60 font-medium"
           >
             {syncingMail ? (

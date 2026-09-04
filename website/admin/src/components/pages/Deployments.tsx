@@ -25,8 +25,7 @@ import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import CollapsibleCard from "../ui/CollapsibleCard";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import LoadableButton from "../ui/LoadableButton";
-import { auth } from "../../lib/firebase";
-import { isMasterAdmin } from "../../lib/admin-config";
+import { useAuthSession } from "../../lib/auth-context";
 
 function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) {
   if (!siteData) return { tags: [] as string[], liveTag: null as string | null };
@@ -41,7 +40,9 @@ type Mode = "deploy" | "rollback" | "infra";
  * Renders the interface for deploying releases, rolling back to known-good tags, or redeploying infrastructure.
  */
 export default function Deployments() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canDeployRun = hasPermission("deploy.run");
+  const canDeployInfra = hasPermission("deploy.infra");
   const { inProgress, startSession, registerOnDeployComplete } = useDeployRuntime();
   const { data: siteData } = useSiteData();
   const [mode, setMode] = useState<Mode>("deploy");
@@ -201,8 +202,8 @@ export default function Deployments() {
   }, [mode, selectedTag]);
 
   useEffect(() => {
-    if (isMaster) void runVersionCheck();
-  }, [isMaster, runVersionCheck]);
+    if (canDeployRun) void runVersionCheck();
+  }, [canDeployRun, runVersionCheck]);
 
   const releaseChannel = channel === "production" ? "Production" as const : "Beta (Pre-release)" as const;
   const isLiveSelected = Boolean(liveTag && selectedTag === liveTag);
@@ -238,10 +239,16 @@ export default function Deployments() {
     e.preventDefault();
     setMessage(null);
 
-    if (!isMaster) {
+    const canSubmitMode =
+      mode === "infra" ? canDeployInfra : canDeployRun;
+
+    if (!canSubmitMode) {
       setMessage({
         type: "error",
-        text: "Only the master admin can trigger releases. Sign in as mdshuvo40@gmail.com or contact the project owner.",
+        text:
+          mode === "infra"
+            ? "You need deploy.infra permission to trigger infrastructure deploys."
+            : "You need deploy.run permission to trigger releases.",
       });
       return;
     }
@@ -317,7 +324,7 @@ export default function Deployments() {
   };
 
   const canSubmit =
-    isMaster &&
+    (mode === "infra" ? canDeployInfra : canDeployRun) &&
     !tagsError &&
     !formLocked &&
     !deployPolicyError &&
@@ -370,10 +377,10 @@ export default function Deployments() {
         </p>
       </CollapsibleCard>
 
-      {!isMaster ? (
+      {!canDeployRun && !canDeployInfra ? (
         <div className="glass-panel px-4 py-3 text-sm border border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] text-[var(--color-warn)] flex items-center gap-2">
           <Lock className="w-4 h-4 shrink-0" />
-          Release, deploy, and rollback are restricted to the master admin account.
+          Release, deploy, and rollback require deploy.run; infrastructure redeploys require deploy.infra.
         </div>
       ) : null}
 
@@ -401,7 +408,7 @@ export default function Deployments() {
           <LoadableButton
             type="button"
             onClick={() => void runVersionCheck()}
-            disabled={versionPlanLoading || !isMaster}
+            disabled={versionPlanLoading || !canDeployRun}
             loading={versionPlanLoading}
             loadingLabel="Validating…"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50"

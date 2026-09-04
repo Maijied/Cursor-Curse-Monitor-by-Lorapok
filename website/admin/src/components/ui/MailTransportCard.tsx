@@ -6,7 +6,7 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import MailSyncProgressBanner from "./MailSyncProgressBanner";
-import { auth } from "../../lib/firebase";
+import { useAuthSession } from "../../lib/auth-context";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import { useWorkflowPoll } from "../../hooks/useWorkflowPoll";
 import {
@@ -15,13 +15,13 @@ import {
   syncMailTransport,
   type MailTransportConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
  * Configure Cloudflare outbound mail identities and relay sync.
  */
 export default function MailTransportCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("settings.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -64,7 +64,7 @@ export default function MailTransportCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -78,7 +78,7 @@ export default function MailTransportCard() {
   };
 
   const handleSync = async () => {
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSyncing(true);
     setMessage(null);
     try {
@@ -172,7 +172,7 @@ export default function MailTransportCard() {
                   type="email"
                   value={form.productEmail}
                   onChange={(e) => setForm((p) => ({ ...p, productEmail: e.target.value }))}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   className={inputClass}
                 />
               </div>
@@ -185,7 +185,7 @@ export default function MailTransportCard() {
                   type="email"
                   value={form.supportEmail}
                   onChange={(e) => setForm((p) => ({ ...p, supportEmail: e.target.value }))}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   className={inputClass}
                 />
               </div>
@@ -198,7 +198,7 @@ export default function MailTransportCard() {
                   type="email"
                   value={form.opsBccEmail}
                   onChange={(e) => setForm((p) => ({ ...p, opsBccEmail: e.target.value }))}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   className={inputClass}
                 />
               </div>
@@ -211,7 +211,7 @@ export default function MailTransportCard() {
                   type="text"
                   value={form.productFromName}
                   onChange={(e) => setForm((p) => ({ ...p, productFromName: e.target.value }))}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   className={inputClass}
                 />
               </div>
@@ -224,7 +224,7 @@ export default function MailTransportCard() {
                   type="text"
                   value={form.supportFromName}
                   onChange={(e) => setForm((p) => ({ ...p, supportFromName: e.target.value }))}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   className={inputClass}
                 />
               </div>
@@ -233,7 +233,7 @@ export default function MailTransportCard() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="submit"
-                disabled={!isMaster || saving}
+                disabled={!canWrite || saving}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
               >
                 <Save size={16} aria-hidden="true" />
@@ -241,7 +241,7 @@ export default function MailTransportCard() {
               </button>
               <button
                 type="button"
-                disabled={!isMaster || syncing}
+                disabled={!canWrite || syncing}
                 onClick={handleSync}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
               >
@@ -255,7 +255,7 @@ export default function MailTransportCard() {
                 Open Mailbox
               </Link>
             </div>
-            {!isMaster && <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>}
+            {!canWrite && <p className="text-xs text-[var(--color-warn)]">Requires settings.write permission.</p>}
           </form>
         </div>
       )}

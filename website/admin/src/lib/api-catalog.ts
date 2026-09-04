@@ -73,6 +73,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "email-identities-config", path: "/integrations/email-identities/config", method: "GET", auth: "admin", group: "Integrations", description: "@lorapok.tech routing identities and forward targets", safeProbe: true },
   { id: "email-identities-config-put", path: "/integrations/email-identities/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save default ops forward and identity metadata" },
   { id: "email-identities-provision", path: "/integrations/email-identities/provision", method: "POST", auth: "admin", group: "Integrations", description: "Provision Cloudflare Email Routing forward rule (mail.provision)" },
+  { id: "email-identities-sync", path: "/integrations/email-identities/sync", method: "POST", auth: "admin", group: "Integrations", description: "Bulk sync builtin identities + routing rules (setup-email-addresses parity)" },
   { id: "mail-config-put", path: "/integrations/mail/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save outbound mail identities and routing preferences" },
   { id: "mail-status", path: "/integrations/mail/status", method: "GET", auth: "admin", group: "Integrations", description: "Mail setup readiness checklist aggregate", safeProbe: true },
   { id: "mail-sync", path: "/integrations/mail/sync", method: "POST", auth: "admin", group: "Integrations", description: "Dispatch deploy-infra to repair outbound mail (relay + verify + Pages deploy)" },

@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useCallback, useEffect, useState } from "react";
 import { Bell, Save, Send } from "lucide-react";
 import Card from "./Card";
@@ -5,7 +6,6 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchDiscordConfigApi,
@@ -13,7 +13,6 @@ import {
   putDiscordConfigApi,
   type DiscordConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
  * Configures and tests the Discord webhook used for deployment status updates.
@@ -21,7 +20,8 @@ import { isMasterAdmin } from "../../lib/admin-config";
  * @returns The Discord integration configuration card.
  */
 export default function DiscordIntegrationsCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -48,7 +48,7 @@ export default function DiscordIntegrationsCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -63,7 +63,7 @@ export default function DiscordIntegrationsCard() {
   };
 
   const handleTest = async () => {
-    if (!isMaster || !config?.deploymentConfigured) return;
+    if (!canWrite || !config?.deploymentConfigured) return;
     setTesting(true);
     setMessage(null);
     try {
@@ -130,7 +130,7 @@ export default function DiscordIntegrationsCard() {
               type="password"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
               placeholder={config?.deploymentWebhookPreview ? `Saved: ${config.deploymentWebhookPreview}` : "https://discord.com/api/webhooks/…"}
               className={inputClass}
               autoComplete="off"
@@ -143,7 +143,7 @@ export default function DiscordIntegrationsCard() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              disabled={!isMaster || saving || !webhookUrl.trim()}
+              disabled={!canWrite || saving || !webhookUrl.trim()}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
             >
               <Save size={16} aria-hidden="true" />
@@ -152,7 +152,7 @@ export default function DiscordIntegrationsCard() {
             <button
               type="button"
               onClick={handleTest}
-              disabled={!isMaster || testing || !config?.deploymentConfigured}
+              disabled={!canWrite || testing || !config?.deploymentConfigured}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
             >
               <Send size={16} aria-hidden="true" />
@@ -160,8 +160,8 @@ export default function DiscordIntegrationsCard() {
             </button>
           </div>
 
-          {!isMaster && (
-            <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>
+          {!canWrite && (
+            <p className="text-xs text-[var(--color-warn)]">Requires integrations.write permission.</p>
           )}
         </form>
       )}

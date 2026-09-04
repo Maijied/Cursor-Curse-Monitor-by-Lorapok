@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useEffect, useState } from "react";
 import { ExternalLink, Mail, Save } from "lucide-react";
 import Card from "./Card";
@@ -5,15 +6,14 @@ import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { fetchResendConfigApi, fetchSyncStatus, putResendConfigApi, type ResendIntegrationConfig } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 const RESEND_GUIDE_URL =
   "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/guides/RESEND_WORKERS_FREE_SETUP.md";
 
 export default function ResendConfigCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -65,7 +65,7 @@ export default function ResendConfigCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -178,7 +178,7 @@ export default function ResendConfigCard() {
                 className={inputClass}
                 value={form.monthlyEmailLimit}
                 onChange={(e) => setForm((p) => ({ ...p, monthlyEmailLimit: Number(e.target.value) || 3000 }))}
-                disabled={!isMaster}
+                disabled={!canWrite}
               />
             </div>
             <div>
@@ -192,7 +192,7 @@ export default function ResendConfigCard() {
                 className={inputClass}
                 value={form.dailyEmailLimit}
                 onChange={(e) => setForm((p) => ({ ...p, dailyEmailLimit: Number(e.target.value) || 100 }))}
-                disabled={!isMaster}
+                disabled={!canWrite}
               />
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function ResendConfigCard() {
                 className={inputClass}
                 value={form.sendingDomain}
                 onChange={(e) => setForm((p) => ({ ...p, sendingDomain: e.target.value }))}
-                disabled={!isMaster}
+                disabled={!canWrite}
               />
             </div>
             <div>
@@ -217,7 +217,7 @@ export default function ResendConfigCard() {
                 className={inputClass}
                 value={form.resendFromOverride}
                 onChange={(e) => setForm((p) => ({ ...p, resendFromOverride: e.target.value }))}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 placeholder="Name &lt;user@lorapok.tech&gt;"
               />
             </div>
@@ -239,7 +239,7 @@ export default function ResendConfigCard() {
                 className={inputClass}
                 value={form.resendApiKey}
                 onChange={(e) => setForm((p) => ({ ...p, resendApiKey: e.target.value }))}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 placeholder="Leave blank to keep current"
               />
             </div>
@@ -257,7 +257,7 @@ export default function ResendConfigCard() {
                 className={inputClass}
                 value={form.resendFrom}
                 onChange={(e) => setForm((p) => ({ ...p, resendFrom: e.target.value }))}
-                disabled={!isMaster}
+                disabled={!canWrite}
                 placeholder="cursor-contact@lorapok.tech"
               />
             </div>
@@ -290,7 +290,7 @@ export default function ResendConfigCard() {
                   type="checkbox"
                   checked={form[item.key]}
                   onChange={(e) => setForm((p) => ({ ...p, [item.key]: e.target.checked }))}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   className="mt-1"
                 />
                 <span>
@@ -303,7 +303,7 @@ export default function ResendConfigCard() {
 
           {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
 
-          {isMaster && (
+          {canWrite && (
             <button
               type="submit"
               disabled={saving}

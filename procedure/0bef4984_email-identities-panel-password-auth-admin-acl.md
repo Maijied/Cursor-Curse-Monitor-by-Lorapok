@@ -32,7 +32,10 @@
 - [x] MAIL-09 API + KV (`integrations:email-identities`, config/provision routes)
 - [x] MAIL-10 Email identities Settings tab (`EmailIdentitiesCard`)
 - [x] MAIL-12 partial — `email-identities-config.test.mjs`, api-catalog, rbac-routes
-- [ ] MAIL-11 full `setup-email-addresses.mjs` parity (bulk sync / display-name push)
+- [x] MAIL-11 bulk sync — `POST /integrations/email-identities/sync`, `email-identities-sync.js`, `setup-email-addresses.mjs` refactor, Settings **Sync all identities**
+- [x] SET-09 RBAC nav + Settings tab gating (`nav-permissions.ts`, `PermissionRoute`, card permissions)
+- [x] SET-10 production smoke — `npm run auth:probe-production` (API); manual UI checklist below
+- [x] MAIL-07 Resend `mail.lorapok.tech` verified + KV `resendDomainVerified=true` (`mail:verify-resend-domain --sync-kv`)
 - [x] AUTH-06 RBAC assignment API + admin-emails sync
 - [x] AUTH-08 Team page role assignment UI
 - [x] AUTH-07 requirePermission on mutating + key read routes
@@ -79,7 +82,7 @@
 
 | Blocker                                        | Unblocks                                                   |
 | ---------------------------------------------- | ---------------------------------------------------------- |
-| MAIL-07 Resend verify pending                  | End-to-end external mail test before identity From changes |
+| MAIL-07 Resend verify pending                  | ~~End-to-end external mail test~~ — domain verified 2026-09-05 |
 | Firebase Email/Password not enabled in console | AUTH-02                                                    |
 
 
@@ -89,12 +92,32 @@
 
 ## Verification
 
+| Tier | Check | Command / steps | Result |
+| ---- | ----- | --------------- | ------ |
+| A | Headless RBAC matrix | `cd website/admin && npm test && npm run test:scripts` | pass (local) |
+| B | Nav + settings tab gating | `vitest run src/__tests__/nav-permissions.test.ts` | pass (local) |
+| C | Production API smoke | `npm run auth:probe-production` (after PR #121 deploy) | run post-merge |
+| D | Password login UI (manual) | See checklist below | pending |
 
-| Tier | Check                              | Result  |
-| ---- | ---------------------------------- | ------- |
-| A    | Headless tests                     | pending |
-| B    | Component matrix                   | pending |
-| C    | Production smoke (password + RBAC) | pending |
+### Tier C — automated
+
+```bash
+cd website/admin
+npm run auth:probe-production
+# Optional Tier B (authenticated):
+# ADMIN_PROBE_EMAIL=you@lorapok.tech ADMIN_ID_TOKEN=<firebase-id-token> npm run auth:probe-production
+```
+
+`auth-api-deployed` fails with SPA HTML fallback until auth/RBAC Functions from PR #121 are live on the target URL.
+
+### Tier D — manual UI checklist (password + RBAC)
+
+1. Open `https://cursor-dev.lorapok.tech/login` → switch to **Password** tab.
+2. Enter a non-invited email → invite gate blocks before Firebase sign-in.
+3. Sign in as **viewer** (or assign via Team) → Settings visible, Cred vault tab hidden, Deployments nav hidden.
+4. Sign in as **operator** → Mailbox + Notices visible; Settings nav hidden.
+5. Sign in as **master** → Team Access visible; Settings write actions enabled.
+6. Profile → set PIN → reload dashboard → PIN overlay appears → unlock works.
 
 
 ---

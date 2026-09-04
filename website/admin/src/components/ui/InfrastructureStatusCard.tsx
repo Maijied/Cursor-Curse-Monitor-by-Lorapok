@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useState } from "react";
 import { Database, ExternalLink, PauseCircle, RefreshCw } from "lucide-react";
 import Card from "./Card";
@@ -7,8 +8,6 @@ import Notification from "./Notification";
 import { usePollingFetch } from "../../hooks/usePollingFetch";
 import { fetchSyncStatus, putCronJobsConfigApi } from "../../lib/api";
 import { formatDownloadCount } from "../../lib/download-stats";
-import { auth } from "../../lib/firebase";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 const CF_KV_LIMITS_URL = "https://developers.cloudflare.com/kv/platform/limits/";
 
@@ -17,7 +16,8 @@ const KV_PUTS_UNCHANGED = "1";
 const KV_PUTS_CHANGED = "3–5";
 
 export default function InfrastructureStatusCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("settings.write");
   const { data: sync, loading, refresh } = usePollingFetch(fetchSyncStatus, { intervalMs: 30_000 });
   const [pausing, setPausing] = useState(false);
   const [notice, setNotice] = useState<{ tone: "success" | "error"; message: string } | null>(null);
@@ -30,7 +30,7 @@ export default function InfrastructureStatusCard() {
   );
 
   const handlePauseStats = async () => {
-    if (!isMaster) return;
+    if (!canWrite) return;
     setPausing(true);
     setNotice(null);
     try {
@@ -199,7 +199,7 @@ export default function InfrastructureStatusCard() {
               <p className="text-[var(--color-muted)] leading-relaxed mb-3">
                 {sync.hint ?? sync.stats.lastRunError ?? "KV daily limit exceeded."}
               </p>
-              {isMaster && sync.stats.enabled ? (
+              {canWrite && sync.stats.enabled ? (
                 <button
                   type="button"
                   disabled={pausing}

@@ -58,6 +58,64 @@ export async function resolveZoneIdForDomain(env, domain = "lorapok.tech") {
 
 /**
  * @param {Record<string, unknown>} env
+ */
+function resolveAccountId(env) {
+  const id = typeof env.CLOUDFLARE_ACCOUNT_ID === "string" ? env.CLOUDFLARE_ACCOUNT_ID.trim() : "";
+  return id || "f049faaf2f67549f5c58837479596a4a";
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} email
+ */
+export async function ensureRoutingDestination(env, email) {
+  const accountId = resolveAccountId(env);
+  const result = await cloudflareApiRequest(env, `/accounts/${accountId}/email/routing/addresses`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  if (result.ok) {
+    return { ok: true, created: true, message: `Destination ${email} added or already present` };
+  }
+  const message = result.errors?.[0]?.message ?? "Failed to ensure routing destination";
+  if (/already exists|duplicate/i.test(message)) {
+    return { ok: true, created: false, message: `Destination ${email} already exists` };
+  }
+  return { ok: false, created: false, message };
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} [domain]
+ */
+export async function enableZoneEmailRouting(env, domain = "lorapok.tech") {
+  const zoneId = await resolveZoneIdForDomain(env, domain);
+  const result = await cloudflareApiRequest(env, `/zones/${zoneId}/email/routing/enable`, {
+    method: "POST",
+  });
+  if (result.ok) {
+    return { ok: true, message: `Email Routing enabled for ${domain}` };
+  }
+  const message = result.errors?.[0]?.message ?? "Failed to enable Email Routing";
+  if (/already enabled/i.test(message)) {
+    return { ok: true, message: `Email Routing already enabled for ${domain}` };
+  }
+  return { ok: false, message };
+}
+
+/**
+ * @param {unknown[]} rules
+ * @param {string} address
+ */
+export function findRoutingRuleForAddress(rules, address) {
+  const needle = String(address).trim().toLowerCase();
+  return rules.find((rule) =>
+    rule?.matchers?.some((matcher) => matcher.field === "to" && String(matcher.value).toLowerCase() === needle)
+  );
+}
+
+/**
+ * @param {Record<string, unknown>} env
  * @param {string} zoneId
  */
 export async function listEmailRoutingRules(env, zoneId) {

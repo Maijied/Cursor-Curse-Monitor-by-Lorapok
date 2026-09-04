@@ -107,6 +107,7 @@ import {
   writeEmailIdentitiesConfig,
 } from "./functions/api/_shared/email-identities-config.js";
 import { provisionIdentityRouting } from "./functions/api/_shared/cloudflare-email-routing.js";
+import { syncEmailIdentities } from "./functions/api/_shared/email-identities-sync.js";
 import { isValidMailAddress } from "./functions/api/_shared/mail-config.js";
 import { readSystemLogs } from "./functions/api/_shared/system-log.js";
 import {
@@ -1430,6 +1431,29 @@ export function createDevApiMiddleware() {
         } catch (err) {
           res.statusCode = 502;
           res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Provision failed" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/email-identities/sync" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = body ? JSON.parse(body) : {};
+          const result = await syncEmailIdentities(devFunctionsEnv(), {
+            dryRun: parsed?.dryRun === true,
+            enableRouting: parsed?.enableRouting !== false,
+            ensureDestination: parsed?.ensureDestination !== false,
+            updatedBy: "dev@local",
+          });
+          res.statusCode = result.ok ? 200 : 207;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          res.statusCode = 502;
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Sync failed" }));
         }
       });
       return;
