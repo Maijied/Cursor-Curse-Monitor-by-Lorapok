@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Clock, RefreshCw, Save, Send } from "lucide-react";
+import { Clock, PauseCircle, RefreshCw, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import LoadableButton from "./LoadableButton";
@@ -47,6 +47,7 @@ export default function CronSchedulesCard() {
   const [digestRefreshFirst, setDigestRefreshFirst] = useState(true);
   const [digestIncludeChangelog, setDigestIncludeChangelog] = useState(true);
   const [kvWarning, setKvWarning] = useState<string | null>(null);
+  const [pausingStats, setPausingStats] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -123,6 +124,24 @@ export default function CronSchedulesCard() {
     setSaving(false);
   };
 
+  const handlePauseStatsForQuota = async () => {
+    if (!isMaster) return;
+    setPausingStats(true);
+    setMessage(null);
+    try {
+      await putCronJobsConfigApi({ statsRefresh: { enabled: false } });
+      setStatsEnabled(false);
+      setMessage({
+        type: "success",
+        text: "Automatic stats refresh paused. Re-enable when KV quota resets.",
+      });
+      load();
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Pause failed" });
+    }
+    setPausingStats(false);
+  };
+
   const handleRefreshNow = async () => {
     setRefreshing(true);
     setMessage(null);
@@ -189,6 +208,17 @@ export default function CronSchedulesCard() {
         >
           <p className="font-medium text-[var(--color-danger)] mb-1">KV quota — stats refresh affected</p>
           <p>{kvWarning}</p>
+          {isMaster && statsEnabled ? (
+            <button
+              type="button"
+              disabled={pausingStats}
+              onClick={handlePauseStatsForQuota}
+              className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] hover:bg-white/5 disabled:opacity-50 text-xs font-medium"
+            >
+              <PauseCircle size={14} aria-hidden="true" />
+              {pausingStats ? "Pausing…" : "Pause automatic stats refresh"}
+            </button>
+          ) : null}
         </div>
       ) : null}
 

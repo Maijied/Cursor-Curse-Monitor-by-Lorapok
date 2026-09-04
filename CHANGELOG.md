@@ -18,7 +18,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mission Control tabbed Settings** — Discord-style tabs for General, Mail, Discord, Firebase, GitHub, Cloudflare, Automation, Cloud dev, and Services; integration cards sync non-secret metadata to ADMIN_KV and Firebase client fields to GitHub `admin-production` secrets on master save
 - **Firebase runtime bootstrap** — admin SPA loads client config from `GET /api/firebase-config` (or local `VITE_FIREBASE_*`); no hardcoded keys in source
 - **`sync-firebase-pages-secrets.mjs`** — sync `VITE_FIREBASE_*` to Cloudflare Pages secrets when KV read quota blocks runtime bootstrap
-- **Infrastructure status card** — Settings → General shows live sync health from `/api/sync/status` with KV read/write quota detection
+- **Infrastructure status card** — Settings → General shows live sync health from `/api/sync/status` with KV read/write quota detection, estimated write budget per refresh, last run outcome, and master-only pause shortcut when quota is hit
 - **Settings integration polling** — Mail, Cron, Discord, Subscribe, Reindex, and Connected Services cards refresh every 60s without a full page reload
 - **FieldHelp tooltips** — contextual help on Mail sending domain, Discord webhook, subscribe fallback, reindex cap, and cron intervals
 

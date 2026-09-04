@@ -48,8 +48,8 @@
 | KV-04 | Infrastructure card + Cron KV banner | **done** | Settings → General / Automation |
 | KV-05 | Reduce stats refresh writes (skip unchanged badge/log) | **done** | PR #119 |
 | KV-06 | `writesPausedUntil` guard in stats refresh | **done** | auto-pause until UTC reset on KV quota error |
-| KV-07 | KV quota meter copy + CF limits link in UI | **next** | Reliability plan B2 |
-| KV-08 | Architecture.md § stats storage (KV vs R2 vs D1) | **next** | Reliability plan B3 |
+| KV-07 | KV quota meter copy + CF limits link in UI | **done** | write budget estimate, last run outcome, pause shortcut |
+| KV-08 | Architecture.md § stats storage (KV vs R2 vs D1) | **done** | `docs/wiki/Architecture.md` |
 | KV-09 | Wait for daily quota reset (UTC) | **blocked** | Ops — stats cron 502 until reset |
 
 ---
@@ -230,9 +230,9 @@
 
 1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
 2. **KV-09 / STAT-06** — Wait for KV UTC reset OR disable stats in Settings → Automation
-3. **KV-07** — KV quota meter copy in Infrastructure card
-4. **KV-08** — Architecture.md stats storage section
-5. **D1-02** — D1 binding design (Phase 2 storage)
+3. **D1-02** — D1 binding design (Phase 2 storage)
+4. **FB-06** — Connected Services Firebase health row
+5. **R2-02** — R2 bucket + binding for badge/SVG blobs
 
 ---
 

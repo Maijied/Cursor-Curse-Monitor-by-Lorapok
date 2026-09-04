@@ -99,6 +99,34 @@ flowchart TB
   MC -->|send digest now| Digest
 ```
 
+## Stats storage (KV, R2, D1)
+
+Live download stats and Mission Control config today live in **Cloudflare KV** (`ADMIN_KV`). There is no in-app KV usage percentage — Cloudflare enforces **daily read/write quotas** on the Workers plan (Free tier: ~100k reads / ~1k writes per day). When writes are exhausted, `runStatsRefresh` fails or auto-pauses until UTC reset (`writesPausedUntil` in `integrations:stats-refresh`).
+
+### Current KV keys (stats path)
+
+| Key | Content | Writes per refresh |
+|-----|---------|-------------------|
+| `stats:live-cache` | JSON totals + channel breakdown | 1 when data changes |
+| `stats:badges-bundle` | Shields.io JSON payloads | 1 when `displayTotal` changes |
+| `stats:readme-svg` | README chart SVG string | 1 when `displayTotal` changes |
+| `integrations:stats-refresh` | Cron metadata (`lastRunAt`, `lastError`, pause guard) | 1 always |
+| `system:log:*` | Scatter event log | skipped when stats unchanged |
+
+**Optimizations shipped (Phase B1):** badge/readme writes only when verified totals change; scatter log skipped on unchanged refresh; KV quota errors set `writesPausedUntil` and skip automatic cron until UTC reset. Settings → **General → Infrastructure** shows estimated write budget, last run outcome, and a master-only pause shortcut.
+
+### Storage roadmap
+
+| Store | Best for | Status |
+|-------|----------|--------|
+| **KV** | Small JSON config blobs, hot stats cache | **Production** — current path |
+| **R2** | Large blobs (`stats:readme-svg`, badge assets) | **Phase 2** — removes 2+ KV puts per refresh when totals change |
+| **D1** | Append-heavy data (`system:log:*`, subscriber index) | **Phase 2** — SQL queries, less scatter-write pressure |
+| **GitHub `site-data.json`** | Marketing fallback when APIs unreachable | **Production** — weekly GHA + manual regen; not real-time |
+| **GCP / Azure** | Optional off-site backup of stats snapshots | **Deferred** — export via GHA cron, not runtime dual-write |
+
+**Recommendation:** keep optimizing KV first (done); migrate bulky SVG/JSON to **R2** next; move logs/subscribers to **D1** when bindings exist. See `plan/mission-control-master-tasks.md` (KV-08, R2-*, D1-*).
+
 ## IDE extension
 
 - Quota and billing come from Cursor’s remote usage API after reading the local auth token in `state.vscdb`
