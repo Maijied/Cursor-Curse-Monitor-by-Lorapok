@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, CloudUpload, ExternalLink, Mail, Save } from "lucide-react";
+import { CloudUpload, Mail, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
-import FieldHelp from "./FieldHelp";
 import MailSyncProgressBanner from "./MailSyncProgressBanner";
 import { auth } from "../../lib/firebase";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
@@ -14,67 +13,12 @@ import {
   fetchMailTransportConfigApi,
   putMailTransportConfigApi,
   syncMailTransport,
-  type MailSetupInstructions,
   type MailTransportConfig,
 } from "../../lib/api";
 import { isMasterAdmin } from "../../lib/admin-config";
 
-const RESEND_GUIDE_URL =
-  "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/guides/RESEND_WORKERS_FREE_SETUP.md";
-
-function MailInstructionsPanel({ instructions }: { instructions: MailSetupInstructions }) {
-  return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-base)]/40 p-4 space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h4 className="font-medium flex items-center gap-2 text-sm">
-            <BookOpen size={16} className="text-[var(--color-accent)]" aria-hidden="true" />
-            Resend setup instructions
-          </h4>
-          <p className="text-xs text-[var(--color-muted)] mt-1">{instructions.summary}</p>
-        </div>
-        <a
-          href={RESEND_GUIDE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-2)] hover:underline"
-        >
-          Full guide <ExternalLink size={12} />
-        </a>
-      </div>
-      <ol className="space-y-3 text-sm">
-        {instructions.steps.map((step, index) => (
-          <li key={step.id} className="flex gap-3">
-            <Badge variant={step.done ? "synced" : "warn"}>{step.done ? "Done" : `${index + 1}`}</Badge>
-            <div className="min-w-0">
-              <p className="font-medium">{step.title}</p>
-              <p className="text-[var(--color-muted)] text-xs mt-0.5">{step.description}</p>
-              {step.command ? (
-                <code className="block mt-2 text-[10px] p-2 rounded-lg bg-black/30 overflow-x-auto font-[family-name:var(--font-mono)]">
-                  {step.command}
-                </code>
-              ) : null}
-              {step.link ? (
-                <a
-                  href={step.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-1 text-xs text-[var(--color-accent-2)] hover:underline"
-                >
-                  Open <ExternalLink size={12} />
-                </a>
-              ) : null}
-            </div>
-          </li>
-        ))}
-      </ol>
-      <p className="text-xs text-[var(--color-warn)]">{instructions.secretsNote}</p>
-    </div>
-  );
-}
-
 /**
- * Configure outbound mail identities, Resend/Workers Free routing, and view transport secret status.
+ * Configure Cloudflare outbound mail identities and relay sync.
  */
 export default function MailTransportCard() {
   const isMaster = isMasterAdmin(auth.currentUser?.email);
@@ -84,18 +28,12 @@ export default function MailTransportCard() {
   const mailWorkflowPoll = useWorkflowPoll();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [config, setConfig] = useState<MailTransportConfig | null>(null);
-  const [instructions, setInstructions] = useState<MailSetupInstructions | null>(null);
   const [form, setForm] = useState({
     productEmail: "",
     supportEmail: "",
     opsBccEmail: "",
     productFromName: "",
     supportFromName: "",
-    resendFirstExternal: true,
-    workersFreeMode: true,
-    sendingDomain: "lorapok.tech",
-    resendFromOverride: "",
-    resendDomainVerified: false,
   });
 
   const load = useCallback(() => {
@@ -103,18 +41,12 @@ export default function MailTransportCard() {
     fetchMailTransportConfigApi()
       .then((data) => {
         setConfig(data.config);
-        setInstructions(data.setupInstructions);
         setForm({
           productEmail: data.config.productEmail,
           supportEmail: data.config.supportEmail,
           opsBccEmail: data.config.opsBccEmail,
           productFromName: data.config.productFromName,
           supportFromName: data.config.supportFromName,
-          resendFirstExternal: data.config.resendFirstExternal,
-          workersFreeMode: data.config.workersFreeMode,
-          sendingDomain: data.config.sendingDomain,
-          resendFromOverride: data.config.resendFromOverride,
-          resendDomainVerified: data.config.resendDomainVerified,
         });
       })
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
@@ -138,7 +70,6 @@ export default function MailTransportCard() {
     try {
       const result = await putMailTransportConfigApi(form);
       setConfig(result.config);
-      setInstructions(result.setupInstructions);
       setMessage({ type: "success", text: "Mail settings saved." });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
@@ -185,8 +116,7 @@ export default function MailTransportCard() {
             Outbound mail
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Workers Free subscriber mail uses Resend. Configure routing and domain preferences here; API keys stay in
-            Pages secrets.
+            Cloudflare Email identities and relay worker sync. Resend and testmail have dedicated Settings tabs.
           </p>
         </div>
         {config && (
@@ -212,16 +142,11 @@ export default function MailTransportCard() {
         </div>
       ) : (
         <div className="space-y-6">
-          {instructions && <MailInstructionsPanel instructions={instructions} />}
-
           {config && (
             <dl className="grid gap-2 sm:grid-cols-2 text-sm">
               {[
-                ["Resend API key (Pages)", config.resendConfigured],
-                ["RESEND_FROM (Pages)", config.resendFromEnvConfigured],
                 ["MAIL_RELAY bound", config.relayBound],
                 ["Cloudflare REST", config.restConfigured],
-                ["Testmail (E2E)", config.testmailConfigured],
               ].map(([label, ok]) => (
                 <div
                   key={String(label)}
@@ -278,23 +203,6 @@ export default function MailTransportCard() {
                 />
               </div>
               <div>
-                <label htmlFor="mail-sending-domain" className="block text-sm font-medium mb-2">
-                  Resend sending domain
-                </label>
-                <input
-                  id="mail-sending-domain"
-                  type="text"
-                  value={form.sendingDomain}
-                  onChange={(e) => setForm((p) => ({ ...p, sendingDomain: e.target.value }))}
-                  disabled={!isMaster}
-                  className={inputClass}
-                  placeholder="lorapok.tech"
-                />
-                <FieldHelp label="Sending domain" className="mt-2">
-                  Must match DNS verified in Resend. Outbound mail uses this domain for From addresses.
-                </FieldHelp>
-              </div>
-              <div>
                 <label htmlFor="mail-product-name" className="block text-sm font-medium mb-2">
                   Product display name
                 </label>
@@ -320,73 +228,6 @@ export default function MailTransportCard() {
                   className={inputClass}
                 />
               </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="mail-resend-from" className="block text-sm font-medium mb-2">
-                  Resend From override (optional)
-                </label>
-                <input
-                  id="mail-resend-from"
-                  type="text"
-                  value={form.resendFromOverride}
-                  onChange={(e) => setForm((p) => ({ ...p, resendFromOverride: e.target.value }))}
-                  disabled={!isMaster}
-                  className={inputClass}
-                  placeholder='Cursor Curse Monitor <cursor.monitor@lorapok.tech>'
-                />
-                <p className="text-xs text-[var(--color-muted)] mt-1">
-                  Used when the RESEND_FROM Pages secret is empty. Pages secret always wins when set.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="flex items-start gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.workersFreeMode}
-                  onChange={(e) => setForm((p) => ({ ...p, workersFreeMode: e.target.checked }))}
-                  disabled={!isMaster}
-                  className="mt-1"
-                />
-                <span>
-                  <span className="font-medium block">Workers Free mode</span>
-                  <span className="text-[var(--color-muted)]">
-                    Use Resend for external subscribers when RESEND_API_KEY is configured (recommended on Free plan).
-                  </span>
-                </span>
-              </label>
-
-              <label className="flex items-start gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.resendFirstExternal}
-                  onChange={(e) => setForm((p) => ({ ...p, resendFirstExternal: e.target.checked }))}
-                  disabled={!isMaster}
-                  className="mt-1"
-                />
-                <span>
-                  <span className="font-medium block">Resend-first for external recipients</span>
-                  <span className="text-[var(--color-muted)]">
-                    Route Gmail and testmail.app through Resend before Cloudflare relay.
-                  </span>
-                </span>
-              </label>
-
-              <label className="flex items-start gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.resendDomainVerified}
-                  onChange={(e) => setForm((p) => ({ ...p, resendDomainVerified: e.target.checked }))}
-                  disabled={!isMaster}
-                  className="mt-1"
-                />
-                <span>
-                  <span className="font-medium block">Resend domain verified</span>
-                  <span className="text-[var(--color-muted)]">
-                    Enable after SPF/DKIM DNS for {form.sendingDomain} shows verified in Resend.
-                  </span>
-                </span>
-              </label>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">

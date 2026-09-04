@@ -1407,6 +1407,73 @@ export type CloudflareIntegrationConfig = {
   githubSecretsSyncedAt: string | null;
 };
 
+export type ResendIntegrationConfig = {
+  sendingDomain: string;
+  resendFromOverride: string;
+  resendFromEffective: string | null;
+  resendDomainVerified: boolean;
+  resendFirstExternal: boolean;
+  workersFreeMode: boolean;
+  resendApiKeyConfigured: boolean;
+  resendFromConfigured: boolean;
+  secretsPresent: string[];
+  updatedAt: string | null;
+  updatedBy: string | null;
+  githubSecretsSyncedAt: string | null;
+};
+
+export type TestmailIntegrationConfig = {
+  namespace: string;
+  namespacePreview: string | null;
+  probeEnabled: boolean;
+  testmailApiKeyConfigured: boolean;
+  testmailNamespaceConfigured: boolean;
+  secretsPresent: string[];
+  updatedAt: string | null;
+  updatedBy: string | null;
+  githubSecretsSyncedAt: string | null;
+};
+
+export async function fetchResendConfigApi() {
+  return apiGet<{ ok: boolean; config: ResendIntegrationConfig }>("/integrations/resend/config");
+}
+
+export async function putResendConfigApi(payload: Record<string, string | boolean | undefined>) {
+  const res = await fetch(`${API_BASE}/integrations/resend/config`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save Resend settings");
+  return data as {
+    ok: boolean;
+    config: ResendIntegrationConfig;
+    githubSecretsSyncedAt?: string | null;
+    githubSyncWarning?: string | null;
+  };
+}
+
+export async function fetchTestmailConfigApi() {
+  return apiGet<{ ok: boolean; config: TestmailIntegrationConfig }>("/integrations/testmail/config");
+}
+
+export async function putTestmailConfigApi(payload: Record<string, string | boolean | undefined>) {
+  const res = await fetch(`${API_BASE}/integrations/testmail/config`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save testmail settings");
+  return data as {
+    ok: boolean;
+    config: TestmailIntegrationConfig;
+    githubSecretsSyncedAt?: string | null;
+    githubSyncWarning?: string | null;
+  };
+}
+
 export async function fetchFirebaseConfigApi() {
   return apiGet<{ ok: boolean; config: FirebaseIntegrationConfig }>("/integrations/firebase/config");
 }

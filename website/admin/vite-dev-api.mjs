@@ -79,6 +79,17 @@ import {
   readCloudflareIntegrationConfig,
   sanitizeCloudflareIntegrationForClient,
 } from "./functions/api/_shared/cloudflare-integration-config.js";
+import {
+  readResendIntegrationConfig,
+  sanitizeResendIntegrationForClient,
+  writeResendIntegrationMeta,
+} from "./functions/api/_shared/resend-integration-config.js";
+import {
+  normalizeTestmailIntegrationConfig,
+  readTestmailIntegrationConfig,
+  sanitizeTestmailIntegrationForClient,
+  writeTestmailIntegrationConfig,
+} from "./functions/api/_shared/testmail-integration-config.js";
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -130,6 +141,7 @@ const devFunctionsEnv = () => ({
   ANALYTICS_STATS_URL: process.env.ANALYTICS_STATS_URL,
   CRON_SECRET: process.env.CRON_SECRET,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM: process.env.RESEND_FROM,
   TESTMAIL_API_KEY: process.env.TESTMAIL_API_KEY,
   TESTMAIL_NAMESPACE: process.env.TESTMAIL_NAMESPACE,
   VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY,
@@ -1195,6 +1207,149 @@ export function createDevApiMiddleware() {
             JSON.stringify({
               ok: true,
               config: sanitizeCloudflareIntegrationForClient(next, devFunctionsEnv(), []),
+            })
+          );
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/resend/config" && req.method === "GET") {
+      readResendIntegrationConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeResendIntegrationForClient(config, devFunctionsEnv(), []),
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/resend/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = await readResendIntegrationConfig(devFunctionsEnv());
+          const patch = { updatedBy: "dev@local" };
+          if (parsed.sendingDomain !== undefined) {
+            const domain = String(parsed.sendingDomain ?? "").trim().toLowerCase();
+            if (!isValidSendingDomain(domain)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid sending domain" }));
+              return;
+            }
+            patch.sendingDomain = domain;
+          }
+          if (parsed.resendFromOverride !== undefined) {
+            patch.resendFromOverride = String(parsed.resendFromOverride ?? "").trim();
+          }
+          if (parsed.resendDomainVerified !== undefined) {
+            patch.resendDomainVerified = parsed.resendDomainVerified === true;
+          }
+          if (parsed.resendFirstExternal !== undefined) {
+            patch.resendFirstExternal = parsed.resendFirstExternal !== false;
+          }
+          if (parsed.workersFreeMode !== undefined) {
+            patch.workersFreeMode = parsed.workersFreeMode !== false;
+          }
+          if (parsed.resendApiKey !== undefined && String(parsed.resendApiKey ?? "").trim()) {
+            process.env.RESEND_API_KEY = String(parsed.resendApiKey).trim();
+          }
+          if (parsed.resendFrom !== undefined && String(parsed.resendFrom ?? "").trim()) {
+            process.env.RESEND_FROM = String(parsed.resendFrom).trim();
+          }
+          const next = {
+            ...current,
+            ...patch,
+            updatedAt: new Date().toISOString(),
+            githubSecretsSyncedAt: new Date().toISOString(),
+          };
+          devStore.mailConfig = normalizeMailConfig({
+            ...devStore.mailConfig,
+            sendingDomain: next.sendingDomain,
+            resendFromOverride: next.resendFromOverride,
+            resendDomainVerified: next.resendDomainVerified,
+            resendFirstExternal: next.resendFirstExternal,
+            workersFreeMode: next.workersFreeMode,
+            updatedAt: next.updatedAt,
+            updatedBy: next.updatedBy,
+          });
+          await devKv.put("integrations:mail", JSON.stringify(devStore.mailConfig));
+          await writeResendIntegrationMeta(devFunctionsEnv(), next);
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeResendIntegrationForClient(next, devFunctionsEnv(), []),
+              githubSecretsSyncedAt: next.githubSecretsSyncedAt,
+            })
+          );
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/testmail/config" && req.method === "GET") {
+      readTestmailIntegrationConfig(devFunctionsEnv())
+        .then((config) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeTestmailIntegrationForClient(config, devFunctionsEnv(), []),
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/testmail/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const current = await readTestmailIntegrationConfig(devFunctionsEnv());
+          const next = normalizeTestmailIntegrationConfig({
+            ...current,
+            namespace: parsed.namespace !== undefined ? String(parsed.namespace ?? "").trim() : current.namespace,
+            probeEnabled: parsed.probeEnabled !== undefined ? parsed.probeEnabled !== false : current.probeEnabled,
+            updatedAt: new Date().toISOString(),
+            updatedBy: "dev@local",
+            githubSecretsSyncedAt: new Date().toISOString(),
+          });
+          if (parsed.testmailApiKey !== undefined && String(parsed.testmailApiKey ?? "").trim()) {
+            process.env.TESTMAIL_API_KEY = String(parsed.testmailApiKey).trim();
+          }
+          if (next.namespace) {
+            process.env.TESTMAIL_NAMESPACE = next.namespace;
+          }
+          await writeTestmailIntegrationConfig(devFunctionsEnv(), next);
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              config: sanitizeTestmailIntegrationForClient(next, devFunctionsEnv(), []),
+              githubSecretsSyncedAt: next.githubSecretsSyncedAt,
             })
           );
         } catch {

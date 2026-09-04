@@ -28,6 +28,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`sync-cloudflare-cred-vault.mjs`** — push vault Cloudflare tokens to GitHub/Pages with wrangler OAuth fallback
 - **Global API Key deploy auth** — cred vault `cloudfare/cloudfare_global_api_key` + `cursor/cloudflare_account_email` → `CLOUDFLARE_API_KEY` / `CLOUDFLARE_EMAIL` for wrangler when Bearer tokens fail
 - **CI cred vault decrypt** — `load-cred-vault-env-ci.mjs` + `sync-cred-vault-github.mjs` (`CRED_VAULT_PASSPHRASE` pin + `CRED_STORE_GPG_BASE64` blob in `admin-production`)
+- **Per-service Settings tabs** — Resend, testmail.app, cred vault CI status, and marketplace distribution cards; dedicated `GET/PUT /api/integrations/resend/config` and `/integrations/testmail/config` with GitHub secret sync; Mail tab focuses on Cloudflare identities + relay
 
 ### Fixed
 

@@ -217,12 +217,13 @@
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| SET-01 | Tabbed Settings (9 tabs) | **done** | all integration tabs |
+| SET-01 | Tabbed Settings (13 tabs) | **done** | General, Mail, Resend, Testmail, Discord, Firebase, GitHub, Cloudflare, Cred vault, Marketplace, Automation, Cloud dev, Services |
 | SET-02 | Phased completion `settings-phases-complete.md` | **done** | Phases 0–4 |
-| SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex |
+| SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex, Resend, Testmail |
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
 | SET-05 | Production smoke (login + tabs) | **partial** | health + firebase-config + D1 **200/ok**; login UI smoke manual |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
+| SET-07 | Per-service Settings tabs (Resend, testmail, cred vault, marketplace) | **done** | `ResendConfigCard`, `TestmailConfigCard`, `CredVaultConfigCard`, `MarketplaceConfigCard` |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 
 ---

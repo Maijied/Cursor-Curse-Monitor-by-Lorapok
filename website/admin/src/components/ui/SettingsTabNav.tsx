@@ -3,10 +3,14 @@ import type { ReactNode } from "react";
 export type SettingsTabId =
   | "general"
   | "mail"
+  | "resend"
+  | "testmail"
   | "discord"
   | "firebase"
   | "github"
   | "cloudflare"
+  | "cred-vault"
+  | "marketplace"
   | "automation"
   | "cloud-dev"
   | "services";
@@ -24,10 +28,14 @@ export function readSettingsTab(): SettingsTabId {
   const allowed: SettingsTabId[] = [
     "general",
     "mail",
+    "resend",
+    "testmail",
     "discord",
     "firebase",
     "github",
     "cloudflare",
+    "cred-vault",
+    "marketplace",
     "automation",
     "cloud-dev",
     "services",

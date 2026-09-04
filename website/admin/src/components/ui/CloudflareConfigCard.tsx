@@ -24,7 +24,6 @@ export default function CloudflareConfigCard() {
   const [accountEmail, setAccountEmail] = useState("");
   const [emailApiToken, setEmailApiToken] = useState("");
   const [cronSecret, setCronSecret] = useState("");
-  const [resendApiKey, setResendApiKey] = useState("");
 
   useEffect(() => {
     fetchCloudflareConfigApi()
@@ -59,7 +58,6 @@ export default function CloudflareConfigCard() {
       if (accountEmail.trim()) payload.accountEmail = accountEmail.trim();
       if (emailApiToken.trim()) payload.emailApiToken = emailApiToken.trim();
       if (cronSecret.trim()) payload.cronSecret = cronSecret.trim();
-      if (resendApiKey.trim()) payload.resendApiKey = resendApiKey.trim();
 
       const result = await putCloudflareConfigApi(payload);
       setConfig(result.config);
@@ -68,7 +66,6 @@ export default function CloudflareConfigCard() {
       setAccountEmail("");
       setEmailApiToken("");
       setCronSecret("");
-      setResendApiKey("");
       const syncNote = result.githubSyncWarning
         ? ` ${result.githubSyncWarning}`
         : result.githubSecretsSyncedAt
@@ -196,7 +193,6 @@ export default function CloudflareConfigCard() {
                 ],
                 ["emailApiToken", "CLOUDFLARE_EMAIL_API_TOKEN", emailApiToken, setEmailApiToken, config?.emailApiTokenConfigured],
                 ["cronSecret", "CRON_SECRET", cronSecret, setCronSecret, config?.cronSecretConfigured],
-                ["resendApiKey", "RESEND_API_KEY", resendApiKey, setResendApiKey, config?.resendApiKeyConfigured],
               ] as const
             ).map(([id, label, value, setter, configured]) => (
               <div key={id}>

@@ -17,6 +17,10 @@ import CloudEnvironmentsCard from "../ui/CloudEnvironmentsCard";
 import FirebaseConfigCard from "../ui/FirebaseConfigCard";
 import GitHubConfigCard from "../ui/GitHubConfigCard";
 import CloudflareConfigCard from "../ui/CloudflareConfigCard";
+import ResendConfigCard from "../ui/ResendConfigCard";
+import TestmailConfigCard from "../ui/TestmailConfigCard";
+import CredVaultConfigCard from "../ui/CredVaultConfigCard";
+import MarketplaceConfigCard from "../ui/MarketplaceConfigCard";
 import SettingsTabNav, { persistSettingsTab, readSettingsTab, type SettingsTabId } from "../ui/SettingsTabNav";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
@@ -25,10 +29,14 @@ import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailability
 const TABS: { id: SettingsTabId; label: string }[] = [
   { id: "general", label: "General" },
   { id: "mail", label: "Mail" },
+  { id: "resend", label: "Resend" },
+  { id: "testmail", label: "Testmail" },
   { id: "discord", label: "Discord" },
   { id: "firebase", label: "Firebase" },
   { id: "github", label: "GitHub" },
   { id: "cloudflare", label: "Cloudflare" },
+  { id: "cred-vault", label: "Cred vault" },
+  { id: "marketplace", label: "Marketplace" },
   { id: "automation", label: "Automation" },
   { id: "cloud-dev", label: "Cloud dev" },
   { id: "services", label: "Services" },
@@ -70,7 +78,7 @@ export default function Settings() {
     <div className="space-y-6 animate-fade-slide-up">
       <PageHeader
         title="Settings"
-        description="Configure mail, Discord, Firebase, GitHub, Cloudflare, automation, and platform health — secrets sync to GitHub admin-production."
+        description="Configure every integration — mail, Resend, testmail, Discord, Firebase, GitHub, Cloudflare, cred vault, marketplaces, and automation."
       />
 
       <SettingsTabNav tabs={TABS} active={tab} onChange={onTabChange} />
@@ -265,6 +273,9 @@ export default function Settings() {
         </>
       )}
 
+      {tab === "resend" && <ResendConfigCard />}
+      {tab === "testmail" && <TestmailConfigCard />}
+
       {tab === "discord" && (
         <>
           <p className="text-sm text-[var(--color-muted)] -mt-2">
@@ -279,6 +290,8 @@ export default function Settings() {
       {tab === "firebase" && <FirebaseConfigCard />}
       {tab === "github" && <GitHubConfigCard />}
       {tab === "cloudflare" && <CloudflareConfigCard />}
+      {tab === "cred-vault" && <CredVaultConfigCard />}
+      {tab === "marketplace" && <MarketplaceConfigCard />}
 
       {tab === "automation" && (
         <>
@@ -289,7 +302,29 @@ export default function Settings() {
       )}
 
       {tab === "cloud-dev" && <CloudEnvironmentsCard />}
-      {tab === "services" && <ConnectedServicesCard />}
+      {tab === "services" && (
+        <>
+          <Card>
+            <h3 className="font-semibold mb-2">Integration directory</h3>
+            <p className="text-sm text-[var(--color-muted)] mb-4">
+              Jump to a service tab to rotate secrets or review status.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {TABS.filter((t) => t.id !== "services" && t.id !== "general").map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => onTabChange(t.id)}
+                  className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-sm hover:bg-white/5"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </Card>
+          <ConnectedServicesCard />
+        </>
+      )}
     </div>
   );
 }
