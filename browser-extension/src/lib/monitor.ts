@@ -59,12 +59,16 @@ export async function refreshSnapshot(): Promise<DashboardSnapshot> {
     );
     snapshot.features = buildFeatureList(snapshot.usage, snapshot.profile);
     snapshot.history = recordHistory(snapshot, await getHistory());
-    snapshot.usageAnalytics = buildUsageAnalytics({
-      budget: snapshot.budget,
-      usage: snapshot.usage,
-      history: snapshot.history,
-      onDemandSpendUsd: snapshot.onDemandSpendUsd,
-    });
+    try {
+      snapshot.usageAnalytics = buildUsageAnalytics({
+        budget: snapshot.budget,
+        usage: snapshot.usage,
+        history: snapshot.history,
+        onDemandSpendUsd: snapshot.onDemandSpendUsd,
+      });
+    } catch {
+      snapshot.usageAnalytics = null;
+    }
     await saveHistory(snapshot.history);
   } catch (error) {
     const base = error instanceof Error ? error.message : "Unknown refresh error";

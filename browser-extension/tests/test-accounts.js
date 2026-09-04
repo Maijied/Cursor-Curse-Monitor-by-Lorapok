@@ -18,7 +18,7 @@ assert(storage.includes("migrateLegacyToken"), "storage must migrate the previou
 assert(storage.includes("cursor-curse-monitor@lorapok.tech"), "storage must recognize production Firefox extension id");
 assert(worker.includes("saveToken"), "captured dashboard tokens must upsert a saved account");
 assert(storage.includes("SaveTokenOptions"), "saveToken must accept passive vs explicit activation");
-assert(storage.includes("shouldActivate"), "saveToken must preserve manual activeAccountId when not activating");
+assert(storage.includes("!current.accessToken"), "saveToken must activate captured login when no token is active");
 assert(options.includes("setActive: true"), "options add-account flow must explicitly activate pasted token");
 assert(worker.includes("warnedAtThreshold = false"), "account switch must reset usage warning state");
 assert(!storage.includes("console.log"), "storage must not log settings");

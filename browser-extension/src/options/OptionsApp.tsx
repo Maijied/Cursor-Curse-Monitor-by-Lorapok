@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { SecurityFinding, StoredCursorAccount } from "@lorapok/cursor-monitor-shared";
 import { Footer } from "../components/Footer";
 import { FeedbackModal } from "../components/FeedbackModal";
@@ -49,13 +49,46 @@ export function OptionsApp() {
   const [securityFindings, setSecurityFindings] = useState<SecurityFinding[]>([]);
   const [communityStats, setCommunityStats] = useState<CommunityDownloadStats | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const connectPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
   const openDashboard = () => {
     setConnecting(true);
     void browser.tabs.create({ url: "https://cursor.com/dashboard" });
-    void requestRefresh().finally(() => setConnecting(false));
+    void browser.runtime.sendMessage({ type: "probeAuth" });
+    let attempts = 0;
+    if (connectPollRef.current) {
+      clearInterval(connectPollRef.current);
+    }
+    connectPollRef.current = setInterval(() => {
+      attempts += 1;
+      void browser.runtime.sendMessage({ type: "probeAuth" });
+      void requestRefresh().then((next) => {
+        if (next?.usage && !next.error) {
+          setConnecting(false);
+          void loadAccounts();
+          if (connectPollRef.current) {
+            clearInterval(connectPollRef.current);
+            connectPollRef.current = null;
+          }
+        } else if (attempts >= 30) {
+          setConnecting(false);
+          if (connectPollRef.current) {
+            clearInterval(connectPollRef.current);
+            connectPollRef.current = null;
+          }
+        }
+      });
+    }, 2000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (connectPollRef.current) {
+        clearInterval(connectPollRef.current);
+      }
+    };
+  }, []);
 
   const loadAccounts = async () => {
     const s = await getSettings();

@@ -92,12 +92,14 @@ export function App() {
   const openCursor = () => {
     setConnecting(true);
     void browser.tabs.create({ url: "https://cursor.com/dashboard" });
+    void browser.runtime.sendMessage({ type: "probeAuth" });
     let attempts = 0;
     if (connectPollRef.current) {
       clearInterval(connectPollRef.current);
     }
     connectPollRef.current = setInterval(() => {
       attempts += 1;
+      void browser.runtime.sendMessage({ type: "probeAuth" });
       void requestRefresh().then((next) => {
         if (next?.usage && !next.error) {
           setSnapshot(next);
@@ -106,7 +108,7 @@ export function App() {
             clearInterval(connectPollRef.current);
             connectPollRef.current = null;
           }
-        } else if (attempts >= 15) {
+        } else if (attempts >= 30) {
           setConnecting(false);
           if (connectPollRef.current) {
             clearInterval(connectPollRef.current);

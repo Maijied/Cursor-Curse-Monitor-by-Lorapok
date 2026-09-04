@@ -1719,6 +1719,75 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/sync/status" && req.method === "GET") {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2500);
+      fetch("https://api.github.com/zen", { headers: githubHeaders(), signal: controller.signal })
+        .then((gh) => {
+          clearTimeout(timer);
+          const now = Date.now();
+          const refreshedAt = devStore.statsLiveCache?.refreshedAt ?? null;
+          const refreshedMs = refreshedAt ? Date.parse(refreshedAt) : NaN;
+          const ageSeconds =
+            refreshedAt && !Number.isNaN(refreshedMs)
+              ? Math.max(0, Math.round((now - refreshedMs) / 1000))
+              : null;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({
+            ok: gh.ok,
+            overall: gh.ok ? "online" : "offline",
+            checkedAt: new Date(now).toISOString(),
+            github: { ok: gh.ok },
+            adminKv: { configured: true },
+            mail: {
+              configured: true,
+              transport: "dev-simulated",
+              relayBound: false,
+              resendConfigured: false,
+            },
+            stats: {
+              enabled: true,
+              intervalMinutes: devStore.statsRefreshConfig?.intervalMinutes ?? 5,
+              lastRunAt: devStore.statsRefreshConfig?.lastRunAt ?? null,
+              lastRunOk: devStore.statsRefreshConfig?.lastRunOk ?? null,
+              lastRunError: devStore.statsRefreshConfig?.lastRunError ?? null,
+              kvQuotaHit: false,
+              cache: {
+                refreshedAt,
+                ageSeconds,
+                fresh: ageSeconds != null && ageSeconds < 600,
+                displayTotal: devStore.statsLiveCache?.downloads?.displayTotal ?? null,
+                syncStatus: devStore.statsLiveCache?.marketplaceSync?.syncStatus ?? null,
+              },
+            },
+            hint: null,
+          }));
+        })
+        .catch(() => {
+          clearTimeout(timer);
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({
+            ok: false,
+            overall: "offline",
+            checkedAt: new Date().toISOString(),
+            github: { ok: false },
+            adminKv: { configured: true },
+            mail: { configured: true, transport: "dev-simulated" },
+            stats: {
+              enabled: true,
+              intervalMinutes: 5,
+              lastRunAt: null,
+              lastRunOk: null,
+              lastRunError: null,
+              kvQuotaHit: false,
+              cache: { refreshedAt: null, ageSeconds: null, fresh: false, displayTotal: null, syncStatus: null },
+            },
+            hint: null,
+          }));
+        });
+      return;
+    }
+
     if (url === "/api/health" && req.method === "GET") {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 2500);

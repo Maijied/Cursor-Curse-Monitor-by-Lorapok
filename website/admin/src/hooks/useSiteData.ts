@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { normalizeSiteData, type SiteData } from "../lib/site-data";
 
 function siteDataCandidates(): string[] {
@@ -27,13 +27,23 @@ async function loadSiteData(): Promise<SiteData> {
   throw lastError ?? new Error("Failed to load site data");
 }
 
-export function useSiteData() {
+type UseSiteDataOptions = {
+  /** Poll interval in ms; default 60s. Set 0 to disable. */
+  pollIntervalMs?: number;
+};
+
+export function useSiteData(options: UseSiteDataOptions = {}) {
+  const pollIntervalMs = options.pollIntervalMs ?? 60_000;
   const [data, setData] = useState<SiteData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
+
+  const refresh = useCallback(() => setTick((value) => value + 1), []);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     loadSiteData()
       .then((json) => {
         if (!cancelled) {
@@ -47,8 +57,16 @@ export function useSiteData() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => { cancelled = true; };
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [tick]);
 
-  return { data, error, loading, refresh: () => setLoading(true) };
+  useEffect(() => {
+    if (!pollIntervalMs || pollIntervalMs <= 0) return;
+    const id = window.setInterval(() => setTick((value) => value + 1), pollIntervalMs);
+    return () => window.clearInterval(id);
+  }, [pollIntervalMs]);
+
+  return { data, error, loading, refresh };
 }

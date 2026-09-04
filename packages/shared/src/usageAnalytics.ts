@@ -126,6 +126,20 @@ function filterDailyByRange(
     .sort((a, b) => (dayKeyFromStats(a) ?? "").localeCompare(dayKeyFromStats(b) ?? ""));
 }
 
+function maxStackTotal(layers: Array<{ values: number[] }>, floor = 1): number {
+  if (!layers.length) return floor;
+  const pointCount = layers[0]!.values.length;
+  let max = floor;
+  for (let i = 0; i < pointCount; i++) {
+    let sum = 0;
+    for (const layer of layers) {
+      sum += layer.values[i] ?? 0;
+    }
+    max = Math.max(max, sum);
+  }
+  return max;
+}
+
 export function buildUsageKpi(
   budget: BudgetMetrics | null | undefined,
   usage: UsageSummary | null | undefined,
@@ -177,7 +191,19 @@ export function buildUsageAnalytics(input: BuildUsageAnalyticsInput): UsageAnaly
   const cycleStart = input.usage?.billingCycleStart;
   const kpi = buildUsageKpi(input.budget, input.usage, input.onDemandSpendUsd ?? 0);
 
-  if (groupBy === "surface" && input.dailySeries?.length) {
+  if (groupBy === "surface") {
+    if (!input.dailySeries?.length) {
+      return {
+        range,
+        groupBy,
+        kpi,
+        points: [],
+        layers: [],
+        yMax: 1,
+        yUnit: "lines",
+        emptyMessage: "Local daily stats are not available yet — keep using Cursor on this machine.",
+      };
+    }
     const rows = filterDailyByRange(input.dailySeries, range, cycleStart);
     if (rows.length < 2) {
       return {
@@ -198,22 +224,34 @@ export function buildUsageAnalytics(input: BuildUsageAnalyticsInput): UsageAnaly
     });
     const tabValues = rows.map((r) => r.tabAcceptedLines);
     const composerValues = rows.map((r) => r.composerAcceptedLines);
-    const yMax = Math.max(...tabValues, ...composerValues, 1);
+    const surfaceLayers = [
+      { id: "tab", label: "Tab", color: USAGE_LAYER_COLORS.tab, values: tabValues },
+      { id: "composer", label: "Composer", color: USAGE_LAYER_COLORS.composer, values: composerValues },
+    ];
     return {
       range,
       groupBy,
       kpi,
       points,
-      layers: [
-        { id: "tab", label: "Tab", color: USAGE_LAYER_COLORS.tab, values: tabValues },
-        { id: "composer", label: "Composer", color: USAGE_LAYER_COLORS.composer, values: composerValues },
-      ],
-      yMax,
+      layers: surfaceLayers,
+      yMax: maxStackTotal(surfaceLayers),
       yUnit: "lines",
     };
   }
 
-  if (groupBy === "model" && input.local?.models?.length) {
+  if (groupBy === "model") {
+    if (!input.local?.models?.length) {
+      return {
+        range,
+        groupBy,
+        kpi,
+        points: [],
+        layers: [],
+        yMax: 100,
+        yUnit: "percent",
+        emptyMessage: "Model breakdown needs local dashboard capture — try again after using Cursor.",
+      };
+    }
     const models = input.local.models;
     const history = filterHistoryByRange(input.history ?? [], range, cycleStart);
     if (history.length < 2) {
@@ -268,18 +306,18 @@ export function buildUsageAnalytics(input: BuildUsageAnalyticsInput): UsageAnaly
   const points: UsageChartPoint[] = history.map((p) => ({ t: p.t, label: pointLabel(p.t) }));
   const autoValues = history.map((p) => p.auto);
   const apiValues = history.map((p) => p.api);
-  const yMax = Math.max(100, ...autoValues, ...apiValues);
+  const autoApiLayers = [
+    { id: "auto", label: "Auto", color: USAGE_LAYER_COLORS.auto, values: autoValues },
+    { id: "api", label: "API", color: USAGE_LAYER_COLORS.api, values: apiValues },
+  ];
 
   return {
     range,
     groupBy: "autoApi",
     kpi,
     points,
-    layers: [
-      { id: "auto", label: "Auto", color: USAGE_LAYER_COLORS.auto, values: autoValues },
-      { id: "api", label: "API", color: USAGE_LAYER_COLORS.api, values: apiValues },
-    ],
-    yMax,
+    layers: autoApiLayers,
+    yMax: Math.max(100, maxStackTotal(autoApiLayers)),
     yUnit: "percent",
   };
 }

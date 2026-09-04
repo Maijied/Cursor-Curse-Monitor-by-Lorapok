@@ -14,14 +14,16 @@ export default function Badge({
   variant = "neutral",
   children,
   pulse,
+  className = "",
 }: {
   variant?: BadgeVariant;
   children: ReactNode;
   pulse?: boolean;
+  className?: string;
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${styles[variant]} ${pulse ? "animate-pulse-neon" : ""}`}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${styles[variant]} ${pulse ? "animate-pulse-neon" : ""} ${className}`}
     >
       {children}
     </span>

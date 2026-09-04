@@ -81,7 +81,9 @@ browser.runtime.onMessage.addListener((message, _sender) => {
   const msg = message as { type: string; token?: string; email?: string };
   if (msg.type === "tokenCaptured" && msg.token) {
     const email = msg.email ?? emailFromCursorToken(msg.token);
-    return saveToken(msg.token, email).then(() => runRefresh());
+    return getSettings().then((settings) =>
+      saveToken(msg.token, email, { setActive: !settings.accessToken }).then(() => runRefresh())
+    );
   }
   if (msg.type === "probeAuth") {
     return captureAuthFromCursorCookies().then((captured) =>

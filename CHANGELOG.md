@@ -8,7 +8,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Conversation reindex** — live reindex from the dashboard works while the editor is open (backup-first); quit-first safety mode remains available via Mission Control policy; dashboard shows a progress loader with phase updates
+- **Login sync (IDE + browser)** — dashboard refreshes immediately after sign-in, paste, or account changes; browser extension activates tokens on first connect and polls up to 60s with `probeAuth` (popup + options)
+- **Usage analytics chart** — stacked chart ymax uses true stack totals; surface/model group-by shows explicit empty states; IDE chart prefs survive refresh
+- **Admin site data polling** — `useSiteData` re-fetches on interval; `refresh()` triggers a real reload
+- **Live stats KV pressure** — skip badge/readme writes unless `displayTotal` or sync status changes
+
+### Added
+
+- **Mission Control sync status** — `GET /api/sync/status`, sidebar/mobile sync chip, Connected Services live-stats row
+- **Cloud dev environments card** — GCP Workstations, Azure Dev Box, and browser VS Code setup links in Settings
+
 - **Hero layout** — orbit and community stats side-by-side on desktop; no stats card overlap; compact secondary metrics
 - **Hero stats layout** — visits/engagement tiles sit in a two-column grid (was a three-column grid with two items)
 - **Screen readers** — announce verified community totals once after count-up, not during animation
