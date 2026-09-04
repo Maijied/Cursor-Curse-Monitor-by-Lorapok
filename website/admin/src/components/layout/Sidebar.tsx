@@ -8,6 +8,9 @@ import SyncStatusChip from "../ui/SyncStatusChip";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import InstallAppButton from "../ui/InstallAppButton";
 import BackToWebsiteButton from "../ui/BackToWebsiteButton";
+import { useAuthSession } from "../../lib/auth-context";
+import { canAccessFeature } from "../../lib/nav-permissions";
+import { ROLE_LABELS } from "../../lib/rbac";
 
 export default function Sidebar({
   mobileOpen = false,
@@ -17,7 +20,9 @@ export default function Sidebar({
   onClose?: () => void;
 }) {
   const user = auth.currentUser;
+  const { hasPermission, session } = useAuthSession();
   const [footerOpen, setFooterOpen] = useState(true);
+  const navRoutes = APP_ROUTES.filter((route) => canAccessFeature(hasPermission, route.permission));
 
   return (
     <aside
@@ -68,7 +73,7 @@ export default function Sidebar({
         </div>
 
         <nav className="p-4 space-y-1 overflow-y-auto flex-1" aria-label="Main navigation">
-          {APP_ROUTES.map(({ path, label, icon: Icon, end }, index) => (
+          {navRoutes.map(({ path, label, icon: Icon, end }, index) => (
             <NavLink
               key={path}
               to={path}
@@ -111,7 +116,9 @@ export default function Sidebar({
                 </div>
                 <div className="overflow-hidden min-w-0">
                   <p className="text-sm font-medium text-[var(--color-text)] truncate">{user.email}</p>
-                  <p className="text-[11px] text-[var(--color-muted)]">Administrator</p>
+                  <p className="text-[11px] text-[var(--color-muted)]">
+                    {session?.role ? ROLE_LABELS[session.role] : "Administrator"}
+                  </p>
                 </div>
               </div>
             ) : null}

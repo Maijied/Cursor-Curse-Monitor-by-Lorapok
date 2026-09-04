@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useEffect, useState } from "react";
 import { Inbox, Save } from "lucide-react";
 import Card from "./Card";
@@ -5,12 +6,11 @@ import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { fetchTestmailConfigApi, putTestmailConfigApi, type TestmailIntegrationConfig } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 export default function TestmailConfigCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -35,7 +35,7 @@ export default function TestmailConfigCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -97,7 +97,7 @@ export default function TestmailConfigCard() {
               className={inputClass}
               value={namespace}
               onChange={(e) => setNamespace(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
               placeholder="your-namespace"
             />
           </div>
@@ -115,7 +115,7 @@ export default function TestmailConfigCard() {
               className={inputClass}
               value={testmailApiKey}
               onChange={(e) => setTestmailApiKey(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
               placeholder="Leave blank to keep current"
             />
           </div>
@@ -125,7 +125,7 @@ export default function TestmailConfigCard() {
               type="checkbox"
               checked={probeEnabled}
               onChange={(e) => setProbeEnabled(e.target.checked)}
-              disabled={!isMaster}
+              disabled={!canWrite}
               className="mt-1"
             />
             <span>
@@ -141,7 +141,7 @@ export default function TestmailConfigCard() {
 
           {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
 
-          {isMaster && (
+          {canWrite && (
             <button
               type="submit"
               disabled={saving}

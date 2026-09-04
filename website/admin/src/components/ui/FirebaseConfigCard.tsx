@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useEffect, useState } from "react";
 import { Flame, Save } from "lucide-react";
 import Card from "./Card";
@@ -5,9 +6,7 @@ import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { fetchFirebaseConfigApi, putFirebaseConfigApi, type FirebaseIntegrationConfig } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 const FIELDS = [
   { key: "apiKey", label: "API key", secret: true },
@@ -22,7 +21,8 @@ const FIELDS = [
 type FieldKey = (typeof FIELDS)[number]["key"];
 
 export default function FirebaseConfigCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -60,7 +60,7 @@ export default function FirebaseConfigCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -129,7 +129,7 @@ export default function FirebaseConfigCard() {
                 value={form[field.key]}
                 onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                 placeholder={"secret" in field && field.secret && config?.configured ? "Leave blank to keep current" : ""}
-                disabled={!isMaster}
+                disabled={!canWrite}
               />
               {field.key === "projectId" ? (
                 <FieldHelp label="Project ID" className="mt-1">
@@ -145,13 +145,13 @@ export default function FirebaseConfigCard() {
             </p>
           )}
 
-          {!isMaster && (
+          {!canWrite && (
             <p className="text-xs text-[var(--color-muted)]">Only the master admin can edit Firebase settings.</p>
           )}
 
           {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
 
-          {isMaster && (
+          {canWrite && (
             <button
               type="submit"
               disabled={saving}

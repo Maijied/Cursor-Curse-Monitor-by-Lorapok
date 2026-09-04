@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -27,8 +27,10 @@ import SettingsTabNav, { persistSettingsTab, readSettingsTab, type SettingsTabId
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailabilityLabel } from "../../lib/download-stats";
+import { useAuthSession } from "../../lib/auth-context";
+import { canAccessFeature, SETTINGS_TAB_PERMISSIONS, visibleSettingsTabs } from "../../lib/nav-permissions";
 
-const TABS: { id: SettingsTabId; label: string }[] = [
+const ALL_TABS: { id: SettingsTabId; label: string }[] = [
   { id: "general", label: "General" },
   { id: "profile", label: "Profile" },
   { id: "mail", label: "Mail" },
@@ -50,7 +52,13 @@ const TABS: { id: SettingsTabId; label: string }[] = [
  * Renders the application settings page with tabbed service sections.
  */
 export default function Settings() {
+  const { hasPermission } = useAuthSession();
   const { data: siteData } = useSiteData();
+  const allowedTabIds = useMemo(() => visibleSettingsTabs(hasPermission), [hasPermission]);
+  const tabs = useMemo(
+    () => ALL_TABS.filter((t) => allowedTabIds.includes(t.id)),
+    [allowedTabIds]
+  );
   const [tab, setTab] = useState<SettingsTabId>(() => readSettingsTab());
   const [health, setHealth] = useState<
     (Awaited<ReturnType<typeof fetchHealth>> & {
@@ -61,6 +69,14 @@ export default function Settings() {
     }) | null
   >(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("admin-theme") as "dark" | "light") || "dark");
+
+  useEffect(() => {
+    if (!tabs.length) return;
+    if (!canAccessFeature(hasPermission, SETTINGS_TAB_PERMISSIONS[tab])) {
+      setTab(tabs[0].id);
+      persistSettingsTab(tabs[0].id);
+    }
+  }, [tab, tabs, hasPermission]);
 
   useEffect(() => {
     fetchHealth().then(setHealth).catch(() => setHealth(null));
@@ -85,7 +101,7 @@ export default function Settings() {
         description="Configure every integration — mail, Resend, testmail, Discord, Firebase, GitHub, Cloudflare, cred vault, marketplaces, and automation."
       />
 
-      <SettingsTabNav tabs={TABS} active={tab} onChange={onTabChange} />
+      <SettingsTabNav tabs={tabs} active={tab} onChange={onTabChange} />
 
       {tab === "general" && (
         <>
@@ -317,7 +333,7 @@ export default function Settings() {
               Jump to a service tab to rotate secrets or review status.
             </p>
             <div className="flex flex-wrap gap-2">
-              {TABS.filter((t) => t.id !== "services" && t.id !== "general").map((t) => (
+              {tabs.filter((t) => t.id !== "services" && t.id !== "general").map((t) => (
                 <button
                   key={t.id}
                   type="button"

@@ -15,6 +15,7 @@ export const MUTATING_ROUTE_PERMISSIONS = {
   "PUT /integrations/resend/config": "integrations.write",
   "PUT /integrations/email-identities/config": "settings.write",
   "POST /integrations/email-identities/provision": "mail.provision",
+  "POST /integrations/email-identities/sync": "mail.provision",
   "PUT /integrations/testmail/config": "integrations.write",
   "PUT /integrations/mail/config": "settings.write",
   "PUT /integrations/subscribe/config": "settings.write",

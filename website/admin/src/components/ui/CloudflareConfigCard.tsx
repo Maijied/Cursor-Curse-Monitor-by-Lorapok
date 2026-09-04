@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useEffect, useState } from "react";
 import { Cloud, Save } from "lucide-react";
 import Card from "./Card";
@@ -5,12 +6,11 @@ import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { fetchCloudflareConfigApi, putCloudflareConfigApi, type CloudflareIntegrationConfig } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 export default function CloudflareConfigCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -43,7 +43,7 @@ export default function CloudflareConfigCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -128,7 +128,7 @@ export default function CloudflareConfigCard() {
               className={inputClass}
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function CloudflareConfigCard() {
               className={inputClass}
               value={pagesProjectName}
               onChange={(e) => setPagesProjectName(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
             />
           </div>
 
@@ -154,7 +154,7 @@ export default function CloudflareConfigCard() {
               className={inputClass}
               value={adminPublicUrl}
               onChange={(e) => setAdminPublicUrl(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
             />
           </div>
 
@@ -167,7 +167,7 @@ export default function CloudflareConfigCard() {
               className={inputClass}
               value={siteDataUrl}
               onChange={(e) => setSiteDataUrl(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function CloudflareConfigCard() {
                   className={inputClass}
                   value={value}
                   onChange={(e) => setter(e.target.value)}
-                  disabled={!isMaster}
+                  disabled={!canWrite}
                   placeholder="Leave blank to keep current"
                 />
               </div>
@@ -224,13 +224,13 @@ export default function CloudflareConfigCard() {
             </FieldHelp>
           </div>
 
-          {!isMaster && (
+          {!canWrite && (
             <p className="text-xs text-[var(--color-muted)]">Only the master admin can edit Cloudflare settings.</p>
           )}
 
           {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
 
-          {isMaster && (
+          {canWrite && (
             <button
               type="submit"
               disabled={saving}

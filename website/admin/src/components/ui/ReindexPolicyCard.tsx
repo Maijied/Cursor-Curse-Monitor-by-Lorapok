@@ -1,3 +1,4 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useCallback, useEffect, useState } from "react";
 import { Database, Save } from "lucide-react";
 import Card from "./Card";
@@ -5,20 +6,19 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
-import { auth } from "../../lib/firebase";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchCursorIndexPolicyConfigApi,
   putCursorIndexPolicyConfigApi,
   type CursorIndexPolicyConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
  * Configure unified cursor index policy pushed to the IDE extension via GET /api/site-config.
  */
 export default function ReindexPolicyCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("settings.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -70,7 +70,7 @@ export default function ReindexPolicyCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -128,7 +128,7 @@ export default function ReindexPolicyCard() {
               type="checkbox"
               checked={form.indexEnabled}
               onChange={(e) => setForm((prev) => ({ ...prev, indexEnabled: e.target.checked }))}
-              disabled={!isMaster}
+              disabled={!canWrite}
               className="mt-1"
             />
             <span>
@@ -152,7 +152,7 @@ export default function ReindexPolicyCard() {
                   indexWritePolicy: e.target.value === "quit-first" ? "quit-first" : "live",
                 }))
               }
-              disabled={!isMaster || !form.indexEnabled}
+              disabled={!canWrite || !form.indexEnabled}
               className={inputClass}
             >
               <option value="live">Live — write while editor is open (backup first)</option>
@@ -177,7 +177,7 @@ export default function ReindexPolicyCard() {
                     transcriptLookbackDays: Math.max(0, Number(e.target.value) || 0),
                   }))
                 }
-                disabled={!isMaster || !form.indexEnabled}
+                disabled={!canWrite || !form.indexEnabled}
                 className={inputClass}
               />
               <p className="text-xs text-[var(--color-muted)] mt-1">{lookbackSummary}. Use 0 for all time.</p>
@@ -198,7 +198,7 @@ export default function ReindexPolicyCard() {
                     maxReindexRecords: Math.max(0, Number(e.target.value) || 0),
                   }))
                 }
-                disabled={!isMaster || !form.indexEnabled}
+                disabled={!canWrite || !form.indexEnabled}
                 className={inputClass}
               />
               <FieldHelp label="Reindex cap" className="mt-2">
@@ -213,7 +213,7 @@ export default function ReindexPolicyCard() {
                 type="checkbox"
                 checked={form.cipExportEnabled}
                 onChange={(e) => setForm((prev) => ({ ...prev, cipExportEnabled: e.target.checked }))}
-                disabled={!isMaster || !form.indexEnabled}
+                disabled={!canWrite || !form.indexEnabled}
                 className="mt-1"
               />
               <span>
@@ -226,7 +226,7 @@ export default function ReindexPolicyCard() {
                 type="checkbox"
                 checked={form.cipImportEnabled}
                 onChange={(e) => setForm((prev) => ({ ...prev, cipImportEnabled: e.target.checked }))}
-                disabled={!isMaster || !form.indexEnabled}
+                disabled={!canWrite || !form.indexEnabled}
                 className="mt-1"
               />
               <span>
@@ -253,7 +253,7 @@ export default function ReindexPolicyCard() {
                     maxExportRecords: Math.max(0, Number(e.target.value) || 0),
                   }))
                 }
-                disabled={!isMaster || !form.indexEnabled || !form.cipExportEnabled}
+                disabled={!canWrite || !form.indexEnabled || !form.cipExportEnabled}
                 className={inputClass}
               />
             </div>
@@ -273,7 +273,7 @@ export default function ReindexPolicyCard() {
                     maxImportRecords: Math.max(0, Number(e.target.value) || 0),
                   }))
                 }
-                disabled={!isMaster || !form.indexEnabled || !form.cipImportEnabled}
+                disabled={!canWrite || !form.indexEnabled || !form.cipImportEnabled}
                 className={inputClass}
               />
             </div>
@@ -284,7 +284,7 @@ export default function ReindexPolicyCard() {
               type="checkbox"
               checked={form.cipRequireSanitization}
               onChange={(e) => setForm((prev) => ({ ...prev, cipRequireSanitization: e.target.checked }))}
-              disabled={!isMaster || !form.indexEnabled}
+              disabled={!canWrite || !form.indexEnabled}
               className="mt-1"
             />
             <span>
@@ -299,7 +299,7 @@ export default function ReindexPolicyCard() {
                 type="checkbox"
                 checked={form.cipDedupeAcrossUsers}
                 onChange={(e) => setForm((prev) => ({ ...prev, cipDedupeAcrossUsers: e.target.checked }))}
-                disabled={!isMaster || !form.indexEnabled || !form.cipImportEnabled}
+                disabled={!canWrite || !form.indexEnabled || !form.cipImportEnabled}
                 className="mt-1"
               />
               <span>
@@ -316,7 +316,7 @@ export default function ReindexPolicyCard() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, cipAllowCrossUserLocalImport: e.target.checked }))
                 }
-                disabled={!isMaster || !form.indexEnabled || !form.cipImportEnabled}
+                disabled={!canWrite || !form.indexEnabled || !form.cipImportEnabled}
                 className="mt-1"
               />
               <span>
@@ -331,13 +331,13 @@ export default function ReindexPolicyCard() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              disabled={!isMaster || saving}
+              disabled={!canWrite || saving}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
             >
               <Save size={16} aria-hidden="true" />
               {saving ? "Saving…" : "Save settings"}
             </button>
-            {!isMaster && <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>}
+            {!canWrite && <p className="text-xs text-[var(--color-warn)]">Requires settings.write permission.</p>}
           </div>
         </form>
       )}

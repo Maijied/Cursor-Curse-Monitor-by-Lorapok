@@ -9,6 +9,8 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { normalizeEmailIdentitiesConfig } from "../functions/api/_shared/email-identities-config.js";
+import { syncEmailIdentities } from "../functions/api/_shared/email-identities-sync.js";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
@@ -60,11 +62,6 @@ if (wranglerAuth.apiKey && !wranglerAuth.email) {
 }
 
 const opsInbox = process.env.CCM_OPS_INBOX ?? "lorapokdev@gmail.com";
-const ADDRESSES = [
-  "admin@lorapok.tech",
-  "cursor.monitor@lorapok.tech",
-  "cursor.curse.help@lorapok.tech",
-];
 
 function wranglerEnv() {
   const env = { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId };
@@ -89,44 +86,36 @@ function run(args, { allowFail = false } = {}) {
 console.log("Enabling Email Sending for lorapok.tech…");
 run(["email", "sending", "enable", "lorapok.tech"], { allowFail: true });
 
-console.log("Enabling Email Routing for lorapok.tech…");
-run(["email", "routing", "enable", "lorapok.tech"], { allowFail: true });
+const apiEnv = {
+  CLOUDFLARE_API_TOKEN: wranglerAuth.token ?? process.env.CLOUDFLARE_API_TOKEN,
+  CLOUDFLARE_EMAIL_API_TOKEN: process.env.CLOUDFLARE_EMAIL_API_TOKEN,
+  CLOUDFLARE_ACCOUNT_ID: accountId,
+};
 
-console.log(`Verifying destination ${opsInbox}…`);
-run(["email", "routing", "addresses", "create", opsInbox], { allowFail: true });
+console.log(`Syncing Email Routing identities → ${opsInbox}…`);
+const sync = await syncEmailIdentities(apiEnv, {
+  persist: false,
+  updatedBy: "setup-email-addresses.mjs",
+  config: normalizeEmailIdentitiesConfig({ opsForwardTo: opsInbox }),
+});
 
-for (const address of ADDRESSES) {
-  const name = address.split("@")[0].replace(/\./g, "-");
-  console.log(`Routing ${address} → ${opsInbox}`);
-  run(
-    [
-      "email",
-      "routing",
-      "rules",
-      "create",
-      "lorapok.tech",
-      "--name",
-      name,
-      "--enabled",
-      "true",
-      "--match-type",
-      "literal",
-      "--match-field",
-      "to",
-      "--match-value",
-      address,
-      "--action-type",
-      "forward",
-      "--action-value",
-      opsInbox,
-    ],
-    { allowFail: true }
-  );
+for (const step of sync.steps) {
+  console.log(`${step.ok ? "✓" : "⚠"} ${step.step}: ${step.message}`);
+}
+
+for (const row of sync.results) {
+  const mark = row.ok ? "✓" : "✗";
+  console.log(`${mark} ${row.email} → ${opsInbox} (${row.message})`);
+}
+
+if (sync.summary.failed > 0) {
+  console.error(`\nSync completed with ${sync.summary.failed} failure(s).`);
+  process.exit(1);
 }
 
 console.log("\nOutbound identities ready:");
-for (const address of ADDRESSES) {
-  console.log(`  • ${address}`);
+for (const identity of sync.config.identities) {
+  console.log(`  • ${identity.email} (${identity.displayName})`);
 }
 console.log(`Ops copy (BCC + inbound forward): ${opsInbox}`);
 console.log("Sync Pages secret if needed: node scripts/enable-mail.mjs");

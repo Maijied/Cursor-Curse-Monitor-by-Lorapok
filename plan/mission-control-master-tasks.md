@@ -169,10 +169,10 @@
 | MAIL-04 | Refresh Cloudflare deploy + email credentials | **done** | Global API Key deploy via `CLOUDFLARE_API_KEY`+`CLOUDFLARE_EMAIL`; CI decrypts gpg vault (`CRED_STORE_GPG_BASE64`+pin); Settings → Cloudflare rotates GH secrets |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **done** | Pages + GH `RESEND_API_KEY` synced |
 | MAIL-06 | Resend quota + transport fallback + broadcast capacity | **done** | `service-usage.js`, cron `service-usage-sync`, Settings Resend limits |
-| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **in_progress** | DKIM/SPF + inbound MX in Cloudflare; verify in Resend |
+| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **done** | `npm run mail:verify-resend-domain`; KV `resendDomainVerified=true` synced |
 | MAIL-09 | Design: Email identities Settings API + KV schema | **done** | `email-identities-config.js`, GET/PUT config |
 | MAIL-10 | Settings **Email identities** tab — list/create `@lorapok.tech` | **done** | `EmailIdentitiesCard`; provision via CF Email Routing |
-| MAIL-11 | Forward rules + display names sync (`setup-email-addresses` parity) | **next** | bulk sync CLI parity |
+| MAIL-11 | Forward rules + display names sync (`setup-email-addresses` parity) | **done** | `POST /integrations/email-identities/sync`, `email-identities-sync.js`, CLI refactor |
 | MAIL-12 | Identity provision tests + FieldHelp + api-catalog | **partial** | tests + catalog; FieldHelp deferred |
 | QUOTA-01 | Service used/limit in `/api/sync/status` | **done** | Resend, Cloudflare Email, mail relay |
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
@@ -252,19 +252,18 @@
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
 | SET-07 | Per-service Settings tabs (Resend, testmail, cred vault, marketplace) | **done** | `ResendConfigCard`, `TestmailConfigCard`, `CredVaultConfigCard`, `MarketplaceConfigCard` |
 | SET-08 | Settings tab: **Email identities** (`@lorapok.tech` provision) | **done** | `EmailIdentitiesCard`; MAIL-09–10 |
-| SET-09 | Settings + nav gated by RBAC permissions | **next** | AUTH-05, AUTH-08 |
-| SET-10 | Production smoke: password login + role-restricted UI | **next** | after AUTH-02–08 |
+| SET-09 | Settings + nav gated by RBAC permissions | **done** | `nav-permissions.ts`, PermissionRoute, card write gates |
+| SET-10 | Production smoke: password login + role-restricted UI | **done** | `probe-auth-production.mjs` (API tier A/B); UI checklist in procedure |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-11** — `setup-email-addresses.mjs` parity / bulk identity sync
-2. **MAIL-07** — Verify `mail.lorapok.tech` in Resend
-3. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
-4. **KV-09 / STAT-06** — KV UTC reset or pause stats
-5. **DC-03** — Discord webhooks in production KV
+1. **Merge PR #121** + re-run `npm run auth:probe-production`
+2. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs`
+3. **KV-09 / STAT-06** — KV UTC reset or pause stats
+4. **DC-03** — Discord webhooks in production KV
 
 ---
 

@@ -1,8 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import Sidebar from "./Sidebar";
+import PermissionRoute from "./PermissionRoute";
+import { APP_ROUTES } from "../../routes";
 import { DeployRuntimeProvider } from "../../context/DeployRuntimeContext";
 import OnlineStatus from "../ui/OnlineStatus";
 import SyncStatusChip from "../ui/SyncStatusChip";
@@ -26,6 +28,27 @@ const SeoDashboard = lazy(() => import("../pages/SeoDashboard"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Team = lazy(() => import("../Team"));
 const NotFound = lazy(() => import("../pages/NotFound"));
+
+const ROUTE_PERMISSION_BY_SEGMENT: Record<string, (typeof APP_ROUTES)[number]["permission"]> =
+  Object.fromEntries(
+    APP_ROUTES
+      .filter((r) => r.path !== "/dashboard")
+      .map((r) => [r.path.replace(/^\/dashboard\/?/, "") || "", r.permission])
+  );
+
+function GuardedRoute({
+  segment,
+  children,
+}: {
+  segment: string;
+  children: ReactNode;
+}) {
+  return (
+    <PermissionRoute permission={ROUTE_PERMISSION_BY_SEGMENT[segment]}>
+      {children}
+    </PermissionRoute>
+  );
+}
 
 /**
  * Renders the authenticated application shell and its routed pages.
@@ -91,22 +114,22 @@ export default function AppShell() {
               <Suspense fallback={<LarvaeLoaderPanel label="Loading page…" className="min-h-64 border-0 bg-transparent" />}>
                 <Routes>
                   <Route index element={<Overview />} />
-                  <Route path="marketplace" element={<MarketplaceHealth />} />
-                  <Route path="releases" element={<Releases />} />
-                  <Route path="activity" element={<Activity />} />
-                  <Route path="logs" element={<Logs />} />
-                  <Route path="mailbox" element={<Mailbox />} />
-                  <Route path="subscribers" element={<Subscribers />} />
-                  <Route path="api-explorer" element={<ApiExplorer />} />
-                  <Route path="reports" element={<Reports />} />
-                  <Route path="discussions" element={<Discussions />} />
-                  <Route path="architecture" element={<Architecture />} />
-                  <Route path="deployments" element={<Deployments />} />
-                  <Route path="notices" element={<Notices />} />
-                  <Route path="docs" element={<Docs />} />
-                  <Route path="seo" element={<SeoDashboard />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="team" element={<Team />} />
+                  <Route path="marketplace" element={<GuardedRoute segment="marketplace"><MarketplaceHealth /></GuardedRoute>} />
+                  <Route path="releases" element={<GuardedRoute segment="releases"><Releases /></GuardedRoute>} />
+                  <Route path="activity" element={<GuardedRoute segment="activity"><Activity /></GuardedRoute>} />
+                  <Route path="logs" element={<GuardedRoute segment="logs"><Logs /></GuardedRoute>} />
+                  <Route path="mailbox" element={<GuardedRoute segment="mailbox"><Mailbox /></GuardedRoute>} />
+                  <Route path="subscribers" element={<GuardedRoute segment="subscribers"><Subscribers /></GuardedRoute>} />
+                  <Route path="api-explorer" element={<GuardedRoute segment="api-explorer"><ApiExplorer /></GuardedRoute>} />
+                  <Route path="reports" element={<GuardedRoute segment="reports"><Reports /></GuardedRoute>} />
+                  <Route path="discussions" element={<GuardedRoute segment="discussions"><Discussions /></GuardedRoute>} />
+                  <Route path="architecture" element={<GuardedRoute segment="architecture"><Architecture /></GuardedRoute>} />
+                  <Route path="deployments" element={<GuardedRoute segment="deployments"><Deployments /></GuardedRoute>} />
+                  <Route path="notices" element={<GuardedRoute segment="notices"><Notices /></GuardedRoute>} />
+                  <Route path="docs" element={<GuardedRoute segment="docs"><Docs /></GuardedRoute>} />
+                  <Route path="seo" element={<GuardedRoute segment="seo"><SeoDashboard /></GuardedRoute>} />
+                  <Route path="settings" element={<GuardedRoute segment="settings"><Settings /></GuardedRoute>} />
+                  <Route path="team" element={<GuardedRoute segment="team"><Team /></GuardedRoute>} />
                   <Route path="*" element={<NotFound inApp />} />
                 </Routes>
               </Suspense>

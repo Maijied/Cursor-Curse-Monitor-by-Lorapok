@@ -1,23 +1,23 @@
+import { useAuthSession } from "../../lib/auth-context";
 import { useEffect, useState } from "react";
 import { MessageSquare, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
-import { auth } from "../../lib/firebase";
 import {
   fetchDiscordConfigApi,
   notifyDiscordFeedbackApi,
   putDiscordConfigApi,
   type DiscordConfig,
 } from "../../lib/api";
-import { isMasterAdmin } from "../../lib/admin-config";
 
 /**
  * Configure the Discord webhook that receives user-facing feedback prompts (separate from deployment status).
  */
 export default function DiscordFeedbackCard() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -37,7 +37,7 @@ export default function DiscordFeedbackCard() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMaster) return;
+    if (!canWrite) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -52,7 +52,7 @@ export default function DiscordFeedbackCard() {
   };
 
   const handleTest = async () => {
-    if (!isMaster || !config?.feedbackConfigured) return;
+    if (!canWrite || !config?.feedbackConfigured) return;
     setTesting(true);
     setMessage(null);
     try {
@@ -107,7 +107,7 @@ export default function DiscordFeedbackCard() {
               type="password"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              disabled={!isMaster}
+              disabled={!canWrite}
               placeholder={
                 config?.feedbackWebhookPreview
                   ? `Saved: ${config.feedbackWebhookPreview}`
@@ -121,7 +121,7 @@ export default function DiscordFeedbackCard() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              disabled={!isMaster || saving || !webhookUrl.trim()}
+              disabled={!canWrite || saving || !webhookUrl.trim()}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
             >
               <Save size={16} aria-hidden="true" />
@@ -130,7 +130,7 @@ export default function DiscordFeedbackCard() {
             <button
               type="button"
               onClick={handleTest}
-              disabled={!isMaster || testing || !config?.feedbackConfigured}
+              disabled={!canWrite || testing || !config?.feedbackConfigured}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
             >
               <Send size={16} aria-hidden="true" />
@@ -138,7 +138,7 @@ export default function DiscordFeedbackCard() {
             </button>
           </div>
 
-          {!isMaster && <p className="text-xs text-[var(--color-warn)]">Master admin only.</p>}
+          {!canWrite && <p className="text-xs text-[var(--color-warn)]">Requires integrations.write permission.</p>}
         </form>
       )}
     </Card>

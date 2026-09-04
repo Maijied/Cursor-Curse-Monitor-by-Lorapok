@@ -6,9 +6,8 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import LoadableButton from "./LoadableButton";
 import MailSyncProgressBanner from "./MailSyncProgressBanner";
-import { auth } from "../../lib/firebase";
 import { useWorkflowPoll } from "../../hooks/useWorkflowPoll";
-import { isMasterAdmin } from "../../lib/admin-config";
+import { useAuthSession } from "../../lib/auth-context";
 import {
   fetchMailSetupStatusApi,
   sendMailboxTest,
@@ -43,7 +42,10 @@ function stepIcon(state: StepState) {
  * Guided mail setup checklist with transport status, sync recommendations, and quick test actions.
  */
 export default function MailSetupChecklist() {
-  const isMaster = isMasterAdmin(auth.currentUser?.email);
+  const { hasPermission } = useAuthSession();
+  const canSyncInfra = hasPermission("deploy.infra");
+  const canSendMail = hasPermission("mail.send");
+  const canProbeTestmail = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<MailSetupStatus | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -65,7 +67,7 @@ export default function MailSetupChecklist() {
   }, [load]);
 
   const handleSync = async () => {
-    if (!isMaster) return;
+    if (!canSyncInfra) return;
     setSyncing(true);
     setMessage(null);
     try {
@@ -95,7 +97,7 @@ export default function MailSetupChecklist() {
   };
 
   const handleSendTest = async () => {
-    if (!isMaster) return;
+    if (!canSendMail) return;
     setTesting(true);
     setMessage(null);
     try {
@@ -111,7 +113,7 @@ export default function MailSetupChecklist() {
   };
 
   const handleTestmailProbe = async () => {
-    if (!isMaster) return;
+    if (!canProbeTestmail) return;
     setProbing(true);
     setMessage(null);
     try {
@@ -271,7 +273,7 @@ export default function MailSetupChecklist() {
               <LoadableButton
                 type="button"
                 loading={syncing}
-                disabled={!isMaster}
+                disabled={!canSyncInfra}
                 onClick={() => void handleSync()}
                 className="inline-flex items-center gap-2 text-sm"
               >
@@ -289,7 +291,7 @@ export default function MailSetupChecklist() {
                 <LoadableButton
                   type="button"
                   loading={testing}
-                  disabled={!isMaster || !transportDone}
+                  disabled={!canSendMail || !transportDone}
                   onClick={() => void handleSendTest()}
                   className="text-sm"
                 >
@@ -298,7 +300,7 @@ export default function MailSetupChecklist() {
                 <LoadableButton
                   type="button"
                   loading={probing}
-                  disabled={!isMaster || !status.identities.testmailConfigured}
+                  disabled={!canProbeTestmail || !status.identities.testmailConfigured}
                   onClick={() => void handleTestmailProbe()}
                   className="text-sm"
                 >

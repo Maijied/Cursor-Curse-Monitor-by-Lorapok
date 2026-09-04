@@ -1587,6 +1587,33 @@ export async function provisionEmailIdentityApi(payload: {
   };
 }
 
+export async function syncEmailIdentitiesApi(payload?: {
+  dryRun?: boolean;
+  enableRouting?: boolean;
+  ensureDestination?: boolean;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/email-identities/sync`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload ?? {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && res.status !== 207) throw new Error(data.error || "Failed to sync email identities");
+  return data as {
+    ok: boolean;
+    dryRun?: boolean;
+    summary: { total: number; provisioned: number; reused: number; failed: number; simulated: number };
+    results: Array<{
+      localPart: string;
+      email: string;
+      ok: boolean;
+      routingStatus: string;
+      message?: string;
+    }>;
+    config: EmailIdentitiesConfig;
+  };
+}
+
 export async function fetchResendConfigApi() {
   return apiGet<{ ok: boolean; config: ResendIntegrationConfig }>("/integrations/resend/config");
 }
