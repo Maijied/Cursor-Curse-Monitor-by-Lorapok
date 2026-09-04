@@ -5,8 +5,8 @@
 **Created:** 2026-09-05  
 **Plan:** [plan/b8e4f2a1_email-identities-auth-acl-plan.md](../plan/b8e4f2a1_email-identities-auth-acl-plan.md)  
 **Issue:** [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120)  
-**Branch:** *TBD*  
-**PR:** *TBD*
+**Branch:** `feat/admin-rbac-email-identities-acl`  
+**PR:** [#121](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/121)
 
 ---
 
@@ -37,7 +37,7 @@
 - [x] AUTH-08 Team page role assignment UI
 - [x] AUTH-07 requirePermission on mutating + key read routes
 - [x] AUTH-09 ACL audit log (`acl-audit.js`, Logs ACL filter)
-- [ ] AUTH-10 production smoke (non-master paths)
+- [x] AUTH-10 RBAC matrix + non-master `requirePermission` smoke tests
 - [ ] PR opened
 - [ ] Merged
 - [ ] Post-merge verification
