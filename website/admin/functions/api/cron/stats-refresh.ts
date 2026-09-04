@@ -13,15 +13,15 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: auth.reason ?? "unauthorized" }, auth.reason === "cron_secret_not_configured" ? 503 : 401);
   }
 
-  const config = await readStatsRefreshConfig(env);
-  if (!config.enabled) {
-    return jsonResponse({ ok: true, skipped: true, reason: "disabled" });
-  }
-  if (!isStatsRefreshDue(config)) {
-    return jsonResponse({ ok: true, skipped: true, reason: "not_due", intervalMinutes: config.intervalMinutes });
-  }
-
   try {
+    const config = await readStatsRefreshConfig(env);
+    if (!config.enabled) {
+      return jsonResponse({ ok: true, skipped: true, reason: "disabled" });
+    }
+    if (!isStatsRefreshDue(config)) {
+      return jsonResponse({ ok: true, skipped: true, reason: "not_due", intervalMinutes: config.intervalMinutes });
+    }
+
     const result = await runStatsRefresh(env, { triggeredBy: "cron" });
     if (result.skipped) {
       return jsonResponse({ ok: true, skipped: true, reason: result.reason, intervalMinutes: config.intervalMinutes });
