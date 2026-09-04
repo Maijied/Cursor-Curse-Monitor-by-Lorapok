@@ -29,7 +29,7 @@ Saved under `integrations:mail` in ADMIN_KV:
 |---------|---------|
 | **Workers Free mode** | When on, external recipients use Resend when `RESEND_API_KEY` is set |
 | **Resend-first for external** | Route non-`@lorapok.tech` mail through Resend before Cloudflare relay |
-| **Sending domain** | Domain verified in Resend (default `cursor.lorapok.tech`) |
+| **Sending domain** | Domain verified in Resend (default `mail.lorapok.tech`) |
 | **Resend From override** | Optional `Name <email@domain>` when `RESEND_FROM` Pages secret is empty |
 | **Resend domain verified** | Mark after DNS verification succeeds in Resend |
 | **Product / support From** | Addresses and display names for branded templates |
@@ -54,7 +54,34 @@ If a key was shared in chat, logs, or a ticket:
 
 ---
 
-## 2. Verify `cursor.lorapok.tech` in Resend
+## 2. Verify `mail.lorapok.tech` in Resend
+
+1. [Resend → Domains](https://resend.com/domains) → **Add Domain** → `mail.lorapok.tech`
+2. Add DNS records in **Cloudflare** for zone `lorapok.tech` (DNS only / grey cloud — not proxied)
+3. Click **Verify** in Resend (usually 1–5 minutes)
+4. In Mission Control → Settings → Resend, set **Sending domain** to `mail.lorapok.tech` and enable **Resend domain verified**
+
+### Cloudflare DNS records (exact)
+
+Zone: **lorapok.tech** → DNS → Records → Add record.
+
+| Step | Type | Name (Cloudflare) | Content / Target | Priority | Proxy |
+|------|------|-------------------|------------------|----------|-------|
+| 1 DKIM | TXT | `resend._domainkey.mail` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC05QD+Yq0y/5sStusbuo15ULIp5Xuqmqdfn583/+Zlpmgv7VUWV2jlsrQLL60s1xBG/K40zK2wrsSnp5CibJAEX0PlUuTMKENi6qP0qFDHsQC2RCgHiVnZkUeI06wU8XY9Vr074OqV8ALZcocgbso7EbitqzZBK3qKmBEs4fSHSQIDAQAB` | — | DNS only |
+| 2 SPF MX | MX | `send.mail` | `feedback-smtp.eu-west-1.amazonses.com` | 10 | DNS only |
+| 3 SPF TXT | TXT | `send.mail` | `v=spf1 include:amazonses.com ~all` | — | DNS only |
+
+**Possible conflicts**
+
+- Existing **TXT** on `resend._domainkey.mail` — keep only Resend’s DKIM value.
+- Existing **TXT or MX** on `send.mail` — merge or replace with Resend SPF records (one MX + one TXT per name).
+- **A/CNAME** on `mail` for a website is fine alongside these records (different types).
+
+---
+
+## 2b. (Alternate) Verify `cursor.lorapok.tech` in Resend
+
+Use if you send from `@cursor.lorapok.tech` instead of `@mail.lorapok.tech`:
 
 1. [Resend → Domains](https://resend.com/domains) → **Add Domain** → `cursor.lorapok.tech`
 2. Add DNS records in **Cloudflare** for zone `lorapok.tech` (DNS only / grey cloud — not proxied)
@@ -96,7 +123,7 @@ Use only if you send from `@lorapok.tech` instead of `@cursor.lorapok.tech`:
 ```bash
 cd website/admin
 export RESEND_API_KEY="re_..."
-export RESEND_FROM="Cursor Curse Monitor <cursor.monitor@cursor.lorapok.tech>"
+export RESEND_FROM="Cursor Curse Monitor <cursor.monitor@mail.lorapok.tech>"
 node scripts/setup-resend-secret.mjs
 ```
 

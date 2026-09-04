@@ -150,7 +150,7 @@
 | MAIL-04 | Refresh Cloudflare deploy + email credentials | **done** | Global API Key deploy via `CLOUDFLARE_API_KEY`+`CLOUDFLARE_EMAIL`; CI decrypts gpg vault (`CRED_STORE_GPG_BASE64`+pin); Settings → Cloudflare rotates GH secrets |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **done** | Pages + GH `RESEND_API_KEY` synced |
 | MAIL-06 | Resend quota + transport fallback + broadcast capacity | **done** | `service-usage.js`, cron `service-usage-sync`, Settings Resend limits |
-| MAIL-07 | Resend domain `cursor.lorapok.tech` DNS + verify | **in_progress** | Cloudflare DNS (DKIM/SPF/MX); cred vault `resend_from` + `resend_sending_domain` |
+| MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **in_progress** | Cloudflare DNS (DKIM/SPF); cred vault `resend_from` + `resend_sending_domain` |
 | QUOTA-01 | Service used/limit in `/api/sync/status` | **done** | Resend, Cloudflare Email, mail relay |
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |

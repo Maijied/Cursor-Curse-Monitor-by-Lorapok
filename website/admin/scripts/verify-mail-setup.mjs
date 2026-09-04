@@ -13,7 +13,7 @@ import { resolveMailCredentials } from "./lib/mail-credentials.mjs";
 
 const vault = loadCursorCloudflareSecretsFromVault();
 const fromAddress =
-  process.env.CCM_MAIL_PROBE_FROM ?? vault?.resendFrom ?? "cursor.monitor@cursor.lorapok.tech";
+  process.env.CCM_MAIL_PROBE_FROM ?? vault?.resendFrom ?? "cursor.monitor@mail.lorapok.tech";
 const probeTo =
   process.env.CCM_MAIL_PROBE_TO ?? vault?.mailProbeTo ?? "imaizied@gmail.com";
 

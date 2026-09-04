@@ -4,7 +4,7 @@
  * @param {ReturnType<import("./mail.js").getMailTransportStatus>} transport
  */
 export function buildMailSetupInstructions(mailConfig, transport) {
-  const domain = mailConfig.sendingDomain || "cursor.lorapok.tech";
+  const domain = mailConfig.sendingDomain || "mail.lorapok.tech";
   const resendReady = Boolean(transport.resendConfigured);
   const domainReady = Boolean(mailConfig.resendDomainVerified);
 
