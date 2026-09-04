@@ -16,6 +16,7 @@ import {
   syncMailTransport,
   type MailSetupStatus,
 } from "../../lib/api";
+import { DEFAULT_MAIL_PROBE_TO } from "../../test-support/env";
 
 const RESEND_GUIDE_URL =
   "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/guides/RESEND_WORKERS_FREE_SETUP.md";
@@ -98,7 +99,7 @@ export default function MailSetupChecklist() {
     setTesting(true);
     setMessage(null);
     try {
-      const res = await sendMailboxTest();
+      const res = await sendMailboxTest(DEFAULT_MAIL_PROBE_TO);
       setMessage({
         type: res.ok ? "success" : "error",
         text: res.message ?? (res.ok ? `Test sent via ${res.transport ?? "mail"}.` : res.reason ?? "Test failed"),

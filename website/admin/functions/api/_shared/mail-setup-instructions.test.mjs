@@ -13,7 +13,7 @@ const transport = {
 
 const instructions = buildMailSetupInstructions(config, transport);
 assert.equal(instructions.workersFreeMode, true);
-assert.equal(instructions.sendingDomain, "lorapok.tech");
+assert.equal(instructions.sendingDomain, "cursor.lorapok.tech");
 assert.ok(instructions.steps.length >= 5);
 assert.ok(instructions.steps.some((step) => step.id === "verify-domain"));
 

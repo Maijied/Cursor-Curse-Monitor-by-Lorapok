@@ -33,6 +33,7 @@ All API keys, tokens, passwords, and webhook URLs must come from the **cred vaul
 | `resend_api_key` | `RESEND_API_KEY` — Pages secret via `setup-resend-secret.mjs` |
 | `resend_from` | `RESEND_FROM` — verified From address (e.g. `cursor.monitor@cursor.lorapok.tech`) |
 | `resend_sending_domain` | Mission Control default sending domain (e.g. `cursor.lorapok.tech`) |
+| `mail_probe_to` | External Resend test inbox (e.g. `imaizied@gmail.com`) — not Cloudflare verified destinations |
 | `testmail_api_key` | `TESTMAIL_API_KEY` — E2E inbox probes |
 | `testmail_namespace` | `TESTMAIL_NAMESPACE` |
 | `github_token` | `GITHUB_TOKEN` |

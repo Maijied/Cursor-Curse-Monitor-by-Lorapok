@@ -349,6 +349,7 @@ export function loadCursorCloudflareSecretsFromVault() {
     resendApiKey: resolveResendApiKeyFromVault(vault),
     resendFrom: String(cursor.resend_from ?? "").trim() || undefined,
     resendSendingDomain: String(cursor.resend_sending_domain ?? "").trim() || undefined,
+    mailProbeTo: String(cursor.mail_probe_to ?? "").trim() || undefined,
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
     testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
   };

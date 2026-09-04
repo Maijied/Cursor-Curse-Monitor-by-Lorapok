@@ -40,7 +40,7 @@ describe("mail config API", () => {
     expect(data.config.supportEmail).toBe("cursor.curse.help@lorapok.tech");
     expect(data.config.resendFirstExternal).toBe(true);
     expect(data.config.workersFreeMode).toBe(true);
-    expect(data.config.sendingDomain).toBe("lorapok.tech");
+    expect(data.config.sendingDomain).toBe("cursor.lorapok.tech");
     expect(data.setupInstructions.steps.length).toBeGreaterThan(0);
   });
 
@@ -93,7 +93,7 @@ describe("mail config API", () => {
     expect(res.ok).toBe(true);
     expect(data.transport).toBeDefined();
     expect(data.identities.productEmail).toBe("cursor.monitor@lorapok.tech");
-    expect(data.identities.sendingDomain).toBe("lorapok.tech");
+    expect(data.identities.sendingDomain).toBe("cursor.lorapok.tech");
     expect(data.setupInstructions).toBeDefined();
     expect(Array.isArray(data.setupInstructions.steps)).toBe(true);
     expect(Array.isArray(data.recommendations)).toBe(true);

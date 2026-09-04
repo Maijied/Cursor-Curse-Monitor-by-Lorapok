@@ -4,7 +4,7 @@
  * @param {ReturnType<import("./mail.js").getMailTransportStatus>} transport
  */
 export function buildMailSetupInstructions(mailConfig, transport) {
-  const domain = mailConfig.sendingDomain || "lorapok.tech";
+  const domain = mailConfig.sendingDomain || "cursor.lorapok.tech";
   const resendReady = Boolean(transport.resendConfigured);
   const domainReady = Boolean(mailConfig.resendDomainVerified);
 
@@ -59,7 +59,8 @@ export function buildMailSetupInstructions(mailConfig, transport) {
       {
         id: "verify-delivery",
         title: "Send a test to an external inbox",
-        description: "Mailbox → branded test to Gmail, or run probe-subscribe-testmail.mjs.",
+        description:
+          "Mailbox → branded test to imaizied@gmail.com via Resend (do not add to Cloudflare verified destinations).",
         command: "node website/admin/scripts/probe-subscribe-testmail.mjs",
         done: resendReady && domainReady && transport.configured,
       },

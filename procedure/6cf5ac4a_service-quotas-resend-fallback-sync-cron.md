@@ -31,6 +31,7 @@ Track Resend (and mail transport) quotas with used/limit in Settings and sync st
 |------|----------|-----------|
 | 2026-09-05 | Resend quota in KV | Monthly/daily counters; cron probe via `ccm-stats-cron` |
 | 2026-09-05 | `cursor.lorapok.tech` Resend DNS | MAIL-07; cred vault `resend_from` + `resend_sending_domain` |
+| 2026-09-05 | CI fix + mail probe | Tests expect `cursor.lorapok.tech`; cred `mail_probe_to` = imaizied@gmail.com (Resend only, not CF trust) |
 
 ---
 
