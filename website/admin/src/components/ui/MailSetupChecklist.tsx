@@ -16,7 +16,7 @@ import {
   syncMailTransport,
   type MailSetupStatus,
 } from "../../lib/api";
-import { DEFAULT_MAIL_PROBE_TO } from "../../test-support/env";
+import { DEFAULT_MAIL_PROBE_TO } from "../../lib/mail-probe";
 
 const RESEND_GUIDE_URL =
   "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/guides/RESEND_WORKERS_FREE_SETUP.md";

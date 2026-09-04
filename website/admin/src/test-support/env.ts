@@ -1,8 +1,7 @@
 /** Placeholder used only when CI=true and no admin email env is configured. */
 export const CI_TEST_ADMIN_EMAIL = "ci-admin@lorapok.test";
 
-/** External inbox for Resend mailbox probes — not added to Cloudflare verified destinations. */
-export const DEFAULT_MAIL_PROBE_TO = "imaizied@gmail.com";
+export { DEFAULT_MAIL_PROBE_TO } from "../lib/mail-probe";
 
 /** Admin email for tests — prefer env; never hardcode in individual test files. */
 export function getTestAdminEmail(): string {
