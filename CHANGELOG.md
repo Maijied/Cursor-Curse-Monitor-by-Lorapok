@@ -15,7 +15,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Mission Control sync status** — `GET /api/sync/status`, sidebar/mobile sync chip, Connected Services live-stats row
+- **Mission Control tabbed Settings** — Discord-style tabs for General, Mail, Discord, Firebase, GitHub, Cloudflare, Automation, Cloud dev, and Services; integration cards sync non-secret metadata to ADMIN_KV and Firebase client fields to GitHub `admin-production` secrets on master save
+- **Firebase runtime bootstrap** — admin SPA loads client config from `GET /api/firebase-config` (or local `VITE_FIREBASE_*`); no hardcoded keys in source
+- **Infrastructure status card** — Settings → General shows live sync health from `/api/sync/status` with KV read/write quota detection
+- **Settings integration polling** — Mail, Cron, Discord, Subscribe, Reindex, and Connected Services cards refresh every 60s without a full page reload
+- **FieldHelp tooltips** — contextual help on Mail sending domain, Discord webhook, subscribe fallback, reindex cap, and cron intervals
+
+### Fixed
+
+- **KV quota detection** — shared `kv-quota` module classifies Cloudflare KV daily read vs write limit errors; sync status and save paths surface clearer guidance
 - **Cloud dev environments card** — GCP Workstations, Azure Dev Box, and browser VS Code setup links in Settings
 
 - **Hero layout** — orbit and community stats side-by-side on desktop; no stats card overlap; compact secondary metrics

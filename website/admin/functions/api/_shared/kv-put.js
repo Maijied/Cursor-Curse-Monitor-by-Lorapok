@@ -2,16 +2,15 @@
  * KV write helpers — skip unchanged values to stay under Cloudflare daily put limits.
  */
 
+import { formatKvQuotaError, isKvQuotaError } from "./kv-quota.js";
+
 /**
  * @param {unknown} err
  */
 export function formatKvPutError(err) {
   const message = err instanceof Error ? err.message : String(err ?? "Save failed");
-  if (/put\(\) limit exceeded|10027|kv put limit|daily.*limit/i.test(message)) {
-    return (
-      "Cloudflare KV daily write limit reached. Pause automatic stats refresh in Settings " +
-      "(it writes several KV keys per run) or try again after the limit resets (UTC)."
-    );
+  if (isKvQuotaError(message)) {
+    return formatKvQuotaError(err);
   }
   return message || "Save failed";
 }

@@ -26,9 +26,10 @@ Tabbed Mission Control Settings (Discord-style per service). Remove hardcoded Fi
 - [x] CI: `VITE_FIREBASE_*` from `admin-production` secrets
 - [x] GitHub secrets seeded (`VITE_FIREBASE_*`)
 - [x] Production KV seeded (`integrations:firebase` via `seed-firebase-kv.mjs`)
-- [ ] Tests passing (vitest worker timeout in sandbox — tsc clean)
+- [x] Tests passing (kv-quota, sync-status, firebase-config; tsc clean)
 - [ ] PR opened
 - [ ] Admin deploy + `/api/firebase-config` production smoke
+- [x] Phase system: `plan/settings-phases-complete.md` (Phases 0–4 code complete)
 
 ---
 

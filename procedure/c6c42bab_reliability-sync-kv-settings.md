@@ -24,7 +24,7 @@ Reliability sync KV settings
 - [x] Tests passing
 - [x] PR opened (#119)
 - [ ] Review triaged
-- [ ] Merged
+- [x] Merged (#119 → main)
 - [ ] Post-merge verification
 
 ---
@@ -34,7 +34,8 @@ Reliability sync KV settings
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-09-04 | Single PR for login sync + analytics + admin reliability | User requested merge of PR #118 content |
-| 2026-09-04 | KV write reduction: defer badge/svg unless totals change | Cuts 2 KV puts per noisy refresh |
+| 2026-09-04 | PR #119 merged to main; admin redeployed | CI green; cron handler try/catch follow-up on main |
+| 2026-09-04 | Stats cron 502 root cause: KV daily **get** limit | `KV get() limit exceeded for the day` on pages.dev; pause refresh until UTC reset |
 
 ---
 

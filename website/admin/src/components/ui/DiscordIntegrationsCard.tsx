@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Bell, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
+import FieldHelp from "./FieldHelp";
 import { auth } from "../../lib/firebase";
+import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchDiscordConfigApi,
   notifyDiscordDeploymentApi,
@@ -27,12 +29,19 @@ export default function DiscordIntegrationsCard() {
   const [config, setConfig] = useState<DiscordConfig | null>(null);
   const [webhookUrl, setWebhookUrl] = useState("");
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
     fetchDiscordConfigApi()
       .then((data) => setConfig(data.config))
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useIntervalRefresh(load, 60_000);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)] font-[family-name:var(--font-mono)] text-sm";
@@ -126,6 +135,9 @@ export default function DiscordIntegrationsCard() {
               className={inputClass}
               autoComplete="off"
             />
+            <FieldHelp label="Deployment webhook" className="mt-2">
+              Create in Discord → Channel settings → Integrations → Webhooks. Used for deploy status and download digests.
+            </FieldHelp>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

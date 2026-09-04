@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Mail, Save } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
+import FieldHelp from "./FieldHelp";
 import { auth } from "../../lib/firebase";
+import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchSubscribePromptConfigApi,
   putSubscribePromptConfigApi,
@@ -28,7 +30,7 @@ export default function SubscribePromptCard() {
     subscribeFallbackDiscordUrl: "https://discord.gg/bp42QAMC6",
   });
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetchSubscribePromptConfigApi()
       .then((data) => {
         setConfig(data.config);
@@ -42,6 +44,12 @@ export default function SubscribePromptCard() {
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useIntervalRefresh(load, 60_000);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)] font-[family-name:var(--font-mono)] text-sm";
@@ -159,6 +167,9 @@ export default function SubscribePromptCard() {
                 placeholder="https://discord.gg/bp42QAMC6"
                 className={inputClass}
               />
+              <FieldHelp label="Discord fallback" className="mt-2">
+                Shown on the marketing site when outbound mail is unavailable. Use a permanent invite link.
+              </FieldHelp>
             </div>
           )}
 

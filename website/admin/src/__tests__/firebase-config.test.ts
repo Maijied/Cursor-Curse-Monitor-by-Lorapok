@@ -5,7 +5,7 @@ import {
   normalizeFirebaseConfig,
   resolveFirebaseConfigFromEnv,
   toPublicFirebaseClientConfig,
-} from "../functions/api/_shared/firebase-config.js";
+} from "../../functions/api/_shared/firebase-config.js";
 
 describe("firebase-config", () => {
   it("resolves config from VITE_* env bindings", () => {

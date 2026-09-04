@@ -12,6 +12,7 @@ import SubscribePromptCard from "../ui/SubscribePromptCard";
 import ReindexPolicyCard from "../ui/ReindexPolicyCard";
 import CronSchedulesCard from "../ui/CronSchedulesCard";
 import HelpSupportCard from "../ui/HelpSupportCard";
+import InfrastructureStatusCard from "../ui/InfrastructureStatusCard";
 import CloudEnvironmentsCard from "../ui/CloudEnvironmentsCard";
 import FirebaseConfigCard from "../ui/FirebaseConfigCard";
 import GitHubConfigCard from "../ui/GitHubConfigCard";
@@ -77,6 +78,7 @@ export default function Settings() {
       {tab === "general" && (
         <>
           <HelpSupportCard />
+          <InfrastructureStatusCard />
           <Card>
             <h3 className="font-semibold mb-4">Theme</h3>
             <div className="flex gap-3">

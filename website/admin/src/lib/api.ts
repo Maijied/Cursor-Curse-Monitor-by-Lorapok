@@ -88,6 +88,7 @@ export type SyncStatusPayload = {
     lastRunOk: boolean | null;
     lastRunError: string | null;
     kvQuotaHit: boolean;
+    kvQuotaLimitKind?: "read" | "write" | "unknown" | null;
     cache: {
       refreshedAt: string | null;
       ageSeconds: number | null;

@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Clock, RefreshCw, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import LoadableButton from "./LoadableButton";
 import Badge from "./Badge";
 import Notification from "./Notification";
+import FieldHelp from "./FieldHelp";
 import { auth } from "../../lib/firebase";
+import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchCronJobsConfigApi,
+  fetchSyncStatus,
   putCronJobsConfigApi,
   refreshStatsNowApi,
   sendDiscordDigestTestApi,
@@ -43,8 +46,9 @@ export default function CronSchedulesCard() {
   const [digestInterval, setDigestInterval] = useState(1440);
   const [digestRefreshFirst, setDigestRefreshFirst] = useState(true);
   const [digestIncludeChangelog, setDigestIncludeChangelog] = useState(true);
+  const [kvWarning, setKvWarning] = useState<string | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
     fetchCronJobsConfigApi()
       .then((payload) => {
@@ -58,11 +62,23 @@ export default function CronSchedulesCard() {
       })
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
       .finally(() => setLoading(false));
-  };
+
+    fetchSyncStatus()
+      .then((sync) => {
+        if (sync.stats.kvQuotaHit) {
+          setKvWarning(sync.hint ?? sync.stats.lastRunError ?? "KV daily limit exceeded.");
+        } else {
+          setKvWarning(null);
+        }
+      })
+      .catch(() => setKvWarning(null));
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
+
+  useIntervalRefresh(load, 60_000);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)]";
@@ -163,6 +179,16 @@ export default function CronSchedulesCard() {
         </div>
       </div>
 
+      {kvWarning ? (
+        <div
+          className="mb-4 rounded-xl border border-[color-mix(in_srgb,var(--color-danger)_40%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)] p-3 text-xs text-[var(--color-muted)]"
+          role="alert"
+        >
+          <p className="font-medium text-[var(--color-danger)] mb-1">KV quota — stats refresh affected</p>
+          <p>{kvWarning}</p>
+        </div>
+      ) : null}
+
       {message ? (
         <Notification
           tone={message.type === "success" ? "success" : "error"}
@@ -210,6 +236,9 @@ export default function CronSchedulesCard() {
                 disabled={!isMaster}
                 className={inputClass}
               />
+              <FieldHelp label="Stats interval" className="mt-2">
+                Each run may write cache, badges, and logs to KV. Use 15+ minutes on Workers Free to avoid daily limits.
+              </FieldHelp>
             </div>
             {data ? renderRunMeta(data.statsRefresh) : null}
             <LoadableButton
@@ -260,6 +289,9 @@ export default function CronSchedulesCard() {
                 disabled={!isMaster}
                 className={inputClass}
               />
+              <FieldHelp label="Digest interval" className="mt-2">
+                Posts to the deployment Discord webhook. Refresh-before-send triggers an extra stats refresh (more KV writes).
+              </FieldHelp>
             </div>
             <label className="flex items-center gap-3 text-sm cursor-pointer">
               <input

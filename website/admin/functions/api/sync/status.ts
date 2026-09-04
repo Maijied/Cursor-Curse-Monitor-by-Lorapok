@@ -8,6 +8,7 @@ import {
   sanitizeStatsRefreshConfigForClient,
 } from "../_shared/stats-refresh-config.js";
 import { formatKvPutError } from "../_shared/kv-put.js";
+import { isKvQuotaError, kvQuotaKind } from "../_shared/kv-quota.js";
 
 /**
  * Aggregated sync health for Mission Control polling (admin auth).
@@ -39,7 +40,8 @@ export async function onRequestGet(context) {
   const staleThresholdMs = intervalMs * 2;
   const cacheFresh = isStatsLiveCacheFresh(cache, staleThresholdMs, now);
   const lastError = statsConfig.lastRunError ?? null;
-  const kvQuotaHit = Boolean(lastError && /daily write limit|put\(\) limit/i.test(lastError));
+  const kvQuotaHit = Boolean(lastError && isKvQuotaError(lastError));
+  const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : null;
 
   let overall: "online" | "degraded" | "offline" = "online";
   if (!githubOk || !env.ADMIN_KV) {
@@ -67,6 +69,7 @@ export async function onRequestGet(context) {
       lastRunOk: statsConfig.lastRunOk ?? null,
       lastRunError: lastError,
       kvQuotaHit,
+      kvQuotaLimitKind,
       cache: {
         refreshedAt,
         ageSeconds,

@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Database, Save } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
+import FieldHelp from "./FieldHelp";
 import { auth } from "../../lib/firebase";
+import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchCursorIndexPolicyConfigApi,
   putCursorIndexPolicyConfigApi,
@@ -35,7 +37,7 @@ export default function ReindexPolicyCard() {
     cipAllowCrossUserLocalImport: false,
   });
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetchCursorIndexPolicyConfigApi()
       .then((data) => {
         setConfig(data.config);
@@ -56,6 +58,12 @@ export default function ReindexPolicyCard() {
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useIntervalRefresh(load, 60_000);
 
   const inputClass =
     "w-full bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-4 py-3 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition-all text-[var(--color-text)] font-[family-name:var(--font-mono)] text-sm";
@@ -193,7 +201,9 @@ export default function ReindexPolicyCard() {
                 disabled={!isMaster || !form.indexEnabled}
                 className={inputClass}
               />
-              <p className="text-xs text-[var(--color-muted)] mt-1">0 = unlimited.</p>
+              <FieldHelp label="Reindex cap" className="mt-2">
+                Limits how many chat records the IDE extension indexes per run. 0 means unlimited (higher disk and API load).
+              </FieldHelp>
             </div>
           </div>
 
