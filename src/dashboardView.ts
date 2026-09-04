@@ -2255,7 +2255,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
             ? 'Sign in to Cursor and refresh'
             : 'Waiting for usage data…';
         }
-        renderUsageAnalytics(snapshot.usageAnalytics);
+        requestUsageAnalyticsRefresh();
         return;
       }
 
@@ -2410,7 +2410,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
           : 'Usage is at ' + Math.round(hero) + '%. Consider Composer 2.5 (Fast off) before hitting the cap.')
         : "You're in control. We'll notify you before you reach your cap.";
 
-      renderUsageAnalytics(snapshot.usageAnalytics);
+      requestUsageAnalyticsRefresh();
 
       var mascot = document.getElementById('mascotLogo');
       if (mascot) {
