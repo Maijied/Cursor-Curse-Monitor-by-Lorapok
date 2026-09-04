@@ -29,7 +29,7 @@ Saved under `integrations:mail` in ADMIN_KV:
 |---------|---------|
 | **Workers Free mode** | When on, external recipients use Resend when `RESEND_API_KEY` is set |
 | **Resend-first for external** | Route non-`@lorapok.tech` mail through Resend before Cloudflare relay |
-| **Sending domain** | Domain verified in Resend (default `lorapok.tech`) |
+| **Sending domain** | Domain verified in Resend (default `cursor.lorapok.tech`) |
 | **Resend From override** | Optional `Name <email@domain>` when `RESEND_FROM` Pages secret is empty |
 | **Resend domain verified** | Mark after DNS verification succeeds in Resend |
 | **Product / support From** | Addresses and display names for branded templates |
@@ -54,7 +54,35 @@ If a key was shared in chat, logs, or a ticket:
 
 ---
 
-## 2. Verify `lorapok.tech` in Resend
+## 2. Verify `cursor.lorapok.tech` in Resend
+
+1. [Resend → Domains](https://resend.com/domains) → **Add Domain** → `cursor.lorapok.tech`
+2. Add DNS records in **Cloudflare** for zone `lorapok.tech` (DNS only / grey cloud — not proxied)
+3. Click **Verify** in Resend (usually 1–5 minutes)
+4. In Mission Control → Settings → Resend, set **Sending domain** to `cursor.lorapok.tech` and enable **Resend domain verified**
+
+### Cloudflare DNS records (exact)
+
+Zone: **lorapok.tech** → DNS → Records → Add record.
+
+| Step | Type | Name (Cloudflare) | Content / Target | Priority | Proxy |
+|------|------|-------------------|------------------|----------|-------|
+| 1 DKIM | TXT | `resend._domainkey.cursor` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDTDnNSo2hzJJaFTasP58CjPvwmY4MqupMTHY8ygvqFdmMCzg2dVchGNMM8Se0vQE7Re/wCKa/CxWTpi3xVqe4y3WlhNAMfRbwN7Q4bSk62/tdKV6QlMRk1KVERI7JJHMd4G1VMWxPAP9Za8fOpT2JsjlvPvzvRqsRKALYPxYwOWQIDAQAB` | — | DNS only |
+| 2 SPF MX | MX | `send.cursor` | `feedback-smtp.ap-northeast-1.amazonses.com` | 10 | DNS only |
+| 3 SPF TXT | TXT | `send.cursor` | `v=spf1 include:amazonses.com ~all` | — | DNS only |
+| 4 Inbound MX | MX | `cursor` | `inbound-smtp.ap-northeast-1.amazonaws.com` | 10 | DNS only |
+
+**Possible conflicts**
+
+- Existing **TXT** on `resend._domainkey.cursor` or **TXT/MX** on `send.cursor` — edit to match Resend or remove duplicates.
+- Existing **MX** on name `cursor` — only one MX set per host; merge or replace with Resend inbound if you need receiving on this subdomain.
+- **A/CNAME** on `cursor` for the marketing site is fine alongside these MX/TXT records (different types).
+
+---
+
+## 2b. (Legacy) Verify `lorapok.tech` in Resend
+
+Use only if you send from `@lorapok.tech` instead of `@cursor.lorapok.tech`:
 
 1. [Resend → Domains](https://resend.com/domains) → **Add Domain** → `lorapok.tech`
 2. Add DNS records in Cloudflare (DNS only / grey cloud)
@@ -68,7 +96,7 @@ If a key was shared in chat, logs, or a ticket:
 ```bash
 cd website/admin
 export RESEND_API_KEY="re_..."
-export RESEND_FROM="Cursor Curse Monitor <cursor.monitor@lorapok.tech>"
+export RESEND_FROM="Cursor Curse Monitor <cursor.monitor@cursor.lorapok.tech>"
 node scripts/setup-resend-secret.mjs
 ```
 

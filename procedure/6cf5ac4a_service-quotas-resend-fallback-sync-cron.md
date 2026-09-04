@@ -30,7 +30,7 @@ Track Resend (and mail transport) quotas with used/limit in Settings and sync st
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-09-05 | Resend quota in KV | Monthly/daily counters; cron probe via `ccm-stats-cron` |
-| 2026-09-05 | Transport fallback | Resend failure/quota → relay → CF REST (removed resend-primary relay skip) |
+| 2026-09-05 | `cursor.lorapok.tech` Resend DNS | MAIL-07; cred vault `resend_from` + `resend_sending_domain` |
 
 ---
 

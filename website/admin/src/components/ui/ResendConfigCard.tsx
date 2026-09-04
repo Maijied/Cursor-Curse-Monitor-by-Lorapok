@@ -20,7 +20,7 @@ export default function ResendConfigCard() {
   const [config, setConfig] = useState<ResendIntegrationConfig | null>(null);
   const [usage, setUsage] = useState<{ used: number; limit: number | null; dailyUsed: number; dailyLimit: number | null } | null>(null);
   const [form, setForm] = useState({
-    sendingDomain: "lorapok.tech",
+    sendingDomain: "cursor.lorapok.tech",
     resendFromOverride: "",
     resendFrom: "",
     resendApiKey: "",

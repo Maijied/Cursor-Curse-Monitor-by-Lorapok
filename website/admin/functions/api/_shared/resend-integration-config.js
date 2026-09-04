@@ -12,7 +12,7 @@ export function normalizeResendIntegrationConfig(parsed) {
     resendDomainVerified: parsed.resendDomainVerified === true,
     resendFirstExternal: parsed.resendFirstExternal !== false,
     workersFreeMode: parsed.workersFreeMode !== false,
-    sendingDomain: String(parsed.sendingDomain ?? "lorapok.tech").trim().toLowerCase(),
+    sendingDomain: String(parsed.sendingDomain ?? "cursor.lorapok.tech").trim().toLowerCase(),
     monthlyEmailLimit:
       typeof parsed.monthlyEmailLimit === "number" && parsed.monthlyEmailLimit > 0
         ? parsed.monthlyEmailLimit

@@ -347,6 +347,8 @@ export function loadCursorCloudflareSecretsFromVault() {
     cronSecret: String(cursor.cron_secret ?? "").trim() || undefined,
     githubToken,
     resendApiKey: resolveResendApiKeyFromVault(vault),
+    resendFrom: String(cursor.resend_from ?? "").trim() || undefined,
+    resendSendingDomain: String(cursor.resend_sending_domain ?? "").trim() || undefined,
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
     testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
   };
@@ -471,6 +473,7 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
     ...(loaded.cronSecret && !baseEnv.CRON_SECRET ? { CRON_SECRET: loaded.cronSecret } : {}),
     ...(loaded.githubToken && !baseEnv.GITHUB_TOKEN ? { GITHUB_TOKEN: loaded.githubToken } : {}),
     ...(loaded.resendApiKey && !baseEnv.RESEND_API_KEY ? { RESEND_API_KEY: loaded.resendApiKey } : {}),
+    ...(loaded.resendFrom && !baseEnv.RESEND_FROM ? { RESEND_FROM: loaded.resendFrom } : {}),
     ...(loaded.testmailApiKey && !baseEnv.TESTMAIL_API_KEY ? { TESTMAIL_API_KEY: loaded.testmailApiKey } : {}),
     ...(loaded.testmailNamespace && !baseEnv.TESTMAIL_NAMESPACE
       ? { TESTMAIL_NAMESPACE: loaded.testmailNamespace }

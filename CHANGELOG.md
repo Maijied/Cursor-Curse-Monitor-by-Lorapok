@@ -30,6 +30,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **CI cred vault decrypt** — `load-cred-vault-env-ci.mjs` + `sync-cred-vault-github.mjs` (`CRED_VAULT_PASSPHRASE` pin + `CRED_STORE_GPG_BASE64` blob in `admin-production`)
 - **Per-service Settings tabs** — Resend, testmail.app, cred vault CI status, and marketplace distribution cards; dedicated `GET/PUT /api/integrations/resend/config` and `/integrations/testmail/config` with GitHub secret sync; Mail tab focuses on Cloudflare identities + relay
 - **Service quota tracking** — Resend monthly/daily used vs limit in Settings and `/api/sync/status`; subscriber broadcast estimates fallback; mail transport cascades when Resend is over quota or fails; `POST /api/cron/service-usage-sync` via `ccm-stats-cron`
+- **Resend domain `cursor.lorapok.tech`** — cred vault `resend_from` + `resend_sending_domain`; default sending domain updated; Cloudflare DNS steps in `docs/guides/RESEND_WORKERS_FREE_SETUP.md`
 
 ### Fixed
 

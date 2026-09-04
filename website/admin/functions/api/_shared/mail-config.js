@@ -19,7 +19,7 @@ export const DEFAULT_MAIL_CONFIG = {
   supportFromName: FROM_NAME_HELP,
   resendFirstExternal: true,
   workersFreeMode: true,
-  sendingDomain: "lorapok.tech",
+  sendingDomain: "cursor.lorapok.tech",
   resendFromOverride: "",
   resendDomainVerified: false,
 };
