@@ -6,7 +6,7 @@
 **Plan:** [plan/f2a8c3e1_reliability-sync-kv-settings-plan.md](../plan/f2a8c3e1_reliability-sync-kv-settings-plan.md)  
 **Issue:** __ISSUE_PENDING__  
 **Branch:** `cursor/reliability-sync-kv-settings-926f`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/119
 
 ---
 
@@ -22,7 +22,7 @@ Reliability sync KV settings
 - [ ] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing
-- [ ] PR opened
+- [x] PR opened (#119)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
