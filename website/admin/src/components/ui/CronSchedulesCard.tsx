@@ -66,7 +66,10 @@ export default function CronSchedulesCard() {
     fetchSyncStatus()
       .then((sync) => {
         if (sync.stats.kvQuotaHit) {
-          setKvWarning(sync.hint ?? sync.stats.lastRunError ?? "KV daily limit exceeded.");
+          const pause = sync.stats.writesPausedUntil
+            ? ` Writes paused until ${sync.stats.writesPausedUntil} (UTC).`
+            : "";
+          setKvWarning((sync.hint ?? sync.stats.lastRunError ?? "KV daily limit exceeded.") + pause);
         } else {
           setKvWarning(null);
         }

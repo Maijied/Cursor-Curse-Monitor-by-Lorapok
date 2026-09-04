@@ -47,7 +47,7 @@
 | KV-03 | `/api/sync/status` exposes `kvQuotaLimitKind` | **done** | `sync-status.test.ts` |
 | KV-04 | Infrastructure card + Cron KV banner | **done** | Settings → General / Automation |
 | KV-05 | Reduce stats refresh writes (skip unchanged badge/log) | **done** | PR #119 |
-| KV-06 | `writesPausedUntil` guard in stats refresh | **next** | Reliability plan B1 |
+| KV-06 | `writesPausedUntil` guard in stats refresh | **done** | auto-pause until UTC reset on KV quota error |
 | KV-07 | KV quota meter copy + CF limits link in UI | **next** | Reliability plan B2 |
 | KV-08 | Architecture.md § stats storage (KV vs R2 vs D1) | **next** | Reliability plan B3 |
 | KV-09 | Wait for daily quota reset (UTC) | **blocked** | Ops — stats cron 502 until reset |
@@ -146,7 +146,7 @@
 | MAIL-01 | Mail transport card + Settings tab | **done** | themed |
 | MAIL-02 | 60s polling on mail card | **done** | `useIntervalRefresh` |
 | MAIL-03 | FieldHelp on sending domain | **done** | Phase 2 |
-| MAIL-04 | Refresh `CLOUDFLARE_EMAIL_API_TOKEN` | **blocked** | cred vault + `sync-mail-cred-vault.mjs` |
+| MAIL-04 | Refresh `CLOUDFLARE_EMAIL_API_TOKEN` | **blocked** | sync-mail 403 — needs new token in Cloudflare dashboard |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **next** | if external mail needed |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
 | MAIL-07 | Mail sync workflow polling in UI | **next** | Reliability C |
@@ -228,13 +228,12 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-04** — Refresh Cloudflare email token (unblocks mail REST 401)
-2. **KV-09 / STAT-06** — Pause stats cron in Settings until KV reset OR wait UTC
-3. **KV-06** — `writesPausedUntil` guard in stats refresh
-4. **GH-04 / MAIL-07** — Mail sync workflow polling
-5. **FB-06** — Connected Services Firebase health row
-6. **KV-08** — Architecture.md stats storage section
-7. **D1-02** — D1 binding design (Phase 2 storage)
+1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
+2. **KV-09 / STAT-06** — Wait for KV UTC reset OR disable stats in Settings → Automation
+3. **GH-04 / MAIL-07** — Mail sync GHA workflow polling
+4. **KV-07** — KV quota meter copy in Infrastructure card
+5. **KV-08** — Architecture.md stats storage section
+6. **D1-02** — D1 binding design (Phase 2 storage)
 
 ---
 

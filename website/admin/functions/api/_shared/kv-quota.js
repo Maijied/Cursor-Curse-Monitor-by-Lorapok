@@ -46,3 +46,22 @@ export function formatKvQuotaError(err) {
     "(it writes several KV keys per run) or try again after the limit resets (UTC)."
   );
 }
+
+/**
+ * ISO timestamp for the next UTC midnight (when Cloudflare KV daily limits reset).
+ * @param {number} [now]
+ */
+export function nextUtcQuotaResetIso(now = Date.now()) {
+  const d = new Date(now);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1)).toISOString();
+}
+
+/**
+ * @param {string | null | undefined} writesPausedUntil
+ * @param {number} [now]
+ */
+export function isKvWritesPaused(writesPausedUntil, now = Date.now()) {
+  if (!writesPausedUntil) return false;
+  const until = Date.parse(String(writesPausedUntil));
+  return !Number.isNaN(until) && until > now;
+}

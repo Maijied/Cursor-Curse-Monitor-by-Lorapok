@@ -87,6 +87,7 @@ export type SyncStatusPayload = {
     lastRunAt: string | null;
     lastRunOk: boolean | null;
     lastRunError: string | null;
+    writesPausedUntil: string | null;
     kvQuotaHit: boolean;
     kvQuotaLimitKind?: "read" | "write" | "unknown" | null;
     cache: {
@@ -200,6 +201,7 @@ export type StatsRefreshConfig = {
   lastRunAt: string | null;
   lastRunOk: boolean | null;
   lastError: string | null;
+  writesPausedUntil: string | null;
   lastDurationMs: number | null;
   lastTriggeredBy: string | null;
   updatedAt: string | null;

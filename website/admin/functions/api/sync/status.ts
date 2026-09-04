@@ -8,7 +8,7 @@ import {
   sanitizeStatsRefreshConfigForClient,
 } from "../_shared/stats-refresh-config.js";
 import { formatKvPutError } from "../_shared/kv-put.js";
-import { isKvQuotaError, kvQuotaKind } from "../_shared/kv-quota.js";
+import { isKvQuotaError, isKvWritesPaused, kvQuotaKind } from "../_shared/kv-quota.js";
 
 /**
  * Aggregated sync health for Mission Control polling (admin auth).
@@ -39,9 +39,11 @@ export async function onRequestGet(context) {
   const intervalMs = (statsConfig.intervalMinutes ?? 5) * 60 * 1000;
   const staleThresholdMs = intervalMs * 2;
   const cacheFresh = isStatsLiveCacheFresh(cache, staleThresholdMs, now);
-  const lastError = statsConfig.lastRunError ?? null;
-  const kvQuotaHit = Boolean(lastError && isKvQuotaError(lastError));
-  const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : null;
+  const lastError = statsConfig.lastError ?? null;
+  const writesPausedUntil = statsConfig.writesPausedUntil ?? null;
+  const kvWritesPaused = isKvWritesPaused(writesPausedUntil, now);
+  const kvQuotaHit = Boolean((lastError && isKvQuotaError(lastError)) || kvWritesPaused);
+  const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : kvWritesPaused ? "write" : null;
 
   let overall: "online" | "degraded" | "offline" = "online";
   if (!githubOk || !env.ADMIN_KV) {
@@ -68,6 +70,7 @@ export async function onRequestGet(context) {
       lastRunAt: statsConfig.lastRunAt ?? null,
       lastRunOk: statsConfig.lastRunOk ?? null,
       lastRunError: lastError,
+      writesPausedUntil,
       kvQuotaHit,
       kvQuotaLimitKind,
       cache: {
@@ -79,7 +82,9 @@ export async function onRequestGet(context) {
       },
     },
     hint: kvQuotaHit
-      ? formatKvPutError(new Error(lastError ?? "KV limit"))
+      ? kvWritesPaused
+        ? `KV writes paused until ${writesPausedUntil} (UTC). Automatic stats refresh is skipped to protect the daily quota.`
+        : formatKvPutError(new Error(lastError ?? "KV limit"))
       : null,
   });
 }

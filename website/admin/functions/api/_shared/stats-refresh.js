@@ -12,6 +12,7 @@ import {
 } from "./stats-refresh-config.js";
 import { recordCronJobRun } from "./cron-schedule.js";
 import { formatKvPutError, putKvJsonIfChanged, putKvStringIfChanged } from "./kv-put.js";
+import { isKvQuotaError, isKvWritesPaused, nextUtcQuotaResetIso } from "./kv-quota.js";
 import { logSystemEvent } from "./system-log.js";
 import {
   buildReadmeStatsFromSiteData,
@@ -114,6 +115,14 @@ export async function runStatsRefresh(env, options = {}) {
   const config = await readStatsRefreshConfig(env);
   if (!options.force && !config.enabled) {
     return { ok: false, skipped: true, reason: "disabled" };
+  }
+  if (!options.force && isKvWritesPaused(config.writesPausedUntil)) {
+    return {
+      ok: false,
+      skipped: true,
+      reason: "kv_writes_paused",
+      writesPausedUntil: config.writesPausedUntil,
+    };
   }
   if (!options.force && config.lastRunAt) {
     const last = Date.parse(config.lastRunAt);
@@ -262,12 +271,14 @@ export async function runStatsRefresh(env, options = {}) {
   } catch (err) {
     const message = formatKvPutError(err);
     const durationMs = Date.now() - started;
+    const pauseUntil = isKvQuotaError(err) ? nextUtcQuotaResetIso() : null;
     try {
       await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
         ok: false,
         error: message,
         durationMs,
         triggeredBy: options.triggeredBy ?? "manual",
+        writesPausedUntil: pauseUntil,
       });
     } catch {
       // KV quota may block run metadata too

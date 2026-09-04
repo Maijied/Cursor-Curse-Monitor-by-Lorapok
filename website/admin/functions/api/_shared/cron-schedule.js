@@ -22,6 +22,7 @@ export const CRON_RUN_DEFAULTS = {
   lastError: null,
   lastDurationMs: null,
   lastTriggeredBy: null,
+  writesPausedUntil: null,
   updatedAt: null,
   updatedBy: null,
 };
@@ -64,6 +65,7 @@ export function sanitizeCronRunMetaForClient(config) {
     lastError: config.lastError ?? null,
     lastDurationMs: config.lastDurationMs ?? null,
     lastTriggeredBy: config.lastTriggeredBy ?? null,
+    writesPausedUntil: config.writesPausedUntil ?? null,
     updatedAt: config.updatedAt ?? null,
     updatedBy: config.updatedBy ?? null,
   };
@@ -130,6 +132,7 @@ async function writeCronJobState(env, key, next) {
  *   durationMs?: number | null;
  *   triggeredBy?: string | null;
  *   at?: string;
+ *   writesPausedUntil?: string | null;
  * }} result
  */
 export async function recordCronJobRun(env, key, _current, result) {
@@ -143,6 +146,11 @@ export async function recordCronJobRun(env, key, _current, result) {
     lastDurationMs: result.durationMs ?? null,
     lastTriggeredBy: result.triggeredBy ?? "cron",
   };
+  if (result.writesPausedUntil) {
+    next.writesPausedUntil = result.writesPausedUntil;
+  } else if (result.ok) {
+    next.writesPausedUntil = null;
+  }
   await writeCronJobState(env, key, next);
   return next;
 }
