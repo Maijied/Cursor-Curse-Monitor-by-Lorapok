@@ -6,8 +6,10 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
+import MailSyncProgressBanner from "./MailSyncProgressBanner";
 import { auth } from "../../lib/firebase";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
+import { useWorkflowPoll } from "../../hooks/useWorkflowPoll";
 import {
   fetchMailTransportConfigApi,
   putMailTransportConfigApi,
@@ -79,6 +81,7 @@ export default function MailTransportCard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const mailWorkflowPoll = useWorkflowPoll();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [config, setConfig] = useState<MailTransportConfig | null>(null);
   const [instructions, setInstructions] = useState<MailSetupInstructions | null>(null);
@@ -148,12 +151,25 @@ export default function MailTransportCard() {
     setSyncing(true);
     setMessage(null);
     try {
+      const dispatchedAt = Date.now();
       const res = await syncMailTransport();
-      setMessage({
-        type: res.ok ? "success" : "error",
-        text: res.message ?? (res.ok ? "Mail sync dispatched." : "Mail sync failed."),
-      });
-      load();
+      if (res.ok) {
+        mailWorkflowPoll.startPoll({
+          workflowName: res.workflow ?? "ci-cd.yml",
+          dispatchedAfter: dispatchedAt,
+          onComplete: () => load(),
+        });
+        setMessage({
+          type: "success",
+          text: res.message ?? "Mail sync dispatched — tracking GitHub Actions…",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: res.message ?? "Mail sync failed.",
+        });
+        load();
+      }
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Sync failed" });
     }
@@ -181,6 +197,13 @@ export default function MailTransportCard() {
       </div>
 
       {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
+
+      <MailSyncProgressBanner
+        status={mailWorkflowPoll.status}
+        run={mailWorkflowPoll.run}
+        pollError={mailWorkflowPoll.pollError}
+        onDismiss={mailWorkflowPoll.dismiss}
+      />
 
       {loading ? (
         <div className="flex items-center gap-3 py-6 justify-center text-sm text-[var(--color-muted)]">

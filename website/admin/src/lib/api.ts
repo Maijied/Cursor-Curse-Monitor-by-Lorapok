@@ -1219,6 +1219,7 @@ export async function syncMailTransport() {
   return data as {
     ok: boolean;
     message?: string;
+    workflow?: string;
     recommendations?: string[];
     transport?: { configured: boolean; transport: string; relayBound?: boolean; resendConfigured?: boolean };
   };

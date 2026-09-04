@@ -5,7 +5,9 @@ import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import LoadableButton from "./LoadableButton";
+import MailSyncProgressBanner from "./MailSyncProgressBanner";
 import { auth } from "../../lib/firebase";
+import { useWorkflowPoll } from "../../hooks/useWorkflowPoll";
 import { isMasterAdmin } from "../../lib/admin-config";
 import {
   fetchMailSetupStatusApi,
@@ -47,6 +49,7 @@ export default function MailSetupChecklist() {
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
   const [probing, setProbing] = useState(false);
+  const mailWorkflowPoll = useWorkflowPoll();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -65,12 +68,25 @@ export default function MailSetupChecklist() {
     setSyncing(true);
     setMessage(null);
     try {
+      const dispatchedAt = Date.now();
       const res = await syncMailTransport();
-      setMessage({
-        type: res.ok ? "success" : "error",
-        text: res.message ?? (res.ok ? "Mail sync dispatched." : "Mail sync failed."),
-      });
-      load();
+      if (res.ok) {
+        mailWorkflowPoll.startPoll({
+          workflowName: res.workflow ?? "ci-cd.yml",
+          dispatchedAfter: dispatchedAt,
+          onComplete: () => load(),
+        });
+        setMessage({
+          type: "success",
+          text: res.message ?? "Mail sync dispatched — tracking GitHub Actions…",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: res.message ?? "Mail sync failed.",
+        });
+        load();
+      }
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Sync failed" });
     }
@@ -138,6 +154,13 @@ export default function MailSetupChecklist() {
       </div>
 
       {message && <Notification tone={message.type === "success" ? "success" : "error"} message={message.text} />}
+
+      <MailSyncProgressBanner
+        status={mailWorkflowPoll.status}
+        run={mailWorkflowPoll.run}
+        pollError={mailWorkflowPoll.pollError}
+        onDismiss={mailWorkflowPoll.dismiss}
+      />
 
       {loading ? (
         <div className="flex items-center gap-3 py-6 justify-center text-sm text-[var(--color-muted)]">

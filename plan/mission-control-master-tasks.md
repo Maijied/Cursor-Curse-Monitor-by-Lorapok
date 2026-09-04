@@ -110,7 +110,8 @@
 | GH-01 | Integration tab + non-secret metadata | **done** | Settings → GitHub |
 | GH-02 | Env secret encryption (`github-secrets.js`) | **done** | master PUT |
 | GH-03 | `/api/sync/status` GitHub zen check | **done** | sync chip |
-| GH-04 | Mail sync GHA workflow polling (like deploy) | **next** | Reliability C |
+| GH-04 | Mail sync GHA workflow polling (like deploy) | **done** | `useWorkflowPoll` + `MailSyncProgressBanner` |
+| MAIL-07 | Mail sync workflow polling in UI | **done** | Mail + Setup checklist |
 | GH-05 | Procedure on-merge finalize for settings PR | **next** | optional |
 
 ---
@@ -230,10 +231,9 @@
 
 1. **MAIL-04** — Create new Cloudflare Email Sending API token in dashboard, store in cred vault, re-run `sync-mail-cred-vault.mjs`
 2. **KV-09 / STAT-06** — Wait for KV UTC reset OR disable stats in Settings → Automation
-3. **GH-04 / MAIL-07** — Mail sync GHA workflow polling
-4. **KV-07** — KV quota meter copy in Infrastructure card
-5. **KV-08** — Architecture.md stats storage section
-6. **D1-02** — D1 binding design (Phase 2 storage)
+3. **KV-07** — KV quota meter copy in Infrastructure card
+4. **KV-08** — Architecture.md stats storage section
+5. **D1-02** — D1 binding design (Phase 2 storage)
 
 ---
 

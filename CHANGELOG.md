@@ -26,6 +26,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **KV quota detection** — shared `kv-quota` module classifies Cloudflare KV daily read vs write limit errors; sync status and save paths surface clearer guidance
 - **Stats refresh KV pause guard** — `writesPausedUntil` skips automatic stats refresh until UTC quota reset after KV limit errors; fixes sync status `lastError` field mapping
+- **Mail sync workflow polling** — Settings mail cards track deploy-infra GitHub Actions after Sync up
 - **Cloud dev environments card** — GCP Workstations, Azure Dev Box, and browser VS Code setup links in Settings
 
 - **Hero layout** — orbit and community stats side-by-side on desktop; no stats card overlap; compact secondary metrics
