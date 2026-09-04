@@ -18,21 +18,65 @@ export function resolveMailCredentials(env = process.env) {
   const accountId = (mergedEnv.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID).trim();
   const deployToken = (mergedEnv.CLOUDFLARE_API_TOKEN ?? "").trim();
   const emailToken = (mergedEnv.CLOUDFLARE_EMAIL_API_TOKEN ?? "").trim();
+  const globalApiKey = (mergedEnv.CLOUDFLARE_API_KEY ?? "").trim();
+  const globalApiEmail = (mergedEnv.CLOUDFLARE_EMAIL ?? "").trim();
 
-  return { accountId, deployToken, emailToken };
+  return { accountId, deployToken, emailToken, globalApiKey, globalApiEmail };
+}
+
+/**
+ * Build Cloudflare API auth headers for bearer token or Global API Key.
+ * @param {{ bearerToken?: string; globalApiKey?: string; globalApiEmail?: string }} opts
+ */
+export function cloudflareAuthHeaders({ bearerToken, globalApiKey, globalApiEmail } = {}) {
+  if (bearerToken) {
+    return { Authorization: `Bearer ${bearerToken}`, "Content-Type": "application/json" };
+  }
+  if (globalApiKey && globalApiEmail) {
+    return {
+      "X-Auth-Key": globalApiKey,
+      "X-Auth-Email": globalApiEmail,
+      "Content-Type": "application/json",
+    };
+  }
+  return { "Content-Type": "application/json" };
+}
+
+/**
+ * Wrangler env for deploy — bearer token OR global API key + email.
+ * @param {string} accountId
+ * @param {{ type: "bearer"; token: string } | { type: "global"; apiKey: string; email: string }} auth
+ * @param {NodeJS.ProcessEnv} [baseEnv]
+ */
+export function wranglerDeployEnv(accountId, auth, baseEnv = process.env) {
+  const env = { ...baseEnv, CLOUDFLARE_ACCOUNT_ID: accountId };
+  delete env.CLOUDFLARE_API_TOKEN;
+  delete env.CLOUDFLARE_API_KEY;
+  delete env.CLOUDFLARE_EMAIL;
+  if (auth.type === "bearer") {
+    env.CLOUDFLARE_API_TOKEN = auth.token;
+  } else {
+    env.CLOUDFLARE_API_KEY = auth.apiKey;
+    env.CLOUDFLARE_EMAIL = auth.email;
+  }
+  return env;
 }
 
 export function requireDeployToken(env = process.env) {
-  const { deployToken, accountId } = resolveMailCredentials(env);
-  if (!deployToken) {
-    throw new Error(
-      "CLOUDFLARE_API_TOKEN missing. Local options:\n" +
-        "  • .cred-vault-passphrase at repo root (repair-mail loads gpg vault)\n" +
-        "  • cd website/admin && npx wrangler login  (repair-mail falls back to wrangler OAuth)\n" +
-        '  • export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"'
-    );
+  const { deployToken, accountId, globalApiKey, globalApiEmail } = resolveMailCredentials(env);
+  if (deployToken) {
+    return { deployToken, accountId, globalApiKey, globalApiEmail };
   }
-  return { deployToken, accountId };
+  if (globalApiKey && globalApiEmail) {
+    return { deployToken: "", accountId, globalApiKey, globalApiEmail };
+  }
+  throw new Error(
+    "CLOUDFLARE_API_TOKEN or CLOUDFLARE_API_KEY+CLOUDFLARE_EMAIL missing. Local options:\n" +
+      "  • .cred-vault-passphrase at repo root (repair-mail loads gpg vault)\n" +
+      "  • cd website/admin && npx wrangler login  (repair-mail falls back to wrangler OAuth)\n" +
+      '  • export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)"\n' +
+      "  • cred vault: cloudfare/cloudfare_global_api_key + cursor/cloudflare_account_email"
+  );
 }
 
 export function requireEmailToken(env = process.env, { allowMissingInCi = false } = {}) {
@@ -55,8 +99,10 @@ export function setGithubActionsOutput(name, value) {
   appendFileSync(file, `${name}=${value}\n`);
 }
 
-export async function relayWorkerExists(deployToken, accountId) {
-  const headers = { Authorization: `Bearer ${deployToken}` };
+export async function relayWorkerExists(deployToken, accountId, globalAuth) {
+  const headers = globalAuth
+    ? cloudflareAuthHeaders(globalAuth)
+    : cloudflareAuthHeaders({ bearerToken: deployToken });
   const paths = [
     `accounts/${accountId}/workers/services/ccm-mail-relay`,
     `accounts/${accountId}/workers/scripts/ccm-mail-relay`,
@@ -115,6 +161,47 @@ export async function probeDeployToken(deployToken, accountId) {
   return { ok: false, status: verifyRes.status || 401 };
 }
 
+/**
+ * Probe Global API Key auth (X-Auth-Email + X-Auth-Key) for Pages/Workers deploy.
+ * @returns {Promise<{ ok: boolean; status: number; via?: string }>}
+ */
+export async function probeDeployGlobalKey(globalApiKey, globalApiEmail, accountId) {
+  if (!globalApiKey || !globalApiEmail) return { ok: false, status: 0 };
+
+  const headers = cloudflareAuthHeaders({ globalApiKey, globalApiEmail });
+  const userRes = await fetch("https://api.cloudflare.com/client/v4/user", { headers });
+  if (!userRes.ok) {
+    if (userRes.status === 429) return { ok: false, status: userRes.status, via: "user-rate-limit" };
+    return { ok: false, status: userRes.status, via: "user" };
+  }
+
+  if (accountId) {
+    const pagesRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${PAGES_PROJECT}`,
+      { headers }
+    );
+    if (pagesRes.ok) {
+      return { ok: true, status: pagesRes.status, via: "pages-global-key" };
+    }
+    if (pagesRes.status === 429) {
+      return { ok: false, status: pagesRes.status, via: "pages-rate-limit" };
+    }
+
+    const workersRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`,
+      { headers }
+    );
+    if (workersRes.ok) {
+      return { ok: true, status: workersRes.status, via: "workers-global-key" };
+    }
+    if (workersRes.status === 429) {
+      return { ok: false, status: workersRes.status, via: "workers-rate-limit" };
+    }
+  }
+
+  return { ok: true, status: userRes.status, via: "user-global-key" };
+}
+
 /** @param {string} cwd Admin directory with wrangler in node_modules */
 export function tryWranglerOAuthToken(cwd) {
   const env = { ...process.env };
@@ -140,13 +227,45 @@ export function tryWranglerOAuthToken(cwd) {
  * @returns {Promise<{ token: string; probe: Awaited<ReturnType<typeof probeDeployToken>> }>}
  */
 export async function pickDeployToken(env = process.env) {
-  const { accountId, deployToken, emailToken } = resolveMailCredentials(env);
+  const picked = await pickDeployAuth(env);
+  if (picked.auth.type === "bearer") {
+    return { token: picked.auth.token, probe: picked.probe };
+  }
+  return { token: "", probe: picked.probe };
+}
+
+/**
+ * Pick bearer token or Global API Key for Cloudflare deploy.
+ * @returns {Promise<{ auth: { type: "bearer"; token: string } | { type: "global"; apiKey: string; email: string }; probe: Awaited<ReturnType<typeof probeDeployToken>> }>}
+ */
+export async function pickDeployAuth(env = process.env) {
+  const { accountId, deployToken, emailToken, globalApiKey, globalApiEmail } = resolveMailCredentials(env);
   const candidates = [...new Set([deployToken, emailToken].filter(Boolean))];
   for (const token of candidates) {
     const probe = await probeDeployToken(token, accountId);
-    if (probe.ok) return { token, probe };
+    if (probe.ok) return { auth: { type: "bearer", token }, probe };
   }
-  return { token: deployToken, probe: await probeDeployToken(deployToken, accountId) };
+
+  if (globalApiKey && globalApiEmail) {
+    const probe = await probeDeployGlobalKey(globalApiKey, globalApiEmail, accountId);
+    if (probe.ok) {
+      return { auth: { type: "global", apiKey: globalApiKey, email: globalApiEmail }, probe };
+    }
+  }
+
+  const fallbackProbe = deployToken
+    ? await probeDeployToken(deployToken, accountId)
+    : globalApiKey && globalApiEmail
+      ? await probeDeployGlobalKey(globalApiKey, globalApiEmail, accountId)
+      : { ok: false, status: 0 };
+
+  if (globalApiKey && globalApiEmail) {
+    return {
+      auth: { type: "global", apiKey: globalApiKey, email: globalApiEmail },
+      probe: fallbackProbe,
+    };
+  }
+  return { auth: { type: "bearer", token: deployToken }, probe: fallbackProbe };
 }
 
 /**

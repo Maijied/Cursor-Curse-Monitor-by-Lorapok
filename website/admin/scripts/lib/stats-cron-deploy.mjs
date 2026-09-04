@@ -4,18 +4,33 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { wranglerDeployEnv } from "./mail-credentials.mjs";
 
 const defaultAdminDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const PAGES_PROJECT = "cursor-monitor-admin";
 const WORKER_CONFIG = "workers/stats-cron/wrangler.toml";
 
-function wranglerEnv({ deployToken, accountId }) {
+function resolveWranglerEnv(auth) {
+  if (auth.wranglerEnv) {
+    return {
+      ...auth.wranglerEnv,
+      CI: "true",
+      WRANGLER_SEND_METRICS: "false",
+    };
+  }
+  if (auth.deployAuth) {
+    return {
+      ...wranglerDeployEnv(auth.accountId, auth.deployAuth, process.env),
+      CI: "true",
+      WRANGLER_SEND_METRICS: "false",
+    };
+  }
   return {
     ...process.env,
     CI: "true",
     WRANGLER_SEND_METRICS: "false",
-    CLOUDFLARE_ACCOUNT_ID: accountId,
-    CLOUDFLARE_API_TOKEN: deployToken,
+    CLOUDFLARE_ACCOUNT_ID: auth.accountId,
+    CLOUDFLARE_API_TOKEN: auth.deployToken,
   };
 }
 
@@ -36,7 +51,7 @@ export function putPagesCronSecret(secret, auth, opts = {}) {
       input: secret,
       encoding: "utf8",
       stdio: stdio === "inherit" ? ["pipe", "inherit", "inherit"] : stdio,
-      env: wranglerEnv(auth),
+      env: resolveWranglerEnv(auth),
     }
   );
   if (r.status !== 0) {
@@ -66,7 +81,7 @@ export function putWorkerCronSecret(secret, auth, opts = {}) {
       input: secret,
       encoding: "utf8",
       stdio: stdio === "inherit" ? ["pipe", "inherit", "inherit"] : stdio,
-      env: wranglerEnv(auth),
+      env: resolveWranglerEnv(auth),
     }
   );
   if (r.status !== 0) {
@@ -91,7 +106,7 @@ export function deployStatsCronWorker(auth, opts = {}) {
     cwd: adminDir,
     encoding: "utf8",
     stdio: stdio === "inherit" ? "inherit" : stdio,
-    env: wranglerEnv(auth),
+    env: resolveWranglerEnv(auth),
   });
   if (r.status !== 0) {
     throw new Error(`ccm-stats-cron deploy failed: ${r.stderr || r.stdout}`);

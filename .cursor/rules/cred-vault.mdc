@@ -25,7 +25,9 @@ All API keys, tokens, passwords, and webhook URLs must come from the **cred vaul
 
 | Key | Env / use |
 |-----|-----------|
-| `cloudflare_api_token` | `CLOUDFLARE_API_TOKEN` — Pages/Workers deploy |
+| `cloudflare_api_token` | `CLOUDFLARE_API_TOKEN` — Pages/Workers deploy (Bearer) |
+| `cloudflare_account_email` | `CLOUDFLARE_EMAIL` — pairs with Global API Key |
+| `cloudfare/cloudfare_global_api_key` | `CLOUDFLARE_API_KEY` — Global API Key deploy (with email) |
 | `cloudflare_email_api_token` | `CLOUDFLARE_EMAIL_API_TOKEN` — outbound mail REST |
 | `cloudflare_account_id` | `CLOUDFLARE_ACCOUNT_ID` |
 | `resend_api_key` | `RESEND_API_KEY` — Pages secret via `setup-resend-secret.mjs` |
@@ -35,3 +37,5 @@ All API keys, tokens, passwords, and webhook URLs must come from the **cred vaul
 | `cron_secret` | `CRON_SECRET` |
 
 Skip vault load only when explicitly testing without secrets: `CCM_SKIP_CRED_VAULT=1`.
+
+**CI:** `CRED_VAULT_PASSPHRASE` + `CRED_STORE_GPG_BASE64` in `admin-production` decrypt at deploy time (`load-cred-vault-env-ci.mjs`). Sync once locally: `node website/admin/scripts/sync-cred-vault-github.mjs`.

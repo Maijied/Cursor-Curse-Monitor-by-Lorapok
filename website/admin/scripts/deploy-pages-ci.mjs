@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pickDeployToken, probeDeployToken, resolveMailCredentials, tryWranglerOAuthToken } from "./lib/mail-credentials.mjs";
+import { probeDeployToken, resolveMailCredentials, tryWranglerOAuthToken, pickDeployAuth, wranglerDeployEnv } from "./lib/mail-credentials.mjs";
 import {
   classifyWranglerFailure,
   resolvePagesPreDeployCooldownSec,
@@ -17,7 +17,7 @@ import {
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const inCi = process.env.GITHUB_ACTIONS === "true";
 const skipMailSetup = process.env.SKIP_MAIL_SETUP === "true";
-const { accountId, deployToken: envDeployToken } = resolveMailCredentials();
+const { accountId, deployToken: envDeployToken, globalApiKey, globalApiEmail } = resolveMailCredentials();
 const relayDeployed = process.env.MAIL_RELAY_DEPLOYED === "true";
 const relayExists =
   process.env.MAIL_RELAY_EXISTS_SETUP === "true" ||
@@ -32,75 +32,51 @@ function sleep(ms) {
   return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
 }
 
-async function pickDeployTokenWithRetry(maxAttempts = 4) {
-  let sawRateLimit = false;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const result = await pickDeployToken();
-    if (result.probe.ok) {
-      return { ...result, sawRateLimit };
-    }
-    if (result.probe.via?.includes("rate-limit")) {
-      sawRateLimit = true;
-      if (attempt < maxAttempts) {
-        const waitSec = attempt * 15;
-        console.warn(
-          `::warning::Deploy token probe rate-limited (HTTP ${result.probe.status}); retrying in ${waitSec}s (${attempt}/${maxAttempts})…`
-        );
-        await sleep(waitSec * 1000);
-        continue;
-      }
-    }
-    return { ...result, sawRateLimit };
-  }
-  const fallback = await pickDeployToken();
-  return { ...fallback, sawRateLimit };
-}
-
 async function resolveDeployAuth() {
-  if (!envDeployToken) {
+  const hasBearer = Boolean(envDeployToken);
+  const hasGlobal = Boolean(globalApiKey && globalApiEmail);
+  if (!hasBearer && !hasGlobal) {
     return {
-      token: null,
+      auth: null,
       probe: { ok: false, status: 0 },
       sawRateLimit: false,
     };
   }
 
   if (inCi && skipMailSetup) {
-    const probe = await probeDeployToken(envDeployToken, accountId);
-    if (probe.ok) {
+    const { auth, probe } = await pickDeployAuth(process.env);
+    if (probe.ok && auth) {
       console.log(
-        `::notice::CI push: deploy token verified (${probe.via ?? "probe"}${probe.status ? ` HTTP ${probe.status}` : ""}).`
+        `::notice::CI push: deploy credential verified (${probe.via ?? "probe"}${probe.status ? ` HTTP ${probe.status}` : ""}).`
       );
-      return { token: envDeployToken, probe, sawRateLimit: false };
+      return { auth, probe, sawRateLimit: false };
     }
     if (probe.via?.includes("rate-limit")) {
       console.warn(
-        `::warning::CI push: deploy token probe rate-limited (HTTP ${probe.status}); attempting Pages deploy once.`
+        `::warning::CI push: deploy probe rate-limited (HTTP ${probe.status}); attempting Pages deploy once.`
       );
-      return { token: envDeployToken, probe, sawRateLimit: true };
+      return { auth, probe, sawRateLimit: true };
     }
     console.error(
-      "::error::CLOUDFLARE_API_TOKEN cannot deploy to Cloudflare Pages " +
-        `(HTTP ${probe.status}). Refresh the admin-production secret with a token that has ` +
-        "Account → Cloudflare Pages → Edit (and Workers Scripts → Edit for the mail relay). " +
-        'Local: export CLOUDFLARE_API_TOKEN="$(cred get cursor cloudflare_api_token)" then ' +
-        "gh secret set CLOUDFLARE_API_TOKEN --env admin-production"
+      "::error::Cloudflare deploy credential cannot reach Pages/Workers " +
+        `(HTTP ${probe.status}). Refresh cred vault or admin-production secrets.`
     );
     process.exit(1);
   }
 
   if (inCi) {
     const reason = "mail setup already exercised Cloudflare APIs";
-    console.log(`::notice::CI: using CLOUDFLARE_API_TOKEN without pre-deploy probe (${reason}).`);
+    const { auth, probe } = await pickDeployAuth(process.env);
+    console.log(`::notice::CI: using vault/workflow deploy auth without pre-deploy probe (${reason}).`);
     return {
-      token: envDeployToken,
-      probe: { ok: true, status: 0, via: "ci-skip-probe" },
+      auth,
+      probe: probe.ok ? probe : { ok: true, status: 0, via: "ci-skip-probe" },
       sawRateLimit: false,
     };
   }
 
-  const picked = await pickDeployTokenWithRetry();
-  if (picked.probe.ok) {
+  const picked = await pickDeployAuthWithRetry();
+  if (picked.probe.ok && picked.auth) {
     return picked;
   }
 
@@ -109,23 +85,51 @@ async function resolveDeployAuth() {
     const oauthProbe = await probeDeployToken(oauth, accountId);
     if (oauthProbe.ok) {
       console.warn(
-        `Using wrangler OAuth token (stored deploy token invalid or expired: HTTP ${picked.probe.status}).`
+        `Using wrangler OAuth token (stored deploy credential invalid or expired: HTTP ${picked.probe.status}).`
       );
       console.warn(
         "  Tip: refresh vault token with: node website/admin/scripts/sync-mail-cred-vault.mjs"
       );
-      return { token: oauth, probe: oauthProbe, sawRateLimit: false };
+      return {
+        auth: { type: "bearer", token: oauth },
+        probe: oauthProbe,
+        sawRateLimit: false,
+      };
     }
   }
 
   return picked;
 }
 
-function runWranglerDeploy(args, token) {
+async function pickDeployAuthWithRetry(maxAttempts = 4) {
+  let sawRateLimit = false;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const result = await pickDeployAuth(process.env);
+    if (result.probe.ok) {
+      return { ...result, sawRateLimit };
+    }
+    if (result.probe.via?.includes("rate-limit")) {
+      sawRateLimit = true;
+      if (attempt < maxAttempts) {
+        const waitSec = attempt * 15;
+        console.warn(
+          `::warning::Deploy probe rate-limited (HTTP ${result.probe.status}); retrying in ${waitSec}s (${attempt}/${maxAttempts})…`
+        );
+        await sleep(waitSec * 1000);
+        continue;
+      }
+    }
+    return { ...result, sawRateLimit };
+  }
+  const fallback = await pickDeployAuth(process.env);
+  return { ...fallback, sawRateLimit };
+}
+
+function runWranglerDeploy(args, auth) {
   const result = spawnSync("npx", args, {
     cwd: adminDir,
     encoding: "utf8",
-    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+    env: wranglerDeployEnv(accountId, auth, process.env),
   });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
@@ -133,9 +137,9 @@ function runWranglerDeploy(args, token) {
   return { status: result.status ?? 1, output };
 }
 
-const { token: deployToken, probe, sawRateLimit } = await resolveDeployAuth();
-if (!deployToken) {
-  console.error("::error::CLOUDFLARE_API_TOKEN (or CLOUDFLARE_EMAIL_API_TOKEN) is required.");
+const { auth: deployAuth, probe, sawRateLimit } = await resolveDeployAuth();
+if (!deployAuth) {
+  console.error("::error::CLOUDFLARE_API_TOKEN or CLOUDFLARE_API_KEY+CLOUDFLARE_EMAIL is required.");
   process.exit(1);
 }
 
@@ -145,7 +149,7 @@ if (probe.ok) {
   console.warn(
     `::warning::Deploy token probe still rate-limited after retries (HTTP ${probe.status}); attempting wrangler Pages deploy anyway.`
   );
-} else if (deployToken) {
+} else if (deployAuth) {
   console.warn(
     `::warning::Deploy token probe failed (HTTP ${probe.status}); attempting wrangler Pages deploy anyway — wrangler may still succeed when Cloudflare verify/Pages probes are flaky.`
   );
@@ -203,7 +207,7 @@ let lastFailureKind = "other";
 let sawDeployRateLimit = false;
 
 for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-  const result = runWranglerDeploy(args, deployToken);
+  const result = runWranglerDeploy(args, deployAuth);
   if (result.status === 0) {
     process.exit(0);
   }

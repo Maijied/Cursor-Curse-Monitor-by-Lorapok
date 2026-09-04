@@ -86,9 +86,13 @@ export function sanitizeCloudflareIntegrationForClient(config, env, secretNames 
     adminPublicUrl: config.adminPublicUrl,
     siteDataUrl: config.siteDataUrl,
     apiTokenConfigured: Boolean(env.CLOUDFLARE_API_TOKEN),
+    globalApiKeyConfigured: Boolean(env.CLOUDFLARE_API_KEY),
+    accountEmailConfigured: Boolean(env.CLOUDFLARE_EMAIL),
     emailApiTokenConfigured: Boolean(env.CLOUDFLARE_EMAIL_API_TOKEN),
     cronSecretConfigured: Boolean(env.CRON_SECRET),
     resendApiKeyConfigured: Boolean(env.RESEND_API_KEY),
+    credVaultCiConfigured:
+      secretNames.includes("CRED_STORE_GPG_BASE64") && secretNames.includes("CRED_VAULT_PASSPHRASE"),
     secretsPresent: secretNames,
     updatedAt: config.updatedAt,
     updatedBy: config.updatedBy,
@@ -102,6 +106,8 @@ export function sanitizeCloudflareIntegrationForClient(config, env, secretNames 
 export function cloudflareSecretsToGithubMap(secrets) {
   const out = {};
   if (secrets.apiToken) out.CLOUDFLARE_API_TOKEN = secrets.apiToken;
+  if (secrets.globalApiKey) out.CLOUDFLARE_API_KEY = secrets.globalApiKey;
+  if (secrets.accountEmail) out.CLOUDFLARE_EMAIL = secrets.accountEmail;
   if (secrets.emailApiToken) out.CLOUDFLARE_EMAIL_API_TOKEN = secrets.emailApiToken;
   if (secrets.accountId) out.CLOUDFLARE_ACCOUNT_ID = secrets.accountId;
   if (secrets.cronSecret) out.CRON_SECRET = secrets.cronSecret;

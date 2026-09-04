@@ -75,6 +75,19 @@ function withPassphraseFile(passphrase, fn) {
   }
 }
 
+/**
+ * Decrypt the gpg credential vault using passphrase candidates from env/files.
+ * @param {string} [vaultFile]
+ * @returns {Record<string, unknown> | null}
+ */
+export function decryptCredentialVault(vaultFile = DEFAULT_VAULT) {
+  for (const candidate of readPassphraseCandidates()) {
+    const vault = gpgDecrypt(candidate, vaultFile);
+    if (vault) return vault;
+  }
+  return null;
+}
+
 function gpgDecrypt(passphrase, vaultFile = DEFAULT_VAULT) {
   return withPassphraseFile(passphrase, (passPath) => {
     const r = spawnSync(
@@ -230,9 +243,58 @@ function resolveCloudflareEmailTokenFromVault(vault) {
 function resolveCloudflareAccountIdFromVault(vault) {
   const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
   const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
+  const cloudfare = /** @type {Record<string, unknown>} */ (vault?.cloudfare ?? {});
   return (
-    String(cursor.cloudflare_account_id ?? cloudflare.account_id ?? "").trim() || undefined
+    String(
+      cursor.cloudflare_account_id ??
+        cloudflare.account_id ??
+        cloudfare.account_id ??
+        ""
+    ).trim() || undefined
   );
+}
+
+/**
+ * @param {Record<string, unknown>} vault
+ */
+function resolveCloudflareGlobalApiKeyFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
+  const cloudfare = /** @type {Record<string, unknown>} */ (vault?.cloudfare ?? {});
+  const candidates = [
+    cloudfare.cloudfare_global_api_key,
+    cloudfare.global_api_key,
+    cloudflare.global_api_key,
+    cursor.cloudflare_global_api_key,
+    cursor.cloudfare_global_api_key,
+  ];
+  for (const value of candidates) {
+    const key = String(value ?? "").trim();
+    if (key) return key;
+  }
+  return undefined;
+}
+
+/**
+ * @param {Record<string, unknown>} vault
+ */
+function resolveCloudflareAccountEmailFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
+  const cloudfare = /** @type {Record<string, unknown>} */ (vault?.cloudfare ?? {});
+  const candidates = [
+    cursor.cloudflare_account_email,
+    cursor.cloudflare_email,
+    cloudflare.account_email,
+    cloudflare.email,
+    cloudfare.account_email,
+    cloudfare.email,
+  ];
+  for (const value of candidates) {
+    const email = String(value ?? "").trim();
+    if (email) return email;
+  }
+  return undefined;
 }
 
 /**
@@ -240,28 +302,33 @@ function resolveCloudflareAccountIdFromVault(vault) {
  * @return {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} The normalized credentials, or `null` if no usable vault is found.
  */
 export function loadCursorCloudflareSecretsFromVault() {
-  const candidates = readPassphraseCandidates();
-  for (const candidate of candidates) {
-    const vault = gpgDecrypt(candidate);
-    const cursor = vault?.cursor;
-    if (!cursor && !vault?.titi && !vault?.github && !vault?.cloudflare) continue;
-    const githubToken = resolveGithubTokenFromVault(vault);
-    const apiToken = resolveCloudflareApiTokenFromVault(vault);
-    const emailToken = resolveCloudflareEmailTokenFromVault(vault);
-    const accountId = resolveCloudflareAccountIdFromVault(vault);
-    if (!apiToken && !emailToken && !accountId && !githubToken) continue;
-    return {
-      apiToken,
-      emailToken,
-      accountId,
-      cronSecret: String(cursor?.cron_secret ?? "").trim() || undefined,
-      githubToken,
-      resendApiKey: String(cursor?.resend_api_key ?? "").trim() || undefined,
-      testmailApiKey: String(cursor?.testmail_api_key ?? "").trim() || undefined,
-      testmailNamespace: String(cursor?.testmail_namespace ?? "").trim() || undefined,
-    };
+  const vault = decryptCredentialVault();
+  if (!vault) return null;
+  const cursor = /** @type {Record<string, unknown>} */ (vault.cursor ?? {});
+  if (!cursor && !vault.titi && !vault.github && !vault.cloudflare && !vault.cloudfare) {
+    return null;
   }
-  return null;
+  const githubToken = resolveGithubTokenFromVault(vault);
+  const apiToken = resolveCloudflareApiTokenFromVault(vault);
+  const emailToken = resolveCloudflareEmailTokenFromVault(vault);
+  const accountId = resolveCloudflareAccountIdFromVault(vault);
+  const globalApiKey = resolveCloudflareGlobalApiKeyFromVault(vault);
+  const globalApiEmail = resolveCloudflareAccountEmailFromVault(vault);
+  if (!apiToken && !emailToken && !accountId && !githubToken && !globalApiKey) {
+    return null;
+  }
+  return {
+    apiToken,
+    emailToken,
+    accountId,
+    globalApiKey,
+    globalApiEmail,
+    cronSecret: String(cursor.cron_secret ?? "").trim() || undefined,
+    githubToken,
+    resendApiKey: String(cursor.resend_api_key ?? "").trim() || undefined,
+    testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
+    testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
+  };
 }
 
 /**
@@ -386,6 +453,12 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
     ...(loaded.testmailApiKey && !baseEnv.TESTMAIL_API_KEY ? { TESTMAIL_API_KEY: loaded.testmailApiKey } : {}),
     ...(loaded.testmailNamespace && !baseEnv.TESTMAIL_NAMESPACE
       ? { TESTMAIL_NAMESPACE: loaded.testmailNamespace }
+      : {}),
+    ...(loaded.globalApiKey && !baseEnv.CLOUDFLARE_API_KEY
+      ? { CLOUDFLARE_API_KEY: loaded.globalApiKey }
+      : {}),
+    ...(loaded.globalApiEmail && !baseEnv.CLOUDFLARE_EMAIL
+      ? { CLOUDFLARE_EMAIL: loaded.globalApiEmail }
       : {}),
   };
 }

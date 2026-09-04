@@ -147,7 +147,7 @@
 | MAIL-01 | Mail transport card + Settings tab | **done** | themed |
 | MAIL-02 | 60s polling on mail card | **done** | `useIntervalRefresh` |
 | MAIL-03 | FieldHelp on sending domain | **done** | Phase 2 |
-| MAIL-04 | Refresh `CLOUDFLARE_EMAIL_API_TOKEN` | **partial** | GH deploy token synced via OAuth; vault `cloudflare_api_token` invalid (1000) — store long-lived Pages+Workers token |
+| MAIL-04 | Refresh Cloudflare deploy + email credentials | **done** | Global API Key deploy via `CLOUDFLARE_API_KEY`+`CLOUDFLARE_EMAIL`; CI decrypts gpg vault (`CRED_STORE_GPG_BASE64`+pin); Settings → Cloudflare rotates GH secrets |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **next** | if external mail needed |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
 | MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
@@ -223,15 +223,15 @@
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
 | SET-05 | Production smoke (login + tabs) | **partial** | health + firebase-config + D1 **200/ok**; login UI smoke manual |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
+| CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
 1. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs` → uncomment STATS_R2 in `wrangler.toml` → deploy
-2. **MAIL-04** — Store valid long-lived API token in cred vault (`cloudflare_api_token` currently invalid)
-3. **KV-09 / STAT-06** — KV UTC reset or pause stats
-4. **DC-03** — Discord webhooks in production KV
+2. **KV-09 / STAT-06** — KV UTC reset or pause stats
+3. **DC-03** — Discord webhooks in production KV
 
 ---
 
@@ -240,7 +240,6 @@
 | Blocker | Unblocks |
 |---------|----------|
 | KV daily quota exhausted | STAT-06, STAT-07, KV-09 |
-| `cloudflare_api_token` invalid in vault | MAIL-04 vault sync — use Pages+Workers Edit token; GH synced via wrangler OAuth |
 | R2 not enabled on account | R2-02 bucket creation (code 10042) |
 | Discord webhooks not in KV | DC-03, community notifications |
 

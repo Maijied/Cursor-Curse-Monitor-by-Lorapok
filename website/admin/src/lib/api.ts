@@ -1395,9 +1395,12 @@ export type CloudflareIntegrationConfig = {
   adminPublicUrl: string;
   siteDataUrl: string;
   apiTokenConfigured: boolean;
+  globalApiKeyConfigured: boolean;
+  accountEmailConfigured: boolean;
   emailApiTokenConfigured: boolean;
   cronSecretConfigured: boolean;
   resendApiKeyConfigured: boolean;
+  credVaultCiConfigured: boolean;
   secretsPresent: string[];
   updatedAt: string | null;
   updatedBy: string | null;

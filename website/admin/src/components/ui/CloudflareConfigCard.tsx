@@ -20,6 +20,8 @@ export default function CloudflareConfigCard() {
   const [adminPublicUrl, setAdminPublicUrl] = useState("");
   const [siteDataUrl, setSiteDataUrl] = useState("");
   const [apiToken, setApiToken] = useState("");
+  const [globalApiKey, setGlobalApiKey] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
   const [emailApiToken, setEmailApiToken] = useState("");
   const [cronSecret, setCronSecret] = useState("");
   const [resendApiKey, setResendApiKey] = useState("");
@@ -53,6 +55,8 @@ export default function CloudflareConfigCard() {
         siteDataUrl: siteDataUrl.trim(),
       };
       if (apiToken.trim()) payload.apiToken = apiToken.trim();
+      if (globalApiKey.trim()) payload.globalApiKey = globalApiKey.trim();
+      if (accountEmail.trim()) payload.accountEmail = accountEmail.trim();
       if (emailApiToken.trim()) payload.emailApiToken = emailApiToken.trim();
       if (cronSecret.trim()) payload.cronSecret = cronSecret.trim();
       if (resendApiKey.trim()) payload.resendApiKey = resendApiKey.trim();
@@ -60,6 +64,8 @@ export default function CloudflareConfigCard() {
       const result = await putCloudflareConfigApi(payload);
       setConfig(result.config);
       setApiToken("");
+      setGlobalApiKey("");
+      setAccountEmail("");
       setEmailApiToken("");
       setCronSecret("");
       setResendApiKey("");
@@ -77,7 +83,10 @@ export default function CloudflareConfigCard() {
 
   const transportOk =
     config &&
-    (config.apiTokenConfigured || config.emailApiTokenConfigured || config.cronSecretConfigured);
+    (config.apiTokenConfigured ||
+      (config.globalApiKeyConfigured && config.accountEmailConfigured) ||
+      config.emailApiTokenConfigured ||
+      config.cronSecretConfigured);
 
   return (
     <Card>
@@ -88,12 +97,21 @@ export default function CloudflareConfigCard() {
             Cloudflare
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Pages project, public URLs, and optional token rotation. Non-empty secret fields sync to GitHub{" "}
-            <code className="text-xs">admin-production</code> on save.
+            Pages project, public URLs, and deploy credentials. Non-empty secret fields sync to GitHub{" "}
+            <code className="text-xs">admin-production</code> on save. CI can also decrypt the local cred vault when{" "}
+            <code className="text-xs">CRED_STORE_GPG_BASE64</code> +{" "}
+            <code className="text-xs">CRED_VAULT_PASSPHRASE</code> are present.
           </p>
         </div>
         {config && (
-          <Badge variant={transportOk ? "synced" : "warn"}>{transportOk ? "Secrets on server" : "Check secrets"}</Badge>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={transportOk ? "synced" : "warn"}>{transportOk ? "Deploy auth" : "Check secrets"}</Badge>
+            {config.credVaultCiConfigured ? (
+              <Badge variant="synced">Cred vault CI</Badge>
+            ) : (
+              <Badge variant="warn">Cred vault CI</Badge>
+            )}
+          </div>
         )}
       </div>
 
@@ -161,7 +179,21 @@ export default function CloudflareConfigCard() {
 
             {(
               [
-                ["apiToken", "CLOUDFLARE_API_TOKEN", apiToken, setApiToken, config?.apiTokenConfigured],
+                ["apiToken", "CLOUDFLARE_API_TOKEN (Bearer)", apiToken, setApiToken, config?.apiTokenConfigured],
+                [
+                  "globalApiKey",
+                  "CLOUDFLARE_API_KEY (Global API Key)",
+                  globalApiKey,
+                  setGlobalApiKey,
+                  config?.globalApiKeyConfigured,
+                ],
+                [
+                  "accountEmail",
+                  "CLOUDFLARE_EMAIL (Global API Key email)",
+                  accountEmail,
+                  setAccountEmail,
+                  config?.accountEmailConfigured,
+                ],
                 ["emailApiToken", "CLOUDFLARE_EMAIL_API_TOKEN", emailApiToken, setEmailApiToken, config?.emailApiTokenConfigured],
                 ["cronSecret", "CRON_SECRET", cronSecret, setCronSecret, config?.cronSecretConfigured],
                 ["resendApiKey", "RESEND_API_KEY", resendApiKey, setResendApiKey, config?.resendApiKeyConfigured],
@@ -190,6 +222,9 @@ export default function CloudflareConfigCard() {
             ))}
             <FieldHelp label="GitHub secrets">
               Pages runtime still reads Cloudflare Pages secrets — update those via deploy-infra or wrangler after rotating.
+              Prefer Global API Key + email when Bearer tokens expire. After updating the local gpg vault, run{" "}
+              <code className="text-xs">node website/admin/scripts/sync-cred-vault-github.mjs</code> so CI decrypts the
+              same source of truth.
             </FieldHelp>
           </div>
 

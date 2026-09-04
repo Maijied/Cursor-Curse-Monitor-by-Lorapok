@@ -5,13 +5,22 @@
  */
 import { relayWorkerProbeExists } from "./lib/deploy-retry.mjs";
 import {
+  pickDeployAuth,
   relayWorkerExists,
   requireDeployToken,
+  resolveMailCredentials,
   setGithubActionsOutput,
 } from "./lib/mail-credentials.mjs";
 
-const { deployToken, accountId } = requireDeployToken();
-const exists = await relayWorkerExists(deployToken, accountId);
+requireDeployToken();
+const { deployToken, accountId } = resolveMailCredentials();
+const { auth } = await pickDeployAuth();
+const globalAuth =
+  auth.type === "global"
+    ? { globalApiKey: auth.apiKey, globalApiEmail: auth.email }
+    : { bearerToken: deployToken };
+
+const exists = await relayWorkerExists(deployToken, accountId, globalAuth);
 const relayExists = relayWorkerProbeExists(exists) || exists === "rate-limited";
 
 if (exists === "rate-limited") {

@@ -20,6 +20,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { relayWorkerProbeExists } from "./lib/deploy-retry.mjs";
 import {
+  pickDeployAuth,
   probeDeployToken,
   probeEmailSendingToken,
   relayWorkerExists,
@@ -27,6 +28,7 @@ import {
   requireEmailToken,
   resolveMailCredentials,
   setGithubActionsOutput,
+  wranglerDeployEnv,
 } from "./lib/mail-credentials.mjs";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -41,6 +43,15 @@ try {
   console.error(err instanceof Error ? err.message : err);
   process.exit(1);
 }
+
+const { auth: deployAuth } = await pickDeployAuth();
+const wranglerEnv = wranglerDeployEnv(accountId, deployAuth, process.env);
+const relayGlobalAuth =
+  deployAuth.type === "global"
+    ? { globalApiKey: deployAuth.apiKey, globalApiEmail: deployAuth.email }
+    : deployToken
+      ? { bearerToken: deployToken }
+      : undefined;
 
 const hasEmailToken = Boolean(emailToken);
 if (!hasEmailToken) {
@@ -72,11 +83,11 @@ async function verifyEmailToken(token, acctId) {
   return true;
 }
 
-function runWrangler(args, { cwd = adminDir, token = deployToken, allowFail = false } = {}) {
+function runWrangler(args, { cwd = adminDir, allowFail = false } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {
     cwd,
     stdio: "inherit",
-    env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+    env: wranglerEnv,
   });
   if (result.status !== 0 && !allowFail) {
     process.exit(result.status ?? 1);
@@ -99,7 +110,7 @@ let relayExists = false;
 let restSynced = false;
 
 if (inCi) {
-  const exists = await relayWorkerExists(deployToken, accountId);
+  const exists = await relayWorkerExists(deployToken, accountId, relayGlobalAuth);
   if (exists === "rate-limited") {
     console.warn(
       "::warning::CI: ccm-mail-relay probe rate-limited — assuming relay exists to avoid extra Cloudflare API calls before Pages deploy."
@@ -127,7 +138,6 @@ if (hasEmailToken) {
   console.log("Onboarding lorapok.tech for Email Sending (deploy token — needs Zone access)…");
   if (!relayExists || !inCi) {
     runWrangler(["email", "sending", "enable", "lorapok.tech"], {
-      token: deployToken,
       allowFail: true,
     });
   } else {
@@ -137,14 +147,14 @@ if (hasEmailToken) {
 
 if (!relayExists) {
   console.log("Deploying ccm-mail-relay worker (send_email binding on Worker, not Pages)…");
-  relayDeployed = runWrangler(["deploy"], { cwd: relayDir, token: deployToken, allowFail: true });
+  relayDeployed = runWrangler(["deploy"], { cwd: relayDir, allowFail: true });
   if (!relayDeployed) {
     console.warn(
       "ccm-mail-relay deploy failed (deploy token may lack Workers Edit).\n" +
         "REST fallback via CLOUDFLARE_EMAIL_API_TOKEN will be used after Pages redeploy if secret is synced."
     );
   }
-  const existsAfterDeploy = await relayWorkerExists(deployToken, accountId);
+  const existsAfterDeploy = await relayWorkerExists(deployToken, accountId, relayGlobalAuth);
   relayExists = relayWorkerProbeExists(existsAfterDeploy) || relayDeployed;
 }
 
@@ -159,7 +169,7 @@ if (hasEmailToken && restSynced) {
       {
         cwd: adminDir,
         input: emailToken,
-        env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: deployToken },
+        env: wranglerEnv,
         stdio: ["pipe", "inherit", "inherit"],
       }
     );

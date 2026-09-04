@@ -77,6 +77,8 @@ export async function onRequestPut(context) {
   let githubSyncWarning = null;
   const secretPayload = cloudflareSecretsToGithubMap({
     apiToken: body.apiToken !== undefined ? String(body.apiToken ?? "").trim() : undefined,
+    globalApiKey: body.globalApiKey !== undefined ? String(body.globalApiKey ?? "").trim() : undefined,
+    accountEmail: body.accountEmail !== undefined ? String(body.accountEmail ?? "").trim() : undefined,
     emailApiToken: body.emailApiToken !== undefined ? String(body.emailApiToken ?? "").trim() : undefined,
     accountId: next.accountId,
     cronSecret: body.cronSecret !== undefined ? String(body.cronSecret ?? "").trim() : undefined,

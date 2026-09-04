@@ -13,6 +13,15 @@ assert.doesNotThrow(() =>
 );
 assert.throws(() => requireDeployToken(noVault), /CLOUDFLARE_API_TOKEN/);
 
+assert.doesNotThrow(() =>
+  requireDeployToken({
+    ...noVault,
+    CLOUDFLARE_API_KEY: "global-key",
+    CLOUDFLARE_EMAIL: "ops@example.com",
+    CLOUDFLARE_ACCOUNT_ID: "acct",
+  })
+);
+
 const creds = resolveMailCredentials({
   ...noVault,
   CLOUDFLARE_ACCOUNT_ID: "acct",
