@@ -67,3 +67,4 @@ if (r.status !== 0) {
 }
 
 console.log(`KV ${CONFIG_KEY} seeded for project ${config.projectId}`);
+console.log("Tip: sync Pages runtime fallback with: node scripts/sync-firebase-pages-secrets.mjs");

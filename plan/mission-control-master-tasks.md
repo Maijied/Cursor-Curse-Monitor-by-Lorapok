@@ -2,9 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-04  
-**Branch:** `main` @ `a42a7480` (pushed)  
-**CI:** Production Deployment in progress after push
+**Last updated:** 2026-09-05  
+**Branch:** `main` (local ops + script pending commit)  
+**CI:** green on last push
 
 ---
 
@@ -98,6 +98,8 @@
 | FB-04 | CI build from GH secrets | **done** | `ci-cd.yml` |
 | FB-05 | Vitest `firebase-config.test.ts` | **done** | 8/8 phase tests |
 | FB-06 | Connected Services Firebase row health | **next** | Reliability D3 |
+| FB-07 | Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback) | **done** | `sync-firebase-pages-secrets.mjs` |
+| FB-08 | KV `integrations:firebase` re-seeded production | **done** | `seed-firebase-kv.mjs` 2026-09-05 |
 
 ---
 
@@ -219,18 +221,18 @@
 | SET-02 | Phased completion `settings-phases-complete.md` | **done** | Phases 0–4 |
 | SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex |
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
-| SET-05 | Production smoke (login + tabs) | **partial** | API routes OK; `/api/firebase-config` 503 until KV seed or Pages secrets |
+| SET-05 | Production smoke (login + tabs) | **partial** | `/api/firebase-config` **200**; login UI smoke manual |
 | SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **FB-06 / SET-05** — Seed `integrations:firebase` in KV (or add `VITE_FIREBASE_*` Pages secrets) so login works
-2. **MAIL-04** — Refresh Cloudflare email token (unblocks mail 401)
-3. **KV-09 / STAT-06** — Pause stats cron in Settings until KV reset OR wait UTC
-4. **KV-06** — `writesPausedUntil` guard in stats refresh
-5. **GH-04 / MAIL-07** — Mail sync workflow polling
+1. **MAIL-04** — Refresh Cloudflare email token (unblocks mail REST 401)
+2. **KV-09 / STAT-06** — Pause stats cron in Settings until KV reset OR wait UTC
+3. **KV-06** — `writesPausedUntil` guard in stats refresh
+4. **GH-04 / MAIL-07** — Mail sync workflow polling
+5. **FB-06** — Connected Services Firebase health row
 6. **KV-08** — Architecture.md stats storage section
 7. **D1-02** — D1 binding design (Phase 2 storage)
 
