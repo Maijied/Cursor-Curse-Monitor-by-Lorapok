@@ -1,0 +1,80 @@
+/* Interactive feature explorer — post-hero section */
+.features-explorer {
+  padding-block: clamp(3rem, 8vw, 5rem);
+  background: linear-gradient(180deg, transparent, rgba(108, 92, 231, 0.06) 40%, transparent);
+}
+
+.features-explorer-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 1.5rem;
+}
+
+.feature-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  background: rgba(12, 14, 22, 0.72);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  text-align: left;
+}
+
+.feature-card:hover,
+.feature-card.is-active {
+  border-color: rgba(108, 92, 231, 0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.feature-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.feature-card p {
+  margin: 0;
+  color: var(--muted, #9aa3b2);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.feature-detail {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(108, 92, 231, 0.25);
+  background: rgba(8, 10, 18, 0.85);
+  min-height: 120px;
+}
+
+.feature-detail h3 {
+  margin-top: 0;
+}
+
+.github-community-panel {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 12, 20, 0.6);
+}
+
+.github-community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.github-stat strong {
+  display: block;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.github-stat span {
+  font-size: 0.8rem;
+  color: var(--muted, #9aa3b2);
+}

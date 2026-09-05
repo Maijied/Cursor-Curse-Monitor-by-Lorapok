@@ -1,0 +1,533 @@
+{
+  "version": 1,
+  "epicNumber": 126,
+  "sections": {
+    "Cloudflare Pages / Workers": {
+      "number": 127,
+      "title": "Epic: Cloudflare Pages / Workers"
+    },
+    "Firebase": {
+      "number": 131,
+      "title": "Epic: Firebase"
+    },
+    "GitHub": {
+      "number": 133,
+      "title": "Epic: GitHub"
+    },
+    "Microsoft Azure": {
+      "number": 135,
+      "title": "Epic: Microsoft Azure"
+    },
+    "Google Cloud (GCP / GCS)": {
+      "number": 138,
+      "title": "Epic: Google Cloud (GCP / GCS)"
+    },
+    "Mail (Resend + Cloudflare Email)": {
+      "number": 141,
+      "title": "Epic: Mail (Resend + Cloudflare Email)"
+    },
+    "Discord": {
+      "number": 147,
+      "title": "Epic: Discord"
+    },
+    "Stats / Cron": {
+      "number": 152,
+      "title": "Epic: Stats / Cron"
+    },
+    "IDE extension": {
+      "number": 155,
+      "title": "Epic: IDE extension"
+    },
+    "Browser extension": {
+      "number": 158,
+      "title": "Epic: Browser extension"
+    },
+    "Marketing website": {
+      "number": 162,
+      "title": "Epic: Marketing website"
+    },
+    "Settings UX (cross-cutting)": {
+      "number": 164,
+      "title": "Epic: Settings UX (cross-cutting)"
+    },
+    "Ecosystem expansion": {
+      "number": 173,
+      "title": "Epic: Ecosystem expansion"
+    },
+    "Release & deploy": {
+      "number": 184,
+      "title": "Epic: Release & deploy"
+    },
+    "Legal & privacy": {
+      "number": 198,
+      "title": "Epic: Legal & privacy"
+    },
+    "SEO & growth": {
+      "number": 208,
+      "title": "Epic: SEO & growth"
+    },
+    "Social & media": {
+      "number": 212,
+      "title": "Epic: Social & media"
+    }
+  },
+  "tasks": {
+    "CF-03": {
+      "number": 128,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/128",
+      "status": "next",
+      "section": "Cloudflare Pages / Workers"
+    },
+    "CF-04": {
+      "number": 129,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/129",
+      "status": "next",
+      "section": "Cloudflare Pages / Workers"
+    },
+    "OPS-03": {
+      "number": 130,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/130",
+      "status": "next",
+      "section": "Cloudflare Pages / Workers"
+    },
+    "AUTH-13": {
+      "number": 132,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132",
+      "status": "next",
+      "section": "Firebase"
+    },
+    "GH-05": {
+      "number": 134,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/134",
+      "status": "next",
+      "section": "GitHub"
+    },
+    "AZ-03": {
+      "number": 136,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/136",
+      "status": "next",
+      "section": "Microsoft Azure"
+    },
+    "AZ-04": {
+      "number": 137,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/137",
+      "status": "next",
+      "section": "Microsoft Azure"
+    },
+    "GCP-03": {
+      "number": 139,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/139",
+      "status": "next",
+      "section": "Google Cloud (GCP / GCS)"
+    },
+    "GCP-04": {
+      "number": 140,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/140",
+      "status": "next",
+      "section": "Google Cloud (GCP / GCS)"
+    },
+    "MAIL-12": {
+      "number": 142,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/142",
+      "status": "partial",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-06": {
+      "number": 143,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/143",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-08": {
+      "number": 144,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/144",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-13": {
+      "number": 145,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/145",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-14": {
+      "number": 146,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/146",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "DC-04": {
+      "number": 148,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/148",
+      "status": "next",
+      "section": "Discord"
+    },
+    "DC-05": {
+      "number": 149,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/149",
+      "status": "next",
+      "section": "Discord"
+    },
+    "DC-06": {
+      "number": 150,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/150",
+      "status": "next",
+      "section": "Discord"
+    },
+    "DC-07": {
+      "number": 151,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/151",
+      "status": "next",
+      "section": "Discord"
+    },
+    "STAT-05": {
+      "number": 153,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/153",
+      "status": "next",
+      "section": "Stats / Cron"
+    },
+    "STAT-07": {
+      "number": 154,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/154",
+      "status": "next",
+      "section": "Stats / Cron"
+    },
+    "IDE-03": {
+      "number": 156,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/156",
+      "status": "next",
+      "section": "IDE extension"
+    },
+    "IDE-05": {
+      "number": 157,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/157",
+      "status": "next",
+      "section": "IDE extension"
+    },
+    "BR-03": {
+      "number": 159,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/159",
+      "status": "next",
+      "section": "Browser extension"
+    },
+    "BR-04": {
+      "number": 160,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/160",
+      "status": "next",
+      "section": "Browser extension"
+    },
+    "BR-05": {
+      "number": 161,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/161",
+      "status": "next",
+      "section": "Browser extension"
+    },
+    "WEB-03": {
+      "number": 163,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/163",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "SET-05": {
+      "number": 165,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/165",
+      "status": "partial",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "ANALYTICS-01": {
+      "number": 166,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/166",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "LOGS-01": {
+      "number": 167,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/167",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "EXT-01": {
+      "number": 169,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/169",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "WEB-06": {
+      "number": 172,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/172",
+      "status": "partial",
+      "section": "Marketing website"
+    },
+    "ECO-01": {
+      "number": 174,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/174",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-03": {
+      "number": 175,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/175",
+      "status": "partial",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-04": {
+      "number": 176,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/176",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-05": {
+      "number": 177,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/177",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-06": {
+      "number": 178,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/178",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-07": {
+      "number": 179,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/179",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-08": {
+      "number": 180,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/180",
+      "status": "partial",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-09": {
+      "number": 181,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/181",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-10": {
+      "number": 182,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/182",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-11": {
+      "number": 183,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/183",
+      "status": "partial",
+      "section": "Ecosystem expansion"
+    },
+    "REL-01": {
+      "number": 185,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/185",
+      "status": "next",
+      "section": "Release & deploy"
+    },
+    "CHRYS-01": {
+      "number": 186,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/186",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-02": {
+      "number": 187,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/187",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-03": {
+      "number": 188,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/188",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-04": {
+      "number": 189,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/189",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-05": {
+      "number": 190,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/190",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ADMIN-01": {
+      "number": 191,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/191",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "ADMIN-02": {
+      "number": 192,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/192",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "DEPLOY-01": {
+      "number": 193,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/193",
+      "status": "next",
+      "section": "Release & deploy"
+    },
+    "WEB-07": {
+      "number": 194,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/194",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "WEB-08": {
+      "number": 195,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/195",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "WEB-09": {
+      "number": 196,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/196",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "WEB-10": {
+      "number": 197,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/197",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "LEGAL-01": {
+      "number": 199,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/199",
+      "status": "next",
+      "section": "Legal & privacy"
+    },
+    "ANALYTICS-02": {
+      "number": 200,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/200",
+      "status": "next",
+      "section": "Legal & privacy"
+    },
+    "GH-06": {
+      "number": 201,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/201",
+      "status": "next",
+      "section": "GitHub"
+    },
+    "DEPLOY-02": {
+      "number": 202,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/202",
+      "status": "next",
+      "section": "Release & deploy"
+    },
+    "DEPLOY-03": {
+      "number": 203,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/203",
+      "status": "next",
+      "section": "Release & deploy"
+    },
+    "MAIL-16": {
+      "number": 204,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/204",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "DC-08": {
+      "number": 205,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/205",
+      "status": "next",
+      "section": "Discord"
+    },
+    "DC-09": {
+      "number": 206,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/206",
+      "status": "next",
+      "section": "Discord"
+    },
+    "WEB-11": {
+      "number": 207,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/207",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "SEO-01": {
+      "number": 209,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/209",
+      "status": "next",
+      "section": "SEO & growth"
+    },
+    "SEO-02": {
+      "number": 210,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/210",
+      "status": "next",
+      "section": "SEO & growth"
+    },
+    "SEO-03": {
+      "number": 211,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/211",
+      "status": "next",
+      "section": "SEO & growth"
+    },
+    "SOCIAL-01": {
+      "number": 213,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/213",
+      "status": "next",
+      "section": "Social & media"
+    },
+    "SOCIAL-02": {
+      "number": 214,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/214",
+      "status": "next",
+      "section": "Social & media"
+    },
+    "SOCIAL-03": {
+      "number": 215,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/215",
+      "status": "next",
+      "section": "Social & media"
+    },
+    "SOCIAL-04": {
+      "number": 216,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/216",
+      "status": "next",
+      "section": "Social & media"
+    },
+    "SOCIAL-05": {
+      "number": 217,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217",
+      "status": "next",
+      "section": "Social & media"
+    },
+    "CRED-02": {
+      "number": 218,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/218",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "INT-01": {
+      "number": 219,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/219",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "ADMIN-03": {
+      "number": 220,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/220",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "ADMIN-04": {
+      "number": 221,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/221",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "ADMIN-05": {
+      "number": 222,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/222",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    }
+  },
+  "updatedAt": "2026-09-05T09:03:50.244Z"
+}

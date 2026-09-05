@@ -15,6 +15,7 @@ This file is the **onboarding map** for Mission Control (admin SPA). Pair it wit
 | Wrangler (admin) | `cd website/admin && npx wrangler --version` — target **4.129+** |
 | Master task snapshot | User says **Update?** → refresh `plan/mission-control-master-tasks.md` |
 | Pick next task | User says **next** → top open item in **Recommended next queue** |
+| Sync GitHub board | User says **sync issues** or **sync tasks** → `npm run sync:labels && npm run sync:tasks && npm run setup:github-project` |
 | Admin dev server | `cd website/admin && npm run dev` |
 | Admin tests | `cd website/admin && npm test` |
 | Auth smoke (SET-10) | `cd website/admin && npm run auth:tier-d` |
@@ -32,6 +33,9 @@ This file is the **onboarding map** for Mission Control (admin SPA). Pair it wit
 | [`AGENTS.md`](AGENTS.md) | Build/test/deploy commands for all four components |
 | [`docs/wiki/Admin-Panel.md`](docs/wiki/Admin-Panel.md) | Human-facing admin docs (mirror to GitHub Wiki) |
 | [`docs/wiki/Architecture.md`](docs/wiki/Architecture.md) | KV / D1 / R2 / Pages data flow |
+| [`docs/wiki/Ecosystem-Roadmap.md`](docs/wiki/Ecosystem-Roadmap.md) | Tray, browsers, Cursor plugin, floating AI, notifications |
+| [`docs/wiki/AI-Agent-Commands.md`](docs/wiki/AI-Agent-Commands.md) | Canonical **Update?** / **next** / **sync issues** vocabulary |
+| [`.cursor/rules/ai-agent-commands.mdc`](.cursor/rules/ai-agent-commands.mdc) | Same commands — always-applied Cursor rule |
 | [`.cursor/rules/cred-vault.mdc`](.cursor/rules/cred-vault.mdc) | **Never** commit secrets; use `cred get cursor <key>` |
 | [`.cursor/rules/procedure-github-project.mdc`](.cursor/rules/procedure-github-project.mdc) | `procedure/` + GitHub issue tracking |
 
@@ -87,9 +91,15 @@ Do **not** implement unrelated roadmap items when user only said **Update?**.
 
 Current queue (2026-09-05):
 
-1. **AUTH-12** — feature-level ACL v2
-2. **NOTICE-01** — changelog → notice drafts
-3. **MAIL-13/14**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
+1. **REL-01** — fix beta release pipeline
+2. **DEPLOY-01** — global floating deploy + CI/CD step parity (all admin pages)
+3. **AUTH-13** — ACL audit UI ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132))
+4. **WEB-07 / WEB-08** — expanded topology + behind-the-scenes engineering
+5. **WEB-09 / WEB-10** — public wiki/releases/community/docs + contributor welcome
+6. **LEGAL-01 / ANALYTICS-02** — terms/consent + visitor/user analytics
+7. **ADMIN-01**, **CHRYS-01–05**, **MAIL-13/14**, …
+
+Ecosystem + Chrysalis: [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md) · [Chrysalis](docs/wiki/Chrysalis.md).
 
 ---
 
@@ -155,13 +165,19 @@ See `docs/wiki/Architecture.md` § stats storage.
 
 **Mission Control product polish + observability** — tasks in master registry:
 
-- **AUTH-12/13** — per-action ACL + audit UI  
-- **NOTICE-01** — auto notices from `CHANGELOG`  
+- **AUTH-13** — ACL audit UI  
+- **NOTICE-01** — auto notices from `CHANGELOG` (**done**)  
 - **MAIL-13/14** — professional + dynamic subscriber mail  
 - **DC-06/07** — Discord product cards  
 - **ANALYTICS-01** — multi-service metrics hub  
 - **LOGS-01** — unified filterable logs  
 - **EXT-01** — platform logos/links on all surfaces  
+
+**Ecosystem expansion** (ECO-*, CHRYS-*): all browsers, OS tray, Cursor plugin, **Chrysalis** floating AI, push notifications, global loaders, action validators — [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md) · [Chrysalis](docs/wiki/Chrysalis.md).
+
+**Release:** **REL-01** — beta channel pipeline fix. **DEPLOY-01** — deploy floating UX across all admin routes, CI step parity.
+
+**Public website:** [Public Website roadmap](docs/wiki/Public-Website.md) — WEB-07–10, LEGAL-01, ANALYTICS-02.
 
 ---
 

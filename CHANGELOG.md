@@ -15,7 +15,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Changelog → notice drafts (NOTICE-01)** — `npm run changelog:notice`, `GET /api/notices?changelogDraft=1`, and Notices page **From CHANGELOG** import for master review before publish
+- **Chrysalis AI roadmap (CHRYS-01–05)** — named floating assistant; Antigravity/vault for admin; user BYOK on web/extensions; privacy tiers; system learning for usage warnings
+- **DC-08/09 / SOCIAL-01–05** — Discord CI cards, multi-platform webhooks, deploy social gallery, AI image/video generators
+- **SEO-01–03** — world-class SEO, admin hub (GSC/Cloudflare/Azure), Lorapok ecosystem cross-links
+- **ADMIN-03–05 / DEPLOY-02** — refer buttons, minimal footer, dedupe dashboard, remove Deployments webhook duplicate
+- **CRED-02 / INT-01 / GH-06 / MAIL-16** — cred sync never-miss, unified integrations, GitHub webhook, live email audit
+- **WEB-11** — engineering history timeline page
+- **Interactive features explorer (WEB-05)** — post-hero product cards + live GitHub metrics on marketing site
+- **Floating Larvae AI (WEB-06, partial)** — `ccm-floating-assistant.js` reads `site-data.json` for product Q&A on marketing site
+- **Ecosystem task registry (ECO-01–12)** — tray app, all browsers, Cursor plugin, push notifications, validators, loaders, wiki pages
+- **Shared action validator (ECO-08, partial)** — `packages/shared/src/confirmAction.ts` for destructive-operation confirmation
+- **AI agent command vocabulary** — `.cursor/rules/ai-agent-commands.mdc` + wiki `AI-Agent-Commands.md` (`Update?`, `next`, `sync issues`)
+- **GitHub task tracking (PR #171)** — labels, milestones, issue templates, Project #4 sync scripts
 - **Mission Control feature ACL v2 (AUTH-12)** — per-action UI gates on notices, subscribers, mailbox, team, cred vault, API Explorer, and deploy controls; read-only banner when role lacks permission
 - **Cloudflare Web Analytics** — privacy-friendly beacon on marketing site and Mission Control shell (`cloudflare-beacon.js`)
 - **`npm run auth:tier-d`** — headless SET-10 smoke (RBAC nav, PIN unlock, production auth probe) for Mission Control — Discord-style tabs for General, Mail, Discord, Firebase, GitHub, Cloudflare, Automation, Cloud dev, and Services; integration cards sync non-secret metadata to ADMIN_KV and Firebase client fields to GitHub `admin-production` secrets on master save

@@ -1,0 +1,60 @@
+{
+  "description": "GitHub milestones aligned to Mission Control master-task sections. Sync: node scripts/setup-github-project.mjs",
+  "milestones": [
+    {
+      "title": "MC — Auth & ACL",
+      "description": "Firebase auth, RBAC, feature ACL, ACL audit UI (AUTH-*, SET-10)",
+      "sections": ["Firebase"]
+    },
+    {
+      "title": "MC — Mail & Subscribers",
+      "description": "Resend, Cloudflare Email, templates, subscriber emails (MAIL-*)",
+      "sections": ["Mail (Resend + Cloudflare Email)"]
+    },
+    {
+      "title": "MC — Infrastructure",
+      "description": "Cloudflare Pages/Workers, KV/R2/D1, deploy-infra, wrangler ops (CF-*, OPS-*, KV-*, R2-*, D1-*)",
+      "sections": ["Cloudflare Pages / Workers", "Cloudflare KV", "Cloudflare R2", "Cloudflare D1"]
+    },
+    {
+      "title": "MC — Discord",
+      "description": "Webhooks, branded embed cards, CI/CD notify, Settings preview (DC-*)",
+      "sections": ["Discord"]
+    },
+    {
+      "title": "MC — Social & SEO",
+      "description": "Multi-platform social, deploy gallery, SEO hub, video gen (SOCIAL-*, SEO-*)",
+      "sections": ["Social & media", "SEO & growth"]
+    },
+    {
+      "title": "MC — Extensions",
+      "description": "IDE + browser extension polish, platform strip (IDE-*, BR-*, EXT-01)",
+      "sections": ["IDE extension", "Browser extension"]
+    },
+    {
+      "title": "MC — Website",
+      "description": "Marketing site, site-data, public pages, topology, multi-page wiki/releases (WEB-*)",
+      "sections": ["Marketing website", "Legal & privacy"]
+    },
+    {
+      "title": "MC — Observability",
+      "description": "Stats/cron, analytics hub, unified logs (STAT-*, ANALYTICS-01, LOGS-01)",
+      "sections": ["Stats / Cron", "Settings UX (cross-cutting)"]
+    },
+    {
+      "title": "MC — Operations",
+      "description": "GitHub integration, Azure/GCP cloud dev cards, cross-cutting settings (GH-*, AZ-*, GCP-*, SET-*)",
+      "sections": ["GitHub", "Microsoft Azure", "Google Cloud (GCP / GCS)"]
+    },
+    {
+      "title": "MC — Ecosystem",
+      "description": "All browsers, tray app, Cursor plugin, floating AI, push notifications, validators (ECO-*)",
+      "sections": ["Ecosystem expansion", "Release & deploy"]
+    }
+  ],
+  "priorityQueue": {
+    "P0": ["REL-01", "DEPLOY-01", "DEPLOY-02", "AUTH-13"],
+    "P1": ["DC-08", "DC-09", "ADMIN-03", "ADMIN-04", "ADMIN-05", "CRED-02", "INT-01", "SOCIAL-01", "SOCIAL-02", "SEO-01", "ADMIN-01", "WEB-07", "WEB-08", "WEB-09", "CHRYS-01", "GH-06", "MAIL-16", "LEGAL-01", "ECO-08", "MAIL-13", "MAIL-14", "DC-06", "DC-07", "ANALYTICS-01", "LOGS-01", "EXT-01"],
+    "P2": ["ADMIN-02", "WEB-10", "WEB-11", "SOCIAL-03", "SOCIAL-04", "SOCIAL-05", "SEO-02", "SEO-03", "DEPLOY-03", "ANALYTICS-02", "CHRYS-02", "CHRYS-03", "CHRYS-04", "CHRYS-05", "ECO-01", "ECO-04", "ECO-05", "ECO-07", "ECO-09", "ECO-10"]
+  }
+}

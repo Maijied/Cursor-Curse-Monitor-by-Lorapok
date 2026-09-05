@@ -1,0 +1,43 @@
+{
+  "projectNumber": 4,
+  "projectId": "PVT_kwHOAK5oHM4BgsPL",
+  "owner": "Maijied",
+  "url": "https://github.com/users/Maijied/projects/4",
+  "fields": {
+    "status": {
+      "id": "PVTSSF_lAHOAK5oHM4BgsPLzhfq01Y",
+      "options": {
+        "Todo": "f75ad846",
+        "In progress": "47fc9ee4",
+        "Done": "98236657"
+      }
+    },
+    "priority": {
+      "id": "PVTSSF_lAHOAK5oHM4BgsPLzhfq1ug",
+      "options": {
+        "P0": "0f2ea426",
+        "P1": "8ede23d0",
+        "P2": "f3897b1a"
+      }
+    },
+    "size": {
+      "id": "PVTSSF_lAHOAK5oHM4BgsPLzhfq1uk",
+      "options": {
+        "XS": "77b468e2",
+        "S": "c46c7d93",
+        "M": "a3dcde77",
+        "L": "ada343b7",
+        "XL": "694c6f39"
+      }
+    },
+    "iteration": {
+      "id": "PVTIF_lAHOAK5oHM4BgsPLzhfq1us",
+      "current": "Iteration 3"
+    }
+  },
+  "defaults": {
+    "taskStatus": "Todo",
+    "epicStatus": "Todo",
+    "partialStatus": "In progress"
+  }
+}

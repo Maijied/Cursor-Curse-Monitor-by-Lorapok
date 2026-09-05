@@ -1,7 +1,8 @@
 {
   "owner": "Maijied",
   "repo": "Cursor-Curse-Monitor-by-Lorapok",
-  "projectNumber": null,
-  "projectUrl": null,
-  "defaultLabels": ["task"]
+  "projectNumber": 4,
+  "projectUrl": "https://github.com/users/Maijied/projects/4",
+  "projectReadme": "procedure/github-project-readme.md",
+  "defaultLabels": ["type:task", "mission-control"]
 }

@@ -146,6 +146,22 @@ flowchart TB
 
 Deep dive: [docs/wiki/Architecture.md](docs/wiki/Architecture.md)
 
+## GitHub community & project health
+
+Live snapshot from GitHub Insights and Mission Control ([Project #4](https://github.com/users/Maijied/projects/4)). Refreshed via `npm run site:data` into [`site-data.json`](https://cursor.lorapok.tech/site-data.json) (`githubCommunity`).
+
+| Metric | Value (snapshot Sep 2026) |
+|--------|---------------------------|
+| **Git clones** (14 days) | 3,933 total · 352 unique |
+| **Repo views** (14 days) | 1,984 total · 15 unique |
+| **Open issues** | 43 · [backlog epic #126](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/126) |
+| **CI avg job time** | 43s · 5% failure rate (current month) |
+| **Primary workflow** | `ci-cd.yml` — 4m 8s avg · 24% job failures · 131 runs |
+
+Shown on the [marketing site features section](https://cursor.lorapok.tech/#features-explorer), [Mission Control Overview](https://cursor-dev.lorapok.tech), and wiki [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md).
+
+**Agent commands:** say **Update?** for a task snapshot or **next** to implement the top open item — see [AI Agent Commands](docs/wiki/AI-Agent-Commands.md).
+
 ## Features
 
 | Feature | Description |

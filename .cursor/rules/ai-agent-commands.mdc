@@ -1,0 +1,44 @@
+---
+description: Canonical AI agent command vocabulary for Mission Control and repo workflow. Agents must recognize these exact phrases.
+alwaysApply: true
+---
+
+# AI agent commands (canonical)
+
+When the user sends one of these **exact intents**, follow the linked workflow — do not guess or implement unrelated work.
+
+| Command | Meaning | Required actions |
+|---------|---------|------------------|
+| **Update?** | Status snapshot only | Refresh `plan/mission-control-master-tasks.md`; run narrow CI/checks; report done / next / blocked. **Do not implement features.** |
+| **next** | Implement top priority task | Read **Recommended next queue** → linked GitHub issue → `procedure-init` if multi-file → implement → test → update registry. |
+| **sync issues** | Refresh GitHub board | `npm run sync:labels` → `npm run sync:tasks` → `npm run setup:github-project` |
+| **sync tasks** | Same as sync issues | Alias for board sync |
+| **autopilot** | Merge-ready PR | Per `.cursor/rules/procedure-github-project.mdc` autopilot section |
+| **procedure** | Start tracked work | `node scripts/procedure-init.mjs --title "…"` |
+
+## Priority order for **next**
+
+1. P0 issues (`priority:p0` / Project Priority P0) — e.g. AUTH-13
+2. P1 queue in `procedure/github-milestones.json`
+3. First `next` row in master registry not blocked
+
+## Files agents must read
+
+| Command context | Read first |
+|-----------------|------------|
+| Any Mission Control work | `MISSION-CONTROL-WALKTHROUGH.md`, `plan/mission-control-master-tasks.md` |
+| GitHub Issues / Project | `TASK-TRACKING.md`, `docs/guides/GITHUB_ISSUES_AND_PROJECT.md` |
+| Ecosystem roadmap | `docs/wiki/Ecosystem-Roadmap.md` |
+
+## Data hygiene (AI conversations)
+
+- Do **not** paste secrets, tokens, vault passphrases, or full `.env` in chat
+- Use cred vault (`cred get cursor <key>`) — mask previews only
+- Before destructive ops (deploy, delete, mass close issues), use `confirmAction` / ask user
+- Track procedure file **Progress** — not full chat logs
+
+## Related rules
+
+- `.cursor/rules/procedure-github-project.mdc`
+- `.cursor/rules/cred-vault.mdc`
+- `.cursor/rules/coderabbit-review.mdc`

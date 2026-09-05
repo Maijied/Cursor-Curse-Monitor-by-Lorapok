@@ -122,6 +122,34 @@ export interface SiteData {
     settingsUrl: string;
     repoIssuesUrl: string;
   };
+  githubCommunity?: {
+    lastUpdated?: string;
+    stars?: number | null;
+    forks?: number | null;
+    openIssues?: number | null;
+    traffic?: {
+      periodDays?: number;
+      clones?: { total?: number; unique?: number };
+      views?: { total?: number; unique?: number };
+    };
+    ci?: {
+      avgJobRunSeconds?: number;
+      avgQueueSeconds?: number;
+      jobFailureRatePercent?: number;
+      workflows?: Array<{
+        name: string;
+        failureRatePercent?: number;
+        avgRunTime?: string;
+        runs?: number;
+      }>;
+    };
+    project?: {
+      number?: number;
+      url?: string;
+      title?: string;
+      openPullRequests?: number | null;
+    };
+  };
   ovsx: { version: string | null; url: string; namespace?: string; downloadCount?: number };
   ovsxDuplicate?: { version: string | null; url: string; namespace?: string; downloadCount?: number };
   vscode: { version: string | null; installCount?: number; downloadCount?: number; url: string };

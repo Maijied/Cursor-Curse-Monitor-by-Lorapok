@@ -12,6 +12,7 @@ import SyncRadar from "../ui/SyncRadar";
 import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import TrafficTrendGraph from "../ui/TrafficTrendGraph";
 import MarketplaceDistributionChart from "../ui/MarketplaceDistributionChart";
+import GitHubCommunityCard from "../ui/GitHubCommunityCard";
 import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
@@ -191,6 +192,8 @@ export default function Overview() {
       <MarketplaceDistributionChart data={data} />
 
       <VisitorStatsPanel stats={visitors} live={visitorsLive} />
+
+      <GitHubCommunityCard data={data} />
 
       <ConnectedServicesCard />
 
