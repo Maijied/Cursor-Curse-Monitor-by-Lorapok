@@ -58,7 +58,7 @@
 | KV-06 | `writesPausedUntil` guard in stats refresh | **done** | auto-pause until UTC reset on KV quota error |
 | KV-07 | KV quota meter copy + CF limits link in UI | **done** | write budget estimate, last run outcome, pause shortcut |
 | KV-08 | Architecture.md § stats storage (KV vs R2 vs D1) | **done** | `docs/wiki/Architecture.md` |
-| KV-09 | Wait for daily quota reset (UTC) | **blocked** | Ops — stats cron 502 until reset |
+| KV-09 | Wait for daily quota reset (UTC) | **done** | Stats refresh ran 2026-09-05T02:30Z; monitor if 502 returns |
 
 ---
 
@@ -187,7 +187,7 @@
 |----|------|--------|----------------|
 | DC-01 | Discord tab + integrations card | **done** | Settings |
 | DC-02 | Webhook FieldHelp + 60s poll | **done** | Phase 2 |
-| DC-03 | Configure production webhooks in KV | **next** | Settings → Discord |
+| DC-03 | Configure production webhooks in KV | **done** | All three webhooks in `integrations:discord` (2026-09-03 Settings); health confirms `discordConfigured` + feedback + community (2026-09-05) |
 | DC-04 | Community + Feedback cards polling | **next** | optional parity |
 | DC-05 | Subscribe fallback Discord URL in prod | **next** | Settings → General |
 
@@ -202,7 +202,7 @@
 | STAT-03 | Cron card KV banner + FieldHelp | **done** | Phase 1 |
 | STAT-04 | `useSiteData` interval refresh | **done** | PR #119 |
 | STAT-05 | Overview staleness badges (>2× interval) | **next** | Reliability C |
-| STAT-06 | Pause stats refresh until KV reset | **blocked** | KV-09 |
+| STAT-06 | Pause stats refresh until KV reset | **done** | Auto-pause cleared after UTC reset; `statsRefreshLastRunAt` fresh in `/api/health` |
 | STAT-07 | Live stats recover after quota reset | **next** | verify post-reset |
 
 ---
@@ -260,11 +260,10 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **DC-03** — Discord webhooks in production KV (`node scripts/sync-discord-cred-vault.mjs` after vault keys set)
-2. **AUTH-02** — Firebase Console: Email/Password + authorized domains (ops checklist in procedure `0bef4984`)
-3. **KV-09 / STAT-06** — KV UTC reset or pause stats cron until quota clears
-4. **R2-02** — Enable R2 in Cloudflare dashboard → `create-r2-stats-bucket.mjs`
-5. **Reliability** — post-merge verification (`procedure/c6c42bab`, PR #119)
+1. **AUTH-02** — Firebase Console: Email/Password + authorized domains (`cursor-dev.lorapok.tech`, `localhost`) — ops checklist in `procedure/0bef4984`
+2. **R2-02** — Enable R2 in Cloudflare dashboard → `create-r2-stats-bucket.mjs` (reduces KV write pressure)
+3. **Reliability** — close `procedure/c6c42bab` post-merge verification (Tier C health pass 2026-09-05)
+4. **Cred vault Discord backup** (optional) — `cred set cursor discord_*_webhook_url` then `node scripts/sync-discord-cred-vault.mjs` for DR; production KV already configured via Settings
 
 ---
 
@@ -272,9 +271,8 @@
 
 | Blocker | Unblocks |
 |---------|----------|
-| KV daily quota exhausted | STAT-06, STAT-07, KV-09 |
 | R2 not enabled on account | R2-02 bucket creation (code 10042) |
-| Discord webhooks not in KV | DC-03, community notifications |
+| Firebase Email/Password not verified in console | AUTH-02 manual checklist |
 
 ---
 
