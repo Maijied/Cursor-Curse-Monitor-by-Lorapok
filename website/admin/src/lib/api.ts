@@ -1061,6 +1061,13 @@ export async function fetchNoticeTemplates() {
   return apiGet<{ templates: NoticeTemplate[] }>("/notices?templates=1");
 }
 
+export async function fetchChangelogNoticeDraft(tag: string) {
+  const params = new URLSearchParams({ changelogDraft: "1", tag });
+  return apiGet<{ draft: DevNotice; exists: boolean; existing: DevNotice | null }>(
+    `/notices?${params.toString()}`
+  );
+}
+
 export type MailTemplate = {
   id: string;
   label: string;

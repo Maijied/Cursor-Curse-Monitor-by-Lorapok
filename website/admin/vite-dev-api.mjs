@@ -8,6 +8,10 @@ import {
   getHydratedBuiltinNotices,
   getNoticeTemplates,
 } from "./functions/api/_shared/notice-catalog.js";
+import {
+  buildNoticeDraftFromChangelog,
+  changelogNoticeId,
+} from "./functions/api/_shared/changelog-notice.js";
 import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
 import { submitProductFeedback } from "./functions/api/_shared/feedback-submit.js";
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
@@ -2675,7 +2679,8 @@ export function createDevApiMiddleware() {
 
     if (url === "/api/notices" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
-      if (new URL(req.url ?? "/", "http://localhost").searchParams.get("templates") === "1") {
+      const noticeUrl = new URL(req.url ?? "/", "http://localhost");
+      if (noticeUrl.searchParams.get("templates") === "1") {
         getNoticeTemplates({})
           .then((templates) => {
             res.end(JSON.stringify({ templates }));
@@ -2684,6 +2689,24 @@ export function createDevApiMiddleware() {
             res.statusCode = 500;
             res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Failed to load templates" }));
           });
+        return;
+      }
+      const changelogTag = noticeUrl.searchParams.get("tag")?.trim();
+      if (noticeUrl.searchParams.get("changelogDraft") === "1") {
+        if (!changelogTag) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "tag query param is required" }));
+          return;
+        }
+        try {
+          const markdown = readFileSync(resolve(repoRoot, "CHANGELOG.md"), "utf8");
+          const draft = buildNoticeDraftFromChangelog(markdown, changelogTag);
+          const existing = devStore.notices.find((n) => n.id === changelogNoticeId(changelogTag));
+          res.end(JSON.stringify({ draft, exists: Boolean(existing), existing: existing ?? null }));
+        } catch (err) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Changelog draft failed" }));
+        }
         return;
       }
       const active = devStore.notices.find((n) => n.enabled) ?? null;

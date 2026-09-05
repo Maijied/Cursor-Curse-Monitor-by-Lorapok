@@ -11,7 +11,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:scripts": "node --test scripts/lib/deploy-retry.test.mjs scripts/lib/mail-credentials.test.mjs scripts/lib/deploy-fast.test.mjs scripts/deploy-pages-ci.test.mjs scripts/mail-resend-routing.test.mjs scripts/mail-sync.test.mjs scripts/testmail-runtime.test.mjs scripts/cursor-index-config.test.mjs scripts/pages-functions-imports.test.mjs scripts/lib/auth-production-probe.test.mjs scripts/lib/resend-domain-verify.test.mjs functions/api/_shared/site-data.test.mjs functions/api/_shared/notice-hydration.test.mjs functions/api/_shared/rbac.test.mjs functions/api/_shared/rbac-routes.test.mjs functions/api/_shared/rbac-matrix.test.mjs functions/api/_shared/email-identities-config.test.mjs functions/api/_shared/email-identities-sync.test.mjs functions/api/_shared/acl-audit.test.mjs functions/api/_shared/mail-setup-instructions.test.mjs",
+    "test:scripts": "node --test scripts/lib/deploy-retry.test.mjs scripts/lib/mail-credentials.test.mjs scripts/lib/deploy-fast.test.mjs scripts/deploy-pages-ci.test.mjs scripts/mail-resend-routing.test.mjs scripts/mail-sync.test.mjs scripts/testmail-runtime.test.mjs scripts/cursor-index-config.test.mjs scripts/pages-functions-imports.test.mjs scripts/lib/auth-production-probe.test.mjs scripts/lib/resend-domain-verify.test.mjs functions/api/_shared/site-data.test.mjs functions/api/_shared/notice-hydration.test.mjs functions/api/_shared/rbac.test.mjs functions/api/_shared/rbac-routes.test.mjs functions/api/_shared/rbac-matrix.test.mjs functions/api/_shared/email-identities-config.test.mjs functions/api/_shared/email-identities-sync.test.mjs functions/api/_shared/acl-audit.test.mjs functions/api/_shared/mail-setup-instructions.test.mjs functions/api/_shared/changelog-notice.test.mjs",
     "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=cursor-monitor-admin",
     "build:fast": "node scripts/build-fast.mjs",
     "deploy:fast": "node scripts/deploy-pages-fast.mjs",
@@ -32,7 +32,7 @@
     "mail:setup-testmail-pages": "node scripts/setup-testmail-pages-secret.mjs",
     "stats:cron:sync-vault": "node scripts/sync-stats-cron-cred-vault.mjs",
     "github:sync-vault": "node scripts/sync-github-token-cred-vault.mjs",
-    "discord:sync-vault": "node ../../scripts/sync-discord-cred-vault.mjs"
+    "changelog:notice": "node scripts/changelog-to-notice.mjs"
   },
   "dependencies": {
     "@lorapok/cursor-monitor-shared": "file:../../packages/shared",
