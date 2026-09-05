@@ -24,7 +24,7 @@ fix(admin): rbac subscribers deploy and direct main push
 - [x] Tests passing (rbac-matrix, social-gallery-queue, direct-main-push)
 - [x] Merged to `main` via direct push (`5e33e624`)
 - [x] Fast admin deploy to https://cursor-dev.lorapok.tech
-- [ ] CI admin-deploy job green
+- [x] CI admin-deploy job green (run 33971849669)
 - [ ] Post-merge verification (admin role deploy buttons, subscribers count)
 
 ---
