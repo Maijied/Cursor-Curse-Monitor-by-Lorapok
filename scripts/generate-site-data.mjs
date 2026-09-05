@@ -92,6 +92,16 @@ function computeSyncStatus(canonicalVersion, duplicateVersion, targetVersion) {
   return "synced";
 }
 
+function readGithubCommunitySnapshot() {
+  const path = join(root, "procedure", "github-community-stats.json");
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
 function readVisitorStats() {
   const path = join(root, "website", "visitor-stats.json");
   if (!existsSync(path)) {
@@ -492,6 +502,9 @@ if (existsSync(socialPath)) {
   }
 }
 
+const githubSnapshot = readGithubCommunitySnapshot();
+const repoMeta = await fetchJson(`https://api.github.com/repos/${REPO}`);
+
 const siteData = {
   generatedAt,
   assets: {
@@ -553,6 +566,20 @@ const siteData = {
     topics: community.topics,
     settingsUrl: community.settingsUrl,
     repoIssuesUrl: `https://github.com/${REPO}/issues`,
+  },
+  githubCommunity: {
+    lastUpdated: githubSnapshot?.lastUpdated ?? generatedAt.slice(0, 10),
+    stars: repoMeta?.stargazers_count ?? null,
+    forks: repoMeta?.forks_count ?? null,
+    openIssues: repoMeta?.open_issues_count ?? githubSnapshot?.project?.openIssues ?? null,
+    traffic: githubSnapshot?.traffic ?? null,
+    ci: githubSnapshot?.ci ?? null,
+    project: {
+      number: githubSnapshot?.project?.number ?? 4,
+      url: githubSnapshot?.project?.url ?? "https://github.com/users/Maijied/projects/4",
+      title: githubSnapshot?.project?.title ?? "Lorapok Labs : Team Planning : Cursor Curse Monitor",
+      openPullRequests: githubSnapshot?.project?.openPullRequests ?? null,
+    },
   },
   analytics: {
     beaconPath: "/api/analytics/visit",

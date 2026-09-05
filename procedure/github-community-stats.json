@@ -1,0 +1,29 @@
+{
+  "lastUpdated": "2026-09-05",
+  "source": "GitHub Insights (operator snapshot) — merge into site-data via npm run site:data",
+  "traffic": {
+    "periodDays": 14,
+    "clones": { "total": 3933, "unique": 352 },
+    "views": { "total": 1984, "unique": 15 },
+    "note": "Clone spike ~Sep 1; unique visitors low vs views — likely repeat automation or core team."
+  },
+  "ci": {
+    "period": "current-month",
+    "avgJobRunSeconds": 43,
+    "avgQueueSeconds": 3,
+    "jobFailureRatePercent": 5,
+    "failedJobUsageMinutes": 85,
+    "workflows": [
+      { "name": "ci-cd.yml", "failureRatePercent": 24, "avgRunTime": "4m 8s", "runs": 131, "jobs": 12 },
+      { "name": "dependency-security.yml", "failureRatePercent": 0, "avgRunTime": "32s", "runs": 31, "jobs": 1 },
+      { "name": "procedure-on-merge.yml", "failureRatePercent": 0, "avgRunTime": "14s", "runs": 14, "jobs": 1 }
+    ]
+  },
+  "project": {
+    "number": 4,
+    "url": "https://github.com/users/Maijied/projects/4",
+    "title": "Lorapok Labs : Team Planning : Cursor Curse Monitor",
+    "openIssues": 43,
+    "openPullRequests": 1
+  }
+}

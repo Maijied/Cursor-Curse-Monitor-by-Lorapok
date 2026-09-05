@@ -49,6 +49,10 @@
     "Settings UX (cross-cutting)": {
       "number": 164,
       "title": "Epic: Settings UX (cross-cutting)"
+    },
+    "Ecosystem expansion": {
+      "number": 173,
+      "title": "Epic: Ecosystem expansion"
     }
   },
   "tasks": {
@@ -221,17 +225,83 @@
       "section": "Settings UX (cross-cutting)"
     },
     "LOGS-01": {
-      "number": 168,
-      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/168",
+      "number": 167,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/167",
       "status": "next",
       "section": "Settings UX (cross-cutting)"
     },
     "EXT-01": {
-      "number": 170,
-      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/170",
+      "number": 169,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/169",
       "status": "next",
       "section": "Settings UX (cross-cutting)"
+    },
+    "WEB-06": {
+      "number": 172,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/172",
+      "status": "partial",
+      "section": "Marketing website"
+    },
+    "ECO-01": {
+      "number": 174,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/174",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-03": {
+      "number": 175,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/175",
+      "status": "partial",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-04": {
+      "number": 176,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/176",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-05": {
+      "number": 177,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/177",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-06": {
+      "number": 178,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/178",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-07": {
+      "number": 179,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/179",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-08": {
+      "number": 180,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/180",
+      "status": "partial",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-09": {
+      "number": 181,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/181",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-10": {
+      "number": 182,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/182",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ECO-11": {
+      "number": 183,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/183",
+      "status": "partial",
+      "section": "Ecosystem expansion"
     }
   },
-  "updatedAt": "2026-09-05T06:57:14.078Z"
+  "updatedAt": "2026-09-05T07:50:59.708Z"
 }

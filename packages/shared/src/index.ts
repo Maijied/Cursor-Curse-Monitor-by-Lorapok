@@ -11,3 +11,4 @@ export * from "./supportedIdeWrappers";
 export * from "./communityDownloadStats";
 export * from "./productLinks";
 export * from "./feedback";
+export * from "./confirmAction";

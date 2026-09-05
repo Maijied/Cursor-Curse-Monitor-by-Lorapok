@@ -3,7 +3,7 @@
 <head>
   <script src="https://app.secureprivacy.ai/script/6a8302e8f96211191278bd15.js"></script>
   <meta charset="UTF-8" />
-  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="ccm-build-id" content="2fee3b5d7df7" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#06080d" />
   <meta name="color-scheme" content="dark" />
@@ -30,7 +30,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css?v=105f5292a052" />
   <link rel="stylesheet" href="larvae-loader.css?v=105f5292a052" />
-  <link rel="stylesheet" href="stats-dashboard.css?v=105f5292a052" />
+  <link rel="stylesheet" href="features-explorer.css?v=105f5292a052" />
+  <link rel="stylesheet" href="ccm-floating-assistant.css?v=105f5292a052" />
   <!-- seo:jsonld -->
   <script type="application/ld+json">
   {
@@ -279,6 +280,21 @@
         </div>
         </div>
       </aside>
+    </div>
+  </section>
+
+  <section id="features-explorer" class="section features-explorer container">
+    <div class="section-head">
+      <p class="eyebrow">Explore the product</p>
+      <h2>Interactive feature map</h2>
+      <p class="section-lead">Tap a capability to see how it fits the Lorapok ecosystem — IDE, browser, Mission Control, and roadmap (tray app, all browsers, Cursor plugin).</p>
+    </div>
+    <div class="features-explorer-grid" id="features-explorer-grid" role="tablist" aria-label="Product features"></div>
+    <div class="feature-detail" id="feature-detail" role="tabpanel" aria-live="polite"></div>
+    <div class="github-community-panel" id="github-community-panel">
+      <h3 class="eyebrow" style="margin:0">Open source momentum</h3>
+      <p class="muted" style="margin:0.35rem 0 0">GitHub traffic &amp; CI snapshot — refreshed with <code>npm run site:data</code></p>
+      <div id="github-community-stats"></div>
     </div>
   </section>
 
@@ -931,6 +947,8 @@
     </figure>
   </div>
 
+  <script src="features-explorer.js?v=105f5292a052" defer></script>
+  <script src="ccm-floating-assistant.js?v=105f5292a052" defer></script>
   <script src="cloudflare-beacon.js?v=105f5292a052" defer></script>
   <script src="stats-dashboard.js?v=105f5292a052" defer></script>
   <script src="analytics.js?v=105f5292a052" defer></script>

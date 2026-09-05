@@ -2,8 +2,8 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (LOGIN-01 + AI walkthrough sync)  
-**Branch:** `main`  
+**Last updated:** 2026-09-05 (ECO roadmap + GitHub community stats)  
+**Branch:** `feat/github-task-tracking-system`  
 **CI:** green  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -30,6 +30,9 @@ _None — pick from **Recommended next queue** below._
 |---------|------------|
 | **Update?** | Refresh this file’s status row + CI/deploy + blockers; reply with done / next / blocked |
 | **next** | Pick top `next` task below, implement + test + update this file |
+| **sync issues** / **sync tasks** | `npm run sync:labels` → `npm run sync:tasks` → `npm run setup:github-project` |
+
+**Canonical AI vocabulary:** [`.cursor/rules/ai-agent-commands.mdc`](../.cursor/rules/ai-agent-commands.mdc) · wiki [AI Agent Commands](../docs/wiki/AI-Agent-Commands.md)
 
 **GitHub:** Run `node scripts/sync-mission-control-issues.mjs --add-to-project` to sync open tasks to [Project #4](https://github.com/users/Maijied/projects/4). See [`TASK-TRACKING.md`](../TASK-TRACKING.md).
 
@@ -52,7 +55,8 @@ _None — pick from **Recommended next queue** below._
 | Stats / Cron | 6 | 2 | 1 |
 | IDE extension | 4 | 4 | 0 |
 | Browser extension | 4 | 4 | 0 |
-| Marketing website | 2 | 2 | 0 |
+| Marketing website | 4 | 2 | 0 |
+| Ecosystem expansion | 3 | 12 | 0 |
 | Admin UX / observability | 3 | 11 | 0 |
 
 ---
@@ -258,8 +262,29 @@ _None — pick from **Recommended next queue** below._
 |----|------|--------|----------------|
 | WEB-01 | `site-data.json` / shields API fallback | **done** | existing |
 | WEB-02 | Subscribe prompt respects admin KV | **done** | existing |
-| WEB-03 | Regenerate committed site-data (local drift) | **next** | unstaged files — don’t commit noise |
+| WEB-03 | Regenerate committed site-data (local drift) | **done** | `githubCommunity` block + features explorer |
 | WEB-04 | Hero / stats polish plan | **deferred** | `a8f3c2d1_website-final-polish-plan.md` |
+| WEB-05 | **Interactive features explorer** — post-hero cards + GitHub community stats panel | **done** | `features-explorer.js`, `site-data.json` |
+| WEB-06 | **Floating Larvae AI** — live product Q&A from `site-data.json` | **partial** | `ccm-floating-assistant.js` on marketing site |
+
+---
+
+## Ecosystem expansion
+
+| ID | Task | Status | Notes / verify |
+|----|------|--------|----------------|
+| ECO-01 | **All browsers** — Safari, Edge, Opera, Brave MV3 builds + CI publish matrix | **next** | shared `@lorapok/cursor-monitor-shared`; AMO/Chrome patterns |
+| ECO-02 | **GitHub community stats** — traffic + CI snapshot on README, website, Mission Control | **done** | `procedure/github-community-stats.json`, `GitHubCommunityCard`, `npm run site:data` |
+| ECO-03 | **Floating AI assistant (website)** — animated Larvae panel, always reads latest `site-data.json` | **partial** | `ccm-floating-assistant.js` |
+| ECO-04 | **OS tray app** — Win/macOS/Linux system tray for limits, notices, quick actions | **next** | Electron or Tauri; shared product context |
+| ECO-05 | **Cursor native plugin** — first-party Cursor extension / plugin slot (not just VS Code host) | **next** | Cursor plugin API research + packaging |
+| ECO-06 | **Floating AI everywhere** — admin SPA, IDE popup, browser options, tray shell | **next** | share context module; ECO-03 pattern |
+| ECO-07 | **Push notifications** — Web Push + native OS alerts for limits, Mission Control notices | **next** | permission UX + KV notice hooks |
+| ECO-08 | **Action validator** — confirm before deploy, delete, broadcast, cred vault write | **partial** | `packages/shared/src/confirmAction.ts`; wire admin + extensions |
+| ECO-09 | **Global loading animation** — Larvae shimmer on long operations (admin, site, extensions) | **next** | extend `ShimmerSkeleton` + shared loader |
+| ECO-10 | **AI conversation hygiene** — no secrets/junk in agent chat; procedure-only tracking | **next** | `.cursor/rules/ai-agent-commands.mdc` + agent docs |
+| ECO-11 | **Wiki + taskboard assets** — professional wiki pages; optional generated diagrams for Project #4 | **partial** | `docs/wiki/Ecosystem-Roadmap.md`, `GitHub-Project.md`, `AI-Agent-Commands.md` |
+| ECO-12 | **Repo hygiene** — gitignore local Wrangler/miniflare state; keep agent-accessible paths documented | **done** | `.gitignore` → `website/admin/.wrangler/` |
 
 ---
 
@@ -288,12 +313,15 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **AUTH-13** — ACL audit UI (filterable timeline + export)
-3. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
-4. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
-5. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
-6. **LOGS-01** — Formatted, filterable unified logs
-7. **EXT-01** — Platform logos + links across admin, website, IDE, browser extensions
+1. **AUTH-13** — ACL audit UI (filterable timeline + export) · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
+2. **ECO-08** — Wire `confirmAction` on destructive admin/deploy/mail paths
+3. **ECO-06** — Floating Larvae AI in Mission Control Overview (reuse website module)
+4. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
+5. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
+6. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
+7. **LOGS-01** — Formatted, filterable unified logs
+8. **EXT-01** — Platform logos + links across admin, website, IDE, browser extensions
+9. **ECO-01 / ECO-04 / ECO-05** — All browsers, tray app, Cursor plugin (parallel epics)
 
 ---
 
@@ -311,4 +339,6 @@ _None — R2 enabled 2026-09-05. Redeploy after `wrangler.toml` STATS_R2 binding
 - `procedure/2b7b880d_settings-tabs-secrets.md`
 - `plan/b8e4f2a1_email-identities-auth-acl-plan.md` — email identities Settings panel, password auth, RBAC/ACL
 - `MISSION-CONTROL-WALKTHROUGH.md` — agent onboarding for **Update?** / **next**
+- `docs/wiki/Ecosystem-Roadmap.md` — tray, browsers, Cursor plugin, floating AI, notifications
+- `docs/wiki/GitHub-Project.md` — Project #4, labels, milestones, community stats
 - `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` — epic procedure ([#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120))

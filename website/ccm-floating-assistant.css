@@ -1,0 +1,97 @@
+/* Floating Lorapok AI assistant */
+.ccm-floating-ai {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 9000;
+  font-family: var(--font-sans, "DM Sans", system-ui, sans-serif);
+}
+
+.ccm-floating-ai-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(108, 92, 231, 0.6);
+  background: radial-gradient(circle at 30% 30%, #6c5ce7, #2d1b69);
+  box-shadow: 0 8px 32px rgba(108, 92, 231, 0.35);
+  cursor: pointer;
+  animation: ccm-float-bob 4s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.ccm-floating-ai-toggle img {
+  width: 36px;
+  height: 36px;
+}
+
+@keyframes ccm-float-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.ccm-floating-ai-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(340px, calc(100vw - 2rem));
+  max-height: 420px;
+  border-radius: 16px;
+  border: 1px solid rgba(108, 92, 231, 0.35);
+  background: rgba(8, 10, 18, 0.96);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ccm-floating-ai-panel[hidden] {
+  display: none;
+}
+
+.ccm-floating-ai-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.ccm-floating-ai-body {
+  padding: 1rem;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #c8d0dc;
+}
+
+.ccm-floating-ai-body dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+}
+
+.ccm-floating-ai-body dt {
+  color: #8b95a8;
+  font-size: 0.75rem;
+}
+
+.ccm-floating-ai-body dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ccm-floating-ai-footer {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ccm-floating-ai-toggle {
+    animation: none;
+  }
+}
