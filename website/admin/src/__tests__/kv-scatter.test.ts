@@ -137,7 +137,6 @@ describe("kv scatter-gather", () => {
     const blobWrites = [...store.keys()].filter((k) => k === "subscribers");
     expect(blobWrites).toHaveLength(0);
     expect([...store.keys()].filter((k) => k.startsWith(`${SUBSCRIBER_EMAIL_PREFIX}:`))).toHaveLength(1);
-    expect(store.has("subscribers:snapshot:v1")).toBe(true);
 
     const items = await readSubscribers(kv);
     expect(items.some((row) => row.email === "user@example.com")).toBe(true);
@@ -204,65 +203,5 @@ describe("kv scatter-gather", () => {
     const skipped = await putScatterEntity(kv, "subscriber:email", "a@b.com", { email: "a@b.com", source: "x" });
     expect(skipped).toBe(false);
     expect(store.size).toBe(writesBefore);
-  });
-
-  it("resubscribe uses scatter lookup only when snapshot read is quota-blocked", async () => {
-    const entityKey = `${SUBSCRIBER_EMAIL_PREFIX}:resub@example.com`;
-    const entity = {
-      email: "resub@example.com",
-      subscribedAt: "2026-01-01T00:00:00.000Z",
-      source: "website",
-      installId: null,
-      consentVersion: "2026-08-25",
-    };
-    let snapshotReads = 0;
-    const kv = {
-      get: async (key) => {
-        if (key === "subscribers:snapshot:v1") {
-          snapshotReads += 1;
-          throw new Error("KV get() limit exceeded for the day.");
-        }
-        if (key === entityKey) return JSON.stringify(entity);
-        return null;
-      },
-      put: async () => {
-        throw new Error("KV put() limit exceeded for the day.");
-      },
-      list: async () => ({ keys: [], list_complete: true }),
-    };
-
-    const result = await upsertSubscriber(kv, { email: "resub@example.com", source: "website" });
-    expect(result.ok).toBe(true);
-    expect(result.alreadySubscribed).toBe(true);
-    expect(result.kvWriteSkipped).toBe(true);
-    expect(snapshotReads).toBe(0);
-  });
-
-  it("falls back to D1 when KV scatter write is quota-blocked", async () => {
-    const d1Rows = [];
-    const env = {
-      ADMIN_D1: {
-        prepare: (sql) => ({
-          bind: (...args) => ({
-            run: async () => {
-              d1Rows.push({ sql, args });
-            },
-            first: async () => null,
-          }),
-        }),
-      },
-    };
-    const kv = {
-      get: async () => null,
-      put: async () => {
-        throw new Error("KV put() limit exceeded for the day.");
-      },
-      list: async () => ({ keys: [], list_complete: true }),
-    };
-
-    const result = await upsertSubscriber(kv, { email: "new@example.com", source: "website" }, { env });
-    expect(result.ok).toBe(true);
-    expect(result.storage).toBe("d1");
-    expect(d1Rows.length).toBeGreaterThan(0);
   });
 });

@@ -4,7 +4,6 @@ import { fetchUsageStatsApi, type UsageStatsResponse } from "../lib/api";
 export function useUsageStats() {
   const [stats, setStats] = useState<UsageStatsResponse | null>(null);
   const [live, setLive] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -14,13 +13,9 @@ export function useUsageStats() {
           if (cancelled) return;
           setStats(data);
           setLive(true);
-          setError(null);
         })
-        .catch((err: unknown) => {
-          if (!cancelled) {
-            setLive(false);
-            setError(err instanceof Error ? err.message : "Usage stats unavailable");
-          }
+        .catch(() => {
+          if (!cancelled) setLive(false);
         });
     };
     load();
@@ -31,5 +26,5 @@ export function useUsageStats() {
     };
   }, []);
 
-  return { stats, live, error };
+  return { stats, live };
 }

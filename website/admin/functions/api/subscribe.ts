@@ -1,7 +1,5 @@
 import { jsonResponse } from "./_shared/auth.js";
-import { isKvQuotaError, formatKvQuotaError, isKvWritesPaused } from "./_shared/kv-quota.js";
 import { buildSubscribeHtml, sendMail } from "./_shared/mail.js";
-import { readStatsRefreshConfig } from "./_shared/stats-refresh-config.js";
 import { CONSENT_VERSION, normalizeEmail, upsertSubscriber } from "./_shared/subscribers.js";
 
 const CORS_HEADERS = {
@@ -10,20 +8,20 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-function kvLimitResponse(detail: string, kind: "read" | "write" | "unknown" = "write") {
-  const retryAfter =
-    kind === "read"
-      ? "KV daily read limit reached — pause stats refresh in Settings → Automation and retry after UTC midnight."
-      : "KV daily write limit reached — retry tomorrow or upgrade Cloudflare Workers plan.";
+function kvLimitResponse(detail: string) {
   return jsonResponse(
     {
       error: "Service temporarily unavailable",
       detail,
-      retryAfter,
+      retryAfter: "KV daily write limit reached — retry tomorrow or upgrade Cloudflare Workers plan.",
     },
     503,
     CORS_HEADERS
   );
+}
+
+function isKvLimitError(error: unknown) {
+  return String(error instanceof Error ? error.message : error).includes("KV put() limit");
 }
 
 function normalizeInstallId(value: unknown): string | null {
@@ -57,24 +55,14 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: "Consent is required to subscribe" }, 400, CORS_HEADERS);
     }
 
-    const statsConfig = await readStatsRefreshConfig(env);
-    const skipSnapshot = isKvWritesPaused(statsConfig.writesPausedUntil);
-    const upsert = await upsertSubscriber(
-      env.ADMIN_KV,
-      {
-        email,
-        source: String(body.source ?? "website").trim() || "website",
-        installId: normalizeInstallId(body.installId ?? body.install_id),
-        consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
-      },
-      { skipSnapshot, env }
-    );
+    const upsert = await upsertSubscriber(env.ADMIN_KV, {
+      email,
+      source: String(body.source ?? "website").trim() || "website",
+      installId: normalizeInstallId(body.installId ?? body.install_id),
+      consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
+    });
     if (!upsert.ok) {
-      const message = upsert.error || "Subscribe failed";
-      if (isKvQuotaError(message)) {
-        return kvLimitResponse(formatKvQuotaError(message), message.includes("get()") ? "read" : "write");
-      }
-      return jsonResponse({ error: message }, 503, CORS_HEADERS);
+      return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
     }
 
     const alreadySubscribed = Boolean(upsert.alreadySubscribed);
@@ -122,9 +110,8 @@ export async function onRequestPost(context) {
     );
   } catch (error) {
     console.error("subscribe handler error", error);
-    if (isKvQuotaError(error)) {
-      const message = error instanceof Error ? error.message : "KV quota exceeded";
-      return kvLimitResponse(formatKvQuotaError(message), message.includes("get()") ? "read" : "write");
+    if (isKvLimitError(error)) {
+      return kvLimitResponse(error instanceof Error ? error.message : "KV write limit exceeded");
     }
     return jsonResponse(
       { error: "Subscribe failed", detail: error instanceof Error ? error.message : "Unknown error" },

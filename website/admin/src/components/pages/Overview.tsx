@@ -40,7 +40,7 @@ function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger
 export default function Overview() {
   const { data, error, loading } = useSiteData();
   const { stats: visitors, live: visitorsLive } = useVisitorStats(data?.visitors);
-  const { stats: usageStats, live: usageLive, error: usageError } = useUsageStats();
+  const { stats: usageStats, live: usageLive } = useUsageStats();
 
   if (loading) {
     return (
@@ -110,12 +110,10 @@ export default function Overview() {
         />
         <KpiCard
           label="Active users (now)"
-          value={usageError ? "—" : formatCount(usageStats?.optInUniques?.activeNow ?? 0)}
+          value={formatCount(usageStats?.optInUniques?.activeNow ?? 0)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              {usageError
-                ? usageError
-                : `${usageLive ? "Live · last 5 min" : "Polling"} · ${formatCount(usageStats?.optInUniques?.unique24h ?? 0)} in 24h`}
+              {usageLive ? "Live · last 5 min" : "Polling"} · {formatCount(usageStats?.optInUniques?.unique24h ?? 0)} in 24h
             </span>
           }
           icon={<Users className="text-[var(--color-accent)]" size={24} />}
@@ -123,12 +121,10 @@ export default function Overview() {
         />
         <KpiCard
           label="Opt-in installs (all-time)"
-          value={usageError ? "—" : formatCount(usageStats?.optInUniques?.uniqueAll ?? 0)}
+          value={formatCount(usageStats?.optInUniques?.uniqueAll ?? 0)}
           sub={
             <span className="text-xs text-[var(--color-muted)]">
-              {usageError
-                ? "Check /api/usage/stats"
-                : `${formatCount(usageStats?.optInUniques?.unique1h ?? 0)} in the last hour`}
+              {formatCount(usageStats?.optInUniques?.unique1h ?? 0)} in the last hour
             </span>
           }
           icon={<Activity className="text-[var(--color-accent-2)]" size={24} />}

@@ -147,12 +147,9 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
   authenticated dashboard without a real Google account. `website/admin/.env`
   ships with public Firebase config for local dev.
 - **Fast deploy (local testing, ~1–3 min):** skips live marketplace fetches and
- mail setup. One-time: `cd website/admin && npx wrangler login`. Then from repo
- root: `npm run admin:deploy:fast` (production) or
- `npm run deploy:fast:preview --prefix website/admin` (preview branch).
- **Direct main push (sync + deploy):** `npm run push:main:admin -- --title "…"` syncs
- site-data/SEO, pushes `main`, runs fast admin deploy, and watches CI. Full infra:
- `npm run push:main:full -- --title "…"`. See `AGENT_INIT.md`.
+  mail setup. One-time: `cd website/admin && npx wrangler login`. Then from repo
+  root: `npm run admin:deploy:fast` (production) or
+  `npm run deploy:fast:preview --prefix website/admin` (preview branch).
   Full repair with mail: `node website/admin/scripts/repair-mail.mjs`.
 - **Mail CI:** push to `main` skips `enable-mail` and stats-cron deploy; use
   workflow_dispatch **deploy-infra** for full Cloudflare mail repair. Guide:

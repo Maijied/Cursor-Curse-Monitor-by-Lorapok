@@ -241,7 +241,11 @@ function resolveCloudflareApiTokenFromVault(vault) {
 function resolveCloudflareEmailTokenFromVault(vault) {
   const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
   const cloudflare = /** @type {Record<string, unknown>} */ (vault?.cloudflare ?? {});
-  const candidates = [cursor.cloudflare_email_api_token, cloudflare.email_api_token];
+  const candidates = [
+    cursor.cloudflare_email_api_token,
+    cloudflare.email_api_token,
+    resolveCloudflareApiTokenFromVault(vault),
+  ];
   for (const value of candidates) {
     const token = String(value ?? "").trim();
     if (token) return token;

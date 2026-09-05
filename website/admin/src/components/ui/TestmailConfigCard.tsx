@@ -17,7 +17,7 @@ export default function TestmailConfigCard() {
   const [config, setConfig] = useState<TestmailIntegrationConfig | null>(null);
   const [namespace, setNamespace] = useState("");
   const [testmailApiKey, setTestmailApiKey] = useState("");
-  const [probeEnabled, setProbeEnabled] = useState(false);
+  const [probeEnabled, setProbeEnabled] = useState(true);
 
   useEffect(() => {
     fetchTestmailConfigApi()
@@ -74,8 +74,8 @@ export default function TestmailConfigCard() {
             testmail.app
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Optional E2E subscribe probes for Mailbox and local scripts. Disabled by default — production mail uses Resend.
-            Sync API key + namespace only if you re-enable probes.
+            E2E subscribe probes in CI and Mailbox. Sync API key + namespace to GitHub, then run{" "}
+            <code className="text-xs">setup-testmail-pages-secret.mjs</code> for Pages runtime.
           </p>
         </div>
         {config && <Badge variant={ok ? "synced" : "warn"}>{ok ? "Configured" : "Incomplete"}</Badge>}

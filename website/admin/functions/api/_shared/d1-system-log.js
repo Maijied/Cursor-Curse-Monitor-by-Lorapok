@@ -102,56 +102,6 @@ export async function readSystemLogsD1(env, limit = MAX_SYSTEM_LOG_ENTRIES) {
 }
 
 /**
- * @param {Record<string, unknown>} env
- * @param {string} source
- * @param {number} [limit]
- */
-export async function readSystemLogsD1BySource(env, source, limit = MAX_SYSTEM_LOG_ENTRIES) {
-  const db = env?.ADMIN_D1;
-  if (!db?.prepare) return null;
-
-  const capped = Math.max(1, Math.min(limit, MAX_SYSTEM_LOG_ENTRIES));
-  const safeSource = String(source ?? "").trim();
-  if (!safeSource) return [];
-
-  try {
-    const result = await db
-      .prepare(
-        `SELECT id, ts, level, source, message, meta_json, email
-         FROM system_logs
-         WHERE source = ?
-         ORDER BY ts DESC
-         LIMIT ?`
-      )
-      .bind(safeSource, capped)
-      .all();
-
-    return (result?.results ?? []).map((row) => {
-      let meta = {};
-      if (row.meta_json) {
-        try {
-          meta = JSON.parse(String(row.meta_json));
-        } catch {
-          meta = {};
-        }
-      }
-      return normalizeSystemLogEntry({
-        id: row.id,
-        ts: row.ts,
-        level: row.level,
-        source: row.source,
-        message: row.message,
-        meta,
-        email: row.email,
-      });
-    });
-  } catch (err) {
-    console.error("readSystemLogsD1BySource failed", err);
-    return null;
-  }
-}
-
-/**
  * @param {Array<ReturnType<typeof normalizeSystemLogEntry>>} batches
  */
 export function mergeSystemLogEntries(...batches) {
