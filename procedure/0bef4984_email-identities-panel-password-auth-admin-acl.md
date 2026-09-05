@@ -28,7 +28,7 @@
 - [x] MAIL-07 inbound MX added Cloudflare
 - [x] AUTH-01 RBAC matrix + `/api/auth/me`
 - [x] AUTH-11 Profile tab + PIN quick-unlock
-- [x] AUTH-02–05 Password login + invite gate + AuthContext
+- [x] AUTH-02 Firebase Console — Email/Password + authorized domains (user confirmed + API probe 2026-09-05)
 - [x] MAIL-09 API + KV (`integrations:email-identities`, config/provision routes)
 - [x] MAIL-10 Email identities Settings tab (`EmailIdentitiesCard`)
 - [x] MAIL-12 partial — `email-identities-config.test.mjs`, api-catalog, rbac-routes
@@ -61,18 +61,18 @@
 | 2026-09-05 | Fix vault `admin_master_email` typo (`@gmail.comm` → `@gmail.com`) | Production Access Denied for mdshuvo40@gmail.com until Pages secret redeployed |
 | 2026-09-05 | Invite-check API before login | `GET /api/auth/invite-check` — no allowlist leak |
 | 2026-09-05 | Password policy without zxcvbn dep | min 12 + complexity + strength label in `password-policy.ts` |
-| 2026-09-05 | Tier D automated where browser blocked | `auth:tier-d` = `tier-d-rbac-nav` + `pin-unlock` + `PinUnlockOverlay` vitest + `auth:probe-production` |
+| 2026-09-05 | AUTH-02 Firebase Console complete | User enabled Email/Password + domains; Identity Toolkit password probe OK |
 
 ---
 
 
 
-## AUTH-02 — Firebase Console (manual)
+## AUTH-02 — Firebase Console (manual) — **done** (2026-09-05)
 
-1. [Firebase Console](https://console.firebase.google.com/) → project **cursor-curse-by-lorapok**
-2. **Authentication** → **Sign-in method** → enable **Email/Password** (not Email link only)
-3. **Authentication** → **Settings** → **Authorized domains** — ensure `cursor-dev.lorapok.tech` and `localhost` are listed
-4. No public registration — invite list enforced by `/api/auth/invite-check` + `verifyAdminRequest`
+1. [x] [Firebase Console](https://console.firebase.google.com/) → project **cursor-curse-by-lorapok**
+2. [x] **Authentication** → **Sign-in method** → **Email/Password** enabled
+3. [x] **Authentication** → **Settings** → **Authorized domains** — `cursor-dev.lorapok.tech` and `localhost`
+4. [x] Verified: Identity Toolkit returns `INVALID_LOGIN_CREDENTIALS` (not `OPERATION_NOT_ALLOWED`) for password sign-in probe
 
 ---
 
@@ -83,8 +83,6 @@
 
 | Blocker                                        | Unblocks                                                   |
 | ---------------------------------------------- | ---------------------------------------------------------- |
-| MAIL-07 Resend verify pending                  | ~~End-to-end external mail test~~ — domain verified 2026-09-05 |
-| Firebase Email/Password not enabled in console | AUTH-02 (ops — Firebase Console) |
 | Optional live operator browser spot-check      | Sign in as `s.songket@gmail.com` or `sawirmajumder@gmail.com` |
 
 

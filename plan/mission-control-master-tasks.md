@@ -109,7 +109,7 @@
 | FB-07 | Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback) | **done** | `sync-firebase-pages-secrets.mjs` |
 | FB-08 | KV `integrations:firebase` re-seeded production | **done** | `seed-firebase-kv.mjs` 2026-09-05 |
 | AUTH-01 | RBAC + email-identities architecture sign-off | **done** | `plan/AUTH-01-rbac-matrix.md`; `rbac.js` + `GET /api/auth/me` |
-| AUTH-02 | Enable Firebase Email/Password + invite-only gate | **done** | Console step documented; `GET /api/auth/invite-check` + Login gate |
+| AUTH-02 | Enable Firebase Email/Password + invite-only gate | **done** | Console enabled 2026-09-05; `invite-check` + Login Password tab; Identity Toolkit probe OK |
 | AUTH-03 | Login UI: email/password fields + validation (zxcvbn) | **done** | `Login.tsx` + `password-policy.ts` (min 12 + strength score) |
 | AUTH-04 | Password reset + lockout messaging for allowlisted admins | **done** | `sendPasswordResetEmail` + too-many-requests copy |
 | AUTH-05 | `GET /api/auth/me` — role + permissions for SPA | **done** | `AuthProvider` + `auth-guard` via `fetchAuthMe` |
@@ -260,10 +260,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **AUTH-02** — Firebase Console: Email/Password + authorized domains (`cursor-dev.lorapok.tech`, `localhost`) — ops checklist in `procedure/0bef4984`
-2. **R2-02** — Enable R2 in Cloudflare dashboard → `create-r2-stats-bucket.mjs` (reduces KV write pressure)
-3. **Reliability** — close `procedure/c6c42bab` post-merge verification (Tier C health pass 2026-09-05)
-4. **Cred vault Discord backup** (optional) — `cred set cursor discord_*_webhook_url` then `node scripts/sync-discord-cred-vault.mjs` for DR; production KV already configured via Settings
+1. **R2-02** — Enable R2 in Cloudflare dashboard → `node website/admin/scripts/create-r2-stats-bucket.mjs` (reduces KV write pressure; currently **code 10042**)
+2. **Cred vault Discord backup** (optional) — `cred set cursor discord_*_webhook_url` then `node scripts/sync-discord-cred-vault.mjs`
+3. **Optional** — live operator browser spot-check (`s.songket@gmail.com` / `sawirmajumder@gmail.com`)
 
 ---
 
@@ -272,7 +271,6 @@
 | Blocker | Unblocks |
 |---------|----------|
 | R2 not enabled on account | R2-02 bucket creation (code 10042) |
-| Firebase Email/Password not verified in console | AUTH-02 manual checklist |
 
 ---
 
