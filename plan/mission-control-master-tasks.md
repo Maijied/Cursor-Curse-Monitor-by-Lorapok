@@ -2,7 +2,7 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (deploy UX, public site pages, legal/analytics tasks)  
+**Last updated:** 2026-09-05 (social/SEO, Discord CI cards, admin footer, cred sync)  
 **Branch:** `feat/github-task-tracking-system`  
 **CI:** green  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
@@ -47,19 +47,21 @@ _None — pick from **Recommended next queue** below._
 | Cloudflare R2 | 2 | 1 | 0 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
 | Firebase | 6 | 5 | 0 |
-| GitHub | 5 | 3 | 0 |
-| Release & deploy | 0 | 2 | 0 |
+| GitHub | 5 | 4 | 0 |
+| Release & deploy | 0 | 3 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
 | Google Cloud (GCP) | 2 | 3 | 0 |
 | Mail (Resend + CF Email) | 3 | 8 | 1 |
-| Discord | 3 | 5 | 0 |
+| Discord | 3 | 11 | 0 |
+| SEO & growth | 0 | 3 | 0 |
+| Social & media | 0 | 4 | 0 |
 | Stats / Cron | 6 | 2 | 1 |
 | IDE extension | 4 | 4 | 0 |
 | Browser extension | 4 | 4 | 0 |
 | Marketing website | 4 | 8 | 0 |
 | Legal & privacy | 0 | 2 | 0 |
 | Ecosystem expansion | 3 | 18 | 0 |
-| Admin UX / observability | 3 | 13 | 0 |
+| Admin UX / observability | 3 | 16 | 0 |
 
 ---
 
@@ -155,6 +157,7 @@ _None — pick from **Recommended next queue** below._
 | GH-04 | Mail sync GHA workflow polling (like deploy) | **done** | `useWorkflowPoll` + `MailSyncProgressBanner` |
 | MAIL-07 | Mail sync workflow polling in UI | **done** | Mail + Setup checklist |
 | GH-05 | Procedure on-merge finalize for settings PR | **next** | optional |
+| GH-06 | **GitHub webhooks** — repo push, release, workflow_run → Mission Control ingest + fan-out to Discord/social | **next** | Settings → GitHub tab; configurable events; HMAC verify |
 
 ---
 
@@ -164,6 +167,8 @@ _None — pick from **Recommended next queue** below._
 |----|------|--------|----------------|
 | REL-01 | **Beta release pipeline fix** — `-beta` tag/channel, `release-prep`, marketplace skips (Firefox), Mission Control deploy dispatch out of sync with CI | **next** | `ci-cd.yml`, `compute-next-release-version.mjs`, Deployments beta channel; operator reports broken beta flow |
 | DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **next** | `DeployRuntimeContext`, `DeployRuntimePanel`, `DeployLeaveWarningModal`; parity with `workflow-run-match.ts` |
+| DEPLOY-02 | **Remove duplicate webhook UI** from Deployments page — canonical config in Settings → Discord / Social | **next** | `Deployments.tsx`; link refer buttons to Settings |
+| DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **next** | hooks `release-prep` + Mission Control deploy complete |
 
 ---
 
@@ -212,6 +217,7 @@ _None — pick from **Recommended next queue** below._
 | MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
 | MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **next** | `mail.js` templates + Settings preview |
 | MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **next** | subscribe API + template engine in KV |
+| MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **next** | `mail-probe` cron + Settings matrix; alert on failure |
 
 ---
 
@@ -226,6 +232,8 @@ _None — pick from **Recommended next queue** below._
 | DC-05 | Subscribe fallback Discord URL in prod | **next** | Settings → General |
 | DC-06 | **Product-designed Discord cards** — branded embed layouts for deploy, digest, community, feedback (Lorapok aesthetic) | **next** | `discord-config.js` payloads + shared template partials; preview in Settings |
 | DC-07 | Discord card gallery / test-send matrix in Settings | **next** | one-click preview per webhook type |
+| DC-08 | **CI/CD success cards** — Discord embed on workflow success: jobs, duration, markets, changelog excerpt, release link | **next** | `discord-deployment-notify.mjs` + `ci-cd.yml`; pairs DC-06 templates |
+| DC-09 | **CI/CD failure cards** — Discord embed on failure: failed job, step, logs URL, partial changelog, rollback hint | **next** | same pipeline; distinct Lorapok error aesthetic |
 
 ---
 
@@ -281,6 +289,29 @@ _None — pick from **Recommended next queue** below._
 | WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **next** | new `#engineering` section; link to wiki + GitHub |
 | WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **next** | static pages or lightweight router; Mission Control as CMS source |
 | WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **next** | all surfaces; pairs with ECO-11 |
+| WEB-11 | **Engineering history timeline** — long behind-the-scenes page: sectioned milestones, procedure arc, deploy history, team credits | **next** | extends WEB-08; `/engineering/history` |
+
+---
+
+## SEO & growth
+
+| ID | Task | Status | Notes / verify |
+|----|------|--------|----------------|
+| SEO-01 | **World-class SEO core** — JSON-LD, canonical URLs, Lorapok Labs + all product links in meta/alt/semantic HTML; `seo.json` pipeline | **next** | `npm run site:seo`; repeat ecosystem keywords naturally |
+| SEO-02 | **SEO admin hub** — Google Search Console, Cloudflare, Azure Webmaster, Bing; sitemap, robots, Core Web Vitals — all configurable in Settings | **next** | new Settings tab or Services card; cred vault for tokens |
+| SEO-03 | **SEO policy & compliance** — privacy-aligned indexing rules, noindex admin, structured `Organization` + `SoftwareApplication` schema | **next** | `LEGAL-01` alignment; Lorapok cross-links in hidden/aria where appropriate |
+
+---
+
+## Social & media
+
+| ID | Task | Status | Notes / verify |
+|----|------|--------|----------------|
+| SOCIAL-01 | **Multi-platform webhooks** — Discord + X/LinkedIn/Mastodon/Bluesky/Telegram (where API allows); Lorapok card templates like DC-06 | **next** | Settings → Social; KV `integrations:social`; test-send matrix |
+| SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **next** | `DEPLOY-03` trigger; feature-tagged assets |
+| SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **next** | admin Social Studio; size presets per network |
+| SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **next** | Settings; cred vault keys; Chrysalis/SOCIAL-02 consumer |
+| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **next** | configurable; falls back to static carousel |
 
 ---
 
@@ -332,6 +363,8 @@ _None — pick from **Recommended next queue** below._
 | SET-09 | Settings + nav gated by RBAC permissions | **done** | `nav-permissions.ts`, PermissionRoute, card write gates |
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
+| CRED-02 | **Cred sync reliability** — idempotent save→GH/Pages/CF sync; miss detection + retry; health badge "sync never miss" | **next** | audit on every Settings master save; alert if drift |
+| INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **next** | reduce duplicate cards; everything configurable from admin |
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
@@ -339,21 +372,25 @@ _None — pick from **Recommended next queue** below._
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **next** | ACL-aware; fuzzy match; keyboard-first |
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
+| ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **next** | shared `SectionReferLink` component |
+| ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **next** | `/api/health` + `site-data`; no duplicate Overview chips |
+| ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **next** | single source per metric; ADMIN-04 footer owns status strip |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **REL-01** — Fix beta release pipeline (tag, channel, deploy dispatch)
-2. **DEPLOY-01** — Global floating deploy UX + CI/CD step parity in admin
-3. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
-4. **ADMIN-01** — Mission Control global search / command palette
-5. **WEB-07 / WEB-08** — Expanded topology + behind-the-scenes engineering section
-6. **WEB-09 / WEB-10** — Public wiki/releases/community/docs + contributor welcome
-7. **LEGAL-01 / ANALYTICS-02** — Terms/consent + professional visitor/user analytics
-8. **CHRYS-01** — Chrysalis brand + animated floating assistant
-9. **CHRYS-02 / CHRYS-03** — AI provider (Antigravity/vault) + privacy tiers
-10. **ECO-08**, **MAIL-13/14**, **CHRYS-04/05**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
+1. **REL-01** — Fix beta release pipeline
+2. **DEPLOY-01 / DEPLOY-02** — Global deploy UX + remove duplicate webhook UI
+3. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog
+4. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
+5. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
+6. **SOCIAL-01–03 / DEPLOY-03** — Multi-platform webhooks + deploy social gallery + one-click share
+7. **SEO-01–03** — World-class SEO + admin hub + policies
+8. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+9. **WEB-11** — Engineering history timeline page
+10. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+11. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
 
@@ -374,5 +411,6 @@ _None — R2 enabled 2026-09-05. Redeploy after `wrangler.toml` STATS_R2 binding
 - `docs/wiki/Ecosystem-Roadmap.md` — tray, browsers, Cursor plugin, Chrysalis AI, notifications
 - `docs/wiki/Chrysalis.md` — floating AI assistant, privacy tiers, BYOK
 - `docs/wiki/Public-Website.md` — multi-page site, topology, behind-the-scenes, contributors
+- `docs/wiki/Social-and-SEO.md` — webhooks, gallery, SEO hub, multi-channel publish
 - `docs/wiki/GitHub-Project.md` — Project #4, labels, milestones, community stats
 - `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` — epic procedure ([#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120))

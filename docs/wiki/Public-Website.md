@@ -64,7 +64,15 @@ New section covering:
 
 ---
 
-## Legal & analytics
+## Engineering history (WEB-11)
+
+Long-form **behind-the-scenes timeline** at `/engineering/history` — sectioned summary of the whole build: monorepo, CI/CD evolution, Mission Control, procedure workflow, releases, contributors. Extends WEB-08.
+
+## Social & SEO
+
+See **[Social and SEO](Social-and-SEO)** — Discord CI cards, multi-platform webhooks, deploy image gallery, video generator, world-class SEO hub.
+
+---
 
 | Task | Purpose |
 |------|---------|

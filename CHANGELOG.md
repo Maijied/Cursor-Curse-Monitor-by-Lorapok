@@ -16,9 +16,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **Chrysalis AI roadmap (CHRYS-01–05)** — named floating assistant; Antigravity/vault for admin; user BYOK on web/extensions; privacy tiers; system learning for usage warnings
-- **DEPLOY-01 / WEB-07** — global admin deploy UX + expanded CI/CD topology on website
-- **WEB-08–10** — behind-the-scenes engineering, public wiki/releases/community pages, OSS welcome
-- **LEGAL-01 / ANALYTICS-02** — terms/consent + professional visitor/user event log
+- **DC-08/09 / SOCIAL-01–05** — Discord CI cards, multi-platform webhooks, deploy social gallery, AI image/video generators
+- **SEO-01–03** — world-class SEO, admin hub (GSC/Cloudflare/Azure), Lorapok ecosystem cross-links
+- **ADMIN-03–05 / DEPLOY-02** — refer buttons, minimal footer, dedupe dashboard, remove Deployments webhook duplicate
+- **CRED-02 / INT-01 / GH-06 / MAIL-16** — cred sync never-miss, unified integrations, GitHub webhook, live email audit
+- **WEB-11** — engineering history timeline page
 - **Interactive features explorer (WEB-05)** — post-hero product cards + live GitHub metrics on marketing site
 - **Floating Larvae AI (WEB-06, partial)** — `ccm-floating-assistant.js` reads `site-data.json` for product Q&A on marketing site
 - **Ecosystem task registry (ECO-01–12)** — tray app, all browsers, Cursor plugin, push notifications, validators, loaders, wiki pages
