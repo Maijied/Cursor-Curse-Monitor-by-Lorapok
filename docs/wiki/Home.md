@@ -12,6 +12,7 @@ Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs 
 | Email & mailbox | [Mailbox and Email](Mailbox-and-Email) |
 | Architecture | [Architecture](Architecture) |
 | Ecosystem roadmap (tray, browsers, AI) | [Ecosystem Roadmap](Ecosystem-Roadmap) |
+| Chrysalis floating AI assistant | [Chrysalis](Chrysalis) |
 | GitHub Project & issues | [GitHub Project](GitHub-Project) |
 | AI agent commands (`Update?`, `next`) | [AI Agent Commands](AI-Agent-Commands) |
 | Support | [Support](Support) |
@@ -45,7 +46,7 @@ CCM is developed and operated by [Lorapok Labs](https://lorapok.tech). Mission C
 |----------|-------------|
 | [GitHub Project #4](https://github.com/users/Maijied/projects/4) | Team planning board — synced from `plan/mission-control-master-tasks.md` |
 | [Open backlog epic #126](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/126) | Mission Control polish + observability |
-| [Ecosystem Roadmap](Ecosystem-Roadmap) | Tray app, all browsers, Cursor plugin, floating AI, push notifications |
+| [Ecosystem Roadmap](Ecosystem-Roadmap) | Tray app, all browsers, Cursor plugin, Chrysalis AI, push notifications |
 | GitHub traffic (14d) | 3,933 clones · 1,984 views — live on site-data `githubCommunity` |
 
 Agents: read [AI Agent Commands](AI-Agent-Commands) before **Update?** or **next**.

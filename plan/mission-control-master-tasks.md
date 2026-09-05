@@ -2,7 +2,7 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (ECO roadmap + GitHub community stats)  
+**Last updated:** 2026-09-05 (Chrysalis AI + beta release + admin search tasks)  
 **Branch:** `feat/github-task-tracking-system`  
 **CI:** green  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
@@ -47,7 +47,8 @@ _None — pick from **Recommended next queue** below._
 | Cloudflare R2 | 2 | 1 | 0 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
 | Firebase | 6 | 5 | 0 |
-| GitHub | 5 | 2 | 0 |
+| GitHub | 5 | 3 | 0 |
+| Release & deploy | 0 | 1 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
 | Google Cloud (GCP) | 2 | 3 | 0 |
 | Mail (Resend + CF Email) | 3 | 8 | 1 |
@@ -56,8 +57,8 @@ _None — pick from **Recommended next queue** below._
 | IDE extension | 4 | 4 | 0 |
 | Browser extension | 4 | 4 | 0 |
 | Marketing website | 4 | 2 | 0 |
-| Ecosystem expansion | 3 | 12 | 0 |
-| Admin UX / observability | 3 | 11 | 0 |
+| Ecosystem expansion | 3 | 18 | 0 |
+| Admin UX / observability | 3 | 13 | 0 |
 
 ---
 
@@ -153,6 +154,14 @@ _None — pick from **Recommended next queue** below._
 | GH-04 | Mail sync GHA workflow polling (like deploy) | **done** | `useWorkflowPoll` + `MailSyncProgressBanner` |
 | MAIL-07 | Mail sync workflow polling in UI | **done** | Mail + Setup checklist |
 | GH-05 | Procedure on-merge finalize for settings PR | **next** | optional |
+
+---
+
+## Release & deploy
+
+| ID | Task | Status | Notes / verify |
+|----|------|--------|----------------|
+| REL-01 | **Beta release pipeline fix** — `-beta` tag/channel, `release-prep`, marketplace skips (Firefox), Mission Control deploy dispatch out of sync with CI | **next** | `ci-cd.yml`, `compute-next-release-version.mjs`, Deployments beta channel; operator reports broken beta flow |
 
 ---
 
@@ -265,7 +274,7 @@ _None — pick from **Recommended next queue** below._
 | WEB-03 | Regenerate committed site-data (local drift) | **done** | `githubCommunity` block + features explorer |
 | WEB-04 | Hero / stats polish plan | **deferred** | `a8f3c2d1_website-final-polish-plan.md` |
 | WEB-05 | **Interactive features explorer** — post-hero cards + GitHub community stats panel | **done** | `features-explorer.js`, `site-data.json` |
-| WEB-06 | **Floating Larvae AI** — live product Q&A from `site-data.json` | **partial** | `ccm-floating-assistant.js` on marketing site |
+| WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | `ccm-floating-assistant.js`; rename → Chrysalis (CHRYS-01) |
 
 ---
 
@@ -275,16 +284,21 @@ _None — pick from **Recommended next queue** below._
 |----|------|--------|----------------|
 | ECO-01 | **All browsers** — Safari, Edge, Opera, Brave MV3 builds + CI publish matrix | **next** | shared `@lorapok/cursor-monitor-shared`; AMO/Chrome patterns |
 | ECO-02 | **GitHub community stats** — traffic + CI snapshot on README, website, Mission Control | **done** | `procedure/github-community-stats.json`, `GitHubCommunityCard`, `npm run site:data` |
-| ECO-03 | **Floating AI assistant (website)** — animated Larvae panel, always reads latest `site-data.json` | **partial** | `ccm-floating-assistant.js` |
+| ECO-03 | **Chrysalis (website)** — animated floating assistant; reads latest `site-data.json` | **partial** | `ccm-floating-assistant.js` → Chrysalis brand (CHRYS-01) |
 | ECO-04 | **OS tray app** — Win/macOS/Linux system tray for limits, notices, quick actions | **next** | Electron or Tauri; shared product context |
 | ECO-05 | **Cursor native plugin** — first-party Cursor extension / plugin slot (not just VS Code host) | **next** | Cursor plugin API research + packaging |
-| ECO-06 | **Floating AI everywhere** — admin SPA, IDE popup, browser options, tray shell | **next** | share context module; ECO-03 pattern |
+| ECO-06 | **Chrysalis everywhere** — admin SPA, IDE popup, browser options, tray shell | **next** | share Chrysalis module; CHRYS-01–05 |
 | ECO-07 | **Push notifications** — Web Push + native OS alerts for limits, Mission Control notices | **next** | permission UX + KV notice hooks |
 | ECO-08 | **Action validator** — confirm before deploy, delete, broadcast, cred vault write | **partial** | `packages/shared/src/confirmAction.ts`; wire admin + extensions |
 | ECO-09 | **Global loading animation** — Larvae shimmer on long operations (admin, site, extensions) | **next** | extend `ShimmerSkeleton` + shared loader |
 | ECO-10 | **AI conversation hygiene** — no secrets/junk in agent chat; procedure-only tracking | **next** | `.cursor/rules/ai-agent-commands.mdc` + agent docs |
 | ECO-11 | **Wiki + taskboard assets** — professional wiki pages; optional generated diagrams for Project #4 | **partial** | `docs/wiki/Ecosystem-Roadmap.md`, `GitHub-Project.md`, `AI-Agent-Commands.md` |
 | ECO-12 | **Repo hygiene** — gitignore local Wrangler/miniflare state; keep agent-accessible paths documented | **done** | `.gitignore` → `website/admin/.wrangler/` |
+| CHRYS-01 | **Chrysalis brand + animation** — official name for floating AI; Larvae mascot animation on all surfaces | **next** | rename UI copy; shared `@lorapok/cursor-monitor-shared` Chrysalis shell |
+| CHRYS-02 | **Chrysalis AI provider** — Antigravity + pluggable models; operator API key from cred vault (admin only) | **next** | user supplies Antigravity/other key; never commit; server-side proxy for admin |
+| CHRYS-03 | **Chrysalis privacy tiers** — admin learns full system under RBAC; website/extensions never see admin KV, secrets, or PII | **next** | separate context bundles; fail closed on ACL |
+| CHRYS-04 | **Chrysalis BYOK (user ecosystem)** — web + extensions use **user's** API key passively from options/vault; Lorapok does not ship keys to clients | **next** | encrypted local storage; opt-in; no telemetry of key material |
+| CHRYS-05 | **Chrysalis system learning** — ingest wiki, site-data, usage state; suggest actions and warn (limits, budget, deploy) with surface-appropriate restrictions | **next** | RAG + rules; pairs with ECO-10 hygiene |
 
 ---
 
@@ -308,20 +322,23 @@ _None — pick from **Recommended next queue** below._
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
+| ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **next** | ACL-aware; fuzzy match; keyboard-first |
+| ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **AUTH-13** — ACL audit UI (filterable timeline + export) · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
-2. **ECO-08** — Wire `confirmAction` on destructive admin/deploy/mail paths
-3. **ECO-06** — Floating Larvae AI in Mission Control Overview (reuse website module)
-4. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
-5. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
-6. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
-7. **LOGS-01** — Formatted, filterable unified logs
-8. **EXT-01** — Platform logos + links across admin, website, IDE, browser extensions
-9. **ECO-01 / ECO-04 / ECO-05** — All browsers, tray app, Cursor plugin (parallel epics)
+1. **REL-01** — Fix beta release pipeline (tag, channel, deploy dispatch)
+2. **AUTH-13** — ACL audit UI (filterable timeline + export) · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
+3. **ADMIN-01** — Mission Control global search / command palette
+4. **CHRYS-01** — Chrysalis brand + animated floating assistant (all surfaces)
+5. **CHRYS-02 / CHRYS-03** — AI provider (Antigravity/vault) + privacy tiers
+6. **ECO-08** — Wire `confirmAction` on destructive admin/deploy/mail paths
+7. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
+8. **CHRYS-04 / CHRYS-05** — User BYOK + system learning (usage warnings)
+9. **DC-06 / DC-07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
+10. **ECO-01 / ECO-04 / ECO-05** — All browsers, tray app, Cursor plugin
 
 ---
 
@@ -339,6 +356,7 @@ _None — R2 enabled 2026-09-05. Redeploy after `wrangler.toml` STATS_R2 binding
 - `procedure/2b7b880d_settings-tabs-secrets.md`
 - `plan/b8e4f2a1_email-identities-auth-acl-plan.md` — email identities Settings panel, password auth, RBAC/ACL
 - `MISSION-CONTROL-WALKTHROUGH.md` — agent onboarding for **Update?** / **next**
-- `docs/wiki/Ecosystem-Roadmap.md` — tray, browsers, Cursor plugin, floating AI, notifications
+- `docs/wiki/Ecosystem-Roadmap.md` — tray, browsers, Cursor plugin, Chrysalis AI, notifications
+- `docs/wiki/Chrysalis.md` — floating AI assistant, privacy tiers, BYOK
 - `docs/wiki/GitHub-Project.md` — Project #4, labels, milestones, community stats
 - `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` — epic procedure ([#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120))

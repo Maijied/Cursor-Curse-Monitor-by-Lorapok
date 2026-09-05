@@ -15,7 +15,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **GitHub community stats (ECO-02)** — traffic + CI snapshot in README, marketing site features panel, and Mission Control Overview (`githubCommunity` in `site-data.json`)
+- **Chrysalis AI roadmap (CHRYS-01–05)** — named floating assistant; Antigravity/vault for admin; user BYOK on web/extensions; privacy tiers; system learning for usage warnings
+- **REL-01** — beta release pipeline fix task
+- **ADMIN-01/02** — Mission Control global search + UX polish tasks
 - **Interactive features explorer (WEB-05)** — post-hero product cards + live GitHub metrics on marketing site
 - **Floating Larvae AI (WEB-06, partial)** — `ccm-floating-assistant.js` reads `site-data.json` for product Q&A on marketing site
 - **Ecosystem task registry (ECO-01–12)** — tray app, all browsers, Cursor plugin, push notifications, validators, loaders, wiki pages

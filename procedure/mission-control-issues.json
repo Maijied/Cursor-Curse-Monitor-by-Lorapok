@@ -53,6 +53,10 @@
     "Ecosystem expansion": {
       "number": 173,
       "title": "Epic: Ecosystem expansion"
+    },
+    "Release & deploy": {
+      "number": 184,
+      "title": "Epic: Release & deploy"
     }
   },
   "tasks": {
@@ -301,7 +305,55 @@
       "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/183",
       "status": "partial",
       "section": "Ecosystem expansion"
+    },
+    "REL-01": {
+      "number": 185,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/185",
+      "status": "next",
+      "section": "Release & deploy"
+    },
+    "CHRYS-01": {
+      "number": 186,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/186",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-02": {
+      "number": 187,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/187",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-03": {
+      "number": 188,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/188",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-04": {
+      "number": 189,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/189",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "CHRYS-05": {
+      "number": 190,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/190",
+      "status": "next",
+      "section": "Ecosystem expansion"
+    },
+    "ADMIN-01": {
+      "number": 191,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/191",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
+    },
+    "ADMIN-02": {
+      "number": 192,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/192",
+      "status": "next",
+      "section": "Settings UX (cross-cutting)"
     }
   },
-  "updatedAt": "2026-09-05T07:50:59.708Z"
+  "updatedAt": "2026-09-05T08:18:58.009Z"
 }

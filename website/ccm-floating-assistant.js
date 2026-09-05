@@ -1,5 +1,5 @@
 /**
- * Floating AI panel — live product info from site-data.json (no server chat log).
+ * Chrysalis — floating AI assistant panel (product context from site-data.json).
  */
 (function () {
   function mount() {
@@ -10,11 +10,11 @@
     root.className = "ccm-floating-ai";
     root.innerHTML = `
       <div class="ccm-floating-ai-panel" id="ccm-floating-ai-panel" hidden>
-        <div class="ccm-floating-ai-header">Lorapok guide · live product info</div>
+        <div class="ccm-floating-ai-header">Chrysalis · Lorapok guide</div>
         <div class="ccm-floating-ai-body" id="ccm-floating-ai-body">Loading…</div>
-        <div class="ccm-floating-ai-footer">Local session only — no chat sent to servers. Data from site-data.json.</div>
+        <div class="ccm-floating-ai-footer">Local session — Chrysalis uses site-data only. AI chat (BYOK) coming soon.</div>
       </div>
-      <button type="button" class="ccm-floating-ai-toggle" id="ccm-floating-ai-toggle" aria-expanded="false" aria-controls="ccm-floating-ai-panel" aria-label="Open Lorapok product guide">
+      <button type="button" class="ccm-floating-ai-toggle" id="ccm-floating-ai-toggle" aria-expanded="false" aria-controls="ccm-floating-ai-panel" aria-label="Open Chrysalis product guide">
         <img src="assets/logo.svg" alt="" width="36" height="36" />
       </button>`;
     document.body.appendChild(root);

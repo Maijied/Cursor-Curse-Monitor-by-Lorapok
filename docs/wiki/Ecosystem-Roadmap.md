@@ -8,7 +8,7 @@
 
 ## Vision
 
-Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all major browsers, OS tray app, Mission Control admin, marketing site with live AI guide, push notifications, action validators, and a native **Cursor plugin** — unified branding and always up-to-date product context.
+Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all major browsers, OS tray app, Mission Control admin, marketing site with **Chrysalis** (floating AI), push notifications, action validators, and a native **Cursor plugin** — unified branding and always up-to-date product context.
 
 ---
 
@@ -23,7 +23,9 @@ Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all ma
 | Marketing website | **shipped** | ECO-02, ECO-03 |
 | OS tray app (Win/macOS/Linux) | **planned** | ECO-04 |
 | Cursor native plugin | **planned** | ECO-05 |
-| Floating AI assistant (all surfaces) | **in progress** | ECO-03, ECO-06 |
+| Floating AI — **Chrysalis** (all surfaces) | **in progress** | CHRYS-01–05, ECO-03, ECO-06 |
+| Beta release pipeline | **broken / fix needed** | REL-01 |
+| Admin global search + UX | **planned** | ADMIN-01, ADMIN-02 |
 | Push notifications (browser + OS) | **planned** | ECO-07 |
 | Action validator (destructive ops) | **in progress** | ECO-08 |
 | Global loading animation (Larvae) | **partial** | ECO-09 |
@@ -46,12 +48,14 @@ Live copy: `site-data.json` → `githubCommunity` (refreshed via `npm run site:d
 
 ---
 
-## Floating AI assistant
+## Chrysalis (floating AI)
 
-- **Website:** `ccm-floating-assistant.js` — product Q&A from `site-data.json`
-- **Admin:** planned panel (ECO-06)
-- **Extensions / tray:** share `@lorapok/cursor-monitor-shared` product context
-- **Privacy:** no chat logging to server without opt-in; local session only
+See **[Chrysalis](Chrysalis)** for full spec.
+
+- **Website:** `ccm-floating-assistant.js` — product info from `site-data.json` (CHRYS-01 rename in progress)
+- **Admin:** operator guide + Antigravity/vault-backed model (CHRYS-02, CHRYS-03)
+- **Extensions / tray:** user BYOK; passive learn + usage warnings (CHRYS-04, CHRYS-05)
+- **Privacy:** tiered context — admin secrets never on public site; user keys never leave device without opt-in
 
 ---
 
@@ -69,6 +73,7 @@ Use before: deploy, delete, broadcast email, cred vault write, marketplace publi
 
 ## Related wiki pages
 
+- [Chrysalis](Chrysalis)
 - [AI Agent Commands](AI-Agent-Commands)
 - [GitHub Project & Issues](GitHub-Project)
 - [Architecture](Architecture)

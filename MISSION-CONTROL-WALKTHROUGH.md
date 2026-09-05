@@ -91,13 +91,14 @@ Do **not** implement unrelated roadmap items when user only said **Update?**.
 
 Current queue (2026-09-05):
 
-1. **AUTH-13** — ACL audit UI ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132))
-2. **ECO-08** — wire `confirmAction` on destructive admin paths
-3. **ECO-06** — floating Larvae AI in Mission Control
-4. **MAIL-13/14**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
-5. **ECO-01 / ECO-04 / ECO-05** — all browsers, tray app, Cursor plugin
+1. **REL-01** — fix beta release pipeline
+2. **AUTH-13** — ACL audit UI ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132))
+3. **ADMIN-01** — Mission Control global search
+4. **CHRYS-01–05** — Chrysalis floating AI (Antigravity/vault admin, user BYOK on extensions)
+5. **MAIL-13/14**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
+6. **ECO-01 / ECO-04 / ECO-05** — all browsers, tray app, Cursor plugin
 
-Ecosystem tasks: see **Ecosystem expansion** in master registry + [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md).
+Ecosystem + Chrysalis: [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md) · [Chrysalis](docs/wiki/Chrysalis.md).
 
 ---
 
@@ -171,7 +172,9 @@ See `docs/wiki/Architecture.md` § stats storage.
 - **LOGS-01** — unified filterable logs  
 - **EXT-01** — platform logos/links on all surfaces  
 
-**Ecosystem expansion** (ECO-*): all browsers, OS tray, Cursor plugin, floating AI on every surface, push notifications, global loaders, action validators — [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md).
+**Ecosystem expansion** (ECO-*, CHRYS-*): all browsers, OS tray, Cursor plugin, **Chrysalis** floating AI, push notifications, global loaders, action validators — [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md) · [Chrysalis](docs/wiki/Chrysalis.md).
+
+**Release:** **REL-01** — beta channel pipeline fix (tag prep, deploy dispatch).
 
 ---
 
