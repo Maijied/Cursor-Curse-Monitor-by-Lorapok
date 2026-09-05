@@ -18,7 +18,7 @@ describe("marketplace-tag-policy", () => {
     expect(hasCiOnlySuffix("v1.0.34-pr.12")).toBe(true);
     expect(hasCiOnlySuffix("v1.0.34-beta.0")).toBe(true);
     expect(isValidMarketplaceTag("v1.0.34-dev.5")).toBe(false);
-    expect(isValidMarketplaceTag("v1.0.34-beta.0")).toBe(false);
+    expect(isValidMarketplaceTag("v1.0.34-beta.0")).toBe(true);
     expect(isMarketplaceSemverTag("v1.0.34-beta.0")).toBe(false);
   });
 
@@ -28,6 +28,13 @@ describe("marketplace-tag-policy", () => {
         targetTag: "v1.0.51",
         releaseChannel: "Beta (Pre-release)",
         publishMarket: "Open VSX + Firefox AMO",
+      }).ok
+    ).toBe(true);
+    expect(
+      validateMarketplaceDeploy({
+        targetTag: "v1.0.51-beta.0",
+        releaseChannel: "Beta (Pre-release)",
+        publishMarket: "VS Code Marketplace",
       }).ok
     ).toBe(true);
     expect(

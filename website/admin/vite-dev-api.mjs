@@ -18,7 +18,7 @@ import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broad
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
 import { validateMarketplaceDeploy } from "./functions/api/_shared/marketplace-tag-policy.js";
 import { liveTagFromSiteData } from "./functions/api/_shared/site-data.js";
-import { buildVersionPlan } from "./functions/api/_shared/version-plan.js";
+import { buildBetaVersionPlan, buildVersionPlan } from "./functions/api/_shared/version-plan.js";
 import { buildReadmeStatsFromSiteData, renderReadmeStatsSvg, renderShieldsBadge } from "./functions/api/_shared/readme-stats.js";
 import { resolveBadgeKind } from "./functions/api/_shared/badge-endpoint.js";
 import {
@@ -3378,16 +3378,33 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/version/plan" && req.method === "GET") {
-      const bumpType = new URL(req.url ?? "", "http://localhost").searchParams.get("bump") ?? "patch";
+      const planUrl = new URL(req.url ?? "", "http://localhost");
+      const bumpType = planUrl.searchParams.get("bump") ?? "patch";
+      const releaseChannel = planUrl.searchParams.get("channel") ?? "production";
       fetchMarketplaceSync()
         .then((sync) => {
-          const plan = buildVersionPlan({
-            packageVersion: sync.packageVersion,
-            channels: sync.channels,
-            bumpType: ["patch", "minor", "major"].includes(bumpType) ? bumpType : "patch",
-          });
+          const plan =
+            releaseChannel === "beta"
+              ? buildBetaVersionPlan({
+                  packageVersion: sync.packageVersion,
+                  channels: sync.channels,
+                  bumpType: ["patch", "minor", "major"].includes(bumpType) ? bumpType : "patch",
+                })
+              : buildVersionPlan({
+                  packageVersion: sync.packageVersion,
+                  channels: sync.channels,
+                  bumpType: ["patch", "minor", "major"].includes(bumpType) ? bumpType : "patch",
+                });
           res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ checkedAt: new Date().toISOString(), bumpType, channels: sync.channels, ...plan }));
+          res.end(
+            JSON.stringify({
+              checkedAt: new Date().toISOString(),
+              bumpType,
+              releaseChannel,
+              channels: sync.channels,
+              ...plan,
+            }),
+          );
         })
         .catch((err) => {
           res.statusCode = 502;

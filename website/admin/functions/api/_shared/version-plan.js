@@ -77,6 +77,41 @@ export function maxVersionFromGitTags(existingTags = []) {
   return versions.length ? versions.sort(compareSemver).at(-1) : null;
 }
 
+/** Parse beta prerelease versions like 1.0.115-beta.0 or v1.0.115-beta.2 */
+export function parseBetaVersion(version) {
+  const m = String(version ?? "")
+    .trim()
+    .replace(/^v/i, "")
+    .match(/^(\d+\.\d+\.\d+)-beta\.(\d+)$/i);
+  if (!m) return null;
+  return {
+    core: m[1],
+    beta: Number.parseInt(m[2], 10) || 0,
+    version: `${m[1]}-beta.${m[2]}`,
+    tag: `v${m[1]}-beta.${m[2]}`,
+  };
+}
+
+/**
+ * Next beta tag: v{core}-beta.{n} where core = maxAll + bump.
+ * @param {string} maxVersion
+ * @param {string[]} [existingTags]
+ * @param {"patch"|"minor"|"major"} [bumpType]
+ */
+export function nextBetaVersion(maxVersion, existingTags = [], bumpType = "patch") {
+  const core = bumpSemver(maxVersion, bumpType);
+  if (!core) return null;
+  let maxBeta = -1;
+  for (const tag of existingTags) {
+    const parsed = parseBetaVersion(tag);
+    if (parsed && parsed.core === core) {
+      maxBeta = Math.max(maxBeta, parsed.beta);
+    }
+  }
+  const version = `${core}-beta.${maxBeta + 1}`;
+  return { recommendedVersion: version, recommendedTag: `v${version}` };
+}
+
 /**
  * @param {object} input
  * @param {string} input.packageVersion
@@ -229,6 +264,106 @@ export function buildVersionPlan({ packageVersion, channels, bumpType = "patch",
     summary: recommendedVersion
       ? `Deploy target v${recommendedVersion} = highest live v${maxAll} + 1 ${bumpType}.`
       : "Could not determine version plan.",
+  };
+}
+
+/**
+ * Beta channel plan: v{core}-beta.{n} so pre-releases never collide with production semver tags.
+ * @param {object} input
+ * @param {string} input.packageVersion
+ * @param {Array<{id:string,label:string,version:string|null,warn?:boolean}>} input.channels
+ * @param {"patch"|"minor"|"major"} [input.bumpType]
+ * @param {string[]} [input.existingTags]
+ */
+export function buildBetaVersionPlan({
+  packageVersion,
+  channels,
+  bumpType = "patch",
+  existingTags = [],
+}) {
+  const packageCore = normalizeSemver(packageVersion);
+  let maxAll = maxVersionFromChannels(channels) ?? packageCore;
+  if (!maxAll) maxAll = maxVersionFromGitTags(existingTags);
+  const beta = maxAll ? nextBetaVersion(maxAll, existingTags, bumpType) : null;
+  const recommendedVersion = beta?.recommendedVersion ?? null;
+  const recommendedTag = beta?.recommendedTag ?? null;
+
+  const reasons = channels.map((channel) => {
+    const live = normalizeSemver(channel.version);
+    if (!live) {
+      return {
+        id: channel.id,
+        label: channel.label,
+        liveVersion: channel.version,
+        status: "missing",
+        reason: "No live version detected — first beta publish will create the listing.",
+      };
+    }
+    if (!recommendedVersion) {
+      return {
+        id: channel.id,
+        label: channel.label,
+        liveVersion: live,
+        status: "unknown",
+        reason: "Could not compute a recommended beta version.",
+      };
+    }
+    const liveCore = live;
+    const targetCore = normalizeSemver(recommendedVersion);
+    const cmp = compareSemver(liveCore, targetCore);
+    if (cmp > 0) {
+      return {
+        id: channel.id,
+        label: channel.label,
+        liveVersion: live,
+        status: "ahead",
+        reason: `Live v${live} is ahead of beta target ${recommendedTag}.`,
+      };
+    }
+    if (cmp === 0) {
+      return {
+        id: channel.id,
+        label: channel.label,
+        liveVersion: live,
+        status: "synced",
+        reason: `Live v${live} matches beta core — publish ${recommendedTag} as pre-release.`,
+      };
+    }
+    return {
+      id: channel.id,
+      label: channel.label,
+      liveVersion: live,
+      status: "behind",
+      reason: `Live v${live} — publish beta ${recommendedTag} (--pre-release).`,
+    };
+  });
+
+  const tagAlreadyExists = Boolean(
+    recommendedTag &&
+      existingTags.some(
+        (t) => t.replace(/^v/i, "").toLowerCase() === recommendedVersion?.toLowerCase(),
+      ),
+  );
+
+  return {
+    packageVersion: packageCore,
+    maxLiveVersion: maxAll,
+    maxAllVersion: maxAll,
+    recommendedVersion,
+    recommendedTag,
+    bumpType,
+    planMode: "release",
+    releaseChannel: "beta",
+    needsBump: false,
+    needsPublish: true,
+    shouldCreateTag: Boolean(recommendedTag && !tagAlreadyExists),
+    shouldBumpPackage: false,
+    tagAlreadyExists,
+    allSynced: false,
+    reasons,
+    summary: recommendedTag
+      ? `Beta target ${recommendedTag} (highest live v${maxAll} + ${bumpType}, pre-release).`
+      : "Could not determine beta version plan.",
   };
 }
 

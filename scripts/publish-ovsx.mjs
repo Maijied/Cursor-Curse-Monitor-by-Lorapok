@@ -126,7 +126,7 @@ async function fetchCanonicalLatest() {
   return data?.version?.replace(/^v/, "") ?? null;
 }
 
-async function waitForCanonicalVersion(target, attempts = 36, delayMs = 10000) {
+async function waitForCanonicalVersion(target, attempts = 60, delayMs = 10000) {
   for (let i = 0; i < attempts; i++) {
     const latest = await fetchCanonicalLatest();
     if (latest === target) return true;
@@ -231,7 +231,7 @@ async function main() {
           `${after ?? "missing"} (expected ${target}). Open VSX indexing may be delayed; ` +
           `verify-marketplace-sync will re-check.`
       );
-      process.exitCode = 1;
+      console.log(`Treating ovsx publish as success — deferring API confirmation to verify-marketplace-sync.`);
       return;
     }
 

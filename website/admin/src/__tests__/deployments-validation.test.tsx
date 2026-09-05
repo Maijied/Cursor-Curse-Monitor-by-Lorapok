@@ -106,7 +106,7 @@ describe("Deployments validation UI", () => {
     expect(optionValues).not.toContain("v1.0.34-dev.5");
     expect(optionValues).toContain("v1.0.51");
     expect(screen.getByText(/Beta channel/i)).toBeInTheDocument();
-    expect(screen.getByText(/CI may skip Firefox AMO/i)).toBeInTheDocument();
+    expect(screen.getByText(/CI skips Firefox AMO/i)).toBeInTheDocument();
   });
 
   it("defaults to All Marketplaces and keeps every market option on beta channel", async () => {

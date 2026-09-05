@@ -27,6 +27,11 @@ export function isMarketplaceSemverTag(tag: string): boolean {
   return /^v?\d+\.\d+\.\d+$/i.test(String(tag));
 }
 
+/** Beta marketplace tags: vMAJOR.MINOR.PATCH-beta.N */
+export function isBetaMarketplaceTag(tag: string): boolean {
+  return /^v?\d+\.\d+\.\d+-beta\.\d+$/i.test(String(tag));
+}
+
 /**
  * Determines whether a tag has a CI-only release suffix.
  *
@@ -85,6 +90,10 @@ function meetsMinVersion(tag: string): boolean {
  */
 export function isValidMarketplaceTag(tag: string): boolean {
   if (isRollbackTag(tag)) return meetsMinVersion(tag);
+  if (isBetaMarketplaceTag(tag)) {
+    const core = `v${String(tag).replace(/^v/i, "").split("-beta.")[0]}`;
+    return meetsMinVersion(core);
+  }
   if (!isMarketplaceSemverTag(tag)) return false;
   if (hasCiOnlySuffix(tag)) return false;
   return meetsMinVersion(tag);
@@ -114,11 +123,15 @@ export function validateMarketplaceDeploy(params: {
   releaseChannel: ReleaseChannel;
   publishMarket: PublishMarket;
 }): { ok: true } | { ok: false; error: string } {
-  const { targetTag } = params;
+  const { targetTag, releaseChannel } = params;
+  const betaChannel = releaseChannel === "Beta (Pre-release)";
   if (!isValidMarketplaceTag(targetTag)) {
+    const hint = betaChannel
+      ? "Use vMAJOR.MINOR.PATCH, vMAJOR.MINOR.PATCH-beta.N, or rollback vMAJOR.MINOR.Rn (minimum v0.5.5)."
+      : "Use vMAJOR.MINOR.PATCH or rollback vMAJOR.MINOR.Rn (minimum v0.5.5). CI-only tags (-dev, -pr) cannot be published.";
     return {
       ok: false,
-      error: `Tag ${targetTag} is not valid for marketplace publish. Use vMAJOR.MINOR.PATCH or rollback vMAJOR.MINOR.Rn (minimum v0.5.5). CI-only tags (-dev, -pr, -beta) cannot be published.`,
+      error: `Tag ${targetTag} is not valid for marketplace publish. ${hint}`,
     };
   }
   return { ok: true };

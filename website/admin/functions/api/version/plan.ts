@@ -1,7 +1,7 @@
 import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
 import { fetchSiteData, packageVersionFromSiteData } from "../_shared/site-data.js";
 import { fetchGitTagNames, fetchLiveChannels } from "../_shared/live-channels.js";
-import { buildRollbackPlan, buildVersionPlan } from "../_shared/version-plan.js";
+import { buildRollbackPlan, buildBetaVersionPlan, buildVersionPlan } from "../_shared/version-plan.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -11,11 +11,15 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const bumpType = url.searchParams.get("bump") ?? "patch";
   const planMode = url.searchParams.get("mode") ?? "release";
+  const releaseChannel = url.searchParams.get("channel") ?? "production";
   if (!["patch", "minor", "major"].includes(bumpType) && planMode !== "rollback") {
     return jsonResponse({ error: "bump must be patch, minor, or major" }, 400);
   }
   if (!["release", "rollback"].includes(planMode)) {
     return jsonResponse({ error: "mode must be release or rollback" }, 400);
+  }
+  if (!["production", "beta"].includes(releaseChannel)) {
+    return jsonResponse({ error: "channel must be production or beta" }, 400);
   }
 
   let siteData;
@@ -39,18 +43,26 @@ export async function onRequestGet(context) {
           existingTags,
           targetTag,
         })
-      : buildVersionPlan({
-          packageVersion: packageVersionFromSiteData(siteData),
-          channels,
-          bumpType,
-          latestGitTag,
-          existingTags,
-        });
+      : releaseChannel === "beta"
+        ? buildBetaVersionPlan({
+            packageVersion: packageVersionFromSiteData(siteData),
+            channels,
+            bumpType,
+            existingTags,
+          })
+        : buildVersionPlan({
+            packageVersion: packageVersionFromSiteData(siteData),
+            channels,
+            bumpType,
+            latestGitTag,
+            existingTags,
+          });
 
   return jsonResponse({
     checkedAt: new Date().toISOString(),
     bumpType: planMode === "rollback" ? "rollback" : bumpType,
     planMode,
+    releaseChannel: planMode === "rollback" ? null : releaseChannel,
     channels,
     ...plan,
   });

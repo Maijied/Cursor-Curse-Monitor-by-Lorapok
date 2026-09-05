@@ -165,7 +165,7 @@ _None — pick from **Recommended next queue** below._
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| REL-01 | **Beta release pipeline fix** — `-beta` tag/channel, `release-prep`, marketplace skips (Firefox), Mission Control deploy dispatch out of sync with CI | **next** | `ci-cd.yml`, `compute-next-release-version.mjs`, Deployments beta channel; operator reports broken beta flow |
+| REL-01 | **Beta release pipeline fix** — `-beta` tag/channel, `release-prep`, marketplace skips (Firefox), Mission Control deploy dispatch out of sync with CI | **done** | `buildBetaVersionPlan`, `ci-cd.yml` deploy gate, `Deployments.tsx` channel-aware version plan |
 | DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **next** | `DeployRuntimeContext`, `DeployRuntimePanel`, `DeployLeaveWarningModal`; parity with `workflow-run-match.ts` |
 | DEPLOY-02 | **Remove duplicate webhook UI** from Deployments page — canonical config in Settings → Discord / Social | **next** | `Deployments.tsx`; link refer buttons to Settings |
 | DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **next** | hooks `release-prep` + Mission Control deploy complete |
@@ -380,17 +380,16 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **REL-01** — Fix beta release pipeline
-2. **DEPLOY-01 / DEPLOY-02** — Global deploy UX + remove duplicate webhook UI
-3. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog
-4. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
-5. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
-6. **SOCIAL-01–03 / DEPLOY-03** — Multi-platform webhooks + deploy social gallery + one-click share
-7. **SEO-01–03** — World-class SEO + admin hub + policies
-8. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
-9. **WEB-11** — Engineering history timeline page
-10. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-11. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+1. **DEPLOY-01 / DEPLOY-02** — Global deploy UX + remove duplicate webhook UI
+2. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog
+3. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
+4. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
+5. **SOCIAL-01–03 / DEPLOY-03** — Multi-platform webhooks + deploy social gallery + one-click share
+6. **SEO-01–03** — World-class SEO + admin hub + policies
+7. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+8. **WEB-11** — Engineering history timeline page
+9. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+10. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
 
