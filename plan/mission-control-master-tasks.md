@@ -5,7 +5,7 @@
 **Last updated:** 2026-09-05 (LOGIN-01 + AI walkthrough sync)  
 **Branch:** `main`  
 **CI:** green  
-**Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md)
+**Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
 
@@ -14,7 +14,7 @@
 | Epic | Issue | Status | Plan | Procedure |
 |------|-------|--------|------|-----------|
 | Email identities + password auth + admin ACL | [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120) | **closed** | `plan/b8e4f2a1_email-identities-auth-acl-plan.md` | `procedure/0bef4984_…` (**done**) |
-| Mission Control product polish + observability | _TBD_ | **planned** | _(this file — sections below)_ | _(create on first implementation PR)_ |
+| Mission Control product polish + observability | [#126](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/126) | **in progress** | _(this file — sections below)_ | [`procedure/mission-control-issues.json`](../procedure/mission-control-issues.json) |
 
 ---
 
@@ -30,6 +30,8 @@ _None — pick from **Recommended next queue** below._
 |---------|------------|
 | **Update?** | Refresh this file’s status row + CI/deploy + blockers; reply with done / next / blocked |
 | **next** | Pick top `next` task below, implement + test + update this file |
+
+**GitHub:** Run `node scripts/sync-mission-control-issues.mjs --add-to-project` to sync open tasks to [Project #4](https://github.com/users/Maijied/projects/4). See [`TASK-TRACKING.md`](../TASK-TRACKING.md).
 
 ---
 

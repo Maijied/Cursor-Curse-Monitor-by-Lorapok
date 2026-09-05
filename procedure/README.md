@@ -27,7 +27,7 @@ Example: `procedure/e665770d_pr-104-feedback-testmail.md`
 ## GitHub integration
 
 - **Issues** — always created (labels from [`project.json`](project.json))
-- **Project board** — optional; set `projectNumber` in `project.json` after `gh auth refresh -s read:project,project`
+- **Project board** — set `projectNumber` in `project.json` (currently **#4** — [Lorapok Team Planning](https://github.com/users/Maijied/projects/4)); `procedure-init.mjs` and `sync-mission-control-issues.mjs` add items automatically
 
 ## Rules
 

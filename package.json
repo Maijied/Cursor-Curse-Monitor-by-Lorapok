@@ -348,6 +348,8 @@
     "security:deps:fix": "node scripts/dependency-security-remediate.mjs",
     "validate:reinstall": "node scripts/validate-reinstall.mjs",
     "admin:deploy:fast": "node website/admin/scripts/deploy-pages-fast.mjs",
+    "sync:tasks": "node scripts/sync-mission-control-issues.mjs --add-to-project",
+    "sync:tasks:dry": "node scripts/sync-mission-control-issues.mjs --dry-run",
     "admin:mail:sync-vault": "node website/admin/scripts/sync-mail-on-main.mjs --vault",
     "admin:mail:repair": "node website/admin/scripts/repair-mail.mjs",
     "cleanup:cursor-backups": "node scripts/cleanup-cursor-db-backups.mjs",
