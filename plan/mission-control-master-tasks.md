@@ -2,17 +2,24 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05  
+**Last updated:** 2026-09-05 (roadmap expansion)  
 **Branch:** `main`  
-**CI:** green (last push `00e4a7e2`)
+**CI:** green
+
+---
+
+## Epic status
+
+| Epic | Issue | Status | Plan | Procedure |
+|------|-------|--------|------|-----------|
+| Email identities + password auth + admin ACL | [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120) | **closed** | `plan/b8e4f2a1_email-identities-auth-acl-plan.md` | `procedure/0bef4984_…` (**done**) |
+| Mission Control product polish + observability | _TBD_ | **planned** | _(this file — sections below)_ | _(create on first implementation PR)_ |
 
 ---
 
 ## Epic in progress
 
-| Epic | Issue | Plan | Procedure |
-|------|-------|------|-----------|
-| Email identities + password auth + admin ACL | [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120) | `plan/b8e4f2a1_email-identities-auth-acl-plan.md` | `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` |
+_None — pick from **Recommended next queue** below._
 
 ---
 
@@ -31,18 +38,19 @@
 |---------|------|------|---------|
 | Cloudflare KV | 8 | 3 | 1 |
 | Cloudflare D1 | 0 | 4 | 0 |
-| Cloudflare R2 | 0 | 3 | 0 |
+| Cloudflare R2 | 1 | 2 | 1 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
 | Firebase | 6 | 5 | 0 |
 | GitHub | 5 | 2 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
 | Google Cloud (GCP) | 2 | 3 | 0 |
 | Mail (Resend + CF Email) | 3 | 8 | 1 |
-| Discord | 3 | 3 | 0 |
+| Discord | 3 | 5 | 0 |
 | Stats / Cron | 6 | 2 | 1 |
-| IDE extension | 4 | 2 | 0 |
-| Browser extension | 4 | 2 | 0 |
+| IDE extension | 4 | 4 | 0 |
+| Browser extension | 4 | 4 | 0 |
 | Marketing website | 2 | 2 | 0 |
+| Admin UX / observability | 2 | 12 | 0 |
 
 ---
 
@@ -78,7 +86,7 @@
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | R2-01 | Design: `stats:readme-svg` + badge blobs to R2 | **deferred** | Reliability plan B3 option B |
-| R2-02 | R2 bucket + binding | **blocked** | Enable R2 in CF dashboard → `create-r2-stats-bucket.mjs` → uncomment `wrangler.toml` |
+| R2-02 | R2 bucket + binding | **blocked** | **You:** Cloudflare Dashboard → R2 → Enable (account `f049faaf2f67549f5c58837479596a4a`). **Then:** `node website/admin/scripts/create-r2-stats-bucket.mjs` → uncomment `[[r2_buckets]]` in `wrangler.toml` → `npm run admin:deploy:fast` |
 | R2-03 | Read path in stats refresh + shields API | **done** | `r2-stats.js` + stats-refresh/badge/readme.svg R2-first |
 
 ---
@@ -119,6 +127,8 @@
 | AUTH-09 | ACL audit log (role/email changes) | **done** | `acl-audit.js` → system log; Logs → ACL filter |
 | AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **done** | `rbac-matrix.test.mjs` + `src/__tests__/rbac-matrix.test.ts` |
 | AUTH-11 | Profile tab + quick-unlock PIN (Settings) | **done** | `ProfileSettingsCard`, `pin-unlock.ts`, KV verifier backup |
+| AUTH-12 | **Feature ACL v2** — per-card / per-action permissions beyond nav (deploy buttons, mail send, notice publish, cred vault, team invite) | **next** | extend `requirePermission` + UI `hasPermission` on every mutating control; matrix doc |
+| AUTH-13 | **ACL audit UI** — filterable timeline of role/email changes with export | **next** | Logs ACL tab + `acl-audit.js` query API |
 
 ---
 
@@ -178,6 +188,8 @@
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
 | MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
+| MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **next** | `mail.js` templates + Settings preview |
+| MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **next** | subscribe API + template engine in KV |
 
 ---
 
@@ -190,6 +202,8 @@
 | DC-03 | Configure production webhooks in KV | **done** | All three webhooks in `integrations:discord` (2026-09-03 Settings); health confirms `discordConfigured` + feedback + community (2026-09-05) |
 | DC-04 | Community + Feedback cards polling | **next** | optional parity |
 | DC-05 | Subscribe fallback Discord URL in prod | **next** | Settings → General |
+| DC-06 | **Product-designed Discord cards** — branded embed layouts for deploy, digest, community, feedback (Lorapok aesthetic) | **next** | `discord-config.js` payloads + shared template partials; preview in Settings |
+| DC-07 | Discord card gallery / test-send matrix in Settings | **next** | one-click preview per webhook type |
 
 ---
 
@@ -215,6 +229,7 @@
 | IDE-02 | Analytics chart fixes | **done** | PR #118/#119 |
 | IDE-03 | Cloud IDE link list in settings modal | **next** | Reliability D5 |
 | IDE-04 | `state.vscdb` watcher | **deferred** | out of scope |
+| IDE-05 | **Platform logos + download links** in status bar / about (EXT-01) | **next** | shared footer component |
 
 ---
 
@@ -226,6 +241,7 @@
 | BR-02 | 60s connect poll + probeAuth | **done** | PR #119 |
 | BR-03 | Options cloud environments section | **next** | Reliability D5 |
 | BR-04 | Align Options connect with popup | **next** | Reliability A |
+| BR-05 | **Platform logos + AMO/Chrome links** in popup/options footer (EXT-01) | **next** | Lorapok + Cursor attribution + marketplace row |
 
 ---
 
@@ -255,14 +271,25 @@
 | SET-09 | Settings + nav gated by RBAC permissions | **done** | `nav-permissions.ts`, PermissionRoute, card write gates |
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
+| LOGIN-01 | **Login page infra notes** — after deploy, show read-only panel: auth methods (Google, magic link, password), invite-only policy, Firebase project, links to docs/wiki | **next** | `Login.tsx` info card; data from `/api/health` + `/api/firebase-config` (no secrets) |
+| NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **next** | `scripts/changelog-to-notice.mjs` + Notices API; optional CI hook |
+| ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
+| LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
+| EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **R2-02** — Enable R2 in Cloudflare dashboard → `node website/admin/scripts/create-r2-stats-bucket.mjs` (reduces KV write pressure; currently **code 10042**)
-2. **Cred vault Discord backup** (optional) — `cred set cursor discord_*_webhook_url` then `node scripts/sync-discord-cred-vault.mjs`
-3. **Optional** — live operator browser spot-check (`s.songket@gmail.com` / `sawirmajumder@gmail.com`)
+1. **R2-02** — **Blocked on you:** [Cloudflare R2](https://dash.cloudflare.com/?to=/:account/r2/overview) → **Enable R2** for account `f049faaf2f67549f5c58837479596a4a` → then `node website/admin/scripts/create-r2-stats-bucket.mjs` → uncomment `wrangler.toml` → deploy
+2. **LOGIN-01** — Login page infra/auth info panel (post-deploy transparency)
+3. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
+4. **NOTICE-01** — Auto-draft notices from `CHANGELOG` on release
+5. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
+6. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
+7. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
+8. **LOGS-01** — Formatted, filterable unified logs
+9. **EXT-01** — Platform logos + links across admin, website, IDE, browser extensions
 
 ---
 
@@ -270,7 +297,7 @@
 
 | Blocker | Unblocks |
 |---------|----------|
-| R2 not enabled on account | R2-02 bucket creation (code 10042) |
+| R2 not enabled on account (`code 10042`) | R2-02 — enable in [Cloudflare Dashboard → R2](https://dash.cloudflare.com/?to=/:account/r2/overview), then re-run `create-r2-stats-bucket.mjs` |
 
 ---
 
