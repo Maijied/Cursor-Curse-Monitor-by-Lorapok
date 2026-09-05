@@ -2121,6 +2121,56 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/integrations/social/gallery" && req.method === "GET") {
+      import("./functions/api/_shared/social-gallery-queue.js")
+        .then(({ listSocialGalleryQueue }) => listSocialGalleryQueue(devFunctionsEnv()))
+        .then((data) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, ...data }));
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message || "Social gallery list failed" }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/social/gallery/queue" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const { verifyCronSecret } = await import("./functions/api/_shared/stats-refresh.js");
+          const { queueSocialGalleryJob } = await import("./functions/api/_shared/social-gallery-queue.js");
+          const cron = verifyCronSecret(req, devFunctionsEnv());
+          const result = await queueSocialGalleryJob(devFunctionsEnv(), {
+            tag: parsed.tag ?? null,
+            actionType: parsed.actionType ?? parsed.action_type ?? null,
+            caption: parsed.caption ?? null,
+            runUrl: parsed.runUrl ?? parsed.run_url ?? null,
+            channel: parsed.channel ?? null,
+            market: parsed.market ?? null,
+            triggeredBy: cron.ok ? (parsed.triggeredBy ?? "ci") : "dev@local",
+            source: parsed.source ?? (cron.ok ? "ci" : "mission-control"),
+          });
+          res.setHeader("Content-Type", "application/json");
+          if (!result.ok) {
+            res.statusCode = 503;
+            res.end(JSON.stringify({ error: result.error ?? "Queue failed" }));
+            return;
+          }
+          res.end(JSON.stringify(result));
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/integrations/discord/digest/test" && req.method === "POST") {
       runDiscordDigest(devFunctionsEnv(), { triggeredBy: "dev@local", force: true })
         .then((result) => {

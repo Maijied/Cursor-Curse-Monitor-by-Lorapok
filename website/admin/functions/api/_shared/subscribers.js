@@ -75,9 +75,15 @@ async function readLegacySubscribers(kv) {
 export async function readSubscribers(kv) {
   if (!kv?.get) return [];
 
-  const scattered = (await listScatterEntities(kv, SUBSCRIBER_EMAIL_PREFIX, { limit: 1000 }))
-    .map(normalizeSubscriber)
-    .filter(Boolean);
+  let scattered = [];
+  try {
+    scattered = (await listScatterEntities(kv, SUBSCRIBER_EMAIL_PREFIX, { limit: 1000 }))
+      .map(normalizeSubscriber)
+      .filter(Boolean);
+  } catch (error) {
+    console.warn("subscribers: scatter list failed", error);
+  }
+
   const legacy = await readLegacySubscribers(kv);
 
   const byEmail = new Map();

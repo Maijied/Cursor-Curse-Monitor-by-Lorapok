@@ -14,7 +14,16 @@
 | **procedure** | `node scripts/procedure-init.mjs --title "…"` |
 | **autopilot** | Merge-ready PR triage (checks + review threads) |
 
-Direct main push (hotfix): `npm run push:main -- --title "…" --component website --deploy-website`
+Direct main push (fast dev):
+
+| Command | What it does |
+|---------|----------------|
+| `npm run push:main:admin -- --title "…"` | Sync site-data/SEO → push main → local `admin:deploy:fast` + watch CI |
+| `npm run push:main:full -- --title "…"` | Sync → push → `deploy-infra` (admin + website + mail) |
+| `npm run push:main:website -- --title "…"` | Sync → push → marketing site deploy |
+| `npm run push:main -- --title "…" --from feat/branch` | Merge branch into main, then push |
+
+Commit code on `main` (or use `--from`) before running. CI `admin-deploy` also runs on every main push when `website/admin/` changes.
 
 ---
 

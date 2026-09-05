@@ -1,10 +1,12 @@
-import { jsonResponse, verifyAdminRequest } from "./_shared/auth.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/auth.js";
 import { readSubscribers, subscriberStats } from "./_shared/subscribers.js";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+  const denied = requirePermission(auth, "subscribers.write");
+  if (denied) return denied;
 
   try {
     const items = await readSubscribers(env.ADMIN_KV);

@@ -35,6 +35,7 @@ export const ROLE_PERMISSIONS = {
     "integrations.read",
     "mail.read",
     "mail.send",
+    "deploy.run",
     "notices.write",
     "subscribers.write",
     "logs.read",

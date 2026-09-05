@@ -401,7 +401,7 @@ export default function Deployments() {
       {!canDeployRun && !canDeployInfra ? (
         <div className="glass-panel px-4 py-3 text-sm border border-[color-mix(in_srgb,var(--color-warn)_35%,transparent)] text-[var(--color-warn)] flex items-center gap-2">
           <Lock className="w-4 h-4 shrink-0" />
-          Release, deploy, and rollback require deploy.run; infrastructure redeploys require deploy.infra.
+          Release, deploy, and rollback require <code className="font-mono text-xs">deploy.run</code> (admin + master); infrastructure redeploys require <code className="font-mono text-xs">deploy.infra</code> (master).
         </div>
       ) : null}
 

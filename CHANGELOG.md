@@ -13,11 +13,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **CI dispatch validation** — `validate-dispatch` job gates publish-tag, rollback, sync-open-vsx, and full-release; classifies tags as rollback-eligible, publish-ready, or metadata-ready; local `npm run validate:dispatch` resolves tags on origin when missing locally
 - **Rollback tag policy** — rollback sources must be semver tags older than the current live tag
 - **DEPLOY-01 global deploy runtime** — floating larvae FAB + status modal survive route changes; pipeline job order matches `ci-cd.yml` (incl. Validate Dispatch); session stays visible until operator taps Done
+- **DEPLOY-03 social gallery trigger** — on successful marketplace deploy, queue SOCIAL-02 gallery job in KV with changelog caption; CI `queue-social-gallery.mjs` + Mission Control deploy watch hook
 - **Marketing site feature map** — orbit-style interactive map with animated logo; GitHub stats use board issue count (not PR-inflated total) and sync via `ccm:site-data` from Mission Control merge
 - **Hero download universe** — restore `stats-dashboard.css`, orbit planets with live channel counts, cosmic frame labeling the stats panel
 - **Hero layout** — orbit stars (no boxes) separated from stats console; smooth staggered count animation
 - **AGENT_INIT.md** — universal AI onboarding (not Cursor-only); `npm run sync:issues` alias
-- **Direct main push** — `npm run push:main` + CI workflow auto-creates tracking issue, Project board item, and audit PR
+- **Direct main push (dev)** — `push:main:admin` syncs site-data/SEO, pushes `main`, runs `admin:deploy:fast`, watches CI; `push:main:full` dispatches deploy-infra (admin + website + mail); `--from <branch>` merges before push
 - **Login sync (IDE + browser)** — dashboard refreshes immediately after sign-in, paste, or account changes; browser extension activates tokens on first connect and polls up to 60s with `probeAuth` (popup + options)
 - **Usage analytics chart** — stacked chart ymax uses true stack totals; surface/model group-by shows explicit empty states; IDE chart prefs survive refresh
 - **Admin site data polling** — `useSiteData` re-fetches on interval; `refresh()` triggers a real reload

@@ -16,6 +16,7 @@ const ROLE_MATRIX = {
     "integrations.read",
     "mail.read",
     "mail.send",
+    "deploy.run",
     "notices.write",
     "subscribers.write",
     "logs.read",
@@ -70,7 +71,6 @@ function assertAllowed(role, permission) {
 }
 
 const MASTER_ONLY = [
-  "deploy.run",
   "deploy.infra",
   "settings.write",
   "team.manage",
@@ -91,7 +91,8 @@ assertDenied("viewer", "subscribers.write");
 
 assertAllowed("admin", "mail.send");
 assertAllowed("admin", "notices.write");
-assertDenied("admin", "deploy.run");
+assertAllowed("admin", "deploy.run");
+assertDenied("admin", "deploy.infra");
 
 assertAllowed("operator", "mail.send");
 assertDenied("operator", "settings.read");
@@ -108,12 +109,14 @@ for (const [, permission] of Object.entries(MUTATING_ROUTE_PERMISSIONS)) {
 }
 
 for (const [, permission] of Object.entries(READ_ROUTE_PERMISSIONS)) {
-  assertAllowed("viewer", permission);
-  if (permission === "settings.read") {
-    assertDenied("operator", permission);
-  } else {
-    assertAllowed("operator", permission);
+  for (const role of ["viewer", "operator"]) {
+    if (ROLE_MATRIX[role].includes(permission)) {
+      assertAllowed(role, permission);
+    } else {
+      assertDenied(role, permission);
+    }
   }
+  assertAllowed("admin", permission);
 }
 
 const kvStore = new Map();

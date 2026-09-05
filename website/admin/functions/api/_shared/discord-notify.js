@@ -24,6 +24,10 @@ const ACTION_LABELS = {
   "download-digest": "Download digest",
 };
 
+const TRIGGERED_BY_LABELS = {
+  "auto-rollback": "Auto-rollback",
+};
+
 /**
  * Formats a deployment action identifier as a human-readable label.
  * @param {*} actionType - The action identifier or descriptive action string.
@@ -40,6 +44,19 @@ function formatActionType(actionType) {
   if (raw.includes("deploy-infra")) return ACTION_LABELS["deploy-infra"];
   if (raw.includes("deployment-status-test")) return ACTION_LABELS["deployment-status-test"];
   return raw.split(" - ")[0] ?? raw;
+}
+
+/**
+ * @param {unknown} triggeredBy
+ */
+function formatTriggeredBy(triggeredBy) {
+  if (!triggeredBy) return null;
+  const raw = String(triggeredBy).trim();
+  if (!raw) return null;
+  const key = raw.toLowerCase();
+  if (TRIGGERED_BY_LABELS[key]) return TRIGGERED_BY_LABELS[key];
+  if (key.includes("@")) return raw;
+  return raw;
 }
 
 /**
@@ -107,7 +124,10 @@ export function buildDeploymentEmbed(payload, enrichment) {
   if (version) fields.push({ name: "Version", value: `\`${version}\``, inline: true });
   if (payload.channel) fields.push({ name: "Channel", value: String(payload.channel), inline: true });
   if (payload.market) fields.push({ name: "Marketplaces", value: String(payload.market), inline: true });
-  if (payload.triggeredBy) fields.push({ name: "Triggered by", value: String(payload.triggeredBy), inline: true });
+  if (payload.triggeredBy) {
+    const actor = formatTriggeredBy(payload.triggeredBy);
+    if (actor) fields.push({ name: "Triggered by", value: actor, inline: true });
+  }
   if (payload.duration) fields.push({ name: "Duration", value: String(payload.duration), inline: true });
 
   const descriptionParts = [status.brandLine];

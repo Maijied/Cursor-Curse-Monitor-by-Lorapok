@@ -7,7 +7,7 @@ Canonical reference for Mission Control role-based access control. Server: `webs
 | Role | Description |
 |------|-------------|
 | `master` | Full access — deploy, secrets, team, email provision |
-| `admin` | Integrations read, mail send, notices, subscribers |
+| `admin` | Integrations read, mail send, deploy/rollback, notices, subscribers |
 | `operator` | Mailbox/notices/subscribers only |
 | `viewer` | Read-only dashboards, logs, settings |
 
@@ -26,7 +26,7 @@ Default for allowlisted emails without explicit KV assignment: **admin**. Master
 | `mail.provision` | ✓ | — | — | — |
 | `team.manage` | ✓ | — | — | — |
 | `secrets.manage` | ✓ | — | — | — |
-| `deploy.run` | ✓ | — | — | — |
+| `deploy.run` | ✓ | ✓ | — | — |
 | `deploy.infra` | ✓ | — | — | — |
 | `notices.write` | ✓ | ✓ | ✓ | — |
 | `subscribers.write` | ✓ | ✓ | ✓ | — |
