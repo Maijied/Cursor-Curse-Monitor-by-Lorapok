@@ -5,6 +5,11 @@ import { startTestDataServer, type TestDataServer } from "../../test-support/tes
 import { getTestAdminEmail } from "../../test-support/env";
 import { formatCount } from "../../lib/site-data";
 
+vi.mock("../../lib/auth-context", async () => {
+  const { mockAuthSessionModule } = await import("../../test-support/mock-auth-session");
+  return mockAuthSessionModule();
+});
+
 const firebaseMock = vi.hoisted(() => {
   const email = (
     process.env.ADMIN_MASTER_EMAIL ||
