@@ -16,11 +16,21 @@ export type ConfirmHandler = (options: ConfirmActionOptions) => Promise<boolean>
 
 let handler: ConfirmHandler = defaultBrowserConfirm;
 
+type GlobalWithConfirm = typeof globalThis & {
+  confirm?: (message?: string) => boolean;
+};
+
+function readBrowserConfirm(): ((message?: string) => boolean) | undefined {
+  const confirmFn = (globalThis as GlobalWithConfirm).confirm;
+  return typeof confirmFn === "function" ? confirmFn : undefined;
+}
+
 function defaultBrowserConfirm(options: ConfirmActionOptions): Promise<boolean> {
-  if (typeof globalThis.confirm !== "function") return Promise.resolve(false);
+  const confirmFn = readBrowserConfirm();
+  if (!confirmFn) return Promise.resolve(false);
   const prefix =
     options.severity === "destructive" ? "⚠️ DESTRUCTIVE\n\n" : options.severity === "warning" ? "⚠️\n\n" : "";
-  return Promise.resolve(globalThis.confirm(`${prefix}${options.title}\n\n${options.message}`));
+  return Promise.resolve(confirmFn(`${prefix}${options.title}\n\n${options.message}`));
 }
 
 /** Override for VS Code window.showWarningMessage, admin modal, etc. */
