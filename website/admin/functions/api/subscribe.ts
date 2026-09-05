@@ -1,6 +1,7 @@
 import { jsonResponse } from "./_shared/auth.js";
-import { isKvQuotaError, formatKvQuotaError } from "./_shared/kv-quota.js";
+import { isKvQuotaError, formatKvQuotaError, isKvWritesPaused } from "./_shared/kv-quota.js";
 import { buildSubscribeHtml, sendMail } from "./_shared/mail.js";
+import { readStatsRefreshConfig } from "./_shared/stats-refresh-config.js";
 import { CONSENT_VERSION, normalizeEmail, upsertSubscriber } from "./_shared/subscribers.js";
 
 const CORS_HEADERS = {
@@ -56,12 +57,18 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: "Consent is required to subscribe" }, 400, CORS_HEADERS);
     }
 
-    const upsert = await upsertSubscriber(env.ADMIN_KV, {
-      email,
-      source: String(body.source ?? "website").trim() || "website",
-      installId: normalizeInstallId(body.installId ?? body.install_id),
-      consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
-    });
+    const statsConfig = await readStatsRefreshConfig(env);
+    const skipSnapshot = isKvWritesPaused(statsConfig.writesPausedUntil);
+    const upsert = await upsertSubscriber(
+      env.ADMIN_KV,
+      {
+        email,
+        source: String(body.source ?? "website").trim() || "website",
+        installId: normalizeInstallId(body.installId ?? body.install_id),
+        consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
+      },
+      { skipSnapshot }
+    );
     if (!upsert.ok) {
       const message = upsert.error || "Subscribe failed";
       if (isKvQuotaError(message)) {

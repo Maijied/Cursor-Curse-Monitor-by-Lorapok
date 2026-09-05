@@ -205,4 +205,36 @@ describe("kv scatter-gather", () => {
     expect(skipped).toBe(false);
     expect(store.size).toBe(writesBefore);
   });
+
+  it("resubscribe uses scatter lookup only when snapshot read is quota-blocked", async () => {
+    const entityKey = `${SUBSCRIBER_EMAIL_PREFIX}:resub@example.com`;
+    const entity = {
+      email: "resub@example.com",
+      subscribedAt: "2026-01-01T00:00:00.000Z",
+      source: "website",
+      installId: null,
+      consentVersion: "2026-08-25",
+    };
+    let snapshotReads = 0;
+    const kv = {
+      get: async (key) => {
+        if (key === "subscribers:snapshot:v1") {
+          snapshotReads += 1;
+          throw new Error("KV get() limit exceeded for the day.");
+        }
+        if (key === entityKey) return JSON.stringify(entity);
+        return null;
+      },
+      put: async () => {
+        throw new Error("KV put() limit exceeded for the day.");
+      },
+      list: async () => ({ keys: [], list_complete: true }),
+    };
+
+    const result = await upsertSubscriber(kv, { email: "resub@example.com", source: "website" });
+    expect(result.ok).toBe(true);
+    expect(result.alreadySubscribed).toBe(true);
+    expect(result.kvWriteSkipped).toBe(true);
+    expect(snapshotReads).toBe(0);
+  });
 });

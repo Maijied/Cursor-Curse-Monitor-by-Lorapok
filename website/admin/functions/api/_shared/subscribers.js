@@ -90,7 +90,10 @@ async function readSubscriberSnapshot(kv) {
     const items = parsed.map(normalizeSubscriber).filter(Boolean);
     return items.length ? items : null;
   } catch (error) {
-    if (isKvQuotaError(error)) throw error;
+    if (isKvQuotaError(error)) {
+      console.warn("subscribers: snapshot read skipped (KV quota)", error);
+      return null;
+    }
     return null;
   }
 }
@@ -139,11 +142,8 @@ export async function readSubscribers(kv) {
     const snapshot = await readSubscriberSnapshot(kv);
     if (snapshot) return snapshot;
   } catch (error) {
-    if (isKvQuotaError(error)) {
-      console.warn("subscribers: snapshot read failed (KV quota)", error);
-      return [];
-    }
-    throw error;
+    if (!isKvQuotaError(error)) throw error;
+    console.warn("subscribers: snapshot read failed (KV quota)", error);
   }
 
   const merged = await rebuildSubscribersFromScatter(kv);
@@ -173,33 +173,23 @@ export async function writeSubscribers(kv, items) {
 /**
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
  * @param {{ email: string; source?: string; installId?: string | null; consentVersion?: string }} input
+ * @param {{ skipSnapshot?: boolean }} [options]
  */
-export async function upsertSubscriber(kv, input) {
+export async function upsertSubscriber(kv, input, options = {}) {
   const email = normalizeEmail(input.email);
   if (!email) return { ok: false, error: "Valid email is required" };
   if (!kv?.put) return { ok: false, error: "Subscriber storage unavailable" };
 
-  let snapshot = null;
+  const skipSnapshot = options.skipSnapshot === true;
+
+  let existing = null;
   try {
-    snapshot = await readSubscriberSnapshot(kv);
+    existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
   } catch (error) {
     if (isKvQuotaError(error)) {
       return { ok: false, error: formatKvQuotaError(error) };
     }
     throw error;
-  }
-
-  let existing = snapshot?.find((row) => row.email === email) ?? null;
-
-  if (!existing) {
-    try {
-      existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
-    } catch (error) {
-      if (isKvQuotaError(error)) {
-        return { ok: false, error: formatKvQuotaError(error) };
-      }
-      throw error;
-    }
   }
 
   if (!existing) {
@@ -227,19 +217,33 @@ export async function upsertSubscriber(kv, input) {
     existing.installId === next.installId &&
     existing.consentVersion === next.consentVersion;
 
-  let wrote = false;
-  if (!unchanged) {
-    try {
-      wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next);
-    } catch (error) {
-      if (isKvQuotaError(error)) {
-        return { ok: false, error: formatKvQuotaError(error) };
-      }
-      throw error;
-    }
+  if (unchanged) {
+    return {
+      ok: true,
+      subscriber: next,
+      alreadySubscribed: true,
+      kvWriteSkipped: true,
+    };
   }
 
-  if (!unchanged) {
+  let wrote = false;
+  try {
+    wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next, { skipUnchangedRead: true });
+  } catch (error) {
+    if (isKvQuotaError(error)) {
+      return { ok: false, error: formatKvQuotaError(error) };
+    }
+    throw error;
+  }
+
+  if (!skipSnapshot) {
+    let snapshot = null;
+    try {
+      snapshot = await readSubscriberSnapshot(kv);
+    } catch (error) {
+      if (!isKvQuotaError(error)) throw error;
+      console.warn("subscribers: snapshot read skipped during upsert (KV quota)", error);
+    }
     const base = snapshot ?? (existing ? [existing] : []);
     const byEmail = new Map(base.map((row) => [row.email, row]));
     byEmail.set(email, next);

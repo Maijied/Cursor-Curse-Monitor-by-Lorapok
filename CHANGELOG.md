@@ -22,7 +22,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Login sync (IDE + browser)** — dashboard refreshes immediately after sign-in, paste, or account changes; browser extension activates tokens on first connect and polls up to 60s with `probeAuth` (popup + options)
 - **Usage analytics chart** — stacked chart ymax uses true stack totals; surface/model group-by shows explicit empty states; IDE chart prefs survive refresh
 - **Admin site data polling** — `useSiteData` re-fetches on interval; `refresh()` triggers a real reload
-- **Live stats KV pressure** — skip badge/readme writes unless `displayTotal` or sync status changes
+- **Subscribe KV quota resilience** — upsert looks up one scatter key first (no snapshot read on resubscribe); skip snapshot writes when stats refresh is paused; subscriber list falls back to capped scatter rebuild when snapshot read is quota-blocked
 
 ### Added
 
