@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import {
+  buildBetaVersionPlan,
   buildRollbackPlan,
   buildVersionPlan,
   bumpSemver,
   compareSemver,
   maxVersionFromChannels,
   maxVersionFromGitTags,
+  nextBetaVersion,
   nextRollbackVersion,
+  parseBetaVersion,
   parseRollbackVersion,
   warnLiveChannelDrift,
 } from "./version-plan.js";
@@ -97,5 +100,23 @@ warnLiveChannelDrift({
   log: { warn: (msg) => warnings.push(msg) },
 });
 assert.equal(warnings.length, 0);
+
+assert.deepEqual(parseBetaVersion("v1.0.114-beta.0"), {
+  core: "1.0.114",
+  beta: 0,
+  version: "1.0.114-beta.0",
+  tag: "v1.0.114-beta.0",
+});
+assert.equal(nextBetaVersion("1.0.114", ["v1.0.115-beta.0"], "patch").recommendedTag, "v1.0.115-beta.1");
+assert.equal(nextBetaVersion("1.0.114", [], "patch").recommendedTag, "v1.0.115-beta.0");
+
+const betaPlan = buildBetaVersionPlan({
+  packageVersion: "1.0.1",
+  bumpType: "patch",
+  channels,
+  existingTags: ["v1.0.3", "v1.0.4-beta.0"],
+});
+assert.equal(betaPlan.recommendedTag, "v1.0.4-beta.1");
+assert.equal(betaPlan.releaseChannel, "beta");
 
 console.log("version-plan.test.mjs: OK");

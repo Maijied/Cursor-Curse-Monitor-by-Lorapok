@@ -191,7 +191,7 @@ export default function Deployments() {
     try {
       const planMode = mode === "rollback" ? "rollback" : "release";
       const targetForPlan = mode === "rollback" && selectedTag ? selectedTag : undefined;
-      const plan = await fetchVersionPlan("patch", planMode, targetForPlan);
+      const plan = await fetchVersionPlan("patch", planMode, targetForPlan, channel);
       setVersionPlan(plan);
     } catch (err: unknown) {
       setVersionPlan(null);
@@ -199,7 +199,7 @@ export default function Deployments() {
     } finally {
       setVersionPlanLoading(false);
     }
-  }, [mode, selectedTag]);
+  }, [mode, selectedTag, channel]);
 
   useEffect(() => {
     if (canDeployRun) void runVersionCheck();
@@ -572,10 +572,9 @@ export default function Deployments() {
           ) : null}
           {channel === "beta" ? (
             <p className="mt-2 text-[var(--color-text)]">
-              <strong>Beta channel</strong> sets VS Code / Open VSX <em>pre-release</em> flags at publish time.
-              Tags stay <code className="font-mono text-xs">vMAJOR.MINOR.PATCH</code> (no{" "}
-              <code className="font-mono text-xs">-beta</code> suffix). Any market can be selected; CI may skip Firefox
-              AMO for pre-releases.
+              <strong>Beta channel</strong> publishes with VS Code / Open VSX <em>pre-release</em> flags. Full-release
+              creates <code className="font-mono text-xs">vMAJOR.MINOR.PATCH-beta.N</code> tags; publish-tag can also use
+              plain semver tags. CI skips Firefox AMO for pre-releases.
             </p>
           ) : null}
         </div>

@@ -877,7 +877,7 @@ jobs:
               NEW_VERSION="$CUSTOM_VERSION"
               echo "Custom release target v${NEW_VERSION}"
             elif [ "$CHANNEL" == "Beta (Pre-release)" ]; then
-              LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE")
+              LIVE_PLAN=$(node scripts/compute-next-release-version.mjs --json --bump "$BUMP_TYPE" --channel beta)
               NEW_VERSION=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.recommendedVersion||'')")
               MAX_LIVE=$(echo "$LIVE_PLAN" | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.maxAllVersion||'')")
               if [ -z "$NEW_VERSION" ]; then
@@ -935,10 +935,6 @@ jobs:
       && github.event_name == 'workflow_dispatch'
       && !startsWith(inputs.action_type, 'deploy-infra')
       && inputs.deploy_extension != false
-      && (
-        !startsWith(inputs.action_type, 'full-release')
-        || inputs.release_channel == 'Beta (Pre-release)'
-      )
       && (
         (needs.release-prep.result == 'success' && needs.release-prep.outputs.should_deploy == 'true') ||
         (

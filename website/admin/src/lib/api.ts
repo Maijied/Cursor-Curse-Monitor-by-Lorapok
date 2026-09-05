@@ -163,10 +163,12 @@ export async function fetchVersionPlan(
   bump: "patch" | "minor" | "major" = "patch",
   mode: "release" | "rollback" = "release",
   targetTag?: string,
+  channel: "beta" | "production" = "production",
 ) {
   const params = new URLSearchParams({
     bump,
     mode,
+    channel,
   });
   if (targetTag) params.set("target_tag", targetTag);
   return apiGet<VersionPlan>(`/version/plan?${params.toString()}`);

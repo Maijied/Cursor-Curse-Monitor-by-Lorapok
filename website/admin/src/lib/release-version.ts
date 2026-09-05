@@ -51,7 +51,7 @@ function compareTags(a: string, b: string): number {
   return 0;
 }
 
-import { isValidMarketplaceTag } from "./marketplace-deploy-policy";
+import { isValidMarketplaceTag, isBetaMarketplaceTag } from "./marketplace-deploy-policy";
 
 /**
  * Determines whether a tag identifies a beta, alpha, or release candidate pre-release.
@@ -105,8 +105,10 @@ export function filterTagsForChannel(
   if (channel === "production") {
     return marketplaceTags.filter((tag) => !isBetaPrereleaseTag(tag));
   }
-  // Beta channel: semver tags only; pre-release is set at publish time (--pre-release), not in the tag name.
-  return marketplaceTags.filter((tag) => !isBetaPrereleaseTag(tag));
+  // Beta channel: semver tags (pre-release at publish) and vX.Y.Z-beta.N full-release tags.
+  return marketplaceTags.filter(
+    (tag) => isBetaMarketplaceTag(tag) || (!isBetaPrereleaseTag(tag) && !/-dev\.|-pr\./i.test(tag)),
+  );
 }
 
 /**

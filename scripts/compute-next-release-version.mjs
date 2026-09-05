@@ -5,13 +5,13 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildRollbackPlan, buildVersionPlan } from "../website/admin/functions/api/_shared/version-plan.js";
+import { buildRollbackPlan, buildBetaVersionPlan, buildVersionPlan } from "../website/admin/functions/api/_shared/version-plan.js";
 import { fetchGitTagNames, fetchLiveChannels } from "../website/admin/functions/api/_shared/live-channels.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function parseArgs(argv) {
-  const args = { bump: "patch", field: null, json: false, rollback: false };
+  const args = { bump: "patch", field: null, json: false, rollback: false, channel: "production" };
   for (let i = 2; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--json") args.json = true;
@@ -19,9 +19,15 @@ function parseArgs(argv) {
     else if (arg === "--field") args.field = argv[++i];
     else if (arg.startsWith("--bump=")) args.bump = arg.split("=")[1];
     else if (arg === "--bump") args.bump = argv[++i] ?? "patch";
+    else if (arg.startsWith("--channel=")) args.channel = arg.split("=")[1];
+    else if (arg === "--channel") args.channel = argv[++i] ?? "production";
   }
   if (!args.rollback && !["patch", "minor", "major"].includes(args.bump)) {
     console.error(`::error::Invalid bump type: ${args.bump}`);
+    process.exit(1);
+  }
+  if (!["production", "beta"].includes(args.channel)) {
+    console.error(`::error::Invalid channel: ${args.channel}`);
     process.exit(1);
   }
   return args;
@@ -56,18 +62,26 @@ const plan = args.rollback
       existingTags,
       targetTag: process.env.TARGET_TAG ?? null,
     })
-  : buildVersionPlan({
-      packageVersion: siteData.version,
-      channels,
-      bumpType: args.bump,
-      latestGitTag,
-      existingTags,
-    });
+  : args.channel === "beta"
+    ? buildBetaVersionPlan({
+        packageVersion: siteData.version,
+        channels,
+        bumpType: args.bump,
+        existingTags,
+      })
+    : buildVersionPlan({
+        packageVersion: siteData.version,
+        channels,
+        bumpType: args.bump,
+        latestGitTag,
+        existingTags,
+      });
 
 const payload = {
   checkedAt: new Date().toISOString(),
   bumpType: args.rollback ? "rollback" : args.bump,
   planMode: args.rollback ? "rollback" : "release",
+  releaseChannel: args.rollback ? null : args.channel,
   channels,
   ...plan,
 };
