@@ -9,7 +9,9 @@ import {
 export function permissionForApiRoute(method: string, path: string): string | null {
   const normalizedPath = path.startsWith("/api") ? path.replace(/^\/api/, "") : path;
   const key = `${method.toUpperCase()} ${normalizedPath}`;
-  return MUTATING_ROUTE_PERMISSIONS[key] ?? READ_ROUTE_PERMISSIONS[key] ?? null;
+  const mutating = MUTATING_ROUTE_PERMISSIONS as Record<string, string>;
+  const read = READ_ROUTE_PERMISSIONS as Record<string, string>;
+  return mutating[key] ?? read[key] ?? null;
 }
 
 /** Whether the signed-in admin may run an API Explorer probe (AUTH-12). */
