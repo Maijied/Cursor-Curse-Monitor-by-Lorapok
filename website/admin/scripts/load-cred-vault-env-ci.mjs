@@ -14,7 +14,7 @@
 import { appendFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadCursorCloudflareSecretsFromVault } from "./lib/cred-vault-sync.mjs";
+import { decryptCredentialVault, loadCursorCloudflareSecretsFromVault } from "./lib/cred-vault-sync.mjs";
 import { pickDeployAuth, setGithubActionsOutput } from "./lib/mail-credentials.mjs";
 
 const DEFAULT_VAULT =
@@ -52,9 +52,22 @@ async function main() {
   process.env.CRED_STORE_FILE = vaultPath;
 
   try {
+    const vault = decryptCredentialVault();
+    if (!vault) {
+      const hasBlob = Boolean((process.env.CRED_STORE_GPG_BASE64 ?? "").trim());
+      console.warn(
+        hasBlob
+          ? "::warning::Cred vault GPG decrypt failed (check CRED_VAULT_PASSPHRASE vs CRED_STORE_GPG_BASE64) — falling back to workflow secrets."
+          : "::warning::Cred vault blob missing (CRED_STORE_GPG_BASE64) — falling back to workflow secrets."
+      );
+      return;
+    }
+
     const loaded = loadCursorCloudflareSecretsFromVault();
     if (!loaded) {
-      console.warn("::warning::Cred vault decrypt failed or vault empty — falling back to workflow secrets.");
+      console.warn(
+        "::warning::Cred vault decrypted but no Cloudflare credentials found — falling back to workflow secrets."
+      );
       return;
     }
 
@@ -65,6 +78,10 @@ async function main() {
     if (loaded.testmailApiKey) exportEnv("TESTMAIL_API_KEY", loaded.testmailApiKey);
     if (loaded.testmailNamespace) exportEnv("TESTMAIL_NAMESPACE", loaded.testmailNamespace);
     if (loaded.emailToken) exportEnv("CLOUDFLARE_EMAIL_API_TOKEN", loaded.emailToken);
+    if (loaded.adminMasterEmail) {
+      exportEnv("ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
+      exportEnv("VITE_ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
+    }
 
     const env = {
       ...process.env,
