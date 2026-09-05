@@ -8,6 +8,8 @@ import ErrorState from "../ui/ErrorState";
 import DataTable, { type DataTableColumn } from "../ui/DataTable";
 import { broadcastToSubscribers, fetchSubscribers, type SubscriberRecord } from "../../lib/api";
 import Notification from "../ui/Notification";
+import { useAuthSession } from "../../lib/auth-context";
+import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 
 function exportCsv(rows: SubscriberRecord[]) {
   const header = ["email", "source", "subscribedAt", "installId", "consentVersion"];
@@ -29,6 +31,8 @@ function exportCsv(rows: SubscriberRecord[]) {
 }
 
 export default function Subscribers() {
+  const { hasPermission } = useAuthSession();
+  const canBroadcast = hasPermission("subscribers.write");
   const [items, setItems] = useState<SubscriberRecord[]>([]);
   const [stats, setStats] = useState<{ total: number; withInstallId: number; bySource: Record<string, number> } | null>(
     null
@@ -56,6 +60,7 @@ export default function Subscribers() {
   }, [load]);
 
   const emailAll = async () => {
+    if (!canBroadcast) return;
     const title = window.prompt("Email subject / notice title");
     if (!title?.trim()) return;
     const message = window.prompt("Full message body for subscribers");
@@ -137,7 +142,8 @@ export default function Subscribers() {
             <button
               type="button"
               onClick={() => void emailAll()}
-              disabled={!items.length || broadcasting}
+              disabled={!canBroadcast || !items.length || broadcasting}
+              title={canBroadcast ? undefined : "Requires subscribers.write"}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-accent)]/40 text-sm text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 disabled:opacity-50"
             >
               <Send size={14} aria-hidden="true" />
@@ -155,6 +161,10 @@ export default function Subscribers() {
           </div>
         }
       />
+
+      {!canBroadcast ? (
+        <ReadOnlyAclBanner permission="subscribers.write" feature="Subscriber broadcast" />
+      ) : null}
 
       {notice && (
         <Notification tone={notice.tone} message={notice.message} onDismiss={() => setNotice(null)} />

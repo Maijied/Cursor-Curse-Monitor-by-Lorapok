@@ -132,7 +132,7 @@ _None — pick from **Recommended next queue** below._
 | AUTH-09 | ACL audit log (role/email changes) | **done** | `acl-audit.js` → system log; Logs → ACL filter |
 | AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **done** | `rbac-matrix.test.mjs` + `src/__tests__/rbac-matrix.test.ts` |
 | AUTH-11 | Profile tab + quick-unlock PIN (Settings) | **done** | `ProfileSettingsCard`, `pin-unlock.ts`, KV verifier backup |
-| AUTH-12 | **Feature ACL v2** — per-card / per-action permissions beyond nav (deploy buttons, mail send, notice publish, cred vault, team invite) | **next** | extend `requirePermission` + UI `hasPermission` on every mutating control; matrix doc |
+| AUTH-12 | **Feature ACL v2** — per-card / per-action permissions beyond nav (deploy buttons, mail send, notice publish, cred vault, team invite) | **done** | `feature-permissions.ts`, `api-permissions.ts`, `ReadOnlyAclBanner`; gates on Notices, Subscribers, Mailbox, Team, CredVault, ApiExplorer, Deployments |
 | AUTH-13 | **ACL audit UI** — filterable timeline of role/email changes with export | **next** | Logs ACL tab + `acl-audit.js` query API |
 
 ---
@@ -286,8 +286,7 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
-2. **AUTH-13** — ACL audit UI (filterable timeline + export)
+1. **AUTH-13** — ACL audit UI (filterable timeline + export)
 3. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
 4. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
 5. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)

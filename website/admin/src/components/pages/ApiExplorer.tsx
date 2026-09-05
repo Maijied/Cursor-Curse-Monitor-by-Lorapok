@@ -7,6 +7,8 @@ import Badge from "../ui/Badge";
 import LoadableButton from "../ui/LoadableButton";
 import { API_CATALOG, API_CATALOG_GROUPS, type ApiCatalogEntry } from "../../lib/api-catalog";
 import { probeApiEndpoint, type ApiProbeResult } from "../../lib/api";
+import { useAuthSession } from "../../lib/auth-context";
+import { canProbeApiRoute, permissionForApiRoute } from "../../lib/api-permissions";
 
 type ProbeState = ApiProbeResult & { loading?: boolean; error?: string };
 
@@ -27,11 +29,26 @@ function methodColor(method: string) {
 }
 
 export default function ApiExplorer() {
+  const { hasPermission } = useAuthSession();
   const [results, setResults] = useState<Record<string, ProbeState>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [runningAll, setRunningAll] = useState(false);
 
   const runProbe = useCallback(async (entry: ApiCatalogEntry) => {
+    if (!canProbeApiRoute(entry.method, entry.path, hasPermission)) {
+      const perm = permissionForApiRoute(entry.method, entry.path);
+      setResults((prev) => ({
+        ...prev,
+        [entry.id]: {
+          ok: false,
+          status: 403,
+          latencyMs: 0,
+          body: "",
+          error: perm ? `Requires ${perm}` : "Permission denied",
+        },
+      }));
+      return null;
+    }
     setResults((prev) => ({
       ...prev,
       [entry.id]: { ok: false, status: 0, latencyMs: 0, body: "", loading: true },
@@ -51,7 +68,7 @@ export default function ApiExplorer() {
       }));
       return null;
     }
-  }, []);
+  }, [hasPermission]);
 
   const runAllSafe = useCallback(async () => {
     setRunningAll(true);
@@ -118,6 +135,8 @@ export default function ApiExplorer() {
               {entries.map((entry) => {
                 const state = results[entry.id];
                 const isOpen = expanded === entry.id;
+                const probeAllowed = canProbeApiRoute(entry.method, entry.path, hasPermission);
+                const requiredPerm = permissionForApiRoute(entry.method, entry.path);
                 return (
                   <Card key={entry.id} className="h-full min-h-[11rem] flex flex-col">
                     <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
@@ -161,7 +180,9 @@ export default function ApiExplorer() {
                         <button
                           type="button"
                           onClick={() => runProbe(entry)}
-                          className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 rounded-lg text-xs font-semibold border border-[var(--color-border)] hover:bg-white/5"
+                          disabled={!probeAllowed}
+                          title={probeAllowed ? undefined : requiredPerm ? `Requires ${requiredPerm}` : "Permission denied"}
+                          className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 rounded-lg text-xs font-semibold border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-50"
                         >
                           <Play size={14} aria-hidden="true" />
                           Run
