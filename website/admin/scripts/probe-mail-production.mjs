@@ -59,13 +59,13 @@ async function main() {
   if (!health.mailConfigured) {
     fail("Outbound mail transport is not configured");
   } else {
-    pass(`Mail binding: ${health.mailTransport} (relay/REST infrastructure)`);
+    pass(`Mail transport: ${health.mailTransport}`);
   }
 
   if (!health.mailResendConfigured && health.mailTransport === "cloudflare-rest") {
     warn("RESEND_API_KEY missing — external Gmail/testmail delivery may fail on Workers Free");
   } else if (health.mailResendConfigured) {
-    pass("Resend configured — production delivery for external inboxes (Gmail, etc.)");
+    pass("Resend API key configured");
   }
 
   if (!health.mailRelayBound && health.mailTransport === "cloudflare-rest") {
@@ -113,7 +113,7 @@ async function main() {
       pass("Testmail subscribe E2E passed");
     }
   } else {
-    console.log("\nLive delivery: use Mailbox → Test with your Gmail, or enable testmail in Settings → Testmail for --e2e probes.");
+    console.log("\nSkip live delivery test (pass --e2e with TESTMAIL_* to run subscribe probe)");
   }
 
   if (process.exitCode) {

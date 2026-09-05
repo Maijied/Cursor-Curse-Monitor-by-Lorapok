@@ -24,11 +24,9 @@ export async function onRequestPost(context) {
     severity: body.severity,
     feedbackUrl: body.feedbackUrl ?? body.feedback_url,
     sentBy: auth.email,
-    offset: body.offset,
-    limit: body.limit,
   });
 
-  const status = result.error ? 400 : !result.done && result.failed === 0 ? 202 : result.failed > 0 ? 207 : 200;
+  const status = result.error ? 400 : result.failed > 0 ? 207 : 200;
   const response = jsonResponse(result, status);
   return logAuthenticatedRequest(context, auth, response, startedAt);
 }

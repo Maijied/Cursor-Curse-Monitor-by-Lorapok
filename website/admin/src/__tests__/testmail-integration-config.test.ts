@@ -3,20 +3,9 @@ import {
   normalizeTestmailIntegrationConfig,
   sanitizeTestmailIntegrationForClient,
   testmailSecretsToGithubMap,
-  isTestmailProbeEnabled,
 } from "../../functions/api/_shared/testmail-integration-config.js";
 
 describe("testmail-integration-config", () => {
-  it("disables probes by default", () => {
-    const config = normalizeTestmailIntegrationConfig({});
-    expect(config.probeEnabled).toBe(false);
-    expect(isTestmailProbeEnabled(config)).toBe(false);
-  });
-
-  it("enables probes only when explicitly true", () => {
-    const config = normalizeTestmailIntegrationConfig({ probeEnabled: true });
-    expect(isTestmailProbeEnabled(config)).toBe(true);
-  });
   it("maps secrets to GitHub env names", () => {
     const secrets = testmailSecretsToGithubMap({
       testmailApiKey: "key",

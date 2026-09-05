@@ -42,8 +42,6 @@ import {
   logAllowlistRemove,
   logRoleAssignment,
   logRoleClear,
-  queryAclAuditEvents,
-  aclAuditRowsToCsv,
 } from "./functions/api/_shared/acl-audit.js";
 import { sanitizeProfileForClient } from "./functions/api/_shared/user-profile.js";
 import {
@@ -121,7 +119,6 @@ import {
   readTestmailIntegrationConfig,
   sanitizeTestmailIntegrationForClient,
   writeTestmailIntegrationConfig,
-  isTestmailProbeEnabled,
 } from "./functions/api/_shared/testmail-integration-config.js";
 import { envWithCursorCloudflareSecrets } from "./scripts/lib/cred-vault-sync.mjs";
 import { getMasterEmail } from "./functions/api/_shared/admins.js";
@@ -1508,7 +1505,7 @@ export function createDevApiMiddleware() {
           const next = normalizeTestmailIntegrationConfig({
             ...current,
             namespace: parsed.namespace !== undefined ? String(parsed.namespace ?? "").trim() : current.namespace,
-            probeEnabled: parsed.probeEnabled !== undefined ? parsed.probeEnabled === true : current.probeEnabled,
+            probeEnabled: parsed.probeEnabled !== undefined ? parsed.probeEnabled !== false : current.probeEnabled,
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",
             githubSecretsSyncedAt: new Date().toISOString(),
@@ -2569,47 +2566,6 @@ export function createDevApiMiddleware() {
       return;
     }
 
-    if (url.startsWith("/api/auth/acl-audit") && req.method === "GET") {
-      const query = new URL(req.url ?? "", "http://localhost");
-      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
-      const limit = Math.min(
-        500,
-        Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25)
-      );
-      const format = String(query.searchParams.get("format") ?? "").trim().toLowerCase();
-      void (async () => {
-        const result = await queryAclAuditEvents(devFunctionsEnv(), {
-          page,
-          limit,
-          exportAll: format === "csv",
-          event: query.searchParams.get("event") ?? undefined,
-          actor: query.searchParams.get("actor") ?? undefined,
-          target: query.searchParams.get("target") ?? undefined,
-          since: query.searchParams.get("since") ?? undefined,
-          until: query.searchParams.get("until") ?? undefined,
-          q: query.searchParams.get("q") ?? undefined,
-        });
-        logDevActivity(req, 200);
-        if (format === "csv") {
-          const csv = aclAuditRowsToCsv(result.items);
-          res.setHeader("Content-Type", "text/csv; charset=utf-8");
-          res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="acl-audit-${new Date().toISOString().slice(0, 10)}.csv"`
-          );
-          res.end(csv);
-          return;
-        }
-        res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify(result));
-      })().catch((err) => {
-        res.statusCode = 500;
-        res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
-      });
-      return;
-    }
-
     if (url === "/api/auth/me" && req.method === "GET") {
       void (async () => {
         const email = resolveDevMasterEmail();
@@ -3002,11 +2958,9 @@ export function createDevApiMiddleware() {
               severity: parsed.severity,
               feedbackUrl: parsed.feedbackUrl,
               sentBy: "dev@local",
-              offset: parsed.offset,
-              limit: parsed.limit,
             }
           );
-          res.statusCode = result.error ? 400 : !result.done && result.failed === 0 ? 202 : 200;
+          res.statusCode = result.error ? 400 : 200;
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify(result));
         } catch (error) {
@@ -3280,7 +3234,7 @@ export function createDevApiMiddleware() {
     if (url === "/api/mailbox" && req.method === "POST") {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });
-      req.on("end", async () => {
+      req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
           const action = parsed.action ?? "send";
@@ -3292,13 +3246,6 @@ export function createDevApiMiddleware() {
             return;
           }
           if (action === "testmail-probe") {
-            const integration = await readTestmailIntegrationConfig(devFunctionsEnv());
-            if (!isTestmailProbeEnabled(integration)) {
-              res.statusCode = 403;
-              res.setHeader("Content-Type", "application/json");
-              res.end(JSON.stringify({ ok: false, error: "Testmail E2E probes are disabled in Settings." }));
-              return;
-            }
             const tag = `ccm-mailbox-${Date.now()}`;
             const namespace = String(process.env.TESTMAIL_NAMESPACE ?? "dev").trim();
             const to = `${namespace}.${tag}@inbox.testmail.app`;

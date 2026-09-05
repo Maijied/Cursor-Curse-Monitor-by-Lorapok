@@ -5,11 +5,9 @@ import {
   listMailboxMessages,
   patchMailboxMessage,
 } from "./_shared/mailbox.js";
-import { retryFailedMailboxMessages } from "./_shared/mailbox-retry.js";
 import { buildComposeHtml, buildSubscribeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
 import { getMailTemplates } from "./_shared/mail-templates.js";
 import { testmailInboxAddress, resolveTestmailRuntimeConfig } from "./_shared/testmail-runtime.js";
-import { isTestmailProbeEnabled, readTestmailIntegrationConfig } from "./_shared/testmail-integration-config.js";
 
 const COMPOSE_CATEGORIES = new Set([
   "compose",
@@ -115,19 +113,6 @@ export async function onRequestPost(context) {
   }
 
   if (action === "testmail-probe") {
-    const integration = await readTestmailIntegrationConfig(env);
-    if (!isTestmailProbeEnabled(integration)) {
-      const response = jsonResponse(
-        {
-          ok: false,
-          error:
-            "Testmail E2E probes are disabled. Enable them in Settings → Testmail if you need inbox delivery checks.",
-        },
-        403
-      );
-      return logAuthenticatedRequest(context, auth, response, startedAt);
-    }
-
     const config = resolveTestmailRuntimeConfig(env);
     if (!config.ok) {
       const response = jsonResponse({ ok: false, error: config.error }, 503);
@@ -159,29 +144,6 @@ export async function onRequestPost(context) {
         ? `Subscribe welcome mail sent to ${to}. Poll testmail.app for tag "${tag}".`
         : `Welcome mail failed: ${result.reason}`,
       reason: result.sent ? undefined : result.reason,
-    });
-    return logAuthenticatedRequest(context, auth, response, startedAt);
-  }
-
-  if (action === "retry-failed") {
-    const result = await retryFailedMailboxMessages(env, {
-      sentBy: auth.email,
-      limit: Math.min(100, Math.max(1, Number.parseInt(String(body.limit ?? "50"), 10) || 50)),
-      includeRetried: body.includeRetried === true,
-    });
-    const response = jsonResponse({
-      ok: result.ok,
-      attempted: result.attempted,
-      sent: result.sent,
-      skipped: result.skipped,
-      failed: result.failed,
-      results: result.results,
-      message:
-        result.sent > 0
-          ? `Retried ${result.sent} failed message(s).`
-          : result.attempted === 0
-            ? "No failed outbound messages to retry."
-            : "Retry finished with failures — see results.",
     });
     return logAuthenticatedRequest(context, auth, response, startedAt);
   }
