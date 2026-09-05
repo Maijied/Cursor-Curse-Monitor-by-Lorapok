@@ -130,6 +130,9 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 - Tests: `npm test` (vitest). Build: `npm run build` (`tsc -b && vite build`;
   its `prebuild` regenerates `site-data.json`/`seo.json` via the root scripts,
   so the repo root must be intact).
+- **Production auth smoke (SET-10):** `npm run auth:probe-production` (API;
+  set `ADMIN_ID_TOKEN` for authenticated tier). Full headless Tier C+D:
+  `npm run auth:tier-d`.
 - **Lint gotcha:** the `lint` npm script is `eslint .`, but ESLint is NOT a
   dependency — the actual linter is **oxlint** (config in `.oxlintrc.json`).
   Run the linter with `npx oxlint` from `website/admin/`; `npm run lint` fails

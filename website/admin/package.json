@@ -25,6 +25,7 @@
     "mail:probe-production": "node scripts/probe-mail-production.mjs",
     "mail:verify-resend-domain": "node scripts/verify-resend-domain.mjs",
     "auth:probe-production": "node scripts/probe-auth-production.mjs",
+    "auth:tier-d": "vitest run src/__tests__/tier-d-rbac-nav.test.ts src/__tests__/pin-unlock.test.ts src/components/__tests__/PinUnlockOverlay.test.tsx && node scripts/probe-auth-production.mjs",
     "auth:setup-master-pages-secret": "node scripts/setup-admin-master-secret.mjs",
     "mail:probe-production:e2e": "node scripts/probe-mail-production.mjs --e2e",
     "mail:sync-testmail-vault": "node scripts/sync-testmail-cred-vault.mjs",

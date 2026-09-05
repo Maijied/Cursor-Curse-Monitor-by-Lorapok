@@ -39,6 +39,6 @@ if (!result.ok) {
 console.log("\nProbe OK.");
 if (!process.env.ADMIN_ID_TOKEN) {
   console.log(
-    "Tip: sign in with password in production, copy Firebase ID token from devtools, then re-run with ADMIN_ID_TOKEN=… for Tier B."
+    "Tip: sign in in production, copy Firebase ID token from devtools, then re-run with ADMIN_ID_TOKEN=… for Tier B. Or run npm run auth:tier-d for full SET-10 headless smoke."
   );
 }

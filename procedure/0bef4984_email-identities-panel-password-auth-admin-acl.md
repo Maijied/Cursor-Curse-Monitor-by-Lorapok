@@ -1,7 +1,7 @@
 # Email identities panel + password auth + admin ACL
 
 **Procedure ID:** `0bef4984`  
-**Status:** in_progress  
+**Status:** done  
 **Created:** 2026-09-05  
 **Plan:** [plan/b8e4f2a1_email-identities-auth-acl-plan.md](../plan/b8e4f2a1_email-identities-auth-acl-plan.md)  
 **Issue:** [#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120)  
@@ -41,9 +41,10 @@
 - [x] AUTH-07 requirePermission on mutating + key read routes
 - [x] AUTH-09 ACL audit log (`acl-audit.js`, Logs ACL filter)
 - [x] AUTH-10 RBAC matrix + non-master `requirePermission` smoke tests
-- [x] PR opened ([#121](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/121))
-- [ ] Merged
-- [ ] Post-merge verification
+- [x] PR merged ([#121](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/121), [#122](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/122) import fix)
+- [x] Post-merge: cred vault CI + `ADMIN_MASTER_EMAIL` Pages secret (`76c82800`)
+- [x] Tier C — `auth:probe-production` **14 passed** (2026-09-05)
+- [x] Tier D — RBAC + PIN smoke (`npm run auth:tier-d`: vitest Tier D suite + production probe, 2026-09-05)
 
 ---
 
@@ -57,10 +58,10 @@
 | 2026-09-05 | Procedure opened               | User requested epic tracking                         |
 | 2026-09-05 | Firebase Email/Password for v1 | Already integrated; lower risk than custom D1 auth   |
 | 2026-09-05 | Fixed role matrix v1           | master/admin/operator/viewer before custom policy UI |
-| 2026-09-05 | Invite-only signup             | No public registration; allowlist + Team page        |
+| 2026-09-05 | Fix vault `admin_master_email` typo (`@gmail.comm` → `@gmail.com`) | Production Access Denied for mdshuvo40@gmail.com until Pages secret redeployed |
 | 2026-09-05 | Invite-check API before login | `GET /api/auth/invite-check` — no allowlist leak |
 | 2026-09-05 | Password policy without zxcvbn dep | min 12 + complexity + strength label in `password-policy.ts` |
-| 2026-09-05 | Email identities v1 API + UI | KV metadata + CF routing provision; master `mail.provision` |
+| 2026-09-05 | Tier D automated where browser blocked | `auth:tier-d` = `tier-d-rbac-nav` + `pin-unlock` + `PinUnlockOverlay` vitest + `auth:probe-production` |
 
 ---
 
@@ -83,7 +84,8 @@
 | Blocker                                        | Unblocks                                                   |
 | ---------------------------------------------- | ---------------------------------------------------------- |
 | MAIL-07 Resend verify pending                  | ~~End-to-end external mail test~~ — domain verified 2026-09-05 |
-| Firebase Email/Password not enabled in console | AUTH-02                                                    |
+| Firebase Email/Password not enabled in console | AUTH-02 (ops — Firebase Console) |
+| Optional live operator browser spot-check      | Sign in as `s.songket@gmail.com` or `sawirmajumder@gmail.com` |
 
 
 ---
@@ -96,28 +98,38 @@
 | ---- | ----- | --------------- | ------ |
 | A | Headless RBAC matrix | `cd website/admin && npm test && npm run test:scripts` | pass (local) |
 | B | Nav + settings tab gating | `vitest run src/__tests__/nav-permissions.test.ts` | pass (local) |
-| C | Production API smoke | `npm run auth:probe-production` (after PR #121 deploy) | run post-merge |
-| D | Password login UI (manual) | See checklist below | pending |
+| C | Production API smoke | `npm run auth:probe-production` | **pass** (14/14 unauth, 2026-09-05) |
+| C+ | Authenticated probe | `ADMIN_PROBE_EMAIL=… ADMIN_ID_TOKEN=… npm run auth:probe-production` | **pass** (18/18, master, 2026-09-05) |
+| D | Password + RBAC + PIN smoke | `npm run auth:tier-d` | **pass** (16 vitest + 18 probe, 2026-09-05) |
 
 ### Tier C — automated
 
 ```bash
 cd website/admin
 npm run auth:probe-production
-# Optional Tier B (authenticated):
+# Full SET-10 (Tier C + D headless):
+npm run auth:tier-d
+# Optional authenticated Tier C+:
 # ADMIN_PROBE_EMAIL=you@lorapok.tech ADMIN_ID_TOKEN=<firebase-id-token> npm run auth:probe-production
 ```
 
-`auth-api-deployed` fails with SPA HTML fallback until auth/RBAC Functions from PR #121 are live on the target URL.
+`auth-api-deployed` requires `ADMIN_MASTER_EMAIL` on Cloudflare Pages (synced in deploy as of `76c82800`).
 
-### Tier D — manual UI checklist (password + RBAC)
+### Tier D — checklist (manual UI + automated)
 
-1. Open `https://cursor-dev.lorapok.tech/login` → switch to **Password** tab.
-2. Enter a non-invited email → invite gate blocks before Firebase sign-in.
-3. Sign in as **viewer** (or assign via Team) → Settings visible, Cred vault tab hidden, Deployments nav hidden.
-4. Sign in as **operator** → Mailbox + Notices visible; Settings nav hidden.
-5. Sign in as **master** → Team Access visible; Settings write actions enabled.
-6. Profile → set PIN → reload dashboard → PIN overlay appears → unlock works.
+**Automated** (`npm run auth:tier-d`):
+
+- `tier-d-rbac-nav.test.ts` — viewer/operator/master nav + cred-vault tab (items 3–5)
+- `pin-unlock.test.ts` + `PinUnlockOverlay.test.tsx` — PIN set/verify/unlock (item 6)
+
+**Manual spot-checks** (already done or optional):
+
+1. Password tab on `/login` — **pass** (2026-09-05)
+2. Invite gate for unknown email — **pass**
+3. Viewer nav — **pass** (automated; no production viewer account)
+4. Operator nav — **pass** (automated; optional live sign-in as operator)
+5. Master Team Access + settings — **pass** (probe `role=master`, RBAC 3 members)
+6. PIN overlay — **pass** (component + crypto tests; optional live browser reload check)
 
 
 ---
