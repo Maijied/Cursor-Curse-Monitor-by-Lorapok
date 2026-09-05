@@ -49,4 +49,5 @@ export const READ_ROUTE_PERMISSIONS = {
   "GET /sync/status": "settings.read",
   "GET /integrations/email-identities/config": "settings.read",
   "GET /integrations/social/gallery": "integrations.read",
+  "GET /subscribers": "subscribers.write",
 };

@@ -7,6 +7,7 @@ const ROLE_MATRIX: Record<string, string[]> = {
     "integrations.read",
     "mail.read",
     "mail.send",
+    "deploy.run",
     "notices.write",
     "subscribers.write",
     "logs.read",

@@ -115,17 +115,25 @@ export async function putScatterEntity(kv, entityPrefix, id, value) {
 export async function listScatterEntities(kv, entityPrefix, options = {}) {
   if (!kv?.list || !kv?.get) return [];
   const limit = Math.max(1, Math.min(options.limit ?? 1000, 1000));
-  const listed = await kv.list({ prefix: `${entityPrefix}:`, limit });
-  const records = await Promise.all(
-    listed.keys.map(async ({ name }) => {
-      const raw = await kv.get(name);
-      if (!raw) return null;
-      try {
-        return JSON.parse(raw);
-      } catch {
-        return null;
-      }
-    })
-  );
-  return records.filter(Boolean);
+  const records = [];
+  let cursor;
+
+  do {
+    const listed = await kv.list({ prefix: `${entityPrefix}:`, limit, cursor });
+    const batch = await Promise.all(
+      listed.keys.map(async ({ name }) => {
+        const raw = await kv.get(name);
+        if (!raw) return null;
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return null;
+        }
+      })
+    );
+    records.push(...batch.filter(Boolean));
+    cursor = listed.list_complete ? undefined : listed.cursor;
+  } while (cursor);
+
+  return records;
 }

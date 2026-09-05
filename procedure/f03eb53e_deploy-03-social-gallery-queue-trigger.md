@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** __ISSUE_PENDING__  
 **Branch:** `feat/deploy-03-social-gallery-queue`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/227
 
 ---
 
@@ -22,7 +22,7 @@ DEPLOY-03 social gallery queue trigger
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
