@@ -2,13 +2,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import Deployments from "../components/pages/Deployments";
 
+const testFixtures = vi.hoisted(() => ({
+  adminEmail:
+    process.env.ADMIN_MASTER_EMAIL?.trim().toLowerCase() ||
+    process.env.VITE_ADMIN_MASTER_EMAIL?.trim().toLowerCase() ||
+    "ci-admin@lorapok.test",
+}));
+
 vi.mock("../lib/auth-context", async () => {
   const { mockAuthSessionModule } = await import("../test-support/mock-auth-session");
   return mockAuthSessionModule();
 });
 
 vi.mock("../lib/firebase", () => ({
-  auth: { currentUser: { email: "mdshuvo40@gmail.com" } },
+  auth: { currentUser: { email: testFixtures.adminEmail } },
 }));
 
 vi.mock("../hooks/useSiteData", () => ({

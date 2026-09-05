@@ -330,7 +330,7 @@ export default function Login() {
                   onChange={(e) => setConfirmEmail(e.target.value)}
                   required
                   className={inputClass}
-                  placeholder="mdshuvo40@gmail.com"
+                  placeholder="admin@lorapok.tech"
                 />
               </div>
               <button
@@ -434,7 +434,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="mdshuvo40@gmail.com"
+                    placeholder="admin@lorapok.tech"
                     autoComplete="email"
                   />
                 </div>
@@ -463,7 +463,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="mdshuvo40@gmail.com"
+                    placeholder="admin@lorapok.tech"
                     autoComplete="email"
                   />
                 </div>

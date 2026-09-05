@@ -236,7 +236,7 @@ npx vsce publish -p $VSCE_PAT # VS Code Marketplace`}
           <li>Sends a Firebase email sign-in link to <code className="font-[family-name:var(--font-mono)] text-sm">/login</code></li>
         </ol>
         <p className="mt-4">
-          The master admin (<code className="font-[family-name:var(--font-mono)] text-sm">mdshuvo40@gmail.com</code>) can add or remove
+          The master admin (configured via <code className="font-[family-name:var(--font-mono)] text-sm">ADMIN_MASTER_EMAIL</code>) can add or remove
           team members. Ensure Firebase Auth authorized domains include <code className="font-[family-name:var(--font-mono)] text-sm">cursor-dev.lorapok.tech</code> and
           your <code className="font-[family-name:var(--font-mono)] text-sm">*.pages.dev</code> preview host.
         </p>

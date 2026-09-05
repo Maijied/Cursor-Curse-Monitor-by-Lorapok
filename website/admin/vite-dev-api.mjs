@@ -116,6 +116,15 @@ import {
   sanitizeTestmailIntegrationForClient,
   writeTestmailIntegrationConfig,
 } from "./functions/api/_shared/testmail-integration-config.js";
+import { envWithCursorCloudflareSecrets } from "./scripts/lib/cred-vault-sync.mjs";
+import { getMasterEmail } from "./functions/api/_shared/admins.js";
+
+const mergedDevSecrets = envWithCursorCloudflareSecrets(process.env);
+for (const [key, value] of Object.entries(mergedDevSecrets)) {
+  if (value != null && value !== "" && !process.env[key]) {
+    process.env[key] = String(value);
+  }
+}
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(rootDir, "../..");
@@ -181,7 +190,12 @@ const devFunctionsEnv = () => ({
   FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ?? process.env.VITE_FIREBASE_PROJECT_ID,
   CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
   ADMIN_PUBLIC_URL: process.env.ADMIN_PUBLIC_URL,
+  ADMIN_MASTER_EMAIL: process.env.ADMIN_MASTER_EMAIL ?? process.env.VITE_ADMIN_MASTER_EMAIL,
 });
+
+function resolveDevMasterEmail() {
+  return getMasterEmail(devFunctionsEnv());
+}
 
 const devKvEntries = new Map();
 
@@ -2437,7 +2451,7 @@ export function createDevApiMiddleware() {
     if (url.startsWith("/api/auth/invite-check") && req.method === "GET") {
       const parsedUrl = new URL(req.url ?? "", "http://localhost");
       const email = String(parsedUrl.searchParams.get("email") ?? "").trim().toLowerCase();
-      const master = "mdshuvo40@gmail.com";
+      const master = resolveDevMasterEmail();
       const allowed = new Set([master, ...readDevAdminEmails()]);
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ invited: Boolean(email && allowed.has(email)) }));
@@ -2500,7 +2514,7 @@ export function createDevApiMiddleware() {
 
     if (url === "/api/auth/me" && req.method === "GET") {
       void (async () => {
-        const email = "mdshuvo40@gmail.com";
+        const email = resolveDevMasterEmail();
         const ctx = await buildAdminAuthContext(devFunctionsEnv(), email, true);
         const profile = devStore.userProfiles[email] ?? null;
         res.setHeader("Content-Type", "application/json");
@@ -2525,7 +2539,7 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/auth/profile" && req.method === "GET") {
-      const email = "mdshuvo40@gmail.com";
+      const email = resolveDevMasterEmail();
       const profile = devStore.userProfiles[email] ?? null;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ ok: true, profile: sanitizeProfileForClient(profile) }));
@@ -2538,7 +2552,7 @@ export function createDevApiMiddleware() {
       req.on("end", () => {
         try {
           const parsed = JSON.parse(body || "{}");
-          const email = "mdshuvo40@gmail.com";
+          const email = resolveDevMasterEmail();
           const current = devStore.userProfiles[email] ?? {};
           const next = {
             ...current,

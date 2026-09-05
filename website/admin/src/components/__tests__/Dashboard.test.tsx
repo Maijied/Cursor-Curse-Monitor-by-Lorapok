@@ -11,19 +11,14 @@ vi.mock("../../lib/auth-context", async () => {
 });
 
 const firebaseMock = vi.hoisted(() => {
-  const email = (
-    process.env.ADMIN_MASTER_EMAIL ||
-    process.env.VITE_ADMIN_MASTER_EMAIL ||
-    (process.env.CI === "true" ? "ci-admin@lorapok.test" : "mdshuvo40@gmail.com")
-  )
-    .trim()
-    .toLowerCase();
-
+  const email =
+    process.env.ADMIN_MASTER_EMAIL?.trim().toLowerCase() ||
+    process.env.VITE_ADMIN_MASTER_EMAIL?.trim().toLowerCase() ||
+    "ci-admin@lorapok.test";
   const user = {
     email,
     getIdToken: vi.fn().mockResolvedValue("vitest-session-token"),
   };
-
   return {
     auth: {
       onAuthStateChanged: vi.fn((cb: (u: typeof user) => void) => {
@@ -35,7 +30,7 @@ const firebaseMock = vi.hoisted(() => {
     },
     db: {},
   };
-}, 30_000);
+});
 
 vi.mock("../../lib/firebase", () => firebaseMock);
 
