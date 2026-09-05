@@ -11,6 +11,8 @@ This file is the **onboarding map** for Mission Control (admin SPA). Pair it wit
 
 | Intent | Command |
 |--------|---------|
+| Node version | `.nvmrc` → **24** (CI + local) |
+| Wrangler (admin) | `cd website/admin && npx wrangler --version` — target **4.129+** |
 | Master task snapshot | User says **Update?** → refresh `plan/mission-control-master-tasks.md` |
 | Pick next task | User says **next** → top open item in **Recommended next queue** |
 | Admin dev server | `cd website/admin && npm run dev` |
@@ -85,26 +87,15 @@ Do **not** implement unrelated roadmap items when user only said **Update?**.
 
 Current queue (2026-09-05):
 
-1. **R2-02** — blocked: enable R2 in dashboard (API error `10042` — not entitlements via token)
-2. **LOGIN-01** — done (login infra panel)
-3. **AUTH-12** — feature-level ACL v2
-4. **NOTICE-01** — changelog → notice drafts
-5. **MAIL-13/14**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
+1. **AUTH-12** — feature-level ACL v2
+2. **NOTICE-01** — changelog → notice drafts
+3. **MAIL-13/14**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
 
 ---
 
-## Cloudflare R2 blocker (R2-02)
+## Cloudflare R2 (R2-02 done)
 
-**Symptom:** `wrangler r2 bucket create` → `Please enable R2 through the Cloudflare Dashboard [code: 10042]`
-
-**Cause:** Account lacks R2 subscription (NotEntitled). **Cannot** be fixed via API token alone.
-
-**Operator steps:**
-
-1. Sign in to Cloudflare as account owner.
-2. Open [R2 overview](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview) → accept terms / enable R2.
-3. Run `node website/admin/scripts/create-r2-stats-bucket.mjs`.
-4. Uncomment in `website/admin/wrangler.toml`:
+Bucket `ccm-admin-stats` on Lorapok Facility. Binding in `website/admin/wrangler.toml`:
 
 ```toml
 [[r2_buckets]]
@@ -112,9 +103,13 @@ binding = "STATS_R2"
 bucket_name = "ccm-admin-stats"
 ```
 
-5. Deploy: `npm run admin:deploy:fast`.
+**Free tier (monthly):** 10 GB storage · 1M Class A ops · 10M Class B ops ([pricing](https://developers.cloudflare.com/r2/pricing/)).
 
-**Agent note:** Browser MCP (Maizied Chrome) can click Enable if user connects the extension; API/MCP `execute` will still fail until subscription exists.
+**KV fallback:** If `STATS_R2` is missing or a put fails, `stats-refresh.js` writes badge SVG + JSON to `ADMIN_KV` (same keys as pre-R2). `readme.svg.ts` reads R2 first, then KV.
+
+**Health:** `GET /api/health` and `GET /api/sync/status` expose `statsR2` (configured, ok, freeTier, artifactsFallback).
+
+**Enable (one-time):** Dashboard only — API error `10042` until R2 subscription accepted.
 
 ---
 

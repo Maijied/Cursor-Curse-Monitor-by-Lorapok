@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   isStatsR2Available,
+  isR2NotEntitledError,
   probeStatsR2,
   writeStatsArtifactsR2,
   readStatsBadgesR2,
   STATS_R2_BADGES_KEY,
+  STATS_R2_FREE_TIER,
 } from "../../functions/api/_shared/r2-stats.js";
 
 function mockR2(store = new Map()) {
@@ -53,5 +55,15 @@ describe("r2-stats", () => {
     const env = { STATS_R2: mockR2() };
     const probe = await probeStatsR2(env);
     expect(probe).toEqual({ configured: true, ok: true });
+  });
+
+  it("documents free tier limits", () => {
+    expect(STATS_R2_FREE_TIER.storageGb).toBe(10);
+    expect(STATS_R2_FREE_TIER.classAOperationsPerMonth).toBe(1_000_000);
+  });
+
+  it("detects not-entitled errors", () => {
+    expect(isR2NotEntitledError(new Error("Please enable R2 (10042)"))).toBe(true);
+    expect(isR2NotEntitledError(new Error("network"))).toBe(false);
   });
 });

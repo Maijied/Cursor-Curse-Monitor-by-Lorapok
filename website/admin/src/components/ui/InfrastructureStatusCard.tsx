@@ -10,6 +10,7 @@ import { fetchSyncStatus, putCronJobsConfigApi } from "../../lib/api";
 import { formatDownloadCount } from "../../lib/download-stats";
 
 const CF_KV_LIMITS_URL = "https://developers.cloudflare.com/kv/platform/limits/";
+const CF_R2_PRICING_URL = "https://developers.cloudflare.com/r2/pricing/";
 
 /** Rough KV put budget per successful stats refresh (see stats-refresh.js). */
 const KV_PUTS_UNCHANGED = "1";
@@ -123,6 +124,69 @@ export default function InfrastructureStatusCard() {
                   </span>
                 ) : null}
               </dd>
+            </div>
+          ) : null}
+          {sync.statsR2 ? (
+            <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-3 text-xs text-[var(--color-muted)] space-y-2">
+              <div className="flex justify-between gap-4 items-start">
+                <dt className="text-[var(--color-muted)] font-medium text-[var(--color-text)]">
+                  Stats R2
+                </dt>
+                <dd className="text-right max-w-[65%]">
+                  <Badge
+                    variant={
+                      !sync.statsR2.configured
+                        ? "warn"
+                        : sync.statsR2.ok
+                          ? "synced"
+                          : "danger"
+                    }
+                  >
+                    {!sync.statsR2.configured
+                      ? "Not bound"
+                      : sync.statsR2.writeTarget === "r2"
+                        ? "R2 primary"
+                        : "KV fallback"}
+                  </Badge>
+                  {sync.statsR2.configured && sync.statsR2.ok ? (
+                    <span className="block text-[10px] text-[var(--color-muted)] mt-0.5">
+                      ccm-admin-stats · badge SVG + JSON blobs
+                    </span>
+                  ) : sync.statsR2.error ? (
+                    <span className="block text-[10px] text-[var(--color-warn)] mt-0.5 line-clamp-3">
+                      {sync.statsR2.error}
+                    </span>
+                  ) : null}
+                </dd>
+              </div>
+              <p>
+                Free tier:{" "}
+                <strong className="text-[var(--color-text)]">
+                  {sync.statsR2.freeTier.storageGb} GB
+                </strong>
+                ,{" "}
+                <strong className="text-[var(--color-text)]">
+                  {formatDownloadCount(sync.statsR2.freeTier.classAOperationsPerMonth)}
+                </strong>{" "}
+                Class A and{" "}
+                <strong className="text-[var(--color-text)]">
+                  {formatDownloadCount(
+                    sync.statsR2.freeTier.classBOperationsPerMonth ??
+                      sync.statsR2.freeTier.classBOps ??
+                      10_000_000
+                  )}
+                </strong>{" "}
+                Class B ops/month. If R2 is unavailable, artifacts stay on{" "}
+                <code className="text-[10px]">{sync.statsR2.artifactsFallback}</code> (same as pre-R2).
+              </p>
+              <a
+                href={CF_R2_PRICING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:underline"
+              >
+                R2 pricing &amp; limits <ExternalLink size={12} aria-hidden="true" />
+              </a>
             </div>
           ) : null}
           <div className="flex justify-between gap-4 items-center">

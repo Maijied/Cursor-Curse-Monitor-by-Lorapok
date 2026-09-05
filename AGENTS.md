@@ -155,7 +155,7 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 
 ### Notes
 
-- Node 22 is expected (CI uses Node 22). A few admin devDeps (`jsdom`, `undici`)
-  print `EBADENGINE` warnings on Node 22.14 but install and run fine.
+- Node **24** is expected (CI uses Node 24; see `.nvmrc`). A few admin devDeps (`jsdom`, `undici`)
+  print `EBADENGINE` warnings on older Node but install and run fine on 24+.
 - The deprecated standalone worker in `website/admin-api/` is not used — the
   admin API lives in `website/admin/functions/api/` (Pages Functions).

@@ -4,6 +4,21 @@ import type { DevNotice } from "./site-data";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
+export type StatsR2Status = {
+  configured: boolean;
+  ok: boolean;
+  error: string | null;
+  artifactsFallback: string;
+  freeTier: {
+    storageGb: number;
+    classAOperationsPerMonth: number;
+    classBOps?: number;
+    classBOperationsPerMonth?: number;
+    pricingUrl: string;
+  };
+  writeTarget?: "r2" | "kv";
+};
+
 export function parseApiResponse<T>(text: string, ok: boolean, path: string): T {
   let data: T & { error?: string };
   try {
@@ -71,6 +86,7 @@ export async function fetchHealth() {
     discordDigestIntervalMinutes?: number;
     discordDigestLastRunAt?: string | null;
     cronSecretConfigured?: boolean;
+    statsR2?: StatsR2Status;
   }>("/health", false);
 }
 
@@ -81,6 +97,7 @@ export type SyncStatusPayload = {
   github: { ok: boolean };
   adminKv: { configured: boolean };
   adminD1?: { configured: boolean; ok: boolean; error: string | null };
+  statsR2?: StatsR2Status;
   mail: {
     configured: boolean;
     transport: string | null;

@@ -1,7 +1,7 @@
 # R2 bucket + login infra notes + AI walkthrough sync
 
 **Procedure ID:** `c442c0fe`  
-**Status:** in_progress (LOGIN-01 done; R2 blocked)  
+**Status:** done (R2-02 + R2-04 + OPS-01/02)  
 **Created:** 2026-09-05  
 **Plan:** `plan/mission-control-master-tasks.md`  
 **Issue:** __ISSUE_PENDING__  
@@ -18,13 +18,11 @@ R2 bucket + login infra notes + AI walkthrough sync
 
 ## Progress
 
-- [x] `MISSION-CONTROL-WALKTHROUGH.md` at repo root (agent onboarding)
-- [x] `mission-control-master-tasks.md` symlink → `plan/mission-control-master-tasks.md`
-- [x] LOGIN-01 — `LoginInfraPanel.tsx` on login page + vitest
-- [x] Master tasks + `AGENTS.md` + wiki `Admin-Panel.md` updated
-- [ ] R2-02 — dashboard R2 subscription (`10042`); bucket script pending
-- [ ] Tests passing (LOGIN-01 subset green)
-- [ ] Deploy login panel to production
+- [x] R2-02 — bucket + `STATS_R2` binding; production health `statsR2.ok: true`
+- [x] R2-04 — free-tier docs + KV fallback in health/sync/UI
+- [x] OPS-01/02 — wrangler 4.129+, CI Node 24, `.nvmrc`
+- [x] Tests: r2-stats + LoginInfraPanel (7/7)
+- [x] Fast deploy to cursor-dev.lorapok.tech
 
 ---
 
@@ -38,9 +36,7 @@ R2 bucket + login infra notes + AI walkthrough sync
 
 ## Blockers
 
-| Blocker | Owner |
-|---------|-------|
-| R2 subscription not accepted on account `f049faaf2f67549f5c58837479596a4a` (API `10042`) | Operator — [R2 dashboard](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview) |
+_None._
 
 ---
 

@@ -1,7 +1,22 @@
 /**
  * STATS_R2 object storage for large stats artifacts (readme SVG + badge JSON).
  * Keys are stable — swap KV puts for R2 when binding is present.
+ *
+ * Free tier (monthly): 10 GB storage, 1M Class A ops, 10M Class B ops.
+ * When R2 is missing, disabled, or a put fails, stats-refresh falls back to ADMIN_KV
+ * (same keys as pre-R2). See stats-refresh.js and readme.svg.ts read path.
  */
+
+/** @see https://developers.cloudflare.com/r2/pricing/ */
+export const STATS_R2_FREE_TIER = {
+  storageGb: 10,
+  classAOperationsPerMonth: 1_000_000,
+  classBOperationsPerMonth: 10_000_000,
+  pricingUrl: "https://developers.cloudflare.com/r2/pricing/",
+};
+
+/** KV keys used when STATS_R2 is unavailable (legacy + fallback). */
+export const STATS_ARTIFACTS_KV_FALLBACK = "ADMIN_KV";
 
 export const STATS_R2_README_KEY = "stats/readme.svg";
 export const STATS_R2_BADGES_KEY = "stats/badges-bundle.json";
@@ -11,6 +26,30 @@ export const STATS_R2_BADGES_KEY = "stats/badges-bundle.json";
  */
 export function isStatsR2Available(env) {
   return Boolean(env?.STATS_R2?.put);
+}
+
+/**
+ * @param {unknown} err
+ */
+export function isR2NotEntitledError(err) {
+  const text = err instanceof Error ? err.message : String(err ?? "");
+  return /10042|not entitled|enable R2/i.test(text);
+}
+
+/**
+ * @param {unknown} err
+ */
+export function isR2QuotaOrLimitError(err) {
+  const text = err instanceof Error ? err.message : String(err ?? "");
+  return /quota|limit|too many requests|10058/i.test(text);
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @returns {"r2" | "kv"}
+ */
+export function statsArtifactsWriteTarget(env) {
+  return isStatsR2Available(env) ? "r2" : "kv";
 }
 
 /**
@@ -29,6 +68,13 @@ export async function probeStatsR2(env) {
     const code = err && typeof err === "object" ? String(err.code ?? "") : "";
     if (code === "10007" || /not found/i.test(String(err?.message ?? ""))) {
       return { configured: true, ok: true };
+    }
+    if (isR2NotEntitledError(err)) {
+      return {
+        configured: false,
+        ok: false,
+        error: "R2 not enabled on account (enable in Cloudflare dashboard)",
+      };
     }
     const message = err instanceof Error ? err.message : String(err);
     return { configured: true, ok: false, error: message };
@@ -51,6 +97,9 @@ export async function putStatsR2Text(env, key, body, contentType = "text/plain; 
     return true;
   } catch (err) {
     console.error("putStatsR2Text failed", key, err);
+    if (isR2NotEntitledError(err) || isR2QuotaOrLimitError(err)) {
+      console.warn("STATS_R2 write blocked — stats-refresh will fall back to ADMIN_KV");
+    }
     return false;
   }
 }

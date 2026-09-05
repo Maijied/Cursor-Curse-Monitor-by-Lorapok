@@ -50,3 +50,7 @@ if (create.status !== 0) {
 }
 
 console.log(`Created R2 bucket ${BUCKET}. Deploy admin to bind STATS_R2.`);
+console.log("");
+console.log("R2 free tier (monthly): 10 GB storage, 1M Class A ops, 10M Class B ops.");
+console.log("Ensure [[r2_buckets]] STATS_R2 is in website/admin/wrangler.toml, then deploy.");
+console.log("If R2 is unavailable, stats-refresh automatically falls back to ADMIN_KV.");

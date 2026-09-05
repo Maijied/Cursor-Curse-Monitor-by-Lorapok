@@ -37,6 +37,8 @@ export default function LoginInfraPanel() {
   const [mailStatus, setMailStatus] = useState<InfraStatus>("loading");
   const [d1Status, setD1Status] = useState<InfraStatus>("loading");
   const [githubStatus, setGithubStatus] = useState<InfraStatus>("loading");
+  const [r2Status, setR2Status] = useState<InfraStatus>("loading");
+  const [r2WriteTarget, setR2WriteTarget] = useState<"r2" | "kv">("kv");
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +57,19 @@ export default function LoginInfraPanel() {
           !health.adminD1Configured ? "off" : health.adminD1Ok ? "ok" : "warn",
         );
         setGithubStatus(health.checks?.github ? "ok" : "warn");
+        const r2 = health.statsR2;
+        if (!r2) {
+          setR2Status("off");
+        } else if (!r2.configured) {
+          setR2Status("warn");
+          setR2WriteTarget("kv");
+        } else if (r2.ok) {
+          setR2Status("ok");
+          setR2WriteTarget("r2");
+        } else {
+          setR2Status("warn");
+          setR2WriteTarget("kv");
+        }
       } catch {
         if (!cancelled) {
           setFirebaseStatus("warn");
@@ -74,11 +89,16 @@ export default function LoginInfraPanel() {
     };
   }, []);
 
-  const chips: { label: string; status: InfraStatus }[] = [
+  const chips: { label: string; status: InfraStatus; detail?: string }[] = [
     { label: "Firebase", status: firebaseStatus },
     { label: "Mail", status: mailStatus },
     { label: "D1 logs", status: d1Status },
     { label: "GitHub", status: githubStatus },
+    {
+      label: "Stats R2",
+      status: r2Status,
+      detail: r2WriteTarget === "r2" ? "primary" : "KV fallback",
+    },
   ];
 
   return (
@@ -140,16 +160,22 @@ export default function LoginInfraPanel() {
           Live services
         </p>
         <ul className="flex flex-wrap gap-1.5">
-          {chips.map(({ label, status }) => (
+          {chips.map(({ label, status, detail }) => (
             <li
               key={label}
               className={`px-2 py-0.5 rounded-md border text-[11px] ${statusClass(status)}`}
             >
               {label}: {statusLabel(status)}
+              {detail ? ` (${detail})` : ""}
             </li>
           ))}
         </ul>
       </div>
+
+      <p className="text-[10px] text-[var(--color-muted)] leading-relaxed mb-3">
+        R2 free tier: 10 GB storage, 1M Class A + 10M Class B ops/month. Stats badges fall back to KV when
+        R2 is not bound.
+      </p>
 
       <div className="pt-2 border-t border-[var(--color-border)] flex flex-wrap gap-3">
         <a

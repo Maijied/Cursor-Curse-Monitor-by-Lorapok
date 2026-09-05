@@ -220,6 +220,7 @@ export async function runStatsRefresh(env, options = {}) {
   const previous = await readStatsLiveCache(env);
   const statsChanged =
     !previous || JSON.stringify(stableSnapshotBody(previous)) !== JSON.stringify(stableSnapshotBody(snapshot));
+  let artifactsStorage = null;
 
   if (statsChanged) {
     await putKvJsonIfChanged(env, STATS_REFRESH_CACHE_KEY, snapshot);
@@ -241,6 +242,7 @@ export async function runStatsRefresh(env, options = {}) {
       };
       const svg = renderReadmeStatsSvg(readmeStats);
       const r2Written = await writeStatsArtifactsR2(env, { svg, badgeBundle });
+      const artifactsStorage = r2Written ? "r2" : "kv";
       if (!r2Written) {
         await Promise.all([
           putKvStringIfChanged(env, STATS_README_SVG_KEY, svg),
@@ -268,6 +270,7 @@ export async function runStatsRefresh(env, options = {}) {
         displayTotal: downloads.displayTotal,
         durationMs,
         syncStatus: marketplaceSync.syncStatus,
+        ...(artifactsStorage ? { artifactsStorage } : {}),
       },
     });
   }

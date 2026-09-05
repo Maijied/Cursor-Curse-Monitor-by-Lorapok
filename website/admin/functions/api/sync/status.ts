@@ -10,6 +10,7 @@ import {
 import { formatKvPutError } from "../_shared/kv-put.js";
 import { isKvQuotaError, isKvWritesPaused, kvQuotaKind } from "../_shared/kv-quota.js";
 import { probeAdminD1 } from "../_shared/d1-admin.js";
+import { probeStatsR2, STATS_R2_FREE_TIER, STATS_ARTIFACTS_KV_FALLBACK } from "../_shared/r2-stats.js";
 import { buildServiceQuotaSnapshot } from "../_shared/service-usage.js";
 
 /**
@@ -49,6 +50,7 @@ export async function onRequestGet(context) {
   const kvQuotaHit = Boolean((lastError && isKvQuotaError(lastError)) || kvWritesPaused);
   const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : kvWritesPaused ? "write" : null;
   const adminD1 = await probeAdminD1(env);
+  const statsR2 = await probeStatsR2(env);
   const serviceQuotas = await buildServiceQuotaSnapshot(env, {
     resendConfigured: mail.resendConfigured ?? false,
     relayBound: mail.relayBound ?? false,
@@ -74,6 +76,14 @@ export async function onRequestGet(context) {
       configured: adminD1.configured,
       ok: adminD1.ok,
       error: adminD1.error ?? null,
+    },
+    statsR2: {
+      configured: statsR2.configured,
+      ok: statsR2.ok,
+      error: statsR2.error ?? null,
+      artifactsFallback: STATS_ARTIFACTS_KV_FALLBACK,
+      freeTier: STATS_R2_FREE_TIER,
+      writeTarget: statsR2.configured && statsR2.ok ? "r2" : "kv",
     },
     mail: {
       configured: mail.configured,

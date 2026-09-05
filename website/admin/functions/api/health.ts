@@ -13,6 +13,11 @@ import {
   readDiscordDigestConfig,
   sanitizeDiscordDigestConfigForClient,
 } from "./_shared/discord-digest-config.js";
+import {
+  probeStatsR2,
+  STATS_R2_FREE_TIER,
+  STATS_ARTIFACTS_KV_FALLBACK,
+} from "./_shared/r2-stats.js";
 
 /**
  * Reports service health, configuration status, and endpoint URLs.
@@ -39,6 +44,7 @@ export async function onRequestGet(context) {
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
   const discordDigest = sanitizeDiscordDigestConfigForClient(await readDiscordDigestConfig(env));
+  const statsR2 = await probeStatsR2(env);
 
   return jsonResponse({
     ok: checks.github,
@@ -74,5 +80,12 @@ export async function onRequestGet(context) {
     siteDataUrl:
       env.SITE_DATA_URL ??
       "https://cursor.lorapok.tech/site-data.json",
+    statsR2: {
+      configured: statsR2.configured,
+      ok: statsR2.ok,
+      error: statsR2.error ?? null,
+      artifactsFallback: STATS_ARTIFACTS_KV_FALLBACK,
+      freeTier: STATS_R2_FREE_TIER,
+    },
   });
 }

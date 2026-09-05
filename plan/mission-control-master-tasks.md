@@ -39,7 +39,7 @@ _None — pick from **Recommended next queue** below._
 |---------|------|------|---------|
 | Cloudflare KV | 8 | 3 | 1 |
 | Cloudflare D1 | 0 | 4 | 0 |
-| Cloudflare R2 | 1 | 2 | 1 |
+| Cloudflare R2 | 2 | 1 | 0 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
 | Firebase | 6 | 5 | 0 |
 | GitHub | 5 | 2 | 0 |
@@ -87,7 +87,8 @@ _None — pick from **Recommended next queue** below._
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | R2-01 | Design: `stats:readme-svg` + badge blobs to R2 | **deferred** | Reliability plan B3 option B |
-| R2-02 | R2 bucket + binding | **blocked** | API `10042` — R2 subscription must be accepted in [dashboard](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview) (not API-only). Then: `node website/admin/scripts/create-r2-stats-bucket.mjs` → uncomment `[[r2_buckets]]` in `wrangler.toml` → `npm run admin:deploy:fast` |
+| R2-02 | R2 bucket + binding | **done** | Bucket `ccm-admin-stats` created 2026-09-05; `[[r2_buckets]] STATS_R2` in `wrangler.toml` — redeploy to bind |
+| R2-04 | R2 free-tier guardrails + KV fallback surfacing | **done** | `STATS_R2_FREE_TIER`, health/sync `statsR2`, Infrastructure card + login panel; stats-refresh KV fallback |
 | R2-03 | Read path in stats refresh + shields API | **done** | `r2-stats.js` + stats-refresh/badge/readme.svg R2-first |
 
 ---
@@ -102,6 +103,9 @@ _None — pick from **Recommended next queue** below._
 | CF-04 | `deploy-infra` workflow_dispatch for full mail | **next** | docs/guides |
 | CF-05 | Production deploy after settings phases | **done** | fast deploy 2026-09-05; D1 + KV UX live at cursor-dev.lorapok.tech |
 | CF-06 | Fix `firebase-config.ts` import paths (Pages bundle) | **done** | `pages-functions-imports.test.mjs` |
+| OPS-01 | Bump `wrangler` to latest 4.x | **done** | `website/admin` devDep `^4.129.0` (was 4.123.0) |
+| OPS-02 | CI Node 24 (replace deprecated Node 22 pin) | **done** | `.nvmrc` + all `.github/workflows/*` `node-version: 24`; engines `>=24.0.0` |
+| OPS-03 | Periodic wrangler + Node LTS audit | **next** | Quarterly check against Cloudflare Workers + GitHub Actions images |
 
 ---
 
@@ -282,22 +286,19 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **R2-02** — **Blocked:** [Cloudflare R2](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview) → accept R2 subscription → `create-r2-stats-bucket.mjs` → `wrangler.toml` → deploy
-2. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
-3. **NOTICE-01** — Auto-draft notices from `CHANGELOG` on release
-5. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
-6. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
-7. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
-8. **LOGS-01** — Formatted, filterable unified logs
-9. **EXT-01** — Platform logos + links across admin, website, IDE, browser extensions
+1. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
+2. **NOTICE-01** — Auto-draft notices from `CHANGELOG` on release
+3. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
+4. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
+5. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
+6. **LOGS-01** — Formatted, filterable unified logs
+7. **EXT-01** — Platform logos + links across admin, website, IDE, browser extensions
 
 ---
 
 ## Blockers (need you)
 
-| Blocker | Unblocks |
-|---------|----------|
-| R2 not enabled on account (`code 10042`) | R2-02 — accept R2 subscription in [dashboard](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview); API tokens cannot enable billing entitlements |
+_None — R2 enabled 2026-09-05. Redeploy after `wrangler.toml` STATS_R2 binding if not yet live._
 
 ---
 
