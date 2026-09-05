@@ -6,6 +6,7 @@ export const WORKFLOW_JOB_ORDER = [
   "Admin Panel CI",
   "Prepare Release Tag (push to main)",
   "Admin Deploy Gate",
+  "Validate Dispatch Inputs",
   "Prepare & Tag Release",
   "Deploy to Marketplaces",
   "Deploy Admin Panel",

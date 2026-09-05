@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { WorkflowRun, WorkflowRunLogs } from "../lib/api";
+import { getPipelineSummary } from "../lib/workflow-jobs";
 import DeployFloatingStatusButton from "../components/ui/DeployFloatingStatusButton";
 import DeployLeaveWarningModal from "../components/ui/DeployLeaveWarningModal";
 import DeployStatusModal from "../components/ui/DeployStatusModal";
@@ -30,6 +31,7 @@ type DeployRuntimeContextValue = {
   openStatusModal: () => void;
   closeStatusModal: () => void;
   registerOnDeployComplete: (fn: (() => void) | null) => void;
+  dismissSession: () => void;
   statusModalOpen: boolean;
 };
 
@@ -98,6 +100,11 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     return "running";
   }, [session, run, waiting]);
 
+  const pipelineSummary = useMemo(
+    () => getPipelineSummary(logs?.jobs ?? []),
+    [logs?.jobs],
+  );
+
   const registerInlineAnchor = useCallback((el: HTMLDivElement | null) => {
     inlineAnchorRef.current = el;
   }, []);
@@ -120,18 +127,31 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     });
   }, []);
 
-  const finishSession = useCallback(() => {
-    if (!session) return;
-    onCompleteRef.current?.();
+  const dismissSession = useCallback(() => {
     setSession(null);
+    setRun(null);
+    setLogs(null);
+    setPollError(null);
+    setWaiting(false);
     setStatusModalOpen(false);
-  }, [session]);
+    completedRef.current = false;
+  }, []);
+
+  const notifyDeployComplete = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onCompleteRef.current?.();
+  }, []);
 
   const abandonSession = useCallback((message: string) => {
     setPollError(message);
     onCompleteRef.current?.();
     setSession(null);
+    setRun(null);
+    setLogs(null);
+    setWaiting(false);
     setStatusModalOpen(false);
+    completedRef.current = false;
   }, []);
 
   const openStatusModal = useCallback(() => setStatusModalOpen(true), []);
@@ -173,8 +193,8 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
           if (!cancelled) setLogs(logData);
 
           if (match.status === "completed" && !completedRef.current) {
-            completedRef.current = true;
-            finishSession();
+            notifyDeployComplete();
+            if (!onDeploymentsPage) setStatusModalOpen(true);
             return;
           }
         } else {
@@ -200,7 +220,7 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [session, finishSession, abandonSession]);
+  }, [session, notifyDeployComplete, abandonSession, onDeploymentsPage]);
 
   // Warn when closing the browser tab mid-deploy.
   useEffect(() => {
@@ -282,6 +302,7 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
       closeStatusModal,
       statusModalOpen,
       registerOnDeployComplete,
+      dismissSession,
     }),
     [
       session,
@@ -298,6 +319,7 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
       closeStatusModal,
       statusModalOpen,
       registerOnDeployComplete,
+      dismissSession,
     ]
   );
 
@@ -310,11 +332,13 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
             status={status}
             modeLabel={session?.modeLabel ?? "Deployment"}
             targetTag={session?.targetTag}
+            pipelineHint={pipelineSummary?.title}
             onClick={openStatusModal}
           />
           <DeployStatusModal
             open={statusModalOpen}
             onClose={closeStatusModal}
+            onDismiss={dismissSession}
             session={session}
             status={status}
             run={run}

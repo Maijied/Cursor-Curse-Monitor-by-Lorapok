@@ -5,9 +5,28 @@ import {
   getPipelineActiveIndex,
   getPipelineSummary,
   sortWorkflowJobs,
+  WORKFLOW_JOB_ORDER,
 } from "./workflow-jobs";
 
 describe("workflow-jobs", () => {
+  it("matches ci-cd.yml Production Deployment job display order", () => {
+    expect([...WORKFLOW_JOB_ORDER]).toEqual([
+      "Resolve Version (Live Marketplaces)",
+      "Build & Validate (Root Extension)",
+      "SEO & Metadata Pipeline",
+      "Browser Extension CI",
+      "Admin Panel CI",
+      "Prepare Release Tag (push to main)",
+      "Admin Deploy Gate",
+      "Validate Dispatch Inputs",
+      "Prepare & Tag Release",
+      "Deploy to Marketplaces",
+      "Deploy Admin Panel",
+      "Deploy Marketing Website",
+      "Test Results Summary",
+    ]);
+  });
+
   it("sorts jobs into workflow order", () => {
     const sorted = sortWorkflowJobs([
       { name: "Deploy to Marketplaces" },
