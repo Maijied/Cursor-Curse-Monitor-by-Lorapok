@@ -5,6 +5,7 @@ import {
   isValidMarketplaceTag,
   validateMarketplaceDeploy,
 } from "./marketplace-tag-policy.js";
+import { compareSemver, normalizeSemver } from "./version-plan.js";
 
 /** @typedef {"Production" | "Beta (Pre-release)"} ReleaseChannel */
 
@@ -86,6 +87,13 @@ export function classifyReleaseTag(tag, options = {}) {
     reasons.push(`${normalized} is the current live tag — choose a prepared tag for deploy or an older tag for rollback.`);
   }
 
+  const tagCore = normalizeSemver(normalized);
+  const liveCore = liveTag ? normalizeSemver(liveTag) : null;
+  const isOlderThanLive = Boolean(liveCore && tagCore && compareSemver(tagCore, liveCore) < 0);
+  if (isRollbackSourceTag(normalized) && liveCore && tagCore && !isOlderThanLive && !isLive) {
+    reasons.push(`${normalized} is not older than live ${liveTag} — rollback requires an earlier semver tag.`);
+  }
+
   const publishReady =
     metadataReady &&
     !isLive &&
@@ -96,6 +104,7 @@ export function classifyReleaseTag(tag, options = {}) {
   const rollbackEligible =
     isRollbackSourceTag(normalized) &&
     !isLive &&
+    (!liveCore || isOlderThanLive) &&
     !(releaseChannel === "Production" && isBetaMarketplaceTag(normalized));
 
   return {

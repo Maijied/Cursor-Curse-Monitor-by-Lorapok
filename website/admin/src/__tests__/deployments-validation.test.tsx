@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import Deployments from "../components/pages/Deployments";
 
 const testFixtures = vi.hoisted(() => ({
@@ -58,13 +59,17 @@ vi.mock("../lib/api", () => ({
   triggerRollback: vi.fn(),
 }));
 
-vi.mock("../components/ui/DiscordIntegrationsCard", () => ({
-  default: () => <div data-testid="discord-card">Discord</div>,
-}));
-
 vi.mock("../components/ui/DeployRuntimeInlineSlot", () => ({
   default: () => <div data-testid="deploy-runtime-slot" />,
 }));
+
+function renderDeployments() {
+  return render(
+    <MemoryRouter>
+      <Deployments />
+    </MemoryRouter>
+  );
+}
 
 describe("Deployments validation UI", () => {
   beforeEach(() => {
@@ -73,7 +78,7 @@ describe("Deployments validation UI", () => {
   });
 
   it("shows Deployment validation section and Validate platforms button", async () => {
-    render(<Deployments />);
+    renderDeployments();
     expect(await screen.findByRole("heading", { name: "Deployment validation" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /validate marketplace platforms before deployment/i })
@@ -81,7 +86,7 @@ describe("Deployments validation UI", () => {
   });
 
   it("keeps a manually selected deploy tag instead of snapping back to the prepared tag", async () => {
-    render(<Deployments />);
+    renderDeployments();
 
     const select = await screen.findByLabelText("Deploy tag");
     await waitFor(() => expect(select).toHaveValue("v1.0.35"));
@@ -95,7 +100,7 @@ describe("Deployments validation UI", () => {
   });
 
   it("lists semver tags on beta channel (not CI-only tags)", async () => {
-    render(<Deployments />);
+    renderDeployments();
     const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
     fireEvent.click(betaRadio);
     const select = await screen.findByLabelText("Deploy tag");
@@ -110,7 +115,7 @@ describe("Deployments validation UI", () => {
   });
 
   it("defaults to All Marketplaces and keeps every market option on beta channel", async () => {
-    render(<Deployments />);
+    renderDeployments();
     const marketSelect = await screen.findByLabelText("Publish Market");
     expect(marketSelect).toHaveValue("Both");
     const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
@@ -125,7 +130,7 @@ describe("Deployments validation UI", () => {
   });
 
   it("auto-selects the next prepared tag on beta channel", async () => {
-    render(<Deployments />);
+    renderDeployments();
     const betaRadio = await screen.findByRole("radio", { name: /beta \(pre-release\)/i });
     fireEvent.click(betaRadio);
     const select = await screen.findByLabelText("Deploy tag");

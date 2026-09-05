@@ -10,7 +10,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **REL-01 Beta release pipeline** — `vX.Y.Z-beta.N` version plan for beta channel; CI `release-prep` uses `--channel beta`; full-release deploy no longer blocked for production; Mission Control version check passes `channel=beta`; marketplace policy accepts beta tags
 - **Open VSX publish CI** — do not fail deploy when ovsx CLI succeeds but canonical API indexing lags (defer to `verify-marketplace-sync`)
-- **CI dispatch validation** — `validate-dispatch` job gates publish-tag, rollback, sync-open-vsx, and full-release; classifies tags as rollback-eligible, publish-ready, or metadata-ready
+- **CI dispatch validation** — `validate-dispatch` job gates publish-tag, rollback, sync-open-vsx, and full-release; classifies tags as rollback-eligible, publish-ready, or metadata-ready; local `npm run validate:dispatch` resolves tags on origin when missing locally
+- **Rollback tag policy** — rollback sources must be semver tags older than the current live tag
 - **Marketing site feature map** — orbit-style interactive map with animated logo; GitHub stats use board issue count (not PR-inflated total) and sync via `ccm:site-data` from Mission Control merge
 - **Hero download universe** — restore `stats-dashboard.css`, orbit planets with live channel counts, cosmic frame labeling the stats panel
 - **Hero layout** — orbit stars (no boxes) separated from stats console; smooth staggered count animation

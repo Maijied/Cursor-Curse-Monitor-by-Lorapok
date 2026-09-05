@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
+import { Link } from "react-router-dom";
 import { AlertTriangle, ExternalLink, Lock, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
 import {
   fetchTags,
@@ -21,8 +22,8 @@ import Card from "../ui/Card";
 import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
-import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import CollapsibleCard from "../ui/CollapsibleCard";
+import { persistSettingsTab } from "../ui/SettingsTabNav";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import LoadableButton from "../ui/LoadableButton";
 import { useAuthSession } from "../../lib/auth-context";
@@ -342,10 +343,23 @@ export default function Deployments() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Release"
-        description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces. Discord gets started and completed status when the hook is set."
+        description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces. Configure deploy Discord notifications in Settings."
       />
 
-      <DiscordIntegrationsCard />
+      <div className="glass-panel px-4 py-3 text-sm text-[var(--color-muted)] flex flex-wrap items-center justify-between gap-3">
+        <span>
+          Discord deploy status posts are configured in{" "}
+          <strong className="text-[var(--color-text)]">Settings → Discord</strong> (and Social when enabled).
+        </span>
+        <Link
+          to="/dashboard/settings"
+          onClick={() => persistSettingsTab("discord")}
+          className="inline-flex items-center gap-1.5 text-[var(--color-accent)] hover:underline shrink-0"
+        >
+          Open Discord settings
+          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+        </Link>
+      </div>
 
       <CollapsibleCard
         title="How it works"
@@ -368,8 +382,15 @@ export default function Deployments() {
             <code className="font-mono text-xs">v{"{major}.{minor}.Rn"}</code>, then publish.
           </li>
           <li>
-            <strong className="text-[var(--color-text)]">Discord hook</strong> — paste a channel webhook at the top of
-            this page to receive started and completed deploy status in Discord.
+            <strong className="text-[var(--color-text)]">Discord hook</strong> — configure the deployment webhook in{" "}
+            <Link
+              to="/dashboard/settings"
+              onClick={() => persistSettingsTab("discord")}
+              className="text-[var(--color-accent)] hover:underline"
+            >
+              Settings → Discord
+            </Link>
+            .
           </li>
         </ul>
         <p className="text-xs text-[var(--color-warn)] mt-3">

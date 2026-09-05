@@ -11,6 +11,7 @@ assert.equal(classifyReleaseTag("v1.0.35", { liveTag: live }).publishReady, true
 assert.equal(classifyReleaseTag("v1.0.31", { liveTag: live }).publishReady, false);
 assert.equal(classifyReleaseTag("v1.0.31", { liveTag: live }).rollbackEligible, false);
 assert.equal(classifyReleaseTag("v1.0.30", { liveTag: live }).rollbackEligible, true);
+assert.equal(classifyReleaseTag("v1.0.35", { liveTag: live }).rollbackEligible, false);
 assert.equal(classifyReleaseTag("v1.0.R2", { liveTag: live }).rollbackEligible, false);
 assert.equal(classifyReleaseTag("v1.0.34-dev.5", { liveTag: live }).metadataReady, false);
 
