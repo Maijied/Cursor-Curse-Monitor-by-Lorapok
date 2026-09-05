@@ -74,6 +74,15 @@ describe("notice catalog APIs", () => {
     expect(notice.title).toBe("Test live notice");
   });
 
+  it("returns a changelog draft for Unreleased", async () => {
+    const res = await fetch(`${base}/api/notices?changelogDraft=1&tag=unreleased`);
+    const data = await res.json();
+    expect(res.ok).toBe(true);
+    expect(data.draft.enabled).toBe(false);
+    expect(data.draft.source).toBe("changelog");
+    expect(data.draft.message).toMatch(/Login sync|Unreleased preview/i);
+  });
+
   it("hides the public banner when the generated notice is disabled", async () => {
     const disable = await fetch(`${base}/api/notices`, {
       method: "PUT",

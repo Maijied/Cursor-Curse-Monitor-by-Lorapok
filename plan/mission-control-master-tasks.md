@@ -277,7 +277,7 @@ _None — pick from **Recommended next queue** below._
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
-| NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **next** | `scripts/changelog-to-notice.mjs` + Notices API; optional CI hook |
+| NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
@@ -287,7 +287,7 @@ _None — pick from **Recommended next queue** below._
 ## Recommended **next** queue (priority order)
 
 1. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
-2. **NOTICE-01** — Auto-draft notices from `CHANGELOG` on release
+2. **AUTH-13** — ACL audit UI (filterable timeline + export)
 3. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
 4. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
 5. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)

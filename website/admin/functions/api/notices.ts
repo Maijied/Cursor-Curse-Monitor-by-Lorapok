@@ -9,6 +9,11 @@ import {
   setEnabled,
   writeCatalog,
 } from "./_shared/notices.js";
+import {
+  buildNoticeDraftFromChangelog,
+  changelogNoticeId,
+  fetchChangelogMarkdown,
+} from "./_shared/changelog-notice.js";
 
 /**
  * Retrieves notice templates or the current public notice catalog.
@@ -23,8 +28,25 @@ export async function onRequestGet(context) {
 
   const url = new URL(request.url);
   const templatesMode = url.searchParams.get("templates") === "1";
+  const changelogDraft = url.searchParams.get("changelogDraft") === "1";
+  const changelogTag = url.searchParams.get("tag")?.trim();
 
   try {
+    if (changelogDraft) {
+      if (!changelogTag) {
+        return jsonResponse({ error: "tag query param is required" }, 400);
+      }
+      const markdown = await fetchChangelogMarkdown(env);
+      const draft = buildNoticeDraftFromChangelog(markdown, changelogTag);
+      const catalog = await ensureCatalogSeeded(env);
+      const existing = catalog.items.find((n) => n.id === changelogNoticeId(changelogTag));
+      return jsonResponse({
+        draft: publicNoticeShape(draft),
+        exists: Boolean(existing),
+        existing: existing ? publicNoticeShape(existing) : null,
+      });
+    }
+
     if (templatesMode) {
       const templates = await getNoticeTemplates(env);
       return jsonResponse({ templates });

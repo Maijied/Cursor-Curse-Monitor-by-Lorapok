@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, Megaphone, Plus, Power, Save, Send, Trash2 } from "lucide-react";
+import { Eye, FileText, Megaphone, Plus, Power, Save, Send, Trash2 } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -7,8 +7,9 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DataTable, { type DataTableColumn } from "../ui/DataTable";
 import Notification from "../ui/Notification";
-import { createNotice, deleteNotice, fetchNotices, fetchNoticeTemplates, updateNotice, broadcastToSubscribers, type NoticeTemplate } from "../../lib/api";
+import { createNotice, deleteNotice, fetchChangelogNoticeDraft, fetchNotices, fetchNoticeTemplates, updateNotice, broadcastToSubscribers, type NoticeTemplate } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
+import { useAuthSession } from "../../lib/auth-context";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;
 
@@ -51,6 +52,8 @@ function noticeKey(row: DevNotice, index: number) {
 }
 
 export default function Notices() {
+  const { hasPermission } = useAuthSession();
+  const canWrite = hasPermission("notices.write");
   const [form, setForm] = useState<DevNotice>(EMPTY);
   const [items, setItems] = useState<DevNotice[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
@@ -61,6 +64,8 @@ export default function Notices() {
   const [showPreview, setShowPreview] = useState(false);
   const [templates, setTemplates] = useState<NoticeTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [changelogTag, setChangelogTag] = useState("unreleased");
+  const [importingChangelog, setImportingChangelog] = useState(false);
 
   const applyCatalog = useCallback((nextItems: DevNotice[], preferredId?: string | null) => {
     setItems(nextItems);
@@ -216,6 +221,28 @@ export default function Notices() {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Delete failed" });
     }
     setSaving(false);
+  };
+
+  const handleImportChangelog = async () => {
+    const tag = changelogTag.trim();
+    if (!tag) return;
+    setImportingChangelog(true);
+    setMessage(null);
+    try {
+      const data = await fetchChangelogNoticeDraft(tag);
+      const draft = { ...EMPTY, ...data.draft };
+      setForm(draft);
+      setSelectedTemplate("");
+      setMessage({
+        type: "success",
+        text: data.exists
+          ? `Loaded CHANGELOG draft for ${tag}. A notice with this id already exists — review before saving.`
+          : `Loaded CHANGELOG draft for ${tag}. Review and Save & Enable when ready.`,
+      });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Changelog import failed" });
+    }
+    setImportingChangelog(false);
   };
 
   const filteredItems = useMemo(() => {
@@ -403,6 +430,24 @@ export default function Notices() {
             {editing ? "Edit notice" : "New notice"}
           </h3>
           <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={changelogTag}
+              onChange={(e) => setChangelogTag(e.target.value)}
+              placeholder="v1.0.3 or unreleased"
+              aria-label="Changelog version tag"
+              className="text-sm bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] w-[9rem]"
+            />
+            <button
+              type="button"
+              onClick={() => void handleImportChangelog()}
+              disabled={!canWrite || importingChangelog || !changelogTag.trim()}
+              title={canWrite ? "Import disabled draft from CHANGELOG.md" : "Requires notices.write"}
+              className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-50"
+            >
+              <FileText size={16} aria-hidden="true" />
+              {importingChangelog ? "Importing…" : "From CHANGELOG"}
+            </button>
             <select
               value={selectedTemplate}
               onChange={(e) => {
