@@ -132,19 +132,23 @@ export async function listMailboxMessages(env, filters = {}) {
 /**
  * @param {Record<string, unknown>} env
  * @param {string} id
- * @param {{ read?: boolean }} patch
+ * @param {{ read?: boolean; status?: MailboxMessage["status"]; error?: string | null; retriedAt?: string | null }} patch
  */
 export async function patchMailboxMessage(env, id, patch) {
   const list = await readAll(env);
   const index = list.findIndex((m) => m.id === id);
   if (index < 0) return null;
 
-  if (typeof patch.read === "boolean") {
-    list[index] = { ...list[index], read: patch.read };
-  }
+  const next = { ...list[index] };
+  if (typeof patch.read === "boolean") next.read = patch.read;
+  if (patch.status) next.status = patch.status;
+  if (patch.error !== undefined) next.error = patch.error;
+  if (patch.retriedAt !== undefined) next.retriedAt = patch.retriedAt;
+
+  list[index] = next;
 
   const wrote = await writeAll(env, list);
-  if (!wrote && typeof patch.read === "boolean") {
+  if (!wrote && Object.keys(patch).length > 0) {
     return list[index];
   }
   return list[index];
