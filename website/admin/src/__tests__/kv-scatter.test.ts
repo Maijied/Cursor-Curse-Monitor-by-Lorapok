@@ -137,6 +137,7 @@ describe("kv scatter-gather", () => {
     const blobWrites = [...store.keys()].filter((k) => k === "subscribers");
     expect(blobWrites).toHaveLength(0);
     expect([...store.keys()].filter((k) => k.startsWith(`${SUBSCRIBER_EMAIL_PREFIX}:`))).toHaveLength(1);
+    expect(store.has("subscribers:snapshot:v1")).toBe(true);
 
     const items = await readSubscribers(kv);
     expect(items.some((row) => row.email === "user@example.com")).toBe(true);

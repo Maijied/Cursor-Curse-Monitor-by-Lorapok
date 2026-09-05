@@ -97,12 +97,14 @@ export async function getScatterEntity(kv, entityPrefix, id) {
  * @param {string} id
  * @param {unknown} value
  */
-export async function putScatterEntity(kv, entityPrefix, id, value) {
+export async function putScatterEntity(kv, entityPrefix, id, value, options = {}) {
   if (!kv?.put) return false;
   const key = `${entityPrefix}:${id}`;
   const serialized = typeof value === "string" ? value : JSON.stringify(value);
-  const current = await kv.get(key);
-  if (current === serialized) return false;
+  if (!options.skipUnchangedRead) {
+    const current = await kv.get(key);
+    if (current === serialized) return false;
+  }
   await kv.put(key, serialized);
   return true;
 }
@@ -110,13 +112,15 @@ export async function putScatterEntity(kv, entityPrefix, id, value) {
 /**
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
  * @param {string} entityPrefix
- * @param {{ limit?: number }} [options]
+ * @param {{ limit?: number; maxPages?: number }} [options]
  */
 export async function listScatterEntities(kv, entityPrefix, options = {}) {
   if (!kv?.list || !kv?.get) return [];
   const limit = Math.max(1, Math.min(options.limit ?? 1000, 1000));
+  const maxPages = Math.max(1, options.maxPages ?? Number.POSITIVE_INFINITY);
   const records = [];
   let cursor;
+  let pages = 0;
 
   do {
     const listed = await kv.list({ prefix: `${entityPrefix}:`, limit, cursor });
@@ -132,8 +136,9 @@ export async function listScatterEntities(kv, entityPrefix, options = {}) {
       })
     );
     records.push(...batch.filter(Boolean));
+    pages += 1;
     cursor = listed.list_complete ? undefined : listed.cursor;
-  } while (cursor);
+  } while (cursor && pages < maxPages);
 
   return records;
 }

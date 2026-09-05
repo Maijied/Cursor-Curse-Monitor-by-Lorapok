@@ -1,3 +1,4 @@
+import { formatKvQuotaError, isKvQuotaError } from "./kv-quota.js";
 import {
   getScatterEntity,
   listScatterEntities,
@@ -5,6 +6,7 @@ import {
 } from "./kv-scatter.js";
 
 export const SUBSCRIBERS_KEY = "subscribers";
+export const SUBSCRIBERS_SNAPSHOT_KEY = "subscribers:snapshot:v1";
 export const SUBSCRIBER_EMAIL_PREFIX = "subscriber:email";
 export const CONSENT_VERSION = "2026-08-25";
 
@@ -57,6 +59,11 @@ function normalizeSubscriber(entry) {
   };
 }
 
+/** @param {SubscriberRecord[]} items */
+function sortSubscribers(items) {
+  return [...items].sort((a, b) => a.email.localeCompare(b.email));
+}
+
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
 async function readLegacySubscribers(kv) {
   if (!kv?.get) return [];
@@ -66,31 +73,84 @@ async function readLegacySubscribers(kv) {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed.map(normalizeSubscriber).filter(Boolean);
-  } catch {
+  } catch (error) {
+    if (isKvQuotaError(error)) throw error;
     return [];
   }
+}
+
+/** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
+async function readSubscriberSnapshot(kv) {
+  if (!kv?.get) return null;
+  try {
+    const raw = await kv.get(SUBSCRIBERS_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const items = parsed.map(normalizeSubscriber).filter(Boolean);
+    return items.length ? items : null;
+  } catch (error) {
+    if (isKvQuotaError(error)) throw error;
+    return null;
+  }
+}
+
+/** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv @param {SubscriberRecord[]} items */
+async function writeSubscriberSnapshot(kv, items) {
+  if (!kv?.put || !items.length) return false;
+  try {
+    await kv.put(SUBSCRIBERS_SNAPSHOT_KEY, JSON.stringify(sortSubscribers(items)));
+    return true;
+  } catch (error) {
+    if (isKvQuotaError(error)) {
+      console.warn("subscribers: snapshot write skipped (KV quota)", error);
+      return false;
+    }
+    throw error;
+  }
+}
+
+/** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
+async function rebuildSubscribersFromScatter(kv) {
+  let scattered = [];
+  try {
+    scattered = (
+      await listScatterEntities(kv, SUBSCRIBER_EMAIL_PREFIX, { limit: 1000, maxPages: 1 })
+    )
+      .map(normalizeSubscriber)
+      .filter(Boolean);
+  } catch (error) {
+    console.warn("subscribers: scatter list failed", error);
+    if (isKvQuotaError(error)) throw error;
+  }
+
+  const legacy = await readLegacySubscribers(kv);
+  const byEmail = new Map();
+  for (const row of legacy) byEmail.set(row.email, row);
+  for (const row of scattered) byEmail.set(row.email, row);
+  return sortSubscribers([...byEmail.values()]);
 }
 
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
 export async function readSubscribers(kv) {
   if (!kv?.get) return [];
 
-  let scattered = [];
   try {
-    scattered = (await listScatterEntities(kv, SUBSCRIBER_EMAIL_PREFIX, { limit: 1000 }))
-      .map(normalizeSubscriber)
-      .filter(Boolean);
+    const snapshot = await readSubscriberSnapshot(kv);
+    if (snapshot) return snapshot;
   } catch (error) {
-    console.warn("subscribers: scatter list failed", error);
+    if (isKvQuotaError(error)) {
+      console.warn("subscribers: snapshot read failed (KV quota)", error);
+      return [];
+    }
+    throw error;
   }
 
-  const legacy = await readLegacySubscribers(kv);
-
-  const byEmail = new Map();
-  for (const row of legacy) byEmail.set(row.email, row);
-  for (const row of scattered) byEmail.set(row.email, row);
-
-  return [...byEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
+  const merged = await rebuildSubscribersFromScatter(kv);
+  if (merged.length) {
+    await writeSubscriberSnapshot(kv, merged);
+  }
+  return merged;
 }
 
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv @param {SubscriberRecord[]} items */
@@ -102,9 +162,11 @@ export async function writeSubscribers(kv, items) {
     if (!normalized) continue;
     byEmail.set(normalized.email, normalized);
   }
+  const rows = sortSubscribers([...byEmail.values()]);
   await Promise.all(
-    [...byEmail.values()].map((row) => putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, row.email, row))
+    rows.map((row) => putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, row.email, row))
   );
+  await writeSubscriberSnapshot(kv, rows);
   return true;
 }
 
@@ -115,10 +177,40 @@ export async function writeSubscribers(kv, items) {
 export async function upsertSubscriber(kv, input) {
   const email = normalizeEmail(input.email);
   if (!email) return { ok: false, error: "Valid email is required" };
+  if (!kv?.put) return { ok: false, error: "Subscriber storage unavailable" };
 
-  let existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
+  let snapshot = null;
+  try {
+    snapshot = await readSubscriberSnapshot(kv);
+  } catch (error) {
+    if (isKvQuotaError(error)) {
+      return { ok: false, error: formatKvQuotaError(error) };
+    }
+    throw error;
+  }
+
+  let existing = snapshot?.find((row) => row.email === email) ?? null;
+
   if (!existing) {
-    existing = (await readLegacySubscribers(kv)).find((row) => row.email === email) ?? null;
+    try {
+      existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
+    } catch (error) {
+      if (isKvQuotaError(error)) {
+        return { ok: false, error: formatKvQuotaError(error) };
+      }
+      throw error;
+    }
+  }
+
+  if (!existing) {
+    try {
+      existing = (await readLegacySubscribers(kv)).find((row) => row.email === email) ?? null;
+    } catch (error) {
+      if (isKvQuotaError(error)) {
+        return { ok: false, error: formatKvQuotaError(error) };
+      }
+      throw error;
+    }
   }
 
   const next = {
@@ -129,14 +221,36 @@ export async function upsertSubscriber(kv, input) {
     consentVersion: input.consentVersion ?? CONSENT_VERSION,
   };
 
-  const wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next);
-  if (!kv?.put) return { ok: false, error: "Subscriber storage unavailable" };
+  const unchanged =
+    existing &&
+    existing.source === next.source &&
+    existing.installId === next.installId &&
+    existing.consentVersion === next.consentVersion;
+
+  let wrote = false;
+  if (!unchanged) {
+    try {
+      wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next);
+    } catch (error) {
+      if (isKvQuotaError(error)) {
+        return { ok: false, error: formatKvQuotaError(error) };
+      }
+      throw error;
+    }
+  }
+
+  if (!unchanged) {
+    const base = snapshot ?? (existing ? [existing] : []);
+    const byEmail = new Map(base.map((row) => [row.email, row]));
+    byEmail.set(email, next);
+    await writeSubscriberSnapshot(kv, [...byEmail.values()]);
+  }
 
   return {
     ok: true,
     subscriber: next,
     alreadySubscribed: Boolean(existing),
-    kvWriteSkipped: existing != null && wrote === false,
+    kvWriteSkipped: Boolean(existing) && wrote === false,
   };
 }
 

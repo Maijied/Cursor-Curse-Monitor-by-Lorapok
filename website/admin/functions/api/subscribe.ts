@@ -1,4 +1,5 @@
 import { jsonResponse } from "./_shared/auth.js";
+import { isKvQuotaError, formatKvQuotaError } from "./_shared/kv-quota.js";
 import { buildSubscribeHtml, sendMail } from "./_shared/mail.js";
 import { CONSENT_VERSION, normalizeEmail, upsertSubscriber } from "./_shared/subscribers.js";
 
@@ -8,20 +9,20 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-function kvLimitResponse(detail: string) {
+function kvLimitResponse(detail: string, kind: "read" | "write" | "unknown" = "write") {
+  const retryAfter =
+    kind === "read"
+      ? "KV daily read limit reached — pause stats refresh in Settings → Automation and retry after UTC midnight."
+      : "KV daily write limit reached — retry tomorrow or upgrade Cloudflare Workers plan.";
   return jsonResponse(
     {
       error: "Service temporarily unavailable",
       detail,
-      retryAfter: "KV daily write limit reached — retry tomorrow or upgrade Cloudflare Workers plan.",
+      retryAfter,
     },
     503,
     CORS_HEADERS
   );
-}
-
-function isKvLimitError(error: unknown) {
-  return String(error instanceof Error ? error.message : error).includes("KV put() limit");
 }
 
 function normalizeInstallId(value: unknown): string | null {
@@ -62,7 +63,11 @@ export async function onRequestPost(context) {
       consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
     });
     if (!upsert.ok) {
-      return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
+      const message = upsert.error || "Subscribe failed";
+      if (isKvQuotaError(message)) {
+        return kvLimitResponse(formatKvQuotaError(message), message.includes("get()") ? "read" : "write");
+      }
+      return jsonResponse({ error: message }, 503, CORS_HEADERS);
     }
 
     const alreadySubscribed = Boolean(upsert.alreadySubscribed);
@@ -110,8 +115,9 @@ export async function onRequestPost(context) {
     );
   } catch (error) {
     console.error("subscribe handler error", error);
-    if (isKvLimitError(error)) {
-      return kvLimitResponse(error instanceof Error ? error.message : "KV write limit exceeded");
+    if (isKvQuotaError(error)) {
+      const message = error instanceof Error ? error.message : "KV quota exceeded";
+      return kvLimitResponse(formatKvQuotaError(message), message.includes("get()") ? "read" : "write");
     }
     return jsonResponse(
       { error: "Subscribe failed", detail: error instanceof Error ? error.message : "Unknown error" },
