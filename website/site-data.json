@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-05T09:35:04.536Z",
+  "generatedAt": "2026-09-05T10:01:18.606Z",
   "assets": {
-    "buildId": "bf6bfe3c59c5",
+    "buildId": "1417d976e625",
     "cachePolicy": "static-assets-query-bust"
   },
   "displayName": "Cursor Curse Monitor by Lorapok",
@@ -73,7 +73,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-09-05T09:35:04.536Z"
+    "updatedAt": "2026-09-05T10:01:18.606Z"
   },
   "noticeTemplates": [
     {
@@ -467,6 +467,7 @@
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
     "releaseTag": "v1.0.114",
     "tags": [
+      "v1.0.116",
       "v1.0.115",
       "v1.0.114",
       "v1.0.113",
@@ -565,8 +566,7 @@
       "v1.0.20",
       "v1.0.19",
       "v1.0.18",
-      "v1.0.17",
-      "v1.0.15"
+      "v1.0.17"
     ],
     "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.114",
     "vsixName": "cursor-curse-monitor-by-lorapok-1.0.114.vsix",

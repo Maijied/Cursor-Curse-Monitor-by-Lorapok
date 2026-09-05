@@ -183,6 +183,30 @@
       tone: "engagement",
     });
 
+    renderStatCount(root.querySelector("[data-hero-orbit-ovsx]"), downloadsVerified ? combined : null, {
+      verified: downloadsVerified,
+      duration: 1100,
+      tone: "ovsx",
+    });
+    renderStatCount(root.querySelector("[data-hero-orbit-vscode]"), downloadsVerified ? vscode : null, {
+      verified: downloadsVerified,
+      duration: 1100,
+      tone: "vscode",
+    });
+    renderStatCount(root.querySelector("[data-hero-orbit-github]"), downloadsVerified ? github : null, {
+      verified: downloadsVerified && github != null,
+      duration: 1100,
+      tone: "github",
+    });
+    renderStatCount(root.querySelector("[data-hero-orbit-visits]"), visits, {
+      verified: true,
+      duration: 1100,
+      tone: "visits",
+    });
+
+    const universe = document.getElementById("hero-download-universe");
+    if (universe) universe.classList.add("is-live");
+
     if (downloadsVerified) {
       setBar(root.querySelector("[data-hero-downloads-bar]"), (downloads / maxScale) * 100, "total");
       if (combined > 0) {

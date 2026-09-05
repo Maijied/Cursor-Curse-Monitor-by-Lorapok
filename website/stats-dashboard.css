@@ -1,4 +1,134 @@
 /* Hero live stats dashboard — animated meters from site-data.json */
+
+/* Download universe frame */
+.hero-universe {
+  position: relative;
+  width: 100%;
+  border-radius: calc(var(--radius-lg) + 8px);
+  border: 1px solid rgba(124, 92, 255, 0.22);
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(77, 159, 255, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(124, 92, 255, 0.1), transparent 50%),
+    linear-gradient(165deg, rgba(12, 16, 26, 0.96), rgba(8, 10, 18, 0.92));
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.38),
+    0 0 80px rgba(124, 92, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero-universe-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 78% 22%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 44% 8%, rgba(124, 92, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 88% 62%, rgba(77, 159, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 24% 72%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 62% 88%, rgba(255, 255, 255, 0.3), transparent);
+  animation: hero-universe-twinkle 8s ease-in-out infinite alternate;
+}
+
+.hero-universe-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-universe-head-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-universe-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #c4d4f0;
+}
+
+.hero-universe-sub {
+  font-size: 0.72rem;
+  color: var(--muted, #9aa3b2);
+}
+
+.hero-visual-stage {
+  position: relative;
+  padding: 8px 14px 16px;
+}
+
+@media (min-width: 900px) {
+  .hero-visual-stage {
+    padding: 4px 18px 18px;
+    min-height: 420px;
+  }
+}
+
+.hero-orbit-track {
+  position: absolute;
+  inset: 0;
+  animation: hero-orbit-spin 48s linear infinite;
+}
+
+.hero-planet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72px;
+  margin: -36px 0 0 -36px;
+  padding: 8px 6px 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: linear-gradient(165deg, rgba(17, 24, 39, 0.95), rgba(10, 14, 22, 0.9));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  transform: rotate(var(--planet-angle, 0deg)) translateX(102px) rotate(calc(-1 * var(--planet-angle, 0deg)));
+}
+
+.hero-planet img {
+  display: block;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto 4px;
+  object-fit: contain;
+}
+
+.hero-planet-name {
+  display: block;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted, #9aa3b2);
+  line-height: 1.2;
+}
+
+.hero-planet-count {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+@keyframes hero-universe-twinkle {
+  0% { opacity: 0.35; }
+  100% { opacity: 0.55; }
+}
+
+.hero-universe.is-live .hero-orbit-glow {
+  animation: hero-orbit-pulse 4s ease-in-out infinite;
+}
+
 .hero-stats-dashboard {
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: calc(var(--radius-lg) + 2px);
@@ -401,6 +531,18 @@
 @media (max-width: 899px) {
   .hero-visual-stage .hero-stats-dashboard {
     margin-top: 4px;
+    padding-top: 0;
+  }
+
+  .hero-orbit {
+    height: 240px;
+    margin-bottom: -8px;
+  }
+
+  .hero-planet {
+    width: 64px;
+    margin-left: -32px;
+    transform: rotate(var(--planet-angle, 0deg)) translateX(88px) rotate(calc(-1 * var(--planet-angle, 0deg)));
   }
 }
 
@@ -416,6 +558,9 @@
   .stat-tile .meter-fill.stat-meter,
   .hero-ovsx-split-bar .meter-fill,
   .hero-total-meter .meter-fill { transition: none; }
+  .hero-universe-stars,
+  .hero-orbit-track,
+  .hero-orbit-ring { animation: none !important; }
 }
 
 @media (max-width: 720px) {

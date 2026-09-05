@@ -1,0 +1,93 @@
+# Direct main push tracker
+#
+# When commits land on main without a merged PR, auto-create a tracking issue,
+# add to Project #4, and open a retrospective PR for audit.
+
+name: Direct Main Push Tracker
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  track:
+    name: Issue + PR + board sync
+    runs-on: ubuntu-latest
+    if: >-
+      github.actor != 'github-actions[bot]'
+      && !contains(github.event.head_commit.message, 'chore(seo):')
+      && !contains(github.event.head_commit.message, 'Merge pull request')
+      && !startsWith(github.event.head_commit.message, 'track: direct main push')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Create tracking issue and Project item
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ github.event.head_commit.message }}
+          SHA: ${{ github.sha }}
+        run: |
+          SHORT="${SHA:0:7}"
+          BODY=$(cat <<EOF
+          Direct push to \`main\` — automated tracker.
+
+          - **Commit:** \`${SHA}\` (\`${SHORT}\`)
+          - **Author:** @${{ github.actor }}
+          - **Message:** ${TITLE}
+
+          Procedure: run \`node scripts/direct-main-push.mjs\` locally for full audit trail.
+          EOF
+          )
+          ISSUE_URL=$(gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "[direct-push] ${TITLE}" \
+            --body "$BODY" \
+            --label "type:task" \
+            --label "mission-control" \
+            --label "area:ops" || true)
+          echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
+          if [ -n "$ISSUE_URL" ] && [ -f procedure/project.json ]; then
+            PROJECT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('procedure/project.json','utf8')).projectNumber||'')")
+            if [ -n "$PROJECT" ]; then
+              ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$' || true)
+              if [ -n "$ISSUE_NUM" ]; then
+                gh project item-add "$PROJECT" --owner "${{ github.repository_owner }}" --url "$ISSUE_URL" || true
+              fi
+            fi
+          fi
+
+      - name: Open retrospective tracking PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ github.event.head_commit.message }}
+          SHA: ${{ github.sha }}
+        run: |
+          SHORT="${SHA:0:7}"
+          BRANCH="track/ci-direct-push-${SHORT}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git branch -f "$BRANCH" "${SHA}~1" || exit 0
+          git push origin "$BRANCH" --force || exit 0
+          gh pr create --base main --head "$BRANCH" \
+            --title "track: direct main push — ${TITLE}" \
+            --body "Automated audit PR for direct push \`${SHORT}\` already on main. Closes tracking for Project board review." \
+            || echo "PR may already exist"
+
+      - name: Sync mission-control registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-mission-control-issues.mjs --add-to-project || true
