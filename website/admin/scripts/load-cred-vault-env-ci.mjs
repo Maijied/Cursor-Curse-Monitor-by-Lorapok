@@ -14,7 +14,11 @@
 import { appendFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decryptCredentialVault, loadCursorCloudflareSecretsFromVault } from "./lib/cred-vault-sync.mjs";
+import {
+  decryptCredentialVault,
+  gpgDecryptLastError,
+  loadCursorCloudflareSecretsFromVault,
+} from "./lib/cred-vault-sync.mjs";
 import { pickDeployAuth, setGithubActionsOutput } from "./lib/mail-credentials.mjs";
 
 const DEFAULT_VAULT =
@@ -55,9 +59,10 @@ async function main() {
     const vault = decryptCredentialVault();
     if (!vault) {
       const hasBlob = Boolean((process.env.CRED_STORE_GPG_BASE64 ?? "").trim());
+      const gpgHint = gpgDecryptLastError() ? ` (${gpgDecryptLastError()})` : "";
       console.warn(
         hasBlob
-          ? "::warning::Cred vault GPG decrypt failed (check CRED_VAULT_PASSPHRASE vs CRED_STORE_GPG_BASE64) — falling back to workflow secrets."
+          ? `::warning::Cred vault GPG decrypt failed (check CRED_VAULT_PASSPHRASE vs CRED_STORE_GPG_BASE64)${gpgHint} — falling back to workflow secrets.`
           : "::warning::Cred vault blob missing (CRED_STORE_GPG_BASE64) — falling back to workflow secrets."
       );
       return;

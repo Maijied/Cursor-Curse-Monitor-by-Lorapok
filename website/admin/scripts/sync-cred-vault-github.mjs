@@ -31,11 +31,15 @@ function readPassphrase() {
 }
 
 function ghSecret(name, value) {
-  const r = spawnSync("gh", ["secret", "set", name, "--env", "admin-production"], {
-    input: value,
-    encoding: "utf8",
-  });
-  if (r.status !== 0) throw new Error(`gh secret set ${name} failed`);
+  const r = spawnSync(
+    "gh",
+    ["secret", "set", name, "--env", "admin-production", "--body", value],
+    { encoding: "utf8" }
+  );
+  if (r.status !== 0) {
+    const err = (r.stderr ?? r.stdout ?? "").trim();
+    throw new Error(`gh secret set ${name} failed${err ? `: ${err}` : ""}`);
+  }
   console.log(`GitHub secret ${name} updated (admin-production)`);
 }
 

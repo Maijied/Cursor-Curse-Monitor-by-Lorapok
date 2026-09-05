@@ -88,6 +88,11 @@ export function decryptCredentialVault(vaultFile = DEFAULT_VAULT) {
   return null;
 }
 
+/** Last GPG failure message (safe for CI logs). */
+export function gpgDecryptLastError() {
+  return gpgDecrypt.lastError || "";
+}
+
 function gpgDecrypt(passphrase, vaultFile = DEFAULT_VAULT) {
   return withPassphraseFile(passphrase, (passPath) => {
     const r = spawnSync(
@@ -105,14 +110,22 @@ function gpgDecrypt(passphrase, vaultFile = DEFAULT_VAULT) {
       ],
       { encoding: "utf8" }
     );
-    if (r.status !== 0 || !r.stdout.trim()) return null;
+    if (r.status !== 0 || !r.stdout.trim()) {
+      const detail = (r.stderr ?? "").trim().split(/\r?\n/).pop();
+      if (detail) gpgDecrypt.lastError = detail;
+      return null;
+    }
+    gpgDecrypt.lastError = "";
     try {
       return JSON.parse(r.stdout);
     } catch {
+      gpgDecrypt.lastError = "vault JSON parse failed";
       return null;
     }
   });
 }
+/** @type {string} Last GPG decrypt failure (no secrets). */
+gpgDecrypt.lastError = "";
 
 function gpgEncrypt(passphrase, data, vaultFile = DEFAULT_VAULT) {
   return withPassphraseFile(passphrase, (passPath) => {
