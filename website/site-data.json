@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-05T10:01:18.606Z",
+  "generatedAt": "2026-09-05T10:22:56.398Z",
   "assets": {
-    "buildId": "1417d976e625",
+    "buildId": "725d04eca265",
     "cachePolicy": "static-assets-query-bust"
   },
   "displayName": "Cursor Curse Monitor by Lorapok",
@@ -73,7 +73,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-09-05T10:01:18.606Z"
+    "updatedAt": "2026-09-05T10:22:56.398Z"
   },
   "noticeTemplates": [
     {
@@ -257,8 +257,8 @@
     }
   ],
   "downloads": {
-    "total": 23188,
-    "displayTotal": 23188,
+    "total": 23197,
+    "displayTotal": 23197,
     "verified": true,
     "liveSources": {
       "openVsxCanonical": true,
@@ -266,13 +266,13 @@
       "vscodeMarketplace": true,
       "githubReleases": true
     },
-    "canonicalTotal": 12927,
+    "canonicalTotal": 12936,
     "source": "canonical",
     "breakdown": {
       "openVsxCanonical": 12211,
       "openVsxDuplicate": 10261,
       "openVsxDisplay": 12211,
-      "vscodeMarketplace": 699,
+      "vscodeMarketplace": 708,
       "githubAllAssets": 17,
       "githubVsix": 17,
       "latestReleaseVsix": 1
@@ -457,7 +457,7 @@
   "vscode": {
     "version": "1.0.114",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "downloadCount": 699,
+    "downloadCount": 708,
     "installCount": 4,
     "updateCount": 24,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok",
@@ -467,6 +467,7 @@
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
     "releaseTag": "v1.0.114",
     "tags": [
+      "v1.0.117",
       "v1.0.116",
       "v1.0.115",
       "v1.0.114",
@@ -565,8 +566,7 @@
       "v1.0.21",
       "v1.0.20",
       "v1.0.19",
-      "v1.0.18",
-      "v1.0.17"
+      "v1.0.18"
     ],
     "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.114",
     "vsixName": "cursor-curse-monitor-by-lorapok-1.0.114.vsix",

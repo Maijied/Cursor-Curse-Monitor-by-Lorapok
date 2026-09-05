@@ -10,6 +10,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Marketing site feature map** — orbit-style interactive map with animated logo; GitHub stats use board issue count (not PR-inflated total) and sync via `ccm:site-data` from Mission Control merge
 - **Hero download universe** — restore `stats-dashboard.css`, orbit planets with live channel counts, cosmic frame labeling the stats panel
+- **Hero layout** — orbit stars (no boxes) separated from stats console; smooth staggered count animation
+- **AGENT_INIT.md** — universal AI onboarding (not Cursor-only); `npm run sync:issues` alias
 - **Direct main push** — `npm run push:main` + CI workflow auto-creates tracking issue, Project board item, and audit PR
 - **Login sync (IDE + browser)** — dashboard refreshes immediately after sign-in, paste, or account changes; browser extension activates tokens on first connect and polls up to 60s with `probeAuth` (popup + options)
 - **Usage analytics chart** — stacked chart ymax uses true stack totals; surface/model group-by shows explicit empty states; IDE chart prefs survive refresh

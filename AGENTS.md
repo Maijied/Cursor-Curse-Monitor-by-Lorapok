@@ -1,5 +1,7 @@
 # AGENTS.md
 
+> **All AI tools:** read [`AGENT_INIT.md`](AGENT_INIT.md) first (Cursor, Codex, Claude, Copilot, …).
+
 ## Cursor Cloud specific instructions
 
 This repo contains four related components. The update script already runs

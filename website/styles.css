@@ -535,9 +535,8 @@ a:hover { color: #7cb8ff; }
 }
 .hero-visual-stage {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
   gap: 0;
   min-height: 0;
@@ -546,36 +545,14 @@ a:hover { color: #7cb8ff; }
   overflow: visible;
   width: 100%;
 }
-@media (min-width: 900px) {
-  .hero-visual-stage {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(200px, auto) minmax(0, 1fr);
-    align-items: stretch;
-    min-height: 0;
-    padding: 0;
-    border: none;
-    background: none;
-    box-shadow: none;
-  }
-}
 .hero-orbit {
   position: relative;
-  width: min(100%, 340px);
-  height: clamp(220px, 32vw, 280px);
+  width: min(100%, 320px);
+  height: 100%;
   margin: 0 auto;
   pointer-events: none;
-  z-index: 3;
+  z-index: 1;
   flex-shrink: 0;
-}
-@media (min-width: 900px) {
-  .hero-orbit {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: center;
-    width: min(100%, 300px);
-    height: 220px;
-    margin: 0 auto -36px;
-  }
 }
 .hero-orbit-ring--inner {
   inset: 20% 16% 24%;
@@ -667,25 +644,8 @@ a:hover { color: #7cb8ff; }
 .hero-visual-stage .hero-stats-dashboard {
   position: relative;
   z-index: 2;
-  width: min(100%, 420px);
-  margin: 0 auto;
-}
-@media (min-width: 900px) {
-  .hero-visual-stage .hero-stats-dashboard {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    width: 100%;
-    max-width: none;
-    justify-self: stretch;
-    align-self: end;
-    margin: 0;
-    padding-top: 168px;
-    display: flex;
-    flex-direction: column;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
+  width: 100%;
+  margin: 0;
 }
 .hero-device {
   border: 1px solid rgba(77, 159, 255, 0.28);

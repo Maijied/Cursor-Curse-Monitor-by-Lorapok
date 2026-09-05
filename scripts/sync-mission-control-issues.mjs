@@ -328,6 +328,7 @@ async function main() {
         task.notes ? `**Notes:** ${task.notes}` : "",
         "",
         "## Workflow",
+        "0. Read [`AGENT_INIT.md`](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/AGENT_INIT.md) (all AI tools)",
         "1. `node scripts/procedure-init.mjs --title \"…\" --plan plan/…` (optional plan)",
         "2. Implement on branch `feat/${task.id.toLowerCase()}-…`",
         "3. Update `plan/mission-control-master-tasks.md` when done",
@@ -356,6 +357,7 @@ async function main() {
   writeFileSync(TRACKING_REGISTRY, JSON.stringify(registry, null, 2) + "\n", "utf8");
   console.log(`\n✓ Registry: procedure/mission-control-issues.json`);
   console.log(`✓ Epic: #${epicNumber} — ${epicTitle}`);
+  console.log(`✓ Agent init (all AI tools): AGENT_INIT.md`);
 }
 
 main().catch((err) => {

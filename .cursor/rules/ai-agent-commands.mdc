@@ -11,8 +11,8 @@ When the user sends one of these **exact intents**, follow the linked workflow �
 |---------|---------|------------------|
 | **Update?** | Status snapshot only | Refresh `plan/mission-control-master-tasks.md`; run narrow CI/checks; report done / next / blocked. **Do not implement features.** |
 | **next** | Implement top priority task | Read **Recommended next queue** → linked GitHub issue → `procedure-init` if multi-file → implement → test → update registry. |
-| **sync issues** | Refresh GitHub board | `npm run sync:labels` → `npm run sync:tasks` → `npm run setup:github-project` |
-| **sync tasks** | Same as sync issues | Alias for board sync |
+| **sync issues** | Refresh GitHub board | `npm run sync:issues` (labels + tasks + project) |
+| **sync tasks** | Same as sync issues | Alias — `npm run sync:issues` |
 | **autopilot** | Merge-ready PR | Per `.cursor/rules/procedure-github-project.mdc` autopilot section |
 | **procedure** | Start tracked work | `node scripts/procedure-init.mjs --title "…"` |
 
@@ -26,6 +26,7 @@ When the user sends one of these **exact intents**, follow the linked workflow �
 
 | Command context | Read first |
 |-----------------|------------|
+| **Any session (all AI tools)** | `AGENT_INIT.md` |
 | Any Mission Control work | `MISSION-CONTROL-WALKTHROUGH.md`, `plan/mission-control-master-tasks.md` |
 | GitHub Issues / Project | `TASK-TRACKING.md`, `docs/guides/GITHUB_ISSUES_AND_PROJECT.md` |
 | Ecosystem roadmap | `docs/wiki/Ecosystem-Roadmap.md` |

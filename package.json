@@ -351,6 +351,7 @@
     "push:main": "node scripts/direct-main-push.mjs",
     "push:main:website": "node scripts/direct-main-push.mjs --component website --deploy-website",
     "sync:tasks": "node scripts/sync-mission-control-issues.mjs --add-to-project",
+    "sync:issues": "npm run sync:labels && npm run sync:tasks && npm run setup:github-project",
     "sync:tasks:dry": "node scripts/sync-mission-control-issues.mjs --dry-run",
     "sync:labels": "node scripts/sync-github-labels.mjs --remap-issues",
     "setup:github-project": "node scripts/setup-github-project.mjs",

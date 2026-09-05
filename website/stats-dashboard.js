@@ -4,29 +4,45 @@
 (function () {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  function easeOutExpo(t) {
+    return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  }
+
   /**
    * @param {Element | null | undefined} el
    * @param {number | null | undefined} end
-   * @param {{ duration?: number; start?: number }} [options]
+   * @param {{ duration?: number; start?: number; delay?: number }} [options]
    */
   function animateCount(el, end, options = {}) {
     if (!el || end == null || Number.isNaN(Number(end))) return;
     const target = Number(end);
-    const duration = options.duration ?? 1200;
+    const duration = options.duration ?? 1600;
     const start = options.start ?? 0;
+    const delay = options.delay ?? 0;
 
     if (reducedMotion || duration <= 0) {
       el.textContent = target.toLocaleString();
+      el.classList.remove("is-counting");
       return;
     }
 
-    const startTime = performance.now();
+    el.classList.add("is-counting");
+    const startTime = performance.now() + delay;
+
     function frame(now) {
+      if (now < startTime) {
+        requestAnimationFrame(frame);
+        return;
+      }
       const t = Math.min(1, (now - startTime) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
+      const eased = easeOutExpo(t);
       const current = t >= 1 ? target : Math.round(start + (target - start) * eased);
       el.textContent = current.toLocaleString();
-      if (t < 1) requestAnimationFrame(frame);
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        el.classList.remove("is-counting");
+      }
     }
     requestAnimationFrame(frame);
   }
@@ -34,7 +50,7 @@
   /**
    * @param {Element | null | undefined} el
    * @param {number | null | undefined} value
-   * @param {{ verified?: boolean; duration?: number; tone?: string }} [options]
+   * @param {{ verified?: boolean; duration?: number; tone?: string; delay?: number }} [options]
    */
   function renderStatCount(el, value, options = {}) {
     if (!el) return;
@@ -44,9 +60,13 @@
     }
     if (!verified || value == null || Number.isNaN(Number(value))) {
       el.textContent = "—";
+      el.classList.remove("is-counting");
       return;
     }
-    animateCount(el, Number(value), { duration: options.duration ?? 1200 });
+    animateCount(el, Number(value), {
+      duration: options.duration ?? 1600,
+      delay: options.delay ?? 0,
+    });
   }
 
   /**
@@ -144,85 +164,74 @@
 
     renderStatCount(root.querySelector("[data-hero-downloads]"), downloadsVerified ? downloads : null, {
       verified: downloadsVerified,
-      duration: 1400,
+      duration: 1800,
       tone: "total",
+      delay: 0,
     });
     renderStatCount(root.querySelector("[data-hero-ovsx-combined]"), downloadsVerified ? combined : null, {
       verified: downloadsVerified,
-      duration: 1200,
+      duration: 1500,
       tone: "ovsx",
+      delay: 120,
     });
     renderStatCount(root.querySelector("[data-hero-vscode]"), downloadsVerified ? vscode : null, {
       verified: downloadsVerified,
-      duration: 1150,
+      duration: 1500,
       tone: "vscode",
+      delay: 200,
     });
     renderStatCount(root.querySelector("[data-hero-github]"), downloadsVerified ? github : null, {
       verified: downloadsVerified && github != null,
-      duration: 1150,
+      duration: 1500,
       tone: "github",
+      delay: 280,
     });
     renderStatCount(root.querySelector("[data-hero-ovsx-canonical]"), downloadsVerified ? canonical : null, {
       verified: downloadsVerified,
-      duration: 1000,
+      duration: 1400,
       tone: "canonical",
+      delay: 360,
     });
     renderStatCount(root.querySelector("[data-hero-ovsx-duplicate]"), downloadsVerified ? duplicate : null, {
       verified: downloadsVerified,
-      duration: 1000,
+      duration: 1400,
       tone: "duplicate",
+      delay: 440,
     });
     renderStatCount(root.querySelector("[data-hero-visits]"), visits, {
       verified: true,
-      duration: 1200,
+      duration: 1500,
       tone: "visits",
+      delay: 520,
     });
     renderStatCount(root.querySelector("[data-hero-engagement]"), engagement, {
       verified: true,
-      duration: 1200,
+      duration: 1500,
       tone: "engagement",
-    });
-
-    renderStatCount(root.querySelector("[data-hero-orbit-ovsx]"), downloadsVerified ? combined : null, {
-      verified: downloadsVerified,
-      duration: 1100,
-      tone: "ovsx",
-    });
-    renderStatCount(root.querySelector("[data-hero-orbit-vscode]"), downloadsVerified ? vscode : null, {
-      verified: downloadsVerified,
-      duration: 1100,
-      tone: "vscode",
-    });
-    renderStatCount(root.querySelector("[data-hero-orbit-github]"), downloadsVerified ? github : null, {
-      verified: downloadsVerified && github != null,
-      duration: 1100,
-      tone: "github",
-    });
-    renderStatCount(root.querySelector("[data-hero-orbit-visits]"), visits, {
-      verified: true,
-      duration: 1100,
-      tone: "visits",
+      delay: 600,
     });
 
     const universe = document.getElementById("hero-download-universe");
     if (universe) universe.classList.add("is-live");
 
     if (downloadsVerified) {
-      setBar(root.querySelector("[data-hero-downloads-bar]"), (downloads / maxScale) * 100, "total");
-      if (combined > 0) {
-        const canonicalPct = Math.round((canonical / combined) * 100);
-        const duplicatePct = 100 - canonicalPct;
-        setBar(root.querySelector("[data-hero-ovsx-canonical-bar]"), canonicalPct, "canonical");
-        setBar(root.querySelector("[data-hero-ovsx-duplicate-bar]"), duplicatePct, "duplicate");
-      }
+      const barDelay = 400;
+      setTimeout(() => {
+        setBar(root.querySelector("[data-hero-downloads-bar]"), (downloads / maxScale) * 100, "total");
+        if (combined > 0) {
+          const canonicalPct = Math.round((canonical / combined) * 100);
+          const duplicatePct = 100 - canonicalPct;
+          setBar(root.querySelector("[data-hero-ovsx-canonical-bar]"), canonicalPct, "canonical");
+          setBar(root.querySelector("[data-hero-ovsx-duplicate-bar]"), duplicatePct, "duplicate");
+        }
+        setBar(root.querySelector("[data-hero-visits-bar]"), (visits / maxScale) * 100, "visits");
+        setBar(root.querySelector("[data-hero-engagement-bar]"), (engagement / maxScale) * 100, "engagement");
+      }, reducedMotion ? 0 : barDelay);
     } else {
       setBar(root.querySelector("[data-hero-downloads-bar]"), 0, "total");
       setBar(root.querySelector("[data-hero-ovsx-canonical-bar]"), 0, "canonical");
       setBar(root.querySelector("[data-hero-ovsx-duplicate-bar]"), 0, "duplicate");
     }
-
-    setBar(root.querySelector("[data-hero-visits-bar]"), (visits / maxScale) * 100, "visits");
-    setBar(root.querySelector("[data-hero-engagement-bar]"), (engagement / maxScale) * 100, "engagement");
 
     const status = document.getElementById("hero-stats-status");
     if (status) {
