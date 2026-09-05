@@ -28,6 +28,12 @@ export const SYNC_ARTIFACT_PATHS = [
   "website/sitemap.xml",
   "website/robots.txt",
   "website/visitor-stats.json",
+  "website/index.html",
+  "website/privacy.html",
+  "website/terms.html",
+  "website/readme-stats.png",
+  "website/readme-stats.svg",
+  "website/stats",
 ];
 
 export function parseArgs(argv) {
