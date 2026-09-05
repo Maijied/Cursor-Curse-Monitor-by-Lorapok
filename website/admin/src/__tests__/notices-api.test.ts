@@ -80,7 +80,7 @@ describe("notice catalog APIs", () => {
     expect(res.ok).toBe(true);
     expect(data.draft.enabled).toBe(false);
     expect(data.draft.source).toBe("changelog");
-    expect(data.draft.message).toMatch(/AUTH-12|feature ACL/i);
+    expect(data.draft.message).toMatch(/Login sync|Unreleased preview/i);
   });
 
   it("hides the public banner when the generated notice is disabled", async () => {
