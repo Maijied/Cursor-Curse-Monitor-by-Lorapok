@@ -6,13 +6,16 @@
  *   node website/admin/scripts/retry-failed-mail-from-logs.mjs --dry-run
  *   node website/admin/scripts/retry-failed-mail-from-logs.mjs --since 2026-09-05
  *
- * Uses cred vault (Resend + Cloudflare) and runs mail:probe-production first.
+ * Uses cred vault (Resend API) and runs mail:probe-production first.
+ * Test/probe failures (example.com, testmail, probe-* locals) are skipped and
+ * marked resolved in D1 so the queue stays clean.
  */
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildNoticeDraftFromChangelog } from "../functions/api/_shared/changelog-notice.js";
+import { classifyMailRetryRecipient } from "../functions/api/_shared/mail-retry-filter.js";
 import { buildNoticeHtml, buildSubscribeHtml } from "../functions/api/_shared/mail.js";
 import { resolveLocalMailEnvAsync } from "./lib/resolve-local-mail-env.mjs";
 
@@ -22,12 +25,13 @@ const adminUrl = String(process.env.ADMIN_URL ?? "https://cursor-dev.lorapok.tec
 const d1Name = "ccm-admin-d1";
 
 function parseArgs(argv) {
-  /** @type {{ dryRun?: boolean; since?: string; limit?: number; skipProbe?: boolean }} */
-  const out = { since: "2026-09-05", limit: 100 };
+  /** @type {{ dryRun?: boolean; since?: string; limit?: number; skipProbe?: boolean; markTestSkipped?: boolean; help?: boolean }} */
+  const out = { since: "2026-09-05", limit: 100, markTestSkipped: true };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--dry-run") out.dryRun = true;
     else if (arg === "--skip-probe") out.skipProbe = true;
+    else if (arg === "--no-mark-test-skipped") out.markTestSkipped = false;
     else if (arg === "--since" && argv[i + 1]) out.since = argv[++i];
     else if (arg.startsWith("--since=")) out.since = arg.slice("--since=".length);
     else if (arg === "--limit" && argv[i + 1]) out.limit = Number(argv[++i]);
@@ -35,16 +39,6 @@ function parseArgs(argv) {
     else if (arg === "--help" || arg === "-h") out.help = true;
   }
   return out;
-}
-
-function shouldRetryRecipient(email) {
-  const e = String(email ?? "").trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return false;
-  if (e.endsWith("@example.com")) return false;
-  if (e.endsWith("@inbox.testmail.app")) return false;
-  const local = e.split("@")[0] ?? "";
-  if (/^(probe|test|mail-test|mail-verify|check-|post-push|stable-|prod-mail-check)/i.test(local)) return false;
-  return true;
 }
 
 function runProbe() {
@@ -97,15 +91,20 @@ function queryFailedLogs(since, limit) {
     .filter((row) => row.meta.to);
 }
 
-function markLogRetried(logId, note) {
+function markLogRetried(logId, note, { quiet = false } = {}) {
   const safeNote = String(note ?? "resent").replace(/'/g, "''");
   const sql = `UPDATE system_logs
     SET meta_json = json_set(COALESCE(meta_json, '{}'), '$.retriedAt', datetime('now'), '$.retryNote', '${safeNote}')
     WHERE id = '${String(logId).replace(/'/g, "''")}';`;
-  spawnSync("npx", ["wrangler", "d1", "execute", d1Name, "--remote", "--command", sql], {
+  const result = spawnSync("npx", ["wrangler", "d1", "execute", d1Name, "--remote", "--command", sql], {
     cwd: adminDir,
-    stdio: "inherit",
+    stdio: quiet ? "pipe" : "inherit",
+    encoding: "utf8",
   });
+  if (result.status !== 0 && !quiet) {
+    throw new Error(result.stderr || result.stdout || `Failed to mark log ${logId}`);
+  }
+  return result.status === 0;
 }
 
 async function buildPayload(meta) {
@@ -188,10 +187,40 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function partitionRows(rows) {
+  const seen = new Set();
+  const production = [];
+  const testSkipped = [];
+  const invalidSkipped = [];
+
+  for (const row of rows) {
+    const to = String(row.meta.to ?? "").trim().toLowerCase();
+    const subject = String(row.meta.subject ?? "").trim();
+    const key = `${to}::${subject}::${row.meta.category ?? ""}`;
+    const classification = classifyMailRetryRecipient(to);
+
+    if (classification.kind === "production") {
+      if (seen.has(key)) continue;
+      seen.add(key);
+      production.push(row);
+      continue;
+    }
+    if (classification.kind === "test") {
+      testSkipped.push({ row, reason: classification.reason ?? "test address" });
+      continue;
+    }
+    invalidSkipped.push({ row, reason: classification.reason ?? "invalid address" });
+  }
+
+  return { production, testSkipped, invalidSkipped };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
-    console.log("Usage: retry-failed-mail-from-logs.mjs [--dry-run] [--since YYYY-MM-DD] [--limit N] [--skip-probe]");
+    console.log(
+      "Usage: retry-failed-mail-from-logs.mjs [--dry-run] [--since YYYY-MM-DD] [--limit N] [--skip-probe] [--no-mark-test-skipped]"
+    );
     process.exit(0);
   }
 
@@ -203,26 +232,48 @@ async function main() {
   }
 
   const rows = queryFailedLogs(args.since, args.limit);
-  const seen = new Set();
-  const queue = [];
-  for (const row of rows) {
-    const to = String(row.meta.to ?? "").trim().toLowerCase();
-    const subject = String(row.meta.subject ?? "").trim();
-    const key = `${to}::${subject}::${row.meta.category ?? ""}`;
-    if (!shouldRetryRecipient(to) || seen.has(key)) continue;
-    seen.add(key);
-    queue.push(row);
-  }
+  const { production, testSkipped, invalidSkipped } = partitionRows(rows);
 
-  console.log(`\nFound ${rows.length} failed mail log row(s); ${queue.length} unique production recipient(s) to retry.\n`);
-  if (!queue.length) {
-    console.log("Nothing to resend.");
+  console.log(`\nFailed mail log scan (since ${args.since}):`);
+  console.log(`  unretrried rows:     ${rows.length}`);
+  console.log(`  production to retry: ${production.length} unique`);
+  console.log(`  test/probe skipped:  ${testSkipped.length}`);
+  if (invalidSkipped.length) {
+    console.log(`  invalid skipped:     ${invalidSkipped.length}`);
+  }
+  console.log();
+
+  if (!production.length) {
+    if (!rows.length) {
+      console.log("All clear — no failed mail in D1 for this window.");
+      return;
+    }
+
+    if (args.dryRun) {
+      console.log("Nothing to resend (remaining failures are test/probe only).");
+      console.log("Run without --dry-run to mark test/probe rows as resolved in D1.");
+      return;
+    }
+
+    if (args.markTestSkipped && (testSkipped.length || invalidSkipped.length)) {
+      let marked = 0;
+      for (const { row, reason } of [...testSkipped, ...invalidSkipped]) {
+        if (markLogRetried(row.id, `skipped ${reason} — no production resend`, { quiet: true })) {
+          marked += 1;
+        }
+      }
+      console.log(`Marked ${marked} test/probe failure(s) as resolved in D1.`);
+      console.log("Production mail queue is clear.");
+      return;
+    }
+
+    console.log("Nothing to resend (test/probe rows remain — pass without --no-mark-test-skipped to clear).");
     return;
   }
 
   let sent = 0;
   let failed = 0;
-  for (const row of queue) {
+  for (const row of production) {
     const payload = await buildPayload(row.meta);
     if (args.dryRun) {
       console.log(`[dry-run] would send ${payload.category} → ${payload.to} (${payload.subject})`);
@@ -231,8 +282,8 @@ async function main() {
     const result = await sendViaResend(env, payload);
     if (result.sent) {
       sent += 1;
-      console.log(`✓ sent ${payload.category} → ${payload.to}`);
-      markLogRetried(row.id, `resent via retry-failed-mail-from-logs (${result.transport})`);
+      console.log(`✓ Resend → ${payload.to} (${payload.category})`);
+      markLogRetried(row.id, `resent via Resend (retry-failed-mail-from-logs)`, { quiet: true });
     } else {
       failed += 1;
       console.error(`✗ failed ${payload.to}: ${result.reason}`);
@@ -240,7 +291,22 @@ async function main() {
     await sleep(750);
   }
 
-  console.log(`\nDone. sent=${sent} failed=${failed} skipped_test=${rows.length - queue.length}`);
+  if (!args.dryRun && args.markTestSkipped && (testSkipped.length || invalidSkipped.length)) {
+    let marked = 0;
+    for (const { row, reason } of [...testSkipped, ...invalidSkipped]) {
+      if (markLogRetried(row.id, `skipped ${reason} — no production resend`, { quiet: true })) {
+        marked += 1;
+      }
+    }
+    if (marked) console.log(`\nMarked ${marked} test/probe failure(s) as resolved in D1.`);
+  }
+
+  if (args.dryRun) {
+    console.log(`\n[dry-run] would resend ${production.length} production message(s).`);
+    return;
+  }
+
+  console.log(`\nDone. sent=${sent} failed=${failed} test_skipped=${testSkipped.length}`);
   if (failed > 0) process.exitCode = 2;
 }
 

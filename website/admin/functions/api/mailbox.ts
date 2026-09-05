@@ -9,6 +9,7 @@ import { retryFailedMailboxMessages } from "./_shared/mailbox-retry.js";
 import { buildComposeHtml, buildSubscribeHtml, buildTestHtml, getAdminPublicUrl, getMailTransportStatus, sendMail } from "./_shared/mail.js";
 import { getMailTemplates } from "./_shared/mail-templates.js";
 import { testmailInboxAddress, resolveTestmailRuntimeConfig } from "./_shared/testmail-runtime.js";
+import { isTestmailProbeEnabled, readTestmailIntegrationConfig } from "./_shared/testmail-integration-config.js";
 
 const COMPOSE_CATEGORIES = new Set([
   "compose",
@@ -114,6 +115,19 @@ export async function onRequestPost(context) {
   }
 
   if (action === "testmail-probe") {
+    const integration = await readTestmailIntegrationConfig(env);
+    if (!isTestmailProbeEnabled(integration)) {
+      const response = jsonResponse(
+        {
+          ok: false,
+          error:
+            "Testmail E2E probes are disabled. Enable them in Settings → Testmail if you need inbox delivery checks.",
+        },
+        403
+      );
+      return logAuthenticatedRequest(context, auth, response, startedAt);
+    }
+
     const config = resolveTestmailRuntimeConfig(env);
     if (!config.ok) {
       const response = jsonResponse({ ok: false, error: config.error }, 503);

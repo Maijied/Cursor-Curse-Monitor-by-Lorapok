@@ -23,6 +23,7 @@
     "mail:test": "node scripts/test-admin-mail.mjs",
     "mail:testmail": "node scripts/probe-subscribe-testmail.mjs",
     "mail:probe-production": "node scripts/probe-mail-production.mjs",
+    "mail:verify-vault": "node scripts/verify-mail-cred-vault.mjs",
     "mail:retry-failed": "node scripts/retry-failed-mail-from-logs.mjs",
     "mail:verify-resend-domain": "node scripts/verify-resend-domain.mjs",
     "auth:probe-production": "node scripts/probe-auth-production.mjs",

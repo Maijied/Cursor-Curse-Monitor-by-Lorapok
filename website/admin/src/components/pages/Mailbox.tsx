@@ -15,6 +15,7 @@ import { scanAdminText, type AdminSecurityFinding } from "../../lib/scanSecrets"
 import {
   fetchMailbox,
   fetchMailTemplates,
+  fetchTestmailConfigApi,
   markMailboxRead,
   pollTestmailInbox,
   sendMailboxMessage,
@@ -83,6 +84,7 @@ export default function Mailbox() {
   const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
   const [syncingMail, setSyncingMail] = useState(false);
   const [testmailProbing, setTestmailProbing] = useState(false);
+  const [testmailProbeEnabled, setTestmailProbeEnabled] = useState(false);
   const testmailPollRef = useRef<number | null>(null);
   const { hasPermission } = useAuthSession();
   const canSendMail = hasPermission("mail.send");
@@ -113,6 +115,12 @@ export default function Mailbox() {
     fetchMailTemplates()
       .then((data) => setMailTemplates(data.templates ?? []))
       .catch(() => setMailTemplates([]));
+  }, []);
+
+  useEffect(() => {
+    fetchTestmailConfigApi()
+      .then((data) => setTestmailProbeEnabled(Boolean(data.config?.probeEnabled)))
+      .catch(() => setTestmailProbeEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -416,19 +424,21 @@ export default function Mailbox() {
             {sending ? <LorapokLarvaeLoader size="xs" ariaLabel="Sending test email" /> : <Zap size={16} />}
             {sending ? "Sending…" : "Test"}
           </button>
-          <button
-            type="button"
-            disabled={!canSendMail || sending || testmailProbing}
-            onClick={handleTestmailE2E}
-            className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_35%,var(--color-border))] text-[var(--color-text)] font-medium hover:bg-white/5 disabled:opacity-60"
-          >
-            {testmailProbing ? (
-              <LorapokLarvaeLoader size="xs" ariaLabel="Running testmail probe" />
-            ) : (
-              <Sparkles size={16} className="text-[var(--color-accent)]" />
-            )}
-            {testmailProbing ? "Probing…" : "Testmail E2E"}
-          </button>
+          {testmailProbeEnabled ? (
+            <button
+              type="button"
+              disabled={!canSendMail || sending || testmailProbing}
+              onClick={handleTestmailE2E}
+              className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_35%,var(--color-border))] text-[var(--color-text)] font-medium hover:bg-white/5 disabled:opacity-60"
+            >
+              {testmailProbing ? (
+                <LorapokLarvaeLoader size="xs" ariaLabel="Running testmail probe" />
+              ) : (
+                <Sparkles size={16} className="text-[var(--color-accent)]" />
+              )}
+              {testmailProbing ? "Probing…" : "Testmail E2E"}
+            </button>
+          ) : null}
         </div>
       </div>
 

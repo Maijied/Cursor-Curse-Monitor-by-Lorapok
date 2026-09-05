@@ -4,7 +4,7 @@ const CONFIG_KEY = "integrations:testmail";
 
 export const DEFAULT_TESTMAIL_INTEGRATION = {
   namespace: "",
-  probeEnabled: true,
+  probeEnabled: false,
 };
 
 /**
@@ -13,7 +13,7 @@ export const DEFAULT_TESTMAIL_INTEGRATION = {
 export function normalizeTestmailIntegrationConfig(parsed) {
   return {
     namespace: String(parsed.namespace ?? DEFAULT_TESTMAIL_INTEGRATION.namespace).trim(),
-    probeEnabled: parsed.probeEnabled !== false,
+    probeEnabled: parsed.probeEnabled === true,
     updatedAt: parsed.updatedAt ?? null,
     updatedBy: parsed.updatedBy ?? null,
     githubSecretsSyncedAt: parsed.githubSecretsSyncedAt ?? null,
@@ -81,4 +81,9 @@ export function sanitizeTestmailIntegrationForClient(config, env, secretNames = 
     updatedBy: config.updatedBy,
     githubSecretsSyncedAt: config.githubSecretsSyncedAt,
   };
+}
+
+/** @param {ReturnType<typeof normalizeTestmailIntegrationConfig>} config */
+export function isTestmailProbeEnabled(config) {
+  return config?.probeEnabled === true;
 }

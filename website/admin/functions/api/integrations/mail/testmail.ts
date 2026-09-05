@@ -1,6 +1,7 @@
 import { jsonResponse, verifyAdminRequest } from "../../_shared/auth.js";
 import { logAuthenticatedRequest } from "../../_shared/activity-log.js";
 import { pollTestmailTag, resolveTestmailRuntimeConfig } from "../../_shared/testmail-runtime.js";
+import { isTestmailProbeEnabled, readTestmailIntegrationConfig } from "../../_shared/testmail-integration-config.js";
 
 /** Poll testmail.app inbox for a tag (used by Mailbox E2E probe UI). */
 export async function onRequestGet(context) {
@@ -8,6 +9,12 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const auth = await verifyAdminRequest(request, env);
   if (auth.error) return auth.error;
+
+  const integration = await readTestmailIntegrationConfig(env);
+  if (!isTestmailProbeEnabled(integration)) {
+    const response = jsonResponse({ ok: false, error: "Testmail E2E probes are disabled in Settings." }, 403);
+    return logAuthenticatedRequest(context, auth, response, startedAt);
+  }
 
   const url = new URL(request.url);
   const tag = String(url.searchParams.get("tag") ?? "").trim();

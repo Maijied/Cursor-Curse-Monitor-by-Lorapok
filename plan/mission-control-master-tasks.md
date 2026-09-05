@@ -2,9 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (social/SEO, Discord CI cards, admin footer, cred sync)  
-**Branch:** `feat/github-task-tracking-system`  
-**CI:** green  
+**Last updated:** 2026-09-05 (admin RBAC deploy.run, subscribers fix, DEPLOY-03, direct main push sync)  
+**Branch:** `main` (`cbd8e7d0`)  
+**CI:** green (admin-deploy run 33971849669; docs-only pushes in flight)  
+**Production:** https://cursor-dev.lorapok.tech — deployed 2026-09-05 (fast + CI)  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -111,7 +112,7 @@ _None — pick from **Recommended next queue** below._
 | CF-02 | Public `GET /api/firebase-config` | **done** | smoke 200 production |
 | CF-03 | `ccm-mail-relay` worker deploy | **next** | `repair-mail.mjs` |
 | CF-04 | `deploy-infra` workflow_dispatch for full mail | **next** | docs/guides |
-| CF-05 | Production deploy after settings phases | **done** | fast deploy 2026-09-05; D1 + KV UX live at cursor-dev.lorapok.tech |
+| CF-05 | Production deploy after settings phases | **done** | direct main push + fast deploy 2026-09-05; RBAC/subscriber fixes live |
 | CF-06 | Fix `firebase-config.ts` import paths (Pages bundle) | **done** | `pages-functions-imports.test.mjs` |
 | OPS-01 | Bump `wrangler` to latest 4.x | **done** | `website/admin` devDep `^4.129.0` (was 4.123.0) |
 | OPS-02 | CI Node 24 (replace deprecated Node 22 pin) | **done** | `.nvmrc` + all `.github/workflows/*` `node-version: 24`; engines `>=24.0.0` |
@@ -142,8 +143,8 @@ _None — pick from **Recommended next queue** below._
 | AUTH-09 | ACL audit log (role/email changes) | **done** | `acl-audit.js` → system log; Logs → ACL filter |
 | AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **done** | `rbac-matrix.test.mjs` + `src/__tests__/rbac-matrix.test.ts` |
 | AUTH-11 | Profile tab + quick-unlock PIN (Settings) | **done** | `ProfileSettingsCard`, `pin-unlock.ts`, KV verifier backup |
-| AUTH-12 | **Feature ACL v2** — per-card / per-action permissions beyond nav (deploy buttons, mail send, notice publish, cred vault, team invite) | **done** | `feature-permissions.ts`, `api-permissions.ts`, `ReadOnlyAclBanner`; gates on Notices, Subscribers, Mailbox, Team, CredVault, ApiExplorer, Deployments |
-| AUTH-13 | **ACL audit UI** — filterable timeline of role/email changes with export | **next** | Logs ACL tab + `acl-audit.js` query API |
+| AUTH-12 | **Feature ACL v2** — per-card / per-action permissions beyond nav (deploy buttons, mail send, notice publish, cred vault, team invite) | **done** | `deploy.run` granted to **admin** role 2026-09-05 ([#228](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/228)) |
+| AUTH-13 | **ACL audit UI** — filterable timeline of role/email changes with export | **done** | Logs → ACL audit tab; `GET /api/auth/acl-audit` + CSV export ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)) |
 
 ---
 
@@ -380,16 +381,17 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **DEPLOY-01 / DEPLOY-02** — Global deploy UX + remove duplicate webhook UI
-2. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog
-3. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
-4. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
-5. **SOCIAL-01–03 / DEPLOY-03** — Multi-platform webhooks + deploy social gallery + one-click share
-6. **SEO-01–03** — World-class SEO + admin hub + policies
-7. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
-8. **WEB-11** — Engineering history timeline page
-9. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-10. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+1. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog
+2. **SOCIAL-02** — Deploy social gallery (consume DEPLOY-03 KV queue; R2 assets)
+3. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
+4. **SEO-01–03** — World-class SEO + admin hub + policies
+5. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+6. **CF-03 / CF-04** — Mail relay repair + deploy-infra runbook verification
+7. **WEB-11** — Engineering history timeline page
+8. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+9. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+
+**Recently completed:** AUTH-13 ACL audit UI ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)), DEPLOY-01/02/03, admin RBAC deploy + subscribers ([#228](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/228)), `push:main:admin` / `push:main:full` direct deploy flow.
 
 ---
 
