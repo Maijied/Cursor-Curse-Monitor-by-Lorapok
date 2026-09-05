@@ -13,6 +13,7 @@ Welcome to the **Cursor Curse Monitor (CCM)** knowledge base — a Lorapok Labs 
 | Architecture | [Architecture](Architecture) |
 | Ecosystem roadmap (tray, browsers, AI) | [Ecosystem Roadmap](Ecosystem-Roadmap) |
 | Chrysalis floating AI assistant | [Chrysalis](Chrysalis) |
+| Public website (wiki, releases, engineering) | [Public Website](Public-Website) |
 | GitHub Project & issues | [GitHub Project](GitHub-Project) |
 | AI agent commands (`Update?`, `next`) | [AI Agent Commands](AI-Agent-Commands) |
 | Support | [Support](Support) |

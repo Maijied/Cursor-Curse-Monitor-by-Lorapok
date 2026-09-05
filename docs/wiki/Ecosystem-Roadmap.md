@@ -26,6 +26,12 @@ Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all ma
 | Floating AI — **Chrysalis** (all surfaces) | **in progress** | CHRYS-01–05, ECO-03, ECO-06 |
 | Beta release pipeline | **broken / fix needed** | REL-01 |
 | Admin global search + UX | **planned** | ADMIN-01, ADMIN-02 |
+| Global deploy floating UX + CI step parity | **planned** | DEPLOY-01 |
+| Public multi-page site (wiki, releases, docs) | **planned** | WEB-09 |
+| Behind-the-scenes engineering section | **planned** | WEB-08 |
+| Expanded animated topology | **planned** | WEB-07 |
+| OSS contributor welcome | **planned** | WEB-10 |
+| Terms/consent + visitor analytics | **planned** | LEGAL-01, ANALYTICS-02 |
 | Push notifications (browser + OS) | **planned** | ECO-07 |
 | Action validator (destructive ops) | **in progress** | ECO-08 |
 | Global loading animation (Larvae) | **partial** | ECO-09 |
@@ -76,4 +82,5 @@ Use before: deploy, delete, broadcast email, cred vault write, marketplace publi
 - [Chrysalis](Chrysalis)
 - [AI Agent Commands](AI-Agent-Commands)
 - [GitHub Project & Issues](GitHub-Project)
+- [Public Website](Public-Website)
 - [Architecture](Architecture)

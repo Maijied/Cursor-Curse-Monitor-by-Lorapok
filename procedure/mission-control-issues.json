@@ -57,6 +57,10 @@
     "Release & deploy": {
       "number": 184,
       "title": "Epic: Release & deploy"
+    },
+    "Legal & privacy": {
+      "number": 198,
+      "title": "Epic: Legal & privacy"
     }
   },
   "tasks": {
@@ -353,7 +357,49 @@
       "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/192",
       "status": "next",
       "section": "Settings UX (cross-cutting)"
+    },
+    "DEPLOY-01": {
+      "number": 193,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/193",
+      "status": "next",
+      "section": "Release & deploy"
+    },
+    "WEB-07": {
+      "number": 194,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/194",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "WEB-08": {
+      "number": 195,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/195",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "WEB-09": {
+      "number": 196,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/196",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "WEB-10": {
+      "number": 197,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/197",
+      "status": "next",
+      "section": "Marketing website"
+    },
+    "LEGAL-01": {
+      "number": 199,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/199",
+      "status": "next",
+      "section": "Legal & privacy"
+    },
+    "ANALYTICS-02": {
+      "number": 200,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/200",
+      "status": "next",
+      "section": "Legal & privacy"
     }
   },
-  "updatedAt": "2026-09-05T08:18:58.009Z"
+  "updatedAt": "2026-09-05T08:35:25.278Z"
 }

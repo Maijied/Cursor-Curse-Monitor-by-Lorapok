@@ -2,7 +2,7 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (Chrysalis AI + beta release + admin search tasks)  
+**Last updated:** 2026-09-05 (deploy UX, public site pages, legal/analytics tasks)  
 **Branch:** `feat/github-task-tracking-system`  
 **CI:** green  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
@@ -48,7 +48,7 @@ _None — pick from **Recommended next queue** below._
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
 | Firebase | 6 | 5 | 0 |
 | GitHub | 5 | 3 | 0 |
-| Release & deploy | 0 | 1 | 0 |
+| Release & deploy | 0 | 2 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
 | Google Cloud (GCP) | 2 | 3 | 0 |
 | Mail (Resend + CF Email) | 3 | 8 | 1 |
@@ -56,7 +56,8 @@ _None — pick from **Recommended next queue** below._
 | Stats / Cron | 6 | 2 | 1 |
 | IDE extension | 4 | 4 | 0 |
 | Browser extension | 4 | 4 | 0 |
-| Marketing website | 4 | 2 | 0 |
+| Marketing website | 4 | 8 | 0 |
+| Legal & privacy | 0 | 2 | 0 |
 | Ecosystem expansion | 3 | 18 | 0 |
 | Admin UX / observability | 3 | 13 | 0 |
 
@@ -162,6 +163,7 @@ _None — pick from **Recommended next queue** below._
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | REL-01 | **Beta release pipeline fix** — `-beta` tag/channel, `release-prep`, marketplace skips (Firefox), Mission Control deploy dispatch out of sync with CI | **next** | `ci-cd.yml`, `compute-next-release-version.mjs`, Deployments beta channel; operator reports broken beta flow |
+| DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **next** | `DeployRuntimeContext`, `DeployRuntimePanel`, `DeployLeaveWarningModal`; parity with `workflow-run-match.ts` |
 
 ---
 
@@ -275,6 +277,19 @@ _None — pick from **Recommended next queue** below._
 | WEB-04 | Hero / stats polish plan | **deferred** | `a8f3c2d1_website-final-polish-plan.md` |
 | WEB-05 | **Interactive features explorer** — post-hero cards + GitHub community stats panel | **done** | `features-explorer.js`, `site-data.json` |
 | WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | `ccm-floating-assistant.js`; rename → Chrysalis (CHRYS-01) |
+| WEB-07 | **Expanded system topology** — beautiful animated diagrams with **every** CI/CD step, cron, KV/R2, marketplaces, Discord (match `ci-cd.yml` + Architecture wiki) | **next** | `architecture.mjs`, `index.html` #architecture; add deploy job-level nodes |
+| WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **next** | new `#engineering` section; link to wiki + GitHub |
+| WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **next** | static pages or lightweight router; Mission Control as CMS source |
+| WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **next** | all surfaces; pairs with ECO-11 |
+
+---
+
+## Legal & privacy
+
+| ID | Task | Status | Notes / verify |
+|----|------|--------|----------------|
+| LEGAL-01 | **Terms, privacy & process consent** — unified ToS/Privacy for subscribe, extensions, analytics, Chrysalis BYOK; explicit consent before data collection | **next** | update `terms.html` / `privacy.html`; consent banner + KV audit trail |
+| ANALYTICS-02 | **Visitor & user event log** — new signup/visit events (IP hash, user-agent, referrer, page); admin analytics view; retention policy | **next** | D1/Firestore; no raw secrets; GDPR-style export/delete hooks |
 
 ---
 
@@ -330,15 +345,15 @@ _None — pick from **Recommended next queue** below._
 ## Recommended **next** queue (priority order)
 
 1. **REL-01** — Fix beta release pipeline (tag, channel, deploy dispatch)
-2. **AUTH-13** — ACL audit UI (filterable timeline + export) · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
-3. **ADMIN-01** — Mission Control global search / command palette
-4. **CHRYS-01** — Chrysalis brand + animated floating assistant (all surfaces)
-5. **CHRYS-02 / CHRYS-03** — AI provider (Antigravity/vault) + privacy tiers
-6. **ECO-08** — Wire `confirmAction` on destructive admin/deploy/mail paths
-7. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
-8. **CHRYS-04 / CHRYS-05** — User BYOK + system learning (usage warnings)
-9. **DC-06 / DC-07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
-10. **ECO-01 / ECO-04 / ECO-05** — All browsers, tray app, Cursor plugin
+2. **DEPLOY-01** — Global floating deploy UX + CI/CD step parity in admin
+3. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
+4. **ADMIN-01** — Mission Control global search / command palette
+5. **WEB-07 / WEB-08** — Expanded topology + behind-the-scenes engineering section
+6. **WEB-09 / WEB-10** — Public wiki/releases/community/docs + contributor welcome
+7. **LEGAL-01 / ANALYTICS-02** — Terms/consent + professional visitor/user analytics
+8. **CHRYS-01** — Chrysalis brand + animated floating assistant
+9. **CHRYS-02 / CHRYS-03** — AI provider (Antigravity/vault) + privacy tiers
+10. **ECO-08**, **MAIL-13/14**, **CHRYS-04/05**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
 
 ---
 
@@ -358,5 +373,6 @@ _None — R2 enabled 2026-09-05. Redeploy after `wrangler.toml` STATS_R2 binding
 - `MISSION-CONTROL-WALKTHROUGH.md` — agent onboarding for **Update?** / **next**
 - `docs/wiki/Ecosystem-Roadmap.md` — tray, browsers, Cursor plugin, Chrysalis AI, notifications
 - `docs/wiki/Chrysalis.md` — floating AI assistant, privacy tiers, BYOK
+- `docs/wiki/Public-Website.md` — multi-page site, topology, behind-the-scenes, contributors
 - `docs/wiki/GitHub-Project.md` — Project #4, labels, milestones, community stats
 - `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` — epic procedure ([#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120))

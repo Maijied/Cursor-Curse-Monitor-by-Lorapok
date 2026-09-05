@@ -92,11 +92,12 @@ Do **not** implement unrelated roadmap items when user only said **Update?**.
 Current queue (2026-09-05):
 
 1. **REL-01** — fix beta release pipeline
-2. **AUTH-13** — ACL audit UI ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132))
-3. **ADMIN-01** — Mission Control global search
-4. **CHRYS-01–05** — Chrysalis floating AI (Antigravity/vault admin, user BYOK on extensions)
-5. **MAIL-13/14**, **DC-06/07**, **ANALYTICS-01**, **LOGS-01**, **EXT-01**
-6. **ECO-01 / ECO-04 / ECO-05** — all browsers, tray app, Cursor plugin
+2. **DEPLOY-01** — global floating deploy + CI/CD step parity (all admin pages)
+3. **AUTH-13** — ACL audit UI ([#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132))
+4. **WEB-07 / WEB-08** — expanded topology + behind-the-scenes engineering
+5. **WEB-09 / WEB-10** — public wiki/releases/community/docs + contributor welcome
+6. **LEGAL-01 / ANALYTICS-02** — terms/consent + visitor/user analytics
+7. **ADMIN-01**, **CHRYS-01–05**, **MAIL-13/14**, …
 
 Ecosystem + Chrysalis: [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md) · [Chrysalis](docs/wiki/Chrysalis.md).
 
@@ -174,7 +175,9 @@ See `docs/wiki/Architecture.md` § stats storage.
 
 **Ecosystem expansion** (ECO-*, CHRYS-*): all browsers, OS tray, Cursor plugin, **Chrysalis** floating AI, push notifications, global loaders, action validators — [Ecosystem Roadmap](docs/wiki/Ecosystem-Roadmap.md) · [Chrysalis](docs/wiki/Chrysalis.md).
 
-**Release:** **REL-01** — beta channel pipeline fix (tag prep, deploy dispatch).
+**Release:** **REL-01** — beta channel pipeline fix. **DEPLOY-01** — deploy floating UX across all admin routes, CI step parity.
+
+**Public website:** [Public Website roadmap](docs/wiki/Public-Website.md) — WEB-07–10, LEGAL-01, ANALYTICS-02.
 
 ---
 

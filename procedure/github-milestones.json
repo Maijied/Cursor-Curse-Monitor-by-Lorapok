@@ -28,8 +28,8 @@
     },
     {
       "title": "MC — Website",
-      "description": "Marketing site, site-data, public pages (WEB-*)",
-      "sections": ["Marketing website"]
+      "description": "Marketing site, site-data, public pages, topology, multi-page wiki/releases (WEB-*)",
+      "sections": ["Marketing website", "Legal & privacy"]
     },
     {
       "title": "MC — Observability",
@@ -48,8 +48,8 @@
     }
   ],
   "priorityQueue": {
-    "P0": ["REL-01", "AUTH-13"],
-    "P1": ["ADMIN-01", "CHRYS-01", "CHRYS-02", "CHRYS-03", "ECO-08", "ECO-06", "MAIL-13", "MAIL-14", "DC-06", "DC-07", "ANALYTICS-01", "LOGS-01", "EXT-01"],
-    "P2": ["ADMIN-02", "CHRYS-04", "CHRYS-05", "ECO-01", "ECO-04", "ECO-05", "ECO-07", "ECO-09", "ECO-10"]
+    "P0": ["REL-01", "DEPLOY-01", "AUTH-13"],
+    "P1": ["ADMIN-01", "WEB-07", "WEB-08", "WEB-09", "CHRYS-01", "CHRYS-02", "CHRYS-03", "LEGAL-01", "ECO-08", "ECO-06", "MAIL-13", "MAIL-14", "DC-06", "DC-07", "ANALYTICS-01", "LOGS-01", "EXT-01"],
+    "P2": ["ADMIN-02", "WEB-10", "ANALYTICS-02", "CHRYS-04", "CHRYS-05", "ECO-01", "ECO-04", "ECO-05", "ECO-07", "ECO-09", "ECO-10"]
   }
 }
