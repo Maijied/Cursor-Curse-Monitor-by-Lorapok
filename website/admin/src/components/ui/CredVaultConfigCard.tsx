@@ -4,9 +4,13 @@ import Card from "./Card";
 import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import FieldHelp from "./FieldHelp";
+import ReadOnlyAclBanner from "./ReadOnlyAclBanner";
 import { fetchCloudflareConfigApi, type CloudflareIntegrationConfig } from "../../lib/api";
+import { useAuthSession } from "../../lib/auth-context";
 
 export default function CredVaultConfigCard() {
+  const { hasPermission } = useAuthSession();
+  const canManageSecrets = hasPermission("secrets.manage");
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<CloudflareIntegrationConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +41,10 @@ export default function CredVaultConfigCard() {
           </Badge>
         )}
       </div>
+
+      {!canManageSecrets ? (
+        <ReadOnlyAclBanner permission="secrets.manage" feature="Credential vault maintenance" />
+      ) : null}
 
       {loading ? (
         <LorapokLarvaeLoader label="Loading cred vault status…" />

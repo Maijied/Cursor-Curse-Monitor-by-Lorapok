@@ -9,11 +9,13 @@ import PageHeader from "./layout/PageHeader";
 import Card from "./ui/Card";
 import LoadableButton from "./ui/LoadableButton";
 import Notification, { type NotificationTone } from "./ui/Notification";
+import ReadOnlyAclBanner from "./ui/ReadOnlyAclBanner";
 
 type AdminRecord = { id: string; email: string };
 
 export default function Team() {
-  const { isMaster, user } = useAuthSession();
+  const { user, hasPermission } = useAuthSession();
+  const canManageTeam = hasPermission("team.manage");
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Exclude<AdminRole, "master">>("admin");
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export default function Team() {
   const [roleByEmail, setRoleByEmail] = useState<Record<string, AdminRole>>({});
 
   const loadRoles = useCallback(async () => {
-    if (!isMaster) return;
+    if (!canManageTeam) return;
     try {
       const data = await fetchRbacTeam();
       const map: Record<string, AdminRole> = {};
@@ -33,7 +35,7 @@ export default function Team() {
     } catch (e) {
       console.warn("RBAC team snapshot failed:", e);
     }
-  }, [isMaster]);
+  }, [canManageTeam]);
 
   const fetchAdmins = useCallback(async () => {
     try {
@@ -56,6 +58,7 @@ export default function Team() {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageTeam) return;
     setLoading(true);
     setMsg("");
     try {
@@ -65,7 +68,7 @@ export default function Team() {
         role: inviteRole,
         createdAt: new Date(),
       });
-      if (isMaster) {
+      if (canManageTeam) {
         try {
           await syncAdminAccess({ email: normalized, action: "add", role: inviteRole });
         } catch (syncErr) {
@@ -90,7 +93,7 @@ export default function Team() {
   };
 
   const handleRemove = async (record: AdminRecord) => {
-    if (!isMaster) return;
+    if (!canManageTeam) return;
     if (!window.confirm(`Remove ${record.email} from admin access?`)) return;
     setLoading(true);
     setMsg("");
@@ -111,7 +114,7 @@ export default function Team() {
   };
 
   const handleRoleChange = async (memberEmail: string, role: Exclude<AdminRole, "master">) => {
-    if (!isMaster) return;
+    if (!canManageTeam) return;
     setLoading(true);
     setMsg("");
     try {
@@ -147,6 +150,10 @@ export default function Team() {
         description="Manage who has access to Mission Control, their API allowlist entry, and RBAC role (master-only)."
       />
 
+      {!canManageTeam ? (
+        <ReadOnlyAclBanner permission="team.manage" feature="Team invites and role changes" />
+      ) : null}
+
       <Card>
         <h3 className="text-base font-semibold mb-4 flex items-center gap-2 text-[var(--color-text)]">
           <UserPlus className="text-[var(--color-accent)]" size={20} aria-hidden="true" />
@@ -156,7 +163,7 @@ export default function Team() {
           Adds the email to Firestore, syncs API allowlist (ADMIN_KV), and assigns an RBAC role.
         </p>
 
-        {isMaster ? (
+        {canManageTeam ? (
           <form onSubmit={handleInvite} className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <input
@@ -190,7 +197,9 @@ export default function Team() {
             </div>
           </form>
         ) : (
-          <p className="text-sm text-[var(--color-muted)]">Only the master admin can invite new team members.</p>
+          <p className="text-sm text-[var(--color-muted)]">
+            Team management requires <code className="text-[10px]">team.manage</code> (master admin).
+          </p>
         )}
 
         {teamNotice ? (
@@ -229,7 +238,7 @@ export default function Team() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[var(--color-text)] truncate">{record.email}</p>
-                  {isMaster ? (
+                  {canManageTeam ? (
                     <select
                       value={role === "master" ? "admin" : role}
                       onChange={(e) =>
@@ -249,7 +258,7 @@ export default function Team() {
                     <p className="text-xs text-[var(--color-accent-2)] font-medium">{ROLE_LABELS[role as AdminRole] ?? role}</p>
                   )}
                 </div>
-                {isMaster && (
+                {canManageTeam && (
                   <button
                     type="button"
                     onClick={() => void handleRemove(record)}

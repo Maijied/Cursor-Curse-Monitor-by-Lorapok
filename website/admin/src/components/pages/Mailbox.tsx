@@ -26,6 +26,7 @@ import {
 } from "../../lib/api";
 import { auth } from "../../lib/firebase";
 import { useAuthSession } from "../../lib/auth-context";
+import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 
 const PAGE_SIZE = 20;
 
@@ -84,6 +85,7 @@ export default function Mailbox() {
   const [testmailProbing, setTestmailProbing] = useState(false);
   const testmailPollRef = useRef<number | null>(null);
   const { hasPermission } = useAuthSession();
+  const canSendMail = hasPermission("mail.send");
   const canSyncInfra = hasPermission("deploy.infra");
   const isWide = useMediaQuery("(min-width: 1280px)");
 
@@ -124,6 +126,7 @@ export default function Mailbox() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSendMail) return;
     const findings = [...scanAdminText(subject, "Subject"), ...scanAdminText(body, "Message body")];
     if (findings.length) {
       setSecurityFindings(findings);
@@ -151,6 +154,7 @@ export default function Mailbox() {
   };
 
   const handleTest = async () => {
+    if (!canSendMail) return;
     setSending(true);
     setNotice(null);
     try {
@@ -204,6 +208,7 @@ export default function Mailbox() {
   };
 
   const handleTestmailE2E = async () => {
+    if (!canSendMail) return;
     setTestmailProbing(true);
     setNotice(null);
     if (testmailPollRef.current) {
@@ -334,6 +339,7 @@ export default function Mailbox() {
         title="Mailbox"
         description="Outbound mail from Lorapok Labs — subscribe confirmations, invites, notices, and compose."
         action={
+          canSendMail ? (
           <button
             type="button"
             onClick={() => setComposeOpen(true)}
@@ -341,8 +347,13 @@ export default function Mailbox() {
           >
             <PenLine size={16} /> Compose
           </button>
+          ) : null
         }
       />
+
+      {!canSendMail ? (
+        <ReadOnlyAclBanner permission="mail.send" feature="Mailbox compose and test send" />
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-elevated)_80%,transparent)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-3 min-w-0">
@@ -376,7 +387,7 @@ export default function Mailbox() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            disabled={syncingMail || sending}
+            disabled={!canSyncInfra || syncingMail || sending}
             onClick={handleSyncUp}
             title={canSyncInfra ? "Dispatch deploy-infra to repair outbound mail" : "Requires deploy.infra permission"}
             className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-60 font-medium"
@@ -393,11 +404,12 @@ export default function Mailbox() {
             value={testTo}
             onChange={(e) => setTestTo(e.target.value)}
             placeholder="Test recipient"
+            disabled={!canSendMail}
             className={`${inputClass} !w-auto min-w-[12rem] max-w-xs`}
           />
           <button
             type="button"
-            disabled={sending || testmailProbing}
+            disabled={!canSendMail || sending || testmailProbing}
             onClick={handleTest}
             className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 disabled:opacity-60"
           >
@@ -406,7 +418,7 @@ export default function Mailbox() {
           </button>
           <button
             type="button"
-            disabled={sending || testmailProbing}
+            disabled={!canSendMail || sending || testmailProbing}
             onClick={handleTestmailE2E}
             className="inline-flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_35%,var(--color-border))] text-[var(--color-text)] font-medium hover:bg-white/5 disabled:opacity-60"
           >

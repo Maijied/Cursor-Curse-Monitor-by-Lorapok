@@ -10,6 +10,7 @@ import Notification from "../ui/Notification";
 import { createNotice, deleteNotice, fetchChangelogNoticeDraft, fetchNotices, fetchNoticeTemplates, updateNotice, broadcastToSubscribers, type NoticeTemplate } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
 import { useAuthSession } from "../../lib/auth-context";
+import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;
 
@@ -54,6 +55,7 @@ function noticeKey(row: DevNotice, index: number) {
 export default function Notices() {
   const { hasPermission } = useAuthSession();
   const canWrite = hasPermission("notices.write");
+  const canBroadcast = hasPermission("subscribers.write");
   const [form, setForm] = useState<DevNotice>(EMPTY);
   const [items, setItems] = useState<DevNotice[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
@@ -322,7 +324,7 @@ export default function Notices() {
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            disabled={saving || !row.id}
+            disabled={!canWrite || saving || !row.id}
             onClick={() => handleToggle(row)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs hover:bg-white/5 disabled:opacity-50"
           >
@@ -331,7 +333,7 @@ export default function Notices() {
           </button>
           <button
             type="button"
-            disabled={saving || !row.id}
+            disabled={!canWrite || saving || !row.id}
             onClick={() => handleDelete(row)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)] text-[var(--color-danger)] text-xs hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] disabled:opacity-50"
           >
@@ -380,6 +382,10 @@ export default function Notices() {
         }
       />
 
+      {!canWrite ? (
+        <ReadOnlyAclBanner permission="notices.write" feature="Notice publishing" />
+      ) : null}
+
       {templates.length > 0 ? (
         <Card>
           <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">Notice templates</h3>
@@ -398,6 +404,7 @@ export default function Notices() {
                 <button
                   key={template.templateId}
                   type="button"
+                  disabled={!canWrite}
                   onClick={() => loadTemplate(template.templateId)}
                   className={`notice-template-card text-left rounded-xl border p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--color-accent)]/40 ${
                     selectedTemplate === template.templateId
@@ -425,6 +432,7 @@ export default function Notices() {
       ) : null}
 
       <Card>
+        <fieldset disabled={!canWrite} className={!canWrite ? "opacity-70" : undefined}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <h3 className="text-lg font-semibold text-[var(--color-text)]">
             {editing ? "Edit notice" : "New notice"}
@@ -577,7 +585,8 @@ export default function Notices() {
             <button
               type="button"
               onClick={() => void handleEmailSubscribers()}
-              disabled={saving}
+              disabled={!canBroadcast || saving}
+              title={canBroadcast ? undefined : "Requires subscribers.write"}
               className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[var(--color-accent)]/40 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors disabled:opacity-50"
             >
               <Send size={18} aria-hidden="true" />
@@ -641,6 +650,8 @@ export default function Notices() {
             </div>
           </div>
         )}
+
+        </fieldset>
 
         {message && (
           <Notification
