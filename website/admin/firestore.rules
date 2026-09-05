@@ -5,8 +5,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+
     function isMaster() {
-      return isSignedIn() && request.auth.token.email == 'mdshuvo40@gmail.com';
+      return isSignedIn() && adminDoc().data.role == 'master';
     }
 
     match /admins/{adminId} {

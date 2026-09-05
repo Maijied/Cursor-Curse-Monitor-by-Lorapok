@@ -1,4 +1,5 @@
 import { auth } from "./firebase";
+import { MASTER_ADMIN } from "./admin-config";
 import type { DevNotice } from "./site-data";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -988,8 +989,10 @@ export async function probeApiEndpoint(
     try {
       Object.assign(headers, await authHeaders());
     } catch {
-      // In dev or preview, provide fallback admin identifier
-      headers["X-Dev-Admin"] = "mdshuvo40@gmail.com";
+      // In dev or preview, provide fallback admin identifier from env (never a hardcoded personal email)
+      if (MASTER_ADMIN) {
+        headers["X-Dev-Admin"] = MASTER_ADMIN;
+      }
     }
   }
   if (options?.body) {

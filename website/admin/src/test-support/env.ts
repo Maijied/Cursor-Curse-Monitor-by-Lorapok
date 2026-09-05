@@ -1,14 +1,14 @@
-/** Placeholder used only when CI=true and no admin email env is configured. */
+/** Placeholder used when no admin email env is configured in tests. */
 export const CI_TEST_ADMIN_EMAIL = "ci-admin@lorapok.test";
 
 export { DEFAULT_MAIL_PROBE_TO } from "../lib/mail-probe";
 
-/** Admin email for tests — prefer env; never hardcode in individual test files. */
+/** Admin email for tests — from env or cred-vault-backed CI secret; never hardcode personal addresses. */
 export function getTestAdminEmail(): string {
   const email = (
     process.env.ADMIN_MASTER_EMAIL ||
     process.env.VITE_ADMIN_MASTER_EMAIL ||
-    (process.env.CI === "true" ? CI_TEST_ADMIN_EMAIL : "mdshuvo40@gmail.com")
+    CI_TEST_ADMIN_EMAIL
   )
     .trim()
     .toLowerCase();

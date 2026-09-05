@@ -33,7 +33,7 @@ binding = "MAIL_RELAY"
 service = "ccm-mail-relay"
 
 [vars]
-ADMIN_MASTER_EMAIL = "mdshuvo40@gmail.com"
+# ADMIN_MASTER_EMAIL — set as encrypted Pages secret / GitHub Actions secret (not in git)
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"
 SITE_DATA_URL = "https://cursor.lorapok.tech/site-data.json"
 ADMIN_PUBLIC_URL = "https://cursor-dev.lorapok.tech"

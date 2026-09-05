@@ -1,9 +1,20 @@
-const DEFAULT_MASTER = "mdshuvo40@gmail.com";
-const KV_KEY = "admin-emails";
-
+/**
+ * Master admin email — must come from ADMIN_MASTER_EMAIL (Functions/Pages) or
+ * VITE_ADMIN_MASTER_EMAIL (SPA). Never hardcode a personal address in source.
+ */
 export function getMasterEmail(env) {
-  return (env.ADMIN_MASTER_EMAIL ?? DEFAULT_MASTER).trim().toLowerCase();
+  const email = String(
+    env.ADMIN_MASTER_EMAIL ?? env.VITE_ADMIN_MASTER_EMAIL ?? ""
+  )
+    .trim()
+    .toLowerCase();
+  if (!email) {
+    throw new Error("ADMIN_MASTER_EMAIL is not configured");
+  }
+  return email;
 }
+
+const KV_KEY = "admin-emails";
 
 function parseEnvEmails(env) {
   const raw = env.ADMIN_EMAILS ?? "";

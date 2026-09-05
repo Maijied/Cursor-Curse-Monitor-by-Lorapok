@@ -276,6 +276,25 @@ function resolveCloudflareGlobalApiKeyFromVault(vault) {
 }
 
 /**
+ * Resolves admin master email from the credential vault (cursor namespace).
+ * @param {Record<string, unknown>} vault
+ * @returns {string|undefined}
+ */
+function resolveAdminMasterEmailFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const candidates = [
+    cursor.admin_master_email,
+    cursor.ADMIN_MASTER_EMAIL,
+    cursor.master_admin_email,
+  ];
+  for (const value of candidates) {
+    const email = String(value ?? "").trim().toLowerCase();
+    if (email.includes("@")) return email;
+  }
+  return undefined;
+}
+
+/**
  * @param {Record<string, unknown>} vault
  */
 function resolveCloudflareAccountEmailFromVault(vault) {
@@ -350,6 +369,7 @@ export function loadCursorCloudflareSecretsFromVault() {
     resendFrom: String(cursor.resend_from ?? "").trim() || undefined,
     resendSendingDomain: String(cursor.resend_sending_domain ?? "").trim() || undefined,
     mailProbeTo: String(cursor.mail_probe_to ?? "").trim() || undefined,
+    adminMasterEmail: resolveAdminMasterEmailFromVault(vault),
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
     testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
   };
@@ -484,6 +504,12 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
       : {}),
     ...(loaded.globalApiEmail && !baseEnv.CLOUDFLARE_EMAIL
       ? { CLOUDFLARE_EMAIL: loaded.globalApiEmail }
+      : {}),
+    ...(loaded.adminMasterEmail && !baseEnv.ADMIN_MASTER_EMAIL
+      ? { ADMIN_MASTER_EMAIL: loaded.adminMasterEmail }
+      : {}),
+    ...(loaded.adminMasterEmail && !baseEnv.VITE_ADMIN_MASTER_EMAIL
+      ? { VITE_ADMIN_MASTER_EMAIL: loaded.adminMasterEmail }
       : {}),
   };
 }

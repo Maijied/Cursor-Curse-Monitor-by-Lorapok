@@ -1,13 +1,15 @@
 import { vi } from "vitest";
 import type { ReactNode } from "react";
+import { getTestAdminEmail } from "./env";
 
 /** Vitest mock for components that call useAuthSession outside AuthGuard. */
 export function mockAuthSessionModule() {
+  const email = getTestAdminEmail();
   return {
     useAuthSession: () => ({
-      user: { email: "test@lorapok.test", uid: "vitest-auth-uid" },
+      user: { email, uid: "vitest-auth-uid" },
       session: {
-        email: "test@lorapok.test",
+        email,
         role: "master" as const,
         isMaster: true,
         permissions: [],
