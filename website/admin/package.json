@@ -23,6 +23,7 @@
     "mail:test": "node scripts/test-admin-mail.mjs",
     "mail:testmail": "node scripts/probe-subscribe-testmail.mjs",
     "mail:probe-production": "node scripts/probe-mail-production.mjs",
+    "mail:retry-failed": "node scripts/retry-failed-mail-from-logs.mjs",
     "mail:verify-resend-domain": "node scripts/verify-resend-domain.mjs",
     "auth:probe-production": "node scripts/probe-auth-production.mjs",
     "auth:tier-d": "vitest run src/__tests__/tier-d-rbac-nav.test.ts src/__tests__/pin-unlock.test.ts src/components/__tests__/PinUnlockOverlay.test.tsx && node scripts/probe-auth-production.mjs",
