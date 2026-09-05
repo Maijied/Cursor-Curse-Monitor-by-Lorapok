@@ -5,8 +5,11 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const DEFAULT_VAULT =
-  process.env.CRED_STORE_FILE ?? "/mnt/NewVolume/Personal_Projects/cred/credentials.json.gpg";
+const LOCAL_VAULT_PATH = "/mnt/NewVolume/Personal_Projects/cred/credentials.json.gpg";
+
+function getVaultPath() {
+  return process.env.CRED_STORE_FILE ?? LOCAL_VAULT_PATH;
+}
 const DEFAULT_PASS_FILE =
   process.env.CRED_VAULT_PASSPHRASE_FILE ??
   "/mnt/NewVolume/Personal_Projects/cred/VAULT_PASSPHRASE_READ_ONCE.txt";
@@ -80,7 +83,7 @@ function withPassphraseFile(passphrase, fn) {
  * @param {string} [vaultFile]
  * @returns {Record<string, unknown> | null}
  */
-export function decryptCredentialVault(vaultFile = DEFAULT_VAULT) {
+export function decryptCredentialVault(vaultFile = getVaultPath()) {
   for (const candidate of readPassphraseCandidates()) {
     const vault = gpgDecrypt(candidate, vaultFile);
     if (vault) return vault;
@@ -93,7 +96,7 @@ export function gpgDecryptLastError() {
   return gpgDecrypt.lastError || "";
 }
 
-function gpgDecrypt(passphrase, vaultFile = DEFAULT_VAULT) {
+function gpgDecrypt(passphrase, vaultFile = getVaultPath()) {
   return withPassphraseFile(passphrase, (passPath) => {
     const r = spawnSync(
       "gpg",
@@ -127,7 +130,7 @@ function gpgDecrypt(passphrase, vaultFile = DEFAULT_VAULT) {
 /** @type {string} Last GPG decrypt failure (no secrets). */
 gpgDecrypt.lastError = "";
 
-function gpgEncrypt(passphrase, data, vaultFile = DEFAULT_VAULT) {
+function gpgEncrypt(passphrase, data, vaultFile = getVaultPath()) {
   return withPassphraseFile(passphrase, (passPath) => {
     const r = spawnSync(
       "gpg",
