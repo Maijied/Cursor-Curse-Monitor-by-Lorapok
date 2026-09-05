@@ -11,6 +11,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadCursorCloudflareSecretsFromVault } from "./lib/cred-vault-sync.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const vaultFile =
@@ -57,6 +58,14 @@ if (!passphrase) {
 const b64 = readFileSync(vaultFile).toString("base64");
 ghSecret("CRED_STORE_GPG_BASE64", b64);
 ghSecret("CRED_VAULT_PASSPHRASE", passphrase);
+
+process.env.CRED_STORE_FILE = vaultFile;
+const loaded = loadCursorCloudflareSecretsFromVault();
+if (loaded?.adminMasterEmail) {
+  ghSecret("ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
+} else {
+  console.warn("::warning::cred vault has no admin_master_email — ADMIN_MASTER_EMAIL GitHub secret not updated.");
+}
 
 console.log("Done — CI can decrypt cred vault with CRED_VAULT_PASSPHRASE pin.");
 console.log("Run: node website/admin/scripts/load-cred-vault-env-ci.mjs (local dry-run with GITHUB_ENV unset)");

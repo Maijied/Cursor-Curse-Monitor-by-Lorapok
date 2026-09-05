@@ -145,4 +145,13 @@ if (emailToken) {
   console.warn("Email token probe did not pass — mail may still work via ccm-mail-relay service binding.");
 }
 
+if (loaded?.adminMasterEmail) {
+  ghSecret("ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
+  console.log("GitHub ADMIN_MASTER_EMAIL synced");
+  pagesSecret("ADMIN_MASTER_EMAIL", loaded.adminMasterEmail, deployEnv);
+  console.log("Pages ADMIN_MASTER_EMAIL synced");
+} else {
+  console.warn("cred vault has no admin_master_email — ADMIN_MASTER_EMAIL not synced.");
+}
+
 console.log("Done — Cloudflare deploy credentials propagated to GitHub.");

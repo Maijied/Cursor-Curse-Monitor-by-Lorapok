@@ -6,7 +6,15 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { probeDeployToken, resolveMailCredentials, tryWranglerOAuthToken, pickDeployAuth, wranglerDeployEnv } from "./lib/mail-credentials.mjs";
+import {
+  probeDeployToken,
+  resolveMailCredentials,
+  tryWranglerOAuthToken,
+  pickDeployAuth,
+  wranglerDeployEnv,
+  putPagesSecret,
+  resolveAdminMasterEmailFromEnv,
+} from "./lib/mail-credentials.mjs";
 import {
   classifyWranglerFailure,
   resolvePagesPreDeployCooldownSec,
@@ -172,6 +180,25 @@ if (!relayDeployed && !relayExists) {
   console.warn("::warning::Deploying without MAIL_RELAY binding because ccm-mail-relay is unavailable.");
 } else {
   console.log("::notice::Keeping MAIL_RELAY service binding — ccm-mail-relay is available.");
+}
+
+const masterEmail = resolveAdminMasterEmailFromEnv();
+if (masterEmail) {
+  try {
+    putPagesSecret("ADMIN_MASTER_EMAIL", masterEmail, {
+      adminDir,
+      accountId,
+      auth: deployAuth,
+      baseEnv: process.env,
+    });
+    console.log("::notice::Pages secret ADMIN_MASTER_EMAIL synced before deploy.");
+  } catch (err) {
+    console.warn(`::warning::Pages secret ADMIN_MASTER_EMAIL sync failed: ${err.message}`);
+  }
+} else {
+  console.warn(
+    "::warning::ADMIN_MASTER_EMAIL not set — auth Functions may return 500 until cred vault or GitHub secret is configured."
+  );
 }
 
 if (inCi) {

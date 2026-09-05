@@ -280,3 +280,41 @@ export async function probeEmailSendingToken(emailToken, accountId) {
   const body = await res.json().catch(() => ({}));
   return { ok: res.ok && body.success !== false, status: res.status, body };
 }
+
+/**
+ * Resolve master admin email from env (vault-loaded in CI).
+ * @param {NodeJS.ProcessEnv} [env]
+ */
+export function resolveAdminMasterEmailFromEnv(env = process.env) {
+  const merged = envWithCursorCloudflareSecrets(env);
+  const email = String(
+    merged.ADMIN_MASTER_EMAIL ?? merged.VITE_ADMIN_MASTER_EMAIL ?? ""
+  )
+    .trim()
+    .toLowerCase();
+  return email.includes("@") ? email : "";
+}
+
+/**
+ * Set a Cloudflare Pages encrypted secret (Functions runtime).
+ * @param {string} name
+ * @param {string} value
+ * @param {{ adminDir: string; accountId: string; auth: { type: "bearer"; token: string } | { type: "global"; apiKey: string; email: string }; baseEnv?: NodeJS.ProcessEnv }} opts
+ */
+export function putPagesSecret(name, value, { adminDir, accountId, auth, baseEnv = process.env }) {
+  const wranglerEnv = wranglerDeployEnv(accountId, auth, baseEnv);
+  const result = spawnSync(
+    "npx",
+    ["wrangler", "pages", "secret", "put", name, "--project-name", PAGES_PROJECT],
+    {
+      cwd: adminDir,
+      input: value,
+      encoding: "utf8",
+      env: wranglerEnv,
+    }
+  );
+  if (result.status !== 0) {
+    const detail = (result.stderr ?? result.stdout ?? "").trim();
+    throw new Error(`Pages secret put ${name} failed${detail ? `: ${detail}` : ""}`);
+  }
+}
