@@ -21,6 +21,7 @@ import BackToWebsiteButton from "./ui/BackToWebsiteButton";
 import { MARKETING_SITE_URL } from "../lib/marketing-site";
 import { fetchAuthInviteCheck } from "../lib/api";
 import { passwordStrengthColor, validatePassword } from "../lib/password-policy";
+import LoginInfraPanel from "./LoginInfraPanel";
 
 export default function Login() {
   const [email, setEmail] = useState(() => localStorage.getItem("emailForSignIn") ?? "");
@@ -553,6 +554,8 @@ export default function Login() {
             </div>
           )}
         </div>
+
+        <LoginInfraPanel />
 
         {/* Back to Website Button Below Card */}
         <div className="mt-6 w-full max-w-md animate-fade-slide-up">

@@ -4,9 +4,10 @@ Mission Control is the Lorapok Labs operations dashboard at **https://cursor-dev
 
 ## Authentication
 
-- Google sign-in or email magic link (Firebase Auth)
-- Only allowlisted admin emails can access `/dashboard/*`
+- Google sign-in, email magic link, or email/password (Firebase Auth)
+- Only allowlisted admin emails can access `/dashboard/*` (invite-only; checked before sign-in)
 - Master admin is configured via `ADMIN_MASTER_EMAIL`
+- Login page shows a read-only **Sign-in & infrastructure** panel (`LoginInfraPanel`) with live `/api/health` indicators
 
 ## Master admin privileges
 

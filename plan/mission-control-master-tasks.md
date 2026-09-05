@@ -2,9 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (roadmap expansion)  
+**Last updated:** 2026-09-05 (LOGIN-01 + AI walkthrough sync)  
 **Branch:** `main`  
-**CI:** green
+**CI:** green  
+**Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md)
 
 ---
 
@@ -50,7 +51,7 @@ _None — pick from **Recommended next queue** below._
 | IDE extension | 4 | 4 | 0 |
 | Browser extension | 4 | 4 | 0 |
 | Marketing website | 2 | 2 | 0 |
-| Admin UX / observability | 2 | 12 | 0 |
+| Admin UX / observability | 3 | 11 | 0 |
 
 ---
 
@@ -86,7 +87,7 @@ _None — pick from **Recommended next queue** below._
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | R2-01 | Design: `stats:readme-svg` + badge blobs to R2 | **deferred** | Reliability plan B3 option B |
-| R2-02 | R2 bucket + binding | **blocked** | **You:** Cloudflare Dashboard → R2 → Enable (account `f049faaf2f67549f5c58837479596a4a`). **Then:** `node website/admin/scripts/create-r2-stats-bucket.mjs` → uncomment `[[r2_buckets]]` in `wrangler.toml` → `npm run admin:deploy:fast` |
+| R2-02 | R2 bucket + binding | **blocked** | API `10042` — R2 subscription must be accepted in [dashboard](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview) (not API-only). Then: `node website/admin/scripts/create-r2-stats-bucket.mjs` → uncomment `[[r2_buckets]]` in `wrangler.toml` → `npm run admin:deploy:fast` |
 | R2-03 | Read path in stats refresh + shields API | **done** | `r2-stats.js` + stats-refresh/badge/readme.svg R2-first |
 
 ---
@@ -271,7 +272,7 @@ _None — pick from **Recommended next queue** below._
 | SET-09 | Settings + nav gated by RBAC permissions | **done** | `nav-permissions.ts`, PermissionRoute, card write gates |
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
-| LOGIN-01 | **Login page infra notes** — after deploy, show read-only panel: auth methods (Google, magic link, password), invite-only policy, Firebase project, links to docs/wiki | **next** | `Login.tsx` info card; data from `/api/health` + `/api/firebase-config` (no secrets) |
+| LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **next** | `scripts/changelog-to-notice.mjs` + Notices API; optional CI hook |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
@@ -281,10 +282,9 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **R2-02** — **Blocked on you:** [Cloudflare R2](https://dash.cloudflare.com/?to=/:account/r2/overview) → **Enable R2** for account `f049faaf2f67549f5c58837479596a4a` → then `node website/admin/scripts/create-r2-stats-bucket.mjs` → uncomment `wrangler.toml` → deploy
-2. **LOGIN-01** — Login page infra/auth info panel (post-deploy transparency)
-3. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
-4. **NOTICE-01** — Auto-draft notices from `CHANGELOG` on release
+1. **R2-02** — **Blocked:** [Cloudflare R2](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview) → accept R2 subscription → `create-r2-stats-bucket.mjs` → `wrangler.toml` → deploy
+2. **AUTH-12** — Feature-level ACL on admin panel actions (extends existing RBAC)
+3. **NOTICE-01** — Auto-draft notices from `CHANGELOG` on release
 5. **MAIL-13 / MAIL-14** — Professional templates + dynamic subscriber emails
 6. **DC-06 / DC-07** — Product-designed Discord cards + Settings preview
 7. **ANALYTICS-01** — Multi-service analytics hub (Cloudflare, Google, GitHub, …)
@@ -297,7 +297,7 @@ _None — pick from **Recommended next queue** below._
 
 | Blocker | Unblocks |
 |---------|----------|
-| R2 not enabled on account (`code 10042`) | R2-02 — enable in [Cloudflare Dashboard → R2](https://dash.cloudflare.com/?to=/:account/r2/overview), then re-run `create-r2-stats-bucket.mjs` |
+| R2 not enabled on account (`code 10042`) | R2-02 — accept R2 subscription in [dashboard](https://dash.cloudflare.com/f049faaf2f67549f5c58837479596a4a/r2/overview); API tokens cannot enable billing entitlements |
 
 ---
 
@@ -308,4 +308,5 @@ _None — pick from **Recommended next queue** below._
 - `plan/f2a8c3e1_reliability-sync-kv-settings-plan.md` — reliability Phases A–E (partial)
 - `procedure/2b7b880d_settings-tabs-secrets.md`
 - `plan/b8e4f2a1_email-identities-auth-acl-plan.md` — email identities Settings panel, password auth, RBAC/ACL
+- `MISSION-CONTROL-WALKTHROUGH.md` — agent onboarding for **Update?** / **next**
 - `procedure/0bef4984_email-identities-panel-password-auth-admin-acl.md` — epic procedure ([#120](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/120))
