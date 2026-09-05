@@ -1,0 +1,57 @@
+name: Bug report
+description: Report a defect in the extension, admin panel, or website
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    value: |
+      Thanks for reporting. Include steps to reproduce and expected vs actual behavior.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - IDE extension (VS Code / Cursor)
+        - Browser extension (Firefox / Chrome)
+        - Mission Control admin
+        - Marketing website
+        - API / Cloudflare Workers
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. …\n2. …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit (if known)
+      placeholder: v1.0.112 or main @ abc1234
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste redacted logs — no tokens or secrets

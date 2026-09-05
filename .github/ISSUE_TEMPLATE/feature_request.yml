@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an enhancement not yet in the master task registry
+title: "[feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    value: |
+      For **tracked Mission Control work**, check [Project #4](https://github.com/users/Maijied/projects/4) first.
+      New registry items should go through `plan/mission-control-master-tasks.md` + `npm run sync:tasks`.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user/operator pain does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Mission Control admin
+        - IDE extension
+        - Browser extension
+        - Marketing website
+        - Infrastructure
+        - Documentation
+    validations:
+      required: true

@@ -3,5 +3,6 @@
   "repo": "Cursor-Curse-Monitor-by-Lorapok",
   "projectNumber": 4,
   "projectUrl": "https://github.com/users/Maijied/projects/4",
-  "defaultLabels": ["task", "mission-control"]
+  "projectReadme": "procedure/github-project-readme.md",
+  "defaultLabels": ["type:task", "mission-control"]
 }

@@ -1,0 +1,72 @@
+name: Mission Control task
+description: Track a master-registry task (AUTH-13, MAIL-13, …)
+title: "[TASK-ID] "
+labels:
+  - type:task
+  - mission-control
+body:
+  - type: markdown
+    value: |
+      Use this for **new** master-registry tasks. For existing synced tasks, find them on [Project #4](https://github.com/users/Maijied/projects/4) or in [`procedure/mission-control-issues.json`](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/procedure/mission-control-issues.json).
+
+      Prefer: `node scripts/procedure-init.mjs --title "..." --component admin`
+
+  - type: input
+    id: task_id
+    attributes:
+      label: Task ID
+      description: "e.g. AUTH-13, MAIL-14"
+      placeholder: AUTH-13
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: One paragraph — what ships when this is done?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - area:admin
+        - area:auth
+        - area:mail
+        - area:discord
+        - area:infra
+        - area:extension
+        - area:website
+        - area:analytics
+        - area:logs
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - priority:p0
+        - priority:p1
+        - priority:p2
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Bullet list or checklist
+    validations:
+      required: true
+
+  - type: input
+    id: plan
+    attributes:
+      label: Plan file (optional)
+      placeholder: plan/AUTH-13-acl-audit.md

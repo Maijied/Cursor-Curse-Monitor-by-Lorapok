@@ -124,7 +124,7 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 
 ### Admin SPA (`website/admin/`) — run / test / build / lint
 
-**Mission Control task registry (agents):** say **Update?** or **next** against [`mission-control-master-tasks.md`](mission-control-master-tasks.md) (symlink to `plan/`). Full onboarding: [`MISSION-CONTROL-WALKTHROUGH.md`](MISSION-CONTROL-WALKTHROUGH.md).
+**Mission Control task registry (agents):** say **Update?** or **next** against [`mission-control-master-tasks.md`](mission-control-master-tasks.md) (symlink to `plan/`). Full onboarding: [`MISSION-CONTROL-WALKTHROUGH.md`](MISSION-CONTROL-WALKTHROUGH.md). GitHub Issues + [Project #4](https://github.com/users/Maijied/projects/4): [`TASK-TRACKING.md`](TASK-TRACKING.md) — `npm run sync:tasks`, `npm run sync:labels`, `npm run setup:github-project`.
 
 - Dev server: `npm run dev` (Vite, http://localhost:5173, routes to `/login`).
   A dev middleware (`vite-dev-api.mjs`) serves `/api/*`, `/site-data.json`, and

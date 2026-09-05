@@ -1,1 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
+contact_links:
+  - name: Mission Control walkthrough
+    url: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/MISSION-CONTROL-WALKTHROUGH.md
+    about: Agent onboarding for Update? / next workflow
+  - name: Task tracking guide
+    url: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/TASK-TRACKING.md
+    about: Registry, issues, milestones, and Project #4 process

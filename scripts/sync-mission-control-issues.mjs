@@ -23,27 +23,27 @@ const MASTER_TASKS = resolve(repoRootPath(), "plan/mission-control-master-tasks.
 const TRACKING_REGISTRY = resolve(repoRootPath(), "procedure/mission-control-issues.json");
 
 const SECTION_LABELS = {
-  "Cloudflare KV": ["infra", "mission-control"],
-  "Cloudflare D1": ["infra", "mission-control"],
-  "Cloudflare R2": ["infra", "mission-control"],
-  "Cloudflare Pages / Workers": ["infra", "mission-control"],
-  Firebase: ["auth", "mission-control"],
+  "Cloudflare KV": ["area:infra", "mission-control"],
+  "Cloudflare D1": ["area:infra", "mission-control"],
+  "Cloudflare R2": ["area:infra", "mission-control"],
+  "Cloudflare Pages / Workers": ["area:infra", "mission-control"],
+  Firebase: ["area:auth", "mission-control"],
   GitHub: ["mission-control"],
-  "Microsoft Azure": ["infra", "mission-control"],
-  "Google Cloud (GCP / GCS)": ["infra", "mission-control"],
-  "Mail (Resend + Cloudflare Email)": ["mail", "mission-control"],
-  Discord: ["discord", "mission-control"],
-  "Stats / Cron": ["mission-control"],
-  "IDE extension": ["extension", "mission-control"],
-  "Browser extension": ["extension", "mission-control"],
-  "Marketing website": ["website", "mission-control"],
-  "Settings UX (cross-cutting)": ["mission-control"],
+  "Microsoft Azure": ["area:infra", "mission-control"],
+  "Google Cloud (GCP / GCS)": ["area:infra", "mission-control"],
+  "Mail (Resend + Cloudflare Email)": ["area:mail", "mission-control"],
+  Discord: ["area:discord", "mission-control"],
+  "Stats / Cron": ["area:analytics", "mission-control"],
+  "IDE extension": ["area:extension", "mission-control"],
+  "Browser extension": ["area:extension", "mission-control"],
+  "Marketing website": ["area:website", "mission-control"],
+  "Settings UX (cross-cutting)": ["area:admin", "mission-control"],
 };
 
 const STATUS_LABELS = {
   next: "enhancement",
-  partial: "help wanted",
-  deferred: "wontfix",
+  partial: "status:partial",
+  deferred: "status:deferred",
 };
 
 function parseArgs(argv) {
@@ -268,7 +268,7 @@ async function main() {
         "",
         "Say **next** in Cursor to implement the top priority open task.",
       ].join("\n"),
-      labels: ["epic", "mission-control"],
+      labels: ["epic", "type:epic", "mission-control"],
     });
     epicNumber = created?.number ?? null;
   }
@@ -282,7 +282,7 @@ async function main() {
     if (sectionExisting) {
       sectionEpicNumber = sectionExisting.number;
     } else if (!sectionEpicNumber) {
-      const labels = [...new Set(["epic", "mission-control", ...(SECTION_LABELS[section.name] ?? [])])];
+      const labels = [...new Set(["epic", "type:epic", "mission-control", ...(SECTION_LABELS[section.name] ?? [])])];
       const created = createIssue({
         title: sectionEpicTitle,
         body: [
@@ -313,6 +313,7 @@ async function main() {
       }
 
       const labels = [
+        "type:task",
         "task",
         "mission-control",
         STATUS_LABELS[task.status] ?? "enhancement",
