@@ -1,4 +1,9 @@
-import { formatKvQuotaError, isKvQuotaError } from "./kv-quota.js";
+import { formatKvQuotaError, isKvQuotaError, kvQuotaKind } from "./kv-quota.js";
+import {
+  listSubscribersD1,
+  readSubscriberD1,
+  upsertSubscriberD1,
+} from "./d1-subscribers.js";
 import {
   getScatterEntity,
   listScatterEntities,
@@ -135,15 +140,33 @@ async function rebuildSubscribersFromScatter(kv) {
 }
 
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
-export async function readSubscribers(kv) {
-  if (!kv?.get) return [];
+export async function readSubscribers(kv, env = null) {
+  if (!kv?.get) {
+    if (env) return listSubscribersD1(env);
+    return [];
+  }
 
   try {
     const snapshot = await readSubscriberSnapshot(kv);
-    if (snapshot) return snapshot;
+    if (snapshot) {
+      if (env) {
+        const d1Rows = await listSubscribersD1(env);
+        if (d1Rows.length) {
+          const byEmail = new Map(snapshot.map((row) => [row.email, row]));
+          for (const row of d1Rows) byEmail.set(row.email, row);
+          return sortSubscribers([...byEmail.values()]);
+        }
+      }
+      return snapshot;
+    }
   } catch (error) {
     if (!isKvQuotaError(error)) throw error;
     console.warn("subscribers: snapshot read failed (KV quota)", error);
+  }
+
+  if (env) {
+    const d1Rows = await listSubscribersD1(env);
+    if (d1Rows.length) return sortSubscribers(d1Rows);
   }
 
   const merged = await rebuildSubscribersFromScatter(kv);
@@ -173,33 +196,45 @@ export async function writeSubscribers(kv, items) {
 /**
  * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
  * @param {{ email: string; source?: string; installId?: string | null; consentVersion?: string }} input
- * @param {{ skipSnapshot?: boolean }} [options]
+ * @param {{ skipSnapshot?: boolean; env?: Record<string, unknown> | null }} [options]
  */
 export async function upsertSubscriber(kv, input, options = {}) {
   const email = normalizeEmail(input.email);
   if (!email) return { ok: false, error: "Valid email is required" };
-  if (!kv?.put) return { ok: false, error: "Subscriber storage unavailable" };
-
+  const env = options.env ?? null;
   const skipSnapshot = options.skipSnapshot === true;
+  const canKvWrite = Boolean(kv?.put);
 
   let existing = null;
-  try {
-    existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
-  } catch (error) {
-    if (isKvQuotaError(error)) {
-      return { ok: false, error: formatKvQuotaError(error) };
+  if (kv?.get) {
+    try {
+      existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
+    } catch (error) {
+      if (isKvQuotaError(error) && kvQuotaKind(error) === "read") {
+        console.warn("subscribers: scatter read skipped (KV read quota)", error);
+      } else if (isKvQuotaError(error)) {
+        return { ok: false, error: formatKvQuotaError(error) };
+      } else {
+        throw error;
+      }
     }
-    throw error;
   }
 
-  if (!existing) {
+  if (!existing && env) {
+    existing = normalizeSubscriber(await readSubscriberD1(env, email));
+  }
+
+  if (!existing && kv?.get) {
     try {
       existing = (await readLegacySubscribers(kv)).find((row) => row.email === email) ?? null;
     } catch (error) {
-      if (isKvQuotaError(error)) {
+      if (isKvQuotaError(error) && kvQuotaKind(error) === "read") {
+        console.warn("subscribers: legacy read skipped (KV read quota)", error);
+      } else if (isKvQuotaError(error)) {
         return { ok: false, error: formatKvQuotaError(error) };
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
@@ -223,20 +258,28 @@ export async function upsertSubscriber(kv, input, options = {}) {
       subscriber: next,
       alreadySubscribed: true,
       kvWriteSkipped: true,
+      storage: existing ? "existing" : "unknown",
     };
   }
 
   let wrote = false;
-  try {
-    wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next, { skipUnchangedRead: true });
-  } catch (error) {
-    if (isKvQuotaError(error)) {
-      return { ok: false, error: formatKvQuotaError(error) };
+  let kvWriteError = null;
+  if (canKvWrite) {
+    try {
+      wrote = await putScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email, next, { skipUnchangedRead: true });
+    } catch (error) {
+      if (isKvQuotaError(error) && kvQuotaKind(error) === "write") {
+        kvWriteError = error;
+        console.warn("subscribers: scatter write skipped (KV write quota)", error);
+      } else if (isKvQuotaError(error)) {
+        return { ok: false, error: formatKvQuotaError(error) };
+      } else {
+        throw error;
+      }
     }
-    throw error;
   }
 
-  if (!skipSnapshot) {
+  if (!skipSnapshot && canKvWrite && !kvWriteError) {
     let snapshot = null;
     try {
       snapshot = await readSubscriberSnapshot(kv);
@@ -250,11 +293,44 @@ export async function upsertSubscriber(kv, input, options = {}) {
     await writeSubscriberSnapshot(kv, [...byEmail.values()]);
   }
 
+  if (!wrote && kvWriteError && env) {
+    const d1 = await upsertSubscriberD1(env, next);
+    if (d1.ok) {
+      return {
+        ok: true,
+        subscriber: next,
+        alreadySubscribed: Boolean(existing),
+        kvWriteSkipped: true,
+        storage: "d1",
+      };
+    }
+    return { ok: false, error: formatKvQuotaError(kvWriteError) };
+  }
+
+  if (!wrote && !canKvWrite && env) {
+    const d1 = await upsertSubscriberD1(env, next);
+    if (d1.ok) {
+      return {
+        ok: true,
+        subscriber: next,
+        alreadySubscribed: Boolean(existing),
+        kvWriteSkipped: true,
+        storage: "d1",
+      };
+    }
+    return { ok: false, error: d1.error || "Subscriber storage unavailable" };
+  }
+
+  if (kvWriteError) {
+    return { ok: false, error: formatKvQuotaError(kvWriteError) };
+  }
+
   return {
     ok: true,
     subscriber: next,
     alreadySubscribed: Boolean(existing),
     kvWriteSkipped: Boolean(existing) && wrote === false,
+    storage: wrote ? "kv" : "existing",
   };
 }
 

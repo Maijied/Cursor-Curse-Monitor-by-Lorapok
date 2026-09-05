@@ -9,7 +9,7 @@ export async function onRequestGet(context) {
   if (denied) return denied;
 
   try {
-    const items = await readSubscribers(env.ADMIN_KV);
+    const items = await readSubscribers(env.ADMIN_KV, env);
     return jsonResponse({
       items,
       stats: subscriberStats(items),

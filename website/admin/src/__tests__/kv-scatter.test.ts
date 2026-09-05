@@ -237,4 +237,32 @@ describe("kv scatter-gather", () => {
     expect(result.kvWriteSkipped).toBe(true);
     expect(snapshotReads).toBe(0);
   });
+
+  it("falls back to D1 when KV scatter write is quota-blocked", async () => {
+    const d1Rows = [];
+    const env = {
+      ADMIN_D1: {
+        prepare: (sql) => ({
+          bind: (...args) => ({
+            run: async () => {
+              d1Rows.push({ sql, args });
+            },
+            first: async () => null,
+          }),
+        }),
+      },
+    };
+    const kv = {
+      get: async () => null,
+      put: async () => {
+        throw new Error("KV put() limit exceeded for the day.");
+      },
+      list: async () => ({ keys: [], list_complete: true }),
+    };
+
+    const result = await upsertSubscriber(kv, { email: "new@example.com", source: "website" }, { env });
+    expect(result.ok).toBe(true);
+    expect(result.storage).toBe("d1");
+    expect(d1Rows.length).toBeGreaterThan(0);
+  });
 });

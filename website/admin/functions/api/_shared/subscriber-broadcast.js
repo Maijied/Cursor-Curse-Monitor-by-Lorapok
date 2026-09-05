@@ -14,7 +14,7 @@ export async function broadcastToSubscribers(env, input) {
     return { ok: false, error: "title and message are required", sent: 0, failed: 0, total: 0 };
   }
 
-  const subscribers = await readSubscribers(env.ADMIN_KV);
+  const subscribers = await readSubscribers(env.ADMIN_KV, env);
   if (!subscribers.length) {
     return { ok: true, sent: 0, failed: 0, total: 0, message: "No subscribers to email." };
   }

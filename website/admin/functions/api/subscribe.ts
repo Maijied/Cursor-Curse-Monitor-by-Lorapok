@@ -67,7 +67,7 @@ export async function onRequestPost(context) {
         installId: normalizeInstallId(body.installId ?? body.install_id),
         consentVersion: String(body.consentVersion ?? CONSENT_VERSION),
       },
-      { skipSnapshot }
+      { skipSnapshot, env }
     );
     if (!upsert.ok) {
       const message = upsert.error || "Subscribe failed";
