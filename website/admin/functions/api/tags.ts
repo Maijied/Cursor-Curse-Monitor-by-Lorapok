@@ -3,6 +3,7 @@ import { GITHUB_REPO, jsonResponse, verifyAdminRequest } from "./_shared/auth.js
 import { githubFetch } from "./_shared/github.js";
 import { fetchSiteData, liveTagFromSiteData, tagsFromSiteData } from "./_shared/site-data.js";
 import { enrichTags, filterPublishableTags } from "./_shared/publishable-tags.js";
+import { buildTagEligibilityMap } from "./_shared/release-tag-eligibility.js";
 
 async function buildTagsPayload(env, rawTags, source, warning, siteDataOverride) {
   let liveTag = null;
@@ -13,7 +14,19 @@ async function buildTagsPayload(env, rawTags, source, warning, siteDataOverride)
     /* liveTag stays null */
   }
   const enriched = enrichTags(filterPublishableTags(rawTags), liveTag);
-  return { ...enriched, source, ...(warning ? { warning } : {}) };
+  const eligibility = buildTagEligibilityMap(enriched.tags, { liveTag });
+  const rollbackSources = enriched.tags.filter((tag) => eligibility[tag]?.rollbackEligible);
+  const publishReadyTags = enriched.tags.filter((tag) => eligibility[tag]?.publishReady);
+  const metadataReadyTags = enriched.tags.filter((tag) => eligibility[tag]?.metadataReady);
+  return {
+    ...enriched,
+    eligibility,
+    rollbackSources,
+    publishReadyTags,
+    metadataReadyTags,
+    source,
+    ...(warning ? { warning } : {}),
+  };
 }
 
 /**

@@ -759,12 +759,56 @@ jobs:
           fi
 
   # ───────────────────────────────────────────────────────────────────────────
+  # 5b. VALIDATE WORKFLOW DISPATCH (publish / rollback / sync-open-vsx / full-release)
+  # ───────────────────────────────────────────────────────────────────────────
+  validate-dispatch:
+    name: Validate Dispatch Inputs
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      && (
+        startsWith(inputs.action_type, 'full-release')
+        || inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces'
+        || inputs.action_type == 'rollback - Restore previous tag as a new version'
+        || inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'
+      )
+    outputs:
+      dispatch_valid: ${{ steps.validate.outputs.dispatch_valid }}
+      live_tag: ${{ steps.validate.outputs.live_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate workflow dispatch
+        id: validate
+        env:
+          ACTION_TYPE: ${{ inputs.action_type }}
+          TARGET_TAG: ${{ inputs.target_tag }}
+          RELEASE_CHANNEL: ${{ inputs.release_channel }}
+          PUBLISH_MARKET: ${{ inputs.publish_market }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export EXISTING_TAGS="$(git tag -l 'v*' | tr '\n' ' ')"
+          node scripts/validate-release-dispatch.mjs
+
+  # ───────────────────────────────────────────────────────────────────────────
   # 6. RELEASE TRIGGER & ROLLBACK RESOLUTION
   # ───────────────────────────────────────────────────────────────────────────
   release-prep:
     name: Prepare & Tag Release
     runs-on: ubuntu-latest
-    needs: [ci, browser-extension-ci, admin-ci]
+    needs: [ci, browser-extension-ci, admin-ci, validate-dispatch]
     permissions:
       contents: write
     if: >-
@@ -772,6 +816,7 @@ jobs:
       && needs.ci.result == 'success'
       && needs.browser-extension-ci.result == 'success'
       && needs.admin-ci.result == 'success'
+      && (needs.validate-dispatch.result == 'success' || needs.validate-dispatch.result == 'skipped')
       && github.event_name == 'workflow_dispatch'
       && (
         startsWith(inputs.action_type, 'full-release') ||
@@ -926,12 +971,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: [ci, browser-extension-ci, admin-ci, release-prep]
+    needs: [ci, browser-extension-ci, admin-ci, release-prep, validate-dispatch]
     if: >-
       always()
       && needs.ci.result == 'success'
       && needs.browser-extension-ci.result == 'success'
       && needs.admin-ci.result == 'success'
+      && (needs.validate-dispatch.result == 'success' || needs.validate-dispatch.result == 'skipped')
       && github.event_name == 'workflow_dispatch'
       && !startsWith(inputs.action_type, 'deploy-infra')
       && inputs.deploy_extension != false

@@ -1,5 +1,6 @@
 import { GITHUB_REPO, jsonResponse, mapPublishMarket, mapReleaseChannel } from "./auth.js";
 import { validateMarketplaceDeploy } from "./marketplace-tag-policy.js";
+import { validateReleaseDispatch } from "./release-tag-eligibility.js";
 import { activateConversationRecoveryNotice, activateRollbackNotice } from "./notices.js";
 import { scheduleDiscordDeploymentCompletionWatch } from "./discord-deployment-watch.js";
 import { fetchSiteData, liveTagFromSiteData } from "./site-data.js";
@@ -132,6 +133,8 @@ export async function dispatchPublishWorkflow(env, body, successMessage, notifyC
   if (!policy.ok) {
     return jsonResponse({ error: policy.error }, 400);
   }
+  const dispatchPolicy = await assertDispatchPolicy(env, ACTION_PUBLISH_TAG, targetTag, releaseChannel);
+  if (dispatchPolicy) return dispatchPolicy;
 
   const deployAdmin = body.deploy_admin === true || body.deploy_admin === "true";
   const deployWebsite = body.deploy_website !== false && body.deploy_website !== "false";
@@ -182,6 +185,8 @@ export async function dispatchRollbackWorkflow(env, body, successMessage, notify
   if (!policy.ok) {
     return jsonResponse({ error: policy.error }, 400);
   }
+  const dispatchPolicy = await assertDispatchPolicy(env, ACTION_ROLLBACK, targetTag, releaseChannel);
+  if (dispatchPolicy) return dispatchPolicy;
 
   const deployAdmin = bodyFlag(body, "deploy_admin", false);
   const deployWebsite = bodyFlag(body, "deploy_website", false);
@@ -269,6 +274,29 @@ function bodyFlag(body, key, defaultValue) {
   if (!body || body[key] === undefined) return defaultValue;
   if (body[key] === false || body[key] === "false") return false;
   return true;
+}
+
+async function resolveLiveTag(env) {
+  try {
+    return liveTagFromSiteData(await fetchSiteData(env));
+  } catch {
+    return null;
+  }
+}
+
+async function assertDispatchPolicy(env, actionType, targetTag, releaseChannel) {
+  const liveTag = await resolveLiveTag(env);
+  const policy = validateReleaseDispatch({
+    actionType,
+    targetTag,
+    releaseChannel,
+    liveTag,
+    tagExistsInGit: true,
+  });
+  if (!policy.ok) {
+    return jsonResponse({ error: policy.error, code: "invalid_release_dispatch" }, 400);
+  }
+  return null;
 }
 
 /**

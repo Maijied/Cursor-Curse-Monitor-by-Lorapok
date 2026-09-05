@@ -335,6 +335,7 @@
     "site:seo": "node scripts/generate-seo.mjs",
     "site:seo:validate": "node scripts/validate-seo.mjs",
     "validate:release": "node scripts/validate-release.mjs",
+    "validate:dispatch": "node scripts/validate-release-dispatch.mjs",
     "version:compute": "node scripts/compute-version.mjs",
     "version:sync": "node scripts/sync-workspace-versions.mjs",
     "version:check": "node scripts/sync-workspace-versions.mjs --check",

@@ -51,6 +51,20 @@ export async function fetchTags() {
     liveTag: string | null;
     latestTag: string | null;
     suggestedTag: string | null;
+    rollbackSources?: string[];
+    publishReadyTags?: string[];
+    metadataReadyTags?: string[];
+    eligibility?: Record<
+      string,
+      {
+        tag: string;
+        metadataReady: boolean;
+        publishReady: boolean;
+        rollbackEligible: boolean;
+        isLive?: boolean;
+        reasons?: string[];
+      }
+    >;
     source?: string;
     warning?: string;
   }>("/tags");
