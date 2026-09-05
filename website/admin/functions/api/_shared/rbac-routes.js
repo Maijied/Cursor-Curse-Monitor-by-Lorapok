@@ -28,6 +28,7 @@ export const MUTATING_ROUTE_PERMISSIONS = {
   "POST /integrations/discord/community": "integrations.write",
   "POST /integrations/discord/feedback": "integrations.write",
   "POST /integrations/discord/digest/test": "integrations.write",
+  "POST /integrations/social/gallery/queue": "integrations.write",
   "POST /notices": "notices.write",
   "PUT /notices": "notices.write",
   "DELETE /notices": "notices.write",
@@ -47,4 +48,5 @@ export const READ_ROUTE_PERMISSIONS = {
   "GET /mailbox": "mail.read",
   "GET /sync/status": "settings.read",
   "GET /integrations/email-identities/config": "settings.read",
+  "GET /integrations/social/gallery": "integrations.read",
 };

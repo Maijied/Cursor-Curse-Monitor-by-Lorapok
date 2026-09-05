@@ -168,7 +168,7 @@ _None — pick from **Recommended next queue** below._
 | REL-01 | **Beta release pipeline fix** — `-beta` tag/channel, `release-prep`, marketplace skips (Firefox), Mission Control deploy dispatch out of sync with CI | **done** | `buildBetaVersionPlan`, `ci-cd.yml` deploy gate, `Deployments.tsx` channel-aware version plan |
 | DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **done** | Session persists until Done; pipeline includes Validate Dispatch; FAB shows active job |
 | DEPLOY-02 | **Remove duplicate webhook UI** from Deployments page — canonical config in Settings → Discord / Social | **done** | `Deployments.tsx` links to Settings → Discord; webhook card removed |
-| DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **next** | hooks `release-prep` + Mission Control deploy complete |
+| DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **done** | KV queue API + CI `queue-social-gallery.mjs` + Mission Control deploy watch |
 
 ---
 

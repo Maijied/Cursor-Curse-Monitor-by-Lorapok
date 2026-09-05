@@ -89,6 +89,8 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "cron-jobs-config", path: "/integrations/cron-jobs/config", method: "GET", auth: "admin", group: "Integrations", description: "Unified cron schedules (stats refresh + Discord digest + GitHub read-only)", safeProbe: true },
   { id: "cron-jobs-config-put", path: "/integrations/cron-jobs/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save managed Cloudflare cron intervals and flags" },
   { id: "discord-digest-test", path: "/integrations/discord/digest/test", method: "POST", auth: "admin", group: "Integrations", description: "Send Discord download digest now (deployment webhook)" },
+  { id: "social-gallery", path: "/integrations/social/gallery", method: "GET", auth: "admin", group: "Integrations", description: "Queued deploy social-gallery jobs (SOCIAL-02 intake)", safeProbe: true },
+  { id: "social-gallery-queue", path: "/integrations/social/gallery/queue", method: "POST", auth: "cron", group: "Integrations", description: "Queue deploy social-gallery job from CI or admin (CRON_SECRET or integrations.write)" },
   { id: "stats-refresh-now", path: "/stats/refresh", method: "POST", auth: "admin", group: "Integrations", description: "Manually refresh live marketplace download stats" },
   { id: "stats-refresh-cron", path: "/cron/stats-refresh", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for live stats refresh (CRON_SECRET)" },
   { id: "discord-digest-cron", path: "/cron/discord-digest", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for Discord download digest (CRON_SECRET)" },

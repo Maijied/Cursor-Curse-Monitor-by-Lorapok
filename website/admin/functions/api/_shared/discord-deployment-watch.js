@@ -146,6 +146,24 @@ export async function watchDiscordDeploymentCompletion(env, watch) {
         } catch (error) {
           console.error("Discord deployment completion notification failed", error);
         }
+
+        if (match.conclusion === "success") {
+          try {
+            const { queueSocialGalleryJob } = await import("./social-gallery-queue.js");
+            await queueSocialGalleryJob(env, {
+              tag: watch.tag ?? null,
+              actionType: watch.actionType,
+              channel: watch.channel ?? null,
+              market: watch.market ?? null,
+              runUrl: match.url,
+              triggeredBy: watch.triggeredBy ?? null,
+              source: "mission-control-watch",
+            });
+          } catch (error) {
+            console.error("Social gallery queue failed", error);
+          }
+        }
+
         await maybeAutoRollbackOnFailure(env, watch, match);
         return;
       }
