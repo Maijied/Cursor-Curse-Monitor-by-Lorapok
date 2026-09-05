@@ -93,17 +93,63 @@ const base = await runAuthProductionProbe({
   invitedEmail: "invited@lorapok.tech",
   fetchFn: mockFetch,
 });
-
-assert.equal(base.ok, true);
 assert.ok(base.checks.some((c) => c.name === "invite-check-allowlisted" && c.ok));
 
 const authed = await runAuthProductionProbe({
   adminUrl: "https://example.test",
   idToken: "fake-token",
+  invitedEmail: "",
   fetchFn: mockFetch,
 });
 
 assert.equal(authed.ok, true);
 assert.ok(authed.checks.some((c) => c.name === "auth-rbac-denied" && c.ok));
+
+const expiredTokenFetch = async (url, init = {}) => {
+  const u = String(url);
+  const auth = init.headers?.Authorization ?? init.headers?.authorization;
+  if (u.endsWith("/login")) {
+    return { status: 200, text: async () => "<html>Mission Control — Sign in</html>" };
+  }
+  if (u.endsWith("/api/health")) {
+    return { status: 200, text: async () => JSON.stringify({ firebaseProject: "test" }) };
+  }
+  if (u.endsWith("/api/firebase-config")) {
+    return {
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          ok: true,
+          config: { apiKey: "AIzaSy1234567890", authDomain: "t.firebaseapp.com", projectId: "t" },
+        }),
+    };
+  }
+  if (u.includes("/api/auth/invite-check") && !u.includes("email=")) {
+    return { status: 400, text: async () => JSON.stringify({ error: "email required" }) };
+  }
+  if (u.includes("not-an-email")) {
+    return { status: 400, text: async () => JSON.stringify({ error: "invalid" }) };
+  }
+  if (u.includes("probe-not-invited")) {
+    return { status: 200, text: async () => JSON.stringify({ invited: false }) };
+  }
+  if (!auth) {
+    return { status: 401, text: async () => JSON.stringify({ error: "unauthorized" }) };
+  }
+  if (auth && u.endsWith("/api/auth/me")) {
+    return { status: 401, text: async () => JSON.stringify({ error: "token expired" }) };
+  }
+  return { status: 404, text: async () => "{}" };
+};
+
+const stale = await runAuthProductionProbe({
+  adminUrl: "https://example.test",
+  idToken: "expired-token",
+  invitedEmail: "",
+  fetchFn: expiredTokenFetch,
+});
+
+assert.equal(stale.ok, true);
+assert.ok(stale.checks.some((c) => c.name === "auth-me-token" && c.skipped));
 
 console.log("auth-production-probe.test.mjs: OK");

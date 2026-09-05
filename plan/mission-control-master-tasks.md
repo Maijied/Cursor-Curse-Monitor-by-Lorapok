@@ -248,22 +248,23 @@
 | SET-02 | Phased completion `settings-phases-complete.md` | **done** | Phases 0–4 |
 | SET-03 | FieldHelp on all integration inputs | **done** | Mail, Discord, Cron, Subscribe, Reindex, Resend, Testmail |
 | SET-04 | 60s polling all integration cards | **done** | hook + cards |
-| SET-05 | Production smoke (login + tabs) | **partial** | health + firebase-config + D1 **200/ok**; login UI smoke manual |
-| SET-06 | Open PR or track on main-only flow | **next** | branch protection bypassed |
+| SET-05 | Production smoke (login + tabs) | **partial** | `auth:tier-d` covers login/RBAC/PIN headless; optional live tab walkthrough |
+| SET-06 | Open PR or track on main-only flow | **done** | Direct push to `main` with branch-protection bypass (documented) |
 | SET-07 | Per-service Settings tabs (Resend, testmail, cred vault, marketplace) | **done** | `ResendConfigCard`, `TestmailConfigCard`, `CredVaultConfigCard`, `MarketplaceConfigCard` |
 | SET-08 | Settings tab: **Email identities** (`@lorapok.tech` provision) | **done** | `EmailIdentitiesCard`; MAIL-09–10 |
 | SET-09 | Settings + nav gated by RBAC permissions | **done** | `nav-permissions.ts`, PermissionRoute, card write gates |
-| SET-10 | Production smoke: password login + role-restricted UI | **done** | `probe-auth-production.mjs` (API tier A/B); UI checklist in procedure |
+| SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **Merge PR #121** + re-run `npm run auth:probe-production`
-2. **Enable R2** in Cloudflare dashboard → run `create-r2-stats-bucket.mjs`
-3. **KV-09 / STAT-06** — KV UTC reset or pause stats
-4. **DC-03** — Discord webhooks in production KV
+1. **DC-03** — Discord webhooks in production KV (`node scripts/sync-discord-cred-vault.mjs` after vault keys set)
+2. **AUTH-02** — Firebase Console: Email/Password + authorized domains (ops checklist in procedure `0bef4984`)
+3. **KV-09 / STAT-06** — KV UTC reset or pause stats cron until quota clears
+4. **R2-02** — Enable R2 in Cloudflare dashboard → `create-r2-stats-bucket.mjs`
+5. **Reliability** — post-merge verification (`procedure/c6c42bab`, PR #119)
 
 ---
 
