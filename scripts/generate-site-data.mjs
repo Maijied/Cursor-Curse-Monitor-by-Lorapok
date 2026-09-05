@@ -571,7 +571,12 @@ const siteData = {
     lastUpdated: githubSnapshot?.lastUpdated ?? generatedAt.slice(0, 10),
     stars: repoMeta?.stargazers_count ?? null,
     forks: repoMeta?.forks_count ?? null,
-    openIssues: repoMeta?.open_issues_count ?? githubSnapshot?.project?.openIssues ?? null,
+    /** Project board count (excludes PRs); prefer over GitHub open_issues_count. */
+    openIssues:
+      githubSnapshot?.project?.openIssues ??
+      repoMeta?.open_issues_count ??
+      null,
+    openIssuesGitHub: repoMeta?.open_issues_count ?? null,
     traffic: githubSnapshot?.traffic ?? null,
     ci: githubSnapshot?.ci ?? null,
     project: {
@@ -580,6 +585,7 @@ const siteData = {
       title: githubSnapshot?.project?.title ?? "Lorapok Labs : Team Planning : Cursor Curse Monitor",
       openPullRequests: githubSnapshot?.project?.openPullRequests ?? null,
     },
+    repositoryUrl: `https://github.com/${REPO}`,
   },
   analytics: {
     beaconPath: "/api/analytics/visit",

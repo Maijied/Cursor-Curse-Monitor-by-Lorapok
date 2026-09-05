@@ -3,7 +3,7 @@
 <head>
   <script src="https://app.secureprivacy.ai/script/6a8302e8f96211191278bd15.js"></script>
   <meta charset="UTF-8" />
-  <meta name="ccm-build-id" content="2fee3b5d7df7" />
+  <meta name="ccm-build-id" content="bf6bfe3c59c5" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#06080d" />
   <meta name="color-scheme" content="dark" />
@@ -287,14 +287,27 @@
     <div class="section-head">
       <p class="eyebrow">Explore the product</p>
       <h2>Interactive feature map</h2>
-      <p class="section-lead">Tap a capability to see how it fits the Lorapok ecosystem — IDE, browser, Mission Control, and roadmap (tray app, all browsers, Cursor plugin).</p>
+      <p class="section-lead">Select a node on the orbit to see how each capability fits the Lorapok ecosystem — IDE, browser, Mission Control, and roadmap.</p>
     </div>
-    <div class="features-explorer-grid" id="features-explorer-grid" role="tablist" aria-label="Product features"></div>
-    <div class="feature-detail" id="feature-detail" role="tabpanel" aria-live="polite"></div>
-    <div class="github-community-panel" id="github-community-panel">
-      <h3 class="eyebrow" style="margin:0">Open source momentum</h3>
-      <p class="muted" style="margin:0.35rem 0 0">GitHub traffic &amp; CI snapshot — refreshed with <code>npm run site:data</code></p>
-      <div id="github-community-stats"></div>
+    <div class="features-explorer-layout">
+      <div class="feature-map" id="feature-map" aria-label="Product feature map">
+        <div class="feature-map-orbit" id="feature-map-orbit">
+          <span class="feature-map-ring" aria-hidden="true"></span>
+          <span class="feature-map-ring feature-map-ring--inner" aria-hidden="true"></span>
+          <span class="feature-map-glow" aria-hidden="true"></span>
+          <img class="feature-map-logo" src="assets/logo.svg?v=105f5292a052" alt="" width="88" height="88" />
+          <div class="feature-map-nodes" id="feature-map-nodes" role="tablist" aria-label="Product features"></div>
+        </div>
+        <p class="feature-map-hint muted">Click a satellite to explore</p>
+      </div>
+      <div class="features-explorer-panel">
+        <div class="feature-detail" id="feature-detail" role="tabpanel" aria-live="polite"></div>
+        <div class="github-community-panel" id="github-community-panel">
+          <h3 class="eyebrow" style="margin:0">Open source momentum</h3>
+          <p class="muted github-community-lead">Live GitHub traffic &amp; CI — synced from Mission Control and <code>npm run site:data</code></p>
+          <div id="github-community-stats"></div>
+        </div>
+      </div>
     </div>
   </section>
 

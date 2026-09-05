@@ -496,6 +496,11 @@ function updateStructuredDataVersion(data) {
     // Static site-data.json is enough when Mission Control API is unreachable.
   }
 
+  if (data) {
+    window.__CCM_SITE_DATA__ = data;
+    document.dispatchEvent(new CustomEvent("ccm:site-data", { detail: data }));
+  }
+
   void fetchWelcomeDiscordInvite(
     data?.social?.subscribe || "https://cursor-dev.lorapok.tech/api/subscribe"
   );
