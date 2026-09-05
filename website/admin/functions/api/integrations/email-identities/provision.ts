@@ -1,6 +1,6 @@
-import { jsonResponse, verifyAdminRequest, requirePermission } from "../../../_shared/auth.js";
-import { formatKvPutError } from "../../../_shared/kv-put.js";
-import { provisionIdentityRouting } from "../../../_shared/cloudflare-email-routing.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { formatKvPutError } from "../../_shared/kv-put.js";
+import { provisionIdentityRouting } from "../../_shared/cloudflare-email-routing.js";
 import {
   identityEmail,
   readEmailIdentitiesConfig,
@@ -8,8 +8,8 @@ import {
   upsertIdentity,
   validateIdentityLocalPart,
   writeEmailIdentitiesConfig,
-} from "../../../_shared/email-identities-config.js";
-import { isValidMailAddress } from "../../../_shared/mail-config.js";
+} from "../../_shared/email-identities-config.js";
+import { isValidMailAddress } from "../../_shared/mail-config.js";
 
 export async function onRequestPost(context) {
   const { request, env } = context;

@@ -1,5 +1,5 @@
-import { jsonResponse, verifyAdminRequest, requirePermission } from "../../../_shared/auth.js";
-import { syncEmailIdentities } from "../../../_shared/email-identities-sync.js";
+import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { syncEmailIdentities } from "../../_shared/email-identities-sync.js";
 
 export async function onRequestPost(context) {
   const { request, env } = context;
