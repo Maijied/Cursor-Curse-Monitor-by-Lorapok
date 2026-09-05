@@ -5,6 +5,7 @@ type DeployFloatingStatusButtonProps = {
   status: DeployPollStatus;
   modeLabel: string;
   targetTag?: string;
+  pipelineHint?: string;
   onClick: () => void;
 };
 
@@ -23,9 +24,14 @@ export default function DeployFloatingStatusButton({
   status,
   modeLabel,
   targetTag,
+  pipelineHint,
   onClick,
 }: DeployFloatingStatusButtonProps) {
   const label = `${modeLabel}${targetTag ? ` · ${targetTag}` : ""} — ${STATUS_LABEL[status]}`;
+  const detail =
+    pipelineHint && status === "running"
+      ? `${pipelineHint}${targetTag ? ` · ${targetTag}` : ""}`
+      : `${STATUS_LABEL[status]}${targetTag ? ` · ${targetTag}` : ""}`;
 
   return (
     <button
@@ -40,8 +46,7 @@ export default function DeployFloatingStatusButton({
       <span className="text-left min-w-0 max-w-[11rem]">
         <span className="block text-xs uppercase tracking-wide text-[var(--color-muted)]">{modeLabel}</span>
         <span className="block text-sm font-semibold text-[var(--color-text)] truncate">
-          {STATUS_LABEL[status]}
-          {targetTag ? ` · ${targetTag}` : ""}
+          {detail}
         </span>
       </span>
     </button>
