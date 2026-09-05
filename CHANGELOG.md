@@ -17,6 +17,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Changelog → notice drafts (NOTICE-01)** — `npm run changelog:notice`, `GET /api/notices?changelogDraft=1`, and Notices page **From CHANGELOG** import for master review before publish
 - **Mission Control feature ACL v2 (AUTH-12)** — per-action UI gates on notices, subscribers, mailbox, team, cred vault, API Explorer, and deploy controls; read-only banner when role lacks permission
+- **Cloudflare Web Analytics** — privacy-friendly beacon on marketing site and Mission Control shell (`cloudflare-beacon.js`)
 - **`npm run auth:tier-d`** — headless SET-10 smoke (RBAC nav, PIN unlock, production auth probe) for Mission Control — Discord-style tabs for General, Mail, Discord, Firebase, GitHub, Cloudflare, Automation, Cloud dev, and Services; integration cards sync non-secret metadata to ADMIN_KV and Firebase client fields to GitHub `admin-production` secrets on master save
 - **Firebase runtime bootstrap** — admin SPA loads client config from `GET /api/firebase-config` (or local `VITE_FIREBASE_*`); no hardcoded keys in source
 - **`sync-firebase-pages-secrets.mjs`** — sync `VITE_FIREBASE_*` to Cloudflare Pages secrets when KV read quota blocks runtime bootstrap
