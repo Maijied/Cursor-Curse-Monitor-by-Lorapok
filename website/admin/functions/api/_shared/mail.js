@@ -51,6 +51,37 @@ function resendConfigured(env) {
   return typeof env.RESEND_API_KEY === "string" && env.RESEND_API_KEY.trim().length > 0;
 }
 
+const DEFAULT_RESEND_SENDING_DOMAIN = "mail.lorapok.tech";
+
+/**
+ * Resend From header: env/KV override, else align apex @lorapok.tech to verified sending subdomain.
+ * @param {{ email?: string; name?: string }} from
+ * @param {{ sendingDomain?: string; resendFromOverride?: string } | null} mailConfig
+ * @param {Record<string, unknown>} env
+ */
+export function resolveResendFromAddress(from, mailConfig, env) {
+  const envFrom = typeof env?.RESEND_FROM === "string" ? env.RESEND_FROM.trim() : "";
+  if (envFrom) return envFrom;
+
+  const kvFrom =
+    mailConfig && typeof mailConfig.resendFromOverride === "string" ? mailConfig.resendFromOverride.trim() : "";
+  if (kvFrom) return kvFrom;
+
+  const sendingDomain = String(mailConfig?.sendingDomain ?? DEFAULT_RESEND_SENDING_DOMAIN)
+    .trim()
+    .toLowerCase();
+  const email = String(from?.email ?? FROM_EMAIL).trim().toLowerCase();
+  const displayName = coerceMailDisplayName(from?.name, FROM_NAME);
+  const [localPart, domainPart] = email.split("@");
+
+  let resendEmail = email;
+  if (domainPart === "lorapok.tech" && sendingDomain && sendingDomain !== "lorapok.tech") {
+    resendEmail = `${localPart || "cursor.monitor"}@${sendingDomain}`;
+  }
+
+  return `${displayName} <${resendEmail}>`;
+}
+
 /** External inboxes (Gmail, testmail) need Resend on Workers Free — Cloudflare sandbox blocks them. */
 export function prefersResendFirst(to, env, options = {}) {
   const workersFreeMode = options.workersFreeMode !== false;
@@ -428,12 +459,7 @@ async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo 
     return { sent: false, reason: "RESEND_API_KEY not configured" };
   }
 
-  const envFrom = typeof env.RESEND_FROM === "string" ? env.RESEND_FROM.trim() : "";
-  const kvFrom = mailConfig && typeof mailConfig.resendFromOverride === "string" ? mailConfig.resendFromOverride.trim() : "";
-  const resendFrom =
-    envFrom ||
-    kvFrom ||
-    `${coerceMailDisplayName(from.name, "Cursor Curse Monitor")} <${from.email}>`;
+  const resendFrom = resolveResendFromAddress(from, mailConfig, env);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",

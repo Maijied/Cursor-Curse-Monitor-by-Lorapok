@@ -624,6 +624,12 @@ jobs:
           fi
           node scripts/setup-resend-secret.mjs
 
+      - name: Verify Resend domain and sync KV flag
+        if: github.event_name == 'workflow_dispatch' && steps.mail_setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: website/admin
+        run: node scripts/verify-resend-domain.mjs --verify --sync-kv
+
       - name: Verify outbound mail transport before Pages deploy
         id: mail_verify
         if: github.event_name == 'workflow_dispatch' && steps.mail_setup.outcome == 'success'
@@ -653,6 +659,21 @@ jobs:
           CF_DEPLOY_PRE_COOLDOWN_SEC_LIGHT: "0"
           CF_DEPLOY_MAX_ATTEMPTS: ${{ github.event_name == 'push' && '1' || '4' }}
         run: node scripts/deploy-pages-ci.mjs
+
+      - name: Ping stats refresh after Pages deploy
+        if: steps.pages_deploy.outcome == 'success'
+        continue-on-error: true
+        env:
+          ADMIN_PUBLIC_URL: https://cursor-dev.lorapok.tech
+        run: |
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::notice::CRON_SECRET not set — skip post-deploy stats refresh ping"
+            exit 0
+          fi
+          curl -fsS -X POST "${ADMIN_PUBLIC_URL}/api/cron/stats-refresh" \
+            -H "X-Cron-Secret: ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data '{"triggeredBy":"ci-post-deploy"}' || true
 
       - name: Deploy stats cron worker (cred → CRON_SECRET)
         if: >-

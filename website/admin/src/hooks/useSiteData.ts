@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeSiteData, type SiteData } from "../lib/site-data";
 
 function siteDataCandidates(): string[] {
@@ -10,11 +10,13 @@ function siteDataCandidates(): string[] {
  * Load live marketing site-data when possible so Mission Control totals match the public site.
  * Falls back to the baked-in /site-data.json copy from the last admin build.
  */
-async function loadSiteData(): Promise<SiteData> {
+async function loadSiteData(cacheBust?: number): Promise<SiteData> {
   let lastError: Error | null = null;
   for (const url of siteDataCandidates()) {
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      const requestUrl =
+        cacheBust && url === "/api/site-data" ? `${url}?t=${cacheBust}` : url;
+      const res = await fetch(requestUrl, { cache: "no-store" });
       if (!res.ok) {
         lastError = new Error(`Failed to load site data (${res.status})`);
         continue;
@@ -38,13 +40,19 @@ export function useSiteData(options: UseSiteDataOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
+  const manualRefreshRef = useRef(false);
 
-  const refresh = useCallback(() => setTick((value) => value + 1), []);
+  const refresh = useCallback(() => {
+    manualRefreshRef.current = true;
+    setTick((value) => value + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
+    const cacheBust = manualRefreshRef.current ? Date.now() : undefined;
+    manualRefreshRef.current = false;
     setLoading(true);
-    loadSiteData()
+    loadSiteData(cacheBust)
       .then((json) => {
         if (!cancelled) {
           setData(json);

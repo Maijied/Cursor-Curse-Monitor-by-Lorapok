@@ -159,28 +159,24 @@ if (!relayExists) {
 }
 
 if (hasEmailToken && restSynced) {
-  if (inCi && relayExists) {
-    console.log("::notice::CI: skipping Pages secret sync — relay transport already active.");
-  } else {
-    console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
-    const put = spawnSync(
-      "npx",
-      ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
-      {
-        cwd: adminDir,
-        input: emailToken,
-        env: wranglerEnv,
-        stdio: ["pipe", "inherit", "inherit"],
-      }
-    );
-    if (put.status !== 0) {
-      if (inCi) {
-        console.warn(
-          "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
-        );
-      } else {
-        process.exit(put.status ?? 1);
-      }
+  console.log("Syncing CLOUDFLARE_EMAIL_API_TOKEN Pages secret (REST fallback for Pages Functions)…");
+  const put = spawnSync(
+    "npx",
+    ["wrangler", "pages", "secret", "put", "CLOUDFLARE_EMAIL_API_TOKEN", "--project-name=cursor-monitor-admin"],
+    {
+      cwd: adminDir,
+      input: emailToken,
+      env: wranglerEnv,
+      stdio: ["pipe", "inherit", "inherit"],
+    }
+  );
+  if (put.status !== 0) {
+    if (inCi) {
+      console.warn(
+        "::warning::Pages secret sync failed (auth or rate limit) — continuing; REST may already be configured."
+      );
+    } else {
+      process.exit(put.status ?? 1);
     }
   }
 }

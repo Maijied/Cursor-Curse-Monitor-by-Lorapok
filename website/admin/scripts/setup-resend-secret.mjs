@@ -53,11 +53,9 @@ function putSecret(name, value) {
 
 putSecret("RESEND_API_KEY", resendKey);
 
-const resendFrom = String(mailEnv.RESEND_FROM ?? "").trim();
-if (resendFrom) {
-  putSecret("RESEND_FROM", resendFrom);
-} else {
-  console.log("Tip: set RESEND_FROM when your Resend domain is verified (default uses product From in mail.js).");
-}
+const resendFrom =
+  String(mailEnv.RESEND_FROM ?? "").trim() ||
+  "Cursor Curse Monitor <cursor.monitor@mail.lorapok.tech>";
+putSecret("RESEND_FROM", resendFrom);
 
 console.log("\nResend is configured. External welcome emails use Resend first when resendFirstExternal is enabled (default).");
