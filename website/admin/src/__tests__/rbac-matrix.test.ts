@@ -5,6 +5,7 @@ const ROLE_MATRIX: Record<string, string[]> = {
   admin: [
     "settings.read",
     "integrations.read",
+    "integrations.write",
     "mail.read",
     "mail.send",
     "notices.write",

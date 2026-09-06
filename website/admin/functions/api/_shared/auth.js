@@ -38,10 +38,23 @@ export async function verifyAdminRequest(request, env) {
 
     const allowed = await getAllowedAdminEmails(env);
     if (!allowed.has(email)) {
-      return { error: jsonResponse({ error: "Forbidden" }, 403) };
+      return {
+        error: jsonResponse(
+          {
+            error: "Forbidden",
+            hint: "Ask the master admin to add your email under Team Access (API allowlist / ADMIN_KV).",
+          },
+          403
+        ),
+      };
     }
 
-    const isMaster = email === getMasterEmail(env);
+    let isMaster = false;
+    try {
+      isMaster = email === getMasterEmail(env);
+    } catch {
+      isMaster = false;
+    }
     const ctx = await buildAdminAuthContext(env, email, isMaster);
     return {
       email: ctx.email,

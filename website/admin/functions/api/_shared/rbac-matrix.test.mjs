@@ -14,6 +14,7 @@ const ROLE_MATRIX = {
   admin: [
     "settings.read",
     "integrations.read",
+    "integrations.write",
     "mail.read",
     "mail.send",
     "notices.write",
@@ -75,7 +76,6 @@ const MASTER_ONLY = [
   "settings.write",
   "team.manage",
   "mail.provision",
-  "integrations.write",
   "secrets.manage",
 ];
 
@@ -91,6 +91,7 @@ assertDenied("viewer", "subscribers.write");
 
 assertAllowed("admin", "mail.send");
 assertAllowed("admin", "notices.write");
+assertAllowed("admin", "integrations.write");
 assertDenied("admin", "deploy.run");
 
 assertAllowed("operator", "mail.send");

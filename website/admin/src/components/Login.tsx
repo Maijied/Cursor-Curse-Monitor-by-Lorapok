@@ -93,7 +93,18 @@ export default function Login() {
     setMessage("");
     try {
       await configureAuthPersistence(auth, rememberMe);
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const address = result.user.email?.trim().toLowerCase() ?? "";
+      if (!address) {
+        setMessageTone("error");
+        setMessage("Google account has no email address.");
+        await auth.signOut();
+        return;
+      }
+      if (!(await ensureInvited(address))) {
+        await auth.signOut();
+        return;
+      }
       setMessageTone("success");
       setMessage("Authenticated! Redirecting to Mission Control…");
       navigate("/dashboard", { replace: true });

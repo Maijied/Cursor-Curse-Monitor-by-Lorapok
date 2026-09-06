@@ -87,6 +87,9 @@ async function main() {
       exportEnv("ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
       exportEnv("VITE_ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
     }
+    if (loaded.discordDeploymentWebhook) {
+      exportEnv("DISCORD_DEPLOYMENT_WEBHOOK", loaded.discordDeploymentWebhook);
+    }
 
     const env = {
       ...process.env,

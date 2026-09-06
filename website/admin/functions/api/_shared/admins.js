@@ -3,15 +3,21 @@
  * VITE_ADMIN_MASTER_EMAIL (SPA). Never hardcode a personal address in source.
  */
 export function getMasterEmail(env) {
+  const email = tryGetMasterEmail(env);
+  if (!email) {
+    throw new Error("ADMIN_MASTER_EMAIL is not configured");
+  }
+  return email;
+}
+
+/** Returns master email when configured; null when missing (invite-check / allowlist must not throw). */
+export function tryGetMasterEmail(env) {
   const email = String(
     env.ADMIN_MASTER_EMAIL ?? env.VITE_ADMIN_MASTER_EMAIL ?? ""
   )
     .trim()
     .toLowerCase();
-  if (!email) {
-    throw new Error("ADMIN_MASTER_EMAIL is not configured");
-  }
-  return email;
+  return email || null;
 }
 
 const KV_KEY = "admin-emails";
@@ -37,7 +43,7 @@ async function readKvEmails(env) {
 }
 
 export async function getAllowedAdminEmails(env) {
-  const master = getMasterEmail(env);
+  const master = tryGetMasterEmail(env);
   const envEmails = parseEnvEmails(env);
   const kvEmails = await readKvEmails(env);
   return new Set([master, ...envEmails, ...kvEmails].filter(Boolean));
