@@ -75,6 +75,122 @@ function channelById(channels, id) {
   return channels.find((c) => c.id === id) ?? null;
 }
 
+const STALE_CACHE_MS = 60 * 60 * 1000;
+
+/**
+ * @param {Record<string, unknown>|null|undefined} cache
+ * @param {number} [maxAgeMs]
+ */
+export function isStatsCacheStale(cache, maxAgeMs = STALE_CACHE_MS) {
+  if (!cache?.refreshedAt) return true;
+  const refreshedAt = Date.parse(String(cache.refreshedAt));
+  if (Number.isNaN(refreshedAt)) return true;
+  return Date.now() - refreshedAt > maxAgeMs;
+}
+
+/**
+ * Lightweight read-path overlay when KV cache is missing or stale (no KV write).
+ * @param {Record<string, unknown>} base
+ * @param {Array<Record<string, unknown>>} channels
+ */
+export function buildEphemeralChannelOverlay(base, channels) {
+  const ovsxCanonical = channelById(channels, "ovsx-canonical");
+  const ovsxDuplicate = channelById(channels, "ovsx-duplicate");
+  const vscodeChannel = channelById(channels, "vscode");
+  const firefox = channelById(channels, "firefox-amo");
+  const packageVersion = String(base.packageVersion ?? base.version ?? "").replace(/^v/i, "");
+  const target = packageVersion;
+
+  const marketplaceSync = {
+    packageVersion: target,
+    syncStatus: channels
+      .filter((c) => c.id !== "package" && !c.warn)
+      .every((c) => c.version === target)
+      ? "synced"
+      : "drift",
+    checkedAt: new Date().toISOString(),
+  };
+
+  const liveVersions = channels
+    .filter((c) => c.id !== "package" && c.version)
+    .map((c) => String(c.version).replace(/^v/i, "").split("-")[0])
+    .filter((v) => /^\d+\.\d+\.\d+$/.test(v));
+
+  const newestLive = liveVersions.sort((a, b) => {
+    const pa = a.split(".").map((n) => Number.parseInt(n, 10) || 0);
+    const pb = b.split(".").map((n) => Number.parseInt(n, 10) || 0);
+    for (let i = 0; i < 3; i++) {
+      const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+      if (diff !== 0) return diff;
+    }
+    return 0;
+  }).at(-1);
+
+  const overlay = {
+    refreshedAt: new Date().toISOString(),
+    channels,
+    marketplaceSync,
+    ovsx: {
+      version: ovsxCanonical?.version ?? base.ovsx?.version ?? null,
+      downloadCount: ovsxCanonical?.downloadCount ?? base.ovsx?.downloadCount ?? 0,
+    },
+    ovsxDuplicate: {
+      version: ovsxDuplicate?.version ?? base.ovsxDuplicate?.version ?? null,
+      downloadCount: ovsxDuplicate?.downloadCount ?? base.ovsxDuplicate?.downloadCount ?? 0,
+    },
+    vscode: {
+      version: vscodeChannel?.version ?? base.vscode?.version ?? null,
+      downloadCount: vscodeChannel?.downloadCount ?? base.vscode?.downloadCount ?? 0,
+    },
+    github: {
+      releaseTag: channelById(channels, "github-release")?.version
+        ? `v${channelById(channels, "github-release").version}`
+        : base.github?.releaseTag ?? null,
+    },
+    browserExtension: {
+      firefox: {
+        published: firefox?.published ?? base.browserExtension?.firefox?.published ?? false,
+        version: firefox?.version ?? base.browserExtension?.firefox?.version ?? null,
+      },
+    },
+    ...(newestLive ? { livePackageVersion: newestLive } : {}),
+  };
+
+  return overlay;
+}
+
+/**
+ * @param {Record<string, unknown>} merged
+ * @param {Record<string, unknown>} overlay
+ */
+function applyLivePackageVersion(merged, overlay) {
+  const liveVersion = overlay.livePackageVersion;
+  if (!liveVersion || typeof liveVersion !== "string") return merged;
+
+  const baseVersion = String(merged.packageVersion ?? merged.version ?? "")
+    .replace(/^v/i, "")
+    .split("-")[0];
+  const compare = (a, b) => {
+    const pa = a.split(".").map((n) => Number.parseInt(n, 10) || 0);
+    const pb = b.split(".").map((n) => Number.parseInt(n, 10) || 0);
+    for (let i = 0; i < 3; i++) {
+      const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+      if (diff !== 0) return diff;
+    }
+    return 0;
+  };
+
+  if (!baseVersion || compare(liveVersion, baseVersion) > 0) {
+    return {
+      ...merged,
+      packageVersion: liveVersion,
+      version: liveVersion,
+      syncStatus: overlay.marketplaceSync?.syncStatus ?? merged.syncStatus,
+    };
+  }
+  return merged;
+}
+
 /**
  * Merge live KV cache over static site-data for Mission Control dashboards.
  * @param {Record<string, unknown>} base
@@ -306,7 +422,19 @@ export async function runStatsRefresh(env, options = {}) {
  */
 export async function fetchSiteDataWithLiveCache(env) {
   const [base, cache] = await Promise.all([fetchSiteData(env), readStatsLiveCache(env)]);
-  return mergeSiteDataWithLiveCache(base, cache);
+
+  if (!isStatsCacheStale(cache)) {
+    return mergeSiteDataWithLiveCache(base, cache);
+  }
+
+  try {
+    const channels = await fetchLiveChannels(base, { githubToken: env.GITHUB_TOKEN });
+    const overlay = buildEphemeralChannelOverlay(base, channels);
+    return applyLivePackageVersion(mergeSiteDataWithLiveCache(base, overlay), overlay);
+  } catch (err) {
+    console.error("fetchSiteDataWithLiveCache ephemeral overlay failed", err);
+    return mergeSiteDataWithLiveCache(base, cache);
+  }
 }
 
 /**
