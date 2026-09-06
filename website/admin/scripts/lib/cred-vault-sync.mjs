@@ -310,6 +310,26 @@ function resolveAdminMasterEmailFromVault(vault) {
   return undefined;
 }
 
+function resolveDiscordDeploymentWebhookFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const candidates = [
+    cursor.discord_deployment_webhook_url,
+    cursor.discord_deployment_webhook,
+    cursor.DISCORD_DEPLOYMENT_WEBHOOK_URL,
+    cursor.DISCORD_DEPLOYMENT_WEBHOOK,
+  ];
+  for (const value of candidates) {
+    const url = String(value ?? "").trim();
+    if (
+      url.startsWith("https://discord.com/api/webhooks/") ||
+      url.startsWith("https://discordapp.com/api/webhooks/")
+    ) {
+      return url;
+    }
+  }
+  return undefined;
+}
+
 /**
  * @param {Record<string, unknown>} vault
  */
@@ -386,6 +406,7 @@ export function loadCursorCloudflareSecretsFromVault() {
     resendSendingDomain: String(cursor.resend_sending_domain ?? "").trim() || undefined,
     mailProbeTo: String(cursor.mail_probe_to ?? "").trim() || undefined,
     adminMasterEmail: resolveAdminMasterEmailFromVault(vault),
+    discordDeploymentWebhook: resolveDiscordDeploymentWebhookFromVault(vault),
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
     testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
   };

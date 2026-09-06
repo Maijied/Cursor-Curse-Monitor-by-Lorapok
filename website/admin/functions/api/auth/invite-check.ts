@@ -14,6 +14,11 @@ export async function onRequestGet(context) {
     return jsonResponse({ error: "Valid email query parameter required" }, 400);
   }
 
-  const allowed = await getAllowedAdminEmails(env);
-  return jsonResponse({ invited: allowed.has(email) });
+  try {
+    const allowed = await getAllowedAdminEmails(env);
+    return jsonResponse({ invited: allowed.has(email) });
+  } catch (err) {
+    console.error("invite-check allowlist read failed", err);
+    return jsonResponse({ invited: false, error: "allowlist_unavailable" }, 503);
+  }
 }

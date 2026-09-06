@@ -567,6 +567,7 @@ jobs:
           FB_CRON_SECRET: ${{ secrets.CRON_SECRET }}
           FB_RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FB_ADMIN_MASTER_EMAIL: ${{ secrets.ADMIN_MASTER_EMAIL }}
+          FB_DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
         run: |
           if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${FB_API_TOKEN:-}" ]; then
             echo "CLOUDFLARE_API_TOKEN=${FB_API_TOKEN}" >> "$GITHUB_ENV"
@@ -592,6 +593,9 @@ jobs:
           if [ -z "${ADMIN_MASTER_EMAIL:-}" ] && [ -n "${FB_ADMIN_MASTER_EMAIL:-}" ]; then
             echo "ADMIN_MASTER_EMAIL=${FB_ADMIN_MASTER_EMAIL}" >> "$GITHUB_ENV"
             echo "VITE_ADMIN_MASTER_EMAIL=${FB_ADMIN_MASTER_EMAIL}" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ] && [ -n "${FB_DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
+            echo "DISCORD_DEPLOYMENT_WEBHOOK=${FB_DISCORD_DEPLOYMENT_WEBHOOK}" >> "$GITHUB_ENV"
           fi
 
       - name: Check Cloudflare secrets
@@ -645,6 +649,11 @@ jobs:
         working-directory: website/admin
         run: node scripts/probe-relay-for-deploy.mjs
 
+      - name: Sync Discord webhooks to ADMIN_KV
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: node scripts/sync-discord-cred-vault.mjs
+
       - name: Deploy to Cloudflare Pages
         continue-on-error: true
         id: pages_deploy
@@ -674,6 +683,21 @@ jobs:
             -H "X-Cron-Secret: ${CRON_SECRET}" \
             -H "Content-Type: application/json" \
             --data '{"triggeredBy":"ci-post-deploy"}' || true
+
+      - name: Notify Discord — admin deploy
+        if: always() && steps.pages_deploy.outcome != 'skipped'
+        continue-on-error: true
+        env:
+          DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
+        run: |
+          CONCLUSION="failure"
+          if [ "${{ steps.pages_deploy.outcome }}" = "success" ]; then CONCLUSION="success"; fi
+          node scripts/discord-deployment-notify.mjs \
+            --phase completed \
+            --conclusion "$CONCLUSION" \
+            --target "Deploy Admin Panel" \
+            --action-type "${{ github.event_name }}" \
+            --deploy-url "https://cursor-dev.lorapok.tech"
 
       - name: Deploy stats cron worker (cred → CRON_SECRET)
         if: >-
@@ -1356,6 +1380,21 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Notify Discord — marketing website deploy
+        if: always() && steps.deployment.outcome != 'skipped'
+        continue-on-error: true
+        env:
+          DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
+        run: |
+          CONCLUSION="failure"
+          if [ "${{ steps.deployment.outcome }}" = "success" ]; then CONCLUSION="success"; fi
+          node scripts/discord-deployment-notify.mjs \
+            --phase completed \
+            --conclusion "$CONCLUSION" \
+            --target "Deploy Marketing Website" \
+            --action-type "${{ github.event_name }}" \
+            --deploy-url "https://cursor.lorapok.tech"
 
   # ───────────────────────────────────────────────────────────────────────────
   # 9. CI TEST SUMMARY (PR + main push — visible in Actions summary tab)
