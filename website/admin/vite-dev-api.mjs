@@ -42,6 +42,8 @@ import {
   logAllowlistRemove,
   logRoleAssignment,
   logRoleClear,
+  queryAclAuditEvents,
+  aclAuditRowsToCsv,
 } from "./functions/api/_shared/acl-audit.js";
 import { sanitizeProfileForClient } from "./functions/api/_shared/user-profile.js";
 import {
@@ -2562,6 +2564,47 @@ export function createDevApiMiddleware() {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
         });
+      });
+      return;
+    }
+
+    if (url.startsWith("/api/auth/acl-audit") && req.method === "GET") {
+      const query = new URL(req.url ?? "", "http://localhost");
+      const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
+      const limit = Math.min(
+        500,
+        Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25)
+      );
+      const format = String(query.searchParams.get("format") ?? "").trim().toLowerCase();
+      void (async () => {
+        const result = await queryAclAuditEvents(devFunctionsEnv(), {
+          page,
+          limit,
+          exportAll: format === "csv",
+          event: query.searchParams.get("event") ?? undefined,
+          actor: query.searchParams.get("actor") ?? undefined,
+          target: query.searchParams.get("target") ?? undefined,
+          since: query.searchParams.get("since") ?? undefined,
+          until: query.searchParams.get("until") ?? undefined,
+          q: query.searchParams.get("q") ?? undefined,
+        });
+        logDevActivity(req, 200);
+        if (format === "csv") {
+          const csv = aclAuditRowsToCsv(result.items);
+          res.setHeader("Content-Type", "text/csv; charset=utf-8");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="acl-audit-${new Date().toISOString().slice(0, 10)}.csv"`
+          );
+          res.end(csv);
+          return;
+        }
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify(result));
+      })().catch((err) => {
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }));
       });
       return;
     }
