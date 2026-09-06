@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)  
 **Branch:** feat/auth-13-acl-audit-ui  
-**PR:** _TBD_
+**PR:** [#231](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/231)
 
 ---
 
@@ -24,7 +24,7 @@ Scoped PR only (no mail/KV/subscriber batching from reverted breakdown batch).
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (acl-audit, rbac-routes, api-catalog, tsc)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
