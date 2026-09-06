@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { UserPlus, Shield, Trash2 } from "lucide-react";
-import { fetchRbacTeam, putRbacRole, syncAdminAccess } from "../lib/api";
+import { fetchRbacTeam, putRbacRole, syncAdminAccess, type RbacMember } from "../lib/api";
 import { useAuthSession } from "../lib/auth-context";
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AdminRole } from "../lib/rbac";
 import PageHeader from "./layout/PageHeader";
@@ -20,41 +20,61 @@ export default function Team() {
   const [inviteRole, setInviteRole] = useState<Exclude<AdminRole, "master">>("admin");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [admins, setAdmins] = useState<AdminRecord[]>([]);
-  const [roleByEmail, setRoleByEmail] = useState<Record<string, AdminRole>>({});
+  const [members, setMembers] = useState<RbacMember[]>([]);
+  const [legacyFirestore, setLegacyFirestore] = useState<AdminRecord[]>([]);
 
   const loadRoles = useCallback(async () => {
-    if (!canManageTeam) return;
     try {
       const data = await fetchRbacTeam();
-      const map: Record<string, AdminRole> = {};
-      for (const member of data.members) {
-        map[member.email] = member.role as AdminRole;
-      }
-      setRoleByEmail(map);
+      setMembers(data.members);
+      return data.members;
     } catch (e) {
       console.warn("RBAC team snapshot failed:", e);
-    }
-  }, [canManageTeam]);
-
-  const fetchAdmins = useCallback(async () => {
-    try {
-      const snap = await getDocs(collection(db, "admins"));
-      setAdmins(
-        snap.docs.map((d) => ({
-          id: d.id,
-          email: String(d.data().email ?? "").toLowerCase(),
-        }))
-      );
-    } catch (e) {
-      console.error("Failed to fetch admins", e);
+      return [];
     }
   }, []);
 
+  const fetchLegacyFirestoreAdmins = useCallback(async () => {
+    try {
+      const snap = await getDocs(collection(db, "admins"));
+      const rows = snap.docs.map((d) => ({
+        id: d.id,
+        email: String(d.data().email ?? "").toLowerCase(),
+      }));
+      setLegacyFirestore(rows);
+      return rows;
+    } catch (e) {
+      console.error("Failed to fetch Firestore admins", e);
+      return [];
+    }
+  }, []);
+
+  const reconcileLegacyFirestore = useCallback(
+    async (snapshot: RbacMember[], firestoreRows: AdminRecord[]) => {
+      if (!canManageTeam || firestoreRows.length === 0) return;
+      const allowed = new Set(snapshot.map((m) => m.email));
+      const masterEmail = user.email?.toLowerCase() ?? "";
+      for (const record of firestoreRows) {
+        if (!record.email || record.email === masterEmail || allowed.has(record.email)) continue;
+        try {
+          await syncAdminAccess({ email: record.email, action: "add", role: "admin" });
+        } catch (syncErr) {
+          console.warn(`Legacy Firestore admin reconcile failed for ${record.email}:`, syncErr);
+        }
+      }
+    },
+    [canManageTeam, user.email]
+  );
+
   useEffect(() => {
-    void fetchAdmins();
-    void loadRoles();
-  }, [fetchAdmins, loadRoles]);
+    void (async () => {
+      const snapshot = await loadRoles();
+      if (!canManageTeam) return;
+      const firestoreRows = await fetchLegacyFirestoreAdmins();
+      await reconcileLegacyFirestore(snapshot, firestoreRows);
+      await loadRoles();
+    })();
+  }, [canManageTeam, fetchLegacyFirestoreAdmins, loadRoles, reconcileLegacyFirestore]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,50 +83,43 @@ export default function Team() {
     setMsg("");
     try {
       const normalized = email.trim().toLowerCase();
-      await addDoc(collection(db, "admins"), {
-        email: normalized,
-        role: inviteRole,
-        createdAt: new Date(),
-      });
-      if (canManageTeam) {
-        try {
-          await syncAdminAccess({ email: normalized, action: "add", role: inviteRole });
-        } catch (syncErr) {
-          console.warn("API admin sync failed (Firestore invite still saved):", syncErr);
-          setMsg(
-            `Admin added to Firestore. API sync pending — set ADMIN_EMAILS or ADMIN_KV in Cloudflare if they get 403 on API calls.`
-          );
-          setEmail("");
-          void fetchAdmins();
-          setLoading(false);
-          return;
-        }
+      await syncAdminAccess({ email: normalized, action: "add", role: inviteRole });
+      try {
+        await addDoc(collection(db, "admins"), {
+          email: normalized,
+          role: inviteRole,
+          createdAt: new Date(),
+        });
+      } catch (firestoreErr) {
+        console.warn("Firestore mirror failed (API allowlist is authoritative):", firestoreErr);
       }
-      setMsg(`Admin added with role ${ROLE_LABELS[inviteRole]}. They can sign in after Firebase invite check passes.`);
+      setMsg(`Admin added with role ${ROLE_LABELS[inviteRole]}. They can sign in after Firebase auth.`);
       setEmail("");
-      void fetchAdmins();
-      void loadRoles();
+      await loadRoles();
+      void fetchLegacyFirestoreAdmins();
     } catch (err: unknown) {
       setMsg("Error: " + (err instanceof Error ? err.message : "Failed to add admin"));
     }
     setLoading(false);
   };
 
-  const handleRemove = async (record: AdminRecord) => {
+  const handleRemove = async (memberEmail: string, firestoreId?: string) => {
     if (!canManageTeam) return;
-    if (!window.confirm(`Remove ${record.email} from admin access?`)) return;
+    if (!window.confirm(`Remove ${memberEmail} from admin access?`)) return;
     setLoading(true);
     setMsg("");
     try {
-      await deleteDoc(doc(db, "admins", record.id));
-      try {
-        await syncAdminAccess({ email: record.email, action: "remove" });
-      } catch (syncErr) {
-        console.warn("API admin sync failed:", syncErr);
+      await syncAdminAccess({ email: memberEmail, action: "remove" });
+      if (firestoreId) {
+        try {
+          await deleteDoc(doc(db, "admins", firestoreId));
+        } catch (firestoreErr) {
+          console.warn("Firestore delete failed:", firestoreErr);
+        }
       }
-      setMsg(`${record.email} removed.`);
-      void fetchAdmins();
-      void loadRoles();
+      setMsg(`${memberEmail} removed.`);
+      await loadRoles();
+      void fetchLegacyFirestoreAdmins();
     } catch (err: unknown) {
       setMsg("Error: " + (err instanceof Error ? err.message : "Failed to remove admin"));
     }
@@ -119,7 +132,9 @@ export default function Team() {
     setMsg("");
     try {
       await putRbacRole({ email: memberEmail, role });
-      setRoleByEmail((prev) => ({ ...prev, [memberEmail]: role }));
+      setMembers((prev) =>
+        prev.map((m) => (m.email === memberEmail ? { ...m, role } : m))
+      );
       setMsg(`Role updated for ${memberEmail} → ${ROLE_LABELS[role]}.`);
     } catch (err: unknown) {
       setMsg("Error: " + (err instanceof Error ? err.message : "Role update failed"));
@@ -142,6 +157,8 @@ export default function Team() {
   })();
 
   const masterEmail = user.email?.toLowerCase() ?? "";
+  const firestoreIdByEmail = new Map(legacyFirestore.map((row) => [row.email, row.id]));
+  const invitedMembers = members.filter((m) => m.email !== masterEmail);
 
   return (
     <div className="space-y-6 animate-fade-slide-up">
@@ -160,7 +177,8 @@ export default function Team() {
           Invite Administrator
         </h3>
         <p className="text-sm text-[var(--color-muted)] mb-4">
-          Adds the email to Firestore, syncs API allowlist (ADMIN_KV), and assigns an RBAC role.
+          Syncs the API allowlist (ADMIN_KV) first, then mirrors to Firestore. Invited admins can sign in without
+          using the master email.
         </p>
 
         {canManageTeam ? (
@@ -226,27 +244,31 @@ export default function Team() {
             </div>
           </div>
 
-          {admins.map((record) => {
-            const role = roleByEmail[record.email] ?? "admin";
+          {invitedMembers.map((member) => {
+            const role = member.role as AdminRole;
+            const firestoreId = firestoreIdByEmail.get(member.email);
             return (
               <div
-                key={record.id}
+                key={member.email}
                 className="flex flex-wrap items-center gap-4 p-4 bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-xl"
               >
                 <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] flex items-center justify-center text-[var(--color-accent)] font-bold border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]">
-                  {record.email[0]?.toUpperCase() ?? "?"}
+                  {member.email[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-[var(--color-text)] truncate">{record.email}</p>
+                  <p className="font-semibold text-[var(--color-text)] truncate">{member.email}</p>
+                  <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-wide">
+                    {member.source} allowlist
+                  </p>
                   {canManageTeam ? (
                     <select
                       value={role === "master" ? "admin" : role}
                       onChange={(e) =>
-                        void handleRoleChange(record.email, e.target.value as Exclude<AdminRole, "master">)
+                        void handleRoleChange(member.email, e.target.value as Exclude<AdminRole, "master">)
                       }
                       disabled={loading}
                       className="mt-1 text-xs bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-accent-2)]"
-                      aria-label={`Role for ${record.email}`}
+                      aria-label={`Role for ${member.email}`}
                     >
                       {ASSIGNABLE_ROLES.map((r) => (
                         <option key={r} value={r}>
@@ -255,16 +277,18 @@ export default function Team() {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-xs text-[var(--color-accent-2)] font-medium">{ROLE_LABELS[role as AdminRole] ?? role}</p>
+                    <p className="text-xs text-[var(--color-accent-2)] font-medium">
+                      {ROLE_LABELS[role as AdminRole] ?? role}
+                    </p>
                   )}
                 </div>
                 {canManageTeam && (
                   <button
                     type="button"
-                    onClick={() => void handleRemove(record)}
+                    onClick={() => void handleRemove(member.email, firestoreId)}
                     disabled={loading}
                     className="p-2 rounded-lg text-[var(--color-danger)] hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] transition-colors"
-                    aria-label={`Remove ${record.email}`}
+                    aria-label={`Remove ${member.email}`}
                   >
                     <Trash2 size={18} />
                   </button>

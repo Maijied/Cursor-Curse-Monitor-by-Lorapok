@@ -33,6 +33,7 @@ export const ROLE_PERMISSIONS = {
   admin: [
     "settings.read",
     "integrations.read",
+    "integrations.write",
     "mail.read",
     "mail.send",
     "notices.write",
@@ -189,15 +190,15 @@ export async function removeAdminRole(env, email) {
  * @param {import("./admins.js").Env} env
  */
 export async function buildRbacTeamSnapshot(env) {
-  const { getAllowedAdminEmails, getMasterEmail } = await import("./admins.js");
+  const { getAllowedAdminEmails, tryGetMasterEmail } = await import("./admins.js");
   const allowed = await getAllowedAdminEmails(env);
-  const master = getMasterEmail(env);
+  const master = tryGetMasterEmail(env);
   const rbacMap = await readRbacMap(env);
 
   const members = [...allowed]
     .sort((a, b) => a.localeCompare(b))
     .map((email) => {
-      if (email === master) {
+      if (master && email === master) {
         return { email, role: "master", source: "env" };
       }
       const assigned = rbacMap[email];
