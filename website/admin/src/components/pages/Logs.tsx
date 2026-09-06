@@ -50,7 +50,7 @@ export default function Logs() {
   const [error, setError] = useState<string | null>(null);
 
   const [type, setType] = useState("all");
-  const [source, setSource] = useState("");
+  const source = "";
   const [method, setMethod] = useState("");
   const [status, setStatus] = useState("");
   const [email, setEmail] = useState("");
