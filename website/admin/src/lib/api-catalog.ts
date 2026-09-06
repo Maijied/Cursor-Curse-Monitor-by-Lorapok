@@ -28,6 +28,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "auth-profile-put", path: "/auth/profile", method: "PUT", auth: "admin", group: "Admin", description: "Update display name or PIN verifier backup" },
   { id: "auth-rbac-get", path: "/auth/rbac", method: "GET", auth: "admin", group: "Admin", description: "Team RBAC snapshot (master only)", safeProbe: true },
   { id: "auth-rbac-put", path: "/auth/rbac", method: "PUT", auth: "admin", group: "Admin", description: "Assign admin/operator/viewer role" },
+  { id: "auth-acl-audit", path: "/auth/acl-audit?page=1&limit=5", method: "GET", auth: "admin", group: "Admin", description: "ACL role/allowlist change audit log (JSON or ?format=csv)", safeProbe: true },
   { id: "sync-status", path: "/sync/status", method: "GET", auth: "admin", group: "Admin", description: "Aggregated sync health (GitHub, mail, live stats cache)", safeProbe: true },
   { id: "site-data", path: "/site-data", method: "GET", auth: "public", group: "Public", description: "Live marketing site-data.json proxy", safeProbe: true },
   { id: "notice-get", path: "/notice", method: "GET", auth: "public", group: "Public", description: "Active public development notice", safeProbe: true },

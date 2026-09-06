@@ -44,9 +44,11 @@ export const MUTATING_ROUTE_PERMISSIONS = {
 
 export const READ_ROUTE_PERMISSIONS = {
   "GET /logs": "logs.read",
+  "GET /auth/acl-audit": "logs.read",
   "GET /activity": "logs.read",
   "GET /mailbox": "mail.read",
   "GET /sync/status": "settings.read",
   "GET /integrations/email-identities/config": "settings.read",
   "GET /integrations/social/gallery": "integrations.read",
+  "GET /subscribers": "subscribers.write",
 };

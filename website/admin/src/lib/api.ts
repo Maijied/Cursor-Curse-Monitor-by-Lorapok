@@ -1291,6 +1291,75 @@ export async function fetchLogs(
   }>(`/logs?${params.toString()}`);
 }
 
+export type AclAuditEntry = {
+  id: string;
+  ts: string;
+  level: string;
+  event: string;
+  actor: string;
+  target: string;
+  previousRole: string | null;
+  newRole: string | null;
+  message: string;
+};
+
+export const ACL_AUDIT_EVENT_OPTIONS = [
+  { value: "allowlist.add", label: "Allowlist add" },
+  { value: "allowlist.remove", label: "Allowlist remove" },
+  { value: "role.assign", label: "Role assign" },
+  { value: "role.change", label: "Role change" },
+  { value: "role.clear", label: "Role clear" },
+] as const;
+
+export async function fetchAclAudit(
+  page = 1,
+  limit = 25,
+  filters: { event?: string; actor?: string; target?: string; since?: string; until?: string; q?: string } = {}
+) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filters.event) params.set("event", filters.event);
+  if (filters.actor) params.set("actor", filters.actor);
+  if (filters.target) params.set("target", filters.target);
+  if (filters.since) params.set("since", filters.since);
+  if (filters.until) params.set("until", filters.until);
+  if (filters.q) params.set("q", filters.q);
+  return apiGet<{
+    items: AclAuditEntry[];
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    eventCounts: Record<string, number>;
+  }>(`/auth/acl-audit?${params.toString()}`);
+}
+
+export async function downloadAclAuditCsv(
+  filters: { event?: string; actor?: string; target?: string; since?: string; until?: string; q?: string } = {}
+) {
+  const params = new URLSearchParams({ format: "csv" });
+  if (filters.event) params.set("event", filters.event);
+  if (filters.actor) params.set("actor", filters.actor);
+  if (filters.target) params.set("target", filters.target);
+  if (filters.since) params.set("since", filters.since);
+  if (filters.until) params.set("until", filters.until);
+  if (filters.q) params.set("q", filters.q);
+
+  const res = await fetch(`${API_BASE}/auth/acl-audit?${params.toString()}`, {
+    headers: await authHeaders(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "ACL audit export failed");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `acl-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchMailbox(
   page = 1,
   limit = 25,
