@@ -137,10 +137,8 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 - **Production auth smoke (SET-10):** `npm run auth:probe-production` (API;
   set `ADMIN_ID_TOKEN` for authenticated tier). Full headless Tier C+D:
   `npm run auth:tier-d`.
-- **Lint gotcha:** the `lint` npm script is `eslint .`, but ESLint is NOT a
-  dependency — the actual linter is **oxlint** (config in `.oxlintrc.json`).
-  Run the linter with `npx oxlint` from `website/admin/`; `npm run lint` fails
-  with `eslint: not found`.
+- **Lint:** `npm run lint` in `website/admin/` runs **oxlint** (config in
+  `.oxlintrc.json`). `npx oxlint` from that directory is equivalent.
 - **Auth gotcha:** the admin dashboard is gated behind Firebase auth (Google
   sign-in / email magic link), which needs real external credentials. Headless
   agents can render/interact with the `/login` page but cannot reach the
