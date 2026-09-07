@@ -9,6 +9,7 @@ export const MUTATING_ROUTE_PERMISSIONS = {
   "POST /deploy-infra": "deploy.infra",
   "POST /integrations/mail/sync": "deploy.infra",
   "PUT /integrations/discord/config": "integrations.write",
+  "GET /integrations/discord/preview": "integrations.read",
   "PUT /integrations/cloudflare/config": "integrations.write",
   "PUT /integrations/github/config": "integrations.write",
   "PUT /integrations/firebase/config": "integrations.write",

@@ -413,6 +413,35 @@ export async function fetchDiscordConfigApi() {
   return apiGet<{ ok: boolean; config: DiscordConfig }>("/integrations/discord/config");
 }
 
+export type DiscordGalleryCard = {
+  id: string;
+  label: string;
+  description: string;
+  webhook: "deployment" | "feedback" | "community";
+  configuredKey?: string;
+};
+
+export type DiscordEmbedPreview = {
+  title?: string;
+  color?: number;
+  description?: string;
+  fields?: Array<{ name: string; value: string; inline?: boolean }>;
+  footer?: { text?: string };
+};
+
+/** Lorapok Discord card gallery previews (DC-07). */
+export async function fetchDiscordGalleryApi(cardId?: string) {
+  const query = cardId ? `?card=${encodeURIComponent(cardId)}` : "";
+  return apiGet<{
+    ok: boolean;
+    items?: DiscordGalleryCard[];
+    previews?: Array<{ card: DiscordGalleryCard; embed: DiscordEmbedPreview }>;
+    card?: DiscordGalleryCard;
+    embed?: DiscordEmbedPreview;
+    config: DiscordConfig;
+  }>(`/integrations/discord/preview${query}`);
+}
+
 /**
  * Saves the Discord deployment and feedback webhook configuration.
  *

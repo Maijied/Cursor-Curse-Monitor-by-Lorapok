@@ -112,10 +112,19 @@ export function buildDeploymentEmbed(payload, enrichment) {
 
   const descriptionParts = [status.brandLine];
   if (payload.summary) descriptionParts.push(String(payload.summary));
+  const footers = enrichment?.catalogFooters ?? getMessageCatalog().footers ?? {};
   if (status.color === COLORS.success) {
-    const footers = enrichment?.catalogFooters ?? getMessageCatalog().footers ?? {};
     const hint = footers.discord?.deploySuccessHint;
     if (hint) descriptionParts.push(hint);
+  }
+  if (status.color === COLORS.failure) {
+    const failureHint = footers.discord?.deployFailureHint;
+    const rollbackHint = footers.discord?.deployRollbackHint;
+    if (failureHint) descriptionParts.push(failureHint);
+    if (rollbackHint) descriptionParts.push(rollbackHint);
+    if (payload.failedStep) {
+      descriptionParts.push(`**Failed step**\n\`${String(payload.failedStep)}\``);
+    }
   }
 
   appendEnrichmentSections(descriptionParts, payload, enrichment);
