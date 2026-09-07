@@ -43,9 +43,9 @@ npm run setup:github-project # description, milestones, field values
 
 ## Current focus
 
-**P0:** [AUTH-13 ACL audit UI](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
+**P0:** _(none — AUTH-13 shipped via [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132) / PR #231)_
 
-Say **next** in Cursor to pick up the top queue item.
+**Next up (P1):** [DC-08](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/205) / [DC-09](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/206) Discord CI/CD cards · [ADMIN-03–05](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/220) admin UX polish
 
 ## Links
 

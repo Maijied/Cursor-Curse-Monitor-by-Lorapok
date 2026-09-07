@@ -2,8 +2,8 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-05 (social/SEO, Discord CI cards, admin footer, cred sync)  
-**Branch:** `feat/github-task-tracking-system`  
+**Last updated:** 2026-09-07 (AUTH-13 merged; Discord deploy CI notify wired; registry sync)  
+**Branch:** `main`  
 **CI:** green  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -46,7 +46,7 @@ _None — pick from **Recommended next queue** below._
 | Cloudflare D1 | 0 | 4 | 0 |
 | Cloudflare R2 | 2 | 1 | 0 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
-| Firebase | 6 | 5 | 0 |
+| Firebase | 7 | 4 | 0 |
 | GitHub | 5 | 4 | 0 |
 | Release & deploy | 0 | 3 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
@@ -143,7 +143,7 @@ _None — pick from **Recommended next queue** below._
 | AUTH-10 | ACL vitest matrix + production smoke (non-master paths) | **done** | `rbac-matrix.test.mjs` + `src/__tests__/rbac-matrix.test.ts` |
 | AUTH-11 | Profile tab + quick-unlock PIN (Settings) | **done** | `ProfileSettingsCard`, `pin-unlock.ts`, KV verifier backup |
 | AUTH-12 | **Feature ACL v2** — per-card / per-action permissions beyond nav (deploy buttons, mail send, notice publish, cred vault, team invite) | **done** | `feature-permissions.ts`, `api-permissions.ts`, `ReadOnlyAclBanner`; gates on Notices, Subscribers, Mailbox, Team, CredVault, ApiExplorer, Deployments |
-| AUTH-13 | **ACL audit UI** — filterable timeline of role/email changes with export | **next** | Logs ACL tab + `acl-audit.js` query API |
+| AUTH-13 | **ACL audit UI** — filterable timeline of role/email changes with export | **done** | `AclAuditPanel.tsx`, `GET /api/auth/acl-audit`, CSV export; PR #231 |
 
 ---
 
@@ -380,16 +380,15 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **DEPLOY-01 / DEPLOY-02** — Global deploy UX + remove duplicate webhook UI
-2. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog
-3. **AUTH-13** — ACL audit UI · [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)
-4. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
-5. **SOCIAL-01–03 / DEPLOY-03** — Multi-platform webhooks + deploy social gallery + one-click share
-6. **SEO-01–03** — World-class SEO + admin hub + policies
-7. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
-8. **WEB-11** — Engineering history timeline page
-9. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-10. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+1. **DC-08 / DC-09** — Discord CI/CD success + failure cards with changelog (CI wired 2026-09-07; branded templates + Settings preview remain)
+2. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
+3. **MAIL-13 / MAIL-14** — Professional mail templates + dynamic subscriber emails
+4. **SOCIAL-01–03 / DEPLOY-03** — Multi-platform webhooks + deploy social gallery + one-click share
+5. **SEO-01–03** — World-class SEO + admin hub + policies
+6. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+7. **WEB-11** — Engineering history timeline page
+8. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+9. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
 

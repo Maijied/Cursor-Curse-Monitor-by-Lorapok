@@ -1,7 +1,7 @@
 # AUTH-13 ACL audit UI
 
 **Procedure ID:** `a23f3e50`  
-**Status:** in_progress  
+**Status:** done  
 **Created:** 2026-09-05  
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** [#132](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132)  
@@ -25,9 +25,9 @@ Scoped PR only (no mail/KV/subscriber batching from reverted breakdown batch).
 - [x] Implementation started
 - [x] Tests passing (acl-audit, rbac-routes, api-catalog, tsc)
 - [x] PR opened
-- [ ] Review triaged
-- [ ] Merged
-- [ ] Post-merge verification
+- [x] Review triaged
+- [x] Merged (2026-09-06, PR #231)
+- [x] Post-merge verification (headless tests pass; issue #132 closed)
 
 ---
 

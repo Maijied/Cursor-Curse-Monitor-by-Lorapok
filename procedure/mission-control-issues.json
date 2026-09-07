@@ -93,7 +93,7 @@
     "AUTH-13": {
       "number": 132,
       "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132",
-      "status": "next",
+      "status": "done",
       "section": "Firebase"
     },
     "GH-05": {
@@ -529,5 +529,5 @@
       "section": "Settings UX (cross-cutting)"
     }
   },
-  "updatedAt": "2026-09-05T09:03:50.244Z"
+  "updatedAt": "2026-09-07T22:56:57.743Z"
 }
