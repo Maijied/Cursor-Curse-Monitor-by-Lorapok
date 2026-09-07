@@ -692,12 +692,22 @@ jobs:
         run: |
           CONCLUSION="failure"
           if [ "${{ steps.pages_deploy.outcome }}" = "success" ]; then CONCLUSION="success"; fi
+          TAG="v$(node -p "require('./package.json').version")"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          EXTRA_ARGS=()
+          if [ "$CONCLUSION" = "failure" ]; then
+            EXTRA_ARGS+=(--failed-step "Deploy Admin Panel / pages deploy")
+          fi
           node scripts/discord-deployment-notify.mjs \
             --phase completed \
             --conclusion "$CONCLUSION" \
             --target "Deploy Admin Panel" \
-            --action-type "${{ github.event_name }}" \
-            --deploy-url "https://cursor-dev.lorapok.tech"
+            --action-type "deploy-infra" \
+            --tag "$TAG" \
+            --run-url "$RUN_URL" \
+            --deploy-url "https://cursor-dev.lorapok.tech" \
+            --triggered-by "${GITHUB_ACTOR}" \
+            "${EXTRA_ARGS[@]}"
 
       - name: Deploy stats cron worker (cred → CRON_SECRET)
         if: >-
@@ -1389,12 +1399,22 @@ jobs:
         run: |
           CONCLUSION="failure"
           if [ "${{ steps.deployment.outcome }}" = "success" ]; then CONCLUSION="success"; fi
+          TAG="v$(node -p "require('./package.json').version")"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          EXTRA_ARGS=()
+          if [ "$CONCLUSION" = "failure" ]; then
+            EXTRA_ARGS+=(--failed-step "Deploy Marketing Website / GitHub Pages")
+          fi
           node scripts/discord-deployment-notify.mjs \
             --phase completed \
             --conclusion "$CONCLUSION" \
             --target "Deploy Marketing Website" \
-            --action-type "${{ github.event_name }}" \
-            --deploy-url "https://cursor.lorapok.tech"
+            --action-type "deploy-infra" \
+            --tag "$TAG" \
+            --run-url "$RUN_URL" \
+            --deploy-url "https://cursor.lorapok.tech" \
+            --triggered-by "${GITHUB_ACTOR}" \
+            "${EXTRA_ARGS[@]}"
 
   # ───────────────────────────────────────────────────────────────────────────
   # 9. CI TEST SUMMARY (PR + main push — visible in Actions summary tab)

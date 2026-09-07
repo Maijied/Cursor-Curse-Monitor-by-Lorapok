@@ -6,6 +6,7 @@ import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
 import DiscordCommunityCard from "../ui/DiscordCommunityCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import DiscordCardGallery from "../ui/DiscordCardGallery";
 import MailSetupChecklist from "../ui/MailSetupChecklist";
 import MailTransportCard from "../ui/MailTransportCard";
 import SubscribePromptCard from "../ui/SubscribePromptCard";
@@ -302,8 +303,9 @@ export default function Settings() {
       {tab === "discord" && (
         <>
           <p className="text-sm text-[var(--color-muted)] -mt-2">
-            Lorapok Labs Family community hook, deployment status, and feedback prompts.
+            Lorapok Labs Family community hook, deployment status, feedback prompts, and card previews.
           </p>
+          <DiscordCardGallery />
           <DiscordCommunityCard />
           <DiscordIntegrationsCard />
           <DiscordFeedbackCard />

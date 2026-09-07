@@ -23,6 +23,10 @@ export function getMessageCatalog() {
         feedbackBlock: `💬 **Feedback** — [GitHub Issues](${embedded.ctx?.feedbackUrl ?? "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"})`,
         productBlock: "",
         deploySuccessHint: "Share feedback in GitHub Issues if anything looks off after this deploy.",
+        deployFailureHint:
+          "Open the Actions run link for the failed step and logs. Do not retry marketplace publish until the root cause is fixed.",
+        deployRollbackHint:
+          "Need to recover fast? Use Mission Control → Deployments → Rollback, or re-run deploy-infra after fixing the failing step.",
       },
       notice: { feedbackLabel: "Send feedback" },
     },

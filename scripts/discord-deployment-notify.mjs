@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildLocalDeployEnrichment } from "./discord-ci-enrichment.mjs";
 import { sendDiscordWebhook } from "../website/admin/functions/api/_shared/discord-notify.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,6 +26,11 @@ export function parseDiscordNotifyArgs(argv) {
     runUrl: "",
     deployUrl: "",
     triggeredBy: process.env.GITHUB_ACTOR ?? "",
+    duration: "",
+    market: "",
+    channel: "",
+    failedStep: "",
+    jobsJson: "",
   };
 
   for (let i = 2; i < argv.length; i++) {
@@ -38,6 +44,11 @@ export function parseDiscordNotifyArgs(argv) {
     else if (arg === "--run-url" && argv[i + 1]) opts.runUrl = argv[++i];
     else if (arg === "--deploy-url" && argv[i + 1]) opts.deployUrl = argv[++i];
     else if (arg === "--triggered-by" && argv[i + 1]) opts.triggeredBy = argv[++i];
+    else if (arg === "--duration" && argv[i + 1]) opts.duration = argv[++i];
+    else if (arg === "--market" && argv[i + 1]) opts.market = argv[++i];
+    else if (arg === "--channel" && argv[i + 1]) opts.channel = argv[++i];
+    else if (arg === "--failed-step" && argv[i + 1]) opts.failedStep = argv[++i];
+    else if (arg === "--jobs-json" && argv[i + 1]) opts.jobsJson = argv[++i];
     else if (arg === "-h" || arg === "--help") {
       console.log(`Usage: node scripts/discord-deployment-notify.mjs [options]
 
@@ -51,6 +62,11 @@ Options:
   --run-url <GitHub Actions run URL>
   --deploy-url <live site URL>
   --triggered-by <actor>
+  --duration <human duration, e.g. 4m 12s>
+  --market <marketplace label>
+  --channel <release channel>
+  --failed-step <failing step name>
+  --jobs-json <JSON array of {name, conclusion}>
 `);
       process.exit(0);
     }
@@ -78,6 +94,17 @@ export function buildDiscordNotifyPayload(opts) {
       ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
       : null);
 
+  /** @type {Array<{name: string, conclusion?: string}>} */
+  let jobs = [{ name: opts.target, conclusion }];
+  if (opts.jobsJson) {
+    try {
+      const parsed = JSON.parse(opts.jobsJson);
+      if (Array.isArray(parsed) && parsed.length > 0) jobs = parsed;
+    } catch {
+      /* keep default */
+    }
+  }
+
   return {
     phase: opts.phase || "completed",
     conclusion,
@@ -87,8 +114,12 @@ export function buildDiscordNotifyPayload(opts) {
     summary,
     runUrl: runUrl || undefined,
     triggeredBy: opts.triggeredBy || undefined,
-    jobs: [{ name: opts.target, conclusion }],
+    jobs,
     deployUrl: opts.deployUrl || undefined,
+    duration: opts.duration || undefined,
+    market: opts.market || undefined,
+    channel: opts.channel || undefined,
+    failedStep: opts.failedStep || undefined,
   };
 }
 
@@ -106,7 +137,18 @@ export async function notifyDiscordDeploymentFromCi(opts) {
     payload.summary = `${payload.summary}\n\nLive: ${payload.deployUrl}`;
   }
 
-  return sendDiscordWebhook(webhookUrl, payload, null);
+  let enrichment = null;
+  try {
+    enrichment = buildLocalDeployEnrichment({
+      tag: payload.tag ?? null,
+      includeChangelog: payload.conclusion !== "cancelled",
+      repoRoot: root,
+    });
+  } catch (error) {
+    console.warn("Discord CI enrichment failed", error);
+  }
+
+  return sendDiscordWebhook(webhookUrl, payload, enrichment, null);
 }
 
 async function main() {

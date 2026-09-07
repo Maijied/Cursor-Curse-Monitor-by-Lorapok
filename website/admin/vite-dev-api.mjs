@@ -28,6 +28,11 @@ import {
   sanitizeDiscordConfigForClient,
 } from "./functions/api/_shared/discord-config.js";
 import { notifyDiscordDeployment } from "./functions/api/_shared/discord-notify.js";
+import {
+  DISCORD_GALLERY_ITEMS,
+  buildDiscordGalleryPreview,
+  listDiscordGalleryPreviews,
+} from "./functions/api/_shared/discord-card-gallery.js";
 import { getMailTransportStatus } from "./functions/api/_shared/mail.js";
 import {
   assignAdminRole,
@@ -1013,6 +1018,47 @@ export function createDevApiMiddleware() {
     if (url === "/api/integrations/discord/config" && req.method === "GET") {
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ ok: true, config: sanitizeDiscordConfigForClient(devStore.discordConfig) }));
+      return;
+    }
+
+    if (url.startsWith("/api/integrations/discord/preview") && req.method === "GET") {
+      const cardId = new URL(req.url ?? "", "http://localhost").searchParams.get("card");
+      const config = sanitizeDiscordConfigForClient(devStore.discordConfig);
+      if (cardId) {
+        buildDiscordGalleryPreview({ ADMIN_KV: devKv }, cardId)
+          .then((preview) => {
+            res.setHeader("Content-Type", "application/json");
+            if (!preview) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: "Unknown card id" }));
+              return;
+            }
+            res.end(JSON.stringify({ ok: true, card: preview.item, embed: preview.embed, config }));
+          })
+          .catch((err) => {
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: err.message || "Preview failed" }));
+          });
+        return;
+      }
+      listDiscordGalleryPreviews({ ADMIN_KV: devKv })
+        .then((previews) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              items: DISCORD_GALLERY_ITEMS,
+              previews: previews.map((entry) => ({ card: entry.item, embed: entry.embed })),
+              config,
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message || "Preview failed" }));
+        });
       return;
     }
 

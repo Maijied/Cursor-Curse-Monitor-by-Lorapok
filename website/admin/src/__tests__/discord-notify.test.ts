@@ -72,16 +72,31 @@ describe("buildDeploymentEmbed", () => {
     expect(String(embed.description)).toContain("⏭️ **Deploy Marketing Website**");
   });
 
-  it("formats a failure embed", () => {
-    const embed = buildDeploymentEmbed({
-      phase: "completed",
-      conclusion: "failure",
-      actionType: "rollback",
-      tag: "v0.7.1",
-    });
+  it("formats a failure embed with rollback guidance", () => {
+    const embed = buildDeploymentEmbed(
+      {
+        phase: "completed",
+        conclusion: "failure",
+        actionType: "rollback",
+        tag: "v0.7.1",
+        runUrl: "https://github.com/example/actions/runs/9",
+        failedStep: "Deploy to Marketplaces / package-extension",
+      },
+      {
+        catalogFooters: {
+          discord: {
+            deployFailureHint: "Open the Actions run for logs.",
+            deployRollbackHint: "Use Mission Control → Rollback.",
+          },
+        },
+      },
+    );
 
     expect(embed.title).toBe("❌ Deployment failed");
     expect(embed.color).toBe(0xed4245);
+    expect(String(embed.description)).toContain("Open the Actions run for logs.");
+    expect(String(embed.description)).toContain("Mission Control → Rollback");
+    expect(String(embed.description)).toContain("Deploy to Marketplaces");
   });
 });
 

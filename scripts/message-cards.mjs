@@ -44,6 +44,10 @@ export function buildChannelFooters(ctx) {
         `📦 [Latest release](${ctx.releaseUrl})`,
       ].join(" · "),
       deploySuccessHint: "Share feedback in GitHub Issues if anything looks off after this deploy.",
+      deployFailureHint:
+        "Open the **Actions run** link above for the failed step and logs. Do not retry marketplace publish until the root cause is fixed.",
+      deployRollbackHint:
+        "Need to recover fast? Use **Mission Control → Deployments → Rollback** to restore the last stable tag, or re-run **deploy-infra** after fixing the failing step.",
     },
     notice: {
       feedbackLabel: "Send feedback",
@@ -310,6 +314,32 @@ export function buildMessageCards(ctx) {
         discord: {
           title: "🧪 Beta invite",
           summary: "New beta VSIX ready for testers — check Actions artifacts and Mission Control deploy notes.",
+        },
+      },
+    },
+    {
+      id: "deploy-success",
+      label: "CI/CD deploy success",
+      category: "deploy",
+      severity: "info",
+      channels: {
+        discord: {
+          title: "✅ Deployment succeeded",
+          summary:
+            "Pipeline finished — marketplace sync, downloads, changelog excerpt, and release links in one Lorapok card.",
+        },
+      },
+    },
+    {
+      id: "deploy-failure",
+      label: "CI/CD deploy failure",
+      category: "deploy",
+      severity: "warning",
+      channels: {
+        discord: {
+          title: "❌ Deployment failed",
+          summary:
+            "Failed job, Actions logs link, partial changelog context, and rollback guidance for operators.",
         },
       },
     },
