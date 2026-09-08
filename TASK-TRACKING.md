@@ -161,7 +161,9 @@ Templates: [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/)
 
 ## Auth (one-time)
 
-**Local machine (full access):** personal `gh` login — not the Cloud Agent App integration.
+### Local machine (full access)
+
+Personal `gh` login as **Maijied** — not the Cloud Agent App integration.
 
 ```bash
 gh auth login
@@ -169,7 +171,24 @@ gh auth refresh -h github.com -s repo,workflow,read:project,project
 npm run sync:issues   # labels + tasks + Project #4
 ```
 
-**Cloud Agent:** can merge PRs and run `sync:tasks`, but label/issue/Project writes often return `403 Resource not accessible by integration`. Use local `gh` for full sync. See [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md).
+See [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md).
+
+### Cloud Agent — full-access checklist (repo owner)
+
+Cloud agents merge PRs and run tests by default. **Issues, labels, and Project #4** need extra setup because the Cursor App run token omits the `issues` scope ([Cursor forum](https://forum.cursor.com/t/cursor-cloud-agent-cant-read-issues/169153)).
+
+| Step | Action | Where |
+|------|--------|-------|
+| 1 | Keep Cursor GitHub App installed on this repo (git push/PR) | GitHub → Installed GitHub Apps → Cursor |
+| 2 | Create fine-grained PAT: **Issues** + **Pull requests** read/write; classic `repo` + `project` if Project sync fails | GitHub → Developer settings → PATs |
+| 3 | Add secret **`GH_TOKEN`** = PAT (exact name) | [Cloud Agents → Secrets](https://cursor.com/dashboard/cloud-agents) |
+| 4 | Optional vault parity: **`CRED_VAULT_PASSPHRASE`** + **`CRED_STORE_GPG_BASE64`** (same as `admin-production` CI) | Cursor Secrets; sync blob via `node website/admin/scripts/sync-cred-vault-github.mjs` locally |
+| 5 | Rebuild Cloud environment after `.cursor/environment.json` changes | Dashboard → Builds |
+| 6 | Verify in a cloud run: `gh auth status` · `gh issue list --limit 3` · `npm run sync:issues` | Agent session |
+
+Without step 2–3: cloud agent implements + opens PRs; **local** agent or maintainer runs `npm run sync:issues`.
+
+Full matrix: [`.cursor/CLOUD-AGENT.md`](.cursor/CLOUD-AGENT.md) · Cursor docs: [cloud agent setup](https://cursor.com/docs/cloud-agent/setup)
 
 Config: [`procedure/project.json`](procedure/project.json) → `projectNumber: 4`
 

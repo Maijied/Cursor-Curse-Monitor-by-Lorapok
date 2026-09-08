@@ -31,9 +31,16 @@ Details: [`procedure/README.md`](procedure/README.md) · rule: [`.cursor/rules/p
 
 ## 3. Read order (onboarding)
 
+**Environment pick (order 0):** read **one** of these once per session, then **Update?** or continue.
+
+| Where you run | Read first |
+|---------------|------------|
+| Maintainer PC (`/mnt/NewVolume/.../cred/` or `gh` user **Maijied**) | [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md) |
+| Cursor Cloud Agent VM (`gh` shows **cursor** App / `ghs_` token) | [`.cursor/CLOUD-AGENT.md`](.cursor/CLOUD-AGENT.md) |
+
 | Order | File |
 |-------|------|
-| 0 | [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md) — local machine: gh, cred vault, task queue (read once, then **Update?**) |
+| 0 | **LOCAL-AGENT** or **CLOUD-AGENT** (table above) |
 | 1 | This file (`AGENT_INIT.md`) |
 | 2 | [`AGENTS.md`](AGENTS.md) — build, test, deploy per component |
 | 3 | [`MISSION-CONTROL-WALKTHROUGH.md`](MISSION-CONTROL-WALKTHROUGH.md) — admin / ops |
