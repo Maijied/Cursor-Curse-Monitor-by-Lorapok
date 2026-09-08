@@ -1,8 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import {
+  clearKvWritePause,
   formatKvPutError,
+  getInMemoryKvWritePause,
+  isKvWriteBlockedEarly,
+  markKvWriteQuotaHit,
   putKvJsonIfChanged,
+  putKvJsonSafe,
   putKvStringIfChanged,
+  putKvStringSafe,
 } from "../../functions/api/_shared/kv-put.js";
 
 function mockKv(store = new Map()) {
@@ -15,6 +21,10 @@ function mockKv(store = new Map()) {
 }
 
 describe("kv-put", () => {
+  beforeEach(() => {
+    clearKvWritePause();
+  });
+
   it("formats Cloudflare KV quota errors", () => {
     expect(formatKvPutError(new Error("KV put() limit exceeded for the day"))).toMatch(
       /daily write limit/i
@@ -50,5 +60,42 @@ describe("kv-put", () => {
     const env = { ADMIN_KV: mockKv(store) };
     const wrote = await putKvStringIfChanged(env, "svg", "<svg/>");
     expect(wrote).toBe(false);
+  });
+
+  it("putKvStringSafe returns gracefully on quota errors without throwing", async () => {
+    const kv = {
+      get: async () => null,
+      put: async () => {
+        throw new Error("KV put() limit exceeded for the day");
+      },
+    };
+    const result = await putKvStringSafe({ ADMIN_KV: kv }, "hot:key", "value");
+    expect(result.quotaExceeded).toBe(true);
+    expect(result.wrote).toBe(false);
+    expect(result.skipped).toBe(true);
+    expect(getInMemoryKvWritePause()).toBeTruthy();
+  });
+
+  it("blocks subsequent safe puts after quota hit until pause cleared", async () => {
+    markKvWriteQuotaHit();
+    const store = new Map();
+    const env = { ADMIN_KV: mockKv(store) };
+    const result = await putKvJsonSafe(env, "later:key", { a: 1 });
+    expect(result.skipped).toBe(true);
+    expect(result.quotaExceeded).toBe(true);
+    expect(store.size).toBe(0);
+    expect(isKvWriteBlockedEarly()).toBe(true);
+  });
+
+  it("putKvStringIfChanged still throws on quota for config callers", async () => {
+    const kv = {
+      get: async () => null,
+      put: async () => {
+        throw new Error("KV put() limit exceeded for the day");
+      },
+    };
+    await expect(putKvStringIfChanged({ ADMIN_KV: kv }, "config:key", "v")).rejects.toThrow(
+      /limit exceeded/i
+    );
   });
 });

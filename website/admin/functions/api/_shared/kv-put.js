@@ -1,8 +1,17 @@
 /**
  * KV write helpers — skip unchanged values to stay under Cloudflare daily put limits.
+ * Safe puts catch quota errors so mail/cron hot paths never fail outbound delivery.
  */
 
-import { formatKvQuotaError, isKvQuotaError } from "./kv-quota.js";
+import {
+  formatKvQuotaError,
+  isKvQuotaError,
+  isKvWritesPaused,
+  nextUtcQuotaResetIso,
+} from "./kv-quota.js";
+
+/** In-memory pause until UTC reset — shared across requests in the same isolate. */
+let kvWritePausedUntil = null;
 
 /**
  * @param {unknown} err
@@ -13,6 +22,38 @@ export function formatKvPutError(err) {
     return formatKvQuotaError(err);
   }
   return message || "Save failed";
+}
+
+/**
+ * ISO timestamp when this isolate learned KV writes are blocked (UTC midnight reset).
+ */
+export function getInMemoryKvWritePause() {
+  if (isKvWritesPaused(kvWritePausedUntil)) return kvWritePausedUntil;
+  kvWritePausedUntil = null;
+  return null;
+}
+
+/**
+ * Record a KV quota hit so subsequent hot-path writes skip KV until UTC reset.
+ * @returns {string} pause-until ISO timestamp
+ */
+export function markKvWriteQuotaHit() {
+  kvWritePausedUntil = nextUtcQuotaResetIso();
+  return kvWritePausedUntil;
+}
+
+/** Clear in-memory pause (tests only). */
+export function clearKvWritePause() {
+  kvWritePausedUntil = null;
+}
+
+/**
+ * @param {string | null | undefined} [writesPausedUntil]
+ * @param {number} [now]
+ */
+export function isKvWriteBlockedEarly(writesPausedUntil = null, now = Date.now()) {
+  if (writesPausedUntil && isKvWritesPaused(writesPausedUntil, now)) return true;
+  return Boolean(getInMemoryKvWritePause());
 }
 
 /**
@@ -31,19 +72,84 @@ export function resolveKvBinding(envOrKv) {
 }
 
 /**
+ * @typedef {Object} KvPutResult
+ * @property {boolean} ok — operation completed without fatal error
+ * @property {boolean} wrote — KV put was executed
+ * @property {boolean} [skipped] — write intentionally skipped
+ * @property {string} [reason] — skip/failure reason
+ * @property {boolean} [quotaExceeded]
+ */
+
+/**
+ * KV put that never throws on quota errors — for mail, audit, and scatter hot paths.
+ * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace} envOrKv
+ * @param {string} key
+ * @param {string} value
+ * @param {{ skipIfUnchanged?: boolean; writesPausedUntil?: string | null; required?: boolean; expirationTtl?: number }} [options]
+ * @returns {Promise<KvPutResult>}
+ */
+export async function putKvStringSafe(envOrKv, key, value, options = {}) {
+  const { skipIfUnchanged = false, writesPausedUntil = null, required = false, expirationTtl } = options;
+
+  if (isKvWriteBlockedEarly(writesPausedUntil)) {
+    return { ok: true, wrote: false, skipped: true, reason: "kv_writes_paused", quotaExceeded: true };
+  }
+
+  const kv = resolveKvBinding(envOrKv);
+  if (!kv?.put) {
+    if (required) throw new Error("ADMIN_KV binding not configured");
+    return { ok: false, wrote: false, reason: "kv-unavailable" };
+  }
+
+  try {
+    if (skipIfUnchanged) {
+      const current = await kv.get(key);
+      if (current === value) {
+        return { ok: true, wrote: false, skipped: true, reason: "unchanged" };
+      }
+    }
+    if (expirationTtl) {
+      await kv.put(key, value, { expirationTtl });
+    } else {
+      await kv.put(key, value);
+    }
+    return { ok: true, wrote: true };
+  } catch (err) {
+    if (isKvQuotaError(err)) {
+      markKvWriteQuotaHit();
+      return { ok: true, wrote: false, skipped: true, reason: "quota_exceeded", quotaExceeded: true };
+    }
+    if (required) throw err;
+    const message = err instanceof Error ? err.message : String(err ?? "Save failed");
+    return { ok: false, wrote: false, reason: message };
+  }
+}
+
+/**
+ * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace} envOrKv
+ * @param {string} key
+ * @param {unknown} value
+ * @param {{ skipIfUnchanged?: boolean; writesPausedUntil?: string | null; required?: boolean }} [options]
+ * @returns {Promise<KvPutResult>}
+ */
+export async function putKvJsonSafe(envOrKv, key, value, options = {}) {
+  return putKvStringSafe(envOrKv, key, JSON.stringify(value), options);
+}
+
+/**
  * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace} envOrKv
  * @param {string} key
  * @param {string} value
  */
 export async function putKvStringIfChanged(envOrKv, key, value) {
-  const kv = resolveKvBinding(envOrKv);
-  if (!kv?.put) {
-    throw new Error("ADMIN_KV binding not configured");
+  const result = await putKvStringSafe(envOrKv, key, value, { skipIfUnchanged: true });
+  if (result.quotaExceeded) {
+    throw new Error("KV put() limit exceeded for the day");
   }
-  const current = await kv.get(key);
-  if (current === value) return false;
-  await kv.put(key, value);
-  return true;
+  if (!result.ok && result.reason && result.reason !== "unchanged") {
+    throw new Error(result.reason);
+  }
+  return Boolean(result.wrote);
 }
 
 /**
@@ -62,9 +168,11 @@ export async function putKvJsonIfChanged(env, key, value) {
  * @param {unknown} value
  */
 export async function putKvJson(envOrKv, key, value) {
-  const kv = resolveKvBinding(envOrKv);
-  if (!kv?.put) {
-    throw new Error("ADMIN_KV binding not configured");
+  const result = await putKvJsonSafe(envOrKv, key, value);
+  if (result.quotaExceeded) {
+    throw new Error("KV put() limit exceeded for the day");
   }
-  await kv.put(key, JSON.stringify(value));
+  if (!result.ok) {
+    throw new Error(result.reason ?? "ADMIN_KV put failed");
+  }
 }

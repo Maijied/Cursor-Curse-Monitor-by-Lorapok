@@ -8,6 +8,7 @@ import {
   normalizeSystemLogEntry,
   readSystemLogsD1,
 } from "./d1-system-log.js";
+import { shouldBlockKvWrites } from "./mail-storage.js";
 
 const SYSTEM_LOG_PREFIX = "system:log";
 const LEGACY_SYSTEM_LOG_KEY = "system:logs";
@@ -76,8 +77,12 @@ export async function logSystemEvent(env, entry) {
   const kv = env?.ADMIN_KV;
   if (!kv?.put) return;
 
+  if (await shouldBlockKvWrites(env)) return;
+
   try {
-    await backupLegacySystemLogIfPresent(kv, "logSystemEvent");
+    if (!isAdminD1Available(env)) {
+      await backupLegacySystemLogIfPresent(kv, "logSystemEvent");
+    }
     const id = crypto.randomUUID();
     await putScatterRecord(
       kv,

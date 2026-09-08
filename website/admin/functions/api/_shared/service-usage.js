@@ -1,5 +1,4 @@
-import { isKvQuotaError } from "./kv-quota.js";
-import { putKvJsonIfChanged, resolveKvBinding } from "./kv-put.js";
+import { putKvJsonSafe, resolveKvBinding, isKvWriteBlockedEarly } from "./kv-put.js";
 import { readResendIntegrationConfig } from "./resend-integration-config.js";
 
 const USAGE_KV_PREFIX = "service-usage";
@@ -62,16 +61,14 @@ export async function writeServiceUsage(env, record, month = utcMonthKey()) {
   if (!resolveKvBinding(env)?.put) {
     return false;
   }
-  try {
-    await putKvJsonIfChanged(env, usageKvKey(month), {
-      ...record,
-      updatedAt: new Date().toISOString(),
-    });
-    return true;
-  } catch (err) {
-    if (isKvQuotaError(err)) return false;
-    throw err;
+  if (isKvWriteBlockedEarly()) {
+    return false;
   }
+  const result = await putKvJsonSafe(env, usageKvKey(month), {
+    ...record,
+    updatedAt: new Date().toISOString(),
+  }, { skipIfUnchanged: true });
+  return Boolean(result.wrote || result.skipped);
 }
 
 /**

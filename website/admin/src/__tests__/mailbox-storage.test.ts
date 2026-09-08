@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
+import { clearKvWritePause, markKvWriteQuotaHit } from "../../functions/api/_shared/kv-put.js";
 import { recordMailboxMessage, listMailboxMessages, patchMailboxMessage } from "../../functions/api/_shared/mailbox.js";
 
 function mockKv(store = new Map()) {
@@ -72,6 +73,10 @@ function mockR2(store = new Map()) {
 }
 
 describe("mailbox D1/R2 storage", () => {
+  beforeEach(() => {
+    clearKvWritePause();
+  });
+
   it("writes mailbox messages to D1 without KV blob or backup keys", async () => {
     const kvStore = new Map();
     const r2Store = new Map();
@@ -123,5 +128,73 @@ describe("mailbox D1/R2 storage", () => {
     const patched = await patchMailboxMessage(env, entry.id, { read: true });
     expect(patched?.read).toBe(true);
     expect(kvStore.size).toBe(0);
+  });
+
+  it("skips KV when quota is hit and D1 is primary", async () => {
+    const kvStore = new Map();
+    let kvPutCalls = 0;
+    const env = {
+      ADMIN_KV: {
+        get: async (key) => kvStore.get(key) ?? null,
+        put: async (key, value) => {
+          kvPutCalls += 1;
+          kvStore.set(key, value);
+        },
+      },
+      ADMIN_D1: mockD1Mail(),
+      STATS_R2: mockR2(new Map()),
+    };
+
+    markKvWriteQuotaHit();
+
+    const entry = await recordMailboxMessage(env, {
+      direction: "outbound",
+      from: "cursor.monitor@lorapok.tech",
+      to: "user@example.com",
+      subject: "Quota test",
+      text: "body",
+      status: "sent",
+      category: "test",
+    });
+
+    expect(entry.id).toBeTruthy();
+    expect(kvPutCalls).toBe(0);
+    expect(kvStore.has("mailbox:messages")).toBe(false);
+
+    const items = await listMailboxMessages(env, {});
+    expect(items).toHaveLength(1);
+  });
+
+  it("falls back to R2 archive only when KV mode and quota blocked", async () => {
+    const kvStore = new Map();
+    let kvPutCalls = 0;
+    const r2Store = new Map();
+    const env = {
+      CCM_MAIL_STORAGE: "kv",
+      ADMIN_KV: {
+        get: async (key) => kvStore.get(key) ?? null,
+        put: async (key, value) => {
+          kvPutCalls += 1;
+          kvStore.set(key, value);
+        },
+      },
+      STATS_R2: mockR2(r2Store),
+    };
+
+    markKvWriteQuotaHit();
+
+    const entry = await recordMailboxMessage(env, {
+      direction: "outbound",
+      from: "cursor.monitor@lorapok.tech",
+      to: "user@example.com",
+      subject: "KV blocked",
+      text: "body",
+      status: "sent",
+      category: "test",
+    });
+
+    expect(entry.id).toBeTruthy();
+    expect(kvPutCalls).toBe(0);
+    expect([...r2Store.keys()].some((k) => k.startsWith("mail/outbox/"))).toBe(true);
   });
 });
