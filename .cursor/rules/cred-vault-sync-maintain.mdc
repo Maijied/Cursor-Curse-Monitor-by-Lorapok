@@ -1,0 +1,100 @@
+---
+description: Keep cred vault synced to Cloudflare, GitHub, and CI after any secret write or rotation
+alwaysApply: true
+---
+
+# Cred vault sync maintenance (mandatory)
+
+Local and cloud agents must keep the **cred vault** and downstream targets (GitHub Actions secrets, Cloudflare Pages secrets, wrangler bindings) in sync after any vault write or secret rotation.
+
+**Read/write policy:** [`.cursor/rules/cred-vault.mdc`](cred-vault.mdc) — never hardcode, commit, or paste secrets.
+
+**Onboarding:** [AGENT_INIT.md](../AGENT_INIT.md) · [LOCAL-AGENT.md](../LOCAL-AGENT.md) · [CLOUD-AGENT.md](../CLOUD-AGENT.md)
+
+---
+
+## When to run
+
+Run applicable sync scripts **after**:
+
+- Any vault write (`cred set`, GPG encrypt, or manual edit of `credentials.json.gpg`)
+- Secret rotation (Cloudflare, GitHub, Resend, Discord, mail tokens, cron, testmail)
+- A session that reads or updates tokens for deploy, mail, CI, or Mission Control integrations
+
+### Load vault first
+
+| Environment | Load method |
+|-------------|-------------|
+| **Local** | `cred get cursor <key>` · GPG store at `/mnt/NewVolume/Personal_Projects/cred/credentials.json.gpg` · passphrase from `.cred-vault-passphrase` or `CRED_VAULT_PASSPHRASE` |
+| **Cloud** | `eval "$(node website/admin/scripts/load-cred-vault-env-ci.mjs)"` when `CRED_VAULT_PASSPHRASE` + `CRED_STORE_GPG_BASE64` are set (Cursor Secrets or CI) |
+| **Cloud without vault** | Ask maintainer to run sync locally **or** configure cloud secrets + `load-cred-vault-env-ci.mjs` — do not skip sync silently |
+
+---
+
+## Sync scripts (run applicable ones)
+
+Scripts load from vault first, then push to the target. Run only those that match keys you changed.
+
+| Script | Target |
+|--------|--------|
+| `node website/admin/scripts/sync-cred-vault-github.mjs` | CI blob + GitHub `admin-production` secrets — **ALWAYS** after vault changes affecting CI |
+| `node website/admin/scripts/sync-cloudflare-cred-vault.mjs` | Cloudflare Pages / Workers secrets |
+| `node website/admin/scripts/sync-mail-cred-vault.mjs` | Outbound mail (Cloudflare Email + routing) |
+| `node website/admin/scripts/sync-github-token-cred-vault.mjs` | GitHub token used by automation |
+| `node website/admin/scripts/sync-resend-cred-vault.mjs` | Resend API + From address |
+| `node website/admin/scripts/sync-stats-cron-cred-vault.mjs` | Stats cron worker secret |
+| `node scripts/sync-discord-cred-vault.mjs` | Discord webhooks (if present) |
+
+Optional: `node website/admin/scripts/sync-testmail-cred-vault.mjs` when testmail keys change.
+
+---
+
+## Never commit
+
+- Decrypted vault JSON, passphrases, or secret values
+- `CRED_STORE_GPG_BASE64` blobs in tracked files (sync script pushes to GitHub env only)
+- Procedure progress and doc updates **are** OK — no secret values in them
+
+---
+
+## Git push workflow on `main` (cred-vault maintenance ONLY)
+
+Applies **only** when the session is cred-vault sync maintenance — **no feature code** in the same commit.
+
+1. **Prefer amend** — If HEAD in this session was cred-sync-only (procedure/doc notes, no product code):
+   ```bash
+   git add -A
+   git commit --amend --no-edit
+   git push origin main
+   ```
+
+2. **Non-fast-forward on main** — If push is rejected and the user/agent is doing cred-vault sync maintenance in this session:
+   ```bash
+   git push --force-with-lease origin main
+   ```
+
+3. **Never** force-push `main` for feature work — use PRs or `npm run push:main -- --title "…"` for hotfixes.
+
+4. **Never** force-push if the user did not request vault maintenance in this session.
+
+5. **Rule / doc changes** (like this file) — normal branch + PR; do **not** force-push `main` for governance commits.
+
+---
+
+## Verification (mask-only)
+
+After sync:
+
+- `cred get cursor <key>` — confirm masked preview only (e.g. `4eddb***`)
+- `gh secret list` — confirm expected secret names exist; do not print values
+- No echo of tokens, passphrases, or webhook URLs in terminal output, chat, or PR body
+
+---
+
+## Agent checklist
+
+1. Write secret to vault (local GPG or cloud load + export path)
+2. Run matching `sync-*-cred-vault.mjs` scripts (GitHub sync if CI affected)
+3. Mask-only verification
+4. Update procedure **Progress** if tracked work — no secret values
+5. Push per workflow above (maintenance-only amend/force-with-lease **or** PR for rule/docs)
