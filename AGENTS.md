@@ -166,7 +166,7 @@ gh auth refresh -h github.com -s repo,workflow,read:project,project
 npm run sync:issues
 ```
 
-Local agent onboarding: [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md) (gh vs cloud, cred vault, task queue). Cred vault path: `/mnt/NewVolume/Personal_Projects/cred/` — local only.
+Local agent onboarding: [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md) · Cloud: [`.cursor/CLOUD-AGENT.md`](.cursor/CLOUD-AGENT.md). Cred vault path: `/mnt/NewVolume/Personal_Projects/cred/` — local only; cloud uses `CRED_STORE_GPG_BASE64` in Cursor Secrets (see CLOUD-AGENT).
 
 ### Notes
 

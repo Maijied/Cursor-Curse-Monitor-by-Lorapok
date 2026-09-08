@@ -1,6 +1,6 @@
 {
   "name": "Cursor Curse Monitor",
-  "install": "npm ci && npm ci --prefix website/admin && npm run build -w @lorapok/cursor-monitor-shared && node scripts/sync-global-agent-stack.mjs",
+  "install": "npm ci && npm ci --prefix website/admin && npm run build -w @lorapok/cursor-monitor-shared && node scripts/sync-global-agent-stack.mjs && node -e \"const v=process.version; if (parseInt(v.slice(1),10)<22) { console.error('Node 22+ required, got', v); process.exit(1); }\" && gh --version",
   "terminals": [
     {
       "name": "admin-dev",

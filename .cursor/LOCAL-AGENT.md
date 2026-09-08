@@ -4,19 +4,21 @@
 
 Read this once per session alongside [`AGENT_INIT.md`](../AGENT_INIT.md). For build/test/deploy commands, use [`AGENTS.md`](../AGENTS.md) (canonical; do not duplicate here).
 
+**Cloud agents:** see [`.cursor/CLOUD-AGENT.md`](CLOUD-AGENT.md) for the full capability matrix, PAT checklist, and cred-vault-on-CI patterns.
+
 ---
 
-## Local vs Cloud Agent
+## Local vs Cloud Agent (summary)
 
-| Capability | Local (`gh` + cred vault) | Cloud Agent |
-|------------|---------------------------|-------------|
-| `gh pr merge`, view checks | Yes | Yes |
-| `npm run sync:issues` (labels, issues, Project #4) | Yes | Often **403** (integration token) |
-| Cred vault (`cred get cursor …`) | Yes | No — vault is on this machine only |
-| `wrangler` deploy / KV | Yes (OAuth in `~/.config/.wrangler`) | Limited |
-| Firebase admin dashboard (Google sign-in) | User browser | Headless login blocked |
+| Capability | Local (`gh` + cred vault) | Cloud Agent (default) | Cloud + PAT secrets |
+|------------|---------------------------|------------------------|---------------------|
+| `gh pr merge`, view checks | Yes | Yes | Yes |
+| `npm run sync:issues` | Yes | **403** (App run token) | Yes — `GH_TOKEN` in dashboard |
+| Cred vault (`cred get cursor …`) | Yes | No local path | `CRED_STORE_GPG_BASE64` + pin |
+| `wrangler` deploy / KV | Yes (OAuth) | Limited | Partial — vault secrets |
+| Firebase admin (Google sign-in) | Maizied Chrome | Blocked | Blocked |
 
-**Rule:** Issue/label/project sync and secret reads → run locally. Cloud agents can implement and open PRs; maintainer or local agent runs `sync:issues` when the board must update.
+**Default rule:** Issue/label/project sync and vault writes → local. **Full parity:** maintainer completes [CLOUD-AGENT § checklist](CLOUD-AGENT.md#one-time-maintainer-checklist-full-github--secrets).
 
 ---
 
