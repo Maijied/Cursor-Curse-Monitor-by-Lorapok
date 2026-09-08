@@ -169,7 +169,7 @@ gh auth refresh -h github.com -s repo,workflow,read:project,project
 npm run sync:issues   # labels + tasks + Project #4
 ```
 
-**Cloud Agent:** can merge PRs and run `sync:tasks`, but label/issue/Project writes often return `403 Resource not accessible by integration`. Use local `gh` for full sync. See [`.cursor/SESSION-HANDOFF.md`](.cursor/SESSION-HANDOFF.md).
+**Cloud Agent:** can merge PRs and run `sync:tasks`, but label/issue/Project writes often return `403 Resource not accessible by integration`. Use local `gh` for full sync. See [`.cursor/LOCAL-AGENT.md`](.cursor/LOCAL-AGENT.md).
 
 Config: [`procedure/project.json`](procedure/project.json) → `projectNumber: 4`
 
