@@ -2,9 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-08 (ADMIN-04 global footer)  
-**Branch:** `main` @ `bffb9d44`  
-**CI:** green (Production Deployment + Direct Main Push Tracker, 2026-09-08T13:47Z)  
+**Last updated:** 2026-09-08 (ADMIN-04 merged #251)  
+**Branch:** `main` @ `a374f49a`  
+**CI:** Production Deployment triggered on merge (2026-09-08T15:35Z)  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
