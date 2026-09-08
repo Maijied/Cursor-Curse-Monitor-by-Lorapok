@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** [#222](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/222)  
 **Branch:** `feat/admin-05-dedupe-dashboard`  
-**PR:** _TBD_
+**PR:** [#252](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/252)
 
 ---
 
@@ -21,7 +21,7 @@ Remove redundant KPIs between Overview, Connected Services, and Infrastructure n
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (Overview, ConnectedServicesCard, Dashboard — 7/7)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
