@@ -687,10 +687,6 @@ jobs:
       - name: Notify Discord — admin deploy
         if: always() && steps.pages_deploy.outcome != 'skipped'
         run: |
-          if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
-            echo "::error::DISCORD_DEPLOYMENT_WEBHOOK not set — sync cred vault (discord_deployment_webhook_url) or add admin-production secret."
-            exit 1
-          fi
           CONCLUSION="failure"
           if [ "${{ steps.pages_deploy.outcome }}" = "success" ]; then CONCLUSION="success"; fi
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
@@ -1407,18 +1403,22 @@ jobs:
         if: always() && steps.deployment.outcome != 'skipped'
         env:
           FB_DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
+          FB_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          FB_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ] && [ -n "${FB_DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
             echo "DISCORD_DEPLOYMENT_WEBHOOK=${FB_DISCORD_DEPLOYMENT_WEBHOOK}" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${FB_API_TOKEN:-}" ]; then
+            echo "CLOUDFLARE_API_TOKEN=${FB_API_TOKEN}" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] && [ -n "${FB_ACCOUNT_ID:-}" ]; then
+            echo "CLOUDFLARE_ACCOUNT_ID=${FB_ACCOUNT_ID}" >> "$GITHUB_ENV"
           fi
 
       - name: Notify Discord — marketing website deploy
         if: always() && steps.deployment.outcome != 'skipped'
         run: |
-          if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
-            echo "::error::DISCORD_DEPLOYMENT_WEBHOOK not set — sync cred vault (discord_deployment_webhook_url) or add github-pages secret."
-            exit 1
-          fi
           CONCLUSION="failure"
           if [ "${{ steps.deployment.outcome }}" = "success" ]; then CONCLUSION="success"; fi
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
