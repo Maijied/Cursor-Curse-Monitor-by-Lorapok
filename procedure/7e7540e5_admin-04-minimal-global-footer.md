@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** [#221](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/221)  
 **Branch:** `feat/admin-04-global-footer`  
-**PR:** _TBD_
+**PR:** [#251](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/251)
 
 ---
 
@@ -21,7 +21,7 @@ ADMIN-04 minimal global footer
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (`GlobalFooter.test.tsx` 2/2)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
