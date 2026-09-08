@@ -28,6 +28,20 @@ export const PLACEHOLDER_KEYS = [
   "releaseTag",
 ];
 
+/** Runtime-only merge tags for subscriber mail (not baked at build time). */
+export const SUBSCRIBER_MERGE_KEYS = [
+  "name",
+  "platform",
+  "stats",
+  "unsubscribeHint",
+  "unsubscribeUrl",
+  "email",
+  "changelogExcerpt",
+  "title",
+  "message",
+  "severity",
+];
+
 /**
  * Replace supported placeholder tokens in a string with context values.
  * @param {string} str - The value containing placeholder tokens.
@@ -37,6 +51,21 @@ export const PLACEHOLDER_KEYS = [
 export function interpolateString(str, ctx) {
   if (typeof str !== "string" || !str.includes("{{")) return str;
   return str.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const value = ctx[key];
+    return value == null ? "" : String(value);
+  });
+}
+
+/**
+ * Replace only product-context placeholders (build-time / catalog hydration).
+ * Leaves subscriber merge tags like {{name}} intact for runtime rendering.
+ * @param {string} str
+ * @param {Record<string, unknown>} ctx
+ */
+export function interpolateProductContext(str, ctx) {
+  if (typeof str !== "string" || !str.includes("{{")) return str;
+  return str.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    if (!PLACEHOLDER_KEYS.includes(key)) return match;
     const value = ctx[key];
     return value == null ? "" : String(value);
   });

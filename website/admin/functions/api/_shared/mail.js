@@ -205,15 +205,24 @@ export function buildInviteHtml({ inviteUrl, invitedBy }) {
   return emailShell("Admin invitation", body, { preheader: "Your Mission Control access is ready.", category: "invite" });
 }
 
-export function buildSubscribeHtml({ email }) {
+export function buildSubscribeHtml({ email, name, platform, stats, unsubscribeHint }) {
   const safeEmail = escapeHtml(email);
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi there,";
+  const platformLabel = platform ? escapeHtml(platform) : "Product news";
+  const statsLine = stats ? escapeHtml(stats) : "";
+  const hint =
+    unsubscribeHint ||
+    getMessageCatalog().footers?.email?.unsubscribeHint ||
+    "Reply to this email any time to unsubscribe from product updates.";
   const body = `
+    <p style="margin:0 0 16px;">${greeting}</p>
     <p style="margin:0 0 16px;">You're on the list for <strong style="color:#f8fafc;">Cursor Curse Monitor</strong> release and product updates from Lorapok Labs.</p>
     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 20px;"><tr>
       ${statPill("Subscriber", safeEmail)}
-      ${statPill("Channel", "Product news")}
+      ${statPill("Platform", platformLabel)}
     </tr></table>
-    <p style="margin:0;color:#94a3b8;">Reply to this email any time to unsubscribe.</p>
+    ${statsLine ? `<p style="margin:0 0 16px;color:#94a3b8;">${statsLine}</p>` : ""}
+    <p style="margin:0;color:#94a3b8;">${escapeHtml(hint)}</p>
   `;
   return emailShell("You're subscribed", body, { preheader: "Thanks for subscribing to CCM updates.", category: "subscribe" });
 }

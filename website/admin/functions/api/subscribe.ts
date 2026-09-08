@@ -1,5 +1,6 @@
 import { jsonResponse } from "./_shared/auth.js";
-import { buildSubscribeHtml, sendMail } from "./_shared/mail.js";
+import { sendMail } from "./_shared/mail.js";
+import { renderSubscriberWelcomeMail } from "./_shared/mail-template-engine.js";
 import {
   CONSENT_VERSION,
   getSubscriberByEmail,
@@ -83,11 +84,13 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
     }
 
+    const welcome = await renderSubscriberWelcomeMail(env, upsert.subscriber);
+
     const mailResult = await sendMail(env, {
       to: email,
-      subject: "Subscribed to Cursor Curse Monitor updates",
-      html: buildSubscribeHtml({ email }),
-      text: `Thanks for subscribing, ${email}. We'll email you about important updates from Cursor Curse Monitor.`,
+      subject: welcome.subject,
+      html: welcome.html,
+      text: welcome.text,
       category: "subscribe",
     });
 

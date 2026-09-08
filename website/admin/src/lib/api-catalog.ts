@@ -56,6 +56,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "subscribers-broadcast", path: "/subscribers/broadcast", method: "POST", auth: "admin", group: "Community", description: "Email all subscribers (notice template)" },
   { id: "discord-config", path: "/integrations/discord/config", method: "GET", auth: "admin", group: "Integrations", description: "Discord deployment-status webhook settings", safeProbe: true },
   { id: "discord-config-put", path: "/integrations/discord/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save Discord deployment, feedback, or community webhook URLs" },
+  { id: "mail-preview", path: "/integrations/mail/preview", method: "GET", auth: "admin", group: "Integrations", description: "Lorapok mail template gallery previews (MAIL-13)", safeProbe: true },
   { id: "discord-preview", path: "/integrations/discord/preview", method: "GET", auth: "admin", group: "Integrations", description: "Lorapok Discord card gallery previews (DC-07)", safeProbe: true },
   { id: "firebase-config-public", path: "/firebase-config", method: "GET", auth: "public", group: "Public", description: "Firebase web client bootstrap (public keys)", safeProbe: true },
   { id: "firebase-config", path: "/integrations/firebase/config", method: "GET", auth: "admin", group: "Integrations", description: "Firebase web client settings", safeProbe: true },

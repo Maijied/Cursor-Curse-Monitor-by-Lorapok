@@ -4,7 +4,7 @@ import {
   liveTagFromSiteData,
   packageVersionFromSiteData,
 } from "./site-data.js";
-import { interpolateDeep } from "./template-interpolate.js";
+import { interpolateProductContext } from "./template-interpolate.js";
 
 /**
  * Merges live site data and derived release metadata into the embedded product context.
@@ -81,5 +81,23 @@ export async function resolveProductContext(env) {
  */
 export async function hydrateTemplateValue(templateValue, env) {
   const ctx = await resolveProductContext(env);
-  return interpolateDeep(templateValue, ctx);
+  return interpolateDeepProductContext(templateValue, ctx);
+}
+
+/**
+ * @param {unknown} value
+ * @param {Record<string, unknown>} ctx
+ */
+function interpolateDeepProductContext(value, ctx) {
+  if (typeof value === "string") return interpolateProductContext(value, ctx);
+  if (Array.isArray(value)) return value.map((item) => interpolateDeepProductContext(item, ctx));
+  if (value && typeof value === "object") {
+    /** @type {Record<string, unknown>} */
+    const out = {};
+    for (const [key, nested] of Object.entries(value)) {
+      out[key] = interpolateDeepProductContext(nested, ctx);
+    }
+    return out;
+  }
+  return value;
 }
