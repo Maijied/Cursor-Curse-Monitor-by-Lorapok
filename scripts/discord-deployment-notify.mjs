@@ -2,6 +2,9 @@
 /**
  * Post deployment success/failure cards to Discord from GitHub Actions.
  * Requires DISCORD_DEPLOYMENT_WEBHOOK (mirror Mission Control deployment webhook).
+ *
+ * Version: root package.json stays 0.0.0 (CI bumps via resolve-version / site-data.json).
+ * Deploy cards use resolveDeployNotifyTag() → site-data from the build, not package.json.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
