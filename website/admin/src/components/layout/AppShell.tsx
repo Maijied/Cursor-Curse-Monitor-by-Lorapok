@@ -17,6 +17,7 @@ const Activity = lazy(() => import("../pages/Activity"));
 const ApiExplorer = lazy(() => import("../pages/ApiExplorer"));
 const Logs = lazy(() => import("../pages/Logs"));
 const Mailbox = lazy(() => import("../pages/Mailbox"));
+const MailHub = lazy(() => import("../pages/Mail"));
 const Subscribers = lazy(() => import("../pages/Subscribers"));
 const Reports = lazy(() => import("../pages/Reports"));
 const Discussions = lazy(() => import("../pages/Discussions"));
@@ -119,6 +120,7 @@ export default function AppShell() {
                   <Route path="activity" element={<GuardedRoute segment="activity"><Activity /></GuardedRoute>} />
                   <Route path="logs" element={<GuardedRoute segment="logs"><Logs /></GuardedRoute>} />
                   <Route path="mailbox" element={<GuardedRoute segment="mailbox"><Mailbox /></GuardedRoute>} />
+                  <Route path="mail" element={<GuardedRoute segment="mail"><MailHub /></GuardedRoute>} />
                   <Route path="subscribers" element={<GuardedRoute segment="subscribers"><Subscribers /></GuardedRoute>} />
                   <Route path="api-explorer" element={<GuardedRoute segment="api-explorer"><ApiExplorer /></GuardedRoute>} />
                   <Route path="reports" element={<GuardedRoute segment="reports"><Reports /></GuardedRoute>} />

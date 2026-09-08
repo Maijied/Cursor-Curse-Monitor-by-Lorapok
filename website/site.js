@@ -218,12 +218,23 @@ async function submitSubscribeRequest({ email, subscribeUrl, source }) {
     body: JSON.stringify({ email, source, consent: true }),
   });
   const body = await response.json().catch(() => ({}));
+  if (body.error === "already_subscribed" || (response.status === 409 && body.error === "already_subscribed")) {
+    markSubscribedEmail(email);
+    return { ...body, alreadySubscribed: true };
+  }
   if (!response.ok) throw new Error(body.error || body.mailWarning || "Subscribe failed");
   markSubscribedEmail(email);
   return body;
 }
 
 function subscribeSuccessFeedback(body) {
+  if (body.alreadySubscribed || body.error === "already_subscribed") {
+    return {
+      tone: "success",
+      title: "You're already subscribed",
+      message: body.message || "This email is already on our update list.",
+    };
+  }
   if (body.emailed === false) {
     return {
       tone: "error",

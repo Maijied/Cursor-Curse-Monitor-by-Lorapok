@@ -11,6 +11,7 @@ export const IDENTITY_DOMAIN = "lorapok.tech";
 export const CONFIG_KEY = "integrations:email-identities";
 
 export const IDENTITY_CATEGORIES = ["product", "support", "ops", "custom"];
+export const ALIAS_AUTH_ROLES = ["admin", "operator", "viewer"];
 
 const LOCAL_PART_RE = /^[a-z0-9](?:[a-z0-9.-]{0,62}[a-z0-9])?$/;
 
@@ -102,17 +103,35 @@ function normalizeIdentity(raw) {
     ? String(raw.category).toLowerCase()
     : "custom";
   const forwardTo = String(raw?.forwardTo ?? MAIL_OPS_COPY).trim().toLowerCase();
+  const authRole = ALIAS_AUTH_ROLES.includes(String(raw?.authRole ?? "").toLowerCase())
+    ? String(raw.authRole).toLowerCase()
+    : "viewer";
+  const coworkerEmail = String(raw?.coworkerEmail ?? "").trim().toLowerCase();
   return {
     id: localPart,
     localPart,
     displayName: String(raw?.displayName ?? localPart).trim().slice(0, 80) || localPart,
+    label: String(raw?.label ?? raw?.displayName ?? localPart).trim().slice(0, 120) || localPart,
+    project: String(raw?.project ?? "").trim().slice(0, 80) || "",
+    coworkerEmail: isValidCoworkerEmail(coworkerEmail) ? coworkerEmail : "",
     category,
     forwardTo,
     enabled: raw?.enabled !== false,
+    authAllowed: raw?.authAllowed === true,
+    authRole,
     routingStatus: String(raw?.routingStatus ?? "pending"),
     cloudflareRuleId: raw?.cloudflareRuleId ? String(raw.cloudflareRuleId) : null,
     provisionedAt: raw?.provisionedAt ? String(raw.provisionedAt) : null,
+    createdAt: raw?.createdAt ? String(raw.createdAt) : null,
   };
+}
+
+/**
+ * @param {string} email
+ */
+function isValidCoworkerEmail(email) {
+  if (!email) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 /**
@@ -162,7 +181,7 @@ export async function readEmailIdentitiesConfig(env) {
  */
 export async function writeEmailIdentitiesConfig(env, config) {
   if (!env?.ADMIN_KV?.put) throw new Error("ADMIN_KV binding not configured");
-  await putKvJsonIfChanged(env.ADMIN_KV, CONFIG_KEY, normalizeEmailIdentitiesConfig(config));
+  await putKvJsonIfChanged(env, CONFIG_KEY, normalizeEmailIdentitiesConfig(config));
 }
 
 /**
@@ -172,13 +191,55 @@ export function sanitizeEmailIdentitiesForClient(config) {
   return {
     domain: config.domain,
     opsForwardTo: config.opsForwardTo,
-    identities: config.identities.map((item) => ({
-      ...item,
-      email: identityEmail(item.localPart, config.domain),
-    })),
+    identities: config.identities.map((item) => sanitizeIdentityForClient(item, config.domain)),
     updatedAt: config.updatedAt,
     updatedBy: config.updatedBy,
   };
+}
+
+/**
+ * @param {ReturnType<typeof normalizeIdentity>} item
+ * @param {string} domain
+ */
+export function sanitizeIdentityForClient(item, domain = IDENTITY_DOMAIN) {
+  const builtin = BUILTIN_IDENTITIES.some((b) => b.localPart === item.localPart);
+  return {
+    ...item,
+    email: identityEmail(item.localPart, domain),
+    fullAddress: identityEmail(item.localPart, domain),
+    builtin,
+  };
+}
+
+/**
+ * @param {ReturnType<typeof normalizeEmailIdentitiesConfig>} config
+ * @param {string} localPart
+ */
+export function findIdentity(config, localPart) {
+  const key = String(localPart ?? "").trim().toLowerCase();
+  return config.identities.find((item) => item.localPart === key) ?? null;
+}
+
+/**
+ * @param {ReturnType<typeof normalizeEmailIdentitiesConfig>} config
+ * @param {string} localPart
+ */
+export function resolveIdentityFromAddress(config, localPart) {
+  const identity = findIdentity(config, localPart);
+  if (!identity || identity.enabled === false) return null;
+  return {
+    email: identityEmail(identity.localPart, config.domain),
+    name: identity.displayName,
+    replyTo: identityEmail(identity.localPart, config.domain),
+  };
+}
+
+/**
+ * @param {ReturnType<typeof normalizeEmailIdentitiesConfig>} config
+ * @param {string} localPart
+ */
+export function isBuiltinIdentity(config, localPart) {
+  return BUILTIN_IDENTITIES.some((item) => item.localPart === String(localPart).trim().toLowerCase());
 }
 
 /**
@@ -197,12 +258,18 @@ export function upsertIdentity(config, localPart, patch) {
           id: key,
           localPart: key,
           displayName: key,
+          label: key,
+          project: "",
+          coworkerEmail: "",
           category: "custom",
           forwardTo: config.opsForwardTo,
           enabled: true,
+          authAllowed: false,
+          authRole: "viewer",
           routingStatus: "pending",
           cloudflareRuleId: null,
           provisionedAt: null,
+          createdAt: new Date().toISOString(),
         };
   const next = normalizeIdentity({ ...base, ...patch, localPart: key });
   if (!next) throw new Error("Invalid identity");

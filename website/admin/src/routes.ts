@@ -16,6 +16,7 @@ import {
   Users,
   ScrollText,
   Mail,
+  MailCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { NavPermission } from "./lib/nav-permissions";
@@ -36,6 +37,7 @@ export const APP_ROUTES: AppRoute[] = [
   { path: "/dashboard/activity", label: "Activity", icon: Activity, permission: "logs.read" },
   { path: "/dashboard/logs", label: "Logs", icon: ScrollText, permission: "logs.read" },
   { path: "/dashboard/mailbox", label: "Mailbox", icon: Mail, permission: "mail.read" },
+  { path: "/dashboard/mail", label: "Mail", icon: MailCheck, permission: "mail.read" },
   { path: "/dashboard/subscribers", label: "Subscribers", icon: Contact, permission: "subscribers.write" },
   { path: "/dashboard/api-explorer", label: "API Explorer", icon: Terminal, permission: "integrations.read" },
   { path: "/dashboard/reports", label: "Reports", icon: FileBarChart, permission: "settings.read" },

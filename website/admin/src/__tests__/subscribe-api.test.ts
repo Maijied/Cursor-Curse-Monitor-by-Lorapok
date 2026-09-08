@@ -81,4 +81,26 @@ describe('subscribe API', () => {
     expect(subscribers.ok).toBe(true);
     expect(subscriberData.items.some((row: { email: string }) => row.email === email)).toBe(true);
   });
+
+  it('rejects duplicate subscribe with 409 already_subscribed', async () => {
+    const email = 'duplicate@example.com';
+    const payload = { email, consent: true, source: 'website' };
+
+    const first = await fetch(`${base}/api/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    expect(first.ok).toBe(true);
+
+    const second = await fetch(`${base}/api/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await second.json();
+    expect(second.status).toBe(409);
+    expect(data.ok).toBe(false);
+    expect(data.error).toBe('already_subscribed');
+  });
 });

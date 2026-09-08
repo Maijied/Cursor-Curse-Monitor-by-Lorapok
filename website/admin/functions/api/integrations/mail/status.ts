@@ -4,6 +4,7 @@ import { buildMailSetupInstructions } from "../../_shared/mail-setup-instruction
 import { readMailConfig, sanitizeMailConfigForClient } from "../../_shared/mail-config.js";
 import { getMailTransportStatus } from "../../_shared/mail.js";
 import { buildPublicSiteConfig } from "../../_shared/subscribe-config.js";
+import { maskEmail } from "../../_shared/mask-email.js";
 
 /**
  * Aggregates mail transport readiness, identity config, sync recommendations, and subscribe gate status.
@@ -21,6 +22,7 @@ export async function onRequestGet(context) {
   const recommendations = buildMailSyncRecommendations(transport, config);
   const setupInstructions = buildMailSetupInstructions(config, transport);
   const subscribeSite = await buildPublicSiteConfig(env);
+  const redirectRaw = String(env.MAIL_REDIRECT_TO ?? "").trim();
 
   return jsonResponse({
     ok: true,
@@ -55,5 +57,9 @@ export async function onRequestGet(context) {
     subscribeAvailable: subscribeSite.subscribeAvailable,
     subscribeModalEnabled: subscribeSite.subscribeModalEnabled,
     requireMailForSubscribe: subscribeSite.requireMailForSubscribe,
+    redirect: {
+      configured: Boolean(redirectRaw),
+      masked: redirectRaw ? maskEmail(redirectRaw) : null,
+    },
   });
 }

@@ -1,6 +1,11 @@
 import { jsonResponse } from "./_shared/auth.js";
 import { buildSubscribeHtml, sendMail } from "./_shared/mail.js";
-import { CONSENT_VERSION, normalizeEmail, upsertSubscriber } from "./_shared/subscribers.js";
+import {
+  CONSENT_VERSION,
+  getSubscriberByEmail,
+  normalizeEmail,
+  upsertSubscriber,
+} from "./_shared/subscribers.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -55,6 +60,19 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: "Consent is required to subscribe" }, 400, CORS_HEADERS);
     }
 
+    const existing = await getSubscriberByEmail(env.ADMIN_KV, email);
+    if (existing) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "already_subscribed",
+          message: "This email is already subscribed to Cursor Curse Monitor updates.",
+        },
+        409,
+        CORS_HEADERS
+      );
+    }
+
     const upsert = await upsertSubscriber(env.ADMIN_KV, {
       email,
       source: String(body.source ?? "website").trim() || "website",
@@ -65,7 +83,6 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: upsert.error || "Subscribe failed" }, 503, CORS_HEADERS);
     }
 
-    const alreadySubscribed = Boolean(upsert.alreadySubscribed);
     const mailResult = await sendMail(env, {
       to: email,
       subject: "Subscribed to Cursor Curse Monitor updates",
@@ -74,21 +91,13 @@ export async function onRequestPost(context) {
       category: "subscribe",
     });
 
-    let message;
-    if (mailResult.sent) {
-      message = alreadySubscribed
-        ? "You're already subscribed — we resent the confirmation email."
-        : "You're subscribed! Check your inbox for a confirmation email.";
-    } else if (alreadySubscribed) {
-      message = "You're already on the list. We'll email you when there are updates.";
-    } else {
+    if (!mailResult.sent) {
       console.error("subscribe welcome email failed", mailResult.reason);
       return jsonResponse(
         {
           ok: false,
           error: "Welcome email could not be sent",
           emailed: false,
-          alreadySubscribed: false,
           message:
             "You're on the list, but the welcome email could not be delivered right now. Please try again in a few minutes.",
           mailWarning: mailResult.reason,
@@ -102,8 +111,7 @@ export async function onRequestPost(context) {
       {
         ok: true,
         emailed: mailResult.sent,
-        alreadySubscribed,
-        message,
+        message: "You're subscribed! Check your inbox for a confirmation email.",
       },
       200,
       CORS_HEADERS

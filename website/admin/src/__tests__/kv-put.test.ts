@@ -37,6 +37,14 @@ describe("kv-put", () => {
     expect(JSON.parse(store.get("k"))).toEqual({ a: 2 });
   });
 
+  it("accepts a KV namespace passed directly (legacy callers)", async () => {
+    const store = new Map();
+    const kv = mockKv(store);
+    const wrote = await putKvJsonIfChanged(kv, "legacy", { ok: true });
+    expect(wrote).toBe(true);
+    expect(JSON.parse(store.get("legacy"))).toEqual({ ok: true });
+  });
+
   it("skips string put when unchanged", async () => {
     const store = new Map([["svg", "<svg/>"]]);
     const env = { ADMIN_KV: mockKv(store) };

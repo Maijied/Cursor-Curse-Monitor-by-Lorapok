@@ -55,9 +55,9 @@ describe("kv scatter-gather", () => {
     expect([...store.keys()].filter((k) => k.startsWith("backup:point:"))).toHaveLength(1);
   });
 
-  it("creates a backup point before mailbox compaction", async () => {
+  it("creates a backup point before mailbox compaction (KV mode)", async () => {
     const store = new Map();
-    const env = { ADMIN_KV: mockKv(store) };
+    const env = { ADMIN_KV: mockKv(store), CCM_MAIL_STORAGE: "kv" };
     const html = "<p>".repeat(100);
     const entry = await recordMailboxMessage(env, {
       direction: "outbound",

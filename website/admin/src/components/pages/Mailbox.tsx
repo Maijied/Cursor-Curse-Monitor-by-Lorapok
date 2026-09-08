@@ -14,6 +14,7 @@ import { formatMailboxAddress } from "../mailbox/mailbox-format";
 import { scanAdminText, type AdminSecurityFinding } from "../../lib/scanSecrets";
 import {
   fetchMailbox,
+  fetchEmailIdentitiesConfigApi,
   fetchMailTemplates,
   markMailboxRead,
   pollTestmailInbox,
@@ -80,6 +81,8 @@ export default function Mailbox() {
   const [mailTemplates, setMailTemplates] = useState<MailTemplate[]>([]);
   const [selectedMailTemplate, setSelectedMailTemplate] = useState("");
   const [composeCategory, setComposeCategory] = useState("compose");
+  const [fromLocalPart, setFromLocalPart] = useState("");
+  const [mailAliases, setMailAliases] = useState<Array<{ localPart: string; email: string; displayName: string }>>([]);
   const [securityFindings, setSecurityFindings] = useState<AdminSecurityFinding[]>([]);
   const [syncingMail, setSyncingMail] = useState(false);
   const [testmailProbing, setTestmailProbing] = useState(false);
@@ -116,6 +119,18 @@ export default function Mailbox() {
   }, []);
 
   useEffect(() => {
+    fetchEmailIdentitiesConfigApi()
+      .then((data) => {
+        setMailAliases(
+          data.config.identities
+            .filter((item) => item.enabled)
+            .map((item) => ({ localPart: item.localPart, email: item.email, displayName: item.displayName }))
+        );
+      })
+      .catch(() => setMailAliases([]));
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (testmailPollRef.current) window.clearInterval(testmailPollRef.current);
     };
@@ -135,7 +150,13 @@ export default function Mailbox() {
     setSending(true);
     setNotice(null);
     try {
-      const res = await sendMailboxMessage({ to, subject, text: body, category: composeCategory });
+      const res = await sendMailboxMessage({
+        to,
+        subject,
+        text: body,
+        category: composeCategory,
+        fromLocalPart: fromLocalPart || undefined,
+      });
       setNotice({
         tone: res.ok ? "success" : "error",
         title: res.ok ? "Message sent" : "Send failed",
@@ -648,6 +669,21 @@ export default function Mailbox() {
               {mailTemplates.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="text-[var(--color-muted)]">From alias</span>
+            <select
+              value={fromLocalPart}
+              onChange={(e) => setFromLocalPart(e.target.value)}
+              className={`${inputClass} mt-1`}
+            >
+              <option value="">Default product address</option>
+              {mailAliases.map((alias) => (
+                <option key={alias.localPart} value={alias.localPart}>
+                  {alias.displayName} ({alias.email})
                 </option>
               ))}
             </select>

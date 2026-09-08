@@ -193,6 +193,7 @@ export async function onRequestPost(context) {
     text,
     category: normalizeComposeCategory(body.category),
     sentBy: auth.email,
+    fromLocalPart: body.fromLocalPart ? String(body.fromLocalPart).trim().toLowerCase() : null,
   });
 
   const response = jsonResponse({

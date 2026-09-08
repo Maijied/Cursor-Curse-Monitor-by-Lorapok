@@ -47,7 +47,7 @@ if (resendConfigured) {
 
 if (emailToken) {
   const probe = await probeEmailSendingToken(emailToken, accountId);
-  restOk = probe.status !== 401 && probe.status !== 403;
+  restOk = probe.ok;
   if (restOk) {
     console.log("✓ CLOUDFLARE_EMAIL_API_TOKEN can access Email Sending API");
   } else {

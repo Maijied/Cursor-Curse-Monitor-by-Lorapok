@@ -1,7 +1,9 @@
 import { recordMailboxMessage } from "./mailbox.js";
+import { logResendMailEvent } from "./mail-audit-log.js";
 import { logSystemEvent } from "./system-log.js";
 import { resolveMailBranding } from "./mail-branding.js";
 import { getMessageCatalog } from "./message-cards-runtime.js";
+import { resolveAliasFromAddress } from "./mail-aliases.js";
 import {
   coerceMailDisplayName,
   normalizeMailFromInput,
@@ -483,7 +485,10 @@ async function sendViaResend(env, { to, subject, html, text, from, bcc, replyTo 
     return { sent: false, reason: `Resend ${res.status}: ${errText.slice(0, 200)}` };
   }
 
-  return { sent: true, transport: "resend" };
+  const payload = await res.json().catch(() => ({}));
+  const messageId = typeof payload?.id === "string" ? payload.id : null;
+
+  return { sent: true, transport: "resend", messageId };
 }
 
 async function canSendViaResend(env, mailConfig = null) {
@@ -513,11 +518,39 @@ async function canSendViaResend(env, mailConfig = null) {
  */
 export async function sendMail(
   env,
-  { to, subject, html, text, category = "system", sentBy = null, from: fromOverride = null, bcc: bccOverride = null }
+  {
+    to,
+    subject,
+    html,
+    text,
+    category = "system",
+    sentBy = null,
+    from: fromOverride = null,
+    fromLocalPart = null,
+    bcc: bccOverride = null,
+    skipMailbox = false,
+    skipUsage = false,
+    skipAudit = false,
+    skipSystemLog = false,
+  }
 ) {
+  const skipMailboxKv =
+    skipMailbox || env.CCM_MAIL_SKIP_MAILBOX === "1" || env.CCM_MAIL_SKIP_MAILBOX === "true";
+  const skipUsageKv =
+    skipUsage || env.CCM_MAIL_SKIP_USAGE === "1" || env.CCM_MAIL_SKIP_USAGE === "true";
+  const skipAuditKv =
+    skipAudit || env.CCM_MAIL_SKIP_AUDIT === "1" || env.CCM_MAIL_SKIP_AUDIT === "true";
+  const skipSystemLogKv =
+    skipSystemLog ||
+    env.CCM_MAIL_SKIP_SYSTEM_LOG === "1" ||
+    env.CCM_MAIL_SKIP_SYSTEM_LOG === "true";
   const mailConfig = await readMailConfig(env);
   const textBody = text ?? subject;
-  const from = normalizeMailFromInput(fromOverride ?? resolveMailFromConfig(mailConfig, category));
+  let resolvedFrom = fromOverride;
+  if (!resolvedFrom && fromLocalPart) {
+    resolvedFrom = await resolveAliasFromAddress(env, fromLocalPart);
+  }
+  const from = normalizeMailFromInput(resolvedFrom ?? resolveMailFromConfig(mailConfig, category));
   const bcc = bccOverride ?? defaultBccFromConfig(mailConfig);
   const resendOpts = {
     resendFirstExternal: mailConfig.resendFirstExternal,
@@ -544,10 +577,12 @@ export async function sendMail(
       try {
         result = await sendViaResend(env, payload, mailConfig);
         if (result.sent) {
-          try {
-            await incrementServiceUsage(env, "resend", 1);
-          } catch (err) {
-            console.error("incrementServiceUsage(resend) failed", err);
+          if (!skipUsageKv) {
+            try {
+              await incrementServiceUsage(env, "resend", 1);
+            } catch (err) {
+              console.error("incrementServiceUsage(resend) failed", err);
+            }
           }
         }
       } catch (err) {
@@ -599,10 +634,12 @@ export async function sendMail(
         const resend = await sendViaResend(env, payload, mailConfig);
         if (resend.sent) {
           result = resend;
-          try {
-            await incrementServiceUsage(env, "resend", 1);
-          } catch (err) {
-            console.error("incrementServiceUsage(resend) failed", err);
+          if (!skipUsageKv) {
+            try {
+              await incrementServiceUsage(env, "resend", 1);
+            } catch (err) {
+              console.error("incrementServiceUsage(resend) failed", err);
+            }
           }
         }
       } catch (err) {
@@ -635,10 +672,12 @@ export async function sendMail(
             const resend = await sendViaResend(env, payload, mailConfig);
             if (resend.sent) {
               result = resend;
-              try {
-                await incrementServiceUsage(env, "resend", 1);
-              } catch (err) {
-                console.error("incrementServiceUsage(resend) failed", err);
+              if (!skipUsageKv) {
+                try {
+                  await incrementServiceUsage(env, "resend", 1);
+                } catch (err) {
+                  console.error("incrementServiceUsage(resend) failed", err);
+                }
               }
             } else if (!result.reason || result.reason.includes("credentials missing")) {
               result = resend;
@@ -660,33 +699,54 @@ export async function sendMail(
   }
 
   let mailboxId;
-  try {
-    const recorded = await recordMailboxMessage(env, {
-      direction: "outbound",
+  if (!skipMailboxKv) {
+    try {
+      const recorded = await recordMailboxMessage(env, {
+        direction: "outbound",
+        from: from.email,
+        to,
+        subject,
+        text: textBody,
+        html,
+        status: result.sent ? "sent" : "failed",
+        category,
+        sentBy,
+        error: result.sent ? null : result.reason,
+        read: false,
+        meta: { bcc, copyTo: mailConfig.opsBccEmail },
+      });
+      mailboxId = recorded.id;
+    } catch (err) {
+      console.error("recordMailboxMessage failed", err);
+    }
+  }
+
+  if (!skipSystemLogKv) {
+    await logSystemEvent(env, {
+      level: result.sent ? "info" : "error",
+      source: "mail",
+      message: result.sent ? `Email sent to ${to}` : `Email failed to ${to}`,
+      email: sentBy,
+      meta: { to, subject, category, transport: result.transport, reason: result.reason },
+    });
+  }
+
+  if (
+    !skipAuditKv &&
+    (result.transport === "resend" || result.transport === "resend-fallback")
+  ) {
+    void logResendMailEvent(env, {
       from: from.email,
       to,
       subject,
-      text: textBody,
-      html,
+      transport: result.transport,
       status: result.sent ? "sent" : "failed",
+      messageId: result.messageId ?? null,
       category,
       sentBy,
       error: result.sent ? null : result.reason,
-      read: false,
-      meta: { bcc, copyTo: mailConfig.opsBccEmail },
     });
-    mailboxId = recorded.id;
-  } catch (err) {
-    console.error("recordMailboxMessage failed", err);
   }
-
-  await logSystemEvent(env, {
-    level: result.sent ? "info" : "error",
-    source: "mail",
-    message: result.sent ? `Email sent to ${to}` : `Email failed to ${to}`,
-    email: sentBy,
-    meta: { to, subject, category, transport: result.transport, reason: result.reason },
-  });
 
   return { ...result, mailboxId };
 }

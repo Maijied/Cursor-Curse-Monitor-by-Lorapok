@@ -12,7 +12,7 @@ import {
   buildNoticeDraftFromChangelog,
   changelogNoticeId,
 } from "./functions/api/_shared/changelog-notice.js";
-import { readSubscribers, subscriberStats, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
+import { readSubscribers, subscriberStats, getSubscriberByEmail, upsertSubscriber } from "./functions/api/_shared/subscribers.js";
 import { submitProductFeedback } from "./functions/api/_shared/feedback-submit.js";
 import { broadcastToSubscribers } from "./functions/api/_shared/subscriber-broadcast.js";
 import { enrichTags, filterPublishableTags } from "./functions/api/_shared/publishable-tags.js";
@@ -73,6 +73,7 @@ import {
 } from "./functions/api/_shared/mail-config.js";
 import { buildMailSetupInstructions } from "./functions/api/_shared/mail-setup-instructions.js";
 import { buildMailSyncRecommendations } from "./functions/api/_shared/mail-sync.js";
+import { maskEmail } from "./functions/api/_shared/mask-email.js";
 import {
   DEFAULT_CURSOR_INDEX_CONFIG,
   normalizeCursorIndexConfig,
@@ -119,6 +120,12 @@ import {
 } from "./functions/api/_shared/email-identities-config.js";
 import { provisionIdentityRouting } from "./functions/api/_shared/cloudflare-email-routing.js";
 import { syncEmailIdentities } from "./functions/api/_shared/email-identities-sync.js";
+import {
+  createMailAlias,
+  deleteMailAlias,
+  listMailAliases,
+  updateMailAlias,
+} from "./functions/api/_shared/mail-aliases.js";
 import { isValidMailAddress } from "./functions/api/_shared/mail-config.js";
 import { readSystemLogs } from "./functions/api/_shared/system-log.js";
 import {
@@ -1525,6 +1532,78 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/mail/aliases" && req.method === "GET") {
+      listMailAliases(devFunctionsEnv())
+        .then((aliases) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, aliases }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/mail/aliases" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const result = await createMailAlias(devFunctionsEnv(), parsed, "dev@local");
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, ...result }));
+        } catch (err) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Create failed" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/mail/aliases" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const localPart = String(parsed?.localPart ?? "").trim().toLowerCase();
+          if (!localPart) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "localPart is required" }));
+            return;
+          }
+          const result = await updateMailAlias(devFunctionsEnv(), localPart, parsed, "dev@local");
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, ...result }));
+        } catch (err) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Update failed" }));
+        }
+      });
+      return;
+    }
+
+    if (url.startsWith("/api/mail/aliases") && req.method === "DELETE") {
+      const localPart = String(new URL(req.url ?? "", "http://local").searchParams.get("localPart") ?? "").trim().toLowerCase();
+      if (!localPart) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "localPart query parameter is required" }));
+        return;
+      }
+      deleteMailAlias(devFunctionsEnv(), localPart, "dev@local")
+        .then((result) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, ...result }));
+        })
+        .catch((err) => {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Delete failed" }));
+        });
+      return;
+    }
+
     if (url === "/api/integrations/testmail/config" && req.method === "GET") {
       readTestmailIntegrationConfig(devFunctionsEnv())
         .then((config) => {
@@ -1645,6 +1724,10 @@ export function createDevApiMiddleware() {
           subscribeAvailable,
           subscribeModalEnabled: subscribeConfig.subscribeModalEnabled,
           requireMailForSubscribe: subscribeConfig.requireMailForSubscribe,
+          redirect: {
+            configured: Boolean(process.env.MAIL_REDIRECT_TO),
+            masked: process.env.MAIL_REDIRECT_TO ? maskEmail(process.env.MAIL_REDIRECT_TO) : null,
+          },
         })
       );
       return;
@@ -3131,6 +3214,20 @@ export function createDevApiMiddleware() {
             res.setHeader("Content-Type", "application/json");
             res.setHeader("Access-Control-Allow-Origin", "*");
             res.end(JSON.stringify({ error: "Consent is required to subscribe" }));
+            return;
+          }
+          const existing = await getSubscriberByEmail(devKv, email);
+          if (existing) {
+            res.statusCode = 409;
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error: "already_subscribed",
+                message: "This email is already subscribed to Cursor Curse Monitor updates.",
+              })
+            );
             return;
           }
           const upsert = await upsertSubscriber(devKv, {

@@ -71,6 +71,21 @@ async function readLegacySubscribers(kv) {
   }
 }
 
+/**
+ * @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv
+ * @param {string} email
+ */
+export async function getSubscriberByEmail(kv, email) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
+
+  let existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, normalized));
+  if (!existing) {
+    existing = (await readLegacySubscribers(kv)).find((row) => row.email === normalized) ?? null;
+  }
+  return existing;
+}
+
 /** @param {import("@cloudflare/workers-types").KVNamespace | undefined} kv */
 export async function readSubscribers(kv) {
   if (!kv?.get) return [];
@@ -110,10 +125,7 @@ export async function upsertSubscriber(kv, input) {
   const email = normalizeEmail(input.email);
   if (!email) return { ok: false, error: "Valid email is required" };
 
-  let existing = normalizeSubscriber(await getScatterEntity(kv, SUBSCRIBER_EMAIL_PREFIX, email));
-  if (!existing) {
-    existing = (await readLegacySubscribers(kv)).find((row) => row.email === email) ?? null;
-  }
+  const existing = await getSubscriberByEmail(kv, email);
 
   const next = {
     email,
