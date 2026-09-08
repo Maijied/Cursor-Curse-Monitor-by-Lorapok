@@ -2,7 +2,7 @@ import { putKvJsonIfChanged } from "./kv-put.js";
 import {
   MAIL_HELP,
   MAIL_MONITOR,
-  MAIL_OPS_COPY,
+  resolveDefaultOpsForwardTo,
   FROM_NAME_HELP,
   FROM_NAME_MONITOR,
 } from "./mail-addresses.js";
@@ -14,7 +14,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const DEFAULT_MAIL_CONFIG = {
   productEmail: MAIL_MONITOR,
   supportEmail: MAIL_HELP,
-  opsBccEmail: MAIL_OPS_COPY,
+  opsBccEmail: "",
   productFromName: FROM_NAME_MONITOR,
   supportFromName: FROM_NAME_HELP,
   resendFirstExternal: true,
@@ -46,10 +46,11 @@ export function isValidMailAddress(email) {
 /**
  * @param {Record<string, unknown>} parsed
  */
-export function normalizeMailConfig(parsed) {
+export function normalizeMailConfig(parsed, env = {}) {
+  const envOps = resolveDefaultOpsForwardTo(env);
   const productEmail = String(parsed.productEmail ?? DEFAULT_MAIL_CONFIG.productEmail).trim();
   const supportEmail = String(parsed.supportEmail ?? DEFAULT_MAIL_CONFIG.supportEmail).trim();
-  const opsBccEmail = String(parsed.opsBccEmail ?? DEFAULT_MAIL_CONFIG.opsBccEmail).trim();
+  const opsBccEmail = String(parsed.opsBccEmail ?? envOps ?? DEFAULT_MAIL_CONFIG.opsBccEmail).trim();
 
   return {
     productEmail: isValidMailAddress(productEmail) ? productEmail : DEFAULT_MAIL_CONFIG.productEmail,
@@ -80,19 +81,21 @@ async function readMailConfigFromKv(env) {
     throw new Error("ADMIN_KV binding not configured");
   }
   const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-  if (!raw) return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
-  return normalizeMailConfig(JSON.parse(raw));
+  if (!raw) return normalizeMailConfig({ ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null }, env);
+  return normalizeMailConfig(JSON.parse(raw), env);
 }
 
 /**
  * @param {Record<string, unknown>} env
  */
 export async function readMailConfig(env) {
-  if (!env?.ADMIN_KV?.get) return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
+  if (!env?.ADMIN_KV?.get) {
+    return normalizeMailConfig(DEFAULT_MAIL_CONFIG, env);
+  }
   try {
     return await readMailConfigFromKv(env);
   } catch {
-    return { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null };
+    return normalizeMailConfig(DEFAULT_MAIL_CONFIG, env);
   }
 }
 
@@ -110,7 +113,7 @@ export async function writeMailConfig(env, patch) {
     ...patch,
     updatedAt: new Date().toISOString(),
     updatedBy: patch.updatedBy ?? current.updatedBy ?? null,
-  });
+  }, env);
   await putKvJsonIfChanged(env, CONFIG_KEY, next);
   return next;
 }

@@ -240,8 +240,12 @@ export default function EmailIdentitiesCard() {
         : await provisionEmailIdentityApi(payload);
 
       setConfig(result.config);
-      const fullAddress = result.alias?.fullAddress ?? `${localPart}@lorapok.tech`;
-      const authNote = result.alias?.authAllowed
+      const aliasRow = "alias" in result ? result.alias : result.identity;
+      const fullAddress =
+        aliasRow?.fullAddress ??
+        (aliasRow && "email" in aliasRow ? aliasRow.email : undefined) ??
+        `${localPart}@lorapok.tech`;
+      const authNote = aliasRow?.authAllowed
         ? " Login enabled — alias added to Mission Control allowlist."
         : "";
       setMessage({
@@ -440,7 +444,15 @@ export default function EmailIdentitiesCard() {
               Default ops forward inbox
             </label>
             <p className="text-xs text-[var(--color-muted)] mb-2">
-              New routing rules forward here unless overridden per alias (typically your Gmail ops inbox).
+              New routing rules forward here unless overridden per alias. Seeds from cred vault{" "}
+              <code className="text-xs">mail_redirect_to</code> / Pages secret{" "}
+              <code className="text-xs">MAIL_REDIRECT_TO</code>, then{" "}
+              <code className="text-xs">ADMIN_MASTER_EMAIL</code> when unset.
+              {redirectTo ? (
+                <span className="block mt-1">
+                  Vault redirect active: <span className="font-[family-name:var(--font-mono)]">{redirectTo}</span>
+                </span>
+              ) : null}
             </p>
             <input
               id="ops-forward"
@@ -591,7 +603,8 @@ export default function EmailIdentitiesCard() {
       </Card>
 
       {canProvision && showCreateForm ? (
-        <Card id="create-mail-alias">
+        <div id="create-mail-alias">
+        <Card>
           <h3 className="font-semibold mb-2 flex items-center gap-2">
             <Plus size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
             Generate email
@@ -734,6 +747,7 @@ export default function EmailIdentitiesCard() {
             </div>
           </form>
         </Card>
+        </div>
       ) : null}
 
       <Modal

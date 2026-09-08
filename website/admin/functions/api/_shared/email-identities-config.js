@@ -4,7 +4,7 @@ import {
   FROM_NAME_MONITOR,
   MAIL_HELP,
   MAIL_MONITOR,
-  MAIL_OPS_COPY,
+  resolveDefaultOpsForwardTo,
 } from "./mail-addresses.js";
 
 export const IDENTITY_DOMAIN = "lorapok.tech";
@@ -33,7 +33,6 @@ export const BUILTIN_IDENTITIES = [
     localPart: "cursor.monitor",
     displayName: FROM_NAME_MONITOR,
     category: "product",
-    forwardTo: MAIL_OPS_COPY,
     enabled: true,
     routingStatus: "builtin",
     cloudflareRuleId: null,
@@ -44,7 +43,6 @@ export const BUILTIN_IDENTITIES = [
     localPart: "cursor.curse.help",
     displayName: FROM_NAME_HELP,
     category: "support",
-    forwardTo: MAIL_OPS_COPY,
     enabled: true,
     routingStatus: "builtin",
     cloudflareRuleId: null,
@@ -55,7 +53,6 @@ export const BUILTIN_IDENTITIES = [
     localPart: "admin",
     displayName: "Mission Control Admin",
     category: "ops",
-    forwardTo: MAIL_OPS_COPY,
     enabled: true,
     routingStatus: "builtin",
     cloudflareRuleId: null,
@@ -93,7 +90,7 @@ export function identityEmail(localPart, domain = IDENTITY_DOMAIN) {
 /**
  * @param {unknown} raw
  */
-function normalizeIdentity(raw) {
+function normalizeIdentity(raw, opsForwardTo = "") {
   const localPart = String(raw?.localPart ?? raw?.id ?? "").trim().toLowerCase();
   const check = validateIdentityLocalPart(localPart);
   if (!check.ok && !BUILTIN_IDENTITIES.some((b) => b.localPart === localPart)) {
@@ -102,7 +99,7 @@ function normalizeIdentity(raw) {
   const category = IDENTITY_CATEGORIES.includes(String(raw?.category ?? "").toLowerCase())
     ? String(raw.category).toLowerCase()
     : "custom";
-  const forwardTo = String(raw?.forwardTo ?? MAIL_OPS_COPY).trim().toLowerCase();
+  const forwardTo = String(raw?.forwardTo ?? opsForwardTo).trim().toLowerCase();
   const authRole = ALIAS_AUTH_ROLES.includes(String(raw?.authRole ?? "").toLowerCase())
     ? String(raw.authRole).toLowerCase()
     : "viewer";
@@ -137,14 +134,15 @@ function isValidCoworkerEmail(email) {
 /**
  * @param {Record<string, unknown>} parsed
  */
-export function normalizeEmailIdentitiesConfig(parsed) {
+export function normalizeEmailIdentitiesConfig(parsed, env = {}) {
   const domain = String(parsed?.domain ?? IDENTITY_DOMAIN).trim().toLowerCase();
-  const opsForwardTo = String(parsed?.opsForwardTo ?? MAIL_OPS_COPY).trim().toLowerCase();
+  const defaultOps = resolveDefaultOpsForwardTo(env);
+  const opsForwardTo = String(parsed?.opsForwardTo ?? defaultOps).trim().toLowerCase();
   const rawList = Array.isArray(parsed?.identities) ? parsed.identities : [];
   const merged = new Map(BUILTIN_IDENTITIES.map((item) => [item.localPart, { ...item }]));
 
   for (const entry of rawList) {
-    const normalized = normalizeIdentity(entry);
+    const normalized = normalizeIdentity(entry, opsForwardTo);
     if (!normalized) continue;
     const existing = merged.get(normalized.localPart) ?? {};
     merged.set(normalized.localPart, { ...existing, ...normalized });
@@ -164,14 +162,14 @@ export function normalizeEmailIdentitiesConfig(parsed) {
  */
 export async function readEmailIdentitiesConfig(env) {
   if (!env?.ADMIN_KV?.get) {
-    return normalizeEmailIdentitiesConfig({});
+    return normalizeEmailIdentitiesConfig({}, env);
   }
   try {
     const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-    if (!raw) return normalizeEmailIdentitiesConfig({});
-    return normalizeEmailIdentitiesConfig(JSON.parse(raw));
+    if (!raw) return normalizeEmailIdentitiesConfig({}, env);
+    return normalizeEmailIdentitiesConfig(JSON.parse(raw), env);
   } catch {
-    return normalizeEmailIdentitiesConfig({});
+    return normalizeEmailIdentitiesConfig({}, env);
   }
 }
 
@@ -181,7 +179,7 @@ export async function readEmailIdentitiesConfig(env) {
  */
 export async function writeEmailIdentitiesConfig(env, config) {
   if (!env?.ADMIN_KV?.put) throw new Error("ADMIN_KV binding not configured");
-  await putKvJsonIfChanged(env, CONFIG_KEY, normalizeEmailIdentitiesConfig(config));
+  await putKvJsonIfChanged(env, CONFIG_KEY, normalizeEmailIdentitiesConfig(config, env));
 }
 
 /**
@@ -284,7 +282,7 @@ export function upsertIdentity(config, localPart, patch) {
           provisionedAt: null,
           createdAt: new Date().toISOString(),
         };
-  const next = normalizeIdentity({ ...base, ...patch, localPart: key });
+  const next = normalizeIdentity({ ...base, ...patch, localPart: key }, config.opsForwardTo);
   if (!next) throw new Error("Invalid identity");
   if (index >= 0) identities[index] = next;
   else identities.push(next);

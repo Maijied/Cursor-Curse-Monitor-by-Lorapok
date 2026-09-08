@@ -18,6 +18,7 @@ const reserved = validateIdentityLocalPart("postmaster");
 assert.equal(reserved.ok, false);
 
 const config = normalizeEmailIdentitiesConfig({
+  opsForwardTo: "ops@example.com",
   identities: [
     {
       localPart: "releases",
