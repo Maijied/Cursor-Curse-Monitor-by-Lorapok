@@ -153,6 +153,21 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
   workflow_dispatch **deploy-infra** for full Cloudflare mail repair. Guide:
   `docs/guides/CLOUDFLARE_EMAIL_AND_ROUTING.md`.
 
+### Local machine (full agent access)
+
+When working on your PC (not Cloud Agent), one-time setup unlocks labels, issues, and Project #4 sync:
+
+```bash
+nvm use                          # Node 24 per .nvmrc
+npm ci && npm ci --prefix website/admin
+npm run build -w @lorapok/cursor-monitor-shared
+gh auth login
+gh auth refresh -h github.com -s repo,workflow,read:project,project
+npm run sync:issues
+```
+
+Resume context: [`.cursor/SESSION-HANDOFF.md`](.cursor/SESSION-HANDOFF.md) (cloud→local handoff). Cred vault path: `/mnt/NewVolume/Personal_Projects/cred/` — local only.
+
 ### Notes
 
 - Node **24** is expected (CI uses Node 24; see `.nvmrc`). A few admin devDeps (`jsdom`, `undici`)
