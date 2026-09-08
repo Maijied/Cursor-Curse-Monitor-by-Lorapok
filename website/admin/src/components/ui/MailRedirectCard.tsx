@@ -6,11 +6,11 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import { fetchMailSetupStatusApi } from "../../lib/api";
 
 /**
- * Shows whether MAIL_REDIRECT_TO is active (masked) for safe bulk replay / dev sends.
+ * Shows whether MAIL_REDIRECT_TO is active for ops replay / dev sends.
  */
 export default function MailRedirectCard() {
   const [loading, setLoading] = useState(true);
-  const [masked, setMasked] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(null);
   const [configured, setConfigured] = useState(false);
 
   const load = useCallback(() => {
@@ -18,11 +18,11 @@ export default function MailRedirectCard() {
     fetchMailSetupStatusApi()
       .then((data) => {
         setConfigured(Boolean(data.redirect?.configured));
-        setMasked(data.redirect?.masked ?? null);
+        setAddress(data.redirect?.address ?? data.redirect?.masked ?? null);
       })
       .catch(() => {
         setConfigured(false);
-        setMasked(null);
+        setAddress(null);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -46,10 +46,10 @@ export default function MailRedirectCard() {
       </div>
       {loading ? (
         <LorapokLarvaeLoader label="Loading redirect…" />
-      ) : configured && masked ? (
+      ) : configured && address ? (
         <div className="flex items-center gap-3">
           <Badge variant="synced">Active</Badge>
-          <span className="font-[family-name:var(--font-mono)] text-sm">{masked}</span>
+          <span className="font-[family-name:var(--font-mono)] text-sm">{address}</span>
         </div>
       ) : (
         <Badge variant="warn">Not configured — sends use original recipients</Badge>

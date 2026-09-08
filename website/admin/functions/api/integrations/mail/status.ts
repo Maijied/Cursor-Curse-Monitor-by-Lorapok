@@ -59,6 +59,7 @@ export async function onRequestGet(context) {
     requireMailForSubscribe: subscribeSite.requireMailForSubscribe,
     redirect: {
       configured: Boolean(redirectRaw),
+      address: redirectRaw ? redirectRaw.toLowerCase() : null,
       masked: redirectRaw ? maskEmail(redirectRaw) : null,
     },
   });

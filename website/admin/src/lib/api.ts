@@ -1434,15 +1434,21 @@ export async function sendMailboxMessage(payload: {
   return data as { ok: boolean; message?: string };
 }
 
-export async function sendMailboxTest(to?: string) {
+export async function sendMailboxTest(to?: string, fromLocalPart?: string) {
   const res = await fetch(`${API_BASE}/mailbox`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await authHeaders()) },
-    body: JSON.stringify({ action: "test", to }),
+    body: JSON.stringify({ action: "test", to, fromLocalPart: fromLocalPart || undefined }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Test failed");
-  return data as { ok: boolean; message?: string; transport?: string; reason?: string };
+  return data as {
+    ok: boolean;
+    message?: string;
+    transport?: string;
+    reason?: string;
+    fromLocalPart?: string;
+  };
 }
 
 export async function syncMailTransport() {
@@ -1496,6 +1502,7 @@ export type MailSetupStatus = {
   checkedAt: string;
   redirect?: {
     configured: boolean;
+    address: string | null;
     masked: string | null;
   };
 };

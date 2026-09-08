@@ -683,7 +683,7 @@ export default function Mailbox() {
               <option value="">Default product address</option>
               {mailAliases.map((alias) => (
                 <option key={alias.localPart} value={alias.localPart}>
-                  {alias.displayName} ({alias.email})
+                  {alias.displayName} &lt;{alias.email}&gt;
                 </option>
               ))}
             </select>

@@ -46,9 +46,9 @@ export default function Mail() {
       </Card>
 
       <MailRedirectCard />
+      <EmailIdentitiesCard />
       <MailSetupChecklist />
       <MailTransportCard />
-      <EmailIdentitiesCard />
       {canEditResend ? (
         <ResendConfigCard />
       ) : (
