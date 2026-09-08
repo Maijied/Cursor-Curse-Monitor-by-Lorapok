@@ -1505,6 +1505,29 @@ export type MailSetupStatus = {
     address: string | null;
     masked: string | null;
   };
+  inbound?: {
+    domain: string;
+    opsForwardTo: string;
+    routingApiConfigured: boolean;
+    mxNote: string;
+    identities: Array<{
+      localPart: string;
+      email: string;
+      forwardTo: string;
+      routingStatus: string;
+      inboundReady: boolean;
+      inboundNote: string | null;
+      cloudflareRuleId: string | null;
+    }>;
+    summary: {
+      total: number;
+      inboundReady: number;
+      pending: number;
+      error: number;
+    };
+    syncCommand: string;
+    verifyCommand: string;
+  };
 };
 
 export async function fetchMailSetupStatusApi() {
@@ -1698,6 +1721,8 @@ export type EmailIdentityRow = {
   provisionedAt: string | null;
   createdAt?: string | null;
   builtin?: boolean;
+  inboundReady?: boolean;
+  inboundNote?: string | null;
 };
 
 export type MailAliasRow = {

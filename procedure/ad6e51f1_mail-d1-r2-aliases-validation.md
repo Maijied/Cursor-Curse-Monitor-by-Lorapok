@@ -18,11 +18,11 @@ Mail D1 R2 aliases validation
 
 ## Progress
 
-- [ ] Plan approved
-- [ ] Procedure + GitHub issue created
-- [ ] Implementation started
+- [x] Plan approved
+- [x] Implementation started — inbound routing audit/sync, Mail UI, verify script
+- [x] Production fix — admin@lorapok.tech forward updated to ops inbox
 - [ ] Tests passing
-- [ ] PR opened
+- [ ] PR opened (#245)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
@@ -34,6 +34,8 @@ Mail D1 R2 aliases validation
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-09-08 | Procedure opened | Task tracking started |
+| 2026-09-08 | Separate CLOUDFLARE_ROUTING_API_TOKEN on Pages | Outbound email token lacks Email Routing Edit; Sync routing needs routing-scoped secret |
+| 2026-09-08 | Per-address rules (no catch-all) | Cloudflare catch-all disabled; each alias needs explicit forward rule |
 
 ---
 

@@ -203,11 +203,24 @@ export function sanitizeEmailIdentitiesForClient(config) {
  */
 export function sanitizeIdentityForClient(item, domain = IDENTITY_DOMAIN) {
   const builtin = BUILTIN_IDENTITIES.some((b) => b.localPart === item.localPart);
+  const inboundReady = item.routingStatus === "provisioned";
+  let inboundNote = null;
+  if (!inboundReady) {
+    if (item.routingStatus === "error") {
+      inboundNote = "Inbound routing failed — use Sync routing or run setup-email-addresses.mjs";
+    } else if (item.routingStatus === "simulated") {
+      inboundNote = "Dev/simulated only — no Cloudflare routing rule";
+    } else {
+      inboundNote = "Inbound not provisioned — Mail → Sync routing";
+    }
+  }
   return {
     ...item,
     email: identityEmail(item.localPart, domain),
     fullAddress: identityEmail(item.localPart, domain),
     builtin,
+    inboundReady,
+    inboundNote,
   };
 }
 

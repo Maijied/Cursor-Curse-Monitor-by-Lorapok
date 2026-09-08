@@ -5,6 +5,7 @@ import { readMailConfig, sanitizeMailConfigForClient } from "../../_shared/mail-
 import { getMailTransportStatus } from "../../_shared/mail.js";
 import { buildPublicSiteConfig } from "../../_shared/subscribe-config.js";
 import { maskEmail } from "../../_shared/mask-email.js";
+import { readEmailIdentitiesConfig, sanitizeEmailIdentitiesForClient } from "../../_shared/email-identities-config.js";
 
 /**
  * Aggregates mail transport readiness, identity config, sync recommendations, and subscribe gate status.
@@ -19,7 +20,38 @@ export async function onRequestGet(context) {
   const transport = getMailTransportStatus(env);
   const config = await readMailConfig(env);
   const sanitized = sanitizeMailConfigForClient(config, transport, env);
-  const recommendations = buildMailSyncRecommendations(transport, config);
+  const emailIdentities = await readEmailIdentitiesConfig(env);
+  const sanitizedIdentities = sanitizeEmailIdentitiesForClient(emailIdentities);
+  const inboundSummary = {
+    domain: sanitizedIdentities.domain,
+    opsForwardTo: sanitizedIdentities.opsForwardTo,
+    routingApiConfigured: Boolean(
+      env.CLOUDFLARE_ROUTING_API_TOKEN?.trim() ||
+        env.CLOUDFLARE_API_TOKEN?.trim()
+    ),
+    mxNote:
+      "lorapok.tech MX records must route through Cloudflare Email Routing (Dashboard → Email → Email Routing → enable).",
+    identities: sanitizedIdentities.identities.map((item) => ({
+      localPart: item.localPart,
+      email: item.email,
+      forwardTo: item.forwardTo,
+      routingStatus: item.routingStatus,
+      inboundReady: item.inboundReady === true,
+      inboundNote: item.inboundNote ?? null,
+      cloudflareRuleId: item.cloudflareRuleId,
+    })),
+    summary: {
+      total: sanitizedIdentities.identities.length,
+      inboundReady: sanitizedIdentities.identities.filter((item) => item.inboundReady === true).length,
+      pending: sanitizedIdentities.identities.filter(
+        (item) => !item.inboundReady && item.routingStatus !== "error"
+      ).length,
+      error: sanitizedIdentities.identities.filter((item) => item.routingStatus === "error").length,
+    },
+    syncCommand: "node website/admin/scripts/setup-email-addresses.mjs",
+    verifyCommand: "node website/admin/scripts/verify-inbound-routing.mjs",
+  };
+  const recommendations = buildMailSyncRecommendations(transport, config, inboundSummary);
   const setupInstructions = buildMailSetupInstructions(config, transport);
   const subscribeSite = await buildPublicSiteConfig(env);
   const redirectRaw = String(env.MAIL_REDIRECT_TO ?? "").trim();
@@ -62,5 +94,6 @@ export async function onRequestGet(context) {
       address: redirectRaw ? redirectRaw.toLowerCase() : null,
       masked: redirectRaw ? maskEmail(redirectRaw) : null,
     },
+    inbound: inboundSummary,
   });
 }
