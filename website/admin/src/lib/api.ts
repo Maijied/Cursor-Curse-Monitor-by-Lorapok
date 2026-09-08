@@ -1127,6 +1127,34 @@ export async function fetchMailTemplates() {
   return apiGet<{ templates: MailTemplate[] }>("/mailbox?templates=1");
 }
 
+export type MailGalleryTemplate = {
+  id: string;
+  label: string;
+  description: string;
+  category: string;
+};
+
+export type MailGalleryPreview = {
+  subject: string;
+  text: string;
+  html: string;
+  category: string;
+};
+
+/** Lorapok mail template gallery previews (MAIL-13). */
+export async function fetchMailGalleryApi(templateId?: string) {
+  const query = templateId ? `?template=${encodeURIComponent(templateId)}` : "";
+  return apiGet<{
+    ok: boolean;
+    items?: MailGalleryTemplate[];
+    previews?: Array<{ template: MailGalleryTemplate; preview: MailGalleryPreview }>;
+    template?: MailGalleryTemplate;
+    preview?: MailGalleryPreview;
+    transport?: { configured?: boolean; transport?: string };
+    templateCount?: number;
+  }>(`/integrations/mail/preview${query}`);
+}
+
 export async function createNotice(payload: NoticePayload & { enabled?: boolean }) {
   const res = await fetch(`${API_BASE}/notices`, {
     method: "POST",

@@ -7,6 +7,7 @@ import MailTransportCard from "../ui/MailTransportCard";
 import MailRedirectCard from "../ui/MailRedirectCard";
 import EmailIdentitiesCard from "../ui/EmailIdentitiesCard";
 import ResendConfigCard from "../ui/ResendConfigCard";
+import MailTemplateGallery from "../ui/MailTemplateGallery";
 import { useAuthSession } from "../../lib/auth-context";
 
 /**
@@ -46,6 +47,7 @@ export default function Mail() {
       </Card>
 
       <MailRedirectCard />
+      <MailTemplateGallery />
       <EmailIdentitiesCard />
       <MailSetupChecklist />
       <MailTransportCard />

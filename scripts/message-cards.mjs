@@ -83,9 +83,9 @@ export function buildMessageCards(ctx) {
       category: "subscribe",
       channels: {
         email: {
-          subject: "You're subscribed to CCM updates",
-          text: `Thanks for subscribing to ${ctx.displayName} release updates from Lorapok Labs.\n\nWebsite: ${ctx.homepage}\n${buildChannelFooters(ctx).email.unsubscribeHint}`,
-          variables: ["email"],
+          subject: "You're subscribed to {{displayName}} updates",
+          text: `Hi {{name}},\n\nThanks for subscribing to {{displayName}} release updates from Lorapok Labs.\n\nPlatform: {{platform}}\n{{stats}}\n\nWebsite: {{homepage}}\n{{unsubscribeHint}}`,
+          variables: ["email", "name", "platform", "stats", "unsubscribeHint"],
         },
         notice: {
           type: "info",
@@ -215,6 +215,19 @@ export function buildMessageCards(ctx) {
           subject: `${ctx.displayName} v${v} release notes`,
           text: `A new version of ${ctx.displayName} (v${v}) is available from Lorapok Labs.\n\nRead the full changelog on GitHub: ${ctx.releaseUrl}\nVisit the product site: ${ctx.homepage}\n\nThank you for using CCM.`,
           variables: ["message"],
+        },
+      },
+    },
+    {
+      id: "subscriber-digest",
+      label: "Subscriber release digest",
+      category: "subscribe",
+      severity: "info",
+      channels: {
+        email: {
+          subject: "{{displayName}} v{{releaseVersion}} — what's new",
+          text: `Hi {{name}},\n\n{{changelogExcerpt}}\n\n{{stats}}\n\nGet the update: {{releaseUrl}}\nProduct site: {{homepage}}\n\n{{unsubscribeHint}}`,
+          variables: ["name", "platform", "stats", "changelogExcerpt", "unsubscribeHint"],
         },
       },
     },

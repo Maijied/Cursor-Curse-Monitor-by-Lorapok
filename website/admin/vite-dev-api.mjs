@@ -33,6 +33,11 @@ import {
   buildDiscordGalleryPreview,
   listDiscordGalleryPreviews,
 } from "./functions/api/_shared/discord-card-gallery.js";
+import {
+  MAIL_GALLERY_ITEMS,
+  buildMailGalleryPreview,
+  listMailGalleryPreviews,
+} from "./functions/api/_shared/mail-card-gallery.js";
 import { getMailTransportStatus } from "./functions/api/_shared/mail.js";
 import {
   assignAdminRole,
@@ -1058,6 +1063,54 @@ export function createDevApiMiddleware() {
               items: DISCORD_GALLERY_ITEMS,
               previews: previews.map((entry) => ({ card: entry.item, embed: entry.embed })),
               config,
+            })
+          );
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err.message || "Preview failed" }));
+        });
+        return;
+    }
+
+    if (url.startsWith("/api/integrations/mail/preview") && req.method === "GET") {
+      const templateId = new URL(req.url ?? "", "http://localhost").searchParams.get("template");
+      const env = { ADMIN_KV: devKv, SKIP_LIVE_SITE_DATA: "true", PREFER_LOCAL_SITE_DATA: "true" };
+      if (templateId) {
+        buildMailGalleryPreview(env, templateId)
+          .then((preview) => {
+            res.setHeader("Content-Type", "application/json");
+            if (!preview) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: "Unknown template id" }));
+              return;
+            }
+            res.end(
+              JSON.stringify({
+                ok: true,
+                template: preview.item,
+                preview: preview.preview,
+                transport: getMailTransportStatus(env),
+              })
+            );
+          })
+          .catch((err) => {
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: err.message || "Preview failed" }));
+          });
+        return;
+      }
+      listMailGalleryPreviews(env)
+        .then((previews) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: true,
+              items: MAIL_GALLERY_ITEMS,
+              previews: previews.map((entry) => ({ template: entry.item, preview: entry.preview })),
+              transport: getMailTransportStatus(env),
             })
           );
         })
