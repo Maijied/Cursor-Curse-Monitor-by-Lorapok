@@ -11,6 +11,8 @@ import {
   putDiscordConfigApi,
   type DiscordConfig,
 } from "../../lib/api";
+import SectionReferLink from "./SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 
 /**
  * Configure the Discord webhook that receives user-facing feedback prompts (separate from deployment status).
@@ -79,7 +81,8 @@ export default function DiscordFeedbackCard() {
           <p className="text-sm text-[var(--color-muted)] mt-1">
             Optional channel for in-app user-feedback prompts (GitHub Issues, Discussions, support links).
             For community building and announcements, use the <strong className="text-[var(--color-text)]">Discord community</strong> card above.
-            Deployment status webhooks are configured on the Deployments page.
+            Deployment status webhooks are configured on the Deployments page.{" "}
+            <SectionReferLink {...SECTION_REFERS.deployments} className="!text-sm" />
           </p>
         </div>
         {config && (

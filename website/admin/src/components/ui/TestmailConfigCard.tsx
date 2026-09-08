@@ -7,6 +7,8 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
 import FieldHelp from "./FieldHelp";
 import { fetchTestmailConfigApi, putTestmailConfigApi, type TestmailIntegrationConfig } from "../../lib/api";
+import SectionReferLink from "./SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 
 export default function TestmailConfigCard() {
   const { hasPermission } = useAuthSession();
@@ -75,7 +77,8 @@ export default function TestmailConfigCard() {
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
             E2E subscribe probes in CI and Mailbox. Sync API key + namespace to GitHub, then run{" "}
-            <code className="text-xs">setup-testmail-pages-secret.mjs</code> for Pages runtime.
+            <code className="text-xs">setup-testmail-pages-secret.mjs</code> for Pages runtime.{" "}
+            <SectionReferLink {...SECTION_REFERS.mailbox} className="!text-sm" />
           </p>
         </div>
         {config && <Badge variant={ok ? "synced" : "warn"}>{ok ? "Configured" : "Incomplete"}</Badge>}
