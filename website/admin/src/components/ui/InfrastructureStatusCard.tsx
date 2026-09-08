@@ -25,9 +25,6 @@ export default function InfrastructureStatusCard() {
   const [pausing, setPausing] = useState(false);
   const [notice, setNotice] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
-  const overallVariant =
-    sync?.overall === "online" ? "synced" : sync?.overall === "degraded" ? "warn" : "danger";
-
   const writesPausedActive = Boolean(
     sync?.stats.writesPausedUntil && Date.parse(sync.stats.writesPausedUntil) > Date.now()
   );
@@ -64,7 +61,6 @@ export default function InfrastructureStatusCard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {sync ? <Badge variant={overallVariant}>{sync.overall}</Badge> : null}
           <button
             type="button"
             onClick={() => refresh()}

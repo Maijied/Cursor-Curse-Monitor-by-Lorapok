@@ -1,9 +1,8 @@
-import { Activity, Download, Package, Store, Users } from "lucide-react";
+import { Activity, Download, Store, Users } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import KpiCard from "../ui/KpiCard";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
-import StatusDot from "../ui/StatusDot";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import DriftAlert from "../ui/DriftAlert";
@@ -13,11 +12,12 @@ import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import TrafficTrendGraph from "../ui/TrafficTrendGraph";
 import MarketplaceDistributionChart from "../ui/MarketplaceDistributionChart";
 import GitHubCommunityCard from "../ui/GitHubCommunityCard";
-import ConnectedServicesCard from "../ui/ConnectedServicesCard";
+import SectionReferLink from "../ui/SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import { useUsageStats } from "../../hooks/useUsageStats";
-import { syncStatusLabel, formatCount } from "../../lib/site-data";
+import { formatCount } from "../../lib/site-data";
 import {
   COMMUNITY_DOWNLOADS_NOTE,
   downloadStatsAvailabilityLabel,
@@ -26,13 +26,6 @@ import {
   getVerifiedChannelCount,
   isDownloadStatsDisplayable,
 } from "../../lib/download-stats";
-
-function syncBadgeVariant(status: string): "synced" | "drift" | "warn" | "danger" | "neutral" {
-  if (status === "synced") return "synced";
-  if (status === "drift" || status === "duplicate-listing" || status === "dual-listing") return "warn";
-  if (status === "missing") return "danger";
-  return "neutral";
-}
 
 /**
  * Renders the Mission Control dashboard with synchronization status, marketplace metrics, visitor statistics, and service information.
@@ -60,7 +53,6 @@ export default function Overview() {
     return <ErrorState message={error ?? "Site data unavailable"} />;
   }
 
-  const syncVariant = syncBadgeVariant(data.syncStatus);
   const downloads = data.downloads;
   const downloadsDisplayable = isDownloadStatsDisplayable(data);
   const displayTotal = getDisplayDownloadTotal(data);
@@ -76,12 +68,6 @@ export default function Overview() {
       <PageHeader
         title="Mission Control"
         description="Live marketplace sync, downloads, and reach for Cursor Curse Monitor."
-        action={
-          <Badge variant={syncVariant} pulse={data.syncStatus === "synced"}>
-            <StatusDot status={data.syncStatus === "synced" ? "ok" : "warn"} pulse={data.syncStatus === "synced"} />
-            {syncStatusLabel(data.syncStatus)}
-          </Badge>
-        }
       />
 
       <DriftAlert data={data} />
@@ -144,14 +130,8 @@ export default function Overview() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Package Version"
-          value={data.packageVersion}
-          icon={<Package className="text-[var(--color-accent)]" size={24} />}
-          delayClass="stagger-1"
-        />
-        {data.browserExtension && (
+      {data.browserExtension ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <KpiCard
             label="Firefox AMO"
             value={data.browserExtension.version ?? "—"}
@@ -161,10 +141,10 @@ export default function Overview() {
               </span>
             }
             icon={<Store className="text-[var(--color-warn)]" size={24} />}
-            delayClass="stagger-2"
+            delayClass="stagger-1"
           />
-        )}
-      </div>
+        </div>
+      ) : null}
 
       {/* Interactive Trend & Trajectory Graph */}
       <TrafficTrendGraph
@@ -195,7 +175,17 @@ export default function Overview() {
 
       <GitHubCommunityCard data={data} />
 
-      <ConnectedServicesCard />
+      <Card>
+        <h3 className="font-semibold text-[var(--color-text)]">Service connectivity</h3>
+        <p className="text-sm text-[var(--color-muted)] mt-2">
+          Live API and integration status lives in Settings. System health, version, and marketplace sync appear in the
+          footer on every page.
+        </p>
+        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+          <SectionReferLink {...SECTION_REFERS.settingsServices} />
+          <SectionReferLink {...SECTION_REFERS.settingsGeneral} label="Settings → Infrastructure & KV" />
+        </p>
+      </Card>
 
       <Card>
         <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>

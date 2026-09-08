@@ -93,6 +93,12 @@ describe("Dashboard Component", () => {
     expect(screen.getByText(getTestAdminEmail())).toBeInTheDocument();
   });
 
+  it("shows global footer status strip instead of sidebar sync chips", async () => {
+    renderDashboard();
+    expect(await screen.findByRole("contentinfo", { name: "System status" })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Sync status:/i)).not.toBeInTheDocument();
+  });
+
   it("serves live site-data.json for dashboard KPIs", async () => {
     const res = await fetch(testServer.siteDataUrl);
     expect(res.status).toBe(200);
