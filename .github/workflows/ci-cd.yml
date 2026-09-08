@@ -686,15 +686,15 @@ jobs:
 
       - name: Notify Discord — admin deploy
         if: always() && steps.pages_deploy.outcome != 'skipped'
-        continue-on-error: true
-        env:
-          DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
         run: |
+          if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
+            echo "::error::DISCORD_DEPLOYMENT_WEBHOOK not set — sync cred vault (discord_deployment_webhook_url) or add admin-production secret."
+            exit 1
+          fi
           CONCLUSION="failure"
           if [ "${{ steps.pages_deploy.outcome }}" = "success" ]; then CONCLUSION="success"; fi
-          TAG="v$(node -p "require('./package.json').version")"
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          EXTRA_ARGS=()
+          EXTRA_ARGS=(--require-webhook --site-data website/admin/dist/site-data.json)
           if [ "$CONCLUSION" = "failure" ]; then
             EXTRA_ARGS+=(--failed-step "Deploy Admin Panel / pages deploy")
           fi
@@ -703,7 +703,6 @@ jobs:
             --conclusion "$CONCLUSION" \
             --target "Deploy Admin Panel" \
             --action-type "deploy-infra" \
-            --tag "$TAG" \
             --run-url "$RUN_URL" \
             --deploy-url "https://cursor-dev.lorapok.tech" \
             --triggered-by "${GITHUB_ACTOR}" \
@@ -1391,17 +1390,39 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Notify Discord — marketing website deploy
+      - name: Install GPG (cred vault decrypt)
+        if: always() && steps.deployment.outcome != 'skipped'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnupg
+
+      - name: Load credentials from cred vault
         if: always() && steps.deployment.outcome != 'skipped'
         continue-on-error: true
         env:
-          DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
+          CRED_VAULT_PASSPHRASE: ${{ secrets.CRED_VAULT_PASSPHRASE }}
+          CRED_STORE_GPG_BASE64: ${{ secrets.CRED_STORE_GPG_BASE64 }}
+        run: node scripts/load-cred-vault-env-ci.mjs
+        working-directory: website/admin
+
+      - name: Fallback deployment webhook secret (when cred vault not synced)
+        if: always() && steps.deployment.outcome != 'skipped'
+        env:
+          FB_DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
         run: |
+          if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ] && [ -n "${FB_DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
+            echo "DISCORD_DEPLOYMENT_WEBHOOK=${FB_DISCORD_DEPLOYMENT_WEBHOOK}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Notify Discord — marketing website deploy
+        if: always() && steps.deployment.outcome != 'skipped'
+        run: |
+          if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
+            echo "::error::DISCORD_DEPLOYMENT_WEBHOOK not set — sync cred vault (discord_deployment_webhook_url) or add github-pages secret."
+            exit 1
+          fi
           CONCLUSION="failure"
           if [ "${{ steps.deployment.outcome }}" = "success" ]; then CONCLUSION="success"; fi
-          TAG="v$(node -p "require('./package.json').version")"
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          EXTRA_ARGS=()
+          EXTRA_ARGS=(--require-webhook --site-data website/site-data.json)
           if [ "$CONCLUSION" = "failure" ]; then
             EXTRA_ARGS+=(--failed-step "Deploy Marketing Website / GitHub Pages")
           fi
@@ -1410,7 +1431,6 @@ jobs:
             --conclusion "$CONCLUSION" \
             --target "Deploy Marketing Website" \
             --action-type "deploy-infra" \
-            --tag "$TAG" \
             --run-url "$RUN_URL" \
             --deploy-url "https://cursor.lorapok.tech" \
             --triggered-by "${GITHUB_ACTOR}" \

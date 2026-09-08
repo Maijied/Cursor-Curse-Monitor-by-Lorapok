@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import {
   buildDiscordNotifyPayload,
+  normalizeVersionTag,
   parseDiscordNotifyArgs,
+  readVersionFromSiteData,
+  resolveDeployNotifyTag,
+  shouldRequireDiscordWebhook,
 } from "../scripts/discord-deployment-notify.mjs";
 import { buildLocalDeployEnrichment } from "../scripts/discord-ci-enrichment.mjs";
 import { buildDeploymentEmbed } from "../website/admin/functions/api/_shared/discord-notify.js";
@@ -40,6 +44,20 @@ const parsed = parseDiscordNotifyArgs([
 assert.equal(parsed.conclusion, "success");
 assert.equal(parsed.target, "Admin Panel");
 assert.equal(parsed.duration, "4m 12s");
+
+assert.equal(normalizeVersionTag("1.0.56"), "v1.0.56");
+assert.equal(normalizeVersionTag("v1.0.56"), "v1.0.56");
+assert.equal(normalizeVersionTag("0.0.0"), null);
+
+const siteVersion = readVersionFromSiteData(root);
+assert.ok(siteVersion, "expected version from committed site-data.json");
+assert.match(resolveDeployNotifyTag({ repoRoot: root }), /^v\d+\.\d+\.\d+/);
+assert.equal(
+  resolveDeployNotifyTag({ tag: "v9.9.9", repoRoot: root }),
+  "v9.9.9",
+);
+assert.equal(shouldRequireDiscordWebhook({ requireWebhook: "1" }), true);
+assert.equal(shouldRequireDiscordWebhook({}), process.env.GITHUB_ACTIONS === "true");
 
 const enrichment = buildLocalDeployEnrichment({ tag: "v1.0.56", repoRoot: root });
 const embed = buildDeploymentEmbed(payload, enrichment);

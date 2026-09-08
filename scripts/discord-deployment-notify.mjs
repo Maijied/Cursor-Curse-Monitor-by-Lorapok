@@ -11,6 +11,77 @@ import { sendDiscordWebhook } from "../website/admin/functions/api/_shared/disco
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
+const SITE_DATA_CANDIDATES = [
+  "website/admin/dist/site-data.json",
+  "website/site-data.json",
+];
+
+/**
+ * @param {string|null|undefined} version
+ * @returns {string|null}
+ */
+export function normalizeVersionTag(version) {
+  if (version == null) return null;
+  const raw = String(version).trim();
+  if (!raw || raw === "0.0.0") return null;
+  return raw.startsWith("v") ? raw : `v${raw}`;
+}
+
+/**
+ * @param {string} repoRoot
+ * @param {string} [siteDataPath]
+ * @returns {string|null}
+ */
+export function readVersionFromSiteData(repoRoot, siteDataPath) {
+  const candidates = siteDataPath
+    ? [siteDataPath]
+    : SITE_DATA_CANDIDATES.map((rel) => join(repoRoot, rel));
+
+  for (const path of candidates) {
+    try {
+      const data = JSON.parse(readFileSync(path, "utf8"));
+      const version = data.publishedReleaseVersion ?? data.packageVersion ?? data.version;
+      const tag = normalizeVersionTag(version);
+      if (tag) return tag.replace(/^v/i, "");
+    } catch {
+      /* try next candidate */
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve the deployment version shown in Discord (same source as site-data badge).
+ * @param {{ tag?: string; repoRoot?: string; siteDataPath?: string }} [options]
+ * @returns {string}
+ */
+export function resolveDeployNotifyTag(options = {}) {
+  const repoRoot = options.repoRoot ?? root;
+  const explicit = normalizeVersionTag(options.tag);
+  if (explicit) return explicit;
+
+  const fromSite = normalizeVersionTag(
+    readVersionFromSiteData(repoRoot, options.siteDataPath),
+  );
+  if (fromSite) return fromSite;
+
+  try {
+    const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
+    const fallback = normalizeVersionTag(pkg.version);
+    if (fallback) {
+      console.warn(
+        `::warning::Discord notify: site-data version unavailable — falling back to package.json (${fallback})`,
+      );
+      return fallback;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  console.warn("::warning::Discord notify: could not resolve deployment version");
+  return "v0.0.0";
+}
+
 /**
  * @param {string[]} argv
  */
@@ -31,6 +102,8 @@ export function parseDiscordNotifyArgs(argv) {
     channel: "",
     failedStep: "",
     jobsJson: "",
+    siteData: "",
+    requireWebhook: "",
   };
 
   for (let i = 2; i < argv.length; i++) {
@@ -49,6 +122,8 @@ export function parseDiscordNotifyArgs(argv) {
     else if (arg === "--channel" && argv[i + 1]) opts.channel = argv[++i];
     else if (arg === "--failed-step" && argv[i + 1]) opts.failedStep = argv[++i];
     else if (arg === "--jobs-json" && argv[i + 1]) opts.jobsJson = argv[++i];
+    else if (arg === "--site-data" && argv[i + 1]) opts.siteData = argv[++i];
+    else if (arg === "--require-webhook") opts.requireWebhook = "1";
     else if (arg === "-h" || arg === "--help") {
       console.log(`Usage: node scripts/discord-deployment-notify.mjs [options]
 
@@ -67,6 +142,8 @@ Options:
   --channel <release channel>
   --failed-step <failing step name>
   --jobs-json <JSON array of {name, conclusion}>
+  --site-data <path to site-data.json>
+  --require-webhook  Fail when DISCORD_DEPLOYMENT_WEBHOOK is unset (default in GITHUB_ACTIONS)
 `);
       process.exit(0);
     }
@@ -79,8 +156,11 @@ Options:
  * @param {Record<string, string>} opts
  */
 export function buildDiscordNotifyPayload(opts) {
-  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const tag = opts.tag || `v${pkg.version}`;
+  const tag = resolveDeployNotifyTag({
+    tag: opts.tag,
+    repoRoot: root,
+    siteDataPath: opts.siteData || undefined,
+  });
   const conclusion = opts.conclusion || "success";
   const summary =
     opts.summary ||
@@ -126,9 +206,25 @@ export function buildDiscordNotifyPayload(opts) {
 /**
  * @param {Record<string, string>} opts
  */
+export function shouldRequireDiscordWebhook(opts = {}) {
+  if (opts.requireWebhook === "1" || opts.requireWebhook === "true") return true;
+  if (process.env.REQUIRE_DISCORD_WEBHOOK === "1") return true;
+  return process.env.GITHUB_ACTIONS === "true";
+}
+
 export async function notifyDiscordDeploymentFromCi(opts) {
   const webhookUrl = process.env.DISCORD_DEPLOYMENT_WEBHOOK?.trim();
   if (!webhookUrl) {
+    const requireWebhook = shouldRequireDiscordWebhook(opts);
+    if (requireWebhook) {
+      return {
+        ok: false,
+        skipped: true,
+        reason: "no_webhook",
+        error:
+          "DISCORD_DEPLOYMENT_WEBHOOK not set — sync cred vault (discord_deployment_webhook_url) or add the admin-production / github-pages secret.",
+      };
+    }
     return { ok: false, skipped: true, reason: "no_webhook" };
   }
 
@@ -156,13 +252,20 @@ async function main() {
   const result = await notifyDiscordDeploymentFromCi(opts);
 
   if (result.skipped) {
-    console.log("DISCORD_DEPLOYMENT_WEBHOOK not set — skipping Discord notification");
+    const message =
+      result.error ??
+      "DISCORD_DEPLOYMENT_WEBHOOK not set — skipping Discord notification";
+    if (shouldRequireDiscordWebhook(opts)) {
+      console.error(`::error::${message}`);
+      process.exit(1);
+    }
+    console.log(message);
     process.exit(0);
   }
 
   if (!result.ok) {
-    console.error(`::warning::Discord notification failed: ${result.error ?? result.status}`);
-    process.exit(0);
+    console.error(`::error::Discord notification failed: ${result.error ?? result.status}`);
+    process.exit(1);
   }
 
   console.log("Discord deployment notification sent");
