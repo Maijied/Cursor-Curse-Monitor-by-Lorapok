@@ -9,6 +9,7 @@ import {
   isKvWritesPaused,
   nextUtcQuotaResetIso,
 } from "./kv-quota.js";
+import { isFirestoreFallbackAvailable, putFirestoreSafe } from "./firebase-store.js";
 
 /** In-memory pause until UTC reset — shared across requests in the same isolate. */
 let kvWritePausedUntil = null;
@@ -78,7 +79,37 @@ export function resolveKvBinding(envOrKv) {
  * @property {boolean} [skipped] — write intentionally skipped
  * @property {string} [reason] — skip/failure reason
  * @property {boolean} [quotaExceeded]
+ * @property {boolean} [firestoreFallback] — value persisted to Firestore instead of KV
  */
+
+/**
+ * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace | null | undefined} envOrKv
+ */
+function resolveEnvFromBinding(envOrKv) {
+  if (!envOrKv || typeof envOrKv !== "object") return null;
+  if ("ADMIN_KV" in envOrKv) return /** @type {Record<string, unknown>} */ (envOrKv);
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} key
+ * @param {string} value
+ * @param {{ skipIfUnchanged?: boolean }} [options]
+ */
+async function tryFirestoreKvFallback(env, key, value, options = {}) {
+  if (!isFirestoreFallbackAvailable(env)) {
+    return { ok: false, wrote: false, reason: "firestore-unavailable" };
+  }
+  const fs = await putFirestoreSafe(env, key, value, options);
+  if (fs.ok && fs.wrote) {
+    return { ok: true, wrote: true, firestoreFallback: true };
+  }
+  if (fs.ok && !fs.wrote && fs.reason === "unchanged") {
+    return { ok: true, wrote: false, skipped: true, reason: "unchanged", firestoreFallback: true };
+  }
+  return { ok: false, wrote: false, reason: fs.reason ?? "firestore-failed" };
+}
 
 /**
  * KV put that never throws on quota errors — for mail, audit, and scatter hot paths.
@@ -91,7 +122,15 @@ export function resolveKvBinding(envOrKv) {
 export async function putKvStringSafe(envOrKv, key, value, options = {}) {
   const { skipIfUnchanged = false, writesPausedUntil = null, required = false, expirationTtl } = options;
 
+  const env = resolveEnvFromBinding(envOrKv);
+
   if (isKvWriteBlockedEarly(writesPausedUntil)) {
+    if (env) {
+      const fs = await tryFirestoreKvFallback(env, key, value, { skipIfUnchanged });
+      if (fs.ok && (fs.wrote || fs.skipped)) {
+        return { ...fs, quotaExceeded: true };
+      }
+    }
     return { ok: true, wrote: false, skipped: true, reason: "kv_writes_paused", quotaExceeded: true };
   }
 
@@ -117,6 +156,12 @@ export async function putKvStringSafe(envOrKv, key, value, options = {}) {
   } catch (err) {
     if (isKvQuotaError(err)) {
       markKvWriteQuotaHit();
+      if (env) {
+        const fs = await tryFirestoreKvFallback(env, key, value, { skipIfUnchanged });
+        if (fs.ok && (fs.wrote || fs.skipped)) {
+          return { ...fs, quotaExceeded: true };
+        }
+      }
       return { ok: true, wrote: false, skipped: true, reason: "quota_exceeded", quotaExceeded: true };
     }
     if (required) throw err;

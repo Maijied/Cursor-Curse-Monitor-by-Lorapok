@@ -6,6 +6,7 @@ import { jsonResponse } from "./auth.js";
 import { formatKvQuotaError } from "./kv-quota.js";
 import { getInMemoryKvWritePause, isKvWriteBlockedEarly } from "./kv-put.js";
 import { shouldBlockKvWrites } from "./mail-storage.js";
+import { isFirestoreFallbackAvailable } from "./firebase-store.js";
 
 /**
  * @typedef {{ degraded?: boolean; warning?: string; kvWritesPaused?: boolean }} KvDegradedMeta
@@ -32,10 +33,12 @@ export async function kvDegradedMeta(env, putResult = {}) {
     (await shouldBlockKvWrites(env));
   if (!blocked) return {};
   const pause = getInMemoryKvWritePause();
+  const firestore = isFirestoreFallbackAvailable(env);
   return {
     degraded: true,
     kvWritesPaused: true,
     warning: formatKvQuotaError(new Error("KV put() limit exceeded for the day")),
+    ...(firestore ? { firestoreFallback: true } : {}),
     ...(pause ? { writesPausedUntil: pause } : {}),
   };
 }

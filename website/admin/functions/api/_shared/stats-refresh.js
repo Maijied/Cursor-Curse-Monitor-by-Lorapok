@@ -15,6 +15,7 @@ import { formatKvPutError, putKvJsonSafe, putKvStringSafe } from "./kv-put.js";
 import { writeStatsArtifactsR2 } from "./r2-stats.js";
 import { isKvQuotaError, isKvWritesPaused, nextUtcQuotaResetIso } from "./kv-quota.js";
 import { shouldBlockKvWrites } from "./mail-storage.js";
+import { isFirestoreFallbackAvailable } from "./firebase-store.js";
 import { logSystemEvent } from "./system-log.js";
 import {
   buildReadmeStatsFromSiteData,
@@ -234,7 +235,11 @@ export async function runStatsRefresh(env, options = {}) {
   if (!options.force && !config.enabled) {
     return { ok: false, skipped: true, reason: "disabled" };
   }
-  if (!options.force && (isKvWritesPaused(config.writesPausedUntil) || (await shouldBlockKvWrites(env)))) {
+  if (
+    !options.force &&
+    (isKvWritesPaused(config.writesPausedUntil) || (await shouldBlockKvWrites(env))) &&
+    !isFirestoreFallbackAvailable(env)
+  ) {
     const pauseUntil = config.writesPausedUntil ?? null;
     return {
       ok: false,
@@ -242,7 +247,7 @@ export async function runStatsRefresh(env, options = {}) {
       reason: "kv_writes_paused",
       writesPausedUntil: pauseUntil,
       notice:
-        "KV daily write limit reached — automatic stats refresh skipped until quota resets (UTC).",
+        "KV daily write limit reached — automatic stats refresh skipped until quota resets (UTC). Firestore fallback may still serve cached config.",
     };
   }
   if (!options.force && config.lastRunAt) {
@@ -347,7 +352,7 @@ export async function runStatsRefresh(env, options = {}) {
       skipIfUnchanged: true,
       writesPausedUntil: config.writesPausedUntil,
     });
-    if (cachePut.quotaExceeded) {
+    if (cachePut.quotaExceeded && !cachePut.firestoreFallback) {
       const pauseUntil = nextUtcQuotaResetIso();
       await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
         ok: false,

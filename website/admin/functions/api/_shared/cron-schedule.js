@@ -15,6 +15,7 @@
  */
 
 import { putKvConfigJson } from "./kv-put.js";
+import { getKvJsonWithFirestoreFallback } from "./firebase-store.js";
 
 export const CRON_RUN_DEFAULTS = {
   lastRunAt: null,
@@ -98,15 +99,10 @@ export function mergeCronJobConfig(current, patch, options = {}) {
  * @param {string} key
  */
 async function readCronJobState(env, key) {
-  if (!env.ADMIN_KV?.get) return {};
-  try {
-    const raw = await env.ADMIN_KV.get(key);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return typeof parsed === "object" && parsed !== null ? parsed : {};
-  } catch {
-    return {};
-  }
+  const row = await getKvJsonWithFirestoreFallback(env, key);
+  if (!row) return {};
+  const parsed = row.value;
+  return typeof parsed === "object" && parsed !== null ? parsed : {};
 }
 
 /**
