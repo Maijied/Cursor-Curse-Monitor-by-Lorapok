@@ -405,6 +405,7 @@ export function loadCursorCloudflareSecretsFromVault() {
     resendFrom: String(cursor.resend_from ?? "").trim() || undefined,
     resendSendingDomain: String(cursor.resend_sending_domain ?? "").trim() || undefined,
     mailProbeTo: String(cursor.mail_probe_to ?? "").trim() || undefined,
+    mailRedirectTo: String(cursor.mail_redirect_to ?? "").trim() || undefined,
     adminMasterEmail: resolveAdminMasterEmailFromVault(vault),
     discordDeploymentWebhook: resolveDiscordDeploymentWebhookFromVault(vault),
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
@@ -547,6 +548,9 @@ export function envWithCursorCloudflareSecrets(baseEnv = process.env) {
       : {}),
     ...(loaded.adminMasterEmail && !baseEnv.VITE_ADMIN_MASTER_EMAIL
       ? { VITE_ADMIN_MASTER_EMAIL: loaded.adminMasterEmail }
+      : {}),
+    ...(loaded.mailRedirectTo && !baseEnv.MAIL_REDIRECT_TO
+      ? { MAIL_REDIRECT_TO: loaded.mailRedirectTo }
       : {}),
   };
 }

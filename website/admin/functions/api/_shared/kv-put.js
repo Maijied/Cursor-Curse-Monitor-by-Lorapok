@@ -16,17 +16,33 @@ export function formatKvPutError(err) {
 }
 
 /**
- * @param {Record<string, unknown>} env
+ * Accept either a Workers env (`{ ADMIN_KV }`) or a KV namespace (legacy callers passed `env.ADMIN_KV`).
+ * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace | null | undefined} envOrKv
+ */
+export function resolveKvBinding(envOrKv) {
+  if (!envOrKv || typeof envOrKv !== "object") return null;
+  if ("ADMIN_KV" in envOrKv && envOrKv.ADMIN_KV) {
+    return /** @type {import("@cloudflare/workers-types").KVNamespace} */ (envOrKv.ADMIN_KV);
+  }
+  if (typeof envOrKv.get === "function" && typeof envOrKv.put === "function") {
+    return /** @type {import("@cloudflare/workers-types").KVNamespace} */ (envOrKv);
+  }
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace} envOrKv
  * @param {string} key
  * @param {string} value
  */
-export async function putKvStringIfChanged(env, key, value) {
-  if (!env?.ADMIN_KV?.put) {
+export async function putKvStringIfChanged(envOrKv, key, value) {
+  const kv = resolveKvBinding(envOrKv);
+  if (!kv?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  const current = await env.ADMIN_KV.get(key);
+  const current = await kv.get(key);
   if (current === value) return false;
-  await env.ADMIN_KV.put(key, value);
+  await kv.put(key, value);
   return true;
 }
 
@@ -45,9 +61,10 @@ export async function putKvJsonIfChanged(env, key, value) {
  * @param {string} key
  * @param {unknown} value
  */
-export async function putKvJson(env, key, value) {
-  if (!env?.ADMIN_KV?.put) {
+export async function putKvJson(envOrKv, key, value) {
+  const kv = resolveKvBinding(envOrKv);
+  if (!kv?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  await env.ADMIN_KV.put(key, JSON.stringify(value));
+  await kv.put(key, JSON.stringify(value));
 }

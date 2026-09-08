@@ -26,6 +26,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Mission Control Mail hub** — dedicated `/dashboard/mail` tab for transport status, email identities, Resend config, masked redirect target, and Mailbox link
+- **Mail D1/R2 storage** — `mail_messages`, `mail_audit_resend`, and `ccm-mail-audit` worker; KV scatter aliases; `resend-saved-mail.mjs` replay script
+- **Duplicate subscribe rejection** — `POST /api/subscribe` returns 409 `already_subscribed`; marketing site shows friendly message
 - **Cred vault sync rule** — `.cursor/rules/cred-vault-sync-maintain.mdc` for local/cloud agents to run `sync-*-cred-vault.mjs` after secret changes
 - **Chrysalis AI roadmap (CHRYS-01–05)** — named floating assistant; Antigravity/vault for admin; user BYOK on web/extensions; privacy tiers; system learning for usage warnings
 - **DC-08/09 / SOCIAL-01–05** — Discord CI cards, multi-platform webhooks, deploy social gallery, AI image/video generators

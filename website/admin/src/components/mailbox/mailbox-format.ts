@@ -1,5 +1,6 @@
 import type { MailboxMessage } from "../../lib/api";
 
 export function formatMailboxAddress(row: MailboxMessage): string {
-  return row.direction === "outbound" ? `→ ${row.to}` : `← ${row.from}`;
+  const addr = row.direction === "outbound" ? row.to : row.from;
+  return row.direction === "outbound" ? `→ ${addr}` : `← ${addr}`;
 }

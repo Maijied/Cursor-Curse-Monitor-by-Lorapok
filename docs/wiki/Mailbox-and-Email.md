@@ -50,10 +50,42 @@ Full blueprint (inbound + outbound + CI): [Cloudflare Email and Routing](../guid
 | `compose` | Mission Control message | `logo-product.png` | Admin compose |
 | `test` | Delivery confirmation | `logo-help.png` | Mailbox test button |
 
+## Storage (D1 + R2)
+
+Outbound mail metadata is migrating off hot KV paths:
+
+| Store | Contents |
+|-------|----------|
+| **ADMIN_D1** `mail_messages` | Per-send mailbox rows (replaces `mailbox:messages` KV blob) |
+| **ADMIN_D1** `mail_audit_resend` | Masked Resend audit index |
+| **ADMIN_D1** `subscriber_index` | Subscriber email hash index (Phase 2) |
+| **STATS_R2** `mail/audit/` | Raw masked audit JSON |
+| **KV scatter** | `subscriber:email:*`, legacy `subscribers` array, mail aliases config |
+
+Apply D1 schema after deploy:
+
+```bash
+cd website/admin
+npx wrangler d1 execute ccm-admin-d1 --remote --file=./d1/schema.sql
+```
+
+Replay saved sends (vault redirect default):
+
+```bash
+node website/admin/scripts/resend-saved-mail.mjs              # dry-run
+node website/admin/scripts/resend-saved-mail.mjs --send       # deliver (redirected)
+node website/admin/scripts/resend-saved-mail.mjs --source=d1  # reconstruct from D1 logs
+```
+
+## Subscribe validation
+
+`POST /api/subscribe` rejects duplicate emails with **409** and `{ ok: false, error: "already_subscribed" }`. The marketing site shows a friendly “already subscribed” message instead of an error.
+
 All templates use the **CCM / Lorapok Labs** dark theme with animated gradient header bar, stat pills, and CTA buttons. Template logic lives in `website/admin/functions/api/_shared/mail-branding.js` and `mail.js`.
 
 ## Mission Control mailbox UI
 
+- **Mail hub** (`/dashboard/mail`) — transport checklist, Cloudflare/Resend config, email identities (aliases), masked redirect target, link to Mailbox
 - **Message log** — filter by direction, category, status; search addresses and subjects
 - **Read modal** — click any row to preview HTML (iframe) and plain text
 - **Compose** — send branded HTML mail to any recipient
@@ -84,6 +116,7 @@ node website/admin/scripts/repair-mail.mjs            # full fix: enable + build
 node website/admin/scripts/deploy-pages-fast.mjs        # fast deploy without mail API calls
 node website/admin/scripts/probe-mail-token.mjs
 node website/admin/scripts/setup-mail-secrets.mjs
+node website/admin/scripts/resend-saved-mail.mjs       # replay KV/D1 saved mail (dry-run default)
 ```
 
 ## Troubleshooting

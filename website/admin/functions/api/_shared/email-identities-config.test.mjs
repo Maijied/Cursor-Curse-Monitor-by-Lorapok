@@ -32,7 +32,14 @@ const config = normalizeEmailIdentitiesConfig({
 assert.ok(config.identities.some((item) => item.localPart === "cursor.monitor"));
 assert.ok(config.identities.some((item) => item.localPart === "releases"));
 
-const updated = upsertIdentity(config, "releases", { displayName: "Release Bot" });
+const updated = upsertIdentity(config, "releases", {
+  displayName: "Release Bot",
+  label: "Releases channel",
+  project: "ccm",
+  authAllowed: true,
+  authRole: "viewer",
+});
 assert.equal(updated.identities.find((i) => i.localPart === "releases")?.displayName, "Release Bot");
+assert.equal(updated.identities.find((i) => i.localPart === "releases")?.authAllowed, true);
 
 console.log("email-identities-config.test.mjs: OK");

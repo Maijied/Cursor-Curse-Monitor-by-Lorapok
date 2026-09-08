@@ -17,6 +17,9 @@ export const MUTATING_ROUTE_PERMISSIONS = {
   "PUT /integrations/email-identities/config": "settings.write",
   "POST /integrations/email-identities/provision": "mail.provision",
   "POST /integrations/email-identities/sync": "mail.provision",
+  "POST /mail/aliases": "mail.provision",
+  "PUT /mail/aliases": "mail.provision",
+  "DELETE /mail/aliases": "mail.provision",
   "PUT /integrations/testmail/config": "integrations.write",
   "PUT /integrations/mail/config": "settings.write",
   "PUT /integrations/subscribe/config": "settings.write",
@@ -50,6 +53,7 @@ export const READ_ROUTE_PERMISSIONS = {
   "GET /mailbox": "mail.read",
   "GET /sync/status": "settings.read",
   "GET /integrations/email-identities/config": "settings.read",
+  "GET /mail/aliases": "settings.read",
   "GET /integrations/social/gallery": "integrations.read",
   "GET /subscribers": "subscribers.write",
 };

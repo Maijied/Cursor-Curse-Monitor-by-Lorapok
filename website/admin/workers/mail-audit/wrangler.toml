@@ -1,0 +1,19 @@
+name = "ccm-mail-audit"
+main = "src/index.js"
+compatibility_date = "2024-08-14"
+account_id = "f049faaf2f67549f5c58837479596a4a"
+workers_dev = false
+
+# Audit: STATS_R2 (preferred) → ADMIN_D1 → ADMIN_KV scatter fallback.
+[[r2_buckets]]
+binding = "STATS_R2"
+bucket_name = "ccm-admin-stats"
+
+[[d1_databases]]
+binding = "ADMIN_D1"
+database_name = "ccm-admin-d1"
+database_id = "c38fc653-be43-4222-976b-da5ab829107a"
+
+[[kv_namespaces]]
+binding = "ADMIN_KV"
+id = "8a29ab111ed0488297e12725072e9a10"

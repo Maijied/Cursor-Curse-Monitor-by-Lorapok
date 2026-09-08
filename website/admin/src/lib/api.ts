@@ -1422,6 +1422,7 @@ export async function sendMailboxMessage(payload: {
   subject: string;
   text: string;
   category?: string;
+  fromLocalPart?: string;
 }) {
   const res = await fetch(`${API_BASE}/mailbox`, {
     method: "POST",
@@ -1493,6 +1494,10 @@ export type MailSetupStatus = {
   requireMailForSubscribe: boolean;
   mailConfigured: boolean;
   checkedAt: string;
+  redirect?: {
+    configured: boolean;
+    masked: string | null;
+  };
 };
 
 export async function fetchMailSetupStatusApi() {
@@ -1671,13 +1676,39 @@ export type EmailIdentityRow = {
   id: string;
   localPart: string;
   email: string;
+  fullAddress?: string;
   displayName: string;
+  label?: string;
+  project?: string | null;
+  coworkerEmail?: string | null;
   category: string;
   forwardTo: string;
   enabled: boolean;
+  authAllowed?: boolean;
+  authRole?: "admin" | "operator" | "viewer";
   routingStatus: string;
   cloudflareRuleId: string | null;
   provisionedAt: string | null;
+  createdAt?: string | null;
+  builtin?: boolean;
+};
+
+export type MailAliasRow = {
+  localPart: string;
+  fullAddress: string;
+  label: string;
+  project: string | null;
+  coworkerEmail: string | null;
+  displayName: string;
+  category: string;
+  forwardTo: string;
+  role: string;
+  createdAt: string | null;
+  enabled: boolean;
+  authAllowed: boolean;
+  routingStatus: string;
+  cloudflareRuleId: string | null;
+  builtin: boolean;
 };
 
 export type EmailIdentitiesConfig = {
@@ -1709,8 +1740,13 @@ export async function putEmailIdentitiesConfigApi(payload: {
 export async function provisionEmailIdentityApi(payload: {
   localPart: string;
   displayName?: string;
+  label?: string;
+  project?: string;
+  coworkerEmail?: string;
   forwardTo?: string;
   category?: string;
+  authAllowed?: boolean;
+  authRole?: "admin" | "operator" | "viewer";
   dryRun?: boolean;
 }) {
   const res = await fetch(`${API_BASE}/integrations/email-identities/provision`, {
@@ -1753,6 +1789,65 @@ export async function syncEmailIdentitiesApi(payload?: {
     }>;
     config: EmailIdentitiesConfig;
   };
+}
+
+export async function fetchMailAliasesApi() {
+  return apiGet<{ ok: boolean; aliases: MailAliasRow[] }>("/mail/aliases");
+}
+
+export async function createMailAliasApi(payload: {
+  localPart: string;
+  label?: string;
+  displayName?: string;
+  project?: string;
+  coworkerEmail?: string;
+  forwardTo?: string;
+  category?: string;
+  authAllowed?: boolean;
+  authRole?: "admin" | "operator" | "viewer";
+  provisionRouting?: boolean;
+}) {
+  const res = await fetch(`${API_BASE}/mail/aliases`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to create mail alias");
+  return data as { ok: boolean; alias: MailAliasRow; config: EmailIdentitiesConfig };
+}
+
+export async function updateMailAliasApi(payload: {
+  localPart: string;
+  label?: string;
+  displayName?: string;
+  project?: string;
+  coworkerEmail?: string;
+  forwardTo?: string;
+  category?: string;
+  enabled?: boolean;
+  authAllowed?: boolean;
+  authRole?: "admin" | "operator" | "viewer";
+}) {
+  const res = await fetch(`${API_BASE}/mail/aliases`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to update mail alias");
+  return data as { ok: boolean; alias: MailAliasRow; config: EmailIdentitiesConfig };
+}
+
+export async function deleteMailAliasApi(localPart: string) {
+  const params = new URLSearchParams({ localPart });
+  const res = await fetch(`${API_BASE}/mail/aliases?${params}`, {
+    method: "DELETE",
+    headers: { ...(await authHeaders()) },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to delete mail alias");
+  return data as { ok: boolean; deleted: MailAliasRow; config: EmailIdentitiesConfig };
 }
 
 export async function fetchResendConfigApi() {

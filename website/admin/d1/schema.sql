@@ -23,3 +23,42 @@ CREATE TABLE IF NOT EXISTS subscriber_index (
 );
 
 CREATE INDEX IF NOT EXISTS idx_subscriber_index_subscribed_at ON subscriber_index(subscribed_at DESC);
+
+-- Mail messages (replaces hot KV mailbox:messages blob — one INSERT per send).
+CREATE TABLE IF NOT EXISTS mail_messages (
+  id TEXT PRIMARY KEY,
+  ts TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  from_addr TEXT NOT NULL,
+  to_addr TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  text_body TEXT,
+  html_body TEXT,
+  status TEXT NOT NULL,
+  category TEXT NOT NULL,
+  sent_by TEXT,
+  error TEXT,
+  read_flag INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_mail_messages_ts ON mail_messages(ts DESC);
+CREATE INDEX IF NOT EXISTS idx_mail_messages_status ON mail_messages(status);
+
+-- Masked Resend audit (queryable; raw JSON also in STATS_R2 mail/audit/).
+CREATE TABLE IF NOT EXISTS mail_audit_resend (
+  id TEXT PRIMARY KEY,
+  ts TEXT NOT NULL,
+  transport TEXT NOT NULL,
+  status TEXT NOT NULL,
+  from_display TEXT NOT NULL,
+  to_masked TEXT NOT NULL,
+  subject_preview TEXT,
+  message_id TEXT,
+  category TEXT,
+  sent_by_masked TEXT,
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_mail_audit_resend_ts ON mail_audit_resend(ts DESC);

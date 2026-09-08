@@ -6,6 +6,7 @@ export type AdminSectionId =
   | "settings"
   | "deployments"
   | "mailbox"
+  | "mail"
   | "logs"
   | "subscribers"
   | "api-explorer"
@@ -32,6 +33,7 @@ const SECTION_ROUTES: Record<AdminSectionId, SectionRoute> = {
   settings: { path: "/dashboard/settings", label: "Settings" },
   deployments: { path: "/dashboard/deployments", label: "Deployments" },
   mailbox: { path: "/dashboard/mailbox", label: "Mailbox" },
+  mail: { path: "/dashboard/mail", label: "Mail" },
   logs: { path: "/dashboard/logs", label: "Logs" },
   subscribers: { path: "/dashboard/subscribers", label: "Subscribers" },
   "api-explorer": { path: "/dashboard/api-explorer", label: "API Explorer" },

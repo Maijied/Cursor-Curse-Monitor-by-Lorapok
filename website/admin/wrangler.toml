@@ -21,7 +21,10 @@ database_name = "ccm-admin-d1"
 database_id = "c38fc653-be43-4222-976b-da5ab829107a"
 
 # Phase 2 blobs — bucket `ccm-admin-stats` (create via `node scripts/create-r2-stats-bucket.mjs`).
+# Also stores mail archives under `mail/outbox/` and `mail/audit/` (append-only; no KV RMW).
 # Free tier: 10 GB storage, 1M Class A + 10M Class B ops/month. On failure, stats use ADMIN_KV fallback.
+# Mail storage env (Pages secrets / vars): CCM_MAIL_STORAGE=d1|kv|r2 (default d1 when ADMIN_D1 bound),
+# CCM_MAIL_AUDIT_STORAGE=r2|d1|kv, CCM_MAIL_SKIP_R2_ARCHIVE=1, CCM_SKIP_KV_BACKUP=1.
 [[r2_buckets]]
 binding = "STATS_R2"
 bucket_name = "ccm-admin-stats"
@@ -32,6 +35,10 @@ bucket_name = "ccm-admin-stats"
 [[services]]
 binding = "MAIL_RELAY"
 service = "ccm-mail-relay"
+
+[[services]]
+binding = "MAIL_AUDIT"
+service = "ccm-mail-audit"
 
 [vars]
 # ADMIN_MASTER_EMAIL — set as encrypted Pages secret / GitHub Actions secret (not in git)

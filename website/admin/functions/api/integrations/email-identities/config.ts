@@ -2,12 +2,14 @@ import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shar
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   IDENTITY_CATEGORIES,
+  ALIAS_AUTH_ROLES,
   readEmailIdentitiesConfig,
   sanitizeEmailIdentitiesForClient,
   upsertIdentity,
   validateIdentityLocalPart,
   writeEmailIdentitiesConfig,
 } from "../../_shared/email-identities-config.js";
+import { syncAliasAuthAccess } from "../../_shared/mail-aliases.js";
 import { isValidMailAddress } from "../../_shared/mail-config.js";
 
 export async function onRequestGet(context) {
@@ -65,12 +67,31 @@ export async function onRequestPut(context) {
       if (!isValidMailAddress(forwardTo)) {
         return jsonResponse({ error: `Invalid forward target for ${localPart}` }, 400);
       }
-      next = upsertIdentity(next, localPart, {
+      const existing = current.identities.find((item) => item.localPart === check.value);
+      const authAllowed = entry?.authAllowed !== undefined ? entry.authAllowed === true : existing?.authAllowed === true;
+      const authRole = entry?.authRole !== undefined
+        ? String(entry.authRole).toLowerCase()
+        : existing?.authRole ?? "viewer";
+      if (entry?.authRole !== undefined && !ALIAS_AUTH_ROLES.includes(authRole)) {
+        return jsonResponse({ error: `Invalid authRole for ${localPart}` }, 400);
+      }
+      next = upsertIdentity(next, check.value, {
         displayName: entry?.displayName,
+        label: entry?.label,
+        project: entry?.project,
+        coworkerEmail: entry?.coworkerEmail,
         category,
         forwardTo,
         enabled: entry?.enabled !== false,
+        authAllowed,
+        authRole,
       });
+      const updated = next.identities.find((item) => item.localPart === check.value);
+      if (updated && authAllowed !== (existing?.authAllowed === true)) {
+        await syncAliasAuthAccess(env, updated, next.domain, { enable: authAllowed });
+      } else if (updated && authAllowed && entry?.authRole !== undefined && entry.authRole !== existing?.authRole) {
+        await syncAliasAuthAccess(env, updated, next.domain, { enable: true });
+      }
     }
   }
 

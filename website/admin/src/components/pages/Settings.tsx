@@ -35,7 +35,7 @@ const ALL_TABS: { id: SettingsTabId; label: string }[] = [
   { id: "general", label: "General" },
   { id: "profile", label: "Profile" },
   { id: "mail", label: "Mail" },
-  { id: "identities", label: "Email identities" },
+  { id: "identities", label: "Mail aliases" },
   { id: "resend", label: "Resend" },
   { id: "testmail", label: "Testmail" },
   { id: "discord", label: "Discord" },

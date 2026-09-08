@@ -9,6 +9,7 @@ import {
   validateIdentityLocalPart,
   writeEmailIdentitiesConfig,
 } from "../../_shared/email-identities-config.js";
+import { syncAliasAuthAccess } from "../../_shared/mail-aliases.js";
 import { isValidMailAddress } from "../../_shared/mail-config.js";
 
 export async function onRequestPost(context) {
@@ -33,7 +34,12 @@ export async function onRequestPost(context) {
   const localPart = localCheck.value;
   const forwardTo = String(body?.forwardTo ?? "").trim().toLowerCase();
   const displayName = String(body?.displayName ?? localPart).trim().slice(0, 80) || localPart;
+  const label = String(body?.label ?? displayName).trim().slice(0, 120) || displayName;
+  const project = String(body?.project ?? "").trim().slice(0, 80);
+  const coworkerEmail = String(body?.coworkerEmail ?? "").trim().toLowerCase();
   const category = String(body?.category ?? "custom").toLowerCase();
+  const authAllowed = body?.authAllowed === true;
+  const authRole = String(body?.authRole ?? "viewer").toLowerCase();
 
   const config = await readEmailIdentitiesConfig(env);
   const resolvedForward = forwardTo || config.opsForwardTo;
@@ -60,13 +66,26 @@ export async function onRequestPost(context) {
 
     let next = upsertIdentity(config, localPart, {
       displayName,
+      label,
+      project,
+      coworkerEmail,
       category,
       forwardTo: resolvedForward,
       enabled: true,
+      authAllowed,
+      authRole,
       routingStatus: provision.routingStatus,
       cloudflareRuleId: provision.cloudflareRuleId,
       provisionedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     });
+
+    const identity = next.identities.find((item) => item.localPart === localPart);
+    let authSync = null;
+    if (authAllowed && identity) {
+      authSync = await syncAliasAuthAccess(env, identity, next.domain, { enable: true });
+    }
+
     next = {
       ...next,
       updatedAt: new Date().toISOString(),
@@ -77,6 +96,7 @@ export async function onRequestPost(context) {
     return jsonResponse({
       ok: true,
       provision,
+      authSync,
       identity: sanitizeEmailIdentitiesForClient(next).identities.find((i) => i.localPart === localPart),
       config: sanitizeEmailIdentitiesForClient(next),
     });
