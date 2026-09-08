@@ -75,6 +75,14 @@ assert.equal(
 assert.equal(readDeploymentWebhookFromDiscordConfig({ deploymentWebhookUrl: "not-a-webhook" }), "");
 
 const enrichment = buildLocalDeployEnrichment({ tag: "v1.0.56", repoRoot: root });
+assert.ok(
+  !String(enrichment.catalogBrand?.discordAvatarUrl ?? "").includes("{{"),
+  "catalogBrand.discordAvatarUrl must be hydrated for CI Discord notify",
+);
+assert.match(
+  String(enrichment.catalogBrand?.discordAvatarUrl ?? ""),
+  /^https:\/\//,
+);
 const embed = buildDeploymentEmbed(payload, enrichment);
 assert.equal(embed.title, "❌ Deployment failed");
 assert.match(String(embed.description), /What's new|Release sync|rollback|Rollback/i);

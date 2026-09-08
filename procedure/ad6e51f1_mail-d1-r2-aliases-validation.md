@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** __ISSUE_PENDING__  
 **Branch:** _TBD_  
-**PR:** _TBD_
+**PR:** #246 (CI hotfix)
 
 ---
 
@@ -21,10 +21,9 @@ Mail D1 R2 aliases validation
 - [x] Plan approved
 - [x] Implementation started — inbound routing audit/sync, Mail UI, verify script
 - [x] Production fix — admin@lorapok.tech forward updated to ops inbox
-- [ ] Tests passing
-- [ ] PR opened (#245)
-- [ ] Review triaged
-- [ ] Merged
+- [x] PR opened (#245)
+- [x] Merged (e8c16d90)
+- [ ] CI fixed post-merge (Discord avatar hydration)
 - [ ] Post-merge verification
 
 ---

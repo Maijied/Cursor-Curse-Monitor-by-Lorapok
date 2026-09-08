@@ -6,6 +6,19 @@ import {
   getMessageCatalog,
 } from "./message-cards-runtime.js";
 
+const DEFAULT_DISCORD_AVATAR = "https://cursor.lorapok.tech/assets/logo.png";
+
+/**
+ * @param {unknown} url
+ * @returns {string}
+ */
+function resolveDiscordAvatarUrl(url) {
+  if (typeof url === "string" && /^https?:\/\//i.test(url) && !url.includes("{{")) {
+    return url;
+  }
+  return DEFAULT_DISCORD_AVATAR;
+}
+
 const COLORS = {
   started: 0x5865f2,
   success: 0x57f287,
@@ -95,8 +108,9 @@ export function buildDeploymentEmbed(payload, enrichment) {
   const catalogBrand =
     enrichment?.catalogBrand ?? getMessageCatalog().branding ?? {};
   const brand = enrichment?.brand ?? {};
-  const avatarUrl =
-    brand.icon ?? catalogBrand.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png";
+  const avatarUrl = resolveDiscordAvatarUrl(
+    brand.icon ?? catalogBrand.discordAvatarUrl,
+  );
   const authorName = catalogBrand.discordAuthorName ?? "Lorapok Mission Control";
   const footerText = catalogBrand.discordFooterText ?? "cursor.lorapok.tech · Mission Control";
 
@@ -287,7 +301,7 @@ export async function sendDiscordWebhook(webhookUrl, payload, enrichment, env) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       username: "Mission Control",
-      avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
+      avatar_url: resolveDiscordAvatarUrl(branding.discordAvatarUrl),
       embeds,
     }),
   });

@@ -7,6 +7,9 @@ import {
   formatDownloadBreakdownText,
   formatEngagementText,
 } from "../website/admin/functions/api/_shared/discord-deploy-context.js";
+import embedded from "../website/admin/functions/api/_shared/product-context.embedded.json" with { type: "json" };
+import { mergeProductContext } from "../website/admin/functions/api/_shared/product-context-runtime.js";
+import { interpolateDeep } from "../website/admin/functions/api/_shared/template-interpolate.js";
 import { getMessageCatalog } from "../website/admin/functions/api/_shared/message-cards-runtime.js";
 
 const BRAND = {
@@ -43,8 +46,9 @@ export function buildLocalDeployEnrichment(options = {}) {
   }
 
   const catalog = getMessageCatalog();
-  const catalogBrand = catalog.branding ?? {};
-  const catalogFooters = catalog.footers ?? {};
+  const ctx = mergeProductContext(embedded.ctx ?? {}, siteData);
+  const catalogBrand = interpolateDeep(catalog.branding ?? {}, ctx);
+  const catalogFooters = interpolateDeep(catalog.footers ?? {}, ctx);
 
   return {
     brand: {
