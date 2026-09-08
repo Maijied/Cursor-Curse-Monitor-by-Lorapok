@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** __ISSUE_PENDING__  
 **Branch:** _TBD_  
-**PR:** _TBD_
+**PR:** #246 (CI hotfix)
 
 ---
 
