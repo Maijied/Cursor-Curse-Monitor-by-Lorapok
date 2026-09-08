@@ -201,6 +201,25 @@ if (masterEmail) {
   );
 }
 
+const firebaseServiceAccountJson = String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON ?? "").trim();
+if (firebaseServiceAccountJson) {
+  try {
+    putPagesSecret("FIREBASE_SERVICE_ACCOUNT_JSON", firebaseServiceAccountJson, {
+      adminDir,
+      accountId,
+      auth: deployAuth,
+      baseEnv: process.env,
+    });
+    console.log("::notice::Pages secret FIREBASE_SERVICE_ACCOUNT_JSON synced before deploy.");
+  } catch (err) {
+    console.warn(`::warning::Pages secret FIREBASE_SERVICE_ACCOUNT_JSON sync failed: ${err.message}`);
+  }
+} else {
+  console.warn(
+    "::warning::FIREBASE_SERVICE_ACCOUNT_JSON not set — Firestore KV fallback tier disabled until cred vault or GitHub secret is configured."
+  );
+}
+
 if (inCi) {
   const mailLightweight = process.env.MAIL_API_LIGHTWEIGHT === "true" || skipMailSetup;
   const preCooldownSec = resolvePagesPreDeployCooldownSec({

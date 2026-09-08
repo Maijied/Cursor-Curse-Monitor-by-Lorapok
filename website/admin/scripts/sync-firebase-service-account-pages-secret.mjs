@@ -6,6 +6,7 @@
  * Usage:
  *   node website/admin/scripts/sync-firebase-service-account-pages-secret.mjs
  *   node website/admin/scripts/sync-firebase-service-account-pages-secret.mjs --deploy-rules
+ *   node website/admin/scripts/sync-firebase-service-account-pages-secret.mjs --rules-only
  *
  * Vault keys (cursor namespace): firebase_service_account_json, FIREBASE_SERVICE_ACCOUNT_JSON
  */
@@ -24,6 +25,7 @@ const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
 const project = "cursor-monitor-admin";
 const deployRules = process.argv.includes("--deploy-rules");
+const rulesOnly = process.argv.includes("--rules-only");
 
 function resolveServiceAccountJson() {
   const fromEnv = String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON ?? "").trim();
@@ -101,6 +103,11 @@ console.log(
   })
 );
 
+if (rulesOnly) {
+  deployFirestoreRules(serviceAccountJson);
+  process.exit(0);
+}
+
 const mailEnv = await resolveLocalMailEnvAsync(process.env, adminDir);
 const { auth, probe } = await pickDeployAuth(mailEnv);
 if (!probe?.ok) {
@@ -109,9 +116,11 @@ if (!probe?.ok) {
 }
 
 const wranglerEnv = wranglerDeployEnv(accountId, auth, mailEnv);
-putPagesSecret("FIREBASE_SERVICE_ACCOUNT_JSON", serviceAccountJson, wranglerEnv);
-console.log("Pages secret FIREBASE_SERVICE_ACCOUNT_JSON synced");
+if (!rulesOnly) {
+  putPagesSecret("FIREBASE_SERVICE_ACCOUNT_JSON", serviceAccountJson, wranglerEnv);
+  console.log("Pages secret FIREBASE_SERVICE_ACCOUNT_JSON synced");
+}
 
-if (deployRules) {
+if (deployRules || rulesOnly) {
   deployFirestoreRules(serviceAccountJson);
 }
