@@ -6,7 +6,7 @@
  *   node scripts/verify-inbound-routing.mjs
  *   node scripts/verify-inbound-routing.mjs --fix   # provision/update missing rules
  *
- * Manual E2E: send from Gmail to admin@lorapok.tech → should arrive at identity forwardTo.
+ * Manual E2E: send from Gmail to admin@lorapok.tech → should arrive at the identity forwardTo (ops inbox from KV or MAIL_REDIRECT_TO).
  */
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

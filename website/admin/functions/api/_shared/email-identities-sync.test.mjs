@@ -19,13 +19,13 @@ const dryRun = await syncEmailIdentities(
     persist: false,
     config: {
       domain: "lorapok.tech",
-      opsForwardTo: "lorapokdev@gmail.com",
+      opsForwardTo: "ops@example.com",
       identities: [
         {
           localPart: "cursor.monitor",
           displayName: "Cursor Curse Monitor",
           category: "product",
-          forwardTo: "lorapokdev@gmail.com",
+          forwardTo: "ops@example.com",
           enabled: true,
           routingStatus: "builtin",
         },

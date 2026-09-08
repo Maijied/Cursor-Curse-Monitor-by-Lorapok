@@ -9,8 +9,10 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tryGetMasterEmail } from "../functions/api/_shared/admins.js";
 import { normalizeEmailIdentitiesConfig } from "../functions/api/_shared/email-identities-config.js";
 import { syncEmailIdentities } from "../functions/api/_shared/email-identities-sync.js";
+import { resolveMailRedirectTo } from "../services/mail/config.js";
 
 const adminDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? "f049faaf2f67549f5c58837479596a4a";
@@ -61,7 +63,18 @@ if (wranglerAuth.apiKey && !wranglerAuth.email) {
   process.exit(1);
 }
 
-const opsInbox = process.env.CCM_OPS_INBOX ?? "lorapokdev@gmail.com";
+const opsInbox = (() => {
+  const override = String(process.env.CCM_OPS_INBOX ?? "").trim().toLowerCase();
+  if (override.includes("@")) return override;
+  const redirect = resolveMailRedirectTo(process.env);
+  if (redirect) return redirect;
+  const master = tryGetMasterEmail(process.env);
+  if (master) return master;
+  console.error(
+    "Set CCM_OPS_INBOX, MAIL_REDIRECT_TO (cred vault mail_redirect_to), or ADMIN_MASTER_EMAIL."
+  );
+  process.exit(1);
+})();
 
 function wranglerEnv() {
   const env = { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId };

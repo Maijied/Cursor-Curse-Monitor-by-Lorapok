@@ -29,6 +29,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mission Control Mail hub** — dedicated `/dashboard/mail` tab for transport status, email identities, Resend config, masked redirect target, and Mailbox link
 - **Mail identity panel** — edit/test each @lorapok.tech identity from Mail hub; per-identity test send with exact From address; generate new aliases; full addresses in admin config (no masking)
 - **Inbound Email Routing** — per-identity Cloudflare forward rules; Mail → Sync routing; `verify-inbound-routing.mjs` audit; `setup-routing-secret.mjs` for Pages routing token
+- **Configurable mail forward default** — `mail_redirect_to` / `MAIL_REDIRECT_TO` seeds default ops forward inbox and outbound BCC; per-identity `forwardTo` editable in Mail hub; falls back to `ADMIN_MASTER_EMAIL` or KV when unset
 - **Mail D1/R2 storage** — `mail_messages`, `mail_audit_resend`, and `ccm-mail-audit` worker; KV scatter aliases; `resend-saved-mail.mjs` replay script
 - **Duplicate subscribe rejection** — `POST /api/subscribe` returns 409 `already_subscribed`; marketing site shows friendly message
 - **Cred vault sync rule** — `.cursor/rules/cred-vault-sync-maintain.mdc` for local/cloud agents to run `sync-*-cred-vault.mjs` after secret changes
@@ -46,7 +47,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **GitHub task tracking (PR #171)** — labels, milestones, issue templates, Project #4 sync scripts
 - **Mission Control feature ACL v2 (AUTH-12)** — per-action UI gates on notices, subscribers, mailbox, team, cred vault, API Explorer, and deploy controls; read-only banner when role lacks permission
 - **Cloudflare Web Analytics** — privacy-friendly beacon on marketing site and Mission Control shell (`cloudflare-beacon.js`)
-- **`npm run auth:tier-d`** — headless SET-10 smoke (RBAC nav, PIN unlock, production auth probe) for Mission Control — Discord-style tabs for General, Mail, Discord, Firebase, GitHub, Cloudflare, Automation, Cloud dev, and Services; integration cards sync non-secret metadata to ADMIN_KV and Firebase client fields to GitHub `admin-production` secrets on master save
+- **`npm run auth:tier-d`** — headless SET-10 smoke (RBAC nav, PIN unlock, production auth probe) for Mission Control
+- **Discord-style Settings tabs** — General, Mail, Discord, Firebase, GitHub, Cloudflare, Automation, Cloud dev, and Services; integration cards sync non-secret metadata to ADMIN_KV and Firebase client fields to GitHub `admin-production` secrets on master save
 - **Firebase runtime bootstrap** — admin SPA loads client config from `GET /api/firebase-config` (or local `VITE_FIREBASE_*`); no hardcoded keys in source
 - **`sync-firebase-pages-secrets.mjs`** — sync `VITE_FIREBASE_*` to Cloudflare Pages secrets when KV read quota blocks runtime bootstrap
 - **Infrastructure status card** — Settings → General shows live sync health from `/api/sync/status` with KV read/write quota detection, estimated write budget per refresh, last run outcome, and master-only pause shortcut when quota is hit
