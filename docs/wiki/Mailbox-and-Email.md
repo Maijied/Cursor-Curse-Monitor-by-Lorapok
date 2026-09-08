@@ -36,7 +36,16 @@ node website/admin/scripts/setup-email-addresses.mjs
 node website/admin/scripts/repair-mail.mjs   # same steps as CI, locally
 ```
 
-6. Use **Mailbox → Send branded test email** to verify
+6. Use **Mailbox → Send branded test email** to verify outbound delivery
+
+7. Verify **inbound** routing (external → `@lorapok.tech`):
+
+```bash
+node website/admin/scripts/verify-inbound-routing.mjs
+# Manual: send from Gmail to admin@lorapok.tech → should forward to opsForwardTo
+```
+
+For Mission Control **Sync routing**, sync Pages secret once: `node website/admin/scripts/setup-routing-secret.mjs`
 
 Full blueprint (inbound + outbound + CI): [Cloudflare Email and Routing](../guides/CLOUDFLARE_EMAIL_AND_ROUTING.md).
 

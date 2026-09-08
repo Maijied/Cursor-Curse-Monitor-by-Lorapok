@@ -78,6 +78,21 @@ Equivalent Loragent REST flow: `POST /zones/{zone_id}/email/routing/rules` with 
 
 **Verify:** send a test message from Gmail to `cursor.curse.help@lorapok.tech` and confirm it arrives at the ops inbox.
 
+**Audit all identities:**
+
+```bash
+node website/admin/scripts/verify-inbound-routing.mjs
+node website/admin/scripts/verify-inbound-routing.mjs --fix   # create/update missing rules
+```
+
+**Mission Control UI:** Mail → **Sync routing** provisions rules for every active identity. Requires Pages secret `CLOUDFLARE_ROUTING_API_TOKEN` (Email Routing Edit — not the outbound email token):
+
+```bash
+node website/admin/scripts/setup-routing-secret.mjs
+```
+
+**MX records:** Cloudflare Email Routing must be enabled for `lorapok.tech` (Dashboard → Email → Email Routing). Cloudflare sets MX/SPF automatically; catch-all is disabled — each `@lorapok.tech` address needs its own forward rule.
+
 ---
 
 ## 4. Outbound sending (Mission Control)
@@ -156,6 +171,8 @@ node website/admin/scripts/repair-mail.mjs
 | Script | Purpose |
 |--------|---------|
 | `setup-email-addresses.mjs` | One-time inbound routes + domain enable |
+| `setup-routing-secret.mjs` | Pages `CLOUDFLARE_ROUTING_API_TOKEN` for Mail → Sync routing |
+| `verify-inbound-routing.mjs` | Audit/fix Cloudflare forward rules per identity |
 | `enable-mail.mjs` | Relay worker + Pages `CLOUDFLARE_EMAIL_API_TOKEN` secret |
 | `verify-mail-transport.mjs` | CI gate: relay and/or REST must work |
 | `repair-mail.mjs` | Full local repair (enable + build + deploy + verify) |
@@ -178,7 +195,8 @@ See also: [RESEND_WORKERS_FREE_SETUP.md](./RESEND_WORKERS_FREE_SETUP.md) · [Mai
 | CI slow / rate limited | Use push for code-only changes; use deploy-infra for mail |
 | `9109` / `10000` on Pages deploy | `CLOUDFLARE_API_TOKEN` in admin-production is invalid or lacks Pages Edit — refresh secret, rerun deploy-infra |
 | Job waits 3–7 min then fails auth | Old behavior retried bad tokens; update to latest CI (fail-fast probe) |
-| Inbound not arriving | Re-run `setup-email-addresses.mjs`; confirm destination verified |
+| Inbound not arriving | Re-run `setup-email-addresses.mjs`; confirm destination verified; `verify-inbound-routing.mjs --fix` |
+| Mail → Sync routing fails in prod | Run `setup-routing-secret.mjs` — outbound `CLOUDFLARE_EMAIL_API_TOKEN` cannot manage routing |
 | `destination address is not a verified address` | **Workers Free** only sends to [verified destination addresses](https://developers.cloudflare.com/email-service/platform/limits/#verified-destination-addresses). Upgrade **Lorapok Facility** → Workers **Paid** ($5/mo), then **Email Service → Email Sending → Onboard Domain** for `lorapok.tech`. Or set `RESEND_API_KEY` on Pages as fallback. |
 | Wrangler `email sending enable` → `2036 Unauthorized` | Same as above — Email Sending subdomains API requires Workers Paid before onboarding. |
 

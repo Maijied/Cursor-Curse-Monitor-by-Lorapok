@@ -1,10 +1,12 @@
 import {
   enableZoneEmailRouting,
   ensureRoutingDestination,
+  extractForwardTarget,
   findRoutingRuleForAddress,
   listEmailRoutingRules,
   provisionIdentityRouting,
   resolveZoneIdForDomain,
+  updateForwardRoutingRule,
 } from "./cloudflare-email-routing.js";
 import {
   identityEmail,
@@ -47,7 +49,9 @@ export async function syncEmailIdentities(env, options = {}) {
   let rules = [];
 
   const hasToken =
-    Boolean(env?.CLOUDFLARE_API_TOKEN?.trim()) || Boolean(env?.CLOUDFLARE_EMAIL_API_TOKEN?.trim());
+    Boolean(env?.CLOUDFLARE_ROUTING_API_TOKEN?.trim()) ||
+    Boolean(env?.CLOUDFLARE_API_TOKEN?.trim()) ||
+    Boolean(env?.CLOUDFLARE_EMAIL_API_TOKEN?.trim());
 
   if (!hasToken && !dryRun) {
     for (const identity of config.identities.filter((item) => item.enabled !== false)) {
@@ -90,19 +94,27 @@ export async function syncEmailIdentities(env, options = {}) {
   }
 
   if (!dryRun && ensureDestination) {
-    try {
-      const destination = await ensureRoutingDestination(env, opsForwardTo);
-      steps.push({
-        step: "ensureDestination",
-        ok: destination.ok,
-        message: destination.message,
-      });
-    } catch (err) {
-      steps.push({
-        step: "ensureDestination",
-        ok: false,
-        message: err instanceof Error ? err.message : "ensure destination failed",
-      });
+    const forwardTargets = new Set(
+      config.identities
+        .filter((item) => item.enabled !== false)
+        .map((item) => String(item.forwardTo ?? opsForwardTo).trim().toLowerCase())
+    );
+    forwardTargets.add(opsForwardTo);
+    for (const target of forwardTargets) {
+      try {
+        const destination = await ensureRoutingDestination(env, target);
+        steps.push({
+          step: "ensureDestination",
+          ok: destination.ok,
+          message: `${target}: ${destination.message}`,
+        });
+      } catch (err) {
+        steps.push({
+          step: "ensureDestination",
+          ok: false,
+          message: `${target}: ${err instanceof Error ? err.message : "ensure destination failed"}`,
+        });
+      }
     }
   }
 
@@ -129,18 +141,38 @@ export async function syncEmailIdentities(env, options = {}) {
 
     try {
       const existingRule = rules.length ? findRoutingRuleForAddress(rules, address) : null;
-      const provision = existingRule
-        ? {
+      let provision;
+      if (existingRule) {
+        const currentForward = extractForwardTarget(existingRule);
+        if (currentForward && currentForward !== forwardTo) {
+          await updateForwardRoutingRule(env, {
+            zoneId,
+            ruleId: String(existingRule.id),
+            name: ruleName,
+            address,
+            forwardTo,
+          });
+          provision = {
+            simulated: false,
+            routingStatus: "provisioned",
+            cloudflareRuleId: String(existingRule.id),
+            message: `Routing rule updated → ${forwardTo}`,
+          };
+        } else {
+          provision = {
             simulated: false,
             routingStatus: "provisioned",
             cloudflareRuleId: String(existingRule.id),
             message: "Existing Cloudflare routing rule reused",
-          }
-        : await provisionIdentityRouting(env, {
-            address,
-            forwardTo,
-            ruleName,
-          });
+          };
+        }
+      } else {
+        provision = await provisionIdentityRouting(env, {
+          address,
+          forwardTo,
+          ruleName,
+        });
+      }
 
       config = upsertIdentity(config, identity.localPart, {
         displayName: identity.displayName,

@@ -1,4 +1,5 @@
 import { dispatchInfraWorkflow } from "./deploy-workflow.js";
+import { readEmailIdentitiesConfig, sanitizeEmailIdentitiesForClient } from "./email-identities-config.js";
 import { readMailConfig } from "./mail-config.js";
 import { getMailTransportStatus } from "./mail.js";
 
@@ -7,10 +8,24 @@ import { getMailTransportStatus } from "./mail.js";
  * @param {ReturnType<typeof getMailTransportStatus>} transport
  * @param {ReturnType<import("./mail-config.js").normalizeMailConfig>} [mailConfig]
  */
-export function buildMailSyncRecommendations(transport, mailConfig = {}) {
+export function buildMailSyncRecommendations(transport, mailConfig = {}, emailIdentities = null) {
   const steps = [];
   const workersFree = mailConfig.workersFreeMode !== false;
   const domain = mailConfig.sendingDomain || "lorapok.tech";
+
+  if (emailIdentities?.summary) {
+    const { inboundReady, pending, error, total } = emailIdentities.summary;
+    if (pending > 0 || error > 0) {
+      steps.push(
+        `Inbound routing: ${inboundReady}/${total} @lorapok.tech identities ready. Mail → Sync routing (needs CLOUDFLARE_ROUTING_API_TOKEN on Pages) or run node website/admin/scripts/setup-email-addresses.mjs locally.`
+      );
+    }
+    if (!emailIdentities.routingApiConfigured) {
+      steps.push(
+        "Sync routing from Mission Control requires Pages secret CLOUDFLARE_ROUTING_API_TOKEN — run node website/admin/scripts/setup-routing-secret.mjs once."
+      );
+    }
+  }
 
   if (!transport.relayBound && !workersFree) {
     steps.push(
@@ -51,7 +66,22 @@ export function buildMailSyncRecommendations(transport, mailConfig = {}) {
  */
 export async function syncUpMailTransport(env, pagesContext, triggeredBy) {
   const transport = getMailTransportStatus(env);
-  const recommendations = buildMailSyncRecommendations(transport, await readMailConfig(env));
+  const mailConfig = await readMailConfig(env);
+  const emailIdentities = sanitizeEmailIdentitiesForClient(await readEmailIdentitiesConfig(env));
+  const inboundSummary = {
+    summary: {
+      inboundReady: emailIdentities.identities.filter((item) => item.inboundReady === true).length,
+      pending: emailIdentities.identities.filter(
+        (item) => !item.inboundReady && item.routingStatus !== "error"
+      ).length,
+      error: emailIdentities.identities.filter((item) => item.routingStatus === "error").length,
+      total: emailIdentities.identities.length,
+    },
+    routingApiConfigured: Boolean(
+      env.CLOUDFLARE_ROUTING_API_TOKEN?.trim() || env.CLOUDFLARE_API_TOKEN?.trim()
+    ),
+  };
+  const recommendations = buildMailSyncRecommendations(transport, mailConfig, inboundSummary);
 
   const dispatch = await dispatchInfraWorkflow(
     env,

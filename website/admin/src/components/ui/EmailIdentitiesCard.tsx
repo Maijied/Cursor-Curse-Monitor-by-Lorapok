@@ -57,6 +57,12 @@ export default function EmailIdentitiesCard() {
   const [testingLocalPart, setTestingLocalPart] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [config, setConfig] = useState<EmailIdentitiesConfig | null>(null);
+  const [inboundStatus, setInboundStatus] = useState<{
+    ready: number;
+    total: number;
+    routingApiConfigured: boolean;
+    mxNote: string;
+  } | null>(null);
   const [opsForwardTo, setOpsForwardTo] = useState("");
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, IdentityTestResult>>({});
@@ -99,7 +105,17 @@ export default function EmailIdentitiesCard() {
       .finally(() => setLoading(false));
 
     fetchMailSetupStatusApi()
-      .then((data) => setRedirectTo(data.redirect?.address ?? null))
+      .then((data) => {
+        setRedirectTo(data.redirect?.address ?? null);
+        if (data.inbound) {
+          setInboundStatus({
+            ready: data.inbound.summary.inboundReady,
+            total: data.inbound.summary.total,
+            routingApiConfigured: data.inbound.routingApiConfigured,
+            mxNote: data.inbound.mxNote,
+          });
+        }
+      })
       .catch(() => setRedirectTo(null));
   }, []);
 
@@ -319,18 +335,24 @@ export default function EmailIdentitiesCard() {
     }
   };
 
-  const statusBadge = (status: string) => {
-    if (status === "provisioned" || status === "builtin") {
-      return <Badge variant="synced">{status}</Badge>;
+  const statusBadge = (row: EmailIdentityRow) => {
+    if (row.inboundReady || row.routingStatus === "provisioned") {
+      return <Badge variant="synced">inbound ok</Badge>;
     }
-    if (status === "simulated") {
+    if (row.routingStatus === "simulated") {
       return <Badge variant="warn">simulated</Badge>;
     }
-    if (status === "error") {
-      return <Badge variant="danger">error</Badge>;
+    if (row.routingStatus === "error") {
+      return <Badge variant="danger">routing error</Badge>;
     }
-    return <Badge variant="neutral">{status}</Badge>;
+    if (row.routingStatus === "builtin") {
+      return <Badge variant="warn">needs sync</Badge>;
+    }
+    return <Badge variant="neutral">not provisioned</Badge>;
   };
+
+  const pendingInboundCount =
+    config?.identities.filter((row) => row.inboundReady !== true && row.enabled !== false).length ?? 0;
 
   if (loading) {
     return (
@@ -392,6 +414,25 @@ export default function EmailIdentitiesCard() {
             ) : null}
           </div>
         </div>
+
+        {pendingInboundCount > 0 ? (
+          <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+            <p className="font-medium text-amber-200">
+              {pendingInboundCount} identity alias{pendingInboundCount === 1 ? "" : "es"} cannot receive mail yet
+            </p>
+            <p className="text-[var(--color-muted)] mt-1">
+              External senders need a Cloudflare Email Routing rule per address (catch-all is disabled). Click{" "}
+              <strong>Sync routing</strong>
+              {inboundStatus && !inboundStatus.routingApiConfigured
+                ? " after running setup-routing-secret.mjs to add CLOUDFLARE_ROUTING_API_TOKEN on Pages"
+                : ""}
+              , or run <code className="text-xs">node website/admin/scripts/setup-email-addresses.mjs</code> locally.
+            </p>
+            {inboundStatus?.mxNote ? (
+              <p className="text-xs text-[var(--color-muted)] mt-2">{inboundStatus.mxNote}</p>
+            ) : null}
+          </div>
+        ) : null}
 
         <form onSubmit={handleSaveOpsForward} className="space-y-4 mb-8">
           <div>
@@ -466,11 +507,12 @@ export default function EmailIdentitiesCard() {
                       <div className="font-[family-name:var(--font-mono)] text-xs">{row.forwardTo}</div>
                       {row.forwardTo ? (
                         <p className="text-xs text-[var(--color-muted)] mt-1">
-                          Receive: mail to {address} forwards here. Use Sync routing if inbound is not provisioned.
+                          Receive: mail to {address} forwards here.
+                          {row.inboundNote ? ` ${row.inboundNote}` : null}
                         </p>
                       ) : null}
                     </td>
-                    <td className="py-3 pr-3">{statusBadge(row.routingStatus)}</td>
+                    <td className="py-3 pr-3">{statusBadge(row)}</td>
                     <td className="py-3 pr-3">
                       {isMaster ? (
                         <label className="inline-flex items-center gap-2 text-xs">
