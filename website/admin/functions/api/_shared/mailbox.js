@@ -5,7 +5,7 @@ import {
   truncateStoredText,
 } from "./kv-limits.js";
 import { backupKvBeforeWrite } from "./kv-backup.js";
-import { putKvJsonIfChanged } from "./kv-put.js";
+import { putKvJsonSafe } from "./kv-put.js";
 import {
   getMailboxStatsD1,
   insertMailMessageD1,
@@ -13,7 +13,10 @@ import {
   patchMailMessageD1,
 } from "./d1-mailbox.js";
 import { backupMailboxPayloadR2, shouldArchiveMailToR2, writeMailOutboxArchive } from "./r2-mail.js";
-import { resolveMailboxStorage } from "./mail-storage.js";
+import {
+  resolveMailboxStorage,
+  shouldBlockKvWrites,
+} from "./mail-storage.js";
 
 const MAILBOX_KEY = "mailbox:messages";
 
@@ -72,6 +75,8 @@ function shouldSkipKvBackup(env) {
  */
 async function writeAllKv(env, messages) {
   if (!env?.ADMIN_KV?.put) return false;
+  if (await shouldBlockKvWrites(env)) return false;
+
   const trimmed = messages
     .sort((a, b) => Date.parse(String(b.ts ?? "")) - Date.parse(String(a.ts ?? "")))
     .slice(0, MAX_MAILBOX_MESSAGES)
@@ -84,7 +89,7 @@ async function writeAllKv(env, messages) {
         reason: "mailbox-compaction",
         triggeredBy: "writeAll",
       });
-    } else {
+    } else if (!(await shouldBlockKvWrites(env))) {
       await backupKvBeforeWrite(env.ADMIN_KV, MAILBOX_KEY, serialized, {
         reason: "mailbox-compaction",
         triggeredBy: "writeAll",
@@ -92,7 +97,8 @@ async function writeAllKv(env, messages) {
     }
   }
 
-  return putKvJsonIfChanged(env, MAILBOX_KEY, trimmed);
+  const result = await putKvJsonSafe(env, MAILBOX_KEY, trimmed, { skipIfUnchanged: true });
+  return Boolean(result.wrote);
 }
 
 /**
@@ -119,13 +125,25 @@ export async function recordMailboxMessage(env, message) {
   const mode = resolveMailboxStorage(env);
 
   if (mode === "d1") {
-    const ok = await insertMailMessageD1(env, entry);
-    if (ok) {
-      if (shouldArchiveMailToR2(env)) {
-        void writeMailOutboxArchive(env, entry);
-      }
-      return entry;
+    await insertMailMessageD1(env, entry);
+    if (shouldArchiveMailToR2(env)) {
+      void writeMailOutboxArchive(env, entry);
     }
+    return entry;
+  }
+
+  if (mode === "r2") {
+    if (shouldArchiveMailToR2(env)) {
+      void writeMailOutboxArchive(env, entry);
+    }
+    return entry;
+  }
+
+  if (await shouldBlockKvWrites(env)) {
+    if (shouldArchiveMailToR2(env)) {
+      void writeMailOutboxArchive(env, entry);
+    }
+    return entry;
   }
 
   const list = await readAllKv(env);

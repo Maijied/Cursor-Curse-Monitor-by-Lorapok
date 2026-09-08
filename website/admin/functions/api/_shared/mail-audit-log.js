@@ -2,7 +2,7 @@ import { truncateStoredText } from "./kv-limits.js";
 import { maskEmail, maskEmailDisplay } from "./mask-email.js";
 import { putScatterRecord } from "./kv-scatter.js";
 import { insertMailAuditResendD1 } from "./d1-mail-audit.js";
-import { resolveMailAuditStorage } from "./mail-storage.js";
+import { resolveMailAuditStorage, shouldBlockKvWrites } from "./mail-storage.js";
 import { writeMailAuditR2 } from "./r2-mail.js";
 
 export const MAIL_AUDIT_RESEND_PREFIX = "mail:audit:resend";
@@ -62,16 +62,16 @@ async function persistMailAuditEntry(env, entry) {
     if (ok) return true;
   }
 
+  if (await shouldBlockKvWrites(env)) {
+    return false;
+  }
+
   if (env.ADMIN_KV?.put) {
-    try {
-      await putScatterRecord(env.ADMIN_KV, MAIL_AUDIT_RESEND_PREFIX, entry.id, entry, {
-        ts: Date.parse(entry.ts),
-        expirationTtl: MAIL_AUDIT_TTL_SECONDS,
-      });
-      return true;
-    } catch (err) {
-      console.error("mail audit KV fallback failed", err);
-    }
+    const wrote = await putScatterRecord(env.ADMIN_KV, MAIL_AUDIT_RESEND_PREFIX, entry.id, entry, {
+      ts: Date.parse(entry.ts),
+      expirationTtl: MAIL_AUDIT_TTL_SECONDS,
+    });
+    if (wrote) return true;
   }
 
   return false;

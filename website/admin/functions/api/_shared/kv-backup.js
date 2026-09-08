@@ -1,4 +1,5 @@
 import { reverseSortToken } from "./kv-scatter.js";
+import { isKvWriteBlockedEarly, putKvStringSafe } from "./kv-put.js";
 
 export const BACKUP_POINT_PREFIX = "backup:point";
 export const BACKUP_INDEX_PREFIX = "backup:index";
@@ -62,6 +63,9 @@ export async function ensureKvBackupPoint(kv, sourceKey, options = {}) {
   if (!kv?.get || !kv?.put) {
     return { backedUp: false, reason: "kv-unavailable" };
   }
+  if (isKvWriteBlockedEarly()) {
+    return { backedUp: false, reason: "kv_writes_paused" };
+  }
 
   const raw = await kv.get(sourceKey);
   if (!raw) {
@@ -87,8 +91,14 @@ export async function ensureKvBackupPoint(kv, sourceKey, options = {}) {
     payload: raw,
   };
 
-  await kv.put(key, JSON.stringify(envelope));
-  await kv.put(
+  const envelopeSerialized = JSON.stringify(envelope);
+  const pointResult = await putKvStringSafe(kv, key, envelopeSerialized);
+  if (!pointResult.wrote) {
+    return { backedUp: false, reason: pointResult.reason ?? "put-failed" };
+  }
+
+  await putKvStringSafe(
+    kv,
     backupIndexKey(sourceKey),
     JSON.stringify({
       latestKey: key,

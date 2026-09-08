@@ -6,6 +6,8 @@
  * prefix; keys embed a reverse timestamp so lexical sort ≈ newest-first.
  */
 
+import { putKvStringSafe } from "./kv-put.js";
+
 /** @param {number} [ts] */
 export function reverseSortToken(ts = Date.now()) {
   const n = Number(ts);
@@ -33,12 +35,11 @@ export async function putScatterRecord(kv, prefix, id, value, options = {}) {
   if (!kv?.put) return false;
   const key = scatterRecordKey(prefix, id, options.ts);
   const serialized = typeof value === "string" ? value : JSON.stringify(value);
-  if (options.expirationTtl) {
-    await kv.put(key, serialized, { expirationTtl: options.expirationTtl });
-  } else {
-    await kv.put(key, serialized);
-  }
-  return true;
+  const result = await putKvStringSafe(kv, key, serialized, {
+    writesPausedUntil: options.writesPausedUntil ?? null,
+    expirationTtl: options.expirationTtl,
+  });
+  return Boolean(result.wrote);
 }
 
 /**
@@ -101,10 +102,8 @@ export async function putScatterEntity(kv, entityPrefix, id, value) {
   if (!kv?.put) return false;
   const key = `${entityPrefix}:${id}`;
   const serialized = typeof value === "string" ? value : JSON.stringify(value);
-  const current = await kv.get(key);
-  if (current === serialized) return false;
-  await kv.put(key, serialized);
-  return true;
+  const result = await putKvStringSafe(kv, key, serialized, { skipIfUnchanged: true });
+  return Boolean(result.wrote);
 }
 
 /**
