@@ -2,9 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-08 (ADMIN-03 #240; LOCAL/CLOUD agent docs #241/#242; cred-vault-sync rule #243)  
-**Branch:** `main` @ `b4cffb74`  
-**CI:** green  
+**Last updated:** 2026-09-08 (ADMIN-04 global footer)  
+**Branch:** `main` @ `bffb9d44`  
+**CI:** green (Production Deployment + Direct Main Push Tracker, 2026-09-08T13:47Z)  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -46,7 +46,7 @@ _None — pick from **Recommended next queue** below._
 | Cloudflare D1 | 0 | 4 | 0 |
 | Cloudflare R2 | 2 | 1 | 0 |
 | Cloudflare Pages / Workers | 5 | 2 | 0 |
-| Firebase | 7 | 4 | 0 |
+| Firebase | 8 | 3 | 0 |
 | GitHub | 5 | 4 | 0 |
 | Release & deploy | 0 | 3 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
@@ -131,6 +131,7 @@ _None — pick from **Recommended next queue** below._
 | FB-06 | Connected Services Firebase row health | **done** | bootstrap + session in Connected Services |
 | FB-07 | Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback) | **done** | `sync-firebase-pages-secrets.mjs` |
 | FB-08 | KV `integrations:firebase` re-seeded production | **done** | `seed-firebase-kv.mjs` 2026-09-05 |
+| FB-09 | Firestore KV fallback tier + `FIREBASE_SERVICE_ACCOUNT_JSON` sync | **done** | PR #250; vault + GH + Pages synced local 2026-09-08; Firestore rules deployed |
 | AUTH-01 | RBAC + email-identities architecture sign-off | **done** | `plan/AUTH-01-rbac-matrix.md`; `rbac.js` + `GET /api/auth/me` |
 | AUTH-02 | Enable Firebase Email/Password + invite-only gate | **done** | Console enabled 2026-09-05; `invite-check` + Login Password tab; Identity Toolkit probe OK |
 | AUTH-03 | Login UI: email/password fields + validation (zxcvbn) | **done** | `Login.tsx` + `password-policy.ts` (min 12 + strength score) |
@@ -373,14 +374,14 @@ _None — pick from **Recommended next queue** below._
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **next** | ACL-aware; fuzzy match; keyboard-first |
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
-| ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **next** | `/api/health` + `site-data`; no duplicate Overview chips |
+| ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **done** | `GlobalFooter.tsx` in `AppShell`; `/api/health` + `fetchSyncStatus` + `useSiteData` |
 | ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **next** | single source per metric; ADMIN-04 footer owns status strip |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **ADMIN-04 / ADMIN-05** — Minimal footer, dedupe Overview (ADMIN-03 done)
+1. **ADMIN-05** — Dedupe Overview KPIs (ADMIN-04 footer done)
 2. **MAIL-13 / MAIL-14** — Professional mail templates + dynamic subscriber emails
 3. **DC-06** — Finish branded Discord templates for digest/community (CI cards + gallery shipped)
 4. **SOCIAL-01–03** — Multi-platform webhooks + one-click share (DEPLOY-03 gallery trigger done)
@@ -394,7 +395,7 @@ _None — pick from **Recommended next queue** below._
 
 ## Blockers (need you)
 
-_None — R2 enabled 2026-09-05. Redeploy after `wrangler.toml` STATS_R2 binding if not yet live._
+_None._
 
 ---
 

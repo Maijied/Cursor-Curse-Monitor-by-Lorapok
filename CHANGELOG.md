@@ -6,6 +6,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+
+- **Mission Control global footer (ADMIN-04)** — sticky bottom bar with services health, release version, marketplace sync status, and Lorapok Labs link on every authenticated page.
+
 ### Fixed
 
 - **Firestore KV fallback** — when Cloudflare KV daily write quota is exhausted, Mission Control mirrors config/stats/cron metadata to Firestore (`admin-kv-fallback`) and system logs to `system-logs`; reads fall back KV → Firestore. Requires Pages secret `FIREBASE_SERVICE_ACCOUNT_JSON`.
