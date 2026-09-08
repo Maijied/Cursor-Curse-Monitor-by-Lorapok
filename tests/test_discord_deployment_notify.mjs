@@ -7,6 +7,7 @@ import {
   resolveDeployNotifyTag,
   shouldRequireDiscordWebhook,
 } from "../scripts/discord-deployment-notify.mjs";
+import { readDeploymentWebhookFromDiscordConfig } from "../scripts/lib/resolve-discord-deployment-webhook.mjs";
 import { buildLocalDeployEnrichment } from "../scripts/discord-ci-enrichment.mjs";
 import { buildDeploymentEmbed } from "../website/admin/functions/api/_shared/discord-notify.js";
 import { dirname, join } from "node:path";
@@ -58,6 +59,20 @@ assert.equal(
 );
 assert.equal(shouldRequireDiscordWebhook({ requireWebhook: "1" }), true);
 assert.equal(shouldRequireDiscordWebhook({}), process.env.GITHUB_ACTIONS === "true");
+
+assert.equal(
+  readDeploymentWebhookFromDiscordConfig({
+    deploymentWebhookUrl: "https://discord.com/api/webhooks/123/abc-def",
+  }),
+  "https://discord.com/api/webhooks/123/abc-def",
+);
+assert.equal(
+  readDeploymentWebhookFromDiscordConfig({
+    webhookUrl: "https://discord.com/api/webhooks/456/legacy-token",
+  }),
+  "https://discord.com/api/webhooks/456/legacy-token",
+);
+assert.equal(readDeploymentWebhookFromDiscordConfig({ deploymentWebhookUrl: "not-a-webhook" }), "");
 
 const enrichment = buildLocalDeployEnrichment({ tag: "v1.0.56", repoRoot: root });
 const embed = buildDeploymentEmbed(payload, enrichment);

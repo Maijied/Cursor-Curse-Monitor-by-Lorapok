@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildLocalDeployEnrichment } from "./discord-ci-enrichment.mjs";
+import { resolveDiscordDeploymentWebhookUrl } from "./lib/resolve-discord-deployment-webhook.mjs";
 import { sendDiscordWebhook } from "../website/admin/functions/api/_shared/discord-notify.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -213,7 +214,7 @@ export function shouldRequireDiscordWebhook(opts = {}) {
 }
 
 export async function notifyDiscordDeploymentFromCi(opts) {
-  const webhookUrl = process.env.DISCORD_DEPLOYMENT_WEBHOOK?.trim();
+  const { webhookUrl, source } = await resolveDiscordDeploymentWebhookUrl();
   if (!webhookUrl) {
     const requireWebhook = shouldRequireDiscordWebhook(opts);
     if (requireWebhook) {
@@ -222,10 +223,13 @@ export async function notifyDiscordDeploymentFromCi(opts) {
         skipped: true,
         reason: "no_webhook",
         error:
-          "DISCORD_DEPLOYMENT_WEBHOOK not set — sync cred vault (discord_deployment_webhook_url) or add the admin-production / github-pages secret.",
+          "DISCORD_DEPLOYMENT_WEBHOOK not set — add discord_deployment_webhook_url to cred vault, configure Mission Control Settings, or add the admin-production / github-pages secret.",
       };
     }
     return { ok: false, skipped: true, reason: "no_webhook" };
+  }
+  if (source === "admin_kv") {
+    console.log("::notice::Discord notify: using deployment webhook from ADMIN_KV (Mission Control Settings).");
   }
 
   const payload = buildDiscordNotifyPayload(opts);
