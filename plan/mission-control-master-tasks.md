@@ -2,8 +2,8 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-07 (DC-08/09 Discord CI cards + Settings gallery; AUTH-13 merged; registry sync)  
-**Branch:** `main`  
+**Last updated:** 2026-09-08 (ADMIN-03 #240; LOCAL/CLOUD agent docs #241/#242; cred-vault-sync rule #243)  
+**Branch:** `main` @ `b4cffb74`  
 **CI:** green  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
