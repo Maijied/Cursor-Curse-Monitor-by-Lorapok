@@ -1332,6 +1332,8 @@ jobs:
         || needs.deploy.result == 'skipped'
       )
     runs-on: ubuntu-latest
+    outputs:
+      deploy_conclusion: ${{ steps.deployment.outcome }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -1386,12 +1388,50 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Install GPG (cred vault decrypt)
+      - name: Upload site-data for Discord notify
         if: always() && steps.deployment.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketing-site-data
+          path: website/site-data.json
+          retention-days: 1
+
+  website-discord-notify:
+    name: Notify Discord — marketing website
+    runs-on: ubuntu-latest
+    needs: [website]
+    if: >-
+      always()
+      && needs.website.result != 'skipped'
+      && needs.website.result != 'cancelled'
+    environment:
+      name: admin-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download site-data artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: marketing-site-data
+          path: website
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/admin/package-lock.json
+
+      - name: Install admin tooling (wrangler for ADMIN_KV webhook lookup)
+        working-directory: website/admin
+        run: npm ci --ignore-scripts
+
+      - name: Install GPG (cred vault decrypt)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnupg
 
       - name: Load credentials from cred vault
-        if: always() && steps.deployment.outcome != 'skipped'
         continue-on-error: true
         env:
           CRED_VAULT_PASSPHRASE: ${{ secrets.CRED_VAULT_PASSPHRASE }}
@@ -1399,8 +1439,7 @@ jobs:
         run: node scripts/load-cred-vault-env-ci.mjs
         working-directory: website/admin
 
-      - name: Fallback deployment webhook secret (when cred vault not synced)
-        if: always() && steps.deployment.outcome != 'skipped'
+      - name: Fallback admin-production secrets (when cred vault not synced)
         env:
           FB_DISCORD_DEPLOYMENT_WEBHOOK: ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK }}
           FB_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -1417,10 +1456,9 @@ jobs:
           fi
 
       - name: Notify Discord — marketing website deploy
-        if: always() && steps.deployment.outcome != 'skipped'
         run: |
           CONCLUSION="failure"
-          if [ "${{ steps.deployment.outcome }}" = "success" ]; then CONCLUSION="success"; fi
+          if [ "${{ needs.website.outputs.deploy_conclusion }}" = "success" ]; then CONCLUSION="success"; fi
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           EXTRA_ARGS=(--require-webhook --site-data website/site-data.json)
           if [ "$CONCLUSION" = "failure" ]; then
