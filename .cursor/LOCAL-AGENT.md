@@ -43,6 +43,8 @@ npm run sync:issues
 | Passphrase | repo `.cred-vault-passphrase` or `CRED_VAULT_PASSPHRASE` |
 | CLI | `cred get cursor <key>` — never paste values in chat/commits |
 
+After vault writes or secret rotation, run applicable sync scripts — [`.cursor/rules/cred-vault-sync-maintain.mdc`](rules/cred-vault-sync-maintain.mdc).
+
 **Admin dev:** `website/admin/.env` (Firebase public config). Optional `GITHUB_TOKEN` for local API middleware. Wrangler: `npx wrangler whoami` in `website/admin/`.
 
 **Agent skills:** `.cursor/skills` → `.agents/skills` (symlink). Global Lorapok skills: `node scripts/sync-global-agent-stack.mjs`.

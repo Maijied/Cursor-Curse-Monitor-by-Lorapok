@@ -54,6 +54,7 @@ Wiki mirror: [`docs/wiki/AI-Agent-Commands.md`](docs/wiki/AI-Agent-Commands.md)
 ## 4. Safety
 
 - **Secrets:** cred vault only — [`cred-vault`](.cursor/rules/cred-vault.mdc)
+- **Vault sync:** after any vault write or rotation, run applicable `sync-*-cred-vault.mjs` scripts — [`cred-vault-sync-maintain`](.cursor/rules/cred-vault-sync-maintain.mdc)
 - **No secrets** in chat, procedure files, or commits
 - **Destructive ops:** use `confirmAction` / ask user before deploy, delete, mass issue close
 - **CodeRabbit:** hints only — [`.cursor/rules/coderabbit-review.mdc`](.cursor/rules/coderabbit-review.mdc)

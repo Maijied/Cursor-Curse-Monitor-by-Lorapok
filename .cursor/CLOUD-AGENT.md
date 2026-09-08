@@ -150,6 +150,8 @@ Keep the Cursor GitHub App installed on the repo with default permissions — it
 
 Rule: [`.cursor/rules/cred-vault.mdc`](rules/cred-vault.mdc) — never paste secrets in chat, PRs, or commits.
 
+After vault writes or secret rotation (when secrets are available), run applicable sync scripts — [`.cursor/rules/cred-vault-sync-maintain.mdc`](rules/cred-vault-sync-maintain.mdc). Cloud agents without vault access must ask the maintainer to sync locally.
+
 ---
 
 ## Browser automation
