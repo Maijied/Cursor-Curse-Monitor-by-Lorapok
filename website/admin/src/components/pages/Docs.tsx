@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { BookOpen, Download, ExternalLink, Search } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
+import SectionReferLink from "../ui/SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailabilityLabel } from "../../lib/download-stats";
 
@@ -57,9 +59,12 @@ const SECTIONS = [
           Pushes to <code className="font-[family-name:var(--font-mono)] text-sm">main</code> run CI and deploy the website; marketplace publishing requires a manual workflow dispatch or tag push.
         </p>
         <h4 className="font-semibold mt-6 mb-2 text-[var(--color-text)]">Deploy (forward)</h4>
-        <p>
-          From the Deployments page, pick a target tag, publish market (Both / Open VSX / VS Code Marketplace), and release channel
-          (Production or Beta). This dispatches the GitHub Actions deployment workflow with your inputs.
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span>
+            From the Deployments page, pick a target tag, publish market (Both / Open VSX / VS Code Marketplace), and release channel
+            (Production or Beta). This dispatches the GitHub Actions deployment workflow with your inputs.
+          </span>
+          <SectionReferLink {...SECTION_REFERS.deployments} className="!text-sm" />
         </p>
         <h4 className="font-semibold mt-6 mb-2 text-[var(--color-text)]">Rollback</h4>
         <p>

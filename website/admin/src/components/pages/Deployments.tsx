@@ -1,5 +1,4 @@
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Link } from "react-router-dom";
 import { AlertTriangle, ExternalLink, Lock, Rocket, Server, ShieldCheck, Undo2 } from "lucide-react";
 import {
   fetchTags,
@@ -23,7 +22,8 @@ import ErrorState from "../ui/ErrorState";
 import Notification from "../ui/Notification";
 import DeployRuntimeInlineSlot from "../ui/DeployRuntimeInlineSlot";
 import CollapsibleCard from "../ui/CollapsibleCard";
-import { persistSettingsTab } from "../ui/SettingsTabNav";
+import SectionReferLink from "../ui/SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import LoadableButton from "../ui/LoadableButton";
 import { useAuthSession } from "../../lib/auth-context";
@@ -351,14 +351,7 @@ export default function Deployments() {
           Discord deploy status posts are configured in{" "}
           <strong className="text-[var(--color-text)]">Settings → Discord</strong> (and Social when enabled).
         </span>
-        <Link
-          to="/dashboard/settings"
-          onClick={() => persistSettingsTab("discord")}
-          className="inline-flex items-center gap-1.5 text-[var(--color-accent)] hover:underline shrink-0"
-        >
-          Open Discord settings
-          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-        </Link>
+        <SectionReferLink {...SECTION_REFERS.settingsDiscord} />
       </div>
 
       <CollapsibleCard
@@ -381,16 +374,12 @@ export default function Deployments() {
             <strong className="text-[var(--color-text)]">Rollback</strong> — restore an older tag as{" "}
             <code className="font-mono text-xs">v{"{major}.{minor}.Rn"}</code>, then publish.
           </li>
-          <li>
-            <strong className="text-[var(--color-text)]">Discord hook</strong> — configure the deployment webhook in{" "}
-            <Link
-              to="/dashboard/settings"
-              onClick={() => persistSettingsTab("discord")}
-              className="text-[var(--color-accent)] hover:underline"
-            >
-              Settings → Discord
-            </Link>
-            .
+          <li className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>
+              <strong className="text-[var(--color-text)]">Discord hook</strong> — configure the deployment webhook in
+              Settings → Discord.
+            </span>
+            <SectionReferLink {...SECTION_REFERS.settingsDiscord} />
           </li>
         </ul>
         <p className="text-xs text-[var(--color-warn)] mt-3">

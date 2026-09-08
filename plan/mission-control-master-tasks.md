@@ -61,7 +61,7 @@ _None — pick from **Recommended next queue** below._
 | Marketing website | 4 | 8 | 0 |
 | Legal & privacy | 0 | 2 | 0 |
 | Ecosystem expansion | 3 | 18 | 0 |
-| Admin UX / observability | 3 | 16 | 0 |
+| Admin UX / observability | 4 | 15 | 0 |
 
 ---
 
@@ -372,7 +372,7 @@ _None — pick from **Recommended next queue** below._
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **next** | ACL-aware; fuzzy match; keyboard-first |
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
-| ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **next** | shared `SectionReferLink` component |
+| ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
 | ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **next** | `/api/health` + `site-data`; no duplicate Overview chips |
 | ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **next** | single source per metric; ADMIN-04 footer owns status strip |
 
@@ -380,7 +380,7 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **ADMIN-03 / ADMIN-04 / ADMIN-05** — Refer buttons, minimal footer, dedupe Overview
+1. **ADMIN-04 / ADMIN-05** — Minimal footer, dedupe Overview (ADMIN-03 done)
 2. **MAIL-13 / MAIL-14** — Professional mail templates + dynamic subscriber emails
 3. **DC-06** — Finish branded Discord templates for digest/community (CI cards + gallery shipped)
 4. **SOCIAL-01–03** — Multi-platform webhooks + one-click share (DEPLOY-03 gallery trigger done)

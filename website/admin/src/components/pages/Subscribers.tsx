@@ -10,6 +10,8 @@ import { broadcastToSubscribers, fetchSubscribers, type SubscriberRecord } from 
 import Notification from "../ui/Notification";
 import { useAuthSession } from "../../lib/auth-context";
 import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
+import SectionReferLink from "../ui/SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 
 function exportCsv(rows: SubscriberRecord[]) {
   const header = ["email", "source", "subscribedAt", "installId", "consentVersion"];
@@ -195,9 +197,10 @@ export default function Subscribers() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 mb-4 text-[var(--color-muted)] text-sm">
-          <Mail size={16} aria-hidden="true" />
-          Use Mailbox → Compose to email this list, or export CSV for external campaigns.
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4 text-[var(--color-muted)] text-sm">
+          <Mail size={16} aria-hidden="true" className="shrink-0" />
+          <span>Use Mailbox → Compose to email this list, or export CSV for external campaigns.</span>
+          <SectionReferLink {...SECTION_REFERS.mailbox} />
         </div>
         <DataTable<SubscriberRecord>
           columns={columns}

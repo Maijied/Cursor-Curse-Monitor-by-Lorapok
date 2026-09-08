@@ -8,6 +8,8 @@ import Notification from "./Notification";
 import { usePollingFetch } from "../../hooks/usePollingFetch";
 import { fetchSyncStatus, putCronJobsConfigApi } from "../../lib/api";
 import { formatDownloadCount } from "../../lib/download-stats";
+import SectionReferLink from "./SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 
 const CF_KV_LIMITS_URL = "https://developers.cloudflare.com/kv/platform/limits/";
 const CF_R2_PRICING_URL = "https://developers.cloudflare.com/r2/pricing/";
@@ -263,6 +265,7 @@ export default function InfrastructureStatusCard() {
               <p className="text-[var(--color-muted)] leading-relaxed mb-3">
                 {sync.hint ?? sync.stats.lastRunError ?? "KV daily limit exceeded."}
               </p>
+              <SectionReferLink {...SECTION_REFERS.settingsAutomation} className="mb-3" />
               {canWrite && sync.stats.enabled ? (
                 <button
                   type="button"

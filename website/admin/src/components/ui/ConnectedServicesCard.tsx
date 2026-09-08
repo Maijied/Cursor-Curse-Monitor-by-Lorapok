@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { CheckCircle2, XCircle } from "lucide-react";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Card from "./Card";
 import Badge from "./Badge";
 import { auth } from "../../lib/firebase";
 import { fetchHealth, fetchSyncStatus } from "../../lib/api";
+import SectionReferLink from "./SectionReferLink";
+import { SECTION_REFERS, type SectionReferTarget } from "../../lib/section-refer";
 
 type ServiceStatus = "connected" | "disconnected" | "checking";
 
@@ -14,6 +15,7 @@ type ServiceRow = {
   label: string;
   status: ServiceStatus;
   detail: string;
+  refer?: SectionReferTarget;
 };
 
 function StatusIcon({ status }: { status: ServiceStatus }) {
@@ -59,7 +61,8 @@ export default function ConnectedServicesCard() {
           id: "firebase",
           label: "Firebase Auth",
           status: "disconnected",
-          detail: "Client bootstrap unavailable — check Settings → Firebase or Pages secrets",
+          detail: "Client bootstrap unavailable — check Firebase settings or Pages secrets",
+          refer: SECTION_REFERS.settingsFirebase,
         });
       } else if (user) {
         next.push({
@@ -93,6 +96,7 @@ export default function ConnectedServicesCard() {
           detail: health.mailConfigured
             ? String(health.mailTransport ?? "configured")
             : health.mailHint ?? "Mail transport not configured",
+          refer: health.mailConfigured ? undefined : SECTION_REFERS.settingsMail,
         });
         next.push({
           id: "discord",
@@ -100,7 +104,8 @@ export default function ConnectedServicesCard() {
           status: health.discordConfigured ? "connected" : "disconnected",
           detail: health.discordConfigured
             ? "Webhook set — deploy status posts to Discord"
-            : "Not set — add a channel webhook on Deployments",
+            : "Not set — add a channel webhook in Discord settings",
+          refer: health.discordConfigured ? undefined : SECTION_REFERS.settingsDiscord,
         });
         if (sync) {
           const statsOk = sync.stats.cache.fresh && !sync.stats.kvQuotaHit;
@@ -233,18 +238,23 @@ export default function ConnectedServicesCard() {
                 <th scope="row" className="py-3 pr-4 font-medium text-[var(--color-text)] text-left">
                   {service.label}
                 </th>
-                <td className="py-3 text-[var(--color-muted)] text-xs sm:text-sm">{service.detail}</td>
+                <td className="py-3 text-[var(--color-muted)] text-xs sm:text-sm">
+                  <span>{service.detail}</span>
+                  {service.refer ? (
+                    <span className="block mt-1">
+                      <SectionReferLink {...service.refer} />
+                    </span>
+                  ) : null}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <p className="text-sm text-[var(--color-muted)] mt-6 pt-4 border-t border-[var(--color-border)]">
-        Need full endpoint tests?{" "}
-        <Link to="/dashboard/api-explorer" className="text-[var(--color-accent)] font-medium hover:underline">
-          Open API Explorer
-        </Link>
+      <p className="text-sm text-[var(--color-muted)] mt-6 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span>Need full endpoint tests?</span>
+        <SectionReferLink {...SECTION_REFERS.apiExplorer} className="!text-sm" />
       </p>
     </Card>
   );
