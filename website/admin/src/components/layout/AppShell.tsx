@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import Sidebar from "./Sidebar";
+import GlobalFooter from "./GlobalFooter";
 import PermissionRoute from "./PermissionRoute";
 import { APP_ROUTES } from "../../routes";
 import { DeployRuntimeProvider } from "../../context/DeployRuntimeContext";
@@ -108,35 +109,38 @@ export default function AppShell() {
           </div>
         </header>
 
-        <div className="flex-1 relative min-w-0 min-h-0">
-          <div className="app-shell-bg" aria-hidden="true" />
-          <main className="app-scroll-pane">
-            <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full min-w-0">
-              <Suspense fallback={<LarvaeLoaderPanel label="Loading page…" className="min-h-64 border-0 bg-transparent" />}>
-                <Routes>
-                  <Route index element={<Overview />} />
-                  <Route path="marketplace" element={<GuardedRoute segment="marketplace"><MarketplaceHealth /></GuardedRoute>} />
-                  <Route path="releases" element={<GuardedRoute segment="releases"><Releases /></GuardedRoute>} />
-                  <Route path="activity" element={<GuardedRoute segment="activity"><Activity /></GuardedRoute>} />
-                  <Route path="logs" element={<GuardedRoute segment="logs"><Logs /></GuardedRoute>} />
-                  <Route path="mailbox" element={<GuardedRoute segment="mailbox"><Mailbox /></GuardedRoute>} />
-                  <Route path="mail" element={<GuardedRoute segment="mail"><MailHub /></GuardedRoute>} />
-                  <Route path="subscribers" element={<GuardedRoute segment="subscribers"><Subscribers /></GuardedRoute>} />
-                  <Route path="api-explorer" element={<GuardedRoute segment="api-explorer"><ApiExplorer /></GuardedRoute>} />
-                  <Route path="reports" element={<GuardedRoute segment="reports"><Reports /></GuardedRoute>} />
-                  <Route path="discussions" element={<GuardedRoute segment="discussions"><Discussions /></GuardedRoute>} />
-                  <Route path="architecture" element={<GuardedRoute segment="architecture"><Architecture /></GuardedRoute>} />
-                  <Route path="deployments" element={<GuardedRoute segment="deployments"><Deployments /></GuardedRoute>} />
-                  <Route path="notices" element={<GuardedRoute segment="notices"><Notices /></GuardedRoute>} />
-                  <Route path="docs" element={<GuardedRoute segment="docs"><Docs /></GuardedRoute>} />
-                  <Route path="seo" element={<GuardedRoute segment="seo"><SeoDashboard /></GuardedRoute>} />
-                  <Route path="settings" element={<GuardedRoute segment="settings"><Settings /></GuardedRoute>} />
-                  <Route path="team" element={<GuardedRoute segment="team"><Team /></GuardedRoute>} />
-                  <Route path="*" element={<NotFound inApp />} />
-                </Routes>
-              </Suspense>
-            </div>
-          </main>
+        <div className="flex-1 relative min-w-0 min-h-0 flex flex-col">
+          <div className="flex-1 relative min-w-0 min-h-0">
+            <div className="app-shell-bg" aria-hidden="true" />
+            <main className="app-scroll-pane">
+              <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full min-w-0">
+                <Suspense fallback={<LarvaeLoaderPanel label="Loading page…" className="min-h-64 border-0 bg-transparent" />}>
+                  <Routes>
+                    <Route index element={<Overview />} />
+                    <Route path="marketplace" element={<GuardedRoute segment="marketplace"><MarketplaceHealth /></GuardedRoute>} />
+                    <Route path="releases" element={<GuardedRoute segment="releases"><Releases /></GuardedRoute>} />
+                    <Route path="activity" element={<GuardedRoute segment="activity"><Activity /></GuardedRoute>} />
+                    <Route path="logs" element={<GuardedRoute segment="logs"><Logs /></GuardedRoute>} />
+                    <Route path="mailbox" element={<GuardedRoute segment="mailbox"><Mailbox /></GuardedRoute>} />
+                    <Route path="mail" element={<GuardedRoute segment="mail"><MailHub /></GuardedRoute>} />
+                    <Route path="subscribers" element={<GuardedRoute segment="subscribers"><Subscribers /></GuardedRoute>} />
+                    <Route path="api-explorer" element={<GuardedRoute segment="api-explorer"><ApiExplorer /></GuardedRoute>} />
+                    <Route path="reports" element={<GuardedRoute segment="reports"><Reports /></GuardedRoute>} />
+                    <Route path="discussions" element={<GuardedRoute segment="discussions"><Discussions /></GuardedRoute>} />
+                    <Route path="architecture" element={<GuardedRoute segment="architecture"><Architecture /></GuardedRoute>} />
+                    <Route path="deployments" element={<GuardedRoute segment="deployments"><Deployments /></GuardedRoute>} />
+                    <Route path="notices" element={<GuardedRoute segment="notices"><Notices /></GuardedRoute>} />
+                    <Route path="docs" element={<GuardedRoute segment="docs"><Docs /></GuardedRoute>} />
+                    <Route path="seo" element={<GuardedRoute segment="seo"><SeoDashboard /></GuardedRoute>} />
+                    <Route path="settings" element={<GuardedRoute segment="settings"><Settings /></GuardedRoute>} />
+                    <Route path="team" element={<GuardedRoute segment="team"><Team /></GuardedRoute>} />
+                    <Route path="*" element={<NotFound inApp />} />
+                  </Routes>
+                </Suspense>
+              </div>
+            </main>
+          </div>
+          <GlobalFooter />
         </div>
       </div>
     </div>
