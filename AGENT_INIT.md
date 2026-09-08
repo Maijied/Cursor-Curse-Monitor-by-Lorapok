@@ -33,6 +33,7 @@ Details: [`procedure/README.md`](procedure/README.md) · rule: [`.cursor/rules/p
 
 | Order | File |
 |-------|------|
+| 0 | [`.cursor/SESSION-HANDOFF.md`](.cursor/SESSION-HANDOFF.md) — **if present:** cloud→local continuity (read once, then **Update?**) |
 | 1 | This file (`AGENT_INIT.md`) |
 | 2 | [`AGENTS.md`](AGENTS.md) — build, test, deploy per component |
 | 3 | [`MISSION-CONTROL-WALKTHROUGH.md`](MISSION-CONTROL-WALKTHROUGH.md) — admin / ops |

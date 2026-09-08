@@ -1,6 +1,6 @@
 {
   "name": "Cursor Curse Monitor",
-  "install": "npm ci && npm ci --prefix website/admin && node scripts/sync-global-agent-stack.mjs",
+  "install": "npm ci && npm ci --prefix website/admin && npm run build -w @lorapok/cursor-monitor-shared && node scripts/sync-global-agent-stack.mjs",
   "terminals": [
     {
       "name": "admin-dev",
