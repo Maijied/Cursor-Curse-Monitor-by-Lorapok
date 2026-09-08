@@ -155,13 +155,22 @@ export async function onRequestPost(context) {
       return logAuthenticatedRequest(context, auth, response, startedAt);
     }
 
+    const fromLocalPart = body.fromLocalPart ? String(body.fromLocalPart).trim().toLowerCase() : null;
+    const subject = fromLocalPart
+      ? `Mission Control identity test — ${fromLocalPart}@lorapok.tech`
+      : "Cursor Curse Monitor — mailbox test";
+    const text = fromLocalPart
+      ? `Identity test from ${fromLocalPart}@lorapok.tech at ${new Date().toISOString()}.`
+      : `Mailbox test from Mission Control at ${new Date().toISOString()}. Outbound mail is working.`;
+
     const result = await sendMail(env, {
       to,
-      subject: "Cursor Curse Monitor — mailbox test",
+      subject,
       html: buildTestHtml({ email: to, adminUrl: getAdminPublicUrl(env) }),
-      text: `Mailbox test from Mission Control at ${new Date().toISOString()}. Outbound mail is working.`,
+      text,
       category: "test",
       sentBy: auth.email,
+      fromLocalPart,
     });
 
     const response = jsonResponse({
@@ -169,8 +178,9 @@ export async function onRequestPost(context) {
       emailed: result.sent,
       transport: result.transport,
       mailboxId: result.mailboxId,
+      fromLocalPart,
       message: result.sent
-        ? `Test email sent to ${to}`
+        ? `Test email sent to ${to}${fromLocalPart ? ` from ${fromLocalPart}@lorapok.tech` : ""}`
         : `Test email failed: ${result.reason}`,
       reason: result.sent ? undefined : result.reason,
     });

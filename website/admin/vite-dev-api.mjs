@@ -1726,6 +1726,9 @@ export function createDevApiMiddleware() {
           requireMailForSubscribe: subscribeConfig.requireMailForSubscribe,
           redirect: {
             configured: Boolean(process.env.MAIL_REDIRECT_TO),
+            address: process.env.MAIL_REDIRECT_TO
+              ? String(process.env.MAIL_REDIRECT_TO).trim().toLowerCase()
+              : null,
             masked: process.env.MAIL_REDIRECT_TO ? maskEmail(process.env.MAIL_REDIRECT_TO) : null,
           },
         })
@@ -3465,16 +3468,24 @@ export function createDevApiMiddleware() {
             return;
           }
           const to = String(parsed.to ?? "dev@local").trim().toLowerCase();
+          const fromLocalPart = parsed.fromLocalPart
+            ? String(parsed.fromLocalPart).trim().toLowerCase()
+            : null;
+          const fromEmail = fromLocalPart ? `${fromLocalPart}@lorapok.tech` : "cursor.monitor@lorapok.tech";
           const subject = action === "test"
-            ? "Cursor Curse Monitor — mailbox test"
+            ? fromLocalPart
+              ? `Mission Control identity test — ${fromLocalPart}@lorapok.tech`
+              : "Cursor Curse Monitor — mailbox test"
             : String(parsed.subject ?? "Dev compose");
           const text = action === "test"
-            ? "Mailbox test (dev mode)"
+            ? fromLocalPart
+              ? `Identity test from ${fromLocalPart}@lorapok.tech (dev mode)`
+              : "Mailbox test (dev mode)"
             : String(parsed.text ?? "");
           const entry = {
             id: crypto.randomUUID(),
             direction: "outbound",
-            from: "cursor.monitor@lorapok.tech",
+            from: fromEmail,
             to,
             subject,
             text,
@@ -3488,7 +3499,14 @@ export function createDevApiMiddleware() {
           devStore.mailbox.unshift(entry);
           logDevActivity(req, 200);
           res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ ok: true, emailed: true, message: `Dev: message queued to ${to}`, mailboxId: entry.id }));
+          res.end(JSON.stringify({
+            ok: true,
+            emailed: true,
+            transport: "dev-simulated",
+            fromLocalPart,
+            message: `Dev: message queued to ${to}${fromLocalPart ? ` from ${fromEmail}` : ""}`,
+            mailboxId: entry.id,
+          }));
         } catch {
           res.statusCode = 400;
           res.setHeader("Content-Type", "application/json");

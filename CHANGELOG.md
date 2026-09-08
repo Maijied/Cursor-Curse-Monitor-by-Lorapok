@@ -27,6 +27,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **Mission Control Mail hub** — dedicated `/dashboard/mail` tab for transport status, email identities, Resend config, masked redirect target, and Mailbox link
+- **Mail identity panel** — edit/test each @lorapok.tech identity from Mail hub; per-identity test send with exact From address; generate new aliases; full addresses in admin config (no masking)
 - **Mail D1/R2 storage** — `mail_messages`, `mail_audit_resend`, and `ccm-mail-audit` worker; KV scatter aliases; `resend-saved-mail.mjs` replay script
 - **Duplicate subscribe rejection** — `POST /api/subscribe` returns 409 `already_subscribed`; marketing site shows friendly message
 - **Cred vault sync rule** — `.cursor/rules/cred-vault-sync-maintain.mdc` for local/cloud agents to run `sync-*-cred-vault.mjs` after secret changes
