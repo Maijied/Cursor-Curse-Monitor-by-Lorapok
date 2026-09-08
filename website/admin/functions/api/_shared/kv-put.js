@@ -140,26 +140,36 @@ export async function putKvJsonSafe(envOrKv, key, value, options = {}) {
  * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace} envOrKv
  * @param {string} key
  * @param {string} value
+ * @returns {Promise<KvPutResult & { changed: boolean }>}
  */
 export async function putKvStringIfChanged(envOrKv, key, value) {
   const result = await putKvStringSafe(envOrKv, key, value, { skipIfUnchanged: true });
-  if (result.quotaExceeded) {
-    throw new Error("KV put() limit exceeded for the day");
-  }
-  if (!result.ok && result.reason && result.reason !== "unchanged") {
+  if (!result.ok && result.reason && result.reason !== "unchanged" && !result.quotaExceeded) {
     throw new Error(result.reason);
   }
-  return Boolean(result.wrote);
+  return { ...result, changed: Boolean(result.wrote) };
 }
 
 /**
  * @param {Record<string, unknown>} env
  * @param {string} key
  * @param {unknown} value
+ * @returns {Promise<KvPutResult & { changed: boolean }>}
  */
 export async function putKvJsonIfChanged(env, key, value) {
   const serialized = JSON.stringify(value);
   return putKvStringIfChanged(env, key, serialized);
+}
+
+/**
+ * Config/cron KV write — never throws on quota; callers check `quotaExceeded` / use kvDegradedMeta.
+ * @param {Record<string, unknown>} env
+ * @param {string} key
+ * @param {unknown} value
+ * @returns {Promise<KvPutResult & { changed: boolean }>}
+ */
+export async function putKvConfigJson(env, key, value) {
+  return putKvJsonIfChanged(env, key, value);
 }
 
 /**
@@ -169,10 +179,8 @@ export async function putKvJsonIfChanged(env, key, value) {
  */
 export async function putKvJson(envOrKv, key, value) {
   const result = await putKvJsonSafe(envOrKv, key, value);
-  if (result.quotaExceeded) {
-    throw new Error("KV put() limit exceeded for the day");
-  }
-  if (!result.ok) {
+  if (!result.ok && !result.quotaExceeded) {
     throw new Error(result.reason ?? "ADMIN_KV put failed");
   }
+  return result;
 }

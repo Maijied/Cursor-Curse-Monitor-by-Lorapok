@@ -1,8 +1,6 @@
 import { jsonResponse } from "../_shared/auth.js";
 import { isStatsRefreshDue, readStatsRefreshConfig } from "../_shared/stats-refresh-config.js";
 import { runStatsRefresh, verifyCronSecret } from "../_shared/stats-refresh.js";
-
-/**
  * Cron entry — secured via CRON_SECRET (X-Cron-Secret or Bearer).
  * Cloudflare Worker ccm-stats-cron calls this on a 15-minute schedule; refresh runs when due.
  */
@@ -24,7 +22,14 @@ export async function onRequestPost(context) {
 
     const result = await runStatsRefresh(env, { triggeredBy: "cron" });
     if (result.skipped) {
-      return jsonResponse({ ok: true, skipped: true, reason: result.reason, intervalMinutes: config.intervalMinutes });
+      return jsonResponse({
+        ok: true,
+        skipped: true,
+        reason: result.reason,
+        intervalMinutes: config.intervalMinutes,
+        ...(result.notice ? { notice: result.notice } : {}),
+        ...(result.writesPausedUntil ? { writesPausedUntil: result.writesPausedUntil } : {}),
+      });
     }
     if (!result.ok) {
       return jsonResponse({ ok: false, error: result.error ?? "Refresh failed", durationMs: result.durationMs ?? null }, 502);

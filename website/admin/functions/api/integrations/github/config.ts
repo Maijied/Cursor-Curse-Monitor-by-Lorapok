@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import { GITHUB_REPO } from "../../_shared/repo-constants.js";
 import {
@@ -118,7 +119,7 @@ export async function onRequestPut(context) {
     }
   }
 
-  return jsonResponse({
+  return jsonConfigSaveResponse(env, {
     ok: true,
     config: sanitizeGithubIntegrationForClient(next, env, secretNames),
     githubSecretsSyncedAt,

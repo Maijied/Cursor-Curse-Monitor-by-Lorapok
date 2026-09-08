@@ -1,4 +1,5 @@
 import { jsonResponse } from "../_shared/auth.js";
+import { putKvJsonSafe } from "../_shared/kv-put.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -48,9 +49,8 @@ async function readIndex(env) {
 
 async function writeIndex(env, ids) {
   if (!env.ADMIN_KV?.put) return;
-  // Cap index size to avoid unbounded growth; stats still key by install id.
   const trimmed = ids.slice(-50_000);
-  await env.ADMIN_KV.put(INSTALLS_INDEX_KEY, JSON.stringify(trimmed));
+  await putKvJsonSafe(env, INSTALLS_INDEX_KEY, trimmed);
 }
 
 export async function onRequestOptions() {
@@ -93,7 +93,7 @@ export async function onRequestPost(context) {
       const existing = JSON.parse(existingRaw);
       record.firstSeenAt = existing.firstSeenAt || now;
     }
-    await env.ADMIN_KV.put(key, JSON.stringify(record));
+    await putKvJsonSafe(env, key, record);
 
     const index = await readIndex(env);
     if (!index.includes(installId)) {
@@ -102,7 +102,7 @@ export async function onRequestPost(context) {
     }
   } catch (err) {
     console.error("usage ping failed", err);
-    return jsonResponse({ error: "Server error" }, 500, CORS_HEADERS);
+    return jsonResponse({ ok: true, degraded: true }, 200, CORS_HEADERS);
   }
 
   return jsonResponse({ ok: true }, 200, CORS_HEADERS);

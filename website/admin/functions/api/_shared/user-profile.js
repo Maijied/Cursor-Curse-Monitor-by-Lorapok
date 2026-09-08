@@ -1,3 +1,5 @@
+import { putKvJsonSafe } from "./kv-put.js";
+
 const PROFILE_PREFIX = "user-profile:v1:";
 
 /**
@@ -37,7 +39,10 @@ export async function writeUserProfile(env, email, patch) {
     email: String(email).trim().toLowerCase(),
     updatedAt: new Date().toISOString(),
   };
-  await env.ADMIN_KV.put(profileKvKey(email), JSON.stringify(next));
+  const result = await putKvJsonSafe(env, profileKvKey(email), next);
+  if (!result.ok && !result.quotaExceeded) {
+    throw new Error(result.reason ?? "ADMIN_KV put failed");
+  }
   return next;
 }
 

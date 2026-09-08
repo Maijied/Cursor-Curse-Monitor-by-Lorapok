@@ -14,7 +14,7 @@
  * }} CronRunMeta
  */
 
-import { putKvJsonIfChanged } from "./kv-put.js";
+import { putKvConfigJson } from "./kv-put.js";
 
 export const CRON_RUN_DEFAULTS = {
   lastRunAt: null,
@@ -118,7 +118,7 @@ async function writeCronJobState(env, key, next) {
   if (!env.ADMIN_KV?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  await putKvJsonIfChanged(env, key, next);
+  return await putKvConfigJson(env, key, next);
 }
 
 /**

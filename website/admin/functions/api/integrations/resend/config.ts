@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import { isValidSendingDomain, writeMailConfig } from "../../_shared/mail-config.js";
 import { readGithubIntegrationConfig } from "../../_shared/github-integration-config.js";
@@ -156,7 +157,7 @@ export async function onRequestPut(context) {
     }
   }
 
-  return jsonResponse({
+  return jsonConfigSaveResponse(env, {
     ok: true,
     config: sanitizeResendIntegrationForClient(persisted, env, secretNames),
     githubSecretsSyncedAt,

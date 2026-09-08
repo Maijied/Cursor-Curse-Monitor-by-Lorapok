@@ -5,7 +5,7 @@ import {
   mergeCronJobConfig,
   sanitizeCronRunMetaForClient,
 } from "./cron-schedule.js";
-import { putKvJsonIfChanged } from "./kv-put.js";
+import { putKvConfigJson } from "./kv-put.js";
 
 const CONFIG_KEY = "integrations:stats-refresh";
 const CACHE_KEY = "stats:live-cache";
@@ -48,7 +48,7 @@ export async function writeStatsRefreshConfig(env, patch) {
   }
   const current = await readStatsRefreshConfig(env);
   const next = mergeCronJobConfig(current, patch, { defaultInterval: 5, min: 1, max: 60 });
-  await putKvJsonIfChanged(env, CONFIG_KEY, next);
+  await putKvConfigJson(env, CONFIG_KEY, next);
   return next;
 }
 

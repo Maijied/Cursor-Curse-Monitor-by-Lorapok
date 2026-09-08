@@ -8,6 +8,7 @@ import {
   getNoticeTemplates,
   getRollbackNotice,
 } from "./notice-catalog.js";
+import { putKvJsonSafe } from "./kv-put.js";
 
 const CATALOG_KEY = "notice:catalog";
 const ACTIVE_KEY = "notice:active";
@@ -152,9 +153,15 @@ export async function writeCatalog(env, catalog) {
   if (!env.ADMIN_KV?.put) {
     throw new Error("ADMIN_KV binding not configured");
   }
-  await env.ADMIN_KV.put(CATALOG_KEY, JSON.stringify(catalog));
   const active = publicNoticeShape(activeFromCatalog(catalog.items));
-  await env.ADMIN_KV.put(ACTIVE_KEY, JSON.stringify(active));
+  const catalogResult = await putKvJsonSafe(env, CATALOG_KEY, catalog);
+  const activeResult = await putKvJsonSafe(env, ACTIVE_KEY, active);
+  if (
+    (!catalogResult.ok && !catalogResult.quotaExceeded) ||
+    (!activeResult.ok && !activeResult.quotaExceeded)
+  ) {
+    throw new Error(catalogResult.reason ?? activeResult.reason ?? "ADMIN_KV put failed");
+  }
   return catalog;
 }
 

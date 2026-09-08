@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
+import { getKvWritePauseState } from "../_shared/mail-storage.js";
 import { githubFetch } from "../_shared/github.js";
 import { getMailTransportStatus } from "../_shared/mail.js";
 import {
@@ -46,7 +47,14 @@ export async function onRequestGet(context) {
   const cacheFresh = isStatsLiveCacheFresh(cache, staleThresholdMs, now);
   const lastError = statsConfig.lastError ?? null;
   const writesPausedUntil = statsConfig.writesPausedUntil ?? null;
-  const kvWritesPaused = isKvWritesPaused(writesPausedUntil, now);
+  const inMemoryPause = getKvWritePauseState().inMemoryPausedUntil;
+  const effectivePauseUntil =
+    writesPausedUntil && isKvWritesPaused(writesPausedUntil, now)
+      ? writesPausedUntil
+      : inMemoryPause && isKvWritesPaused(inMemoryPause, now)
+        ? inMemoryPause
+        : writesPausedUntil;
+  const kvWritesPaused = isKvWritesPaused(effectivePauseUntil, now);
   const kvQuotaHit = Boolean((lastError && isKvQuotaError(lastError)) || kvWritesPaused);
   const kvQuotaLimitKind = lastError ? kvQuotaKind(lastError) : kvWritesPaused ? "write" : null;
   const adminD1 = await probeAdminD1(env);
@@ -97,7 +105,7 @@ export async function onRequestGet(context) {
       lastRunAt: statsConfig.lastRunAt ?? null,
       lastRunOk: statsConfig.lastRunOk ?? null,
       lastRunError: lastError,
-      writesPausedUntil,
+      writesPausedUntil: effectivePauseUntil,
       kvQuotaHit,
       kvQuotaLimitKind,
       cache: {
@@ -112,7 +120,7 @@ export async function onRequestGet(context) {
     servicesUpdatedAt: serviceQuotas.updatedAt,
     hint: kvQuotaHit
       ? kvWritesPaused
-        ? `KV writes paused until ${writesPausedUntil} (UTC). Automatic stats refresh is skipped to protect the daily quota.`
+        ? `KV writes paused until ${effectivePauseUntil} (UTC). Automatic stats refresh is skipped to protect the daily quota.`
         : formatKvPutError(new Error(lastError ?? "KV limit"))
       : null,
   });

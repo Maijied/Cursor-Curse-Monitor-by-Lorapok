@@ -1,4 +1,6 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../_shared/kv-api-response.js";
+import { putKvJsonSafe } from "../_shared/kv-put.js";
 
 const CONFIG_KEY = "community:config";
 const CORS_HEADERS = {
@@ -72,6 +74,9 @@ export async function onRequestPut(context) {
     updatedBy: auth.email,
   };
 
-  await env.ADMIN_KV.put(CONFIG_KEY, JSON.stringify(next));
-  return jsonResponse({ ok: true, config: next });
+  const putResult = await putKvJsonSafe(env, CONFIG_KEY, next);
+  if (!putResult.ok && !putResult.quotaExceeded) {
+    return jsonResponse({ error: putResult.reason ?? "Save failed" }, 503, CORS_HEADERS);
+  }
+  return jsonConfigSaveResponse(env, { ok: true, config: next }, 200, CORS_HEADERS);
 }
