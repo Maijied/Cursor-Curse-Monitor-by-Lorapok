@@ -3,8 +3,6 @@ import { NavLink } from "react-router-dom";
 import { ChevronDown, ChevronUp, LogOut, X } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../routes";
-import OnlineStatus from "../ui/OnlineStatus";
-import SyncStatusChip from "../ui/SyncStatusChip";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import InstallAppButton from "../ui/InstallAppButton";
 import BackToWebsiteButton from "../ui/BackToWebsiteButton";
@@ -65,9 +63,7 @@ export default function Sidebar({
               <X size={18} />
             </button>
           </div>
-          <div className="hidden md:flex flex-col gap-2 px-5 pb-3">
-            <SyncStatusChip />
-            <OnlineStatus />
+          <div className="hidden md:flex px-5 pb-3">
             <ActiveUsersLive compact />
           </div>
         </div>

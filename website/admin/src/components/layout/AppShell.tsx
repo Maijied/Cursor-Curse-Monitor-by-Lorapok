@@ -7,8 +7,6 @@ import GlobalFooter from "./GlobalFooter";
 import PermissionRoute from "./PermissionRoute";
 import { APP_ROUTES } from "../../routes";
 import { DeployRuntimeProvider } from "../../context/DeployRuntimeContext";
-import OnlineStatus from "../ui/OnlineStatus";
-import SyncStatusChip from "../ui/SyncStatusChip";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import { LarvaeLoaderPanel } from "../ui/LorapokLarvaeLoader";
 import Overview from "../pages/Overview";
@@ -102,11 +100,7 @@ export default function AppShell() {
           <span className="font-semibold text-sm bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-accent)] bg-clip-text text-transparent">
             Mission Control
           </span>
-          <div className="flex items-center gap-2">
-            <SyncStatusChip compact />
-            <OnlineStatus compact />
-            <ActiveUsersLive compact />
-          </div>
+          <ActiveUsersLive compact />
         </header>
 
         <div className="flex-1 relative min-w-0 min-h-0 flex flex-col">

@@ -4,7 +4,7 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Card from "./Card";
 import Badge from "./Badge";
 import { auth } from "../../lib/firebase";
-import { fetchHealth, fetchSyncStatus } from "../../lib/api";
+import { fetchHealth } from "../../lib/api";
 import SectionReferLink from "./SectionReferLink";
 import { SECTION_REFERS, type SectionReferTarget } from "../../lib/section-refer";
 
@@ -45,11 +45,9 @@ export default function ConnectedServicesCard() {
       const user = auth.currentUser;
 
       let health: Awaited<ReturnType<typeof fetchHealth>> | null = null;
-      let sync: Awaited<ReturnType<typeof fetchSyncStatus>> | null = null;
 
       try {
         health = await fetchHealth();
-        sync = await fetchSyncStatus().catch(() => null);
       } catch {
         health = null;
       }
@@ -107,32 +105,6 @@ export default function ConnectedServicesCard() {
             : "Not set — add a channel webhook in Discord settings",
           refer: health.discordConfigured ? undefined : SECTION_REFERS.settingsDiscord,
         });
-        if (sync) {
-          const statsOk = sync.stats.cache.fresh && !sync.stats.kvQuotaHit;
-          next.push({
-            id: "stats-cron",
-            label: "Live stats cron",
-            status: statsOk ? "connected" : sync.stats.kvQuotaHit ? "disconnected" : "checking",
-            detail: sync.stats.kvQuotaHit
-              ? sync.hint ?? "KV daily write limit reached"
-              : sync.stats.cache.refreshedAt
-                ? `Refreshed ${sync.stats.cache.ageSeconds ?? "?"}s ago · total ${sync.stats.cache.displayTotal ?? "—"}`
-                : sync.stats.lastRunError ?? "No cache yet",
-          });
-          if (sync.adminD1) {
-            const d1 = sync.adminD1;
-            next.push({
-              id: "admin-d1",
-              label: "Admin D1",
-              status: !d1.configured ? "checking" : d1.ok ? "connected" : "disconnected",
-              detail: !d1.configured
-                ? "Binding not deployed yet"
-                : d1.ok
-                  ? "Schema ready · logs/subscribers (Phase 2)"
-                  : d1.error ?? "D1 probe failed",
-            });
-          }
-        }
       } else {
         next.push({
           id: "github",

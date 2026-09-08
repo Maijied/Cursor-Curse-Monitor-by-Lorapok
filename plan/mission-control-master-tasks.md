@@ -2,7 +2,7 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-08 (ADMIN-04 merged #251)  
+**Last updated:** 2026-09-08 (ADMIN-05 dashboard KPI dedupe)  
 **Branch:** `main` @ `a374f49a`  
 **CI:** Production Deployment triggered on merge (2026-09-08T15:35Z)  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
@@ -375,14 +375,13 @@ _None — pick from **Recommended next queue** below._
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
 | ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **done** | `GlobalFooter.tsx` in `AppShell`; `/api/health` + `fetchSyncStatus` + `useSiteData` |
-| ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **next** | single source per metric; ADMIN-04 footer owns status strip |
+| ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **done** | Footer owns status; Overview links to Settings; infra rows only in Infrastructure card |
 
 ---
 
 ## Recommended **next** queue (priority order)
 
-1. **ADMIN-05** — Dedupe Overview KPIs (ADMIN-04 footer done)
-2. **MAIL-13 / MAIL-14** — Professional mail templates + dynamic subscriber emails
+1. **MAIL-13 / MAIL-14** — Professional mail templates + dynamic subscriber emails
 3. **DC-06** — Finish branded Discord templates for digest/community (CI cards + gallery shipped)
 4. **SOCIAL-01–03** — Multi-platform webhooks + one-click share (DEPLOY-03 gallery trigger done)
 5. **SEO-01–03** — World-class SEO + admin hub + policies

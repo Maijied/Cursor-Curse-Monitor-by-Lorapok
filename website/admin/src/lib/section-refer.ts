@@ -84,6 +84,8 @@ export const SECTION_REFERS = {
   settingsFirebase: { section: "settings", settingsTab: "firebase" } satisfies SectionReferTarget,
   settingsMail: { section: "settings", settingsTab: "mail" } satisfies SectionReferTarget,
   settingsAutomation: { section: "settings", settingsTab: "automation" } satisfies SectionReferTarget,
+  settingsServices: { section: "settings", settingsTab: "services" } satisfies SectionReferTarget,
+  settingsGeneral: { section: "settings", settingsTab: "general" } satisfies SectionReferTarget,
   deployments: { section: "deployments" } satisfies SectionReferTarget,
   mailbox: { section: "mailbox" } satisfies SectionReferTarget,
   apiExplorer: { section: "api-explorer" } satisfies SectionReferTarget,
