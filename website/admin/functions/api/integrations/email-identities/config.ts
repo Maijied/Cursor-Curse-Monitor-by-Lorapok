@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   IDENTITY_CATEGORIES,
@@ -100,7 +101,7 @@ export async function onRequestPut(context) {
 
   try {
     await writeEmailIdentitiesConfig(env, next);
-    return jsonResponse({ ok: true, config: sanitizeEmailIdentitiesForClient(next) });
+    return jsonConfigSaveResponse(env, { ok: true, config: sanitizeEmailIdentitiesForClient(next) });
   } catch (err) {
     return jsonResponse({ error: formatKvPutError(err) }, 503);
   }

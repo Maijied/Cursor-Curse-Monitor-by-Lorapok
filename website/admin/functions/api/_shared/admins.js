@@ -20,6 +20,8 @@ export function tryGetMasterEmail(env) {
   return email || null;
 }
 
+import { putKvJsonSafe } from "./kv-put.js";
+
 const KV_KEY = "admin-emails";
 
 function parseEnvEmails(env) {
@@ -58,7 +60,10 @@ export async function writeStoredAdminEmails(env, emails) {
     throw new Error("ADMIN_KV binding not configured");
   }
   const normalized = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))].sort();
-  await env.ADMIN_KV.put(KV_KEY, JSON.stringify(normalized));
+  const result = await putKvJsonSafe(env, KV_KEY, normalized);
+  if (!result.ok && !result.quotaExceeded) {
+    throw new Error(result.reason ?? "ADMIN_KV put failed");
+  }
   return normalized;
 }
 

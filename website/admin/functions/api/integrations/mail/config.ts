@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   isValidMailAddress,
@@ -126,7 +127,7 @@ export async function onRequestPut(context) {
   try {
     const config = await writeMailConfig(env, patch);
     const transport = getMailTransportStatus(env);
-    return jsonResponse({
+    return jsonConfigSaveResponse(env, {
       ok: true,
       config: sanitizeMailConfigForClient(config, transport, env),
       setupInstructions: buildMailSetupInstructions(config, transport),

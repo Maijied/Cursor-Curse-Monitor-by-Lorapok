@@ -9,6 +9,7 @@ import {
   readSystemLogsD1,
 } from "./d1-system-log.js";
 import { shouldBlockKvWrites } from "./mail-storage.js";
+import { appendFirestoreSystemLog } from "./firebase-store.js";
 
 const SYSTEM_LOG_PREFIX = "system:log";
 const LEGACY_SYSTEM_LOG_KEY = "system:logs";
@@ -75,9 +76,31 @@ export async function logSystemEvent(env, entry) {
   }
 
   const kv = env?.ADMIN_KV;
-  if (!kv?.put) return;
+  if (!kv?.put) {
+    await appendFirestoreSystemLog(env, {
+      id: crypto.randomUUID(),
+      ts: new Date().toISOString(),
+      level: entry.level ?? "info",
+      source: entry.source,
+      message: entry.message,
+      meta: entry.meta ?? {},
+      email: entry.email ?? null,
+    });
+    return;
+  }
 
-  if (await shouldBlockKvWrites(env)) return;
+  if (await shouldBlockKvWrites(env)) {
+    await appendFirestoreSystemLog(env, {
+      id: crypto.randomUUID(),
+      ts: new Date().toISOString(),
+      level: entry.level ?? "info",
+      source: entry.source,
+      message: entry.message,
+      meta: entry.meta ?? {},
+      email: entry.email ?? null,
+    });
+    return;
+  }
 
   try {
     if (!isAdminD1Available(env)) {

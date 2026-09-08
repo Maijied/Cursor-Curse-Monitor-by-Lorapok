@@ -3,6 +3,8 @@
  * Server is source of truth; mirror in `src/lib/rbac.ts` for UI gating.
  */
 
+import { putKvJsonSafe } from "./kv-put.js";
+
 export const ROLES = ["master", "admin", "operator", "viewer"];
 
 /** @typedef {'master'|'admin'|'operator'|'viewer'} AdminRole */
@@ -143,7 +145,10 @@ export async function writeRbacMap(env, map) {
     const value = String(role).trim().toLowerCase();
     if (key && ROLES.includes(value) && value !== "master") normalized[key] = value;
   }
-  await env.ADMIN_KV.put(KV_KEY, JSON.stringify(normalized));
+  const result = await putKvJsonSafe(env, KV_KEY, normalized);
+  if (!result.ok && !result.quotaExceeded) {
+    throw new Error(result.reason ?? "ADMIN_KV put failed");
+  }
   return normalized;
 }
 

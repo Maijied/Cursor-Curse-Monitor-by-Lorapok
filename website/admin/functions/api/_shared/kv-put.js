@@ -9,6 +9,7 @@ import {
   isKvWritesPaused,
   nextUtcQuotaResetIso,
 } from "./kv-quota.js";
+import { isFirestoreFallbackAvailable, putFirestoreSafe } from "./firebase-store.js";
 
 /** In-memory pause until UTC reset — shared across requests in the same isolate. */
 let kvWritePausedUntil = null;
@@ -78,7 +79,37 @@ export function resolveKvBinding(envOrKv) {
  * @property {boolean} [skipped] — write intentionally skipped
  * @property {string} [reason] — skip/failure reason
  * @property {boolean} [quotaExceeded]
+ * @property {boolean} [firestoreFallback] — value persisted to Firestore instead of KV
  */
+
+/**
+ * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace | null | undefined} envOrKv
+ */
+function resolveEnvFromBinding(envOrKv) {
+  if (!envOrKv || typeof envOrKv !== "object") return null;
+  if ("ADMIN_KV" in envOrKv) return /** @type {Record<string, unknown>} */ (envOrKv);
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} key
+ * @param {string} value
+ * @param {{ skipIfUnchanged?: boolean }} [options]
+ */
+async function tryFirestoreKvFallback(env, key, value, options = {}) {
+  if (!isFirestoreFallbackAvailable(env)) {
+    return { ok: false, wrote: false, reason: "firestore-unavailable" };
+  }
+  const fs = await putFirestoreSafe(env, key, value, options);
+  if (fs.ok && fs.wrote) {
+    return { ok: true, wrote: true, firestoreFallback: true };
+  }
+  if (fs.ok && !fs.wrote && fs.reason === "unchanged") {
+    return { ok: true, wrote: false, skipped: true, reason: "unchanged", firestoreFallback: true };
+  }
+  return { ok: false, wrote: false, reason: fs.reason ?? "firestore-failed" };
+}
 
 /**
  * KV put that never throws on quota errors — for mail, audit, and scatter hot paths.
@@ -91,7 +122,15 @@ export function resolveKvBinding(envOrKv) {
 export async function putKvStringSafe(envOrKv, key, value, options = {}) {
   const { skipIfUnchanged = false, writesPausedUntil = null, required = false, expirationTtl } = options;
 
+  const env = resolveEnvFromBinding(envOrKv);
+
   if (isKvWriteBlockedEarly(writesPausedUntil)) {
+    if (env) {
+      const fs = await tryFirestoreKvFallback(env, key, value, { skipIfUnchanged });
+      if (fs.ok && (fs.wrote || fs.skipped)) {
+        return { ...fs, quotaExceeded: true };
+      }
+    }
     return { ok: true, wrote: false, skipped: true, reason: "kv_writes_paused", quotaExceeded: true };
   }
 
@@ -117,6 +156,12 @@ export async function putKvStringSafe(envOrKv, key, value, options = {}) {
   } catch (err) {
     if (isKvQuotaError(err)) {
       markKvWriteQuotaHit();
+      if (env) {
+        const fs = await tryFirestoreKvFallback(env, key, value, { skipIfUnchanged });
+        if (fs.ok && (fs.wrote || fs.skipped)) {
+          return { ...fs, quotaExceeded: true };
+        }
+      }
       return { ok: true, wrote: false, skipped: true, reason: "quota_exceeded", quotaExceeded: true };
     }
     if (required) throw err;
@@ -140,26 +185,36 @@ export async function putKvJsonSafe(envOrKv, key, value, options = {}) {
  * @param {Record<string, unknown> | import("@cloudflare/workers-types").KVNamespace} envOrKv
  * @param {string} key
  * @param {string} value
+ * @returns {Promise<KvPutResult & { changed: boolean }>}
  */
 export async function putKvStringIfChanged(envOrKv, key, value) {
   const result = await putKvStringSafe(envOrKv, key, value, { skipIfUnchanged: true });
-  if (result.quotaExceeded) {
-    throw new Error("KV put() limit exceeded for the day");
-  }
-  if (!result.ok && result.reason && result.reason !== "unchanged") {
+  if (!result.ok && result.reason && result.reason !== "unchanged" && !result.quotaExceeded) {
     throw new Error(result.reason);
   }
-  return Boolean(result.wrote);
+  return { ...result, changed: Boolean(result.wrote) };
 }
 
 /**
  * @param {Record<string, unknown>} env
  * @param {string} key
  * @param {unknown} value
+ * @returns {Promise<KvPutResult & { changed: boolean }>}
  */
 export async function putKvJsonIfChanged(env, key, value) {
   const serialized = JSON.stringify(value);
   return putKvStringIfChanged(env, key, serialized);
+}
+
+/**
+ * Config/cron KV write — never throws on quota; callers check `quotaExceeded` / use kvDegradedMeta.
+ * @param {Record<string, unknown>} env
+ * @param {string} key
+ * @param {unknown} value
+ * @returns {Promise<KvPutResult & { changed: boolean }>}
+ */
+export async function putKvConfigJson(env, key, value) {
+  return putKvJsonIfChanged(env, key, value);
 }
 
 /**
@@ -169,10 +224,8 @@ export async function putKvJsonIfChanged(env, key, value) {
  */
 export async function putKvJson(envOrKv, key, value) {
   const result = await putKvJsonSafe(envOrKv, key, value);
-  if (result.quotaExceeded) {
-    throw new Error("KV put() limit exceeded for the day");
-  }
-  if (!result.ok) {
+  if (!result.ok && !result.quotaExceeded) {
     throw new Error(result.reason ?? "ADMIN_KV put failed");
   }
+  return result;
 }

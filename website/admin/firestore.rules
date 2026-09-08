@@ -22,5 +22,14 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if true;
     }
+
+    // Server-only KV mirror (Pages Functions service account). Client SDK denied.
+    match /admin-kv-fallback/{docId} {
+      allow read, write: if false;
+    }
+
+    match /system-logs/{logId} {
+      allow read, write: if false;
+    }
   }
 }

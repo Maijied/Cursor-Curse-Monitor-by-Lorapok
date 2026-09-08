@@ -11,9 +11,11 @@ import {
   STATS_REFRESH_CONFIG_KEY,
 } from "./stats-refresh-config.js";
 import { recordCronJobRun } from "./cron-schedule.js";
-import { formatKvPutError, putKvJsonIfChanged, putKvStringIfChanged } from "./kv-put.js";
+import { formatKvPutError, putKvJsonSafe, putKvStringSafe } from "./kv-put.js";
 import { writeStatsArtifactsR2 } from "./r2-stats.js";
 import { isKvQuotaError, isKvWritesPaused, nextUtcQuotaResetIso } from "./kv-quota.js";
+import { shouldBlockKvWrites } from "./mail-storage.js";
+import { isFirestoreFallbackAvailable } from "./firebase-store.js";
 import { logSystemEvent } from "./system-log.js";
 import {
   buildReadmeStatsFromSiteData,
@@ -233,12 +235,19 @@ export async function runStatsRefresh(env, options = {}) {
   if (!options.force && !config.enabled) {
     return { ok: false, skipped: true, reason: "disabled" };
   }
-  if (!options.force && isKvWritesPaused(config.writesPausedUntil)) {
+  if (
+    !options.force &&
+    (isKvWritesPaused(config.writesPausedUntil) || (await shouldBlockKvWrites(env))) &&
+    !isFirestoreFallbackAvailable(env)
+  ) {
+    const pauseUntil = config.writesPausedUntil ?? null;
     return {
       ok: false,
       skipped: true,
       reason: "kv_writes_paused",
-      writesPausedUntil: config.writesPausedUntil,
+      writesPausedUntil: pauseUntil,
+      notice:
+        "KV daily write limit reached — automatic stats refresh skipped until quota resets (UTC). Firestore fallback may still serve cached config.",
     };
   }
   if (!options.force && config.lastRunAt) {
@@ -339,7 +348,29 @@ export async function runStatsRefresh(env, options = {}) {
   let artifactsStorage = null;
 
   if (statsChanged) {
-    await putKvJsonIfChanged(env, STATS_REFRESH_CACHE_KEY, snapshot);
+    const cachePut = await putKvJsonSafe(env, STATS_REFRESH_CACHE_KEY, snapshot, {
+      skipIfUnchanged: true,
+      writesPausedUntil: config.writesPausedUntil,
+    });
+    if (cachePut.quotaExceeded && !cachePut.firestoreFallback) {
+      const pauseUntil = nextUtcQuotaResetIso();
+      await recordCronJobRun(env, STATS_REFRESH_CONFIG_KEY, config, {
+        ok: false,
+        error: formatKvPutError(new Error("KV put() limit exceeded for the day")),
+        durationMs: Date.now() - started,
+        triggeredBy: options.triggeredBy ?? "manual",
+        writesPausedUntil: pauseUntil,
+      });
+      return {
+        ok: false,
+        skipped: true,
+        reason: "kv_writes_paused",
+        writesPausedUntil: pauseUntil,
+        notice:
+          "KV daily write limit reached — stats cache not updated. Retry after UTC reset or pause automation.",
+        durationMs: Date.now() - started,
+      };
+    }
 
     const prevTotal = previous?.downloads?.displayTotal;
     const nextTotal = snapshot.downloads?.displayTotal;
@@ -361,8 +392,14 @@ export async function runStatsRefresh(env, options = {}) {
       const artifactsStorage = r2Written ? "r2" : "kv";
       if (!r2Written) {
         await Promise.all([
-          putKvStringIfChanged(env, STATS_README_SVG_KEY, svg),
-          putKvJsonIfChanged(env, STATS_BADGES_BUNDLE_KEY, badgeBundle),
+          putKvStringSafe(env, STATS_README_SVG_KEY, svg, {
+            skipIfUnchanged: true,
+            writesPausedUntil: config.writesPausedUntil,
+          }),
+          putKvJsonSafe(env, STATS_BADGES_BUNDLE_KEY, badgeBundle, {
+            skipIfUnchanged: true,
+            writesPausedUntil: config.writesPausedUntil,
+          }),
         ]);
       }
     }

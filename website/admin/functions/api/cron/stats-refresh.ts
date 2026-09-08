@@ -24,7 +24,14 @@ export async function onRequestPost(context) {
 
     const result = await runStatsRefresh(env, { triggeredBy: "cron" });
     if (result.skipped) {
-      return jsonResponse({ ok: true, skipped: true, reason: result.reason, intervalMinutes: config.intervalMinutes });
+      return jsonResponse({
+        ok: true,
+        skipped: true,
+        reason: result.reason,
+        intervalMinutes: config.intervalMinutes,
+        ...(result.notice ? { notice: result.notice } : {}),
+        ...(result.writesPausedUntil ? { writesPausedUntil: result.writesPausedUntil } : {}),
+      });
     }
     if (!result.ok) {
       return jsonResponse({ ok: false, error: result.error ?? "Refresh failed", durationMs: result.durationMs ?? null }, 502);

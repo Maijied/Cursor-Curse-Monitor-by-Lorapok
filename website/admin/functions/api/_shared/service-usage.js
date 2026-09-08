@@ -1,4 +1,5 @@
-import { putKvJsonSafe, resolveKvBinding, isKvWriteBlockedEarly } from "./kv-put.js";
+import { putKvJsonSafe, resolveKvBinding } from "./kv-put.js";
+import { shouldBlockKvWrites } from "./mail-storage.js";
 import { readResendIntegrationConfig } from "./resend-integration-config.js";
 
 const USAGE_KV_PREFIX = "service-usage";
@@ -61,7 +62,7 @@ export async function writeServiceUsage(env, record, month = utcMonthKey()) {
   if (!resolveKvBinding(env)?.put) {
     return false;
   }
-  if (isKvWriteBlockedEarly()) {
+  if (await shouldBlockKvWrites(env)) {
     return false;
   }
   const result = await putKvJsonSafe(env, usageKvKey(month), {

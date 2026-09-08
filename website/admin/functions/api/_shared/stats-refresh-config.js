@@ -5,7 +5,8 @@ import {
   mergeCronJobConfig,
   sanitizeCronRunMetaForClient,
 } from "./cron-schedule.js";
-import { putKvJsonIfChanged } from "./kv-put.js";
+import { putKvConfigJson } from "./kv-put.js";
+import { getKvJsonWithFirestoreFallback } from "./firebase-store.js";
 
 const CONFIG_KEY = "integrations:stats-refresh";
 const CACHE_KEY = "stats:live-cache";
@@ -27,12 +28,10 @@ export const DEFAULT_STATS_REFRESH_CONFIG = {
  * @param {Record<string, unknown>} env
  */
 export async function readStatsRefreshConfig(env) {
-  if (!env.ADMIN_KV?.get) return { ...DEFAULT_STATS_REFRESH_CONFIG };
+  const row = await getKvJsonWithFirestoreFallback(env, CONFIG_KEY);
+  if (!row) return { ...DEFAULT_STATS_REFRESH_CONFIG };
   try {
-    const raw = await env.ADMIN_KV.get(CONFIG_KEY);
-    if (!raw) return { ...DEFAULT_STATS_REFRESH_CONFIG };
-    const parsed = JSON.parse(raw);
-    return normalizeStatsRefreshConfig(parsed);
+    return normalizeStatsRefreshConfig(row.value);
   } catch {
     return { ...DEFAULT_STATS_REFRESH_CONFIG };
   }
@@ -48,7 +47,7 @@ export async function writeStatsRefreshConfig(env, patch) {
   }
   const current = await readStatsRefreshConfig(env);
   const next = mergeCronJobConfig(current, patch, { defaultInterval: 5, min: 1, max: 60 });
-  await putKvJsonIfChanged(env, CONFIG_KEY, next);
+  await putKvConfigJson(env, CONFIG_KEY, next);
   return next;
 }
 
@@ -86,11 +85,10 @@ export function isStatsRefreshDue(config, now = Date.now()) {
  * @param {Record<string, unknown>} env
  */
 export async function readStatsLiveCache(env) {
-  if (!env.ADMIN_KV?.get) return null;
+  const row = await getKvJsonWithFirestoreFallback(env, CACHE_KEY);
+  if (!row) return null;
   try {
-    const raw = await env.ADMIN_KV.get(CACHE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    return row.value;
   } catch {
     return null;
   }

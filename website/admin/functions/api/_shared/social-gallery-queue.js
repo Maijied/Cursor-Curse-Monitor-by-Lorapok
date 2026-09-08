@@ -1,5 +1,5 @@
 import { extractChangelogSection, normalizeTag, truncateDiscordText } from "./discord-deploy-context.js";
-import { putKvJsonIfChanged } from "./kv-put.js";
+import { putKvJsonIfChanged, putKvJsonSafe } from "./kv-put.js";
 import { githubFetch } from "./github.js";
 import { GITHUB_REPO } from "./auth.js";
 
@@ -195,7 +195,10 @@ export async function queueSocialGalleryJob(env, payload) {
     error: null,
   };
 
-  await env.ADMIN_KV.put(`${ITEM_PREFIX}${id}`, JSON.stringify(item));
+  const itemResult = await putKvJsonSafe(env, `${ITEM_PREFIX}${id}`, item);
+  if (!itemResult.ok && !itemResult.quotaExceeded) {
+    return { ok: false, error: itemResult.reason ?? "Queue item save failed" };
+  }
   index.items.unshift({
     id,
     tag,

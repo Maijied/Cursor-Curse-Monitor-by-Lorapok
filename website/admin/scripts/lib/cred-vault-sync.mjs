@@ -374,6 +374,44 @@ function resolveResendApiKeyFromVault(vault) {
 }
 
 /**
+ * @param {Record<string, unknown>} vault
+ * @returns {string|undefined} Minified service-account JSON for FIREBASE_SERVICE_ACCOUNT_JSON
+ */
+function resolveFirebaseServiceAccountJsonFromVault(vault) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  const firebase = /** @type {Record<string, unknown>} */ (vault?.firebase ?? {});
+  const candidates = [
+    cursor.firebase_service_account_json,
+    cursor.FIREBASE_SERVICE_ACCOUNT_JSON,
+    cursor.firebase_service_account,
+    firebase.service_account_json,
+    firebase.service_account,
+  ];
+  for (const value of candidates) {
+    if (value === undefined || value === null) continue;
+    try {
+      const parsed = typeof value === "object" ? value : JSON.parse(String(value));
+      if (parsed?.client_email && parsed?.private_key) {
+        return JSON.stringify(parsed);
+      }
+    } catch {
+      /* try next candidate */
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Loads Firebase service account JSON from the credential vault (cursor/firebase namespace).
+ * @returns {string|null} Minified JSON string or null when vault/keys unavailable
+ */
+export function loadFirebaseServiceAccountFromVault() {
+  const vault = decryptCredentialVault();
+  if (!vault) return null;
+  return resolveFirebaseServiceAccountJsonFromVault(vault) ?? null;
+}
+
+/**
  * Loads Cursor Cloudflare credentials and a GitHub token from the credential vault.
  * @return {{ apiToken?: string; emailToken?: string; accountId?: string; cronSecret?: string; githubToken?: string } | null} The normalized credentials, or `null` if no usable vault is found.
  */

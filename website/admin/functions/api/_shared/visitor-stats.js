@@ -1,3 +1,5 @@
+import { putKvJsonSafe } from "./kv-put.js";
+
 const STATS_KEY = "stats:visitors";
 
 export const DEFAULT_STATS = {
@@ -58,7 +60,7 @@ export async function incrementVisitorStats(env, channel) {
     Object.values(stats.packageClicks ?? {}).reduce((s, n) => s + (Number(n) || 0), 0);
   stats.updatedAt = new Date().toISOString();
   if (env.ADMIN_KV?.put) {
-    await env.ADMIN_KV.put(STATS_KEY, JSON.stringify(stats));
+    await putKvJsonSafe(env, STATS_KEY, stats);
   }
   return stats;
 }

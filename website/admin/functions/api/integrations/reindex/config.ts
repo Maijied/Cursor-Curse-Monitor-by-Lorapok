@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   readReindexConfig,
@@ -71,7 +72,8 @@ export async function onRequestPut(context) {
           : undefined,
       updatedBy: auth.email,
     });
-    return jsonResponse(
+    return jsonConfigSaveResponse(
+      env,
       { ok: true, config: sanitizeReindexConfigForClient(config) },
       200,
       CORS_HEADERS

@@ -18,6 +18,7 @@ import {
   decryptCredentialVault,
   gpgDecryptLastError,
   loadCursorCloudflareSecretsFromVault,
+  loadFirebaseServiceAccountFromVault,
 } from "./lib/cred-vault-sync.mjs";
 import { pickDeployAuth, setGithubActionsOutput } from "./lib/mail-credentials.mjs";
 
@@ -90,6 +91,11 @@ async function main() {
     if (loaded.mailRedirectTo) exportEnv("MAIL_REDIRECT_TO", loaded.mailRedirectTo);
     if (loaded.discordDeploymentWebhook) {
       exportEnv("DISCORD_DEPLOYMENT_WEBHOOK", loaded.discordDeploymentWebhook);
+    }
+
+    const firebaseSa = loadFirebaseServiceAccountFromVault();
+    if (firebaseSa && !process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      exportEnv("FIREBASE_SERVICE_ACCOUNT_JSON", firebaseSa);
     }
 
     const env = {

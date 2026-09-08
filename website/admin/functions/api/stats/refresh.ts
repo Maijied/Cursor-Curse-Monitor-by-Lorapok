@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../_shared/kv-api-response.js";
 import { formatKvPutError } from "../_shared/kv-put.js";
 import { runStatsRefresh } from "../_shared/stats-refresh.js";
 
@@ -22,12 +23,32 @@ export async function onRequestPost(context) {
   try {
     const result = await runStatsRefresh(env, { triggeredBy: auth.email ?? "admin", force: true });
     if (result.skipped) {
+      if (result.reason === "kv_writes_paused") {
+        return jsonConfigSaveResponse(
+          env,
+          {
+            ok: false,
+            skipped: true,
+            reason: result.reason,
+            notice: result.notice ?? "KV writes paused until quota resets (UTC).",
+            writesPausedUntil: result.writesPausedUntil ?? null,
+          },
+          200,
+          CORS_HEADERS
+        );
+      }
       return jsonResponse({ ok: false, ...result }, 409, CORS_HEADERS);
     }
     if (!result.ok) {
-      return jsonResponse(
-        { ok: false, error: result.error ?? "Refresh failed", durationMs: result.durationMs ?? null },
-        502,
+      return jsonConfigSaveResponse(
+        env,
+        {
+          ok: false,
+          error: result.error ?? "Refresh failed",
+          durationMs: result.durationMs ?? null,
+          degraded: true,
+        },
+        200,
         CORS_HEADERS
       );
     }

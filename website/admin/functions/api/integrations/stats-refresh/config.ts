@@ -1,4 +1,5 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
+import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import {
   readStatsRefreshConfig,
@@ -68,7 +69,12 @@ export async function onRequestPut(context) {
         body.intervalMinutes != null ? Number(body.intervalMinutes) : undefined,
       updatedBy: auth.email,
     });
-    return jsonResponse({ ok: true, config: sanitizeStatsRefreshConfigForClient(config) }, 200, CORS_HEADERS);
+    return jsonConfigSaveResponse(
+      env,
+      { ok: true, config: sanitizeStatsRefreshConfigForClient(config) },
+      200,
+      CORS_HEADERS
+    );
   } catch (err) {
     return jsonResponse(
       { error: formatKvPutError(err) },
