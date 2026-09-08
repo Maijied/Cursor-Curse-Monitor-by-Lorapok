@@ -11,7 +11,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadCursorCloudflareSecretsFromVault } from "./lib/cred-vault-sync.mjs";
+import { loadCursorCloudflareSecretsFromVault, loadFirebaseServiceAccountFromVault } from "./lib/cred-vault-sync.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const vaultFile =
@@ -65,6 +65,16 @@ if (loaded?.adminMasterEmail) {
   ghSecret("ADMIN_MASTER_EMAIL", loaded.adminMasterEmail);
 } else {
   console.warn("::warning::cred vault has no admin_master_email — ADMIN_MASTER_EMAIL GitHub secret not updated.");
+}
+
+const firebaseSa = loadFirebaseServiceAccountFromVault();
+if (firebaseSa) {
+  ghSecret("FIREBASE_SERVICE_ACCOUNT_JSON", firebaseSa);
+  console.log("GitHub secret FIREBASE_SERVICE_ACCOUNT_JSON updated (admin-production)");
+} else {
+  console.warn(
+    "::warning::cred vault has no firebase_service_account_json — FIREBASE_SERVICE_ACCOUNT_JSON GitHub secret not updated."
+  );
 }
 
 console.log("Done — CI can decrypt cred vault with CRED_VAULT_PASSPHRASE pin.");

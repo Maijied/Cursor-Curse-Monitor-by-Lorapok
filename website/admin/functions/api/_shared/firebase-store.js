@@ -123,7 +123,7 @@ export function setFirestoreAccessTokenForTests(token, expiresInSec = 3600) {
  * @param {string} docId
  * @param {typeof fetch} [fetchImpl]
  */
-function firestoreDocUrl(env, collection, docId, fetchImpl) {
+function firestoreDocUrl(env, collection, docId, _fetchImpl) {
   const projectId = resolveFirestoreProjectId(env);
   return `${FIRESTORE_BASE}/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`;
 }

@@ -1,6 +1,8 @@
 import { jsonResponse } from "../_shared/auth.js";
 import { isStatsRefreshDue, readStatsRefreshConfig } from "../_shared/stats-refresh-config.js";
 import { runStatsRefresh, verifyCronSecret } from "../_shared/stats-refresh.js";
+
+/**
  * Cron entry — secured via CRON_SECRET (X-Cron-Secret or Bearer).
  * Cloudflare Worker ccm-stats-cron calls this on a 15-minute schedule; refresh runs when due.
  */
