@@ -2,8 +2,8 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-08 (ADMIN-05 dashboard KPI dedupe)  
-**Branch:** `main` @ `a374f49a`  
+**Last updated:** 2026-09-08 (MAIL-13/14 mail templates + subscriber merge tags)  
+**Branch:** `main` @ `ec89b24`  
 **CI:** Production Deployment triggered on merge (2026-09-08T15:35Z)  
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -216,8 +216,8 @@ _None — pick from **Recommended next queue** below._
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
 | MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
-| MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **next** | `mail.js` templates + Settings preview |
-| MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **next** | subscribe API + template engine in KV |
+| MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **done** | `mail-template-engine.js`, `MailTemplateGallery.tsx`, `GET /api/integrations/mail/preview` |
+| MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **done** | `subscriber-mail-context.js`, subscribe API + broadcast merge tags; KV overrides `integrations:mail-templates` |
 | MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **next** | `mail-probe` cron + Settings matrix; alert on failure |
 
 ---
@@ -381,9 +381,8 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-13 / MAIL-14** — Professional mail templates + dynamic subscriber emails
-3. **DC-06** — Finish branded Discord templates for digest/community (CI cards + gallery shipped)
-4. **SOCIAL-01–03** — Multi-platform webhooks + one-click share (DEPLOY-03 gallery trigger done)
+1. **DC-06** — Finish branded Discord templates for digest/community (CI cards + gallery shipped)
+2. **SOCIAL-01–03** — Multi-platform webhooks + one-click share (DEPLOY-03 gallery trigger done)
 5. **SEO-01–03** — World-class SEO + admin hub + policies
 6. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
 7. **WEB-11** — Engineering history timeline page
