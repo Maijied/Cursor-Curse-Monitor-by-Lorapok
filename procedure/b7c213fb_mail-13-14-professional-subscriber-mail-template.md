@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** [#145](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/145) · [#146](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/146)  
 **Branch:** `cursor/mail-templates-subscriber-773e`  
-**PR:** _TBD_
+**PR:** [#253](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/253)
 
 ---
 
