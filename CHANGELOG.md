@@ -8,7 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Discord deployment notifications** — CI cards now read the live version from `site-data.json` (not placeholder `package.json` `0.0.0`); missing `DISCORD_DEPLOYMENT_WEBHOOK` fails the notify step with a clear error instead of silently skipping; marketing website deploy loads the webhook from cred vault like admin deploy
+- **Discord deployment notifications** — CI cards now read the live version from `site-data.json` (not placeholder `package.json` `0.0.0`); missing `DISCORD_DEPLOYMENT_WEBHOOK` fails the notify step with a clear error instead of silently skipping; CI also falls back to the deployment webhook stored in Mission Control `ADMIN_KV` when env/vault secrets are absent; marketing website deploy loads the webhook from cred vault like admin deploy
 - **REL-01 Beta release pipeline** — `vX.Y.Z-beta.N` version plan for beta channel; CI `release-prep` uses `--channel beta`; full-release deploy no longer blocked for production; Mission Control version check passes `channel=beta`; marketplace policy accepts beta tags
 - **Open VSX publish CI** — do not fail deploy when ovsx CLI succeeds but canonical API indexing lags (defer to `verify-marketplace-sync`)
 - **CI dispatch validation** — `validate-dispatch` job gates publish-tag, rollback, sync-open-vsx, and full-release; classifies tags as rollback-eligible, publish-ready, or metadata-ready; local `npm run validate:dispatch` resolves tags on origin when missing locally
