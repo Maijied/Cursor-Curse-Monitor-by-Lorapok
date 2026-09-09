@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useDeployRuntime } from "../../context/DeployRuntimeContext";
+import { useDeployRuntime } from "../../context/deploy-runtime-context";
 import DeployRuntimePanel from "./DeployRuntimePanel";
 
 /**

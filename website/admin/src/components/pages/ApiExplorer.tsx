@@ -7,7 +7,7 @@ import Badge from "../ui/Badge";
 import LoadableButton from "../ui/LoadableButton";
 import { API_CATALOG, API_CATALOG_GROUPS, type ApiCatalogEntry } from "../../lib/api-catalog";
 import { probeApiEndpoint, type ApiProbeResult } from "../../lib/api";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { canProbeApiRoute, permissionForApiRoute } from "../../lib/api-permissions";
 
 type ProbeState = ApiProbeResult & { loading?: boolean; error?: string };

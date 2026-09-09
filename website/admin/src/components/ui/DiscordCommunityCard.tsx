@@ -1,4 +1,4 @@
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { useEffect, useState } from "react";
 import { Copy, ExternalLink, MessageCircle, Save, Send } from "lucide-react";
 import { DISCORD_INVITE_URL } from "@lorapok/cursor-monitor-shared";

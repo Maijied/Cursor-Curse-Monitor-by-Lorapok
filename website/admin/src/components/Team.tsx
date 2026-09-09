@@ -3,7 +3,7 @@ import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore"
 import { db } from "../lib/firebase";
 import { UserPlus, Shield, Trash2 } from "lucide-react";
 import { fetchRbacTeam, putRbacRole, syncAdminAccess, type RbacMember } from "../lib/api";
-import { useAuthSession } from "../lib/auth-context";
+import { useAuthSession } from "../lib/use-auth-session";
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AdminRole } from "../lib/rbac";
 import PageHeader from "./layout/PageHeader";
 import Card from "./ui/Card";

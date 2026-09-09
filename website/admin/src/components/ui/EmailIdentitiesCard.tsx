@@ -19,7 +19,7 @@ import {
   type EmailIdentitiesConfig,
   type EmailIdentityRow,
 } from "../../lib/api";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 
 const CATEGORIES = ["product", "support", "ops", "custom"] as const;
 const AUTH_ROLES = ["viewer", "operator", "admin"] as const;

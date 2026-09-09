@@ -114,7 +114,7 @@ export function buildNoticeDraftFromChangelog(markdown, tag, options = {}) {
 /**
  * @param {Record<string, unknown>} env
  */
-export async function fetchChangelogMarkdown(env) {
+export async function fetchChangelogMarkdown(_env) {
   const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/main/CHANGELOG.md`, {
     headers: { Accept: "text/plain" },
   });

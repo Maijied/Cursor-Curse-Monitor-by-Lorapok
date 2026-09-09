@@ -25,11 +25,12 @@ import TestmailConfigCard from "../ui/TestmailConfigCard";
 import CredVaultConfigCard from "../ui/CredVaultConfigCard";
 import MarketplaceConfigCard from "../ui/MarketplaceConfigCard";
 import ProfileSettingsCard from "../ui/ProfileSettingsCard";
-import SettingsTabNav, { persistSettingsTab, readSettingsTab, type SettingsTabId } from "../ui/SettingsTabNav";
+import SettingsTabNav from "../ui/SettingsTabNav";
+import { persistSettingsTab, readSettingsTab, type SettingsTabId } from "../ui/settings-tab-storage";
 import { fetchHealth } from "../../lib/api";
 import { useSiteData } from "../../hooks/useSiteData";
 import { formatDownloadCount, getDisplayDownloadTotal, downloadStatsAvailabilityLabel } from "../../lib/download-stats";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { canAccessFeature, SETTINGS_TAB_PERMISSIONS, visibleSettingsTabs } from "../../lib/nav-permissions";
 
 const ALL_TABS: { id: SettingsTabId; label: string }[] = [

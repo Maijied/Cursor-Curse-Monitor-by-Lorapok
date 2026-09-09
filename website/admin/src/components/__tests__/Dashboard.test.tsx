@@ -5,7 +5,7 @@ import { startTestDataServer, type TestDataServer } from "../../test-support/tes
 import { getTestAdminEmail } from "../../test-support/env";
 import { formatCount } from "../../lib/site-data";
 
-vi.mock("../../lib/auth-context", async () => {
+vi.mock("../../lib/use-auth-session", async () => {
   const { mockAuthSessionModule } = await import("../../test-support/mock-auth-session");
   return mockAuthSessionModule();
 });

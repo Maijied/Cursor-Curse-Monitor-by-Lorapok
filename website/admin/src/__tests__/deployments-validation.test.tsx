@@ -10,7 +10,7 @@ const testFixtures = vi.hoisted(() => ({
     "ci-admin@lorapok.test",
 }));
 
-vi.mock("../lib/auth-context", async () => {
+vi.mock("../lib/use-auth-session", async () => {
   const { mockAuthSessionModule } = await import("../test-support/mock-auth-session");
   return mockAuthSessionModule();
 });
@@ -31,7 +31,7 @@ vi.mock("../hooks/useSiteData", () => ({
 
 let triggerDeployComplete: (() => void) | null = null;
 
-vi.mock("../context/DeployRuntimeContext", () => ({
+vi.mock("../context/deploy-runtime-context", () => ({
   useDeployRuntime: () => ({
     inProgress: false,
     startSession: vi.fn(),

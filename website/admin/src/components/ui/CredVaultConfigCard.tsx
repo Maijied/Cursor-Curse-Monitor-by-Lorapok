@@ -6,7 +6,7 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import FieldHelp from "./FieldHelp";
 import ReadOnlyAclBanner from "./ReadOnlyAclBanner";
 import { fetchCloudflareConfigApi, type CloudflareIntegrationConfig } from "../../lib/api";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 
 export default function CredVaultConfigCard() {
   const { hasPermission } = useAuthSession();

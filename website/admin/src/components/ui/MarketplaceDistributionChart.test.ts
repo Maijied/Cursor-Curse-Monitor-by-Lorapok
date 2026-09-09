@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDonutStrokeSlices } from "./MarketplaceDistributionChart";
+import { buildDonutStrokeSlices } from "./marketplace-distribution-chart-utils";
 
 describe("buildDonutStrokeSlices", () => {
   const circumference = 100;

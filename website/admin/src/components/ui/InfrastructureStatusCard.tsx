@@ -1,4 +1,4 @@
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { useState } from "react";
 import { Database, ExternalLink, PauseCircle, RefreshCw } from "lucide-react";
 import Card from "./Card";

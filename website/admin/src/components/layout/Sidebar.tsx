@@ -6,7 +6,7 @@ import { APP_ROUTES } from "../../routes";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import InstallAppButton from "../ui/InstallAppButton";
 import BackToWebsiteButton from "../ui/BackToWebsiteButton";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { canAccessFeature } from "../../lib/nav-permissions";
 import { ROLE_LABELS } from "../../lib/rbac";
 

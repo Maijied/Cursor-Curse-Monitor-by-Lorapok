@@ -3,7 +3,6 @@ import test from "node:test";
 import {
   subscriberDisplayName,
   formatSubscriberPlatform,
-  formatSubscriberStatsLine,
   buildSubscriberMergeContext,
 } from "./subscriber-mail-context.js";
 import { interpolateString } from "./template-interpolate.js";

@@ -1,6 +1,6 @@
 import Modal from "./Modal";
 import DeployRuntimePanel from "./DeployRuntimePanel";
-import type { DeployPollStatus, DeploySession } from "../../context/DeployRuntimeContext";
+import type { DeployPollStatus, DeploySession } from "../../context/deploy-runtime-context";
 import type { WorkflowRun, WorkflowRunLogs } from "../../lib/api";
 
 type DeployStatusModalProps = {

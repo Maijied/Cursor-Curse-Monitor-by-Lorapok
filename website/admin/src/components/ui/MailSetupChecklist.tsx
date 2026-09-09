@@ -7,7 +7,7 @@ import Notification from "./Notification";
 import LoadableButton from "./LoadableButton";
 import MailSyncProgressBanner from "./MailSyncProgressBanner";
 import { useWorkflowPoll } from "../../hooks/useWorkflowPoll";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import {
   fetchMailSetupStatusApi,
   sendMailboxTest,

@@ -1,4 +1,4 @@
-import type { SettingsTabId } from "../components/ui/SettingsTabNav";
+import type { SettingsTabId } from "../components/ui/settings-tab-storage";
 
 /** Mission Control destinations for cross-section "Go to →" links. */
 export type AdminSectionId =

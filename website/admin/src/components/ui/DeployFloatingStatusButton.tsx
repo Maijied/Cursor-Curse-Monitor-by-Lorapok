@@ -1,5 +1,5 @@
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
-import type { DeployPollStatus } from "../../context/DeployRuntimeContext";
+import type { DeployPollStatus } from "../../context/deploy-runtime-context";
 
 type DeployFloatingStatusButtonProps = {
   status: DeployPollStatus;

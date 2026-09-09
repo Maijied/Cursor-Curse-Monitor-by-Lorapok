@@ -389,7 +389,6 @@ export async function runStatsRefresh(env, options = {}) {
       };
       const svg = renderReadmeStatsSvg(readmeStats);
       const r2Written = await writeStatsArtifactsR2(env, { svg, badgeBundle });
-      const artifactsStorage = r2Written ? "r2" : "kv";
       if (!r2Written) {
         await Promise.all([
           putKvStringSafe(env, STATS_README_SVG_KEY, svg, {
