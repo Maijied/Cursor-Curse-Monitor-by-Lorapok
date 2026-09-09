@@ -9,6 +9,7 @@ export type SettingsTabId =
   | "testmail"
   | "discord"
   | "social"
+  | "seo"
   | "firebase"
   | "github"
   | "cloudflare"
@@ -35,6 +36,7 @@ const ALLOWED_TABS: SettingsTabId[] = [
   "testmail",
   "discord",
   "social",
+  "seo",
   "firebase",
   "github",
   "cloudflare",

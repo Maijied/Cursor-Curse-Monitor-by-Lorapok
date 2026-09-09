@@ -53,6 +53,7 @@ const SETTINGS_TAB_LABELS: Partial<Record<SettingsTabId, string>> = {
   testmail: "testmail.app",
   discord: "Discord",
   social: "Social",
+  seo: "SEO",
   firebase: "Firebase",
   github: "GitHub",
   cloudflare: "Cloudflare",
@@ -83,6 +84,7 @@ export function resolveSectionRefer(target: SectionReferTarget): {
 export const SECTION_REFERS = {
   settingsDiscord: { section: "settings", settingsTab: "discord" } satisfies SectionReferTarget,
   settingsSocial: { section: "settings", settingsTab: "social" } satisfies SectionReferTarget,
+  settingsSeo: { section: "settings", settingsTab: "seo" } satisfies SectionReferTarget,
   settingsFirebase: { section: "settings", settingsTab: "firebase" } satisfies SectionReferTarget,
   settingsMail: { section: "settings", settingsTab: "mail" } satisfies SectionReferTarget,
   settingsAutomation: { section: "settings", settingsTab: "automation" } satisfies SectionReferTarget,

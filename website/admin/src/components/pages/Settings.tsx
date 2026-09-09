@@ -8,6 +8,7 @@ import DiscordCommunityCard from "../ui/DiscordCommunityCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
 import DiscordCardGallery from "../ui/DiscordCardGallery";
 import SocialIntegrationsCard from "../ui/SocialIntegrationsCard";
+import SeoIntegrationsCard from "../ui/SeoIntegrationsCard";
 import SocialGallery from "../ui/SocialGallery";
 import MailSetupChecklist from "../ui/MailSetupChecklist";
 import MailTransportCard from "../ui/MailTransportCard";
@@ -43,6 +44,7 @@ const ALL_TABS: { id: SettingsTabId; label: string }[] = [
   { id: "testmail", label: "Testmail" },
   { id: "discord", label: "Discord" },
   { id: "social", label: "Social" },
+  { id: "seo", label: "SEO" },
   { id: "firebase", label: "Firebase" },
   { id: "github", label: "GitHub" },
   { id: "cloudflare", label: "Cloudflare" },
@@ -311,6 +313,16 @@ export default function Settings() {
           </p>
           <SocialGallery />
           <SocialIntegrationsCard />
+        </>
+      )}
+
+      {tab === "seo" && (
+        <>
+          <p className="text-sm text-[var(--color-muted)] -mt-2">
+            Search Console, Bing, Azure Webmaster, Cloudflare analytics, and PageSpeed — plus indexing policy from{" "}
+            <code className="text-xs">website/seo.yml</code>.
+          </p>
+          <SeoIntegrationsCard />
         </>
       )}
 

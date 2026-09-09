@@ -4,6 +4,8 @@ import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
+import SectionReferLink from "../ui/SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 
 type SeoManifest = {
   generatedAt: string;
@@ -31,6 +33,18 @@ type SeoManifest = {
   pages?: Record<string, { title: string; description: string; canonical: string }>;
   structuredData?: { "@context": string; "@graph"?: unknown[] };
   marketplaces: Record<string, string | null>;
+  indexingPolicy?: SeoIndexingPolicy;
+};
+
+type SeoIndexingPolicy = {
+  adminNoindex: boolean;
+  marketingAllow: boolean;
+  adminUrls: string[];
+  policySummary: string;
+  sitemapUrl: string;
+  robotsUrl: string;
+  organizationSchema: boolean;
+  softwareApplicationSchema: boolean;
 };
 
 /**
@@ -63,7 +77,8 @@ export default function SeoDashboard() {
         title="SEO Dashboard"
         description="Generated from website/seo.yml — single source of truth for meta, sitemap, and JSON-LD."
         action={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <SectionReferLink {...SECTION_REFERS.settingsSeo} />
             <Badge variant={htmlSynced ? "synced" : "warn"}>{htmlSynced ? "YAML-driven" : "legacy"}</Badge>
             <Badge variant={seo.syncStatus === "synced" ? "synced" : "warn"}>{seo.syncStatus}</Badge>
           </div>
@@ -81,6 +96,42 @@ export default function SeoDashboard() {
           <div><dt className="text-[var(--color-muted)]">Generated</dt><dd>{new Date(seo.generatedAt).toLocaleString()}</dd></div>
         </dl>
       </Card>
+
+      {seo.indexingPolicy && (
+        <Card>
+          <h3 className="font-semibold mb-3">Indexing policy</h3>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt className="text-[var(--color-muted)]">Admin noindex</dt>
+              <dd>{seo.indexingPolicy.adminNoindex ? "yes" : "no"}</dd>
+            </div>
+            <div>
+              <dt className="text-[var(--color-muted)]">Marketing indexable</dt>
+              <dd>{seo.indexingPolicy.marketingAllow ? "yes" : "no"}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-[var(--color-muted)]">Summary</dt>
+              <dd>{seo.indexingPolicy.policySummary}</dd>
+            </div>
+            <div>
+              <dt className="text-[var(--color-muted)]">Sitemap</dt>
+              <dd className="break-all">
+                <a href={seo.indexingPolicy.sitemapUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent-2)] hover:underline">
+                  {seo.indexingPolicy.sitemapUrl}
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[var(--color-muted)]">Robots</dt>
+              <dd className="break-all">
+                <a href={seo.indexingPolicy.robotsUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent-2)] hover:underline">
+                  {seo.indexingPolicy.robotsUrl}
+                </a>
+              </dd>
+            </div>
+          </dl>
+        </Card>
+      )}
 
       {seo.openGraph && (
         <Card>

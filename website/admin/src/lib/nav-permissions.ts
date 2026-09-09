@@ -22,6 +22,7 @@ export const SETTINGS_TAB_PERMISSIONS: Record<SettingsTabId, NavPermission> = {
   testmail: "integrations.read",
   discord: "integrations.read",
   social: "integrations.read",
+  seo: "integrations.read",
   firebase: "integrations.read",
   github: "integrations.read",
   cloudflare: "integrations.read",
