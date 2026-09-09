@@ -2,6 +2,7 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
+**Last updated:** 2026-09-09 (SOCIAL-01 social webhooks; MAIL-13/14 on main)
 **Last updated:** 2026-09-09 (DC-06 Discord product cards; MAIL-13/14 on main)
 **Branch:** `main` @ `9906c292`
 **CI:** Production Deployment triggered on merge (2026-09-09T03:35Z)
@@ -308,7 +309,7 @@ _None — pick from **Recommended next queue** below._
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| SOCIAL-01 | **Multi-platform webhooks** — Discord + X/LinkedIn/Mastodon/Bluesky/Telegram (where API allows); Lorapok card templates like DC-06 | **next** | Settings → Social; KV `integrations:social`; test-send matrix |
+| SOCIAL-01 | **Multi-platform webhooks** — Discord + X/LinkedIn/Mastodon/Bluesky/Telegram (where API allows); Lorapok card templates like DC-06 | **done** | Settings → Social; KV `integrations:social`; test-send matrix |
 | SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **next** | `DEPLOY-03` trigger; feature-tagged assets |
 | SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **next** | admin Social Studio; size presets per network |
 | SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **next** | Settings; cred vault keys; Chrysalis/SOCIAL-02 consumer |
@@ -381,6 +382,13 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
+1. **DC-06** — Lorapok Discord product cards (PR #254)
+2. **SOCIAL-02–03** — Deploy social gallery + one-click multi-channel publish (SOCIAL-01 done in this PR)
+3. **SEO-01–03** — World-class SEO + admin hub + policies
+4. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+5. **WEB-11** — Engineering history timeline page
+6. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+7. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 1. **SOCIAL-01–03** — Multi-platform webhooks (PR #255) + deploy gallery + one-click publish
 2. **SEO-01–03** — World-class SEO + admin hub + policies
 3. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
