@@ -1,5 +1,6 @@
 import { readDiscordConfig } from "./discord-config.js";
-import { buildDiscordFeedbackEmbed, getMessageBranding } from "./message-cards-runtime.js";
+import { buildDiscordFeedbackProductEmbed } from "./discord-product-cards.js";
+import { getMessageBranding } from "./message-cards-runtime.js";
 
 /**
  * Sends a feedback embed to the configured Discord webhook.
@@ -22,19 +23,7 @@ export async function notifyDiscordFeedback(env, payload = {}) {
     return { ok: false, skipped: true, reason: "no_feedback_webhook" };
   }
 
-  const embed = await buildDiscordFeedbackEmbed(env);
-  if (payload.summary) {
-    embed.description = String(payload.summary).slice(0, 4000);
-  }
-
-  const fields = [];
-  if (payload.kind) fields.push({ name: "Kind", value: String(payload.kind), inline: true });
-  if (payload.source) fields.push({ name: "Source", value: String(payload.source), inline: true });
-  if (payload.version) fields.push({ name: "Version", value: String(payload.version), inline: true });
-  if (payload.editor) fields.push({ name: "Editor", value: String(payload.editor).slice(0, 200), inline: false });
-  if (payload.installId) fields.push({ name: "Install ID", value: `\`${payload.installId}\``, inline: false });
-  if (fields.length) embed.fields = fields;
-
+  const embed = await buildDiscordFeedbackProductEmbed(env, payload);
   const branding = await getMessageBranding(env);
   let res;
   try {
@@ -42,7 +31,7 @@ export async function notifyDiscordFeedback(env, payload = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: "Cursor Curse Monitor",
+        username: branding.discordAuthorName ?? "Lorapok Mission Control",
         avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
         embeds: [embed],
       }),

@@ -1,6 +1,12 @@
-import { buildDeployEnrichment } from "./discord-deploy-context.js";
+import {
+  buildDeployEnrichment,
+} from "./discord-deploy-context.js";
 import { buildDeploymentEmbed } from "./discord-notify.js";
-import { buildDiscordFeedbackEmbed } from "./message-cards-runtime.js";
+import {
+  buildDiscordCommunityEmbed,
+  buildDiscordDigestEmbed,
+  buildDiscordFeedbackProductEmbed,
+} from "./discord-product-cards.js";
 
 /** @typedef {"deployment" | "feedback" | "community"} DiscordWebhookKind */
 
@@ -121,21 +127,20 @@ export async function buildDiscordGalleryPreview(env, cardId) {
   if (!item) return null;
 
   if (item.id === "feedback") {
-    const embed = await buildDiscordFeedbackEmbed(env);
+    const embed = await buildDiscordFeedbackProductEmbed(env, {
+      summary: "Gallery preview — user-facing GitHub Issues & support links.",
+      triggeredBy: "gallery-preview",
+    });
     return { item, embed };
   }
 
   if (item.id === "community") {
-    return {
-      item,
-      embed: {
-        title: "👋 Lorapok Labs Family",
-        color: 0x5865f2,
-        description:
-          "Sample community announcement — product updates, beta invites, and contributor shout-outs.",
-        footer: { text: "cursor.lorapok.tech · Lorapok Labs Family" },
-      },
-    };
+    const embed = await buildDiscordCommunityEmbed(env, {
+      summary:
+        "Sample community announcement — product updates, beta invites, and contributor shout-outs.",
+      triggeredBy: "gallery-preview",
+    });
+    return { item, embed };
   }
 
   const payload = samplePayloadForCard(item.id);
@@ -149,10 +154,10 @@ export async function buildDiscordGalleryPreview(env, cardId) {
     console.warn("Discord gallery preview enrichment failed", error);
   }
 
-  const embed = buildDeploymentEmbed(payload, enrichment);
-  if (item.id === "download-digest") {
-    embed.title = "📊 Download & update digest";
-  }
+  const embed =
+    item.id === "download-digest"
+      ? buildDiscordDigestEmbed(payload, enrichment, enrichment?.catalogBrand)
+      : buildDeploymentEmbed(payload, enrichment);
 
   return { item, embed, payload };
 }

@@ -88,25 +88,9 @@ export async function listDiscordCards(env) {
 /**
  * Builds the Discord embed used for feedback and support messages.
  * @param {Record<string, unknown>} [env] - Environment values used to hydrate message content.
- * @return {{title: string, color: number, description: string, footer: {text: string, icon_url?: string}}} The Discord embed configuration.
+ * @param {Record<string, unknown>} [payload] - Optional feedback metadata.
  */
-export async function buildDiscordFeedbackEmbed(env) {
-  const catalog = env ? await getHydratedMessageCatalog(env) : getMessageCatalog();
-  const footers = catalog.footers ?? {};
-  const branding = catalog.branding ?? {};
-  const cards = /** @type {Array<{ id: string; channels?: { discord?: { title?: string; summary?: string } } }>} */ (
-    catalog.cards ?? []
-  );
-  const feedbackCard = cards.find((card) => card.id === "feedback-thanks") ?? null;
-  const discordChannel = feedbackCard?.channels?.discord;
-
-  return {
-    title: discordChannel?.title ?? "💬 Feedback & support",
-    color: 0x4d9fff,
-    description: discordChannel?.summary ?? footers.discord?.feedbackBlock ?? "",
-    footer: {
-      text: branding.discordFooterText ?? "cursor.lorapok.tech · Mission Control",
-      icon_url: branding.discordAvatarUrl,
-    },
-  };
+export async function buildDiscordFeedbackEmbed(env, payload = {}) {
+  const { buildDiscordFeedbackProductEmbed } = await import("./discord-product-cards.js");
+  return buildDiscordFeedbackProductEmbed(env, payload);
 }

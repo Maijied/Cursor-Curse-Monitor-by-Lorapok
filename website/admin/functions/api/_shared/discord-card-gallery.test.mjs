@@ -28,4 +28,16 @@ const failurePreview = await buildDiscordGalleryPreview({}, "deploy-failure");
 assert.equal(failurePreview?.embed.title, "❌ Deployment failed");
 assert.match(String(failurePreview?.embed.description), /rollback|Rollback|Actions run/i);
 
+const digestPreview = await buildDiscordGalleryPreview({}, "download-digest");
+assert.equal(digestPreview?.embed.title, "📊 Download & update digest");
+assert.match(String(digestPreview?.embed.description), /digest|reach|sync/i);
+
+const communityPreview = await buildDiscordGalleryPreview({}, "community");
+assert.match(String(communityPreview?.embed.title), /Lorapok Labs Family/);
+assert.ok(communityPreview?.embed.fields?.length);
+
+const feedbackPreview = await buildDiscordGalleryPreview({}, "feedback");
+assert.match(String(feedbackPreview?.embed.title), /Feedback/);
+assert.ok(feedbackPreview?.embed.author?.name);
+
 console.log("discord-card-gallery.test.mjs: OK");
