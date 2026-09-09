@@ -2,8 +2,8 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-09 (SEO-01 world-class SEO core; SOCIAL-02/03 PR #257 ready)
-**Branch:** `main` @ `9906c292`
+**Last updated:** 2026-09-09 (SEO-01 merged PR #258; SOCIAL-02/03 merged PR #257)
+**Branch:** `main` @ `960ea8b7`
 **CI:** Production Deployment triggered on merge (2026-09-09T03:35Z)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -309,8 +309,8 @@ _None — pick from **Recommended next queue** below._
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | SOCIAL-01 | **Multi-platform webhooks** — Discord + X/LinkedIn/Mastodon/Bluesky/Telegram (where API allows); Lorapok card templates like DC-06 | **done** | Settings → Social; KV `integrations:social`; test-send matrix |
-| SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **next** | `DEPLOY-03` trigger; feature-tagged assets |
-| SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **next** | admin Social Studio; size presets per network |
+| SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **done** | SVG assets + R2/KV; Settings → Social gallery; DEPLOY-03 auto-generate |
+| SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **done** | Publish all channels + dry-run; Telegram photo; text+URL fallback |
 | SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **next** | Settings; cred vault keys; Chrysalis/SOCIAL-02 consumer |
 | SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **next** | configurable; falls back to static carousel |
 
@@ -382,7 +382,7 @@ _None — pick from **Recommended next queue** below._
 ## Recommended **next** queue (priority order)
 
 1. **SEO-02–03** — SEO admin hub + indexing policies
-2. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator (SOCIAL-02/03 in PR #257)
+2. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
 3. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
 4. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue

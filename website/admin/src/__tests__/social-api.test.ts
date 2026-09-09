@@ -99,4 +99,56 @@ describe("social integration APIs", () => {
     expect(data.summary.sent).toBeGreaterThan(0);
     expect(data.results[0].dryRun).toBe(true);
   });
+
+  it("queues, generates, and dry-run publishes gallery items", async () => {
+    const queue = await fetch(`${base}/api/integrations/social/gallery/queue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tag: "v1.0.31",
+        actionType: "publish-tag - Publish existing git tag to marketplaces",
+        caption: "- Gallery test bullet",
+      }),
+    });
+    const queued = await queue.json();
+    expect(queue.ok).toBe(true);
+    expect(queued.item?.id).toBeTruthy();
+
+    const generate = await fetch(`${base}/api/integrations/social/gallery/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: queued.item.id }),
+    });
+    const generated = await generate.json();
+    expect(generate.ok).toBe(true);
+    expect(generated.item.status).toBe("ready");
+    expect(generated.item.imageUrl).toMatch(/gallery\/asset\?id=/);
+
+    await fetch(`${base}/api/integrations/social/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        platform: "telegram",
+        enabled: true,
+        botToken: "123456789:ABCdefGHIjkl",
+        chatId: "-100999",
+      }),
+    });
+
+    const publish = await fetch(`${base}/api/integrations/social/gallery/publish`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: queued.item.id, dryRun: true }),
+    });
+    const published = await publish.json();
+    expect(publish.ok).toBe(true);
+    expect(published.dryRun).toBe(true);
+    expect(published.summary.total).toBeGreaterThan(0);
+
+    const asset = await fetch(`${base}/api/integrations/social/gallery/asset?id=${encodeURIComponent(queued.item.id)}`);
+    expect(asset.ok).toBe(true);
+    expect(asset.headers.get("content-type")).toMatch(/svg/);
+    const svg = await asset.text();
+    expect(svg).toMatch(/<svg/);
+  });
 });

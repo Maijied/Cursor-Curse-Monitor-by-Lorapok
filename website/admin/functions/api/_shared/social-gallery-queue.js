@@ -6,6 +6,7 @@ import { GITHUB_REPO } from "./auth.js";
 const INDEX_KEY = "social-gallery:index";
 const ITEM_PREFIX = "social-gallery:item:";
 const MAX_INDEX_ITEMS = 48;
+const DEFAULT_SOCIAL_HASHTAGS = "#CursorIDE #VSCode #OpenSource #LorapokLabs";
 
 /**
  * @param {string | null | undefined} actionType
@@ -185,6 +186,7 @@ export async function queueSocialGalleryJob(env, payload) {
     channel: payload.channel ?? null,
     market: payload.market ?? null,
     caption: buildSocialGalleryCaption(tag, changelog),
+    hashtags: DEFAULT_SOCIAL_HASHTAGS,
     changelogExcerpt: changelog ? truncateDiscordText(changelog, 1200) : null,
     runUrl: payload.runUrl ?? null,
     triggeredBy: payload.triggeredBy ?? null,
@@ -207,5 +209,60 @@ export async function queueSocialGalleryJob(env, payload) {
   });
   await writeIndex(env, index);
 
-  return { ok: true, item };
+  const result = { ok: true, item };
+
+  try {
+    const { processSocialGalleryJob } = await import("./social-gallery-processor.js");
+    void processSocialGalleryJob(env, id).catch((error) => {
+      console.warn("social-gallery: background generation failed", error);
+    });
+  } catch {
+    /* optional in test env */
+  }
+
+  return result;
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} id
+ */
+export async function readSocialGalleryItem(env, id) {
+  return readItem(env, id);
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} id
+ * @param {Record<string, unknown>} patch
+ */
+export async function updateSocialGalleryItem(env, id, patch) {
+  const current = await readItem(env, id);
+  if (!current) return null;
+
+  const next = {
+    ...current,
+    ...patch,
+    id: current.id,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const itemResult = await putKvJsonSafe(env, `${ITEM_PREFIX}${id}`, next);
+  if (!itemResult.ok && !itemResult.quotaExceeded) {
+    throw new Error(itemResult.reason ?? "Gallery item update failed");
+  }
+
+  const index = await readIndex(env);
+  const entryIndex = index.items.findIndex((entry) => String(entry.id) === id);
+  if (entryIndex >= 0) {
+    index.items[entryIndex] = {
+      ...index.items[entryIndex],
+      tag: next.tag,
+      status: next.status,
+      createdAt: next.createdAt,
+    };
+    await writeIndex(env, index);
+  }
+
+  return next;
 }

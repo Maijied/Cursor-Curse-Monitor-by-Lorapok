@@ -1,6 +1,14 @@
 import { buildSocialGalleryCaption } from "./social-gallery-queue.js";
 import { truncateDiscordText } from "./discord-deploy-context.js";
 
+export const SOCIAL_DIMENSIONS = {
+  feed: { width: 1080, height: 1080, label: "Feed (square)" },
+  story: { width: 1080, height: 1920, label: "Story / Reels" },
+  linkedin: { width: 1200, height: 627, label: "LinkedIn" },
+};
+
+export const DEFAULT_SOCIAL_HASHTAGS = "#CursorIDE #VSCode #OpenSource #LorapokLabs";
+
 export const SOCIAL_TEMPLATE_CARDS = [
   {
     id: "deploy-digest",
@@ -60,6 +68,19 @@ export function buildSocialPostText(templateId, context = {}) {
     default:
       return truncateDiscordText(`Cursor Curse Monitor · Lorapok Labs\n${PRODUCT_URL}`, 280);
   }
+}
+
+/**
+ * Build publish text for a gallery item (SOCIAL-03).
+ *
+ * @param {{ caption?: string | null; hashtags?: string | null; imageUrl?: string | null }} item
+ */
+export function buildSocialPublishText(item) {
+  const parts = [String(item.caption ?? "").trim()];
+  const hashtags = String(item.hashtags ?? DEFAULT_SOCIAL_HASHTAGS).trim();
+  if (hashtags) parts.push(hashtags);
+  if (item.imageUrl) parts.push(String(item.imageUrl).trim());
+  return truncateDiscordText(parts.filter(Boolean).join("\n\n"), 500);
 }
 
 /**

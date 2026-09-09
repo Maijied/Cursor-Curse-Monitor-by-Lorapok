@@ -3,7 +3,7 @@ import {
   readSocialConfig,
   validateSocialPlatform,
 } from "./social-config.js";
-import { buildSocialPostText } from "./social-post-templates.js";
+import { buildSocialPostText, buildSocialPublishText } from "./social-post-templates.js";
 
 /**
  * @param {Response} res
@@ -20,17 +20,22 @@ async function readJsonOrText(res) {
 /**
  * @param {Record<string, unknown>} platformConfig
  * @param {string} text
- * @param {{ dryRun?: boolean }} [options]
+ * @param {{ dryRun?: boolean; imageUrl?: string | null }} [options]
  */
 export async function sendTelegramPost(platformConfig, text, options = {}) {
   if (options.dryRun) return { ok: true, platform: "telegram", dryRun: true };
   const botToken = String(platformConfig.botToken ?? "");
   const chatId = String(platformConfig.chatId ?? "");
-  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+  const imageUrl = String(options.imageUrl ?? "").trim();
+  const endpoint = imageUrl ? "sendPhoto" : "sendMessage";
+  const url = `https://api.telegram.org/bot${botToken}/${endpoint}`;
+  const body = imageUrl
+    ? { chat_id: chatId, photo: imageUrl, caption: text.slice(0, 1024) }
+    : { chat_id: chatId, text, disable_web_page_preview: false };
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: false }),
+    body: JSON.stringify(body),
   });
   const data = await readJsonOrText(res);
   if (!res.ok || data.ok === false) {
@@ -198,7 +203,7 @@ const SENDERS = {
  * @param {string} platform
  * @param {Record<string, unknown>} platformConfig
  * @param {string} text
- * @param {{ dryRun?: boolean }} [options]
+ * @param {{ dryRun?: boolean; imageUrl?: string | null }} [options]
  */
 export async function sendSocialPost(platform, platformConfig, text, options = {}) {
   const sender = SENDERS[platform];
@@ -207,7 +212,11 @@ export async function sendSocialPost(platform, platformConfig, text, options = {
   if (!validation.ok || !validation.enabled) {
     return { ok: false, platform, error: "Platform not configured", skipped: true };
   }
-  return sender(platformConfig, text, options);
+  const payloadText =
+    options.imageUrl && platform !== "telegram"
+      ? `${text}\n\n${options.imageUrl}`.slice(0, platform === "x" ? 280 : 500)
+      : text;
+  return sender(platformConfig, payloadText, options);
 }
 
 /**
@@ -249,4 +258,65 @@ export async function runSocialTestMatrix(config, templateId, options = {}) {
 export async function runSocialTestFromEnv(env, templateId, options = {}) {
   const config = await readSocialConfig(env);
   return runSocialTestMatrix(config, templateId, options);
+}
+
+/**
+ * Publish one social gallery item to configured platforms (SOCIAL-03).
+ *
+ * @param {Record<string, unknown>} config
+ * @param {{ caption?: string | null; hashtags?: string | null; imageUrl?: string | null; status?: string | null }} item
+ * @param {{ platforms?: string[]; dryRun?: boolean }} [options]
+ */
+export async function publishSocialGalleryItem(config, item, options = {}) {
+  if (item.status && item.status !== "ready") {
+    return { ok: false, error: `Gallery item is ${item.status}; generate asset first.` };
+  }
+
+  const text = buildSocialPublishText(item);
+  const targets =
+    options.platforms?.length > 0
+      ? options.platforms.filter((platform) => SOCIAL_PLATFORMS.includes(platform))
+      : SOCIAL_PLATFORMS;
+
+  const results = [];
+  for (const platform of targets) {
+    const platformConfig = config[platform] ?? {};
+    const validation = validateSocialPlatform(platform, platformConfig);
+    if (!validation.ok || !validation.enabled) {
+      results.push({
+        ok: false,
+        platform,
+        skipped: true,
+        error: validation.enabled === false ? "Disabled" : validation.error ?? "Not configured",
+      });
+      continue;
+    }
+    results.push(
+      await sendSocialPost(platform, platformConfig, text, {
+        dryRun: options.dryRun,
+        imageUrl: item.imageUrl ?? null,
+      })
+    );
+  }
+
+  const sent = results.filter((entry) => entry.ok && !entry.dryRun).length;
+  const skipped = results.filter((entry) => entry.skipped).length;
+  const failed = results.filter((entry) => !entry.ok && !entry.skipped).length;
+
+  return {
+    ok: failed === 0,
+    text,
+    results,
+    summary: { sent, skipped, failed, total: results.length },
+  };
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {{ caption?: string | null; hashtags?: string | null; imageUrl?: string | null; status?: string | null }} item
+ * @param {{ platforms?: string[]; dryRun?: boolean }} [options]
+ */
+export async function publishSocialGalleryFromEnv(env, item, options = {}) {
+  const config = await readSocialConfig(env);
+  return publishSocialGalleryItem(config, item, options);
 }
