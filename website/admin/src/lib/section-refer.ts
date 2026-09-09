@@ -85,6 +85,7 @@ export const SECTION_REFERS = {
   settingsDiscord: { section: "settings", settingsTab: "discord" } satisfies SectionReferTarget,
   settingsSocial: { section: "settings", settingsTab: "social" } satisfies SectionReferTarget,
   settingsSeo: { section: "settings", settingsTab: "seo" } satisfies SectionReferTarget,
+  seo: { section: "seo" } satisfies SectionReferTarget,
   settingsFirebase: { section: "settings", settingsTab: "firebase" } satisfies SectionReferTarget,
   settingsMail: { section: "settings", settingsTab: "mail" } satisfies SectionReferTarget,
   settingsAutomation: { section: "settings", settingsTab: "automation" } satisfies SectionReferTarget,

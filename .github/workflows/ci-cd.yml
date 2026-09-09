@@ -351,6 +351,7 @@ jobs:
         run: |
           node scripts/generate-site-data.mjs
           node scripts/generate-seo.mjs
+          npm run site:seo:validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FIREBASE_PROJECT_ID: cursor-curse-by-lorapok

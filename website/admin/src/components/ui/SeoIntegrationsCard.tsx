@@ -213,7 +213,7 @@ export default function SeoIntegrationsCard() {
               <Badge variant={config.configured ? "synced" : "neutral"}>
                 {config.enabledCount} provider{config.enabledCount === 1 ? "" : "s"} configured
               </Badge>
-              <SectionReferLink {...SECTION_REFERS.seo} label="SEO dashboard" />
+              <SectionReferLink section="seo" label="SEO dashboard" />
             </div>
           )}
         </div>
@@ -358,7 +358,13 @@ export default function SeoIntegrationsCard() {
                 </div>
               )}
 
-              {message && <Notification type={message.type} message={message.text} />}
+              {message && (
+                <Notification
+                  tone={message.type === "success" ? "success" : "error"}
+                  message={message.text}
+                  onDismiss={() => setMessage(null)}
+                />
+              )}
 
               <button
                 type="submit"
