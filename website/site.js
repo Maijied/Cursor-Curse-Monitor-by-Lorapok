@@ -376,14 +376,24 @@ function updateStructuredDataVersion(data) {
       if (!Array.isArray(graph)) return;
       let changed = false;
       for (const item of graph) {
-        if (item["@type"] !== "SoftwareApplication") continue;
-        if (version && item.softwareVersion !== version) {
-          item.softwareVersion = version;
-          changed = true;
-        }
-        if (data.github?.vsixUrl && item.downloadUrl !== data.github.vsixUrl) {
-          item.downloadUrl = data.github.vsixUrl;
-          changed = true;
+        if (item["@type"] === "SoftwareApplication") {
+          if (version && item.softwareVersion !== version) {
+            item.softwareVersion = version;
+            changed = true;
+          }
+          if (item.name?.includes("Browser Extension")) {
+            const ffUrl =
+              data.browserExtension?.firefox?.url ??
+              data.productContext?.firefoxUrl ??
+              data.github?.releaseUrl;
+            if (ffUrl && item.downloadUrl !== ffUrl) {
+              item.downloadUrl = ffUrl;
+              changed = true;
+            }
+          } else if (data.github?.vsixUrl && item.downloadUrl !== data.github.vsixUrl) {
+            item.downloadUrl = data.github.vsixUrl;
+            changed = true;
+          }
         }
       }
       if (changed) node.textContent = JSON.stringify(json);

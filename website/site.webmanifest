@@ -2,7 +2,7 @@
   "name": "Cursor Curse Monitor by Lorapok",
   "short_name": "Curse Monitor",
   "description": "Live Cursor usage dashboard by Lorapok Labs",
-  "start_url": "/Cursor-Curse-Monitor-by-Lorapok/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0f14",
   "theme_color": "#5b9dff",

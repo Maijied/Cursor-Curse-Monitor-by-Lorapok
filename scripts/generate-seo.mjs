@@ -68,9 +68,15 @@ const vars = {
   version: siteData?.version ?? pkg.version,
   vsixUrl: siteData?.github?.vsixUrl ?? `${SITE_BASE}/releases/latest`,
   packageVersion: version,
+  siteBase: SITE_BASE,
   firefoxDownloadUrl: firefoxPublished
     ? (siteData?.browserExtension?.firefox?.url ?? siteData?.productContext?.firefoxUrl)
     : (siteData?.github?.releaseUrl ?? `${SITE_BASE}/`),
+  chromeDownloadUrl:
+    siteData?.browserExtension?.chrome?.zipUrl ??
+    siteData?.productContext?.chromeZipUrl ??
+    `${SITE_BASE}/releases/latest`,
+  missionControlUrl: siteData?.company?.adminUrl ?? siteData?.productContext?.adminUrl ?? "https://cursor-dev.lorapok.tech",
 };
 
 /**
@@ -126,6 +132,9 @@ function buildHeadBlock(pageKey, pageCfg) {
   lines.push(`<meta property="og:title" content="${escapeAttr(ogTitle)}" />`);
   lines.push(`<meta property="og:description" content="${escapeAttr(ogDescription)}" />`);
   lines.push(`<meta property="og:url" content="${escapeAttr(canonical)}" />`);
+  if (seoConfig.site?.locale) {
+    lines.push(`<meta property="og:locale" content="${escapeAttr(seoConfig.site.locale)}" />`);
+  }
   lines.push(`<meta property="og:image" content="${escapeAttr(ogImage)}" />`);
   lines.push(`<meta name="twitter:card" content="${escapeAttr(seoConfig.twitter?.card ?? "summary_large_image")}" />`);
   lines.push(`<meta name="twitter:title" content="${escapeAttr(twitterTitle)}" />`);
@@ -156,44 +165,112 @@ function escapeAttr(s) {
 }
 
 /**
+ * Reads social profile URLs for JSON-LD sameAs.
+ * @return {string[]} Unique absolute profile URLs.
+ */
+function readSameAsUrls() {
+  const fromYaml = seoConfig.organization?.sameAs ?? [];
+  const yamlUrls = fromYaml.map((u) => interpolate(String(u), vars)).filter(Boolean);
+  const socialPath = join(website, "social.json");
+  if (!existsSync(socialPath)) return [...new Set(yamlUrls)];
+  try {
+    const social = JSON.parse(readFileSync(socialPath, "utf8"));
+    const extra = [
+      social.brand?.labs,
+      social.brand?.github,
+      social.brand?.linkedin,
+      social.brand?.x,
+      social.brand?.reddit,
+      social.brand?.instagram,
+      social.brand?.facebook,
+      social.community?.discord,
+      siteData?.repository,
+      siteData?.github?.releaseUrl,
+    ].filter(Boolean);
+    return [...new Set([...yamlUrls, ...extra])];
+  } catch {
+    return [...new Set(yamlUrls)];
+  }
+}
+
+/**
  * Builds the Schema.org JSON-LD graph for the configured structured data.
  * @return {string} A formatted JSON-LD document containing the Schema.org context and graph.
  */
-function buildJsonLd() {
-  const graph = (seoConfig.structuredData?.graph ?? []).map((item) => {
+function buildJsonLd(pageKey = "index", pageMetaForPage = null) {
+  const sameAs = readSameAsUrls();
+  const nodesById = new Map();
+
+  for (const item of seoConfig.structuredData?.graph ?? []) {
     const node = {
       "@type": item.type ?? "SoftwareApplication",
-      name: interpolate(item.name, vars),
-      applicationCategory: item.applicationCategory,
-      operatingSystem: item.operatingSystem,
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     };
-    if (item.featureList) node.featureList = item.featureList;
-    if (item.downloadUrl) {
-      const resolved = interpolate(item.downloadUrl, vars);
-      if (item.id === "browser_extension" && !firefoxPublished) {
-        // AMO listing not public yet — point structured data at GitHub Releases instead.
-        node.downloadUrl = siteData?.github?.releaseUrl ?? resolved;
+    if (item.id) node["@id"] = `${SITE_BASE}/#${item.id}`;
+
+    if (item.type === "Organization") {
+      node.name = interpolate(item.name ?? seoConfig.organization?.name ?? "Lorapok Labs", vars);
+      node.url = interpolate(item.url ?? seoConfig.organization?.url ?? "https://lorapok.tech", vars);
+      const logoPath = item.logo ?? seoConfig.organization?.logo;
+      if (logoPath) node.logo = absImage(logoPath);
+      if (sameAs.length) node.sameAs = sameAs;
+    } else if (item.type === "WebSite") {
+      node.name = interpolate(item.name ?? vars.displayName, vars);
+      node.url = interpolate(item.url ?? `${SITE_BASE}/`, vars);
+      node.description = interpolate(seoConfig.website?.description ?? pageMetaForPage?.description ?? "", vars);
+      if (item.publisher === "organization") {
+        node.publisher = { "@id": `${SITE_BASE}/#organization` };
+      }
+    } else {
+      node.name = interpolate(item.name, vars);
+      if (item.applicationCategory) node.applicationCategory = item.applicationCategory;
+      if (item.operatingSystem) node.operatingSystem = item.operatingSystem;
+      node.offers = { "@type": "Offer", price: "0", priceCurrency: "USD" };
+      if (item.featureList) node.featureList = item.featureList;
+      if (item.downloadUrl) {
+        const resolved = interpolate(item.downloadUrl, vars);
+        if (item.id === "browser_extension" && !firefoxPublished) {
+          node.downloadUrl = siteData?.github?.releaseUrl ?? resolved;
+        } else if (item.id === "browser_extension") {
+          node.downloadUrl = resolved;
+        } else {
+          node.downloadUrl = resolved;
+        }
+      }
+      if (item.id === "ide_extension") {
+        node.softwareVersion = version;
+        node.author = {
+          "@type": "Person",
+          name: pkg.author?.name ?? seoConfig.site?.author,
+          url: pkg.author?.url ?? pkg.repository?.url,
+        };
+      }
+      if (item.publisher === "organization") {
+        node.publisher = { "@id": `${SITE_BASE}/#organization` };
       } else {
-        node.downloadUrl = resolved;
+        node.publisher = {
+          "@type": "Organization",
+          name: "Lorapok Labs",
+          url: "https://lorapok.tech",
+        };
       }
     }
-    if (item.id === "ide_extension") {
-      node.softwareVersion = version;
-      node.author = {
-        "@type": "Person",
-        name: pkg.author?.name ?? seoConfig.site?.author,
-        url: pkg.author?.url ?? pkg.repository?.url,
-      };
-    }
-    node.publisher = {
-      "@type": "Organization",
-      name: "Lorapok Labs",
-      url: "https://lorapok.tech",
-    };
-    return node;
-  });
 
+    if (item.id) nodesById.set(item.id, node);
+  }
+
+  if (pageKey !== "index" && pageMetaForPage) {
+    nodesById.set("page", {
+      "@type": "WebPage",
+      "@id": pageMetaForPage.canonical,
+      url: pageMetaForPage.canonical,
+      name: pageMetaForPage.title,
+      description: pageMetaForPage.description,
+      isPartOf: { "@id": `${SITE_BASE}/#website` },
+      publisher: { "@id": `${SITE_BASE}/#organization` },
+    });
+  }
+
+  const graph = [...nodesById.values()];
   return JSON.stringify({ "@context": "https://schema.org", "@graph": graph }, null, 2);
 }
 
@@ -229,6 +306,8 @@ function injectSeoBlock(htmlPath, headLines, jsonLd) {
   if (jsonLd) {
     if (html.includes("<!-- seo:jsonld -->")) {
       html = html.replace(/<!-- seo:jsonld -->[\s\S]*?<!-- \/seo:jsonld -->/, jsonBlock);
+    } else if (html.includes("<!-- seo:end -->")) {
+      html = html.replace(/<!-- seo:end -->/, `<!-- seo:end -->\n  ${jsonBlock}`);
     } else if (htmlPath === "index.html") {
       html = html.replace(
         /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
@@ -247,7 +326,7 @@ for (const [key, pageCfg] of Object.entries(seoConfig.pages ?? {})) {
   const built = buildHeadBlock(key, pageCfg);
   pageMeta[key] = built;
   const htmlFile = pageCfg.file ?? `${key}.html`;
-  const jsonLd = key === "index" ? buildJsonLd() : null;
+  const jsonLd = buildJsonLd(key, built);
   injectSeoBlock(htmlFile, built.lines, jsonLd);
   sitemapPages.push({
     loc: built.canonical,
@@ -301,6 +380,7 @@ const seo = {
   keywords: indexMeta.keywords,
   openGraph: {
     type: seoConfig.openGraph?.type ?? "website",
+    locale: seoConfig.site?.locale ?? "en_US",
     title: indexMeta.ogTitle,
     description: indexMeta.ogDescription,
     url: indexMeta.canonical,
@@ -322,9 +402,14 @@ const seo = {
     openVsxCanonical: siteData?.ovsx?.url ?? `https://open-vsx.org/extension/lorapok-labs/${pkg.name}`,
     openVsxDuplicate: siteData?.ovsxDuplicate?.url ?? null,
     vscode: siteData?.vscode?.url ?? `https://marketplace.visualstudio.com/items?itemName=LorapokLabs.${pkg.name}`,
+    firefox: siteData?.browserExtension?.firefox?.url ?? siteData?.productContext?.firefoxUrl ?? null,
+    chromeZip: vars.chromeDownloadUrl,
     github: siteData?.github?.releaseUrl ?? SITE_BASE,
+    missionControl: vars.missionControlUrl,
+    lorapokLabs: seoConfig.organization?.url ?? "https://lorapok.tech",
   },
-  structuredData: JSON.parse(buildJsonLd()),
+  sameAs: readSameAsUrls(),
+  structuredData: JSON.parse(buildJsonLd("index", indexMeta)),
 };
 
 writeFileSync(join(website, "seo.json"), JSON.stringify(seo, null, 2) + "\n");

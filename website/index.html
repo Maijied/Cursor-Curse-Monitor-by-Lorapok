@@ -10,13 +10,14 @@
   <!-- seo:begin -->
   <title>Cursor Curse Monitor by Lorapok — Live usage dashboard</title>
   <meta name="description" content="Live included quota, Auto/API meters, budget tracking, and a local credential scanner. Browser extension for Firefox and Chrome. Works in VS Code–based AI IDEs via Open VSX or the Marketplace. Private to your login — data stays local." />
-  <meta name="keywords" content="usage monitor, AI IDE, billing, budget, quota, browser extension, Firefox, security scanner, credential leak, Composer 2.5, ai, cursor, lorapok, usage, dashboard, monitor, composer, curse, firefox, security" />
+  <meta name="keywords" content="usage monitor, AI IDE, billing, budget, quota, browser extension, Firefox, security scanner, credential leak, Composer 2.5, Lorapok Labs, Cursor Curse Monitor, Open VSX, VS Code Marketplace, Mission Control, ai, cursor, lorapok, usage, dashboard, monitor, composer, curse, firefox, security" />
   <meta name="author" content="Mohammad Maizied Hasan Majumder" />
   <link rel="canonical" href="https://cursor.lorapok.tech/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Cursor Curse Monitor by Lorapok" />
   <meta property="og:description" content="Live usage dashboard with local security scanner. Browser extensions available. Your data stays on your machine." />
   <meta property="og:url" content="https://cursor.lorapok.tech/" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Cursor Curse Monitor by Lorapok" />
@@ -39,7 +40,37 @@
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "Organization",
+      "@id": "https://cursor.lorapok.tech/#organization",
+      "name": "Lorapok Labs",
+      "url": "https://lorapok.tech",
+      "logo": "https://cursor.lorapok.tech/assets/logo.png",
+      "sameAs": [
+        "https://lorapok.tech",
+        "https://github.com/lorapok",
+        "https://www.linkedin.com/showcase/lorapok/",
+        "https://x.com/LorapokLabs",
+        "https://www.reddit.com/r/LorapokLabs/",
+        "https://www.instagram.com/lorapoklabs/",
+        "https://www.facebook.com/lorapoklabs",
+        "https://discord.gg/bp42QAMC6",
+        "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok",
+        "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.132"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://cursor.lorapok.tech/#website",
+      "name": "Cursor Curse Monitor by Lorapok",
+      "url": "https://cursor.lorapok.tech/",
+      "description": "Official marketing site for Cursor Curse Monitor by Lorapok Labs — live usage dashboard, browser extensions, and Mission Control admin.",
+      "publisher": {
+        "@id": "https://cursor.lorapok.tech/#organization"
+      }
+    },
+    {
       "@type": "SoftwareApplication",
+      "@id": "https://cursor.lorapok.tech/#ide_extension",
       "name": "Cursor Curse Monitor by Lorapok",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Windows, macOS, Linux",
@@ -57,13 +88,12 @@
         "url": "https://github.com/Maijied"
       },
       "publisher": {
-        "@type": "Organization",
-        "name": "Lorapok Labs",
-        "url": "https://lorapok.tech"
+        "@id": "https://cursor.lorapok.tech/#organization"
       }
     },
     {
       "@type": "SoftwareApplication",
+      "@id": "https://cursor.lorapok.tech/#browser_extension",
       "name": "Cursor Curse Monitor by Lorapok Browser Extension",
       "applicationCategory": "BrowserApplication",
       "operatingSystem": "Firefox, Chrome",
@@ -75,9 +105,7 @@
       "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
       "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.132",
       "publisher": {
-        "@type": "Organization",
-        "name": "Lorapok Labs",
-        "url": "https://lorapok.tech"
+        "@id": "https://cursor.lorapok.tech/#organization"
       }
     }
   ]
