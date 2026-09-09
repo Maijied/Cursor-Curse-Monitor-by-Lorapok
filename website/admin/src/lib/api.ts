@@ -626,6 +626,85 @@ export async function testSocialMatrixApi(payload: {
   };
 }
 
+export type SocialGalleryItem = {
+  id: string;
+  tag: string;
+  status: "pending" | "generating" | "ready" | "failed" | string;
+  caption: string;
+  hashtags?: string | null;
+  imageUrl?: string | null;
+  changelogExcerpt?: string | null;
+  runUrl?: string | null;
+  error?: string | null;
+  publishedAt?: string | null;
+  publishedPlatforms?: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchSocialGalleryApi(limit = 20) {
+  return apiGet<{ ok: boolean; items: SocialGalleryItem[]; updatedAt: string | null }>(
+    `/integrations/social/gallery?limit=${limit}`
+  );
+}
+
+export async function generateSocialGalleryItemApi(id: string) {
+  const res = await fetch(`${API_BASE}/integrations/social/gallery/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Gallery generation failed");
+  return data as { ok: boolean; item: SocialGalleryItem; skipped?: boolean; reason?: string };
+}
+
+export async function updateSocialGalleryItemApi(payload: {
+  id: string;
+  caption?: string;
+  hashtags?: string;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/social/gallery/item`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Gallery update failed");
+  return data as { ok: boolean; item: SocialGalleryItem };
+}
+
+export async function publishSocialGalleryItemApi(payload: {
+  id: string;
+  dryRun?: boolean;
+  platforms?: SocialPlatformId[];
+}) {
+  const res = await fetch(`${API_BASE}/integrations/social/gallery/publish`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && !data.results) throw new Error(data.error || "Social publish failed");
+  return data as {
+    ok: boolean;
+    dryRun: boolean;
+    text: string;
+    summary: { sent: number; skipped: number; failed: number; total: number };
+    results: SocialTestResult[];
+    itemId: string;
+  };
+}
+
 export type SubscribePromptConfig = {
   subscribeModalEnabled: boolean;
   requireMailForSubscribe: boolean;

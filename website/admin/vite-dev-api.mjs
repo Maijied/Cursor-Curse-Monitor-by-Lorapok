@@ -2432,6 +2432,121 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/integrations/social/gallery/asset" && req.method === "GET") {
+      const assetUrl = new URL(req.url || "", "http://localhost");
+      import("./functions/api/integrations/social/gallery/asset.ts")
+        .then(({ onRequestGet }) =>
+          onRequestGet({
+            request: new Request(assetUrl.toString(), { method: "GET" }),
+            env: devFunctionsEnv(),
+          })
+        )
+        .then(async (response) => {
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => res.setHeader(key, value));
+          res.end(await response.text());
+        })
+        .catch((err) => {
+          res.statusCode = 502;
+          res.end(err.message || "Asset failed");
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/social/gallery/item" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const { updateSocialGalleryItem } = await import("./functions/api/_shared/social-gallery-queue.js");
+          const item = await updateSocialGalleryItem(devFunctionsEnv(), String(parsed.id ?? ""), {
+            ...(typeof parsed.caption === "string" ? { caption: parsed.caption.trim() } : {}),
+            ...(typeof parsed.hashtags === "string" ? { hashtags: parsed.hashtags.trim() } : {}),
+          });
+          if (!item) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Gallery item not found" }));
+            return;
+          }
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, item }));
+        } catch (err) {
+          res.statusCode = 503;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Update failed" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/social/gallery/generate" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const { processSocialGalleryJob } = await import("./functions/api/_shared/social-gallery-processor.js");
+          const result = await processSocialGalleryJob(devFunctionsEnv(), String(parsed.id ?? ""));
+          res.setHeader("Content-Type", "application/json");
+          if (!result.ok) {
+            res.statusCode = 502;
+            res.end(JSON.stringify({ error: result.error ?? "Generation failed", item: result.item ?? null }));
+            return;
+          }
+          res.end(JSON.stringify(result));
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/social/gallery/publish" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const { publishSocialGalleryFromEnv } = await import("./functions/api/_shared/social-notify.js");
+          const { readSocialGalleryItem, updateSocialGalleryItem } = await import(
+            "./functions/api/_shared/social-gallery-queue.js"
+          );
+          const id = String(parsed.id ?? "");
+          const item = await readSocialGalleryItem(devFunctionsEnv(), id);
+          if (!item) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Gallery item not found" }));
+            return;
+          }
+          const dryRun = parsed.dryRun === true;
+          const publish = await publishSocialGalleryFromEnv(devFunctionsEnv(), item, {
+            dryRun,
+            platforms: Array.isArray(parsed.platforms) ? parsed.platforms : undefined,
+          });
+          if (!dryRun && publish.summary?.sent > 0) {
+            await updateSocialGalleryItem(devFunctionsEnv(), id, {
+              publishedAt: new Date().toISOString(),
+              publishedPlatforms: publish.results.filter((entry) => entry.ok).map((entry) => entry.platform),
+              lastPublishSummary: publish.summary,
+            });
+          }
+          res.setHeader("Content-Type", "application/json");
+          if (!publish.ok && !dryRun) {
+            res.statusCode = 502;
+          }
+          res.end(JSON.stringify({ ok: publish.ok, dryRun, ...publish, itemId: id }));
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/integrations/social/gallery" && req.method === "GET") {
       import("./functions/api/_shared/social-gallery-queue.js")
         .then(({ listSocialGalleryQueue }) => listSocialGalleryQueue(devFunctionsEnv()))
