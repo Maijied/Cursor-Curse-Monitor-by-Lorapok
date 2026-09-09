@@ -26,7 +26,7 @@ import {
   type MailTemplate,
 } from "../../lib/api";
 import { auth } from "../../lib/firebase";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 
 const PAGE_SIZE = 20;

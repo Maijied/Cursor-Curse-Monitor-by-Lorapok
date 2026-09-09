@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { LarvaeLoaderPanel } from "../ui/LorapokLarvaeLoader";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import type { NavPermission } from "../../lib/nav-permissions";
 import { canAccessFeature } from "../../lib/nav-permissions";
 

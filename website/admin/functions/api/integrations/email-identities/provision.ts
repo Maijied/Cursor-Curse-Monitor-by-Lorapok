@@ -1,5 +1,4 @@
 import { jsonResponse, verifyAdminRequest, requirePermission } from "../../_shared/auth.js";
-import { formatKvPutError } from "../../_shared/kv-put.js";
 import { provisionIdentityRouting } from "../../_shared/cloudflare-email-routing.js";
 import {
   identityEmail,
