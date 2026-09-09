@@ -1,4 +1,4 @@
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { useEffect, useMemo, useState } from "react";
 import { Megaphone, Save, Send, Share2 } from "lucide-react";
 import Card from "./Card";
