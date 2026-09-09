@@ -116,3 +116,13 @@ structuredData:
       featureList: Budget tracker popup, credential paste guard, cursor.com token capture
       downloadUrl: "{firefoxDownloadUrl}"
       publisher: organization
+
+indexing:
+  adminNoindex: true
+  marketingAllow: true
+  adminUrls:
+    - https://cursor-dev.lorapok.tech
+  policySummary: >-
+    The public marketing site at {siteBase} is indexable with Organization, WebSite, and
+    SoftwareApplication JSON-LD. Mission Control admin ({missionControlUrl}) uses
+    noindex/nofollow and is excluded from sitemaps. Usage data stays local — see the privacy policy.

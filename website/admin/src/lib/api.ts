@@ -626,6 +626,79 @@ export async function testSocialMatrixApi(payload: {
   };
 }
 
+export type SeoProviderId =
+  | "googleSearchConsole"
+  | "bingWebmaster"
+  | "azureWebmaster"
+  | "cloudflareAnalytics"
+  | "pageSpeedInsights";
+
+export type SeoProviderClientConfig = {
+  enabled: boolean;
+  configured: boolean;
+  siteUrl?: string;
+  zoneId?: string;
+  serviceAccountPreview?: string | null;
+  apiKeyPreview?: string | null;
+  apiTokenPreview?: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export type SeoHubClientConfig = {
+  sitemapUrl: string;
+  robotsNotes: string;
+};
+
+export type SeoConfig = {
+  providers: Record<SeoProviderId, SeoProviderClientConfig>;
+  hub: SeoHubClientConfig;
+  enabledCount: number;
+  configured: boolean;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export type SeoIndexingPolicy = {
+  adminNoindex: boolean;
+  marketingAllow: boolean;
+  adminUrls: string[];
+  policySummary: string;
+  sitemapUrl: string;
+  robotsUrl: string;
+  organizationSchema: boolean;
+  softwareApplicationSchema: boolean;
+};
+
+export async function fetchSeoConfigApi() {
+  return apiGet<{ ok: boolean; config: SeoConfig }>("/integrations/seo/config");
+}
+
+export async function putSeoConfigApi(payload: {
+  provider?: SeoProviderId;
+  section?: "hub";
+  enabled?: boolean;
+  siteUrl?: string;
+  zoneId?: string;
+  serviceAccountJson?: string;
+  apiKey?: string;
+  apiToken?: string;
+  sitemapUrl?: string;
+  robotsNotes?: string;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/seo/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save SEO settings");
+  return data as { ok: boolean; config: SeoConfig };
+}
+
 export type SocialGalleryItem = {
   id: string;
   tag: string;

@@ -146,6 +146,19 @@ if (!existsSync(seoPath)) {
   if (!seo.openGraph?.locale) warn("seo.json missing openGraph.locale");
   if (!seo.marketplaces?.firefox) warn("seo.json missing marketplaces.firefox URL");
   if (!seo.marketplaces?.missionControl) warn("seo.json missing marketplaces.missionControl URL");
+
+  const policy = seo.indexingPolicy;
+  if (!policy) {
+    fail("seo.json missing indexingPolicy (run npm run site:seo)");
+  } else {
+    if (policy.adminNoindex !== true) fail("seo.json indexingPolicy.adminNoindex must be true");
+    if (policy.marketingAllow !== true) warn("seo.json indexingPolicy.marketingAllow is false");
+    if (!policy.policySummary) fail("seo.json indexingPolicy.policySummary is required");
+    if (!policy.sitemapUrl?.startsWith("https://")) fail("seo.json indexingPolicy.sitemapUrl must be https");
+    if (!Array.isArray(policy.adminUrls) || policy.adminUrls.length === 0) {
+      fail("seo.json indexingPolicy.adminUrls must list Mission Control URLs");
+    }
+  }
 }
 
 const robotsPath = join(website, "robots.txt");
@@ -159,6 +172,27 @@ if (!existsSync(robotsPath)) {
 const ogImagePath = join(website, "assets/marketing/og-social-card.png");
 if (!existsSync(ogImagePath)) {
   fail("Missing OG image at website/assets/marketing/og-social-card.png");
+}
+
+const adminIndexPath = join(root, "website/admin/index.html");
+if (!existsSync(adminIndexPath)) {
+  warn("Missing website/admin/index.html — skip admin noindex check");
+} else {
+  const adminHtml = readFileSync(adminIndexPath, "utf8");
+  const robots = readMeta(adminHtml, "robots");
+  if (!robots.includes("noindex")) {
+    fail("Mission Control index.html must include meta robots noindex,nofollow (SEO-03)");
+  }
+}
+
+const adminHeadersPath = join(root, "website/admin/public/_headers");
+if (!existsSync(adminHeadersPath)) {
+  fail("Missing website/admin/public/_headers with X-Robots-Tag (SEO-03)");
+} else {
+  const headers = readFileSync(adminHeadersPath, "utf8");
+  if (!headers.includes("X-Robots-Tag") || !headers.includes("noindex")) {
+    fail("website/admin/public/_headers must set X-Robots-Tag: noindex, nofollow");
+  }
 }
 
 if (failed) process.exit(1);

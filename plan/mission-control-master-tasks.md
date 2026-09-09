@@ -2,9 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-09 (SEO-01 merged PR #258; SOCIAL-02/03 merged PR #257)
-**Branch:** `main` @ `960ea8b7`
-**CI:** Production Deployment triggered on merge (2026-09-09T03:35Z)
+**Last updated:** 2026-09-09 (PR #259 CI green run `34326166651`)
+**Branch:** `cursor/seo-admin-hub-773e` @ `5788b46c`
+**CI:** PR #259 ✅ all PR gates green (Root, Browser, Admin, Test Summary). Deploy/SEO jobs skip on PR — run on **main merge**.
+**Main:** `5457cc8d` (PR #258); last main deploy green run `34318903801`
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -20,7 +21,7 @@
 
 ## Epic in progress
 
-_None — pick from **Recommended next queue** below._
+**PR #259** — SEO-02/03 admin hub + indexing policy — **CI green**, ready to merge.
 
 ---
 
@@ -53,7 +54,7 @@ _None — pick from **Recommended next queue** below._
 | Google Cloud (GCP) | 2 | 3 | 0 |
 | Mail (Resend + CF Email) | 3 | 8 | 1 |
 | Discord | 3 | 11 | 0 |
-| SEO & growth | 0 | 3 | 0 |
+| SEO & growth | 2 | 1 | 0 |
 | Social & media | 0 | 4 | 0 |
 | Stats / Cron | 6 | 2 | 1 |
 | IDE extension | 4 | 4 | 0 |
@@ -299,8 +300,8 @@ _None — pick from **Recommended next queue** below._
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
 | SEO-01 | **World-class SEO core** — JSON-LD, canonical URLs, Lorapok Labs + all product links in meta/alt/semantic HTML; `seo.json` pipeline | **done** | Organization/WebSite/sameAs JSON-LD; og:locale; full marketplaces manifest |
-| SEO-02 | **SEO admin hub** — Google Search Console, Cloudflare, Azure Webmaster, Bing; sitemap, robots, Core Web Vitals — all configurable in Settings | **next** | new Settings tab or Services card; cred vault for tokens |
-| SEO-03 | **SEO policy & compliance** — privacy-aligned indexing rules, noindex admin, structured `Organization` + `SoftwareApplication` schema | **next** | `LEGAL-01` alignment; Lorapok cross-links in hidden/aria where appropriate |
+| SEO-02 | **SEO admin hub** — Google Search Console, Cloudflare, Azure Webmaster, Bing; sitemap, robots, Core Web Vitals — all configurable in Settings | **done** | Settings → SEO tab; `integrations:seo` KV; `/api/integrations/seo/config` |
+| SEO-03 | **SEO policy & compliance** — privacy-aligned indexing rules, noindex admin, structured `Organization` + `SoftwareApplication` schema | **done** | `indexing` in seo.yml; admin noindex + `_headers`; `indexingPolicy` in seo.json |
 
 ---
 
@@ -381,10 +382,9 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **SEO-02–03** — SEO admin hub + indexing policies
-2. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-3. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
-4. **WEB-11** — Engineering history timeline page
+1. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+2. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+3. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
