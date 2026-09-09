@@ -1,4 +1,5 @@
 import { readDiscordConfig } from "./discord-config.js";
+import { buildDiscordCommunityEmbed } from "./discord-product-cards.js";
 import { getMessageBranding } from "./message-cards-runtime.js";
 
 /**
@@ -6,6 +7,7 @@ import { getMessageBranding } from "./message-cards-runtime.js";
  * @param {Record<string, unknown>} env - The environment configuration.
  * @param {{
  *   summary?: string;
+ *   inviteUrl?: string;
  *   triggeredBy?: string | null;
  * }} [payload] - Optional summary and actor metadata.
  * @return {Promise<{ok: boolean; status?: number; skipped?: boolean; reason?: string; error?: string}>} The webhook delivery result.
@@ -16,28 +18,20 @@ export async function notifyDiscordCommunity(env, payload = {}) {
     return { ok: false, skipped: true, reason: "no_community_webhook" };
   }
 
-  const summary =
-    payload.summary ??
-    "Sample community post from Mission Control. Webhooks are outbound-only — join Discord to reply in thread.";
+  const embed = await buildDiscordCommunityEmbed(env, {
+    summary: payload.summary,
+    inviteUrl: payload.inviteUrl ?? config.communityInviteUrl,
+    triggeredBy: payload.triggeredBy ?? null,
+  });
 
   const branding = await getMessageBranding(env);
-  const embed = {
-    title: "Cursor Curse Monitor — community",
-    description: String(summary).slice(0, 4000),
-    color: 0x7c3aed,
-    footer: {
-      text: payload.triggeredBy ? `Sent by ${payload.triggeredBy}` : "Mission Control test",
-    },
-    timestamp: new Date().toISOString(),
-  };
-
   let res;
   try {
     res = await fetch(config.communityWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: "Cursor Curse Monitor",
+        username: branding.discordAuthorName ?? "Lorapok Mission Control",
         avatar_url: branding.discordAvatarUrl ?? "https://cursor.lorapok.tech/assets/logo.png",
         embeds: [embed],
       }),

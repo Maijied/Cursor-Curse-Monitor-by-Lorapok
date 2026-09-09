@@ -72,7 +72,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "subscribe-welcome",
@@ -101,7 +101,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "support-response",
@@ -116,7 +116,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "warning-incident",
@@ -147,7 +147,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "critical-security",
@@ -175,7 +175,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "bugfix-release",
@@ -201,7 +201,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "feature-release",
@@ -231,7 +231,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "release-notes",
@@ -249,7 +249,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "subscriber-digest",
@@ -271,7 +271,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "mailbox-test",
@@ -280,7 +280,7 @@
         "channels": {
           "email": {
             "subject": "Cursor Curse Monitor — mailbox test",
-            "text": "This is a live delivery test from Mission Control at 2026-09-08T16:58:55.076Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
+            "text": "This is a live delivery test from Mission Control at 2026-09-09T04:03:24.222Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
             "variables": [
               "email"
             ]
@@ -288,7 +288,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "conversation-recovery",
@@ -313,7 +313,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "quota-warning",
@@ -336,7 +336,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "agent-editor-tip",
@@ -355,7 +355,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "beta-tester-invite",
@@ -383,7 +383,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "deploy-success",
@@ -398,7 +398,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "deploy-failure",
@@ -413,7 +413,37 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
+      },
+      {
+        "id": "download-digest",
+        "label": "Download digest",
+        "category": "deploy",
+        "severity": "info",
+        "channels": {
+          "discord": {
+            "title": "📊 Download & update digest",
+            "summary": "Scheduled community reach, marketplace sync status, and changelog excerpt for operators."
+          }
+        },
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-09-09T04:03:24.222Z"
+      },
+      {
+        "id": "community-announcement",
+        "label": "Community announcement",
+        "category": "community",
+        "severity": "info",
+        "channels": {
+          "discord": {
+            "title": "👋 Lorapok Labs Family",
+            "summary": "Product updates, beta invites, and contributor shout-outs for {{displayName}}. Join our Discord to discuss releases and try early builds."
+          }
+        },
+        "feedbackUrl": "{{feedbackUrl}}",
+        "collaborateUrl": "{{collaborateUrl}}",
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "feedback-thanks",
@@ -427,13 +457,13 @@
             "variables": []
           },
           "discord": {
-            "title": "💬 Feedback reminder",
+            "title": "💬 Feedback & support",
             "summary": "💬 **Feedback** — [GitHub Issues]({{feedbackUrl}})\n💡 **Discuss** — [GitHub Discussions]({{collaborateUrl}})\n🆘 **Support** — {{supportEmail}}"
           }
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "incident-resolved",
@@ -464,7 +494,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "rollback-incident",
@@ -489,7 +519,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "platform-availability",
@@ -508,7 +538,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "maintenance-window",
@@ -531,7 +561,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "amo-review-pending",
@@ -550,7 +580,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       },
       {
         "id": "telemetry-opt-in",
@@ -569,7 +599,7 @@
         },
         "feedbackUrl": "{{feedbackUrl}}",
         "collaborateUrl": "{{collaborateUrl}}",
-        "updatedAt": "2026-09-08T16:58:55.076Z"
+        "updatedAt": "2026-09-09T04:03:24.222Z"
       }
     ]
   },
@@ -681,7 +711,7 @@
       "label": "Mailbox delivery test",
       "category": "test",
       "subject": "Cursor Curse Monitor — mailbox test",
-      "text": "This is a live delivery test from Mission Control at 2026-09-08T16:58:55.076Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
+      "text": "This is a live delivery test from Mission Control at 2026-09-09T04:03:24.222Z.\n\nIf you received this, outbound mail from {{productEmail}} is working.",
       "variables": [
         "email"
       ]
@@ -732,7 +762,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "warning-incident",
@@ -748,7 +778,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "critical-security",
@@ -764,7 +794,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "bugfix-release",
@@ -780,7 +810,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "feature-release",
@@ -796,7 +826,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "conversation-recovery",
@@ -813,7 +843,7 @@
       "enabled": false,
       "source": "release",
       "id": "conversation-recovery-v0515",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "quota-warning",
@@ -829,7 +859,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "agent-editor-tip",
@@ -845,7 +875,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "beta-tester-invite",
@@ -861,7 +891,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "incident-resolved",
@@ -877,7 +907,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "rollback-incident",
@@ -894,7 +924,7 @@
       "enabled": false,
       "source": "rollback",
       "id": "rollback-recovery-notice",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "platform-availability",
@@ -910,7 +940,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "maintenance-window",
@@ -926,7 +956,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "amo-review-pending",
@@ -942,7 +972,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "templateId": "telemetry-opt-in",
@@ -958,7 +988,7 @@
       "collaborateUrl": "{{collaborateUrl}}",
       "enabled": false,
       "source": "template",
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     }
   ],
   "builtinNotices": [
@@ -974,7 +1004,7 @@
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": true,
-      "updatedAt": "2026-09-08T16:58:55.076Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "id": "conversation-recovery-v0515",
@@ -988,7 +1018,7 @@
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": true,
-      "updatedAt": "2026-09-08T16:58:55.075Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     },
     {
       "id": "rollback-recovery-notice",
@@ -1002,7 +1032,7 @@
       "feedbackUrl": "{{feedbackUrl}}",
       "collaborateUrl": "{{collaborateUrl}}",
       "dismissible": false,
-      "updatedAt": "2026-09-08T16:58:55.075Z"
+      "updatedAt": "2026-09-09T04:03:24.222Z"
     }
   ],
   "generatedDevNotice": {
@@ -1017,7 +1047,7 @@
     "feedbackUrl": "{{feedbackUrl}}",
     "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": true,
-    "updatedAt": "2026-09-08T16:58:55.076Z"
+    "updatedAt": "2026-09-09T04:03:24.222Z"
   },
   "conversationRecoveryNotice": {
     "id": "conversation-recovery-v0515",
@@ -1031,7 +1061,7 @@
     "feedbackUrl": "{{feedbackUrl}}",
     "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": true,
-    "updatedAt": "2026-09-08T16:58:55.075Z"
+    "updatedAt": "2026-09-09T04:03:24.222Z"
   },
   "rollbackNotice": {
     "id": "rollback-recovery-notice",
@@ -1045,6 +1075,6 @@
     "feedbackUrl": "{{feedbackUrl}}",
     "collaborateUrl": "{{collaborateUrl}}",
     "dismissible": false,
-    "updatedAt": "2026-09-08T16:58:55.075Z"
+    "updatedAt": "2026-09-09T04:03:24.222Z"
   }
 }

@@ -357,6 +357,31 @@ export function buildMessageCards(ctx) {
       },
     },
     {
+      id: "download-digest",
+      label: "Download digest",
+      category: "deploy",
+      severity: "info",
+      channels: {
+        discord: {
+          title: "📊 Download & update digest",
+          summary:
+            "Scheduled community reach, marketplace sync status, and changelog excerpt for operators.",
+        },
+      },
+    },
+    {
+      id: "community-announcement",
+      label: "Community announcement",
+      category: "community",
+      severity: "info",
+      channels: {
+        discord: {
+          title: "👋 Lorapok Labs Family",
+          summary: `Product updates, beta invites, and contributor shout-outs for ${ctx.displayName}. Join our Discord to discuss releases and try early builds.`,
+        },
+      },
+    },
+    {
       id: "feedback-thanks",
       label: "Feedback received",
       category: "response",
@@ -368,7 +393,7 @@ export function buildMessageCards(ctx) {
           variables: [],
         },
         discord: {
-          title: "💬 Feedback reminder",
+          title: "💬 Feedback & support",
           summary: buildChannelFooters(ctx).discord.feedbackBlock,
         },
       },

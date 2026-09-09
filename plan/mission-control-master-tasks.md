@@ -2,9 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-08 (MAIL-13/14 mail templates + subscriber merge tags)  
-**Branch:** `main` @ `ec89b24`  
-**CI:** Production Deployment triggered on merge (2026-09-08T15:35Z)  
+**Last updated:** 2026-09-09 (DC-06 Discord product cards; MAIL-13/14 on main)
+**Branch:** `main` @ `9906c292`
+**CI:** Production Deployment triggered on merge (2026-09-09T03:35Z)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -231,7 +231,7 @@ _None — pick from **Recommended next queue** below._
 | DC-03 | Configure production webhooks in KV | **done** | All three webhooks in `integrations:discord` (2026-09-03 Settings); health confirms `discordConfigured` + feedback + community (2026-09-05) |
 | DC-04 | Community + Feedback cards polling | **next** | optional parity |
 | DC-05 | Subscribe fallback Discord URL in prod | **next** | Settings → General |
-| DC-06 | **Product-designed Discord cards** — branded embed layouts for deploy, digest, community, feedback (Lorapok aesthetic) | **partial** | `discord-notify.js` + `message-cards.mjs` deploy cards; gallery preview in Settings |
+| DC-06 | **Product-designed Discord cards** — branded embed layouts for deploy, digest, community, feedback (Lorapok aesthetic) | **done** | `discord-product-cards.js` + gallery; digest/community/feedback notify wired |
 | DC-07 | Discord card gallery / test-send matrix in Settings | **done** | `DiscordCardGallery.tsx`, `GET /api/integrations/discord/preview` |
 | DC-08 | **CI/CD success cards** — Discord embed on workflow success: jobs, duration, markets, changelog excerpt, release link | **done** | `discord-deployment-notify.mjs` enrichment + `ci-cd.yml`; vitest + node tests |
 | DC-09 | **CI/CD failure cards** — Discord embed on failure: failed job, step, logs URL, partial changelog, rollback hint | **done** | failure hints in `discord-notify.js`; `--failed-step` in CI notify |
@@ -381,13 +381,12 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **DC-06** — Finish branded Discord templates for digest/community (CI cards + gallery shipped)
-2. **SOCIAL-01–03** — Multi-platform webhooks + one-click share (DEPLOY-03 gallery trigger done)
-5. **SEO-01–03** — World-class SEO + admin hub + policies
-6. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
-7. **WEB-11** — Engineering history timeline page
-8. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-9. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+1. **SOCIAL-01–03** — Multi-platform webhooks (PR #255) + deploy gallery + one-click publish
+2. **SEO-01–03** — World-class SEO + admin hub + policies
+3. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+4. **WEB-11** — Engineering history timeline page
+5. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
+6. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
 
