@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-09 (PR #259 draft — Admin Panel CI red; SEO-02/03 implemented)
-**Branch:** `cursor/seo-admin-hub-773e` @ `19b24fd5`
-**CI:** PR #259 run `34319646208` — Build ✅ Browser ✅ **Admin Panel CI ❌** (TS: `SECTION_REFERS.seo`, `Notification` props)
-**Main:** `5457cc8d` (PR #258 merged); last main deploy green run `34318903801`
+**Last updated:** 2026-09-09 (PR #259 CI fix pushed — awaiting green Admin Panel CI)
+**Branch:** `cursor/seo-admin-hub-773e` @ `bddfae7b`
+**CI:** PR #259 — Admin Panel CI was red (TS build); fix pushed. Deploy/SEO pipeline jobs **skip on PR by design** (main push only).
+**Main:** `5457cc8d` (PR #258); last main deploy green run `34318903801`
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -21,7 +21,7 @@
 
 ## Epic in progress
 
-**PR #259** — SEO-02/03 admin hub + indexing policy (`cursor/seo-admin-hub-773e`) — **blocked on Admin Panel CI** (2 TypeScript errors in `SeoIntegrationsCard.tsx`).
+**PR #259** — SEO-02/03 admin hub + indexing policy (`cursor/seo-admin-hub-773e`) — CI fix pushed; awaiting green run.
 
 ---
 
