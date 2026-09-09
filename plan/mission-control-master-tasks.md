@@ -2,9 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-09 (SEO-02/03 on branch `cursor/seo-admin-hub-773e`; SEO-01 merged PR #258)
-**Branch:** `cursor/seo-admin-hub-773e`
-**CI:** Main deploy green after PR #258 merge (run 34318903801)
+**Last updated:** 2026-09-09 (PR #259 draft — Admin Panel CI red; SEO-02/03 implemented)
+**Branch:** `cursor/seo-admin-hub-773e` @ `19b24fd5`
+**CI:** PR #259 run `34319646208` — Build ✅ Browser ✅ **Admin Panel CI ❌** (TS: `SECTION_REFERS.seo`, `Notification` props)
+**Main:** `5457cc8d` (PR #258 merged); last main deploy green run `34318903801`
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -20,7 +21,7 @@
 
 ## Epic in progress
 
-_None — pick from **Recommended next queue** below._
+**PR #259** — SEO-02/03 admin hub + indexing policy (`cursor/seo-admin-hub-773e`) — **blocked on Admin Panel CI** (2 TypeScript errors in `SeoIntegrationsCard.tsx`).
 
 ---
 
