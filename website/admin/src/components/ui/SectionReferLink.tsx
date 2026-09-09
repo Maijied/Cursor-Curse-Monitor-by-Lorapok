@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { resolveSectionRefer, type SectionReferTarget } from "../../lib/section-refer";
-import { persistSettingsTab } from "./SettingsTabNav";
+import { persistSettingsTab } from "./settings-tab-storage";
 
 type SectionReferLinkProps = SectionReferTarget & {
   className?: string;

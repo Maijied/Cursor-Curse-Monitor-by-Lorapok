@@ -57,7 +57,7 @@ describe("firebase-store", () => {
   it("reads mirrored KV value from Firestore on KV miss", async () => {
     const env = mockEnv();
     setFirestoreAccessTokenForTests("tok");
-    const fetchImpl = vi.fn(async (url: string) => {
+    const fetchImpl = vi.fn(async (_url: string) => {
       return new Response(
         JSON.stringify({
           fields: {

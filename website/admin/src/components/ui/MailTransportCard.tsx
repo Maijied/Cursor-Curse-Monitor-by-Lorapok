@@ -6,7 +6,7 @@ import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
 import MailSyncProgressBanner from "./MailSyncProgressBanner";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import { useWorkflowPoll } from "../../hooks/useWorkflowPoll";
 import {

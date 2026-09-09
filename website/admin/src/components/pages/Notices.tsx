@@ -9,7 +9,7 @@ import DataTable, { type DataTableColumn } from "../ui/DataTable";
 import Notification from "../ui/Notification";
 import { createNotice, deleteNotice, fetchChangelogNoticeDraft, fetchNotices, fetchNoticeTemplates, updateNotice, broadcastToSubscribers, type NoticeTemplate } from "../../lib/api";
 import type { DevNotice } from "../../lib/site-data";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;

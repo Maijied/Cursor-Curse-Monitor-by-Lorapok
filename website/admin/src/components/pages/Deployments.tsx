@@ -7,7 +7,7 @@ import {
   triggerInfraDeploy,
   triggerRollback,
 } from "../../lib/api";
-import { useDeployRuntime } from "../../context/DeployRuntimeContext";
+import { useDeployRuntime } from "../../context/deploy-runtime-context";
 import { useSiteData } from "../../hooks/useSiteData";
 import {
   defaultDeployTag,
@@ -26,7 +26,7 @@ import SectionReferLink from "../ui/SectionReferLink";
 import { SECTION_REFERS } from "../../lib/section-refer";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import LoadableButton from "../ui/LoadableButton";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 
 function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) {
   if (!siteData) return { tags: [] as string[], liveTag: null as string | null };

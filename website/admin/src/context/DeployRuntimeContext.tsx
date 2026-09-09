@@ -1,62 +1,18 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { WorkflowRun, WorkflowRunLogs } from "../lib/api";
 import { getPipelineSummary } from "../lib/workflow-jobs";
 import DeployFloatingStatusButton from "../components/ui/DeployFloatingStatusButton";
 import DeployLeaveWarningModal from "../components/ui/DeployLeaveWarningModal";
 import DeployStatusModal from "../components/ui/DeployStatusModal";
+import {
+  DeployRuntimeContext,
+  type DeployPollStatus,
+  type DeployRuntimeContextValue,
+  type DeploySession,
+} from "./deploy-runtime-context";
 
-export type DeploySession = {
-  workflowName: string;
-  targetTag: string;
-  dispatchedAfter: number;
-  channel: string;
-  market: string;
-  modeLabel: string;
-};
-
-export type DeployPollStatus = "idle" | "waiting" | "running" | "success" | "failure";
-
-type DeployRuntimeContextValue = {
-  session: DeploySession | null;
-  status: DeployPollStatus;
-  run: WorkflowRun | null;
-  logs: WorkflowRunLogs | null;
-  pollError: string | null;
-  waiting: boolean;
-  inProgress: boolean;
-  startSession: (session: DeploySession) => void;
-  registerInlineAnchor: (el: HTMLDivElement | null) => void;
-  scrollToInlinePanel: () => void;
-  openStatusModal: () => void;
-  closeStatusModal: () => void;
-  registerOnDeployComplete: (fn: (() => void) | null) => void;
-  dismissSession: () => void;
-  statusModalOpen: boolean;
-};
-
-const DeployRuntimeContext = createContext<DeployRuntimeContextValue | null>(null);
-
-/**
- * Retrieves the deployment runtime context.
- *
- * @returns The deployment runtime context.
- * @throws If called outside a `DeployRuntimeProvider`.
- */
-export function useDeployRuntime() {
-  const ctx = useContext(DeployRuntimeContext);
-  if (!ctx) throw new Error("useDeployRuntime must be used within DeployRuntimeProvider");
-  return ctx;
-}
-
-/**
- * Retrieves the deployment runtime context when available.
- *
- * @returns The deployment runtime context, or `undefined` when used outside a `DeployRuntimeProvider`.
- */
-export function useDeployRuntimeOptional() {
-  return useContext(DeployRuntimeContext);
-}
+export type { DeployPollStatus, DeploySession } from "./deploy-runtime-context";
 
 type ProviderProps = { children: ReactNode };
 
@@ -286,7 +242,7 @@ export function DeployRuntimeProvider({ children }: ProviderProps) {
     }
   }, [navigate, pendingPath]);
 
-  const value = useMemo(
+  const value = useMemo<DeployRuntimeContextValue>(
     () => ({
       session,
       status,

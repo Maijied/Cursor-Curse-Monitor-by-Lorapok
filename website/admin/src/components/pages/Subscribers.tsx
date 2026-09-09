@@ -8,7 +8,7 @@ import ErrorState from "../ui/ErrorState";
 import DataTable, { type DataTableColumn } from "../ui/DataTable";
 import { broadcastToSubscribers, fetchSubscribers, type SubscriberRecord } from "../../lib/api";
 import Notification from "../ui/Notification";
-import { useAuthSession } from "../../lib/auth-context";
+import { useAuthSession } from "../../lib/use-auth-session";
 import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 import SectionReferLink from "../ui/SectionReferLink";
 import { SECTION_REFERS } from "../../lib/section-refer";

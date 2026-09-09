@@ -2,8 +2,6 @@ import { putKvJsonIfChanged } from "./kv-put.js";
 import {
   FROM_NAME_HELP,
   FROM_NAME_MONITOR,
-  MAIL_HELP,
-  MAIL_MONITOR,
   resolveDefaultOpsForwardTo,
 } from "./mail-addresses.js";
 

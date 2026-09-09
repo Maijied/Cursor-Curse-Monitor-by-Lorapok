@@ -1,5 +1,5 @@
 import { putKvJsonIfChanged } from "./kv-put.js";
-import { readMailConfig, normalizeMailConfig } from "./mail-config.js";
+import { readMailConfig } from "./mail-config.js";
 
 const CONFIG_KEY = "integrations:resend";
 
