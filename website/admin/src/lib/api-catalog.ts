@@ -106,6 +106,8 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "social-config-put", path: "/integrations/social/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save Telegram, Mastodon, Bluesky, X, or LinkedIn settings" },
   { id: "social-preview", path: "/integrations/social/preview", method: "GET", auth: "admin", group: "Integrations", description: "Preview Lorapok social post templates", safeProbe: true },
   { id: "social-test", path: "/integrations/social/test", method: "POST", auth: "admin", group: "Integrations", description: "Test-send matrix for configured social platforms" },
+  { id: "seo-config", path: "/integrations/seo/config", method: "GET", auth: "admin", group: "Integrations", description: "Search Console, Bing, Azure, Cloudflare, PageSpeed settings (SEO-02)", safeProbe: true },
+  { id: "seo-config-put", path: "/integrations/seo/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save SEO integration provider or hub settings" },
   { id: "stats-refresh-now", path: "/stats/refresh", method: "POST", auth: "admin", group: "Integrations", description: "Manually refresh live marketplace download stats" },
   { id: "stats-refresh-cron", path: "/cron/stats-refresh", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for live stats refresh (CRON_SECRET)" },
   { id: "discord-digest-cron", path: "/cron/discord-digest", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for Discord download digest (CRON_SECRET)" },

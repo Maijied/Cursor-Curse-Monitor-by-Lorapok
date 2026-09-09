@@ -13,6 +13,7 @@ export const MUTATING_ROUTE_PERMISSIONS = {
   "PUT /integrations/social/config": "integrations.write",
   "GET /integrations/social/preview": "integrations.read",
   "POST /integrations/social/test": "integrations.write",
+  "PUT /integrations/seo/config": "integrations.write",
   "PUT /integrations/cloudflare/config": "integrations.write",
   "PUT /integrations/github/config": "integrations.write",
   "PUT /integrations/firebase/config": "integrations.write",
@@ -62,5 +63,6 @@ export const READ_ROUTE_PERMISSIONS = {
   "GET /mail/aliases": "settings.read",
   "GET /integrations/social/gallery": "integrations.read",
   "GET /integrations/social/config": "integrations.read",
+  "GET /integrations/seo/config": "integrations.read",
   "GET /subscribers": "subscribers.write",
 };

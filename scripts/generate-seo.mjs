@@ -194,6 +194,31 @@ function readSameAsUrls() {
 }
 
 /**
+ * Builds privacy-aligned indexing policy metadata for seo.json (SEO-03).
+ * @return {Object} Indexing policy block consumed by admin SEO dashboard.
+ */
+function buildIndexingPolicy() {
+  const indexing = seoConfig.indexing ?? {};
+  const adminUrls = (indexing.adminUrls ?? [vars.missionControlUrl]).map((url) =>
+    interpolate(String(url), vars).replace(/\/+$/, "")
+  );
+  return {
+    adminNoindex: indexing.adminNoindex !== false,
+    marketingAllow: indexing.marketingAllow !== false,
+    adminUrls: [...new Set(adminUrls.filter(Boolean))],
+    policySummary: interpolate(
+      indexing.policySummary ??
+        "Mission Control admin is excluded from search indexes; the marketing site is indexable.",
+      vars
+    ),
+    sitemapUrl: `${SITE_BASE}/sitemap.xml`,
+    robotsUrl: `${SITE_BASE}/robots.txt`,
+    organizationSchema: true,
+    softwareApplicationSchema: true,
+  };
+}
+
+/**
  * Builds the Schema.org JSON-LD graph for the configured structured data.
  * @return {string} A formatted JSON-LD document containing the Schema.org context and graph.
  */
@@ -410,6 +435,7 @@ const seo = {
   },
   sameAs: readSameAsUrls(),
   structuredData: JSON.parse(buildJsonLd("index", indexMeta)),
+  indexingPolicy: buildIndexingPolicy(),
 };
 
 writeFileSync(join(website, "seo.json"), JSON.stringify(seo, null, 2) + "\n");

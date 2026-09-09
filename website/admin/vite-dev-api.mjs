@@ -37,6 +37,11 @@ import {
   mergeSocialPlatformUpdate,
   sanitizeSocialConfigForClient,
 } from "./functions/api/_shared/social-config.js";
+import {
+  mergeSeoHubUpdate,
+  mergeSeoProviderUpdate,
+  sanitizeSeoConfigForClient,
+} from "./functions/api/_shared/seo-config.js";
 import { listSocialPostPreviews } from "./functions/api/_shared/social-post-templates.js";
 import { runSocialTestMatrix } from "./functions/api/_shared/social-notify.js";
 import {
@@ -195,6 +200,16 @@ const devStore = {
     updatedAt: null,
     updatedBy: null,
   },
+  seoConfig: {
+    googleSearchConsole: { enabled: false, siteUrl: "", serviceAccountJson: "" },
+    bingWebmaster: { enabled: false, siteUrl: "", apiKey: "" },
+    azureWebmaster: { enabled: false, siteUrl: "", apiKey: "" },
+    cloudflareAnalytics: { enabled: false, zoneId: "", apiToken: "", siteUrl: "" },
+    pageSpeedInsights: { enabled: false, apiKey: "", siteUrl: "" },
+    hub: { sitemapUrl: "", robotsNotes: "" },
+    updatedAt: null,
+    updatedBy: null,
+  },
   mailConfig: { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null },
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
@@ -249,6 +264,9 @@ const devKv = {
     if (key === "integrations:social") {
       return JSON.stringify(devStore.socialConfig);
     }
+    if (key === "integrations:seo") {
+      return JSON.stringify(devStore.seoConfig);
+    }
     if (key === "integrations:mail") {
       return JSON.stringify(devStore.mailConfig);
     }
@@ -288,6 +306,9 @@ const devKv = {
     }
     if (key === "integrations:social") {
       devStore.socialConfig = JSON.parse(value);
+    }
+    if (key === "integrations:seo") {
+      devStore.seoConfig = JSON.parse(value);
     }
     if (key === "integrations:mail") {
       devStore.mailConfig = JSON.parse(value);
@@ -357,6 +378,16 @@ export async function resetDevStore() {
     bluesky: { enabled: false, handle: "", appPassword: "" },
     x: { enabled: false, bearerToken: "" },
     linkedin: { enabled: false, accessToken: "", authorUrn: "" },
+    updatedAt: null,
+    updatedBy: null,
+  };
+  devStore.seoConfig = {
+    googleSearchConsole: { enabled: false, siteUrl: "", serviceAccountJson: "" },
+    bingWebmaster: { enabled: false, siteUrl: "", apiKey: "" },
+    azureWebmaster: { enabled: false, siteUrl: "", apiKey: "" },
+    cloudflareAnalytics: { enabled: false, zoneId: "", apiToken: "", siteUrl: "" },
+    pageSpeedInsights: { enabled: false, apiKey: "", siteUrl: "" },
+    hub: { sitemapUrl: "", robotsNotes: "" },
     updatedAt: null,
     updatedBy: null,
   };
@@ -1263,6 +1294,50 @@ export function createDevApiMiddleware() {
           devStore.socialConfig = next;
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ ok: true, config: sanitizeSocialConfigForClient(devStore.socialConfig) }));
+        } catch (err) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/seo/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, config: sanitizeSeoConfigForClient(devStore.seoConfig) }));
+      return;
+    }
+
+    if (url === "/api/integrations/seo/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const section = String(parsed.section ?? "").trim();
+          let next;
+          if (section === "hub") {
+            next = mergeSeoHubUpdate(devStore.seoConfig, parsed);
+          } else {
+            const provider = String(parsed.provider ?? "").trim();
+            if (!provider) {
+              res.statusCode = 400;
+              res.end(
+                JSON.stringify({
+                  error:
+                    "provider is required (googleSearchConsole, bingWebmaster, azureWebmaster, cloudflareAnalytics, pageSpeedInsights) or section=hub",
+                })
+              );
+              return;
+            }
+            next = mergeSeoProviderUpdate(devStore.seoConfig, provider, parsed);
+          }
+          next.updatedAt = new Date().toISOString();
+          next.updatedBy = "dev@local";
+          devStore.seoConfig = next;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeSeoConfigForClient(devStore.seoConfig) }));
         } catch (err) {
           res.statusCode = 400;
           res.setHeader("Content-Type", "application/json");
