@@ -52,6 +52,7 @@ const SETTINGS_TAB_LABELS: Partial<Record<SettingsTabId, string>> = {
   resend: "Resend",
   testmail: "testmail.app",
   discord: "Discord",
+  social: "Social",
   firebase: "Firebase",
   github: "GitHub",
   cloudflare: "Cloudflare",
@@ -81,6 +82,7 @@ export function resolveSectionRefer(target: SectionReferTarget): {
 /** Preset targets used across admin copy. */
 export const SECTION_REFERS = {
   settingsDiscord: { section: "settings", settingsTab: "discord" } satisfies SectionReferTarget,
+  settingsSocial: { section: "settings", settingsTab: "social" } satisfies SectionReferTarget,
   settingsFirebase: { section: "settings", settingsTab: "firebase" } satisfies SectionReferTarget,
   settingsMail: { section: "settings", settingsTab: "mail" } satisfies SectionReferTarget,
   settingsAutomation: { section: "settings", settingsTab: "automation" } satisfies SectionReferTarget,

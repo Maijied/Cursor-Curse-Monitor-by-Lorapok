@@ -4,6 +4,7 @@ import { getMailTransportStatus } from "./_shared/mail.js";
 import { readFirebaseConfig, isCompleteFirebaseConfig } from "./_shared/firebase-config.js";
 import { probeAdminD1 } from "./_shared/d1-admin.js";
 import { readDiscordConfig, sanitizeDiscordConfigForClient } from "./_shared/discord-config.js";
+import { readSocialConfig, sanitizeSocialConfigForClient } from "./_shared/social-config.js";
 import { buildPublicSiteConfig } from "./_shared/subscribe-config.js";
 import {
   readStatsRefreshConfig,
@@ -42,6 +43,7 @@ export async function onRequestGet(context) {
   const adminD1 = await probeAdminD1(env);
   const subscribeSite = await buildPublicSiteConfig(env);
   const discordConfig = sanitizeDiscordConfigForClient(await readDiscordConfig(env));
+  const socialConfig = sanitizeSocialConfigForClient(await readSocialConfig(env));
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
   const discordDigest = sanitizeDiscordDigestConfigForClient(await readDiscordDigestConfig(env));
   const statsR2 = await probeStatsR2(env);
@@ -69,6 +71,8 @@ export async function onRequestGet(context) {
     feedbackDiscordConfigured: discordConfig.feedbackConfigured,
     communityDiscordConfigured: discordConfig.communityConfigured,
     communityDiscordInviteUrl: discordConfig.communityInviteUrl,
+    socialConfigured: socialConfig.configured,
+    socialEnabledCount: socialConfig.enabledCount,
     statsRefreshEnabled: statsRefresh.enabled,
     statsRefreshIntervalMinutes: statsRefresh.intervalMinutes,
     statsRefreshLastRunAt: statsRefresh.lastRunAt,

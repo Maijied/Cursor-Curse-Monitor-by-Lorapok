@@ -34,6 +34,12 @@ import {
   listDiscordGalleryPreviews,
 } from "./functions/api/_shared/discord-card-gallery.js";
 import {
+  mergeSocialPlatformUpdate,
+  sanitizeSocialConfigForClient,
+} from "./functions/api/_shared/social-config.js";
+import { listSocialPostPreviews } from "./functions/api/_shared/social-post-templates.js";
+import { runSocialTestMatrix } from "./functions/api/_shared/social-notify.js";
+import {
   MAIL_GALLERY_ITEMS,
   buildMailGalleryPreview,
   listMailGalleryPreviews,
@@ -180,6 +186,15 @@ const devStore = {
     updatedAt: null,
     updatedBy: null,
   },
+  socialConfig: {
+    telegram: { enabled: false, botToken: "", chatId: "" },
+    mastodon: { enabled: false, instanceUrl: "", accessToken: "" },
+    bluesky: { enabled: false, handle: "", appPassword: "" },
+    x: { enabled: false, bearerToken: "" },
+    linkedin: { enabled: false, accessToken: "", authorUrn: "" },
+    updatedAt: null,
+    updatedBy: null,
+  },
   mailConfig: { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null },
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
@@ -231,6 +246,9 @@ const devKv = {
     if (key === "integrations:discord") {
       return JSON.stringify(devStore.discordConfig);
     }
+    if (key === "integrations:social") {
+      return JSON.stringify(devStore.socialConfig);
+    }
     if (key === "integrations:mail") {
       return JSON.stringify(devStore.mailConfig);
     }
@@ -267,6 +285,9 @@ const devKv = {
     }
     if (key === "integrations:discord") {
       devStore.discordConfig = JSON.parse(value);
+    }
+    if (key === "integrations:social") {
+      devStore.socialConfig = JSON.parse(value);
     }
     if (key === "integrations:mail") {
       devStore.mailConfig = JSON.parse(value);
@@ -327,6 +348,15 @@ export async function resetDevStore() {
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
     communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
+    updatedAt: null,
+    updatedBy: null,
+  };
+  devStore.socialConfig = {
+    telegram: { enabled: false, botToken: "", chatId: "" },
+    mastodon: { enabled: false, instanceUrl: "", accessToken: "" },
+    bluesky: { enabled: false, handle: "", appPassword: "" },
+    x: { enabled: false, bearerToken: "" },
+    linkedin: { enabled: false, accessToken: "", authorUrn: "" },
     updatedAt: null,
     updatedBy: null,
   };
@@ -1183,6 +1213,100 @@ export function createDevApiMiddleware() {
         } catch {
           res.statusCode = 400;
           res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/social/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, config: sanitizeSocialConfigForClient(devStore.socialConfig) }));
+      return;
+    }
+
+    if (url.startsWith("/api/integrations/social/preview") && req.method === "GET") {
+      const templateId = new URL(req.url ?? "", "http://localhost").searchParams.get("template");
+      const previews = listSocialPostPreviews(templateId ?? undefined);
+      if (templateId && previews.length === 0) {
+        res.statusCode = 404;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: "Unknown template id" }));
+        return;
+      }
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          items: listSocialPostPreviews().map((entry) => entry.card),
+          previews,
+          config: sanitizeSocialConfigForClient(devStore.socialConfig),
+        })
+      );
+      return;
+    }
+
+    if (url === "/api/integrations/social/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const platform = String(parsed.platform ?? "").trim();
+          if (!platform) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "platform is required (telegram, mastodon, bluesky, x, linkedin)" }));
+            return;
+          }
+          const next = mergeSocialPlatformUpdate(devStore.socialConfig, platform, parsed);
+          next.updatedAt = new Date().toISOString();
+          next.updatedBy = "dev@local";
+          devStore.socialConfig = next;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeSocialConfigForClient(devStore.socialConfig) }));
+        } catch (err) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/social/test" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const templateId = String(parsed.template ?? "deploy-digest").trim();
+          const dryRun = Boolean(parsed.dryRun);
+          const platform = parsed.platform ? String(parsed.platform).trim() : "all";
+          const platforms =
+            platform && platform !== "all"
+              ? [platform]
+              : ["telegram", "mastodon", "bluesky", "x", "linkedin"];
+          const matrix = await runSocialTestMatrix(devStore.socialConfig, templateId, {
+            platforms,
+            dryRun,
+          });
+          const sent = matrix.results.filter((entry) => entry.ok).length;
+          const skipped = matrix.results.filter((entry) => entry.skipped).length;
+          const failed = matrix.results.filter((entry) => !entry.ok && !entry.skipped).length;
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: failed === 0,
+              dryRun,
+              templateId,
+              text: matrix.text,
+              summary: { sent, skipped, failed, total: matrix.results.length },
+              results: matrix.results,
+            })
+          );
+        } catch (err) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Invalid JSON" }));
         }
       });
       return;
@@ -2606,6 +2730,8 @@ export function createDevApiMiddleware() {
             discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
             feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
             communityDiscordConfigured: Boolean(devStore.discordConfig.communityWebhookUrl),
+            socialConfigured: sanitizeSocialConfigForClient(devStore.socialConfig).configured,
+            socialEnabledCount: sanitizeSocialConfigForClient(devStore.socialConfig).enabledCount,
             siteDataUrl: "/site-data.json",
           }));
         })
@@ -2626,6 +2752,8 @@ export function createDevApiMiddleware() {
             discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
             feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
             communityDiscordConfigured: Boolean(devStore.discordConfig.communityWebhookUrl),
+            socialConfigured: sanitizeSocialConfigForClient(devStore.socialConfig).configured,
+            socialEnabledCount: sanitizeSocialConfigForClient(devStore.socialConfig).enabledCount,
             siteDataUrl: "/site-data.json",
           }));
         });

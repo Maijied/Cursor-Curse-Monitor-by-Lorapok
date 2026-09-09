@@ -529,6 +529,103 @@ export async function notifyDiscordCommunityApi(payload?: { summary?: string }) 
   return data as { ok: boolean; skipped?: boolean };
 }
 
+export type SocialPlatformId = "telegram" | "mastodon" | "bluesky" | "x" | "linkedin";
+
+export type SocialPlatformClientConfig = {
+  enabled: boolean;
+  configured: boolean;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  chatId?: string;
+  botTokenPreview?: string | null;
+  instanceUrl?: string;
+  accessTokenPreview?: string | null;
+  handle?: string;
+  appPasswordPreview?: string | null;
+  bearerTokenPreview?: string | null;
+  authorUrn?: string;
+};
+
+export type SocialConfig = {
+  platforms: Record<SocialPlatformId, SocialPlatformClientConfig>;
+  enabledCount: number;
+  configured: boolean;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export type SocialTemplateCard = {
+  id: string;
+  label: string;
+  description: string;
+};
+
+export type SocialTestResult = {
+  ok: boolean;
+  platform: SocialPlatformId;
+  skipped?: boolean;
+  dryRun?: boolean;
+  error?: string;
+  id?: string | number | null;
+  url?: string | null;
+};
+
+export async function fetchSocialConfigApi() {
+  return apiGet<{ ok: boolean; config: SocialConfig }>("/integrations/social/config");
+}
+
+export async function putSocialConfigApi(
+  platform: SocialPlatformId,
+  payload: Record<string, string | boolean>
+) {
+  const res = await fetch(`${API_BASE}/integrations/social/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify({ platform, ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save social settings");
+  return data as { ok: boolean; config: SocialConfig };
+}
+
+export async function fetchSocialPreviewApi(templateId?: string) {
+  const query = templateId ? `?template=${encodeURIComponent(templateId)}` : "";
+  return apiGet<{
+    ok: boolean;
+    items: SocialTemplateCard[];
+    previews: Array<{ card: SocialTemplateCard; text: string }>;
+    config: SocialConfig;
+  }>(`/integrations/social/preview${query}`);
+}
+
+export async function testSocialMatrixApi(payload: {
+  template?: string;
+  platform?: SocialPlatformId | "all";
+  dryRun?: boolean;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/social/test`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && !data.results) throw new Error(data.error || "Social test failed");
+  return data as {
+    ok: boolean;
+    dryRun: boolean;
+    templateId: string;
+    text: string;
+    summary: { sent: number; skipped: number; failed: number; total: number };
+    results: SocialTestResult[];
+  };
+}
+
 export type SubscribePromptConfig = {
   subscribeModalEnabled: boolean;
   requireMailForSubscribe: boolean;

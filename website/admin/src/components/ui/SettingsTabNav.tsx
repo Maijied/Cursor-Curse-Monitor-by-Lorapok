@@ -8,6 +8,7 @@ export type SettingsTabId =
   | "resend"
   | "testmail"
   | "discord"
+  | "social"
   | "firebase"
   | "github"
   | "cloudflare"
@@ -35,6 +36,7 @@ export function readSettingsTab(): SettingsTabId {
     "resend",
     "testmail",
     "discord",
+    "social",
     "firebase",
     "github",
     "cloudflare",
