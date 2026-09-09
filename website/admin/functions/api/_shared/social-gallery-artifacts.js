@@ -1,0 +1,139 @@
+import { normalizeTag } from "./discord-deploy-context.js";
+import { putKvJsonSafe } from "./kv-put.js";
+import { putStatsR2Text } from "./r2-stats.js";
+
+export const SOCIAL_GALLERY_R2_PREFIX = "social-gallery/";
+export const SOCIAL_GALLERY_SVG_KV_PREFIX = "social-gallery:svg:";
+
+/** Lorapok social card palette (SOCIAL-02). */
+export const SOCIAL_GALLERY_COLORS = {
+  background: "#0b1020",
+  accent: "#7c5cff",
+  accent2: "#4d9fff",
+  text: "#f8fafc",
+  muted: "#94a3b8",
+};
+
+/**
+ * @param {string | null | undefined} tag
+ * @param {string | null | undefined} caption
+ * @param {{ width?: number; height?: number }} [dimensions]
+ */
+export function buildSocialGallerySvg(tag, caption, dimensions = {}) {
+  const width = dimensions.width ?? 1080;
+  const height = dimensions.height ?? 1080;
+  const version = normalizeTag(tag).replace(/^v/i, "") || "release";
+  const lines = String(caption ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+
+  const title = `Cursor Curse Monitor ${version}`;
+  const bodyLines = lines.length > 1 ? lines.slice(1) : lines;
+  const escapedTitle = escapeXml(title);
+  const bodyTspans = bodyLines
+    .slice(0, 4)
+    .map((line, index) => {
+      const y = 360 + index * 42;
+      return `<tspan x="80" y="${y}">${escapeXml(line.replace(/^[-*]\s*/, ""))}</tspan>`;
+    })
+    .join("");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapedTitle}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${SOCIAL_GALLERY_COLORS.background}"/>
+      <stop offset="100%" stop-color="#151b33"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="${SOCIAL_GALLERY_COLORS.accent}"/>
+      <stop offset="100%" stop-color="${SOCIAL_GALLERY_COLORS.accent2}"/>
+    </linearGradient>
+  </defs>
+  <rect width="${width}" height="${height}" rx="48" fill="url(#bg)"/>
+  <rect x="48" y="48" width="${width - 96}" height="8" rx="4" fill="url(#accent)"/>
+  <text x="80" y="180" fill="${SOCIAL_GALLERY_COLORS.text}" font-size="54" font-family="system-ui,Segoe UI,sans-serif" font-weight="700">${escapedTitle}</text>
+  <text x="80" y="250" fill="${SOCIAL_GALLERY_COLORS.muted}" font-size="28" font-family="system-ui,Segoe UI,sans-serif">Lorapok Labs · Mission Control deploy</text>
+  <text fill="${SOCIAL_GALLERY_COLORS.text}" font-size="30" font-family="system-ui,Segoe UI,sans-serif">${bodyTspans}</text>
+  <text x="80" y="${height - 72}" fill="${SOCIAL_GALLERY_COLORS.muted}" font-size="24" font-family="system-ui,Segoe UI,sans-serif">cursor.lorapok.tech</text>
+</svg>`;
+}
+
+/**
+ * @param {string} value
+ */
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} id
+ */
+export function socialGalleryAssetPublicUrl(env, id) {
+  const base = String(env.ADMIN_PUBLIC_URL ?? "https://cursor-dev.lorapok.tech").replace(/\/$/, "");
+  return `${base}/api/integrations/social/gallery/asset?id=${encodeURIComponent(id)}`;
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {{ id: string; tag: string; caption?: string | null }} item
+ */
+export async function writeSocialGalleryArtifact(env, item) {
+  const svg = buildSocialGallerySvg(item.tag, item.caption, { width: 1080, height: 1080 });
+  const r2Key = `${SOCIAL_GALLERY_R2_PREFIX}${normalizeTag(item.tag)}/${item.id}.svg`;
+  const r2Written = await putStatsR2Text(env, r2Key, svg, "image/svg+xml; charset=utf-8");
+
+  if (!r2Written && env.ADMIN_KV?.put) {
+    await putKvJsonSafe(env, `${SOCIAL_GALLERY_SVG_KV_PREFIX}${item.id}`, { svg, tag: item.tag });
+  }
+
+  return {
+    svg,
+    r2Key: r2Written ? r2Key : null,
+    imageUrl: socialGalleryAssetPublicUrl(env, item.id),
+    storage: r2Written ? "r2" : env.ADMIN_KV?.put ? "kv" : "inline",
+  };
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} id
+ */
+export async function readSocialGallerySvg(env, id) {
+  const r2KeyPrefix = SOCIAL_GALLERY_R2_PREFIX;
+  if (env.STATS_R2?.get) {
+    const indexRaw = env.ADMIN_KV?.get ? await env.ADMIN_KV.get(`social-gallery:item:${id}`) : null;
+    if (indexRaw) {
+      try {
+        const item = JSON.parse(indexRaw);
+        const r2Key = `${r2KeyPrefix}${normalizeTag(item.tag)}/${id}.svg`;
+        const obj = await env.STATS_R2.get(r2Key);
+        if (obj) return obj.text();
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+
+  if (env.ADMIN_KV?.get) {
+    const raw = await env.ADMIN_KV.get(`${SOCIAL_GALLERY_SVG_KV_PREFIX}${id}`);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.svg) return parsed.svg;
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+
+  return null;
+}
