@@ -31,6 +31,11 @@ pages:
       - security scanner
       - credential leak
       - Composer 2.5
+      - Lorapok Labs
+      - Cursor Curse Monitor
+      - Open VSX
+      - VS Code Marketplace
+      - Mission Control
     changefreq: weekly
     priority: "1.0"
     ogTitle: "{displayName}"
@@ -62,8 +67,39 @@ pages:
     twitterTitle: Terms of Use — {displayName}
     twitterDescription: Terms of use for Cursor Curse Monitor by Lorapok Labs.
 
+organization:
+  name: Lorapok Labs
+  url: https://lorapok.tech
+  logo: /assets/logo.png
+  sameAs:
+    - https://lorapok.tech
+    - https://github.com/lorapok
+    - https://www.linkedin.com/showcase/lorapok/
+    - https://x.com/LorapokLabs
+    - https://www.reddit.com/r/LorapokLabs/
+    - https://www.instagram.com/lorapoklabs/
+    - https://www.facebook.com/lorapoklabs
+    - https://discord.gg/bp42QAMC6
+
+website:
+  name: "{displayName}"
+  url: "{siteBase}/"
+  description: >-
+    Official marketing site for Cursor Curse Monitor by Lorapok Labs — live usage
+    dashboard, browser extensions, and Mission Control admin.
+
 structuredData:
   graph:
+    - id: organization
+      type: Organization
+      name: Lorapok Labs
+      url: https://lorapok.tech
+      logo: /assets/logo.png
+    - id: website
+      type: WebSite
+      name: "{displayName}"
+      url: "{siteBase}/"
+      publisher: organization
     - id: ide_extension
       type: SoftwareApplication
       name: "{displayName}"
@@ -71,6 +107,7 @@ structuredData:
       operatingSystem: Windows, macOS, Linux
       featureList: Usage dashboard, security scanner, local insights, budget tracking, multi-account switching
       downloadUrl: "{vsixUrl}"
+      publisher: organization
     - id: browser_extension
       type: SoftwareApplication
       name: "{displayName} Browser Extension"
@@ -78,3 +115,4 @@ structuredData:
       operatingSystem: Firefox, Chrome
       featureList: Budget tracker popup, credential paste guard, cursor.com token capture
       downloadUrl: "{firefoxDownloadUrl}"
+      publisher: organization

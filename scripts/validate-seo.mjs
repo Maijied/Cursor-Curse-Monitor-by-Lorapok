@@ -108,6 +108,44 @@ if (!existsSync(seoPath)) {
   if (htmlDesc && seo.description && htmlDesc !== seo.description) {
     fail(`index.html description does not match seo.json`);
   }
+
+  for (const pageKey of ["privacy", "terms"]) {
+    const pageFile = join(website, `${pageKey}.html`);
+    if (!existsSync(pageFile)) continue;
+    const pageHtml = readFileSync(pageFile, "utf8");
+    const expected = seo.pages?.[pageKey];
+    if (!expected) continue;
+    const pageTitle = readTitle(pageHtml);
+    if (pageTitle && expected.title && pageTitle !== expected.title) {
+      fail(`${pageKey}.html title does not match seo.json (run npm run site:seo)`);
+    }
+    const pageDesc = readMeta(pageHtml, "description");
+    if (pageDesc && expected.description && pageDesc !== expected.description) {
+      fail(`${pageKey}.html description does not match seo.json`);
+    }
+    if (!pageHtml.includes("application/ld+json")) {
+      fail(`${pageKey}.html missing JSON-LD block (run npm run site:seo)`);
+    }
+  }
+
+  const graph = seo.structuredData?.["@graph"];
+  if (!Array.isArray(graph)) {
+    fail("seo.json structuredData must include @graph array");
+  } else {
+    const types = graph.map((n) => n["@type"]).filter(Boolean);
+    for (const required of ["Organization", "WebSite", "SoftwareApplication"]) {
+      if (!types.includes(required)) {
+        fail(`seo.json structuredData missing @type ${required}`);
+      }
+    }
+    const org = graph.find((n) => n["@type"] === "Organization");
+    if (!org?.sameAs?.length) fail("seo.json Organization must include sameAs URLs");
+    if (!seo.sameAs?.length) fail("seo.json must include top-level sameAs array");
+  }
+
+  if (!seo.openGraph?.locale) warn("seo.json missing openGraph.locale");
+  if (!seo.marketplaces?.firefox) warn("seo.json missing marketplaces.firefox URL");
+  if (!seo.marketplaces?.missionControl) warn("seo.json missing marketplaces.missionControl URL");
 }
 
 const robotsPath = join(website, "robots.txt");

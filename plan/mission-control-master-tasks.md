@@ -2,8 +2,7 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-09 (SOCIAL-01 social webhooks; MAIL-13/14 on main)
-**Last updated:** 2026-09-09 (DC-06 Discord product cards; MAIL-13/14 on main)
+**Last updated:** 2026-09-09 (SEO-01 world-class SEO core; SOCIAL-02/03 PR #257 ready)
 **Branch:** `main` @ `9906c292`
 **CI:** Production Deployment triggered on merge (2026-09-09T03:35Z)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
@@ -299,7 +298,7 @@ _None — pick from **Recommended next queue** below._
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| SEO-01 | **World-class SEO core** — JSON-LD, canonical URLs, Lorapok Labs + all product links in meta/alt/semantic HTML; `seo.json` pipeline | **next** | `npm run site:seo`; repeat ecosystem keywords naturally |
+| SEO-01 | **World-class SEO core** — JSON-LD, canonical URLs, Lorapok Labs + all product links in meta/alt/semantic HTML; `seo.json` pipeline | **done** | Organization/WebSite/sameAs JSON-LD; og:locale; full marketplaces manifest |
 | SEO-02 | **SEO admin hub** — Google Search Console, Cloudflare, Azure Webmaster, Bing; sitemap, robots, Core Web Vitals — all configurable in Settings | **next** | new Settings tab or Services card; cred vault for tokens |
 | SEO-03 | **SEO policy & compliance** — privacy-aligned indexing rules, noindex admin, structured `Organization` + `SoftwareApplication` schema | **next** | `LEGAL-01` alignment; Lorapok cross-links in hidden/aria where appropriate |
 
@@ -382,19 +381,11 @@ _None — pick from **Recommended next queue** below._
 
 ## Recommended **next** queue (priority order)
 
-1. **DC-06** — Lorapok Discord product cards (PR #254)
-2. **SOCIAL-02–03** — Deploy social gallery + one-click multi-channel publish (SOCIAL-01 done in this PR)
-3. **SEO-01–03** — World-class SEO + admin hub + policies
-4. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
-5. **WEB-11** — Engineering history timeline page
-6. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-7. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
-1. **SOCIAL-01–03** — Multi-platform webhooks (PR #255) + deploy gallery + one-click publish
-2. **SEO-01–03** — World-class SEO + admin hub + policies
+1. **SEO-02–03** — SEO admin hub + indexing policies
+2. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator (SOCIAL-02/03 in PR #257)
 3. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
 4. **WEB-11** — Engineering history timeline page
-5. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-6. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
 
