@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import {
   loadFirebaseServiceAccountFromVault,
 } from "./lib/cred-vault-sync.mjs";
+import { formatDeployFailure, stripAnsi } from "./lib/firebase-deploy-failure.mjs";
 import { resolveLocalMailEnvAsync } from "./lib/resolve-local-mail-env.mjs";
 import { pickDeployAuth, wranglerDeployEnv } from "./lib/mail-credentials.mjs";
 
@@ -59,26 +60,11 @@ function putPagesSecret(name, value, wranglerEnv) {
   }
 }
 
-function formatDeployFailure(stdout, stderr) {
-  const combined = [stdout, stderr].filter(Boolean).join("\n").trim();
-  if (!combined) return "";
-
-  const lines = combined.split(/\r?\n/);
-  const signal = lines.find((line) =>
-    /error|failed|authentication|permission|denied|invalid|ENOENT/i.test(line) &&
-    !/^npm warn/i.test(line)
-  );
-  if (signal) return signal.trim();
-
-  const filtered = lines.filter(
-    (line) =>
-      line.trim() &&
-      !/^npm warn/i.test(line) &&
-      !/deprecated glob@/i.test(line) &&
-      !/update to uuid@latest/i.test(line)
-  );
-  const tail = filtered.slice(-8).join("\n").trim();
-  return tail || combined.slice(-800);
+function formatDeployFailureHint(detail) {
+  if (/403|permission|denied/i.test(detail)) {
+    return " Grant firebase-adminsdk service account Firebase Rules Admin (or Firebase Admin) on project cursor-curse-by-lorapok.";
+  }
+  return "";
 }
 
 function deployFirestoreRules(serviceAccountJson) {
@@ -87,29 +73,43 @@ function deployFirestoreRules(serviceAccountJson) {
     String(parsed.project_id ?? process.env.FIREBASE_PROJECT_ID ?? "cursor-curse-by-lorapok").trim();
   const dir = mkdtempSync(join(tmpdir(), "firebase-sa-"));
   const keyPath = join(dir, "service-account.json");
-  writeFileSync(keyPath, serviceAccountJson, { mode: 0o600 });
+  writeFileSync(keyPath, JSON.stringify(parsed), { mode: 0o600 });
   const env = {
     ...process.env,
     GOOGLE_APPLICATION_CREDENTIALS: keyPath,
+    FIREBASE_PROJECT_ID: projectId,
     CI: process.env.CI ?? "true",
   };
+  const args = [
+    "deploy",
+    "--only",
+    "firestore:rules",
+    "--project",
+    projectId,
+    "--non-interactive",
+  ];
+  if (process.env.CI === "true") {
+    args.push("--debug");
+  }
   try {
     const firebaseBin = join(adminDir, "node_modules", ".bin", "firebase");
-    const result = spawnSync(
-      firebaseBin,
-      [
-        "deploy",
-        "--only",
-        "firestore:rules",
-        "--project",
-        projectId,
-        "--non-interactive",
-      ],
-      { cwd: adminDir, env, encoding: "utf8" }
-    );
+    const result = spawnSync(firebaseBin, args, {
+      cwd: adminDir,
+      env,
+      encoding: "utf8",
+      maxBuffer: 10 * 1024 * 1024,
+    });
     if (result.status !== 0) {
+      const combined = stripAnsi([result.stdout, result.stderr].filter(Boolean).join("\n")).trim();
+      if (combined) {
+        console.error("::group::Firebase deploy firestore:rules output");
+        console.error(combined);
+        console.error("::endgroup::");
+      }
       const detail = formatDeployFailure(result.stdout, result.stderr);
-      throw new Error(`firebase deploy firestore:rules failed${detail ? `: ${detail}` : ""}`);
+      throw new Error(
+        `firebase deploy firestore:rules failed${detail ? `: ${detail}` : ""}${formatDeployFailureHint(detail)}`
+      );
     }
     console.log(`Firestore rules deployed (project: ${projectId})`);
   } finally {

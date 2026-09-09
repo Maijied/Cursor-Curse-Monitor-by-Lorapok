@@ -599,7 +599,11 @@ jobs:
             echo "DISCORD_DEPLOYMENT_WEBHOOK=${FB_DISCORD_DEPLOYMENT_WEBHOOK}" >> "$GITHUB_ENV"
           fi
           if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ] && [ -n "${FB_FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
-            echo "FIREBASE_SERVICE_ACCOUNT_JSON=${FB_FIREBASE_SERVICE_ACCOUNT_JSON}" >> "$GITHUB_ENV"
+            {
+              echo "FIREBASE_SERVICE_ACCOUNT_JSON<<EOF"
+              echo "${FB_FIREBASE_SERVICE_ACCOUNT_JSON}"
+              echo "EOF"
+            } >> "$GITHUB_ENV"
           fi
 
       - name: Check Cloudflare secrets
@@ -1460,7 +1464,11 @@ jobs:
             echo "DISCORD_DEPLOYMENT_WEBHOOK=${FB_DISCORD_DEPLOYMENT_WEBHOOK}" >> "$GITHUB_ENV"
           fi
           if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ] && [ -n "${FB_FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
-            echo "FIREBASE_SERVICE_ACCOUNT_JSON=${FB_FIREBASE_SERVICE_ACCOUNT_JSON}" >> "$GITHUB_ENV"
+            {
+              echo "FIREBASE_SERVICE_ACCOUNT_JSON<<EOF"
+              echo "${FB_FIREBASE_SERVICE_ACCOUNT_JSON}"
+              echo "EOF"
+            } >> "$GITHUB_ENV"
           fi
           if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${FB_API_TOKEN:-}" ]; then
             echo "CLOUDFLARE_API_TOKEN=${FB_API_TOKEN}" >> "$GITHUB_ENV"
