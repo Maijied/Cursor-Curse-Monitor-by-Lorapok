@@ -8,9 +8,9 @@ import {
   normalizeTag,
 } from "./discord-deploy-context.js";
 import {
-  buildDeploymentEmbed,
-  buildDeploymentEmbeds,
-} from "./discord-notify.js";
+  buildDiscordDigestEmbed,
+  buildDiscordDigestEmbeds,
+} from "./discord-product-cards.js";
 import { recordCronJobRun } from "./cron-schedule.js";
 import {
   DISCORD_DIGEST_CONFIG_KEY,
@@ -120,9 +120,8 @@ export async function runDiscordDigest(env, options = {}) {
     triggeredBy: options.triggeredBy ?? "cron",
   };
 
-  const primary = buildDeploymentEmbed(payload, enrichment);
-  primary.title = "📊 Download & update digest";
-  const embeds = buildDeploymentEmbeds(payload, enrichment);
+  const embeds = buildDiscordDigestEmbeds(payload, enrichment, enrichment?.catalogBrand);
+  const primary = buildDiscordDigestEmbed(payload, enrichment, enrichment?.catalogBrand);
   embeds[0] = primary;
 
   const branding = enrichment?.catalogBrand ?? {};
