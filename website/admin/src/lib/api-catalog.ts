@@ -101,6 +101,8 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "social-gallery-generate", path: "/integrations/social/gallery/generate", method: "POST", auth: "admin", group: "Integrations", description: "Generate Lorapok social gallery asset" },
   { id: "social-gallery-publish", path: "/integrations/social/gallery/publish", method: "POST", auth: "admin", group: "Integrations", description: "One-click multi-channel social publish (SOCIAL-03)" },
   { id: "social-gallery-asset", path: "/integrations/social/gallery/asset", method: "GET", auth: "public", group: "Integrations", description: "Public SVG asset for social platforms", safeProbe: true },
+  { id: "social-ai-config", path: "/integrations/social/ai/config", method: "GET", auth: "admin", group: "Integrations", description: "AI image provider registry + video generator (SOCIAL-04/05)", safeProbe: true },
+  { id: "social-ai-config-save", path: "/integrations/social/ai/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save active AI image provider or video settings" },
   { id: "social-gallery-queue", path: "/integrations/social/gallery/queue", method: "POST", auth: "cron", group: "Integrations", description: "Queue deploy social-gallery job from CI or admin (CRON_SECRET or integrations.write)" },
   { id: "social-config", path: "/integrations/social/config", method: "GET", auth: "admin", group: "Integrations", description: "Multi-platform social webhook settings (SOCIAL-01)", safeProbe: true },
   { id: "social-config-put", path: "/integrations/social/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save Telegram, Mastodon, Bluesky, X, or LinkedIn settings" },

@@ -1,4 +1,5 @@
 import { writeSocialGalleryArtifact } from "./social-gallery-artifacts.js";
+import { generateSocialGalleryImage, generateSocialVideoManifest } from "./social-ai-generate.js";
 import {
   readSocialGalleryItem,
   updateSocialGalleryItem,
@@ -25,12 +26,31 @@ export async function processSocialGalleryJob(env, id) {
   await updateSocialGalleryItem(env, id, { status: "generating", error: null });
 
   try {
-    const artifact = await writeSocialGalleryArtifact(env, item);
+    const imageResult = await generateSocialGalleryImage(env, {
+      tag: item.tag,
+      caption: item.caption,
+      aspectRatio: "1:1",
+    });
+    const videoManifest = await generateSocialVideoManifest(env, {
+      tag: item.tag,
+      caption: item.caption,
+    });
+    const artifact = await writeSocialGalleryArtifact(env, item, {
+      bytes: imageResult.bytes ?? null,
+      svg: imageResult.svg ?? null,
+      contentType: imageResult.contentType,
+      providerId: imageResult.providerId,
+      imageFallback: Boolean(imageResult.fallback),
+      videoManifest,
+    });
     const next = await updateSocialGalleryItem(env, id, {
       status: "ready",
       imageUrl: artifact.imageUrl,
       storage: artifact.storage,
       r2Key: artifact.r2Key,
+      imageProviderId: artifact.providerId ?? null,
+      imageFallback: Boolean(artifact.imageFallback),
+      videoManifest: artifact.videoManifest ?? null,
       error: null,
     });
     return { ok: true, item: next };
