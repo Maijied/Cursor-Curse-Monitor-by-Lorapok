@@ -699,6 +699,73 @@ export async function putSeoConfigApi(payload: {
   return data as { ok: boolean; config: SeoConfig };
 }
 
+export type SocialImageProviderId =
+  | "svg-fallback"
+  | "pollinations"
+  | "huggingface"
+  | "openai"
+  | string;
+
+export type SocialAiProviderClient = {
+  id: SocialImageProviderId;
+  label: string;
+  tier: "free" | "paid" | string;
+  builtin: boolean;
+  type: string;
+  model: string;
+  promptPrefix: string;
+  active: boolean;
+  configured: boolean;
+  apiKeyPreview: string | null;
+};
+
+export type SocialAiVideoClient = {
+  enabled: boolean;
+  template: string;
+  aspectRatio: string;
+  voiceoverEnabled: boolean;
+  fallbackMode: string;
+  configured: boolean;
+};
+
+export type SocialAiConfig = {
+  activeProviderId: SocialImageProviderId;
+  providers: SocialAiProviderClient[];
+  video: SocialAiVideoClient;
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
+export async function fetchSocialAiConfigApi() {
+  return apiGet<{ ok: boolean; config: SocialAiConfig }>("/integrations/social/ai/config");
+}
+
+export async function putSocialAiConfigApi(payload: {
+  providerId?: SocialImageProviderId;
+  section?: "video";
+  activate?: boolean;
+  enabled?: boolean;
+  template?: string;
+  aspectRatio?: string;
+  voiceoverEnabled?: boolean;
+  activeProviderId?: SocialImageProviderId;
+  model?: string;
+  promptPrefix?: string;
+  apiKey?: string;
+}) {
+  const res = await fetch(`${API_BASE}/integrations/social/ai/config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to save AI settings");
+  return data as { ok: boolean; config: SocialAiConfig };
+}
+
 export type SocialGalleryItem = {
   id: string;
   tag: string;
@@ -706,6 +773,9 @@ export type SocialGalleryItem = {
   caption: string;
   hashtags?: string | null;
   imageUrl?: string | null;
+  imageProviderId?: string | null;
+  imageFallback?: boolean;
+  videoManifest?: Record<string, unknown> | null;
   changelogExcerpt?: string | null;
   runUrl?: string | null;
   error?: string | null;

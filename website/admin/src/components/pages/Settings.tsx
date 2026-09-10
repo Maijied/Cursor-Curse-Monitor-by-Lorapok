@@ -10,6 +10,7 @@ import DiscordCardGallery from "../ui/DiscordCardGallery";
 import SocialIntegrationsCard from "../ui/SocialIntegrationsCard";
 import SeoIntegrationsCard from "../ui/SeoIntegrationsCard";
 import SocialGallery from "../ui/SocialGallery";
+import SocialAiConfigCard from "../ui/SocialAiConfigCard";
 import MailSetupChecklist from "../ui/MailSetupChecklist";
 import MailTransportCard from "../ui/MailTransportCard";
 import SubscribePromptCard from "../ui/SubscribePromptCard";
@@ -312,6 +313,7 @@ export default function Settings() {
             Multi-platform Lorapok captions for Telegram, Mastodon, Bluesky, X, and LinkedIn — with test-send matrix.
           </p>
           <SocialGallery />
+          <SocialAiConfigCard />
           <SocialIntegrationsCard />
         </>
       )}

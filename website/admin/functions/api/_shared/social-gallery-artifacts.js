@@ -86,17 +86,85 @@ export function socialGalleryAssetPublicUrl(env, id) {
  * @param {Record<string, unknown>} env
  * @param {{ id: string; tag: string; caption?: string | null }} item
  */
-export async function writeSocialGalleryArtifact(env, item) {
-  const svg = buildSocialGallerySvg(item.tag, item.caption, { width: 1080, height: 1080 });
-  const r2Key = `${SOCIAL_GALLERY_R2_PREFIX}${normalizeTag(item.tag)}/${item.id}.svg`;
-  const r2Written = await putStatsR2Text(env, r2Key, svg, "image/svg+xml; charset=utf-8");
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} key
+ * @param {ArrayBuffer | string} body
+ * @param {string} contentType
+ */
+async function putGalleryR2Asset(env, key, body, contentType) {
+  const bucket = env?.STATS_R2;
+  if (!bucket?.put) return false;
+  try {
+    await bucket.put(key, body, { httpMetadata: { contentType } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ * @param {{ id: string; tag: string; caption?: string | null }} item
+ * @param {{
+ *   bytes?: ArrayBuffer | null;
+ *   svg?: string | null;
+ *   contentType?: string;
+ *   providerId?: string | null;
+ *   imageFallback?: boolean;
+ *   videoManifest?: Record<string, unknown> | null;
+ * }} [generated]
+ */
+export async function writeSocialGalleryArtifact(env, item, generated = {}) {
+  let svg = generated.svg ?? null;
+  let contentType = generated.contentType ?? "image/svg+xml; charset=utf-8";
+  let extension = contentType.includes("svg") ? "svg" : "png";
+  let r2Body = generated.bytes ?? svg;
+
+  if (!r2Body) {
+    svg = buildSocialGallerySvg(item.tag, item.caption, { width: 1080, height: 1080 });
+    contentType = "image/svg+xml; charset=utf-8";
+    extension = "svg";
+    r2Body = svg;
+  }
+
+  const videoManifest = generated.videoManifest ?? null;
+
+  const r2Key = `${SOCIAL_GALLERY_R2_PREFIX}${normalizeTag(item.tag)}/${item.id}.${extension}`;
+  const r2Written = await putGalleryR2Asset(env, r2Key, r2Body, contentType);
 
   if (!r2Written && env.ADMIN_KV?.put) {
-    await putKvJsonSafe(env, `${SOCIAL_GALLERY_SVG_KV_PREFIX}${item.id}`, { svg, tag: item.tag });
+    if (generated.bytes && r2Body) {
+      const bytes = new Uint8Array(generated.bytes);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i += 1) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      await putKvJsonSafe(env, `${SOCIAL_GALLERY_SVG_KV_PREFIX}${item.id}`, {
+        base64: btoa(binary),
+        contentType,
+        tag: item.tag,
+        providerId: generated.providerId,
+      });
+    } else {
+      await putKvJsonSafe(env, `${SOCIAL_GALLERY_SVG_KV_PREFIX}${item.id}`, {
+        svg,
+        contentType,
+        tag: item.tag,
+        providerId: generated.providerId,
+      });
+    }
+    if (videoManifest?.enabled) {
+      await putKvJsonSafe(env, `social-gallery:video:${item.id}`, videoManifest);
+    }
   }
 
   return {
     svg,
+    contentType,
+    providerId: generated.providerId ?? "svg-fallback",
+    imageFallback: Boolean(generated.imageFallback),
+    videoManifest,
     r2Key: r2Written ? r2Key : null,
     imageUrl: socialGalleryAssetPublicUrl(env, item.id),
     storage: r2Written ? "r2" : env.ADMIN_KV?.put ? "kv" : "inline",
@@ -107,6 +175,29 @@ export async function writeSocialGalleryArtifact(env, item) {
  * @param {Record<string, unknown>} env
  * @param {string} id
  */
+/**
+ * @param {Record<string, unknown>} env
+ * @param {string} id
+ */
+export async function readSocialGalleryAssetMeta(env, id) {
+  if (env.ADMIN_KV?.get) {
+    const raw = await env.ADMIN_KV.get(`${SOCIAL_GALLERY_SVG_KV_PREFIX}${id}`);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        return {
+          contentType: parsed.contentType ?? "image/svg+xml; charset=utf-8",
+          svg: parsed.svg ?? null,
+          base64: parsed.base64 ?? null,
+        };
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+  return null;
+}
+
 export async function readSocialGallerySvg(env, id) {
   const r2KeyPrefix = SOCIAL_GALLERY_R2_PREFIX;
   if (env.STATS_R2?.get) {
@@ -114,26 +205,21 @@ export async function readSocialGallerySvg(env, id) {
     if (indexRaw) {
       try {
         const item = JSON.parse(indexRaw);
-        const r2Key = `${r2KeyPrefix}${normalizeTag(item.tag)}/${id}.svg`;
-        const obj = await env.STATS_R2.get(r2Key);
-        if (obj) return obj.text();
+        for (const extension of ["svg", "png", "jpg", "jpeg", "webp"]) {
+          const r2Key = `${r2KeyPrefix}${normalizeTag(item.tag)}/${id}.${extension}`;
+          const obj = await env.STATS_R2.get(r2Key);
+          if (obj) {
+            const contentType = obj.httpMetadata?.contentType ?? "";
+            if (contentType.includes("svg")) return obj.text();
+          }
+        }
       } catch {
         /* fall through */
       }
     }
   }
 
-  if (env.ADMIN_KV?.get) {
-    const raw = await env.ADMIN_KV.get(`${SOCIAL_GALLERY_SVG_KV_PREFIX}${id}`);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed.svg) return parsed.svg;
-      } catch {
-        /* fall through */
-      }
-    }
-  }
-
+  const meta = await readSocialGalleryAssetMeta(env, id);
+  if (meta?.svg) return meta.svg;
   return null;
 }

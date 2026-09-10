@@ -42,6 +42,10 @@ import {
   mergeSeoProviderUpdate,
   sanitizeSeoConfigForClient,
 } from "./functions/api/_shared/seo-config.js";
+import {
+  mergeSocialAiConfigUpdate,
+  sanitizeSocialAiConfigForClient,
+} from "./functions/api/_shared/social-ai-config.js";
 import { listSocialPostPreviews } from "./functions/api/_shared/social-post-templates.js";
 import { runSocialTestMatrix } from "./functions/api/_shared/social-notify.js";
 import {
@@ -210,6 +214,57 @@ const devStore = {
     updatedAt: null,
     updatedBy: null,
   },
+  socialAiConfig: {
+    activeProviderId: "svg-fallback",
+    providers: {
+      "svg-fallback": {
+        id: "svg-fallback",
+        label: "SVG template (built-in)",
+        tier: "free",
+        apiKey: "",
+        model: "",
+        promptPrefix: "Lorapok Labs futuristic deploy card, purple and blue gradient, minimal UI, no text",
+        enabled: true,
+      },
+      pollinations: {
+        id: "pollinations",
+        label: "Pollinations.ai (free)",
+        tier: "free",
+        apiKey: "",
+        model: "flux",
+        promptPrefix: "Lorapok Labs futuristic deploy card, purple and blue gradient, minimal UI, no text",
+        enabled: false,
+      },
+      huggingface: {
+        id: "huggingface",
+        label: "Hugging Face Inference",
+        tier: "paid",
+        apiKey: "",
+        model: "stabilityai/stable-diffusion-xl-base-1.0",
+        promptPrefix: "Lorapok Labs futuristic deploy card, purple and blue gradient, minimal UI, no text",
+        enabled: false,
+      },
+      openai: {
+        id: "openai",
+        label: "OpenAI DALL·E",
+        tier: "paid",
+        apiKey: "",
+        model: "dall-e-3",
+        promptPrefix: "Lorapok Labs futuristic deploy card, purple and blue gradient, minimal UI, no text",
+        enabled: false,
+      },
+    },
+    customProviders: [],
+    video: {
+      enabled: false,
+      template: "carousel",
+      aspectRatio: "9:16",
+      voiceoverEnabled: false,
+      fallbackMode: "static-carousel",
+    },
+    updatedAt: null,
+    updatedBy: null,
+  },
   mailConfig: { ...DEFAULT_MAIL_CONFIG, updatedAt: null, updatedBy: null },
   statsRefreshConfig: { ...DEFAULT_STATS_REFRESH_CONFIG },
   discordDigestConfig: { ...DEFAULT_DISCORD_DIGEST_CONFIG },
@@ -267,6 +322,9 @@ const devKv = {
     if (key === "integrations:seo") {
       return JSON.stringify(devStore.seoConfig);
     }
+    if (key === "integrations:social-ai") {
+      return JSON.stringify(devStore.socialAiConfig);
+    }
     if (key === "integrations:mail") {
       return JSON.stringify(devStore.mailConfig);
     }
@@ -309,6 +367,9 @@ const devKv = {
     }
     if (key === "integrations:seo") {
       devStore.seoConfig = JSON.parse(value);
+    }
+    if (key === "integrations:social-ai") {
+      devStore.socialAiConfig = JSON.parse(value);
     }
     if (key === "integrations:mail") {
       devStore.mailConfig = JSON.parse(value);
@@ -388,6 +449,20 @@ export async function resetDevStore() {
     cloudflareAnalytics: { enabled: false, zoneId: "", apiToken: "", siteUrl: "" },
     pageSpeedInsights: { enabled: false, apiKey: "", siteUrl: "" },
     hub: { sitemapUrl: "", robotsNotes: "" },
+    updatedAt: null,
+    updatedBy: null,
+  };
+  devStore.socialAiConfig = {
+    activeProviderId: "svg-fallback",
+    providers: devStore.socialAiConfig.providers,
+    customProviders: [],
+    video: {
+      enabled: false,
+      template: "carousel",
+      aspectRatio: "9:16",
+      voiceoverEnabled: false,
+      fallbackMode: "static-carousel",
+    },
     updatedAt: null,
     updatedBy: null,
   };
@@ -1338,6 +1413,33 @@ export function createDevApiMiddleware() {
           devStore.seoConfig = next;
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ ok: true, config: sanitizeSeoConfigForClient(devStore.seoConfig) }));
+        } catch (err) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    if (url === "/api/integrations/social/ai/config" && req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, config: sanitizeSocialAiConfigForClient(devStore.socialAiConfig) }));
+      return;
+    }
+
+    if (url === "/api/integrations/social/ai/config" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const next = mergeSocialAiConfigUpdate(devStore.socialAiConfig, parsed);
+          next.updatedAt = new Date().toISOString();
+          next.updatedBy = "dev@local";
+          devStore.socialAiConfig = next;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, config: sanitizeSocialAiConfigForClient(devStore.socialAiConfig) }));
         } catch (err) {
           res.statusCode = 400;
           res.setHeader("Content-Type", "application/json");

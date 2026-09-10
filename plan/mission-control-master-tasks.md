@@ -312,8 +312,8 @@
 | SOCIAL-01 | **Multi-platform webhooks** — Discord + X/LinkedIn/Mastodon/Bluesky/Telegram (where API allows); Lorapok card templates like DC-06 | **done** | Settings → Social; KV `integrations:social`; test-send matrix |
 | SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **done** | SVG assets + R2/KV; Settings → Social gallery; DEPLOY-03 auto-generate |
 | SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **done** | Publish all channels + dry-run; Telegram photo; text+URL fallback |
-| SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **next** | Settings; cred vault keys; Chrysalis/SOCIAL-02 consumer |
-| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **next** | configurable; falls back to static carousel |
+| SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **done** | Settings → Social → AI image & video; KV `integrations:social-ai`; gallery uses active provider |
+| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **partial** | Carousel manifest + aspect ratio; MP4/voiceover deferred — static frame fallback |
 
 ---
 
@@ -382,8 +382,8 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **SOCIAL-04 / SOCIAL-05** — AI image providers + video generator
-2. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+1. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
 3. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
