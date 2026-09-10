@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-09 (PR #259 CI green run `34326166651`)
-**Branch:** `cursor/seo-admin-hub-773e` @ `5788b46c`
-**CI:** PR #259 ✅ all PR gates green (Root, Browser, Admin, Test Summary). Deploy/SEO jobs skip on PR — run on **main merge**.
-**Main:** `5457cc8d` (PR #258); last main deploy green run `34318903801`
+**Last updated:** 2026-09-11 (Update? snapshot)
+**Branch:** `main` @ `a64d8bf0`
+**Main:** `a64d8bf0` (PR #259 SEO-02/03 merged)
+**CI:** PR #252 + #259 merged green; Dashboard vitest 5/5 local
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -21,7 +21,7 @@
 
 ## Epic in progress
 
-**PR #259** — SEO-02/03 admin hub + indexing policy — **CI green**, ready to merge.
+**Mission Control polish (#126)** — ADMIN-05 done (PR #252 merged 2026-09-08); PR #259 on main. Pick from **next** queue below.
 
 ---
 
