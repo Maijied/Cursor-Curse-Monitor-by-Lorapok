@@ -21,8 +21,8 @@ SOCIAL-04-05 AI image video
 - [x] Plan approved (master registry SOCIAL-04/05)
 - [x] Procedure + GitHub issues linked (#216, #217)
 - [x] Implementation started
-- [ ] Tests passing
-- [ ] PR opened
+- [x] Tests passing (social-ai-config/generate/processor + social-ai-api vitest)
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
