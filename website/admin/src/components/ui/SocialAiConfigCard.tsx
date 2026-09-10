@@ -117,23 +117,32 @@ export default function SocialAiConfigCard() {
 
   if (loading) {
     return (
-      <Card title="AI image & video" icon={Sparkles}>
+      <Card>
         <LorapokLarvaeLoader label="Loading AI provider settings…" />
       </Card>
     );
   }
 
   return (
-    <Card title="AI image & video" icon={Sparkles}>
-      <p className="text-sm text-[var(--color-muted)] mb-4">
-        Register AI image providers (SOCIAL-04) — exactly one active at a time. Optional short-form video carousel
-        manifest for Reels/Stories (SOCIAL-05); falls back to static frames when MP4 encoding is unavailable.
-      </p>
+    <Card>
+      <div className="mb-4">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Sparkles size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
+          AI image & video
+        </h3>
+        <p className="text-sm text-[var(--color-muted)] mt-1">
+          Register AI image providers (SOCIAL-04) — exactly one active at a time. Optional short-form video carousel
+          manifest for Reels/Stories (SOCIAL-05); falls back to static frames when MP4 encoding is unavailable.
+        </p>
+      </div>
 
       {message && (
-        <Notification type={message.type} className="mb-4" onDismiss={() => setMessage(null)}>
-          {message.text}
-        </Notification>
+        <Notification
+          tone={message.type === "success" ? "success" : "error"}
+          message={message.text}
+          className="mb-4"
+          onDismiss={() => setMessage(null)}
+        />
       )}
 
       <div className="space-y-6">
@@ -157,9 +166,9 @@ export default function SocialAiConfigCard() {
               >
                 {provider.label}
                 {provider.active && (
-                  <Badge variant="success" className="ml-2 text-[10px]">active</Badge>
+                  <Badge variant="synced" className="ml-2 text-[10px]">active</Badge>
                 )}
-                <Badge variant={provider.tier === "free" ? "info" : "warning"} className="ml-1 text-[10px]">
+                <Badge variant={provider.tier === "free" ? "neutral" : "warn"} className="ml-1 text-[10px]">
                   {provider.tier}
                 </Badge>
               </button>
