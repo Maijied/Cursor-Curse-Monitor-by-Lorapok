@@ -22,7 +22,7 @@ Remove redundant KPIs between Overview, Connected Services, and Infrastructure n
 - [x] Implementation started
 - [x] Tests passing (Overview, ConnectedServicesCard, Dashboard — 7/7)
 - [x] PR opened
-- [ ] Review triaged
+- [x] Review triaged (cloud autopilot 2026-09-08 — 0 threads)
 - [ ] Merged
 - [ ] Post-merge verification
 
@@ -49,7 +49,7 @@ _None._
 | Tier | Check | Result |
 |------|-------|--------|
 | A | Headless tests | pass (7/7 focused) |
-| B | Component matrix | pending CI |
+| B | Component matrix | pass (Admin/Browser/Root CI green) |
 | C | Production smoke | pending post-merge |
 
 ---
