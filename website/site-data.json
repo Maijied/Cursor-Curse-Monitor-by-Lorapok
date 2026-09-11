@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-06T21:48:01.639Z",
+  "generatedAt": "2026-09-11T16:25:51.320Z",
   "assets": {
-    "buildId": "e07ed40add38",
+    "buildId": "3778426e8d4a",
     "cachePolicy": "static-assets-query-bust"
   },
   "displayName": "Cursor Curse Monitor by Lorapok",
   "description": "Live Cursor usage dashboard — included quota, Auto/API meters, local insights, budget, billing cycle, and free-fallback model switching. A Lorapok Labs product. Also available on VS Code Marketplace, Firefox Add-ons, Chrome (zip), and GitHub Releases.",
-  "version": "1.0.132",
-  "packageVersion": "1.0.132",
-  "publishedReleaseVersion": "1.0.132",
+  "version": "1.0.165",
+  "packageVersion": "1.0.165",
+  "publishedReleaseVersion": "1.0.165",
   "releaseStatus": "published",
   "syncStatus": "synced",
   "ovsxPublisher": "lorapok-labs",
@@ -38,10 +38,10 @@
     "adminUrl": "https://cursor-dev.lorapok.tech"
   },
   "productContext": {
-    "version": "1.0.132",
+    "version": "1.0.165",
     "packageVersion": "0.0.0",
-    "releaseVersion": "1.0.132",
-    "publishedReleaseVersion": "1.0.132",
+    "releaseVersion": "1.0.165",
+    "publishedReleaseVersion": "1.0.165",
     "displayName": "Cursor Curse Monitor by Lorapok",
     "homepage": "https://cursor.lorapok.tech",
     "mainLogoUrl": "https://cursor.lorapok.tech/assets/logo.png",
@@ -52,7 +52,7 @@
     "website": "https://lorapok.tech",
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
-    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.132",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.165",
     "latestReleaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest",
     "firefoxUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
     "ovsxUrl": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
@@ -67,13 +67,13 @@
     "enabled": false,
     "type": "feature",
     "severity": "info",
-    "title": "What's new in Cursor Curse Monitor v1.0.132",
+    "title": "What's new in Cursor Curse Monitor v1.0.165",
     "shortMessage": "• Browser account switch stays on your chosen login when cursor.com refreshes cookies",
-    "message": "Cursor Curse Monitor v1.0.132 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.132\n\n• Browser account switch stays on your chosen login when cursor.com refreshes cookies\n• External subscribe mail uses Resend on Workers Free when configured\n• Usage accuracy, Discord community links, and marketing site polish",
+    "message": "Cursor Curse Monitor v1.0.165 is rolling out across Open VSX, VS Code Marketplace, Firefox AMO, and GitHub Releases.\n\nUpdate: https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.165\n\n• Browser account switch stays on your chosen login when cursor.com refreshes cookies\n• External subscribe mail uses Resend on Workers Free when configured\n• Usage accuracy, Discord community links, and marketing site polish",
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-09-06T21:48:01.639Z"
+    "updatedAt": "2026-09-11T16:25:51.320Z"
   },
   "noticeTemplates": [
     {
@@ -99,14 +99,14 @@
     },
     {
       "templateId": "bugfix-release",
-      "label": "Bug fix — v1.0.132",
+      "label": "Bug fix — v1.0.165",
       "category": "notice",
       "severity": "info",
       "type": "maintenance"
     },
     {
       "templateId": "feature-release",
-      "label": "Feature release — v1.0.132",
+      "label": "Feature release — v1.0.165",
       "category": "feature",
       "severity": "info",
       "type": "feature"
@@ -155,7 +155,7 @@
     },
     {
       "templateId": "platform-availability",
-      "label": "Platform availability — v1.0.132",
+      "label": "Platform availability — v1.0.165",
       "category": "info",
       "severity": "info",
       "type": "development"
@@ -193,7 +193,7 @@
       "id": "subscribe-welcome",
       "label": "Subscribe confirmation",
       "category": "subscribe",
-      "subject": "You're subscribed to CCM updates"
+      "subject": "You're subscribed to {{displayName}} updates"
     },
     {
       "id": "support-response",
@@ -211,25 +211,31 @@
       "id": "critical-security",
       "label": "Critical — security",
       "category": "notice",
-      "subject": "Important security update — Cursor Curse Monitor by Lorapok v1.0.132"
+      "subject": "Important security update — Cursor Curse Monitor by Lorapok v1.0.165"
     },
     {
       "id": "bugfix-release",
-      "label": "Bug fix — v1.0.132",
+      "label": "Bug fix — v1.0.165",
       "category": "notice",
-      "subject": "Cursor Curse Monitor by Lorapok v1.0.132 — bug fixes"
+      "subject": "Cursor Curse Monitor by Lorapok v1.0.165 — bug fixes"
     },
     {
       "id": "feature-release",
-      "label": "Feature release — v1.0.132",
+      "label": "Feature release — v1.0.165",
       "category": "feature",
-      "subject": "Cursor Curse Monitor by Lorapok v1.0.132 is here"
+      "subject": "Cursor Curse Monitor by Lorapok v1.0.165 is here"
     },
     {
       "id": "release-notes",
       "label": "Release notes broadcast",
       "category": "notice",
-      "subject": "Cursor Curse Monitor by Lorapok v1.0.132 release notes"
+      "subject": "Cursor Curse Monitor by Lorapok v1.0.165 release notes"
+    },
+    {
+      "id": "subscriber-digest",
+      "label": "Subscriber release digest",
+      "category": "subscribe",
+      "subject": "{{displayName}} v{{releaseVersion}} — what's new"
     },
     {
       "id": "mailbox-test",
@@ -241,7 +247,7 @@
       "id": "beta-tester-invite",
       "label": "Beta channel invite",
       "category": "invite",
-      "subject": "You're invited to CCM beta builds — v1.0.132"
+      "subject": "You're invited to CCM beta builds — v1.0.165"
     },
     {
       "id": "feedback-thanks",
@@ -257,8 +263,8 @@
     }
   ],
   "downloads": {
-    "total": 26682,
-    "displayTotal": 26682,
+    "total": 31369,
+    "displayTotal": 31369,
     "verified": true,
     "liveSources": {
       "openVsxCanonical": true,
@@ -266,22 +272,22 @@
       "vscodeMarketplace": true,
       "githubReleases": true
     },
-    "canonicalTotal": 14775,
+    "canonicalTotal": 17246,
     "source": "canonical",
     "breakdown": {
-      "openVsxCanonical": 13957,
-      "openVsxDuplicate": 11907,
-      "openVsxDisplay": 13957,
-      "vscodeMarketplace": 787,
-      "githubAllAssets": 31,
-      "githubVsix": 31,
-      "latestReleaseVsix": 1
+      "openVsxCanonical": 16248,
+      "openVsxDuplicate": 14123,
+      "openVsxDisplay": 16248,
+      "vscodeMarketplace": 951,
+      "githubAllAssets": 47,
+      "githubVsix": 47,
+      "latestReleaseVsix": 0
     },
-    "openVsxCombined": 25864,
+    "openVsxCombined": 30371,
     "note": "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets)."
   },
   "visitors": {
-    "websiteVisits": 272,
+    "websiteVisits": 276,
     "packageClicks": {
       "ovsx": 12,
       "vscode": 2,
@@ -289,8 +295,8 @@
       "vsix": 0,
       "openvsxDuplicate": 0
     },
-    "totalEngagement": 292,
-    "updatedAt": "2026-09-06T17:36:45.553Z",
+    "totalEngagement": 296,
+    "updatedAt": "2026-09-09T19:58:58.271Z",
     "source": "firestore"
   },
   "community": {
@@ -305,90 +311,7 @@
         "answered": false
       }
     ],
-    "topics": [
-      {
-        "topic": "epic",
-        "count": 18,
-        "items": [
-          {
-            "title": "Epic: Mission Control — open backlog",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/126",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:14:45Z"
-          },
-          {
-            "title": "Epic: Social & media",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/212",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:14:41Z"
-          },
-          {
-            "title": "Epic: SEO & growth",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/208",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:14:38Z"
-          },
-          {
-            "title": "Epic: Legal & privacy",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/198",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:14:34Z"
-          },
-          {
-            "title": "Epic: Release & deploy",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/184",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:14:31Z"
-          }
-        ]
-      },
-      {
-        "topic": "enhancement",
-        "count": 9,
-        "items": [
-          {
-            "title": "[AUTH-13] ACL audit UI — filterable timeline of role/email changes with export",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/132",
-            "state": "closed",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:22:01Z"
-          },
-          {
-            "title": "[ADMIN-05] Dedupe dashboard data — remove redundant KPIs between Overview, Connected Services, Infrastructure",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/222",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:13:46Z"
-          },
-          {
-            "title": "[ADMIN-04] Minimal global footer — services online, system version, sync status, Lorapok Labs link; sticky bottom bar",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/221",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:13:42Z"
-          },
-          {
-            "title": "[ADMIN-03] Cross-section refer buttons — when copy mentions another area, show minimal \"Go to →\" link (Settings, Deployments, Mail, …)",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/220",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:13:38Z"
-          },
-          {
-            "title": "[INT-01] Unified integrations hub — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status",
-            "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/219",
-            "state": "open",
-            "comments": 0,
-            "updatedAt": "2026-09-06T07:13:33Z"
-          }
-        ]
-      }
-    ],
+    "topics": [],
     "settingsUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/settings#features",
     "repoIssuesUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues"
   },
@@ -397,7 +320,7 @@
     "stars": 0,
     "forks": 1,
     "openIssues": 43,
-    "openIssuesGitHub": 93,
+    "openIssuesGitHub": 82,
     "traffic": {
       "periodDays": 14,
       "clones": {
@@ -453,34 +376,68 @@
   },
   "ovsx": {
     "namespace": "lorapok-labs",
-    "version": "1.0.132",
+    "version": "1.0.165",
     "url": "https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 13957,
+    "downloadCount": 16248,
     "installQuery": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "canonical": true
   },
   "ovsxDuplicate": {
     "namespace": "LorapokLabs",
-    "version": "1.0.132",
+    "version": "1.0.165",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 11907,
+    "downloadCount": 14123,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
-    "version": "1.0.132",
+    "version": "1.0.165",
     "url": "https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "downloadCount": 787,
-    "installCount": 4,
-    "updateCount": 24,
+    "downloadCount": 951,
+    "installCount": 5,
+    "updateCount": 25,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok",
     "published": true
   },
   "github": {
     "repo": "Maijied/Cursor-Curse-Monitor-by-Lorapok",
-    "releaseTag": "v1.0.132",
+    "releaseTag": "v1.0.165",
     "tags": [
+      "v1.0.167",
+      "v1.0.166",
+      "v1.0.165",
+      "v1.0.164",
+      "v1.0.163",
+      "v1.0.162",
+      "v1.0.161",
+      "v1.0.160",
+      "v1.0.159",
+      "v1.0.158",
+      "v1.0.157",
+      "v1.0.156",
+      "v1.0.155",
+      "v1.0.154",
+      "v1.0.153",
+      "v1.0.152",
+      "v1.0.151",
+      "v1.0.150",
+      "v1.0.149",
+      "v1.0.148",
+      "v1.0.147",
+      "v1.0.146",
+      "v1.0.145",
+      "v1.0.144",
+      "v1.0.143",
+      "v1.0.142",
+      "v1.0.141",
+      "v1.0.140",
+      "v1.0.139",
+      "v1.0.138",
+      "v1.0.137",
+      "v1.0.136",
+      "v1.0.135",
+      "v1.0.134",
       "v1.0.133",
       "v1.0.132",
       "v1.0.131",
@@ -546,76 +503,42 @@
       "v1.0.71",
       "v1.0.70",
       "v1.0.69",
-      "v1.0.68",
-      "v1.0.67",
-      "v1.0.66",
-      "v1.0.65",
-      "v1.0.64",
-      "v1.0.63",
-      "v1.0.62",
-      "v1.0.61",
-      "v1.0.60",
-      "v1.0.59",
-      "v1.0.58",
-      "v1.0.57",
-      "v1.0.56",
-      "v1.0.55",
-      "v1.0.54",
-      "v1.0.53",
-      "v1.0.52",
-      "v1.0.51",
-      "v1.0.50",
-      "v1.0.49",
-      "v1.0.48",
-      "v1.0.47",
-      "v1.0.46",
-      "v1.0.45",
-      "v1.0.44",
-      "v1.0.43",
-      "v1.0.42",
-      "v1.0.41",
-      "v1.0.40",
-      "v1.0.39",
-      "v1.0.38",
-      "v1.0.37",
-      "v1.0.36",
-      "v1.0.35",
-      "v1.0.34"
+      "v1.0.68"
     ],
-    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.132",
-    "vsixName": "cursor-curse-monitor-by-lorapok-1.0.132.vsix",
-    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.132/cursor-curse-monitor-by-lorapok-1.0.132.vsix",
-    "vsixDownloadCount": 1,
-    "totalReleaseDownloads": 31,
-    "publishedAt": "2026-09-06T07:35:31Z",
-    "chromeZipUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.132/cursor-curse-monitor-chrome-1.0.132.zip",
-    "chromeZipName": "cursor-curse-monitor-chrome-1.0.132.zip",
+    "releaseUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.165",
+    "vsixName": "cursor-curse-monitor-by-lorapok-1.0.165.vsix",
+    "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.165/cursor-curse-monitor-by-lorapok-1.0.165.vsix",
+    "vsixDownloadCount": 0,
+    "totalReleaseDownloads": 47,
+    "publishedAt": "2026-09-11T13:51:28Z",
+    "chromeZipUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.165/cursor-curse-monitor-chrome-1.0.165.zip",
+    "chromeZipName": "cursor-curse-monitor-chrome-1.0.165.zip",
     "firefoxXpiUrl": null,
     "firefoxXpiName": null
   },
   "browserExtension": {
-    "version": "1.0.132",
+    "version": "1.0.165",
     "firefox": {
       "url": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
       "published": false,
       "reviewStatus": "unknown",
-      "version": "1.0.132",
+      "version": "1.0.165",
       "xpiUrl": null,
       "xpiName": null
     },
     "chrome": {
-      "zipUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.132/cursor-curse-monitor-chrome-1.0.132.zip",
-      "zipName": "cursor-curse-monitor-chrome-1.0.132.zip",
+      "zipUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.165/cursor-curse-monitor-chrome-1.0.165.zip",
+      "zipName": "cursor-curse-monitor-chrome-1.0.165.zip",
       "webStorePublished": false
     }
   },
   "install": {
     "ovsxSearch": "lorapok-labs.cursor-curse-monitor-by-lorapok",
     "vsceSearch": "LorapokLabs.cursor-curse-monitor-by-lorapok",
-    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-1.0.132.vsix",
+    "vsixCommand": "cursor --install-extension cursor-curse-monitor-by-lorapok-1.0.165.vsix",
     "releasePatch": "./scripts/release.sh patch",
     "releaseMinor": "./scripts/release.sh minor",
-    "releaseTag": "./scripts/release.sh 1.0.132"
+    "releaseTag": "./scripts/release.sh 1.0.165"
   },
   "supportedIdes": {
     "headline": "Works with every major VS Code–based AI IDE",
