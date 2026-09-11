@@ -75,9 +75,14 @@ assert.equal(
 assert.equal(readDeploymentWebhookFromDiscordConfig({ deploymentWebhookUrl: "not-a-webhook" }), "");
 
 const enrichment = buildLocalDeployEnrichment({ tag: "v1.0.56", repoRoot: root });
+assert.equal(enrichment.syncStat?.packageVersion, "1.0.56");
+assert.match(
+  enrichment.marketplaceFields.find((field) => field.name === "Package")?.value ?? "",
+  /`1\.0\.56`/,
+);
 assert.ok(
   !String(enrichment.catalogBrand?.discordAvatarUrl ?? "").includes("{{"),
-  "catalogBrand.discordAvatarUrl must be hydrated for CI Discord notify",
+    "catalogBrand.discordAvatarUrl must be hydrated for CI Discord notify",
 );
 assert.match(
   String(enrichment.catalogBrand?.discordAvatarUrl ?? ""),

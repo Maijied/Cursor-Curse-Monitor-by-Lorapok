@@ -246,6 +246,7 @@ export async function notifyDiscordDeploymentFromCi(opts) {
       tag: payload.tag ?? null,
       includeChangelog: payload.conclusion !== "cancelled",
       repoRoot: root,
+      siteDataPath: opts.siteData || undefined,
     });
   } catch (error) {
     console.warn("Discord CI enrichment failed", error);
