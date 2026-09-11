@@ -10,7 +10,7 @@ import {
   writeFirebaseConfig,
 } from "../../_shared/firebase-config.js";
 import { readGithubIntegrationConfig } from "../../_shared/github-integration-config.js";
-import { setGithubEnvironmentSecrets } from "../../_shared/github-secrets.js";
+import { syncGithubSecretsWithAudit } from "../../_shared/cred-sync-audit.js";
 
 /**
  * Retrieves Firebase web client settings for an authenticated administrator.
@@ -71,19 +71,16 @@ export async function onRequestPut(context) {
 
   let githubSecretsSyncedAt = next.githubSecretsSyncedAt ?? null;
   let githubSyncWarning = null;
-  if (body.syncGithubSecrets !== false && env.GITHUB_TOKEN) {
-    try {
-      const ghConfig = await readGithubIntegrationConfig(env);
-      await setGithubEnvironmentSecrets(env, firebaseConfigToGithubSecrets(next), {
-        repo: ghConfig.repository,
-        environment: ghConfig.secretsEnvironment,
-      });
-      githubSecretsSyncedAt = new Date().toISOString();
-    } catch (err) {
-      githubSyncWarning = err instanceof Error ? err.message : "GitHub secret sync failed";
-    }
-  } else if (body.syncGithubSecrets !== false && !env.GITHUB_TOKEN) {
-    githubSyncWarning = "GITHUB_TOKEN not configured — saved to KV only";
+  if (body.syncGithubSecrets !== false) {
+    const ghConfig = await readGithubIntegrationConfig(env);
+    const syncResult = await syncGithubSecretsWithAudit(env, firebaseConfigToGithubSecrets(next), {
+      integration: "firebase",
+      actor: auth.email,
+      repo: ghConfig.repository,
+      environment: ghConfig.secretsEnvironment,
+    });
+    githubSecretsSyncedAt = syncResult.syncedAt;
+    githubSyncWarning = syncResult.warning;
   }
 
   const persisted = { ...next, githubSecretsSyncedAt };

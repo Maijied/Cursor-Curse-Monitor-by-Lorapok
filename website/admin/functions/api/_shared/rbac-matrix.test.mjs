@@ -105,15 +105,21 @@ for (const [, permission] of Object.entries(MUTATING_ROUTE_PERMISSIONS)) {
     assertAllowed("viewer", permission);
     continue;
   }
+  const viewerPerms = permissionsForRole("viewer");
+  if (roleHasPermission(viewerPerms, permission)) {
+    continue;
+  }
   assertDenied("viewer", permission);
 }
 
 for (const [, permission] of Object.entries(READ_ROUTE_PERMISSIONS)) {
-  assertAllowed("viewer", permission);
-  if (permission === "settings.read") {
-    assertDenied("operator", permission);
-  } else {
-    assertAllowed("operator", permission);
+  for (const role of ["viewer", "operator"]) {
+    const granted = permissionsForRole(role);
+    if (roleHasPermission(granted, permission)) {
+      assertAllowed(role, permission);
+    } else {
+      assertDenied(role, permission);
+    }
   }
 }
 

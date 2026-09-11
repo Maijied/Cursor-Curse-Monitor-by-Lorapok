@@ -65,6 +65,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "github-config-put", path: "/integrations/github/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save GitHub integration metadata and rotate GITHUB_TOKEN secret" },
   { id: "cloudflare-config", path: "/integrations/cloudflare/config", method: "GET", auth: "admin", group: "Integrations", description: "Cloudflare Pages project and URL settings", safeProbe: true },
   { id: "cloudflare-config-put", path: "/integrations/cloudflare/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save Cloudflare settings and sync CLOUDFLARE_* GitHub secrets" },
+  { id: "cred-sync-status", path: "/integrations/cred-sync/status", method: "GET", auth: "admin", group: "Integrations", description: "Cred vault GitHub sync health, drift detection, recent audit (CRED-02)", safeProbe: true },
   { id: "resend-config", path: "/integrations/resend/config", method: "GET", auth: "admin", group: "Integrations", description: "Resend API key, From address, and Workers Free routing flags", safeProbe: true },
   { id: "resend-config-put", path: "/integrations/resend/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save Resend settings and sync RESEND_* GitHub secrets" },
   { id: "testmail-config", path: "/integrations/testmail/config", method: "GET", auth: "admin", group: "Integrations", description: "testmail.app namespace and E2E probe settings", safeProbe: true },
