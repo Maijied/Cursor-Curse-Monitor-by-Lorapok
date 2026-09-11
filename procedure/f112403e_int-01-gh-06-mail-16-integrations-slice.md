@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** [#201 GH-06](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/201), [#219 INT-01](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/219), [#204 MAIL-16](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/204)  
 **Branch:** `feat/int-01-gh-06-mail-16-integrations`  
-**PR:** _TBD_
+**PR:** [#264](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/264)
 
 ---
 
@@ -22,7 +22,7 @@ First slice of unified integrations: GitHub webhook ingest (GH-06), mail deliver
 - [x] Procedure created
 - [x] Implementation: webhook ingest, deliverability audit, hub card, health fields
 - [x] Tests: `github-webhook.test.mjs`, `mail-deliverability-audit.test.mjs`; oxlint clean
-- [ ] PR opened
+- [x] PR opened (#264)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
