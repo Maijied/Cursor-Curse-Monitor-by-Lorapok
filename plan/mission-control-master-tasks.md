@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-11 (Update? snapshot)
-**Branch:** `main` @ `a64d8bf0`
-**Main:** `a64d8bf0` (PR #259 SEO-02/03 merged)
-**CI:** PR #252 + #259 merged green; Dashboard vitest 5/5 local
+**Last updated:** 2026-09-11 (CRED-02 done; main merged through PR #261)
+**Branch:** `feat/cred-02-cred-sync-reliability`
+**Main:** `39182bf9` (PR #261 SOCIAL-04/05 merged)
+**CI:** PR #262 green after main merge; Dashboard vitest local
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -55,7 +55,7 @@
 | Mail (Resend + CF Email) | 3 | 8 | 1 |
 | Discord | 3 | 11 | 0 |
 | SEO & growth | 2 | 1 | 0 |
-| Social & media | 0 | 4 | 0 |
+| Social & media | 1 | 3 | 0 |
 | Stats / Cron | 6 | 2 | 1 |
 | IDE extension | 4 | 4 | 0 |
 | Browser extension | 4 | 4 | 0 |
@@ -365,7 +365,7 @@
 | SET-09 | Settings + nav gated by RBAC permissions | **done** | `nav-permissions.ts`, PermissionRoute, card write gates |
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
-| CRED-02 | **Cred sync reliability** — idempotent save→GH/Pages/CF sync; miss detection + retry; health badge "sync never miss" | **next** | audit on every Settings master save; alert if drift |
+| CRED-02 | **Cred sync reliability** — idempotent save→GH/Pages/CF sync; miss detection + retry; health badge "sync never miss" | **done** | `cred-sync-audit.js`, `GET /integrations/cred-sync/status`, Settings → Cred vault badge |
 | INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **next** | reduce duplicate cards; everything configurable from admin |
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
@@ -382,7 +382,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **CRED-02 / INT-01 / GH-06 / MAIL-16** — Cred never-miss, unified integrations, GitHub webhook, live emails
+1. **INT-01 / GH-06 / MAIL-16** — unified integrations hub, GitHub webhook ingest, live email audit
 2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
 3. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue

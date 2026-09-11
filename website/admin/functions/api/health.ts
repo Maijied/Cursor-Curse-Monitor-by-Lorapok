@@ -19,6 +19,7 @@ import {
   STATS_R2_FREE_TIER,
   STATS_ARTIFACTS_KV_FALLBACK,
 } from "./_shared/r2-stats.js";
+import { buildCredSyncHealth } from "./_shared/cred-sync-audit.js";
 
 /**
  * Reports service health, configuration status, and endpoint URLs.
@@ -47,6 +48,7 @@ export async function onRequestGet(context) {
   const statsRefresh = sanitizeStatsRefreshConfigForClient(await readStatsRefreshConfig(env));
   const discordDigest = sanitizeDiscordDigestConfigForClient(await readDiscordDigestConfig(env));
   const statsR2 = await probeStatsR2(env);
+  const credSync = await buildCredSyncHealth(env);
 
   return jsonResponse({
     ok: checks.github,
@@ -91,5 +93,6 @@ export async function onRequestGet(context) {
       artifactsFallback: STATS_ARTIFACTS_KV_FALLBACK,
       freeTier: STATS_R2_FREE_TIER,
     },
+    credSync,
   });
 }

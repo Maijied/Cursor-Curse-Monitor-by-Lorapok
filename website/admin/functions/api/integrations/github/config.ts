@@ -10,8 +10,8 @@ import {
 } from "../../_shared/github-integration-config.js";
 import {
   listGithubEnvironmentSecretNames,
-  setGithubEnvironmentSecret,
 } from "../../_shared/github-secrets.js";
+import { syncGithubSecretsWithAudit } from "../../_shared/cred-sync-audit.js";
 
 /**
  * Retrieves GitHub integration metadata and secret presence for administrators.
@@ -78,19 +78,18 @@ export async function onRequestPut(context) {
   let githubSyncWarning = null;
 
   if (githubToken) {
-    if (!env.GITHUB_TOKEN) {
-      githubSyncWarning = "GITHUB_TOKEN not configured on Mission Control — cannot rotate GitHub PAT secret";
-    } else {
-    try {
-      await setGithubEnvironmentSecret(env, "GITHUB_TOKEN", githubToken, {
+    const syncResult = await syncGithubSecretsWithAudit(
+      env,
+      { GITHUB_TOKEN: githubToken },
+      {
+        integration: "github",
+        actor: auth.email,
         repo: repository,
         environment: secretsEnvironment,
-      });
-      githubSecretsSyncedAt = new Date().toISOString();
-    } catch (err) {
-      githubSyncWarning = err instanceof Error ? err.message : "GitHub token secret sync failed";
-    }
-    }
+      }
+    );
+    githubSecretsSyncedAt = syncResult.syncedAt;
+    githubSyncWarning = syncResult.warning;
   }
 
   const next = normalizeGithubIntegrationConfig({

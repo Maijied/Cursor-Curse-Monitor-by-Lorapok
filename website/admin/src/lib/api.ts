@@ -101,7 +101,33 @@ export async function fetchHealth() {
     discordDigestLastRunAt?: string | null;
     cronSecretConfigured?: boolean;
     statsR2?: StatsR2Status;
+    credSync?: CredSyncHealthStatus;
   }>("/health", false);
+}
+
+export type CredSyncHealthStatus = {
+  configured: boolean;
+  ciSecretsReady: boolean;
+  credVaultCiConfigured: boolean;
+  lastSyncAt: string | null;
+  lastSyncOk: boolean;
+  lastError: string | null;
+  lastIntegration: string | null;
+  driftMissing: string[];
+  neverMiss: boolean;
+  recentAttempts: Array<{
+    ts: string;
+    integration: string;
+    actor: string | null;
+    ok: boolean;
+    secretNames: string[];
+    error: string | null;
+    retryCount: number;
+  }>;
+};
+
+export async function fetchCredSyncStatusApi() {
+  return apiGet<{ ok: boolean; status: CredSyncHealthStatus }>("/integrations/cred-sync/status");
 }
 
 export type SyncStatusPayload = {

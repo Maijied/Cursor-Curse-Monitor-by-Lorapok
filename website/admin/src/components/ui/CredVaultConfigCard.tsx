@@ -5,7 +5,12 @@ import Badge from "./Badge";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import FieldHelp from "./FieldHelp";
 import ReadOnlyAclBanner from "./ReadOnlyAclBanner";
-import { fetchCloudflareConfigApi, type CloudflareIntegrationConfig } from "../../lib/api";
+import {
+  fetchCloudflareConfigApi,
+  fetchCredSyncStatusApi,
+  type CloudflareIntegrationConfig,
+  type CredSyncHealthStatus,
+} from "../../lib/api";
 import { useAuthSession } from "../../lib/use-auth-session";
 
 export default function CredVaultConfigCard() {
@@ -13,14 +18,26 @@ export default function CredVaultConfigCard() {
   const canManageSecrets = hasPermission("secrets.manage");
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<CloudflareIntegrationConfig | null>(null);
+  const [credSync, setCredSync] = useState<CredSyncHealthStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCloudflareConfigApi()
-      .then((data) => setConfig(data.config))
+    Promise.all([fetchCloudflareConfigApi(), fetchCredSyncStatusApi()])
+      .then(([cloudflare, sync]) => {
+        setConfig(cloudflare.config);
+        setCredSync(sync.status);
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const syncBadge = credSync?.neverMiss
+    ? { variant: "synced" as const, label: "Sync never miss" }
+    : credSync?.lastSyncOk
+      ? { variant: "synced" as const, label: "Last sync OK" }
+      : credSync?.lastError
+        ? { variant: "danger" as const, label: "Sync failed" }
+        : { variant: "warn" as const, label: "Awaiting sync" };
 
   return (
     <Card>
@@ -35,11 +52,14 @@ export default function CredVaultConfigCard() {
             keys to the repo.
           </p>
         </div>
-        {config && (
-          <Badge variant={config.credVaultCiConfigured ? "synced" : "warn"}>
-            {config.credVaultCiConfigured ? "CI decrypt ready" : "CI blob missing"}
-          </Badge>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {config && (
+            <Badge variant={config.credVaultCiConfigured ? "synced" : "warn"}>
+              {config.credVaultCiConfigured ? "CI decrypt ready" : "CI blob missing"}
+            </Badge>
+          )}
+          {credSync && <Badge variant={syncBadge.variant}>{syncBadge.label}</Badge>}
+        </div>
       </div>
 
       {!canManageSecrets ? (
@@ -52,6 +72,15 @@ export default function CredVaultConfigCard() {
         <p className="text-sm text-[var(--color-danger)]">{error}</p>
       ) : (
         <div className="space-y-4 text-sm">
+          {credSync && !credSync.neverMiss && credSync.driftMissing.length > 0 ? (
+            <p className="rounded-xl border border-[var(--color-danger)]/40 bg-[var(--color-danger)]/5 px-3 py-2 text-[var(--color-danger)]">
+              Missing GitHub secrets: {credSync.driftMissing.join(", ")}
+            </p>
+          ) : null}
+          {credSync?.lastError ? (
+            <p className="text-[var(--color-danger)]">Last sync error: {credSync.lastError}</p>
+          ) : null}
+
           <dl className="grid gap-2 sm:grid-cols-2">
             {[
               ["CRED_STORE_GPG_BASE64", config?.secretsPresent?.includes("CRED_STORE_GPG_BASE64")],
@@ -71,6 +100,20 @@ export default function CredVaultConfigCard() {
             ))}
           </dl>
 
+          {credSync?.recentAttempts?.length ? (
+            <FieldHelp label="Recent Settings secret syncs">
+              <ul className="mt-2 space-y-1 text-xs text-[var(--color-muted)]">
+                {credSync.recentAttempts.map((attempt) => (
+                  <li key={attempt.ts}>
+                    {attempt.ts.slice(0, 19).replace("T", " ")} — {attempt.integration}{" "}
+                    {attempt.ok ? "OK" : "failed"}
+                    {attempt.retryCount ? ` (retried ${attempt.retryCount}×)` : ""}
+                  </li>
+                ))}
+              </ul>
+            </FieldHelp>
+          ) : null}
+
           <FieldHelp label="Maintain vault locally">
             <ol className="list-decimal list-inside space-y-1 mt-2 text-xs text-[var(--color-muted)]">
               <li>Edit secrets: <code>cred set cursor …</code> or <code>cred set cloudfare …</code></li>
@@ -82,7 +125,7 @@ export default function CredVaultConfigCard() {
 
           <FieldHelp label="CI deploy">
             Admin deploy job runs <code>load-cred-vault-env-ci.mjs</code> before Cloudflare steps. Settings tabs sync
-            individual secrets to GitHub when you rotate from the UI.
+            individual secrets to GitHub with automatic retry and audit logging — failures surface here instead of silently missing.
           </FieldHelp>
         </div>
       )}

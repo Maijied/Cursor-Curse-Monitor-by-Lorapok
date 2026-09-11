@@ -44,6 +44,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **DC-08/09 / SOCIAL-01–05** — Discord CI cards, multi-platform webhooks, deploy social gallery, AI image/video generators
 - **SEO-01–03** — world-class SEO, admin hub (GSC/Cloudflare/Azure), Lorapok ecosystem cross-links
 - **ADMIN-03** — cross-section `SectionReferLink` ("Go to →") on Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure KV alerts
+- **Cred sync reliability (CRED-02)** — Settings integration saves retry GitHub secret sync once, log audit events, detect CI secret drift, and surface a "sync never miss" badge on Settings → Cred vault plus `/api/health` `credSync`
 - **CRED-02 / INT-01 / GH-06 / MAIL-16** — cred sync never-miss, unified integrations, GitHub webhook, live email audit
 - **WEB-11** — engineering history timeline page
 - **Interactive features explorer (WEB-05)** — post-hero product cards + live GitHub metrics on marketing site

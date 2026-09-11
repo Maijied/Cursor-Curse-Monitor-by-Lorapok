@@ -3,7 +3,8 @@ import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import { isValidSendingDomain, writeMailConfig } from "../../_shared/mail-config.js";
 import { readGithubIntegrationConfig } from "../../_shared/github-integration-config.js";
-import { listGithubEnvironmentSecretNames, setGithubEnvironmentSecrets } from "../../_shared/github-secrets.js";
+import { listGithubEnvironmentSecretNames } from "../../_shared/github-secrets.js";
+import { syncGithubSecretsWithAudit } from "../../_shared/cred-sync-audit.js";
 import {
   readResendIntegrationConfig,
   resendSecretsToGithubMap,
@@ -106,19 +107,16 @@ export async function onRequestPut(context) {
   let githubSecretsSyncedAt = current.githubSecretsSyncedAt ?? null;
   let githubSyncWarning: string | null = null;
 
-  if (body.syncGithubSecrets !== false && Object.keys(secretPayload).length > 0 && env.GITHUB_TOKEN) {
-    try {
-      const ghConfig = await readGithubIntegrationConfig(env);
-      await setGithubEnvironmentSecrets(env, secretPayload, {
-        repo: ghConfig.repository,
-        environment: ghConfig.secretsEnvironment,
-      });
-      githubSecretsSyncedAt = new Date().toISOString();
-    } catch (err) {
-      githubSyncWarning = err instanceof Error ? err.message : "GitHub secret sync failed";
-    }
-  } else if (body.syncGithubSecrets !== false && Object.keys(secretPayload).length > 0 && !env.GITHUB_TOKEN) {
-    githubSyncWarning = "GITHUB_TOKEN not configured — metadata saved to KV only";
+  if (body.syncGithubSecrets !== false && Object.keys(secretPayload).length > 0) {
+    const ghConfig = await readGithubIntegrationConfig(env);
+    const syncResult = await syncGithubSecretsWithAudit(env, secretPayload, {
+      integration: "resend",
+      actor: auth.email,
+      repo: ghConfig.repository,
+      environment: ghConfig.secretsEnvironment,
+    });
+    githubSecretsSyncedAt = syncResult.syncedAt;
+    githubSyncWarning = syncResult.warning;
   }
 
   const hasMetaPatch = Object.keys(patch).some((k) => k !== "updatedBy");

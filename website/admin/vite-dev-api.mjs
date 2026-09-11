@@ -155,6 +155,7 @@ import {
   writeTestmailIntegrationConfig,
 } from "./functions/api/_shared/testmail-integration-config.js";
 import { envWithCursorCloudflareSecrets } from "./scripts/lib/cred-vault-sync.mjs";
+import { buildCredSyncHealth } from "./functions/api/_shared/cred-sync-audit.js";
 import { getMasterEmail } from "./functions/api/_shared/admins.js";
 
 const mergedDevSecrets = envWithCursorCloudflareSecrets(process.env);
@@ -1633,6 +1634,19 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/integrations/cred-sync/status" && req.method === "GET") {
+      buildCredSyncHealth(devFunctionsEnv())
+        .then((status) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, status }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
     if (url === "/api/integrations/cloudflare/config" && req.method === "PUT") {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });
@@ -3002,15 +3016,27 @@ export function createDevApiMiddleware() {
     }
 
     if (url === "/api/health" && req.method === "GET") {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 2500);
-      fetch("https://api.github.com/zen", { headers: githubHeaders(), signal: controller.signal })
-        .then((gh) => {
+      (async () => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 2500);
+        let ghOk = false;
+        try {
+          const gh = await fetch("https://api.github.com/zen", {
+            headers: githubHeaders(),
+            signal: controller.signal,
+          });
+          ghOk = gh.ok;
+        } catch {
+          ghOk = false;
+        } finally {
           clearTimeout(timer);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({
-            ok: gh.ok,
-            checks: { github: gh.ok, timestamp: new Date().toISOString() },
+        }
+        const credSync = await buildCredSyncHealth(devFunctionsEnv());
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            ok: ghOk,
+            checks: { github: ghOk, timestamp: new Date().toISOString() },
             firebaseProject: "cursor-curse-by-lorapok",
             firebaseConfigured: Boolean(process.env.VITE_FIREBASE_API_KEY),
             adminD1Configured: false,
@@ -3025,30 +3051,13 @@ export function createDevApiMiddleware() {
             socialConfigured: sanitizeSocialConfigForClient(devStore.socialConfig).configured,
             socialEnabledCount: sanitizeSocialConfigForClient(devStore.socialConfig).enabledCount,
             siteDataUrl: "/site-data.json",
-          }));
-        })
-        .catch(() => {
-          clearTimeout(timer);
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({
-            ok: false,
-            checks: { github: false, timestamp: new Date().toISOString() },
-            firebaseProject: "cursor-curse-by-lorapok",
-            firebaseConfigured: Boolean(process.env.VITE_FIREBASE_API_KEY),
-            adminD1Configured: false,
-            adminD1Ok: false,
-            githubTokenConfigured: Boolean(loadGithubToken()),
-            adminKvConfigured: true,
-            mailConfigured: true,
-            mailTransport: "dev-simulated",
-            discordConfigured: Boolean(devStore.discordConfig.deploymentWebhookUrl),
-            feedbackDiscordConfigured: Boolean(devStore.discordConfig.feedbackWebhookUrl),
-            communityDiscordConfigured: Boolean(devStore.discordConfig.communityWebhookUrl),
-            socialConfigured: sanitizeSocialConfigForClient(devStore.socialConfig).configured,
-            socialEnabledCount: sanitizeSocialConfigForClient(devStore.socialConfig).enabledCount,
-            siteDataUrl: "/site-data.json",
-          }));
-        });
+            credSync,
+          })
+        );
+      })().catch((err) => {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: err.message }));
+      });
       return;
     }
 
