@@ -1,7 +1,6 @@
 import { GITHUB_REPO } from "./repo-constants.js";
 import { githubFetch } from "./github.js";
-import { fetchSiteData } from "./site-data.js";
-import { fetchLiveChannels } from "./live-channels.js";
+import { fetchDeploySyncStat } from "./deploy-sync-stat-service.js";
 import { getChannelFooters, getMessageBranding } from "./message-cards-runtime.js";
 
 const BRAND = {
@@ -126,7 +125,7 @@ export function buildMarketplaceFields(siteData, channels) {
     },
     {
       name: "Sync status",
-      value: String(siteData.syncStatus ?? "unknown"),
+      value: String(siteData.marketplaceSync?.syncStatus ?? siteData.syncStatus ?? "unknown"),
       inline: true,
     },
     {
@@ -245,21 +244,12 @@ async function fetchReleaseNotes(env, tag) {
  */
 export async function buildDeployEnrichment(env, options = {}) {
   const tag = options.tag ?? null;
-  let siteData = null;
-  let channels = null;
 
+  let syncStat = null;
   try {
-    siteData = await fetchSiteData(env);
+    syncStat = await fetchDeploySyncStat(env, { deployedTag: tag });
   } catch (error) {
-    console.warn("Discord enrichment: site-data unavailable", error);
-  }
-
-  if (siteData) {
-    try {
-      channels = await fetchLiveChannels(siteData, { githubToken: env.GITHUB_TOKEN });
-    } catch (error) {
-      console.warn("Discord enrichment: live channels unavailable", error);
-    }
+    console.warn("Discord enrichment: deploy sync stat unavailable", error);
   }
 
   let changelog = null;
@@ -273,6 +263,7 @@ export async function buildDeployEnrichment(env, options = {}) {
 
   const catalogBrand = await getMessageBranding(env);
   const catalogFooters = await getChannelFooters(env);
+  const siteData = syncStat?.siteData ?? null;
 
   return {
     brand: {
@@ -282,11 +273,12 @@ export async function buildDeployEnrichment(env, options = {}) {
     catalogBrand,
     catalogFooters,
     siteData,
-    channels,
+    channels: syncStat?.channels ?? null,
+    syncStat,
     changelog,
-    downloadBreakdown: formatDownloadBreakdownText(siteData),
-    engagement: formatEngagementText(siteData),
-    marketplaceFields: buildMarketplaceFields(siteData, channels),
+    downloadBreakdown: syncStat?.downloadBreakdown ?? formatDownloadBreakdownText(siteData),
+    engagement: syncStat?.engagementText ?? formatEngagementText(siteData),
+    marketplaceFields: syncStat?.marketplaceFields ?? buildMarketplaceFields(siteData, syncStat?.channels),
     quickLinks: buildQuickLinksText(tag, catalogFooters),
   };
 }

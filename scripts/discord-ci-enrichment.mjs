@@ -1,12 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  buildMarketplaceFields,
   buildQuickLinksText,
   extractChangelogSection,
-  formatDownloadBreakdownText,
-  formatEngagementText,
 } from "../website/admin/functions/api/_shared/discord-deploy-context.js";
+import { buildLocalDeploySyncStat } from "../website/admin/functions/api/_shared/deploy-sync-stat-service.js";
 import embedded from "../website/admin/functions/api/_shared/product-context.embedded.json" with { type: "json" };
 import { mergeProductContext } from "../website/admin/functions/api/_shared/product-context-runtime.js";
 import { interpolateDeep } from "../website/admin/functions/api/_shared/template-interpolate.js";
@@ -18,21 +16,43 @@ const BRAND = {
   icon: "https://cursor.lorapok.tech/assets/logo.png",
 };
 
+const SITE_DATA_CANDIDATES = [
+  "website/admin/dist/site-data.json",
+  "website/site-data.json",
+];
+
+/**
+ * @param {string} repoRoot
+ * @param {string} [explicitPath]
+ * @returns {Record<string, unknown>|null}
+ */
+export function readLocalSiteDataForDiscord(repoRoot, explicitPath) {
+  const candidates = explicitPath
+    ? [explicitPath]
+    : SITE_DATA_CANDIDATES.map((rel) => join(repoRoot, rel));
+
+  for (const path of candidates) {
+    try {
+      return JSON.parse(readFileSync(path, "utf8"));
+    } catch {
+      /* try next candidate */
+    }
+  }
+  return null;
+}
+
 /**
  * Headless enrichment for CI scripts — reads committed repo files (no KV / network).
- * @param {{ tag?: string|null; includeChangelog?: boolean; repoRoot?: string }} [options]
+ * @param {{ tag?: string|null; includeChangelog?: boolean; repoRoot?: string; siteDataPath?: string }} [options]
  */
 export function buildLocalDeployEnrichment(options = {}) {
   const repoRoot = options.repoRoot ?? process.cwd();
   const tag = options.tag ?? null;
   const includeChangelog = options.includeChangelog !== false;
 
-  let siteData = null;
-  try {
-    const raw = readFileSync(join(repoRoot, "website/site-data.json"), "utf8");
-    siteData = JSON.parse(raw);
-  } catch (error) {
-    console.warn("Discord CI enrichment: site-data unavailable", error);
+  const siteData = readLocalSiteDataForDiscord(repoRoot, options.siteDataPath);
+  if (!siteData) {
+    console.warn("Discord CI enrichment: site-data unavailable");
   }
 
   let changelog = null;
@@ -49,6 +69,7 @@ export function buildLocalDeployEnrichment(options = {}) {
   const ctx = mergeProductContext(embedded.ctx ?? {}, siteData);
   const catalogBrand = interpolateDeep(catalog.branding ?? {}, ctx);
   const catalogFooters = interpolateDeep(catalog.footers ?? {}, ctx);
+  const syncStat = buildLocalDeploySyncStat(siteData, { deployedTag: tag });
 
   return {
     brand: {
@@ -57,12 +78,13 @@ export function buildLocalDeployEnrichment(options = {}) {
     },
     catalogBrand,
     catalogFooters,
-    siteData,
-    channels: null,
+    siteData: syncStat.siteData,
+    channels: syncStat.channels,
+    syncStat,
     changelog,
-    downloadBreakdown: formatDownloadBreakdownText(siteData),
-    engagement: formatEngagementText(siteData),
-    marketplaceFields: buildMarketplaceFields(siteData, null),
+    downloadBreakdown: syncStat.downloadBreakdown,
+    engagement: syncStat.engagementText,
+    marketplaceFields: syncStat.marketplaceFields,
     quickLinks: buildQuickLinksText(tag, catalogFooters),
   };
 }

@@ -1,12 +1,10 @@
 import { readDiscordConfig } from "./discord-config.js";
 import {
   buildDeployEnrichment,
-  buildMarketplaceFields,
   formatDiscordCount,
-  formatDownloadBreakdownText,
-  formatEngagementText,
   normalizeTag,
 } from "./discord-deploy-context.js";
+import { fetchDeploySyncStat } from "./deploy-sync-stat-service.js";
 import {
   buildDiscordDigestEmbed,
   buildDiscordDigestEmbeds,
@@ -20,7 +18,7 @@ import {
   isStatsLiveCacheFresh,
   readStatsLiveCache,
 } from "./stats-refresh-config.js";
-import { fetchSiteDataWithLiveCache, runStatsRefresh } from "./stats-refresh.js";
+import { runStatsRefresh } from "./stats-refresh.js";
 import { logSystemEvent } from "./system-log.js";
 
 /**
@@ -78,7 +76,8 @@ export async function runDiscordDigest(env, options = {}) {
     }
   }
 
-  const siteData = await fetchSiteDataWithLiveCache(env);
+  const syncStat = await fetchDeploySyncStat(env);
+  const siteData = syncStat.siteData;
   const tag =
     siteData?.github?.releaseTag ??
     (siteData?.version ? `v${String(siteData.version).replace(/^v/i, "")}` : null);
@@ -89,18 +88,12 @@ export async function runDiscordDigest(env, options = {}) {
       tag,
       includeChangelog: config.includeChangelog,
     });
-    if (siteData) {
-      enrichment.siteData = siteData;
-      enrichment.downloadBreakdown = formatDownloadBreakdownText(siteData);
-      enrichment.engagement = formatEngagementText(siteData);
-      enrichment.marketplaceFields = buildMarketplaceFields(siteData, enrichment.channels);
-    }
   } catch (error) {
     console.warn("Discord digest enrichment failed", error);
   }
 
   const displayTotal = siteData?.downloads?.displayTotal ?? siteData?.downloads?.total;
-  const syncStatus = siteData?.marketplaceSync?.syncStatus ?? siteData?.syncStatus ?? "unknown";
+  const syncStatus = syncStat.syncStatus ?? siteData?.marketplaceSync?.syncStatus ?? siteData?.syncStatus ?? "unknown";
   const versionLabel = normalizeTag(tag) || siteData?.version || "—";
 
   const payload = {
