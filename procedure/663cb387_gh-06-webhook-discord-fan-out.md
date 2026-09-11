@@ -1,12 +1,12 @@
 # GH-06 webhook discord fan-out
 
 **Procedure ID:** `663cb387`  
-**Status:** in_progress  
+**Status:** done — production smoke verified  
 **Created:** 2026-09-11  
 **Plan:** _none_  
 **Issue:** __ISSUE_PENDING__  
-**Branch:** `feat/gh-06-webhook-fanout`  
-**PR:** _TBD_
+**Branch:** `main`  
+**PR:** #265 (merged `38cb8642`); bootstrap CLI follow-up TBD
 
 ---
 
@@ -22,10 +22,10 @@ GH-06 webhook discord fan-out
 - [x] Procedure + GitHub issue created
 - [x] Implementation started — `github-webhook-fanout.js` + ingest wiring
 - [x] Tests passing — fanout + webhook node tests
-- [ ] PR opened
-- [ ] Review triaged
-- [ ] Merged
-- [ ] Post-merge verification
+- [x] PR opened — #265
+- [x] Review triaged — autopilot clean
+- [x] Merged — 2026-09-11 (`38cb8642`)
+- [x] Post-merge verification — `npm run github:webhook:bootstrap` (cred vault SA mint); hook id `677766048`; probe 200; Discord community 204
 
 ---
 
@@ -34,6 +34,7 @@ GH-06 webhook discord fan-out
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-09-11 | Procedure opened | Task tracking started |
+| 2026-09-11 | CLI bootstrap via cred vault SA | No stored `ADMIN_ID_TOKEN`; mint from `firebase_service_account_json` + `admin_master_email` |
 
 ---
 
@@ -47,9 +48,9 @@ _None._
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | Headless tests | pending |
-| B | Component matrix | pending |
-| C | Production smoke | pending |
+| A | Headless tests | pass (PR #265 CI) |
+| B | Component matrix | pass (Admin Panel CI) |
+| C | Production smoke | pass — probe `push main`; Discord fan-out `community` 204; recent events in Settings → GitHub |
 
 ---
 
