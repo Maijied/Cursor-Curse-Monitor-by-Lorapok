@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** __ISSUE_PENDING__  
 **Branch:** `fix/discord-deploy-sync-stat-service`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/263
 
 ---
 
@@ -21,8 +21,8 @@ discord-deploy-sync-stat-service
 - [x] Plan approved
 - [x] Procedure + GitHub issue created
 - [x] Implementation started — `deploy-sync-stat-service.js` + wired Discord deploy/CI/digest paths
-- [ ] Tests passing
-- [ ] PR opened
+- [x] Tests passing — deploy-sync-stat-service, discord-notify vitest, CI notify script
+- [x] PR opened — #263
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
@@ -48,7 +48,7 @@ _None._
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | Headless tests | pending |
+| A | Headless tests | pass |
 | B | Component matrix | pending |
 | C | Production smoke | pending |
 
