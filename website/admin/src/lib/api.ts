@@ -92,6 +92,8 @@ export async function fetchHealth() {
     mailHint?: string;
     mailLastVerifiedAt?: string | null;
     mailDeliverabilityOk?: boolean;
+    socialConfigured?: boolean;
+    socialEnabledCount?: number;
     githubWebhookConfigured?: boolean;
     githubWebhookRecentCount?: number;
     adminPublicUrl?: string;
