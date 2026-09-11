@@ -18,6 +18,7 @@ export default function GitHubConfigCard() {
   const [repository, setRepository] = useState("");
   const [secretsEnvironment, setSecretsEnvironment] = useState("admin-production");
   const [githubToken, setGithubToken] = useState("");
+  const [webhookEvents, setWebhookEvents] = useState<string[]>(["push", "release", "workflow_run"]);
 
   useEffect(() => {
     fetchGithubConfigApi()
@@ -25,6 +26,7 @@ export default function GitHubConfigCard() {
         setConfig(data.config);
         setRepository(data.config.repository);
         setSecretsEnvironment(data.config.secretsEnvironment);
+        setWebhookEvents(data.config.webhookEvents ?? ["push", "release", "workflow_run"]);
       })
       .catch((err: Error) => setMessage({ type: "error", text: err.message }))
       .finally(() => setLoading(false));
@@ -42,6 +44,7 @@ export default function GitHubConfigCard() {
       const result = await putGithubConfigApi({
         repository: repository.trim(),
         secretsEnvironment: secretsEnvironment.trim(),
+        webhookEvents,
         ...(githubToken.trim() ? { githubToken: githubToken.trim() } : {}),
       });
       setConfig(result.config);
@@ -129,6 +132,47 @@ export default function GitHubConfigCard() {
             <FieldHelp label="GITHUB_TOKEN" className="mt-1">
               Needs repo + workflow + secrets scopes. Updates admin-production only when provided.
             </FieldHelp>
+          </div>
+
+          <div className="rounded-xl border border-[var(--color-border)] p-4 space-y-3">
+            <h4 className="text-sm font-semibold">Inbound webhooks (GH-06)</h4>
+            <p className="text-xs text-[var(--color-muted)]">
+              Point your repo webhook at this URL. Events are logged and can fan out to Discord/social.
+            </p>
+            {config?.webhookUrl ? (
+              <p className="text-xs font-[family-name:var(--font-mono)] break-all">{config.webhookUrl}</p>
+            ) : (
+              <p className="text-xs text-[var(--color-muted)]">Save settings to generate webhook secret + URL.</p>
+            )}
+            {config?.webhookSecretPreview ? (
+              <p className="text-xs text-[var(--color-muted)]">Secret: {config.webhookSecretPreview}</p>
+            ) : null}
+            <div className="flex flex-wrap gap-3">
+              {(["push", "release", "workflow_run"] as const).map((event) => (
+                <label key={event} className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={webhookEvents.includes(event)}
+                    disabled={!canWrite}
+                    onChange={(e) => {
+                      setWebhookEvents((prev) =>
+                        e.target.checked ? [...prev, event] : prev.filter((x) => x !== event)
+                      );
+                    }}
+                  />
+                  {event}
+                </label>
+              ))}
+            </div>
+            {config?.recentWebhookEvents && config.recentWebhookEvents.length > 0 ? (
+              <ul className="text-xs text-[var(--color-muted)] space-y-1">
+                {config.recentWebhookEvents.slice(0, 5).map((evt) => (
+                  <li key={`${evt.ts}-${evt.event}`}>
+                    {evt.event}: {evt.summary}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           {config?.secretsPresent && config.secretsPresent.length > 0 && (

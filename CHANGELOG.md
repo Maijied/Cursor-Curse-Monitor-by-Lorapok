@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Integrations hub slice (INT-01 / GH-06 / MAIL-16)** — Settings Services tab `IntegrationsHubCard`; GitHub webhook ingest at `POST /api/webhooks/github` with HMAC verify and configurable events; mail deliverability audit matrix + cron; `/api/health` exposes `mailLastVerifiedAt`.
 - **Mission Control global footer (ADMIN-04)** — sticky bottom bar with services health, release version, marketplace sync status, and Lorapok Labs link on every authenticated page.
 - **Dashboard KPI dedupe (ADMIN-05)** — footer owns status strip; removed sidebar/mobile sync chips, Overview sync badge and package version KPI, and infrastructure rows from Connected Services.
 

@@ -27,6 +27,8 @@ import EmailIdentitiesCard from "../ui/EmailIdentitiesCard";
 import TestmailConfigCard from "../ui/TestmailConfigCard";
 import CredVaultConfigCard from "../ui/CredVaultConfigCard";
 import MarketplaceConfigCard from "../ui/MarketplaceConfigCard";
+import IntegrationsHubCard from "../ui/IntegrationsHubCard";
+import MailDeliverabilityCard from "../ui/MailDeliverabilityCard";
 import ProfileSettingsCard from "../ui/ProfileSettingsCard";
 import SettingsTabNav from "../ui/SettingsTabNav";
 import { persistSettingsTab, readSettingsTab, type SettingsTabId } from "../ui/settings-tab-storage";
@@ -298,6 +300,7 @@ export default function Settings() {
 
       {tab === "mail" && (
         <>
+          <MailDeliverabilityCard />
           <MailSetupChecklist />
           <MailTransportCard />
         </>
@@ -357,6 +360,7 @@ export default function Settings() {
       {tab === "cloud-dev" && <CloudEnvironmentsCard />}
       {tab === "services" && (
         <>
+          <IntegrationsHubCard />
           <Card>
             <h3 className="font-semibold mb-2">Integration directory</h3>
             <p className="text-sm text-[var(--color-muted)] mb-4">

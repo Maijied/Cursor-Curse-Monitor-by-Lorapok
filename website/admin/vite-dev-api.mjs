@@ -156,6 +156,14 @@ import {
 } from "./functions/api/_shared/testmail-integration-config.js";
 import { envWithCursorCloudflareSecrets } from "./scripts/lib/cred-vault-sync.mjs";
 import { buildCredSyncHealth } from "./functions/api/_shared/cred-sync-audit.js";
+import {
+  readMailDeliverabilityState,
+  runMailDeliverabilityAudit,
+} from "./functions/api/_shared/mail-deliverability-audit.js";
+import {
+  ingestGithubWebhook,
+  verifyGithubWebhookSignature,
+} from "./functions/api/_shared/github-webhook.js";
 import { getMasterEmail } from "./functions/api/_shared/admins.js";
 
 const mergedDevSecrets = envWithCursorCloudflareSecrets(process.env);
@@ -1644,6 +1652,69 @@ export function createDevApiMiddleware() {
           res.statusCode = 500;
           res.end(JSON.stringify({ error: err.message }));
         });
+      return;
+    }
+
+    if (url === "/api/integrations/mail/deliverability" && req.method === "GET") {
+      readMailDeliverabilityState(devFunctionsEnv())
+        .then((status) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, status }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/integrations/mail/deliverability" && req.method === "POST") {
+      runMailDeliverabilityAudit(devFunctionsEnv())
+        .then((status) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, status }));
+        })
+        .catch((err) => {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      return;
+    }
+
+    if (url === "/api/webhooks/github" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        try {
+          const env = devFunctionsEnv();
+          const config = await readGithubIntegrationConfig(env);
+          const secret = String(config.webhookSecret ?? "").trim();
+          if (!secret) {
+            res.statusCode = 503;
+            res.end(JSON.stringify({ error: "GitHub webhook secret not configured" }));
+            return;
+          }
+          const signature = req.headers["x-hub-signature-256"] ?? "";
+          const valid = await verifyGithubWebhookSignature(secret, body, signature);
+          if (!valid) {
+            res.statusCode = 401;
+            res.end(JSON.stringify({ error: "Invalid signature" }));
+            return;
+          }
+          const payload = JSON.parse(body);
+          const event = req.headers["x-github-event"] ?? "unknown";
+          const result = await ingestGithubWebhook(env, {
+            event,
+            deliveryId: req.headers["x-github-delivery"] ?? null,
+            payload,
+          });
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, ...result }));
+        } catch (err) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
       return;
     }
 

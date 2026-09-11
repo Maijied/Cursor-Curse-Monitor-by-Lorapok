@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-11 (CRED-02 done; main merged through PR #261)
-**Branch:** `feat/cred-02-cred-sync-reliability`
-**Main:** `39182bf9` (PR #261 SOCIAL-04/05 merged)
-**CI:** PR #262 green after main merge; Dashboard vitest local
+**Last updated:** 2026-09-11 (PR #263 discord sync stat merged; INT-01/GH-06/MAIL-16 slice in progress)
+**Branch:** `feat/int-01-gh-06-mail-16-integrations`
+**Main:** `c4d646b6` (PR #263 Discord deploy sync stat service merged)
+**CI:** main green; admin node tests + oxlint local
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -159,7 +159,7 @@
 | GH-04 | Mail sync GHA workflow polling (like deploy) | **done** | `useWorkflowPoll` + `MailSyncProgressBanner` |
 | MAIL-07 | Mail sync workflow polling in UI | **done** | Mail + Setup checklist |
 | GH-05 | Procedure on-merge finalize for settings PR | **next** | optional |
-| GH-06 | **GitHub webhooks** — repo push, release, workflow_run → Mission Control ingest + fan-out to Discord/social | **next** | Settings → GitHub tab; configurable events; HMAC verify |
+| GH-06 | **GitHub webhooks** — repo push, release, workflow_run → Mission Control ingest + fan-out to Discord/social | **partial** | `POST /api/webhooks/github` HMAC ingest; Settings → GitHub webhook URL + events; Discord fan-out deferred |
 
 ---
 
@@ -216,10 +216,10 @@
 | QUOTA-01 | Service used/limit in `/api/sync/status` | **done** | Resend, Cloudflare Email, mail relay |
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
 | MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
-| MAIL-08 | `mailLastVerifiedAt` on health API | **next** | small API |
+| MAIL-08 | `mailLastVerifiedAt` on health API | **done** | `/api/health` exposes `mailLastVerifiedAt` + `mailDeliverabilityOk` |
 | MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **done** | `mail-template-engine.js`, `MailTemplateGallery.tsx`, `GET /api/integrations/mail/preview` |
 | MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **done** | `subscriber-mail-context.js`, subscribe API + broadcast merge tags; KV overrides `integrations:mail-templates` |
-| MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **next** | `mail-probe` cron + Settings matrix; alert on failure |
+| MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **partial** | `mail-deliverability-audit.js`, cron + Settings matrix; live send probe deferred |
 
 ---
 
@@ -366,7 +366,7 @@
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 | CRED-02 | **Cred sync reliability** — idempotent save→GH/Pages/CF sync; miss detection + retry; health badge "sync never miss" | **done** | `cred-sync-audit.js`, `GET /integrations/cred-sync/status`, Settings → Cred vault badge |
-| INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **next** | reduce duplicate cards; everything configurable from admin |
+| INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **partial** | `IntegrationsHubCard` on Services tab; full tab consolidation deferred |
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
@@ -382,8 +382,10 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **INT-01 / GH-06 / MAIL-16** — unified integrations hub, GitHub webhook ingest, live email audit
-2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
+1. **GH-06** (finish) — Discord/social fan-out on webhook events; repo webhook setup docs
+2. **MAIL-16** (finish) — live send probes via testmail; alert on failure
+3. **INT-01** (finish) — consolidate duplicate integration cards into hub tabs
+4. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
 3. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
