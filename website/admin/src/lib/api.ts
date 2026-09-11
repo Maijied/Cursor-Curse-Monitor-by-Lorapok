@@ -90,6 +90,10 @@ export async function fetchHealth() {
     mailRestConfigured?: boolean;
     mailResendConfigured?: boolean;
     mailHint?: string;
+    mailLastVerifiedAt?: string | null;
+    mailDeliverabilityOk?: boolean;
+    githubWebhookConfigured?: boolean;
+    githubWebhookRecentCount?: number;
     adminPublicUrl?: string;
     githubTokenConfigured?: boolean;
     discordConfigured?: boolean;
@@ -2017,15 +2021,58 @@ export type FirebaseIntegrationConfig = {
   githubSecretsSyncedAt: string | null;
 };
 
+export type GithubWebhookEvent = {
+  ts: string;
+  event: string;
+  summary: string;
+  deliveryId?: string | null;
+  repository?: string;
+};
+
 export type GithubIntegrationConfig = {
   repository: string;
   secretsEnvironment: string;
   tokenConfigured: boolean;
   secretsPresent: string[];
+  webhookConfigured?: boolean;
+  webhookUrl?: string | null;
+  webhookSecretPreview?: string | null;
+  webhookEvents?: string[];
+  recentWebhookEvents?: GithubWebhookEvent[];
   updatedAt: string | null;
   updatedBy: string | null;
   githubSecretsSyncedAt: string | null;
 };
+
+export type MailDeliverabilityRow = {
+  address: string;
+  source: string;
+  ok: boolean;
+  checks: Array<{ id: string; ok: boolean; detail: string }>;
+};
+
+export type MailDeliverabilityStatus = {
+  lastRunAt: string | null;
+  lastVerifiedAt: string | null;
+  allOk: boolean;
+  transport?: string | null;
+  addressCount?: number;
+  results: MailDeliverabilityRow[];
+};
+
+export async function fetchMailDeliverabilityApi() {
+  return apiGet<{ ok: boolean; status: MailDeliverabilityStatus }>("/integrations/mail/deliverability");
+}
+
+export async function runMailDeliverabilityAuditApi() {
+  const res = await fetch(`${API_BASE}/integrations/mail/deliverability`, {
+    method: "POST",
+    headers: await authHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Audit failed");
+  return data as { ok: boolean; status: MailDeliverabilityStatus };
+}
 
 export type CloudflareIntegrationConfig = {
   accountId: string;
@@ -2323,6 +2370,8 @@ export async function putGithubConfigApi(payload: {
   repository?: string;
   secretsEnvironment?: string;
   githubToken?: string;
+  webhookSecret?: string;
+  webhookEvents?: string[];
 }) {
   const res = await fetch(`${API_BASE}/integrations/github/config`, {
     method: "PUT",

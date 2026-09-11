@@ -3,11 +3,13 @@ import { jsonConfigSaveResponse } from "../../_shared/kv-api-response.js";
 import { formatKvPutError } from "../../_shared/kv-put.js";
 import { GITHUB_REPO } from "../../_shared/repo-constants.js";
 import {
+  mergeGithubWebhookSettings,
   normalizeGithubIntegrationConfig,
   readGithubIntegrationConfig,
   sanitizeGithubIntegrationForClient,
   writeGithubIntegrationConfig,
 } from "../../_shared/github-integration-config.js";
+import { readRecentGithubWebhookEvents } from "../../_shared/github-webhook.js";
 import {
   listGithubEnvironmentSecretNames,
 } from "../../_shared/github-secrets.js";
@@ -36,9 +38,10 @@ export async function onRequestGet(context) {
     }
   }
 
+  const recentWebhookEvents = await readRecentGithubWebhookEvents(env);
   return jsonResponse({
     ok: true,
-    config: sanitizeGithubIntegrationForClient(config, env, secretNames),
+    config: sanitizeGithubIntegrationForClient(config, env, secretNames, { recentWebhookEvents }),
   });
 }
 
@@ -92,9 +95,16 @@ export async function onRequestPut(context) {
     githubSyncWarning = syncResult.warning;
   }
 
+  const webhook = mergeGithubWebhookSettings(current, {
+    webhookSecret: body.webhookSecret,
+    webhookEvents: body.webhookEvents,
+  });
+
   const next = normalizeGithubIntegrationConfig({
     repository: repository || GITHUB_REPO,
     secretsEnvironment,
+    webhookSecret: webhook.webhookSecret,
+    webhookEvents: webhook.webhookEvents,
     updatedAt: new Date().toISOString(),
     updatedBy: auth.email,
     githubSecretsSyncedAt,
@@ -118,9 +128,10 @@ export async function onRequestPut(context) {
     }
   }
 
+  const recentWebhookEvents = await readRecentGithubWebhookEvents(env);
   return jsonConfigSaveResponse(env, {
     ok: true,
-    config: sanitizeGithubIntegrationForClient(next, env, secretNames),
+    config: sanitizeGithubIntegrationForClient(next, env, secretNames, { recentWebhookEvents }),
     githubSecretsSyncedAt,
     githubSyncWarning,
   });

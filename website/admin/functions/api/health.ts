@@ -20,6 +20,9 @@ import {
   STATS_ARTIFACTS_KV_FALLBACK,
 } from "./_shared/r2-stats.js";
 import { buildCredSyncHealth } from "./_shared/cred-sync-audit.js";
+import { readMailDeliverabilityState } from "./_shared/mail-deliverability-audit.js";
+import { readRecentGithubWebhookEvents } from "./_shared/github-webhook.js";
+import { readGithubIntegrationConfig } from "./_shared/github-integration-config.js";
 
 /**
  * Reports service health, configuration status, and endpoint URLs.
@@ -49,6 +52,9 @@ export async function onRequestGet(context) {
   const discordDigest = sanitizeDiscordDigestConfigForClient(await readDiscordDigestConfig(env));
   const statsR2 = await probeStatsR2(env);
   const credSync = await buildCredSyncHealth(env);
+  const mailDeliverability = await readMailDeliverabilityState(env);
+  const githubConfig = await readGithubIntegrationConfig(env);
+  const githubWebhookEvents = await readRecentGithubWebhookEvents(env);
 
   return jsonResponse({
     ok: checks.github,
@@ -66,6 +72,8 @@ export async function onRequestGet(context) {
     mailRestConfigured: mail.restConfigured ?? false,
     mailResendConfigured: mail.resendConfigured ?? false,
     mailHint: mail.hint,
+    mailLastVerifiedAt: mailDeliverability.lastVerifiedAt ?? null,
+    mailDeliverabilityOk: mailDeliverability.allOk === true,
     subscribeAvailable: subscribeSite.subscribeAvailable,
     subscribeModalEnabled: subscribeSite.subscribeModalEnabled,
     subscribeFallbackMode: subscribeSite.subscribeFallbackMode,
@@ -94,5 +102,7 @@ export async function onRequestGet(context) {
       freeTier: STATS_R2_FREE_TIER,
     },
     credSync,
+    githubWebhookConfigured: Boolean(githubConfig.webhookSecret),
+    githubWebhookRecentCount: githubWebhookEvents.length,
   });
 }

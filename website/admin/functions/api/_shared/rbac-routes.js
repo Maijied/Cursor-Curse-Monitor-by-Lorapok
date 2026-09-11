@@ -64,6 +64,8 @@ export const READ_ROUTE_PERMISSIONS = {
   "GET /integrations/discord/preview": "integrations.read",
   "GET /integrations/social/preview": "integrations.read",
   "GET /integrations/cred-sync/status": "integrations.read",
+  "GET /integrations/mail/deliverability": "integrations.read",
+  "POST /integrations/mail/deliverability": "integrations.write",
   "GET /integrations/seo/config": "integrations.read",
   "GET /subscribers": "subscribers.write",
 };

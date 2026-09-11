@@ -54,4 +54,15 @@ export const MANAGED_CRON_JOBS = [
     intervalDefault: 60,
     intervalUnit: "minutes",
   },
+  {
+    id: "mail-deliverability",
+    label: "Mail deliverability audit",
+    description:
+      "Verifies product, support, and identity addresses against transport and domain readiness; alerts on failure.",
+    workerEndpoint: "/api/cron/mail-deliverability",
+    intervalMin: 360,
+    intervalMax: 10080,
+    intervalDefault: 1440,
+    intervalUnit: "minutes",
+  },
 ];
