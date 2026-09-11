@@ -6,6 +6,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Fixed
+
+- **GH-06 webhook fan-out** — GitHub ingest now fans out to Discord (community/deployment webhook) for all enabled events and to social platforms on `release`; repo webhook setup documented in wiki + Settings → GitHub.
+
 ### Added
 
 - **Integrations hub slice (INT-01 / GH-06 / MAIL-16)** — Settings Services tab `IntegrationsHubCard`; GitHub webhook ingest at `POST /api/webhooks/github` with HMAC verify and configurable events; mail deliverability audit matrix + cron; `/api/health` exposes `mailLastVerifiedAt`.

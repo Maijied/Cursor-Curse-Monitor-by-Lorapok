@@ -2,9 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-11 (PR #263 discord sync stat merged; INT-01/GH-06/MAIL-16 slice in progress)
-**Branch:** `feat/int-01-gh-06-mail-16-integrations`
-**Main:** `c4d646b6` (PR #263 Discord deploy sync stat service merged)
+**Last updated:** 2026-09-11 (PR #264 merged; GH-06 fan-out in progress)
+**Branch:** `feat/gh-06-webhook-fanout`
+**Main:** `67a5c6b1` (PR #264 INT-01/GH-06/MAIL-16 slice merged)
 **CI:** main green; admin node tests + oxlint local
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -159,7 +159,7 @@
 | GH-04 | Mail sync GHA workflow polling (like deploy) | **done** | `useWorkflowPoll` + `MailSyncProgressBanner` |
 | MAIL-07 | Mail sync workflow polling in UI | **done** | Mail + Setup checklist |
 | GH-05 | Procedure on-merge finalize for settings PR | **next** | optional |
-| GH-06 | **GitHub webhooks** — repo push, release, workflow_run → Mission Control ingest + fan-out to Discord/social | **partial** | `POST /api/webhooks/github` HMAC ingest; Settings → GitHub webhook URL + events; Discord fan-out deferred |
+| GH-06 | **GitHub webhooks** — repo push, release, workflow_run → Mission Control ingest + fan-out to Discord/social | **done** | `POST /api/webhooks/github` + `github-webhook-fanout.js`; Discord all events; social on release; wiki setup steps |
 
 ---
 
@@ -382,11 +382,10 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **GH-06** (finish) — Discord/social fan-out on webhook events; repo webhook setup docs
-2. **MAIL-16** (finish) — live send probes via testmail; alert on failure
-3. **INT-01** (finish) — consolidate duplicate integration cards into hub tabs
-4. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
-3. **WEB-11** — Engineering history timeline page
+1. **MAIL-16** (finish) — live send probes via testmail; alert on failure
+2. **INT-01** (finish) — consolidate duplicate integration cards into hub tabs
+3. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
+4. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
 
 ---
