@@ -78,13 +78,21 @@ export function buildDeploySyncStatPayload(siteData, channels, options = {}) {
     normalizeDeployVersion(mergedSiteData?.packageVersion ?? mergedSiteData?.version) ??
     null;
 
-  const syncStatus =
-    (packageVersion && channels?.length
+  const resolvedFromChannels =
+    packageVersion && channels?.length
       ? resolveMarketplaceSyncStatus(packageVersion, channels)
-      : null) ??
-    mergedSiteData?.marketplaceSync?.syncStatus ??
-    mergedSiteData?.syncStatus ??
-    "unknown";
+      : null;
+  const deployedOverlayApplied =
+    Boolean(deployedTag) &&
+    normalizeDeployVersion(deployedTag) !==
+      normalizeDeployVersion(siteData?.packageVersion ?? siteData?.version);
+  const syncStatus =
+    resolvedFromChannels ??
+    (deployedOverlayApplied
+      ? "unknown"
+      : mergedSiteData?.marketplaceSync?.syncStatus ??
+        mergedSiteData?.syncStatus ??
+        "unknown");
 
   const siteDataForFields = mergedSiteData
     ? {

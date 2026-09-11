@@ -13,7 +13,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Discord deploy sync stats** — deployment cards now use a shared `deploy-sync-stat-service` (live KV cache + deployed version overlay) so the Release sync block matches the deployed version instead of stale `site-data.json` package versions
+- **Discord deploy sync stats** — deployment cards now use a shared `deploy-sync-stat-service` (live KV cache + deployed version overlay) so the Release sync block matches the deployed version instead of stale `site-data.json` package versions; marketplace field rows read live channel arrays (not stale site-data fallbacks) and ignore stale sync status when the deployed tag overlay changes the version without channel proof
 - **Firestore KV fallback** — when Cloudflare KV daily write quota is exhausted, Mission Control mirrors config/stats/cron metadata to Firestore (`admin-kv-fallback`) and system logs to `system-logs`; reads fall back KV → Firestore. Requires Pages secret `FIREBASE_SERVICE_ACCOUNT_JSON`.
 - **Discord deployment notifications** — CI cards now read the live version from `site-data.json` (not placeholder `package.json` `0.0.0`); missing `DISCORD_DEPLOYMENT_WEBHOOK` fails the notify step with a clear error instead of silently skipping; CI also falls back to the deployment webhook stored in Mission Control `ADMIN_KV` when env/vault secrets are absent; marketing website deploy loads the webhook from cred vault like admin deploy
 - **REL-01 Beta release pipeline** — `vX.Y.Z-beta.N` version plan for beta channel; CI `release-prep` uses `--channel beta`; full-release deploy no longer blocked for production; Mission Control version check passes `channel=beta`; marketplace policy accepts beta tags

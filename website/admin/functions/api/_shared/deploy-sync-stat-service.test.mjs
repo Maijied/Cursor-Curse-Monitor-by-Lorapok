@@ -67,4 +67,24 @@ assert.equal(localPayload.packageVersion, "1.0.160");
 assert.match(localPayload.downloadBreakdown, /5,000/);
 assert.match(localPayload.engagementText, /42/);
 
+const channelBackedFields = deployedPayload.marketplaceFields;
+assert.match(
+  channelBackedFields.find((field) => field.name === "Open VSX")?.value ?? "",
+  /`1\.0\.160`/,
+  "Open VSX field must use live channel version, not stale site-data",
+);
+assert.match(
+  channelBackedFields.find((field) => field.name === "VS Code Marketplace")?.value ?? "",
+  /`1\.0\.160`/,
+);
+
+const missingChannelsPayload = buildDeploySyncStatPayload(staleSiteData, null, {
+  deployedTag: "v1.0.160",
+});
+assert.equal(missingChannelsPayload.syncStatus, "unknown");
+assert.equal(missingChannelsPayload.packageVersion, "1.0.160");
+
+const onlyPackageChannel = [{ id: "package", version: "1.0.160" }];
+assert.equal(resolveMarketplaceSyncStatus("1.0.160", onlyPackageChannel), "unknown");
+
 console.log("deploy-sync-stat-service.test.mjs: OK");

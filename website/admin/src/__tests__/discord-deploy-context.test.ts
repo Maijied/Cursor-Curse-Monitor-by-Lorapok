@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildMarketplaceFields,
   buildQuickLinksText,
+  channelById,
   extractChangelogSection,
   formatDownloadBreakdownText,
   normalizeTag,
@@ -69,6 +70,35 @@ describe("discord deploy context formatters", () => {
 
     expect(fields.some((field) => field.name === "GitHub release" && field.value.includes("v1.0.31"))).toBe(true);
     expect(fields.some((field) => field.name === "Open VSX" && field.value.includes("⚠️"))).toBe(true);
+  });
+
+  it("prefers live channel array versions over stale site-data", () => {
+    const liveChannels = [
+      { id: "ovsx-canonical", version: "1.0.160" },
+      { id: "ovsx-duplicate", version: "1.0.160" },
+      { id: "vscode", version: "1.0.160" },
+      { id: "firefox-amo", version: "1.0.160", published: true },
+    ];
+
+    expect(channelById(liveChannels, "vscode")?.version).toBe("1.0.160");
+
+    const fields = buildMarketplaceFields(
+      {
+        packageVersion: "1.0.160",
+        version: "1.0.160",
+        marketplaceSync: { syncStatus: "synced" },
+        github: { releaseTag: "v1.0.160" },
+        ovsx: { version: "1.0.132" },
+        ovsxDuplicate: { version: "1.0.132" },
+        vscode: { version: "1.0.132" },
+        browserExtension: { firefox: { version: "1.0.132" } },
+      },
+      liveChannels,
+    );
+
+    expect(fields.find((field) => field.name === "Open VSX")?.value).toContain("`1.0.160`");
+    expect(fields.find((field) => field.name === "Open VSX")?.value).toContain("✅");
+    expect(fields.find((field) => field.name === "Firefox AMO")?.value).toContain("`1.0.160`");
   });
 
   it("normalizes tags and truncates long text", () => {
