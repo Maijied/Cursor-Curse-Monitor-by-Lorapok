@@ -9,6 +9,7 @@ import {
 } from "../scripts/discord-deployment-notify.mjs";
 import { readDeploymentWebhookFromDiscordConfig } from "../scripts/lib/resolve-discord-deployment-webhook.mjs";
 import { buildLocalDeployEnrichment } from "../scripts/discord-ci-enrichment.mjs";
+import { buildLocalDeploySyncStat } from "../website/admin/functions/api/_shared/deploy-sync-stat-service.js";
 import { buildDeploymentEmbed } from "../website/admin/functions/api/_shared/discord-notify.js";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -79,6 +80,34 @@ assert.equal(enrichment.syncStat?.packageVersion, "1.0.56");
 assert.match(
   enrichment.marketplaceFields.find((field) => field.name === "Package")?.value ?? "",
   /`1\.0\.56`/,
+);
+assert.match(
+  enrichment.marketplaceFields.find((field) => field.name === "GitHub release")?.value ?? "",
+  /`v1\.0\.56`/,
+  "deployed tag overlay must align GitHub release with pipeline version",
+);
+
+const staleSiteData = {
+  packageVersion: "1.0.10",
+  version: "1.0.10",
+  github: { releaseTag: "v1.0.10" },
+  ovsx: { version: "1.0.10" },
+  ovsxDuplicate: { version: "1.0.10" },
+  vscode: { version: "1.0.10" },
+  liveChannels: [
+    { id: "ovsx-canonical", version: "1.0.56" },
+    { id: "ovsx-duplicate", version: "1.0.56" },
+    { id: "vscode", version: "1.0.56" },
+    { id: "github-release", version: "1.0.56" },
+  ],
+  downloads: { verified: true, displayTotal: 100, breakdown: { vscodeMarketplace: 10 } },
+  visitors: { websiteVisits: 1, totalEngagement: 2, packageClicks: {} },
+};
+const channelSync = buildLocalDeploySyncStat(staleSiteData, { deployedTag: "v1.0.56" });
+assert.match(
+  channelSync.marketplaceFields.find((field) => field.name === "Open VSX")?.value ?? "",
+  /`1\.0\.56`/,
+  "liveChannels array must drive Open VSX version in Release sync block",
 );
 assert.ok(
   !String(enrichment.catalogBrand?.discordAvatarUrl ?? "").includes("{{"),

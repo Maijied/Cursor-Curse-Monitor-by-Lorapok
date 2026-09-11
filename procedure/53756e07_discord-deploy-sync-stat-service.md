@@ -23,6 +23,7 @@ discord-deploy-sync-stat-service
 - [x] Implementation started — `deploy-sync-stat-service.js` + wired Discord deploy/CI/digest paths
 - [x] Tests passing — deploy-sync-stat-service, discord-notify vitest, CI notify script
 - [x] PR opened — #263
+- [x] Audit follow-up — `buildMarketplaceFields` reads live channel arrays; digest deduped; stale sync guard when overlay lacks channels
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
@@ -35,6 +36,8 @@ discord-deploy-sync-stat-service
 |------|----------|-----------|
 | 2026-09-11 | Procedure opened | Task tracking started |
 | 2026-09-11 | `deploy-sync-stat-service` as single source | Uses `fetchSiteDataWithLiveCache` + deployed tag overlay so Release sync matches pipeline version |
+| 2026-09-11 | `channelById` in marketplace fields | `fetchLiveChannels` returns arrays; Release sync rows must not read object-shaped `channels.ovsxCanonical` |
+| 2026-09-11 | Stale sync guard | When deployed tag overlays site-data without live channels, sync status is `unknown` not inherited `synced` |
 
 ---
 

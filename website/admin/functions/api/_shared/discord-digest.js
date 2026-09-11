@@ -76,24 +76,27 @@ export async function runDiscordDigest(env, options = {}) {
     }
   }
 
-  const syncStat = await fetchDeploySyncStat(env);
-  const siteData = syncStat.siteData;
-  const tag =
-    siteData?.github?.releaseTag ??
-    (siteData?.version ? `v${String(siteData.version).replace(/^v/i, "")}` : null);
-
   let enrichment = null;
   try {
     enrichment = await buildDeployEnrichment(env, {
-      tag,
       includeChangelog: config.includeChangelog,
     });
   } catch (error) {
     console.warn("Discord digest enrichment failed", error);
   }
 
+  const syncStat = enrichment?.syncStat ?? (await fetchDeploySyncStat(env));
+  const siteData = syncStat?.siteData ?? enrichment?.siteData ?? null;
+  const tag =
+    siteData?.github?.releaseTag ??
+    (siteData?.version ? `v${String(siteData.version).replace(/^v/i, "")}` : null);
+
   const displayTotal = siteData?.downloads?.displayTotal ?? siteData?.downloads?.total;
-  const syncStatus = syncStat.syncStatus ?? siteData?.marketplaceSync?.syncStatus ?? siteData?.syncStatus ?? "unknown";
+  const syncStatus =
+    syncStat?.syncStatus ??
+    siteData?.marketplaceSync?.syncStatus ??
+    siteData?.syncStatus ??
+    "unknown";
   const versionLabel = normalizeTag(tag) || siteData?.version || "—";
 
   const payload = {

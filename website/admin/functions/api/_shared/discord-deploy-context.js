@@ -96,8 +96,28 @@ export function formatDownloadBreakdownText(siteData) {
 }
 
 /**
+ * @param {Array<Record<string, unknown>>|Record<string, unknown>|null|undefined} channels
+ * @param {string} id
+ * @returns {Record<string, unknown>|null}
+ */
+export function channelById(channels, id) {
+  if (!channels) return null;
+  if (Array.isArray(channels)) {
+    return channels.find((channel) => channel?.id === id) ?? null;
+  }
+  const legacyKey = {
+    "ovsx-canonical": "ovsxCanonical",
+    "ovsx-duplicate": "ovsxDuplicate",
+    vscode: "vscode",
+    "firefox-amo": "firefoxAmo",
+    "github-release": "githubRelease",
+  }[id];
+  return legacyKey && channels[legacyKey] ? channels[legacyKey] : null;
+}
+
+/**
  * @param {Record<string, unknown>|null|undefined} siteData
- * @param {Record<string, unknown>|null|undefined} [channels]
+ * @param {Array<Record<string, unknown>>|Record<string, unknown>|null|undefined} [channels]
  * @returns {Array<{ name: string; value: string; inline?: boolean }>}
  */
 export function buildMarketplaceFields(siteData, channels) {
@@ -107,10 +127,19 @@ export function buildMarketplaceFields(siteData, channels) {
 
   const pkg = String(siteData.packageVersion ?? siteData.version ?? "—");
   const githubTag = String(siteData.github?.releaseTag ?? "—").replace(/^v/, "");
-  const ovsxVersion = String(channels?.ovsxCanonical?.version ?? siteData.ovsx?.version ?? "—");
-  const duplicateVersion = String(channels?.ovsxDuplicate?.version ?? siteData.ovsxDuplicate?.version ?? "—");
-  const vscodeVersion = String(channels?.vscode?.version ?? siteData.vscode?.version ?? "—");
-  const firefoxVersion = String(siteData.browserExtension?.firefox?.version ?? "pending AMO");
+  const ovsxVersion = String(
+    channelById(channels, "ovsx-canonical")?.version ?? siteData.ovsx?.version ?? "—",
+  );
+  const duplicateVersion = String(
+    channelById(channels, "ovsx-duplicate")?.version ?? siteData.ovsxDuplicate?.version ?? "—",
+  );
+  const vscodeVersion = String(
+    channelById(channels, "vscode")?.version ?? siteData.vscode?.version ?? "—",
+  );
+  const firefoxChannelVersion = channelById(channels, "firefox-amo")?.version;
+  const firefoxVersion = String(
+    firefoxChannelVersion ?? siteData.browserExtension?.firefox?.version ?? "pending AMO",
+  );
 
   return [
     {
@@ -245,11 +274,13 @@ async function fetchReleaseNotes(env, tag) {
 export async function buildDeployEnrichment(env, options = {}) {
   const tag = options.tag ?? null;
 
-  let syncStat = null;
-  try {
-    syncStat = await fetchDeploySyncStat(env, { deployedTag: tag });
-  } catch (error) {
-    console.warn("Discord enrichment: deploy sync stat unavailable", error);
+  let syncStat = options.syncStat ?? null;
+  if (!syncStat) {
+    try {
+      syncStat = await fetchDeploySyncStat(env, { deployedTag: tag });
+    } catch (error) {
+      console.warn("Discord enrichment: deploy sync stat unavailable", error);
+    }
   }
 
   let changelog = null;
