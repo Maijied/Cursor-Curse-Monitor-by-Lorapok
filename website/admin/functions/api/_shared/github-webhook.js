@@ -1,6 +1,7 @@
 import { putKvJsonIfChanged } from "./kv-put.js";
 import { logSystemEvent } from "./system-log.js";
 import { readGithubIntegrationConfig } from "./github-integration-config.js";
+import { fanOutGithubWebhook } from "./github-webhook-fanout.js";
 
 export const GITHUB_WEBHOOK_EVENTS_KEY = "integrations:github-webhook-events";
 
@@ -139,5 +140,16 @@ export async function ingestGithubWebhook(env, input) {
     },
   });
 
-  return { ok: true, event, summary };
+  let fanOut = { discord: { skipped: true }, social: { skipped: true } };
+  try {
+    fanOut = await fanOutGithubWebhook(env, { event, payload: input.payload, summary });
+  } catch (error) {
+    console.warn("GitHub webhook fan-out failed", error);
+    fanOut = {
+      discord: { ok: false, error: error instanceof Error ? error.message : "fan-out failed" },
+      social: { skipped: true },
+    };
+  }
+
+  return { ok: true, event, summary, fanOut };
 }

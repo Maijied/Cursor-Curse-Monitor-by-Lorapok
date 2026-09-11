@@ -137,8 +137,16 @@ export default function GitHubConfigCard() {
           <div className="rounded-xl border border-[var(--color-border)] p-4 space-y-3">
             <h4 className="text-sm font-semibold">Inbound webhooks (GH-06)</h4>
             <p className="text-xs text-[var(--color-muted)]">
-              Point your repo webhook at this URL. Events are logged and can fan out to Discord/social.
+              Point your repo webhook at this URL. Events log to Mission Control, post to Discord (community or
+              deployment webhook), and publish <strong>release</strong> events to enabled social platforms.
             </p>
+            <ol className="text-xs text-[var(--color-muted)] list-decimal list-inside space-y-1">
+              <li>Save settings below to generate the webhook secret and URL.</li>
+              <li>
+                GitHub → repo <strong>Settings → Webhooks → Add webhook</strong> — paste URL, secret, JSON payload.
+              </li>
+              <li>Enable Pushes, Releases, and Workflow runs (match the checkboxes here).</li>
+            </ol>
             {config?.webhookUrl ? (
               <p className="text-xs font-[family-name:var(--font-mono)] break-all">{config.webhookUrl}</p>
             ) : (

@@ -74,9 +74,24 @@ Pipeline: `npm run site:seo` + `site:seo:validate` in CI.
 
 ## GitHub webhook (GH-06)
 
-Repo events (`push`, `release`, `workflow_run`) → Mission Control ingest → fan-out to Discord/social cards.
+Repo events (`push`, `release`, `workflow_run`) → `POST /api/webhooks/github` (HMAC) → Mission Control ingest → fan-out:
+
+| Destination | Events | Notes |
+|-------------|--------|-------|
+| **Discord** | All enabled events | Community webhook first, deployment webhook fallback |
+| **Social** | `release` only | Enabled platforms in Settings → Social (avoids push/workflow spam) |
 
 Configurable event list in Settings → GitHub.
+
+### Repo webhook setup
+
+1. Mission Control → **Settings → GitHub** → **Save** (generates webhook secret + shows ingest URL).
+2. GitHub repo → **Settings → Webhooks → Add webhook**.
+3. **Payload URL:** `https://cursor-dev.lorapok.tech/api/webhooks/github` (or your `ADMIN_PUBLIC_URL`).
+4. **Content type:** `application/json`.
+5. **Secret:** copy from Mission Control (shown once as preview after save; rotate via Save if needed).
+6. **Events:** enable `Pushes`, `Releases`, and `Workflow runs` (match checkboxes in Mission Control).
+7. Deliver a test payload or push a tag; confirm **Recent webhook events** on the GitHub settings card and a Discord community card.
 
 ---
 
