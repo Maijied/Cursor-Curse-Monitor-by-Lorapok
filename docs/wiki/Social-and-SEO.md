@@ -118,7 +118,15 @@ Every Settings save that touches secrets must:
 
 ## Live email audit (MAIL-16)
 
-Verify all addresses referenced in repo/docs send and receive:
+Mission Control audits product, support, and identity addresses (format, transport, domain routing). When `TESTMAIL_API_KEY` + `TESTMAIL_NAMESPACE` are on Pages, **product** and **support** addresses also get a live outbound send + testmail inbox poll.
+
+```bash
+npm run mail:probe-deliverability --prefix website/admin
+```
+
+Failures log to system events and post a Discord deployment/community alert embed.
+
+Addresses covered:
 
 - `cursor.monitor@mail.lorapok.tech`
 - `cursor.curse.help@lorapok.tech`

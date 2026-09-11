@@ -2,9 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-11 (PR #264 merged; GH-06 fan-out in progress)
-**Branch:** `feat/gh-06-webhook-fanout`
-**Main:** `67a5c6b1` (PR #264 INT-01/GH-06/MAIL-16 slice merged)
+**Last updated:** 2026-09-11 (GH-06 done; MAIL-16 live probes in progress)
+**Branch:** `feat/mail-16-live-probes`
+**Main:** `fc89c7bc` (GH-06 bootstrap CLI + #266 merged)
 **CI:** main green; admin node tests + oxlint local
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -219,7 +219,7 @@
 | MAIL-08 | `mailLastVerifiedAt` on health API | **done** | `/api/health` exposes `mailLastVerifiedAt` + `mailDeliverabilityOk` |
 | MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **done** | `mail-template-engine.js`, `MailTemplateGallery.tsx`, `GET /api/integrations/mail/preview` |
 | MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **done** | `subscriber-mail-context.js`, subscribe API + broadcast merge tags; KV overrides `integrations:mail-templates` |
-| MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **partial** | `mail-deliverability-audit.js`, cron + Settings matrix; live send probe deferred |
+| MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **done** | Static matrix + testmail live send for product/support; Discord alert on failure; `npm run mail:probe-deliverability` |
 
 ---
 
@@ -382,8 +382,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-16** (finish) — live send probes via testmail; alert on failure
-2. **INT-01** (finish) — consolidate duplicate integration cards into hub tabs
+1. **INT-01** (finish) — consolidate duplicate integration cards into hub tabs
 3. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
 4. **WEB-11** — Engineering history timeline page
 5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue

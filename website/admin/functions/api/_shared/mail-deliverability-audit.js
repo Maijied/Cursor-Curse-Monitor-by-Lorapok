@@ -3,6 +3,11 @@ import { logSystemEvent } from "./system-log.js";
 import { readMailConfig, isValidMailAddress } from "./mail-config.js";
 import { readEmailIdentitiesConfig, identityEmail, BUILTIN_IDENTITIES } from "./email-identities-config.js";
 import { getMailTransportStatus } from "./mail.js";
+import {
+  mergeLiveProbeChecks,
+  notifyDiscordMailDeliverabilityFailure,
+  runLiveDeliverabilityProbes,
+} from "./mail-deliverability-live-probe.js";
 
 export const MAIL_DELIVERABILITY_KEY = "integrations:mail-deliverability";
 
@@ -88,7 +93,9 @@ export async function runMailDeliverabilityAudit(env) {
   const transport = getMailTransportStatus(env);
   const mailConfig = await readMailConfig(env);
   const addresses = await collectMailAuditAddresses(env);
-  const results = addresses.map((row) => auditMailAddress(row, { transport, mailConfig }));
+  let results = addresses.map((row) => auditMailAddress(row, { transport, mailConfig }));
+  const liveProbe = await runLiveDeliverabilityProbes(env, results);
+  results = mergeLiveProbeChecks(results, liveProbe);
   const allOk = results.length > 0 && results.every((r) => r.ok);
   const ts = new Date().toISOString();
 
@@ -98,6 +105,9 @@ export async function runMailDeliverabilityAudit(env) {
     allOk,
     transport: transport.transport,
     addressCount: results.length,
+    liveProbe: liveProbe.skipped
+      ? { skipped: true, reason: liveProbe.reason ?? "skipped" }
+      : { skipped: false, probeCount: liveProbe.probes?.length ?? 0 },
     results,
   };
 
@@ -118,8 +128,9 @@ export async function runMailDeliverabilityAudit(env) {
       level: "warn",
       source: "mail-deliverability",
       message: `Mail deliverability audit failed for ${failed.length} address(es)`,
-      meta: { failed, lastRunAt: ts },
+      meta: { failed, lastRunAt: ts, liveProbe },
     });
+    await notifyDiscordMailDeliverabilityFailure(env, { failed, lastRunAt: ts });
   }
 
   return snapshot;
@@ -142,6 +153,7 @@ export async function readMailDeliverabilityState(env) {
       allOk: parsed.allOk === true,
       transport: parsed.transport ?? null,
       addressCount: parsed.addressCount ?? 0,
+      liveProbe: parsed.liveProbe ?? null,
       results: Array.isArray(parsed.results) ? parsed.results : [],
     };
   } catch {
