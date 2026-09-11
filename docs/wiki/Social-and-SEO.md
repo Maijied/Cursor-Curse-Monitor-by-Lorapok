@@ -83,15 +83,26 @@ Repo events (`push`, `release`, `workflow_run`) → `POST /api/webhooks/github` 
 
 Configurable event list in Settings → GitHub.
 
-### Repo webhook setup
+### Repo webhook setup (canonical — CLI)
 
-1. Mission Control → **Settings → GitHub** → **Save** (generates webhook secret + shows ingest URL).
-2. GitHub repo → **Settings → Webhooks → Add webhook**.
-3. **Payload URL:** `https://cursor-dev.lorapok.tech/api/webhooks/github` (or your `ADMIN_PUBLIC_URL`).
-4. **Content type:** `application/json`.
-5. **Secret:** copy from Mission Control (shown once as preview after save; rotate via Save if needed).
-6. **Events:** enable `Pushes`, `Releases`, and `Workflow runs` (match checkboxes in Mission Control).
-7. Deliver a test payload or push a tag; confirm **Recent webhook events** on the GitHub settings card and a Discord community card.
+**Preferred:** headless bootstrap from repo root (cred vault + `gh`; no browser console, no manual GitHub form):
+
+```bash
+npm run github:webhook:bootstrap --prefix website/admin
+```
+
+This saves the Mission Control webhook secret, creates or updates the repo hook (`application/json`, push/release/workflow_run), and runs a signed probe. Auth uses cred vault (`firebase_service_account_json` + `admin_master_email`) unless `ADMIN_ID_TOKEN` or `ADMIN_EMAIL`/`ADMIN_PASSWORD` is set.
+
+Re-probe only: `npm run github:webhook:probe --prefix website/admin`.
+
+Agent policy: [`.cursor/rules/github-webhook-bootstrap.mdc`](../../.cursor/rules/github-webhook-bootstrap.mdc).
+
+### Manual fallback (UI only when CLI unavailable)
+
+1. Mission Control → **Settings → GitHub** → **Save** (generates webhook secret + ingest URL).
+2. GitHub repo → **Settings → Webhooks → Add webhook** — URL, secret, `application/json`.
+3. Events: `Pushes`, `Releases`, `Workflow runs`.
+4. Confirm **Recent webhook events** in Mission Control and Discord community card.
 
 ---
 

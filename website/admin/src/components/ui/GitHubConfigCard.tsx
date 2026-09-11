@@ -140,10 +140,14 @@ export default function GitHubConfigCard() {
               Point your repo webhook at this URL. Events log to Mission Control, post to Discord (community or
               deployment webhook), and publish <strong>release</strong> events to enabled social platforms.
             </p>
+            <p className="text-xs text-[var(--color-muted)] font-[family-name:var(--font-mono)]">
+              Headless setup: <code className="text-[0.7rem]">npm run github:webhook:bootstrap</code> (cred vault +{" "}
+              <code className="text-[0.7rem]">gh</code> — no browser console or manual GitHub webhook form).
+            </p>
             <ol className="text-xs text-[var(--color-muted)] list-decimal list-inside space-y-1">
-              <li>Save settings below to generate the webhook secret and URL.</li>
+              <li>Save settings below, or run the bootstrap script above from the repo root.</li>
               <li>
-                GitHub → repo <strong>Settings → Webhooks → Add webhook</strong> — paste URL, secret, JSON payload.
+                Manual fallback only: GitHub → <strong>Settings → Webhooks</strong> — URL, secret, JSON payload.
               </li>
               <li>Enable Pushes, Releases, and Workflow runs (match the checkboxes here).</li>
             </ol>

@@ -38,6 +38,8 @@ All API keys, tokens, passwords, and webhook URLs must come from the **cred vaul
 | `testmail_api_key` | `TESTMAIL_API_KEY` — E2E inbox probes |
 | `testmail_namespace` | `TESTMAIL_NAMESPACE` |
 | `github_token` | `GITHUB_TOKEN` |
+| `firebase_service_account_json` | Mint `ADMIN_ID_TOKEN` for GH-06 webhook bootstrap (`admin-api-auth.mjs`) |
+| `admin_master_email` | Master admin email paired with service account for CLI bootstrap |
 | `cron_secret` | `CRON_SECRET` |
 
 Skip vault load only when explicitly testing without secrets: `CCM_SKIP_CRED_VAULT=1`.

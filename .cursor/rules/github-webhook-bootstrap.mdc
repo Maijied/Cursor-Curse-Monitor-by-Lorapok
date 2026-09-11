@@ -1,0 +1,67 @@
+---
+description: GH-06 GitHub webhook bootstrap — cred vault auth, CLI setup, no browser console or manual GitHub form
+alwaysApply: false
+---
+
+# GitHub webhook bootstrap (GH-06)
+
+Mission Control ingests repo events at `POST /api/webhooks/github` (HMAC) and fans out to Discord and social. **Agents and operators must use the headless CLI** — not the browser console, not manual copy/paste into GitHub’s “Add webhook” form.
+
+## Canonical command
+
+From repo root (local agent with cred vault + `gh` auth):
+
+```bash
+npm run github:webhook:bootstrap --prefix website/admin
+```
+
+Re-probe only (after bootstrap):
+
+```bash
+npm run github:webhook:probe --prefix website/admin
+```
+
+## What the bootstrap does
+
+1. **Authenticates** to Mission Control API (priority order):
+   - `ADMIN_ID_TOKEN` if set
+   - `ADMIN_EMAIL` + `ADMIN_PASSWORD` if set
+   - **Cred vault** (default): `firebase_service_account_json` + `admin_master_email` → mint Firebase ID token via `website/admin/scripts/lib/admin-api-auth.mjs`
+2. **Saves** `integrations:github` in ADMIN_KV (webhook secret + events).
+3. **Registers or updates** the GitHub repo webhook via `gh api` (`application/json`, `push` / `release` / `workflow_run`).
+4. **Probes** signed ingest and reports Discord/social fan-out (with `--probe`, default in npm script).
+
+## Agent rules
+
+| Do | Don't |
+|----|-------|
+| Run `github:webhook:bootstrap` for first-time setup, secret rotation, or smoke after GH-06 deploy | Paste `fetch('/api/integrations/github/config', …)` in browser devtools |
+| Use cred vault + `gh` on the maintainer machine | Ask the user to fill GitHub **Settings → Webhooks** manually unless CLI/`gh` is unavailable |
+| Mask secret previews only (`1944***`) in logs and chat | Echo full webhook secrets, `ADMIN_ID_TOKEN`, or service account JSON |
+| Verify: probe **200**, Settings → GitHub **recent events**, Discord **community** embed | Read production KV with wrangler for secrets when bootstrap can set them |
+
+## Fallback auth
+
+When cred vault is not mounted (e.g. cloud agent without GPG):
+
+```bash
+export ADMIN_ID_TOKEN='<firebase-id-token>'
+npm run github:webhook:bootstrap --prefix website/admin
+```
+
+Or `ADMIN_EMAIL` + `ADMIN_PASSWORD`. Set `CCM_SKIP_CRED_VAULT=1` only to force skipping vault mint (then token or password is required).
+
+## Flags (advanced)
+
+```bash
+node website/admin/scripts/bootstrap-github-webhook.mjs --skip-gh    # MC config only
+node website/admin/scripts/bootstrap-github-webhook.mjs --secret-from-env  # use GITHUB_WEBHOOK_SECRET
+```
+
+## Related
+
+- Implementation: `website/admin/scripts/bootstrap-github-webhook.mjs`, `probe-github-webhook.mjs`
+- Fan-out: `website/admin/functions/api/_shared/github-webhook-fanout.js`
+- Wiki: `docs/wiki/Social-and-SEO.md` (GH-06)
+- Cred vault policy: `.cursor/rules/cred-vault.mdc`
+- Procedure: `procedure/663cb387_gh-06-webhook-discord-fan-out.md`

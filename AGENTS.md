@@ -138,8 +138,9 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
   set `ADMIN_ID_TOKEN` for authenticated tier). Full headless Tier C+D:
   `npm run auth:tier-d`.
 - **GitHub webhook bootstrap (GH-06):** `npm run github:webhook:bootstrap` in
-  `website/admin/` — saves MC webhook secret, registers repo hook via `gh`, probes
-  ingest (auth via cred vault service account, `ADMIN_ID_TOKEN`, or email/password).
+  `website/admin/` — **canonical headless setup** (cred vault auth by default; no
+  browser console or manual GitHub webhook form). See
+  [`.cursor/rules/github-webhook-bootstrap.mdc`](.cursor/rules/github-webhook-bootstrap.mdc).
 - **Lint:** `npm run lint` in `website/admin/` runs **oxlint** (config in
   `.oxlintrc.json`). `npx oxlint` from that directory is equivalent.
 - **Auth gotcha:** the admin dashboard is gated behind Firebase auth (Google
