@@ -119,6 +119,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "discord-digest-cron", path: "/cron/discord-digest", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for Discord download digest (CRON_SECRET)" },
   { id: "resend-vault-bootstrap-cron", path: "/cron/resend-vault-bootstrap", method: "GET", auth: "cron", group: "Integrations", description: "Cron hook to read RESEND_API_KEY for cred vault sync (CRON_SECRET)" },
   { id: "service-usage-sync-cron", path: "/cron/service-usage-sync", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook to probe mail transports and sync service quota counters (CRON_SECRET)" },
+  { id: "mail-deliverability-cron", path: "/cron/mail-deliverability", method: "POST", auth: "cron", group: "Integrations", description: "Cron hook for mail deliverability audit (CRON_SECRET)" },
   { id: "notices", path: "/notices", method: "GET", auth: "admin", group: "Admin", description: "Admin notices catalog", safeProbe: true },
   { id: "notices-post", path: "/notices", method: "POST", auth: "admin", group: "Admin", description: "Create a catalog notice" },
   { id: "notices-put", path: "/notices", method: "PUT", auth: "admin", group: "Admin", description: "Update a catalog notice" },
