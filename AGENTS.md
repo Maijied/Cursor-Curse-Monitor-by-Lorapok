@@ -141,6 +141,8 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
   `website/admin/` — **canonical headless setup** (cred vault auth by default; no
   browser console or manual GitHub webhook form). See
   [`.cursor/rules/github-webhook-bootstrap.mdc`](.cursor/rules/github-webhook-bootstrap.mdc).
+- **Mail deliverability (MAIL-16):** `npm run mail:probe-deliverability` in
+  `website/admin/` — static matrix + live testmail send for product/support; Discord alert on failure.
 - **Lint:** `npm run lint` in `website/admin/` runs **oxlint** (config in
   `.oxlintrc.json`). `npx oxlint` from that directory is equivalent.
 - **Auth gotcha:** the admin dashboard is gated behind Firebase auth (Google

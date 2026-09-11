@@ -62,7 +62,7 @@ export default function MailDeliverabilityCard() {
             Live email deliverability
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Verifies product, support, and provisioned identity addresses against transport and domain readiness.
+            Verifies product, support, and identity addresses (transport, domain, and live testmail send when configured).
           </p>
         </div>
         {status && <Badge variant={badge.variant}>{badge.label}</Badge>}
@@ -75,6 +75,15 @@ export default function MailDeliverabilityCard() {
           {status?.lastVerifiedAt ? (
             <p className="text-xs text-[var(--color-muted)]">
               Last verified: {new Date(status.lastVerifiedAt).toLocaleString()}
+            </p>
+          ) : null}
+          {status?.liveProbe?.skipped ? (
+            <p className="text-xs text-[var(--color-muted)]">
+              Live send probe skipped ({status.liveProbe.reason ?? "unknown"}).
+            </p>
+          ) : status?.liveProbe && !status.liveProbe.skipped ? (
+            <p className="text-xs text-[var(--color-muted)]">
+              Live testmail probes: {status.liveProbe.probeCount ?? 0} address(es).
             </p>
           ) : null}
 
@@ -95,6 +104,11 @@ export default function MailDeliverabilityCard() {
                       <td className="py-2 pr-3 text-[var(--color-muted)]">{row.source}</td>
                       <td className="py-2">
                         <Badge variant={row.ok ? "synced" : "danger"}>{row.ok ? "OK" : "Fail"}</Badge>
+                        {!row.ok && row.checks?.length ? (
+                          <p className="text-xs text-[var(--color-muted)] mt-1">
+                            {row.checks.filter((c) => !c.ok).map((c) => `${c.id}: ${c.detail}`).join(" · ")}
+                          </p>
+                        ) : null}
                       </td>
                     </tr>
                   ))}

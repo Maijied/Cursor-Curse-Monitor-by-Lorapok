@@ -12,6 +12,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **MAIL-16 live deliverability probes** — product/support addresses get testmail live-send checks during audit; Discord alert on failure; `npm run mail:probe-deliverability`.
+- **GH-06 webhook bootstrap CLI** — `npm run github:webhook:bootstrap` (cred vault auth; no manual GitHub webhook form).
 - **Integrations hub slice (INT-01 / GH-06 / MAIL-16)** — Settings Services tab `IntegrationsHubCard`; GitHub webhook ingest at `POST /api/webhooks/github` with HMAC verify and configurable events; mail deliverability audit matrix + cron; `/api/health` exposes `mailLastVerifiedAt`.
 - **Mission Control global footer (ADMIN-04)** — sticky bottom bar with services health, release version, marketplace sync status, and Lorapok Labs link on every authenticated page.
 - **Dashboard KPI dedupe (ADMIN-05)** — footer owns status strip; removed sidebar/mobile sync chips, Overview sync badge and package version KPI, and infrastructure rows from Connected Services.
