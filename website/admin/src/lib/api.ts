@@ -2059,6 +2059,7 @@ export type MailDeliverabilityStatus = {
   allOk: boolean;
   transport?: string | null;
   addressCount?: number;
+  liveProbe?: { skipped: boolean; reason?: string; probeCount?: number } | null;
   results: MailDeliverabilityRow[];
 };
 
