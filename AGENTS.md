@@ -154,7 +154,8 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
   mail setup. One-time: `cd website/admin && npx wrangler login`. Then from repo
   root: `npm run admin:deploy:fast` (production) or
   `npm run deploy:fast:preview --prefix website/admin` (preview branch).
-  Full repair with mail: `node website/admin/scripts/repair-mail.mjs`.
+  Full repair with mail: `node website/admin/scripts/repair-mail.mjs` (or `npm run mail:repair --prefix website/admin`).
+  Verify suite (no deploy): `npm run mail:verify-all --prefix website/admin`.
 - **Mail CI:** push to `main` skips `enable-mail` and stats-cron deploy; use
   workflow_dispatch **deploy-infra** for full Cloudflare mail repair. Guide:
   `docs/guides/CLOUDFLARE_EMAIL_AND_ROUTING.md`.

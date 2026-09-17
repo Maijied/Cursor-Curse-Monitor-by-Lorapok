@@ -211,7 +211,9 @@ export function tryWranglerOAuthToken(cwd) {
     encoding: "utf8",
     cwd,
     env,
+    timeout: 45_000,
   });
+  if (r.error || r.status !== 0) return null;
   const text = `${r.stdout}\n${r.stderr}`;
   const match = text.match(/\{[\s\S]*"token"[\s\S]*\}/);
   if (!match) return null;

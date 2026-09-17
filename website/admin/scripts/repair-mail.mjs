@@ -95,11 +95,18 @@ if (!deployed) {
   process.exit(1);
 }
 
-console.log("\nStep 4/6 — verify email token (REST path)…");
+console.log("\nStep 4/7 — verify email token (REST path)…");
 run(process.execPath, [resolve(adminDir, "scripts/verify-mail-setup.mjs")], { allowFail: true });
 
-console.log("\nStep 5/6 — verify inbound routing rules…");
+console.log("\nStep 5/7 — verify inbound routing rules…");
 run(process.execPath, [resolve(adminDir, "scripts/verify-inbound-routing.mjs")], { allowFail: true });
+
+console.log("\nStep 6/7 — verify outbound transport gate (MAIL-06)…");
+run(process.execPath, [resolve(adminDir, "scripts/verify-mail-transport.mjs")]);
+
+console.log("\nStep 7/7 — verify Resend sending domain (MAIL-07)…");
+run(process.execPath, [resolve(adminDir, "scripts/verify-resend-domain.mjs")]);
 
 console.log("\nDone. Open Mission Control → Mailbox → Send branded test email.");
 console.log("Health should show mailTransport=cloudflare-relay when MAIL_RELAY is bound, or resend when only RESEND_API_KEY is set.");
+console.log("Re-check anytime: npm run mail:verify-all --prefix website/admin");
