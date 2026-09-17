@@ -423,9 +423,11 @@ export type DiscordConfig = {
   deploymentConfigured: boolean;
   feedbackConfigured: boolean;
   communityConfigured: boolean;
+  githubLogConfigured: boolean;
   deploymentWebhookPreview: string | null;
   feedbackWebhookPreview: string | null;
   communityWebhookPreview: string | null;
+  githubLogWebhookPreview: string | null;
   communityInviteUrl: string;
   communityInviteConfigured: boolean;
   /** @deprecated use deploymentConfigured */
@@ -484,6 +486,7 @@ export async function putDiscordConfigApi(payload: {
   deploymentWebhookUrl?: string;
   feedbackWebhookUrl?: string;
   communityWebhookUrl?: string;
+  githubLogWebhookUrl?: string;
   communityInviteUrl?: string;
   /** @deprecated use deploymentWebhookUrl */
   webhookUrl?: string;
@@ -499,6 +502,23 @@ export async function putDiscordConfigApi(payload: {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to save Discord webhook");
   return data as { ok: boolean; config: DiscordConfig };
+}
+
+/**
+ * Sends a sample github-log card to the configured github-log Discord webhook.
+ */
+export async function notifyDiscordGithubLogApi() {
+  const res = await fetch(`${API_BASE}/integrations/discord/github-log`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: "{}",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to send github-log test");
+  return data as { ok: boolean; skipped?: boolean; summary?: string };
 }
 
 /**

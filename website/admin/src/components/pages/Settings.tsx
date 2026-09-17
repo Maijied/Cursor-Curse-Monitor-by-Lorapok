@@ -6,6 +6,7 @@ import ConnectedServicesCard from "../ui/ConnectedServicesCard";
 import DiscordFeedbackCard from "../ui/DiscordFeedbackCard";
 import DiscordCommunityCard from "../ui/DiscordCommunityCard";
 import DiscordIntegrationsCard from "../ui/DiscordIntegrationsCard";
+import DiscordGithubLogCard from "../ui/DiscordGithubLogCard";
 import DiscordCardGallery from "../ui/DiscordCardGallery";
 import SocialIntegrationsCard from "../ui/SocialIntegrationsCard";
 import SeoIntegrationsCard from "../ui/SeoIntegrationsCard";
@@ -338,6 +339,7 @@ export default function Settings() {
           </p>
           <DiscordCardGallery />
           <DiscordCommunityCard />
+          <DiscordGithubLogCard />
           <DiscordIntegrationsCard />
           <DiscordFeedbackCard />
         </>

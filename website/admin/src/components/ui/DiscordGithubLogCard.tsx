@@ -1,6 +1,6 @@
 import { useAuthSession } from "../../lib/use-auth-session";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, Save, Send } from "lucide-react";
+import { GitBranch, Save, Send } from "lucide-react";
 import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
@@ -9,17 +9,16 @@ import FieldHelp from "./FieldHelp";
 import { useIntervalRefresh } from "../../hooks/useIntervalRefresh";
 import {
   fetchDiscordConfigApi,
-  notifyDiscordDeploymentApi,
+  notifyDiscordGithubLogApi,
   putDiscordConfigApi,
   type DiscordConfig,
 } from "../../lib/api";
 
 /**
- * Configures and tests the Discord webhook used for deployment status updates.
- *
- * @returns The Discord integration configuration card.
+ * Configures the Discord webhook for GitHub ingest (push / release / completed workflows).
+ * Separate from deployment cards and community announcements.
  */
-export default function DiscordIntegrationsCard() {
+export default function DiscordGithubLogCard() {
   const { hasPermission } = useAuthSession();
   const canWrite = hasPermission("integrations.write");
   const [loading, setLoading] = useState(true);
@@ -52,10 +51,13 @@ export default function DiscordIntegrationsCard() {
     setSaving(true);
     setMessage(null);
     try {
-      const result = await putDiscordConfigApi({ deploymentWebhookUrl: webhookUrl.trim() });
+      const result = await putDiscordConfigApi({ githubLogWebhookUrl: webhookUrl.trim() });
       setConfig(result.config);
       setWebhookUrl("");
-      setMessage({ type: "success", text: "Discord deployment hook saved. Status posts will go to this channel." });
+      setMessage({
+        type: "success",
+        text: "GitHub log hook saved. Push, release, and completed workflows post here — not to community or deployment.",
+      });
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
     }
@@ -63,27 +65,20 @@ export default function DiscordIntegrationsCard() {
   };
 
   const handleTest = async () => {
-    if (!canWrite || !config?.deploymentConfigured) return;
+    if (!canWrite || !config?.githubLogConfigured) return;
     setTesting(true);
     setMessage(null);
     try {
-      const result = await notifyDiscordDeploymentApi({
-        actionType: "deployment-status-test",
-        tag: "v1.0.31",
-        channel: "Production",
-        market: "Open VSX · VS Code · GitHub",
-        conclusion: "success",
-        jobs: [
-          { name: "Build & Validate", conclusion: "success" },
-          { name: "Deploy Admin Panel", conclusion: "success" },
-          { name: "Deploy Marketing Website", conclusion: "success" },
-        ],
-        summary: "Sample rich deployment card — marketplace sync, downloads, changelog, and links.",
-      });
+      const result = await notifyDiscordGithubLogApi();
       if (result.skipped) {
-        setMessage({ type: "error", text: "Test skipped — save a webhook URL first." });
+        setMessage({ type: "error", text: "Test skipped — save a github-log webhook URL first." });
       } else {
-        setMessage({ type: "success", text: "Test deployment status sent to Discord." });
+        setMessage({
+          type: "success",
+          text: result.summary
+            ? `Sample github-log card sent: ${result.summary}`
+            : "Sample github-log card sent to Discord.",
+        });
       }
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Test notification failed" });
@@ -96,19 +91,18 @@ export default function DiscordIntegrationsCard() {
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
           <h3 className="font-semibold flex items-center gap-2">
-            <Bell size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
-            Discord deployment hook
+            <GitBranch size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
+            Discord github-log hook
           </h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Channel webhook for deploy, rollback, and infra pipeline status. Mission Control posts
-            <strong className="text-[var(--color-text)]"> one compact card per run</strong> when the workflow
-            finishes (pipeline, marketplace sync, downloads, changelog, and links). Repo push/workflow
-            ingest uses the separate <strong className="text-[var(--color-text)]">github-log</strong> hook.
+            Repo webhook ingest (push, release, completed workflows) → this channel only.
+            Intermediate <code className="text-xs">in_progress</code> runs are filtered.
+            Deployment cards stay on the deployment hook; community stays for announcements.
           </p>
         </div>
         {config && (
-          <Badge variant={config.deploymentConfigured ? "synced" : "warn"}>
-            {config.deploymentConfigured ? "Hook connected" : "Not set"}
+          <Badge variant={config.githubLogConfigured ? "synced" : "warn"}>
+            {config.githubLogConfigured ? "Hook connected" : "Not set"}
           </Badge>
         )}
       </div>
@@ -117,27 +111,33 @@ export default function DiscordIntegrationsCard() {
 
       {loading ? (
         <div className="flex items-center gap-3 py-6 justify-center text-sm text-[var(--color-muted)]">
-          <LorapokLarvaeLoader size="sm" ariaLabel="Loading Discord configuration" className="!flex-row !gap-3" />
-          <span>Loading Discord hook…</span>
+          <LorapokLarvaeLoader size="sm" ariaLabel="Loading github-log configuration" className="!flex-row !gap-3" />
+          <span>Loading github-log hook…</span>
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label htmlFor="discord-webhook" className="block text-sm font-medium mb-2">
+            <label htmlFor="discord-github-log-webhook" className="block text-sm font-medium mb-2">
               Webhook URL
             </label>
             <input
-              id="discord-webhook"
+              id="discord-github-log-webhook"
               type="password"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
               disabled={!canWrite}
-              placeholder={config?.deploymentWebhookPreview ? `Saved: ${config.deploymentWebhookPreview}` : "https://discord.com/api/webhooks/…"}
+              placeholder={
+                config?.githubLogWebhookPreview
+                  ? `Saved: ${config.githubLogWebhookPreview}`
+                  : "https://discord.com/api/webhooks/…"
+              }
               className={inputClass}
               autoComplete="off"
             />
-            <FieldHelp label="Deployment webhook" className="mt-2">
-              Create in Discord → Channel settings → Integrations → Webhooks. Used for deploy status and download digests.
+            <FieldHelp label="GitHub log webhook" className="mt-2">
+              Create in Discord → #github-log (or similar) → Integrations → Webhooks. Vault key:{" "}
+              <code className="text-xs">discord_github_log_webhook_url</code>. Sync with{" "}
+              <code className="text-xs">node scripts/sync-discord-cred-vault.mjs</code>.
             </FieldHelp>
           </div>
 
@@ -153,11 +153,11 @@ export default function DiscordIntegrationsCard() {
             <button
               type="button"
               onClick={handleTest}
-              disabled={!canWrite || testing || !config?.deploymentConfigured}
+              disabled={!canWrite || testing || !config?.githubLogConfigured}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--color-border)] font-medium hover:bg-white/5 disabled:opacity-50"
             >
               <Send size={16} aria-hidden="true" />
-              {testing ? "Sending…" : "Send test status"}
+              {testing ? "Sending…" : "Send test log"}
             </button>
           </div>
 

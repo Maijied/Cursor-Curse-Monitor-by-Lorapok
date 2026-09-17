@@ -61,6 +61,7 @@ function normalizeStoredConfig(parsed) {
   );
   const feedbackWebhookUrl = String(parsed.feedbackWebhookUrl ?? "");
   const communityWebhookUrl = String(parsed.communityWebhookUrl ?? "");
+  const githubLogWebhookUrl = String(parsed.githubLogWebhookUrl ?? "");
   const communityInviteUrl = String(
     parsed.communityInviteUrl ?? DEFAULT_COMMUNITY_INVITE_URL
   ).trim();
@@ -68,6 +69,7 @@ function normalizeStoredConfig(parsed) {
     deploymentWebhookUrl,
     feedbackWebhookUrl,
     communityWebhookUrl,
+    githubLogWebhookUrl,
     communityInviteUrl: isValidDiscordInviteUrl(communityInviteUrl)
       ? communityInviteUrl
       : DEFAULT_COMMUNITY_INVITE_URL,
@@ -86,6 +88,7 @@ export async function readDiscordConfig(env) {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
+    githubLogWebhookUrl: "",
     communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: null,
     updatedBy: null,
@@ -124,6 +127,7 @@ export function sanitizeDiscordConfigForClient(config) {
   );
   const feedbackWebhookUrl = String(config.feedbackWebhookUrl ?? "");
   const communityWebhookUrl = String(config.communityWebhookUrl ?? "");
+  const githubLogWebhookUrl = String(config.githubLogWebhookUrl ?? "");
   const communityInviteUrl = String(config.communityInviteUrl ?? DEFAULT_COMMUNITY_INVITE_URL);
   const deploymentConfigured = Boolean(
     deploymentWebhookUrl && isValidDiscordWebhookUrl(deploymentWebhookUrl)
@@ -134,13 +138,18 @@ export function sanitizeDiscordConfigForClient(config) {
   const communityConfigured = Boolean(
     communityWebhookUrl && isValidDiscordWebhookUrl(communityWebhookUrl)
   );
+  const githubLogConfigured = Boolean(
+    githubLogWebhookUrl && isValidDiscordWebhookUrl(githubLogWebhookUrl)
+  );
   return {
     deploymentConfigured,
     feedbackConfigured,
     communityConfigured,
+    githubLogConfigured,
     deploymentWebhookPreview: deploymentWebhookUrl ? maskWebhookUrl(deploymentWebhookUrl) : null,
     feedbackWebhookPreview: feedbackWebhookUrl ? maskWebhookUrl(feedbackWebhookUrl) : null,
     communityWebhookPreview: communityWebhookUrl ? maskWebhookUrl(communityWebhookUrl) : null,
+    githubLogWebhookPreview: githubLogWebhookUrl ? maskWebhookUrl(githubLogWebhookUrl) : null,
     communityInviteUrl,
     communityInviteConfigured: isValidDiscordInviteUrl(communityInviteUrl),
     /** @deprecated use deploymentConfigured */

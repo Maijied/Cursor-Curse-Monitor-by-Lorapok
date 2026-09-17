@@ -1,7 +1,7 @@
 import { putKvJsonIfChanged } from "./kv-put.js";
 import { logSystemEvent } from "./system-log.js";
 import { readGithubIntegrationConfig } from "./github-integration-config.js";
-import { fanOutGithubWebhook } from "./github-webhook-fanout.js";
+import { buildGithubEventSummary, fanOutGithubWebhook } from "./github-webhook-fanout.js";
 
 export const GITHUB_WEBHOOK_EVENTS_KEY = "integrations:github-webhook-events";
 
@@ -92,18 +92,18 @@ async function appendGithubWebhookEvent(env, entry) {
 
 /**
  * @param {Record<string, unknown>} payload
+ * @param {string} [event]
  */
-export function summarizeGithubWebhookPayload(payload) {
-  const action = payload?.action ? String(payload.action) : null;
+export function summarizeGithubWebhookPayload(payload, event) {
+  if (event) return buildGithubEventSummary(String(event), payload ?? {});
   if (payload?.release?.tag_name) {
-    return `release ${payload.release.tag_name}${action ? ` (${action})` : ""}`;
+    return buildGithubEventSummary("release", payload);
   }
   if (payload?.workflow_run?.name) {
-    const status = payload.workflow_run.conclusion ?? payload.workflow_run.status ?? "unknown";
-    return `workflow ${payload.workflow_run.name} — ${status}`;
+    return buildGithubEventSummary("workflow_run", payload);
   }
   if (payload?.ref) {
-    return `push ${String(payload.ref).replace(/^refs\/heads\//, "")}`;
+    return buildGithubEventSummary("push", payload);
   }
   return "event received";
 }
@@ -121,7 +121,7 @@ export async function ingestGithubWebhook(env, input) {
     return { ok: true, skipped: true, reason: "event_disabled" };
   }
 
-  const summary = summarizeGithubWebhookPayload(input.payload);
+  const summary = summarizeGithubWebhookPayload(input.payload, event);
   await appendGithubWebhookEvent(env, {
     event,
     deliveryId: input.deliveryId ?? null,

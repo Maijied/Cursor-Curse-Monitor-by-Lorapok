@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-17 (MAIL-06 verify-all green on `feat/mail-06-repair-verify-green`)
-**Branch:** `feat/mail-06-repair-verify-green`
-**Main:** `6a3a92fb` (INT-01 hub finish + procedure verified)
-**CI:** branch pending PR; local `mail:verify-all` OK
+**Last updated:** 2026-09-18 (Discord slots live: community / github-log / deployment-notice; github-log fanout + AMO stats on branch)
+**Branch:** `fix/discord-stats-analytics`
+**Main:** `75ae9791`
+**CI:** PR [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) CI **green** (local uncommitted: github-log hook + fanout filter — fast-deployed, not yet on remote PR)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -229,7 +229,7 @@
 |----|------|--------|----------------|
 | DC-01 | Discord tab + integrations card | **done** | Settings |
 | DC-02 | Webhook FieldHelp + 60s poll | **done** | Phase 2 |
-| DC-03 | Configure production webhooks in KV | **done** | All three webhooks in `integrations:discord` (2026-09-03 Settings); health confirms `discordConfigured` + feedback + community (2026-09-05) |
+| DC-03 | Configure production webhooks in KV | **done** | Community + feedback set; **github-log** slot added (Settings + vault `discord_github_log_webhook_url`); deployment left for rich deploy cards only |
 | DC-04 | Community + Feedback cards polling | **next** | optional parity |
 | DC-05 | Subscribe fallback Discord URL in prod | **next** | Settings → General |
 | DC-06 | **Product-designed Discord cards** — branded embed layouts for deploy, digest, community, feedback (Lorapok aesthetic) | **done** | `discord-product-cards.js` + gallery; digest/community/feedback notify wired |
@@ -391,7 +391,7 @@
 
 ## Blockers (need you)
 
-_None._
+_None operational._ Optional: rotate Discord webhooks (pasted in chat); commit/push github-log fanout into PR #273.
 
 ---
 

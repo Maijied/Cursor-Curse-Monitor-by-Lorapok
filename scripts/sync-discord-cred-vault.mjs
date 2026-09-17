@@ -3,21 +3,24 @@
  * Sync Discord webhook URLs from cred vault → ADMIN_KV `integrations:discord`.
  *
  * Vault keys (cursor namespace — store with `cred set cursor <key>`):
- *   discord_community_webhook_url   — community announcements channel
- *   discord_feedback_webhook_url    — optional; in-app feedback prompts
- *   discord_deployment_webhook_url  — optional; CI deployment status
+ *   discord_community_webhook_url    — community announcements channel
+ *   discord_feedback_webhook_url     — optional; in-app feedback prompts
+ *   discord_deployment_webhook_url   — optional; CI deployment status cards
+ *   discord_github_log_webhook_url   — GitHub ingest (push/release/completed workflows)
  *
  * Env overrides (no logging of values):
  *   DISCORD_COMMUNITY_WEBHOOK_URL
  *   DISCORD_FEEDBACK_WEBHOOK_URL
  *   DISCORD_DEPLOYMENT_WEBHOOK_URL
+ *   DISCORD_GITHUB_LOG_WEBHOOK_URL
  *
  * Flags:
  *   --dry-run   Print planned KV merge without writing
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { isValidDiscordWebhookUrl } from "../website/admin/functions/api/_shared/discord-config.js";
 import { resolveDeployAuth } from "../website/admin/scripts/lib/resolve-deploy-auth.mjs";
@@ -30,7 +33,7 @@ const KV_NAMESPACE_ID = "8a29ab111ed0488297e12725072e9a10";
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 
-/** @typedef {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; communityWebhookUrl?: string; updatedAt?: string | null; updatedBy?: string | null; webhookUrl?: string }} DiscordKvConfig */
+/** @typedef {{ deploymentWebhookUrl?: string; feedbackWebhookUrl?: string; communityWebhookUrl?: string; githubLogWebhookUrl?: string; communityInviteUrl?: string; updatedAt?: string | null; updatedBy?: string | null; webhookUrl?: string }} DiscordKvConfig */
 
 function log(step, message) {
   console.log(`\n[discord sync] ${step} ${message}`);
@@ -86,27 +89,37 @@ async function wranglerKvGet(namespaceId, deployToken, accountId) {
 }
 
 function wranglerKvPut(namespaceId, deployToken, accountId, value) {
-  const r = spawnSync(
-    "npx",
-    ["wrangler", "kv", "key", "put", CONFIG_KEY, JSON.stringify(value), "--namespace-id", namespaceId, "--remote"],
-    {
-      cwd: adminDir,
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        CLOUDFLARE_API_TOKEN: deployToken,
-        CLOUDFLARE_ACCOUNT_ID: accountId,
-      },
+  const tmp = join(tmpdir(), `discord-kv-sync-${Date.now()}.json`);
+  writeFileSync(tmp, JSON.stringify(value), { mode: 0o600 });
+  try {
+    const r = spawnSync(
+      "npx",
+      ["wrangler", "kv", "key", "put", CONFIG_KEY, "--namespace-id", namespaceId, "--remote", "--path", tmp],
+      {
+        cwd: adminDir,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          CLOUDFLARE_API_TOKEN: deployToken,
+          CLOUDFLARE_ACCOUNT_ID: accountId,
+        },
+      }
+    );
+    if (r.status !== 0) {
+      throw new Error(r.stderr?.trim() || "wrangler kv key put failed");
     }
-  );
-  if (r.status !== 0) {
-    throw new Error(r.stderr?.trim() || "wrangler kv key put failed");
+  } finally {
+    try {
+      unlinkSync(tmp);
+    } catch {
+      /* ignore */
+    }
   }
 }
 
 /**
  * @param {DiscordKvConfig} current
- * @param {{ community?: string; feedback?: string; deployment?: string }} incoming
+ * @param {{ community?: string; feedback?: string; deployment?: string; githubLog?: string }} incoming
  */
 function mergeDiscordConfig(current, incoming) {
   /** @type {DiscordKvConfig} */
@@ -114,6 +127,8 @@ function mergeDiscordConfig(current, incoming) {
     deploymentWebhookUrl: String(current.deploymentWebhookUrl ?? current.webhookUrl ?? ""),
     feedbackWebhookUrl: String(current.feedbackWebhookUrl ?? ""),
     communityWebhookUrl: String(current.communityWebhookUrl ?? ""),
+    githubLogWebhookUrl: String(current.githubLogWebhookUrl ?? ""),
+    communityInviteUrl: current.communityInviteUrl,
     updatedAt: current.updatedAt ?? null,
     updatedBy: current.updatedBy ?? null,
   };
@@ -132,6 +147,10 @@ function mergeDiscordConfig(current, incoming) {
     if (next.deploymentWebhookUrl !== incoming.deployment) changed = true;
     next.deploymentWebhookUrl = incoming.deployment;
   }
+  if (incoming.githubLog && isValidDiscordWebhookUrl(incoming.githubLog)) {
+    if (next.githubLogWebhookUrl !== incoming.githubLog) changed = true;
+    next.githubLogWebhookUrl = incoming.githubLog;
+  }
 
   if (changed) {
     next.updatedAt = new Date().toISOString();
@@ -146,13 +165,14 @@ async function main() {
   const community = resolveWebhook("DISCORD_COMMUNITY_WEBHOOK_URL", "discord_community_webhook_url");
   const feedback = resolveWebhook("DISCORD_FEEDBACK_WEBHOOK_URL", "discord_feedback_webhook_url");
   const deployment = resolveWebhook("DISCORD_DEPLOYMENT_WEBHOOK_URL", "discord_deployment_webhook_url");
+  const githubLog = resolveWebhook("DISCORD_GITHUB_LOG_WEBHOOK_URL", "discord_github_log_webhook_url");
 
-  if (!community && !feedback && !deployment) {
+  if (!community && !feedback && !deployment && !githubLog) {
     console.error(
       "\nNo Discord webhook URLs found.\n" +
-        "  cred set cursor discord_community_webhook_url\n" +
+        "  cred set cursor discord_github_log_webhook_url\n" +
         "  — or —\n" +
-        '  export DISCORD_COMMUNITY_WEBHOOK_URL="$(cred get cursor discord_community_webhook_url)"'
+        '  export DISCORD_GITHUB_LOG_WEBHOOK_URL="https://discord.com/api/webhooks/…"'
     );
     process.exit(1);
   }
@@ -161,6 +181,7 @@ async function main() {
     community ? "community" : null,
     feedback ? "feedback" : null,
     deployment ? "deployment" : null,
+    githubLog ? "github-log" : null,
   ].filter(Boolean);
   console.log(`  sources ready: ${configured.join(", ")}`);
 
@@ -173,6 +194,7 @@ async function main() {
     community,
     feedback,
     deployment,
+    githubLog,
   });
 
   if (!changed) {
@@ -188,6 +210,7 @@ async function main() {
           communityConfigured: Boolean(next.communityWebhookUrl),
           feedbackConfigured: Boolean(next.feedbackWebhookUrl),
           deploymentConfigured: Boolean(next.deploymentWebhookUrl),
+          githubLogConfigured: Boolean(next.githubLogWebhookUrl),
         },
       })
     );
