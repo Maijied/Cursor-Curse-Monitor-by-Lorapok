@@ -6,7 +6,7 @@
 **Plan:** `plan/mission-control-master-tasks.md`  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/194  
 **Branch:** `feat/web-07-system-topology`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/280
 
 ---
 
@@ -22,7 +22,7 @@ Beautiful animated diagrams with every CI/CD step, cron, KV/R2, marketplaces, Di
 - [x] Procedure + GitHub issue linked (#194; #279 closed as duplicate)
 - [x] Implementation started
 - [x] Tests passing (`test_architecture_workflow_sync.mjs`, `test_architecture_cicd_jobs.mjs`)
-- [ ] PR opened
+- [x] PR opened (#280)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
