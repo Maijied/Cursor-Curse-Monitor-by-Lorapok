@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** [#274](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/274)  
 **Branch:** `fix/ci-social-gallery-cron-secret`  
-**PR:** _TBD_
+**PR:** [#275](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/275)
 
 ---
 
@@ -22,7 +22,7 @@ CI CRON_SECRET for social gallery queue
 - [x] Procedure + GitHub issue created
 - [x] Implementation started — dedicated `queue-social-gallery` job with `admin-production`
 - [x] Tests passing — `tests/test_queue_social_gallery.mjs`
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
