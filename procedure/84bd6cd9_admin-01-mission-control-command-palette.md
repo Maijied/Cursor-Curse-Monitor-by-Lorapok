@@ -6,7 +6,7 @@
 **Plan:** `plan/mission-control-master-tasks.md`  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/191  
 **Branch:** `feat/admin-01-command-palette`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/278
 
 ---
 
@@ -22,7 +22,7 @@ Mission Control global search — command palette (⌘K) across nav, settings ta
 - [x] Procedure + GitHub issue created (#191)
 - [x] Implementation started
 - [x] Tests passing (`command-palette-catalog.test.ts`, `CommandPalette.test.tsx`)
-- [ ] PR opened
+- [x] PR opened (#278)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
