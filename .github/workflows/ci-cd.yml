@@ -1290,25 +1290,32 @@ jobs:
           mkdir -p website/downloads
           cp browser-extension/artifacts/chrome/*.zip "website/downloads/cursor-curse-monitor-chrome-${{ steps.config.outputs.version }}.zip" 2>/dev/null || true
 
-      # ── GitHub Release ────────────────────────────────────────────────────
+      # ── GitHub Release (retrying uploads — softprops fails hard on Unicorn 5xx) ──
       - name: Create GitHub Release
         if: >-
           steps.config.outputs.do_vsce == 'true' ||
           steps.config.outputs.do_ovsx == 'true' ||
           steps.config.outputs.do_amo == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref_name }}
-          name: Cursor Curse Monitor v${{ steps.config.outputs.version }}
-          files: |
-            *.vsix
-            browser-extension/artifacts/firefox/*.xpi
-            browser-extension/artifacts/chrome/*.zip
-          generate_release_notes: true
-          prerelease: ${{ steps.config.outputs.pre_release == 'true' }}
-          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref_name }}
+          RELEASE_VERSION: ${{ steps.config.outputs.version }}
+          PRE_RELEASE: ${{ steps.config.outputs.pre_release }}
+        run: |
+          set -euo pipefail
+          TAG="$RELEASE_TAG"
+          case "$TAG" in
+            refs/tags/*) TAG="${TAG#refs/tags/}" ;;
+          esac
+          ARGS=(
+            --tag "$TAG"
+            --name "Cursor Curse Monitor v${RELEASE_VERSION}"
+          )
+          if [ "$PRE_RELEASE" = "true" ]; then
+            ARGS+=(--prerelease)
+          fi
+          node scripts/create-github-release.mjs "${ARGS[@]}"
 
       - name: Queue social gallery job (DEPLOY-03)
         if: success()
