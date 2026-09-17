@@ -29,10 +29,10 @@ function StatusIcon({ status }: { status: ServiceStatus }) {
 }
 
 export default function ConnectedServicesCard() {
+  // Runtime/auth/feed only — mail/Discord/GitHub live in IntegrationsHubCard (INT-01).
   const [services, setServices] = useState<ServiceRow[]>([
     { id: "firebase", label: "Firebase Auth", status: "checking", detail: "Checking session…" },
-    { id: "github", label: "GitHub API", status: "checking", detail: "Checking API…" },
-    { id: "mail", label: "Outbound mail", status: "checking", detail: "Checking mail transport…" },
+    { id: "github-api", label: "GitHub API", status: "checking", detail: "Checking API…" },
     { id: "site-data", label: "Site data feed", status: "checking", detail: "Checking site-data.json…" },
     { id: "notice", label: "Development notice", status: "checking", detail: "Checking notice config…" },
   ]);
@@ -80,41 +80,17 @@ export default function ConnectedServicesCard() {
 
       if (health) {
         next.push({
-          id: "github",
+          id: "github-api",
           label: "GitHub API",
           status: health.checks.github ? "connected" : "disconnected",
           detail: health.checks.github
             ? `OK · ${new Date(health.checks.timestamp).toLocaleString()}`
             : "API unreachable",
         });
-        next.push({
-          id: "mail",
-          label: "Outbound mail",
-          status: health.mailConfigured ? "connected" : "disconnected",
-          detail: health.mailConfigured
-            ? String(health.mailTransport ?? "configured")
-            : health.mailHint ?? "Mail transport not configured",
-          refer: health.mailConfigured ? undefined : SECTION_REFERS.settingsMail,
-        });
-        next.push({
-          id: "discord",
-          label: "Discord deployment hook",
-          status: health.discordConfigured ? "connected" : "disconnected",
-          detail: health.discordConfigured
-            ? "Webhook set — deploy status posts to Discord"
-            : "Not set — add a channel webhook in Discord settings",
-          refer: health.discordConfigured ? undefined : SECTION_REFERS.settingsDiscord,
-        });
       } else {
         next.push({
-          id: "github",
+          id: "github-api",
           label: "GitHub API",
-          status: "disconnected",
-          detail: "Health check failed",
-        });
-        next.push({
-          id: "mail",
-          label: "Outbound mail",
           status: "disconnected",
           detail: "Health check failed",
         });
@@ -181,9 +157,10 @@ export default function ConnectedServicesCard() {
     <Card className="h-full min-h-[18rem] flex flex-col">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-[var(--color-text)]">Connected Services</h3>
+          <h3 className="font-semibold text-[var(--color-text)]">Runtime & auth</h3>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Live connectivity between admin, APIs, and the public site feed.
+            Session, GitHub API reachability, and the public site feed. Integration webhooks live in
+            the hub above.
           </p>
         </div>
         <Badge variant={connectedCount === services.length ? "synced" : "warn"} pulse={connectedCount === services.length}>
@@ -192,7 +169,7 @@ export default function ConnectedServicesCard() {
       </div>
 
       <div className="overflow-x-auto flex-1">
-        <table className="w-full text-sm" aria-label="Connected services status">
+        <table className="w-full text-sm" aria-label="Runtime and auth status">
           <thead>
             <tr className="text-left text-[var(--color-muted)] border-b border-[var(--color-border)]">
               <th scope="col" className="pb-3 pr-4 font-medium w-10"><span className="sr-only">Status</span></th>
