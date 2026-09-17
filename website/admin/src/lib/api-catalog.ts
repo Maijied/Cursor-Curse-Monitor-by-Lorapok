@@ -76,6 +76,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "discord-deployment", path: "/integrations/discord/deployment", method: "POST", auth: "admin", group: "Integrations", description: "Send a deployment status notification to Discord" },
   { id: "discord-feedback", path: "/integrations/discord/feedback", method: "POST", auth: "admin", group: "Integrations", description: "Send a user-feedback card to the feedback Discord webhook" },
   { id: "discord-community", path: "/integrations/discord/community", method: "POST", auth: "admin", group: "Integrations", description: "Send a community announcement test post to the community Discord webhook" },
+  { id: "discord-github-log", path: "/integrations/discord/github-log", method: "POST", auth: "admin", group: "Integrations", description: "Send a sample github-log card (completed workflow embed) to the github-log Discord webhook" },
   { id: "mail-config", path: "/integrations/mail/config", method: "GET", auth: "admin", group: "Integrations", description: "Outbound mail identities and transport status", safeProbe: true },
   { id: "email-identities-config", path: "/integrations/email-identities/config", method: "GET", auth: "admin", group: "Integrations", description: "@lorapok.tech routing identities and forward targets", safeProbe: true },
   { id: "email-identities-config-put", path: "/integrations/email-identities/config", method: "PUT", auth: "admin", group: "Integrations", description: "Save default ops forward and identity metadata" },
