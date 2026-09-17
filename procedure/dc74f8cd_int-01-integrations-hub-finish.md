@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** [#219](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/219)  
 **Branch:** `feat/int-01-integrations-hub-finish`  
-**PR:** _TBD_
+**PR:** [#268](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/268)
 
 ---
 
@@ -22,7 +22,7 @@ Finish INT-01: consolidate duplicate Services-tab status/directory surfaces into
 - [x] Procedure + link issue #219
 - [x] Implementation: hub panes + Settings/ConnectedServices dedupe
 - [x] Tests: `IntegrationsHubCard.test.tsx`, `ConnectedServicesCard.test.tsx`; oxlint clean
-- [ ] PR opened
+- [x] PR opened (#268)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification (close #219)
