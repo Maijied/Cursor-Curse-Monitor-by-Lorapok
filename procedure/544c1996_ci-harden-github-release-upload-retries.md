@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/270  
 **Branch:** `fix/ci-github-release-upload-retries`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/271
 
 ---
 
@@ -22,7 +22,7 @@ Harden GitHub Release creation so transient Unicorn/5xx upload failures do not l
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (`node tests/test_create_github_release.js`)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
