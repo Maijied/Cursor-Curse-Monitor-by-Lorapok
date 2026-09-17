@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** [#143](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/143)  
 **Branch:** `feat/mail-06-repair-verify-green`  
-**PR:** _TBD_
+**PR:** [#269](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/269)
 
 ---
 
@@ -22,7 +22,7 @@ Make `repair-mail.mjs` and the outbound/inbound verify scripts reliably green fo
 - [x] Diagnosed: prod health already OK (relay + Resend); `verify-resend-domain` false-failed on CF DNS 403
 - [x] Soft-skip CF DNS audit when Resend domain verified; `mail:verify-all` suite; repair-mail steps 6–7
 - [x] Local `npm run mail:verify-all` → MAIL-06 OK
-- [ ] PR opened
+- [x] PR opened (#269)
 - [ ] Merged / close #143
 
 ---
