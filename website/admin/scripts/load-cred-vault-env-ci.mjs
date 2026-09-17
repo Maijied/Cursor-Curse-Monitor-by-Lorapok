@@ -91,6 +91,16 @@ async function main() {
     if (loaded.mailRedirectTo) exportEnv("MAIL_REDIRECT_TO", loaded.mailRedirectTo);
     if (loaded.discordDeploymentWebhook) {
       exportEnv("DISCORD_DEPLOYMENT_WEBHOOK", loaded.discordDeploymentWebhook);
+      exportEnv("DISCORD_DEPLOYMENT_WEBHOOK_URL", loaded.discordDeploymentWebhook);
+    }
+    if (loaded.discordCommunityWebhook) {
+      exportEnv("DISCORD_COMMUNITY_WEBHOOK_URL", loaded.discordCommunityWebhook);
+    }
+    if (loaded.discordFeedbackWebhook) {
+      exportEnv("DISCORD_FEEDBACK_WEBHOOK_URL", loaded.discordFeedbackWebhook);
+    }
+    if (loaded.discordGithubLogWebhook) {
+      exportEnv("DISCORD_GITHUB_LOG_WEBHOOK_URL", loaded.discordGithubLogWebhook);
     }
 
     const firebaseSa = loadFirebaseServiceAccountFromVault();
