@@ -14,16 +14,23 @@
  *   DISCORD_DEPLOYMENT_WEBHOOK_URL
  *   DISCORD_GITHUB_LOG_WEBHOOK_URL
  *
+ * CI: prefers env (from load-cred-vault-env-ci) then decrypts CRED_STORE_GPG_BASE64.
+ * Local: env → GPG vault → `cred get`.
+ *
  * Flags:
  *   --dry-run   Print planned KV merge without writing
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { isValidDiscordWebhookUrl } from "../website/admin/functions/api/_shared/discord-config.js";
 import { resolveDeployAuth } from "../website/admin/scripts/lib/resolve-deploy-auth.mjs";
+import {
+  decryptCredentialVault,
+  resolveDiscordWebhooksFromVault,
+} from "../website/admin/scripts/lib/cred-vault-sync.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const adminDir = resolve(repoRoot, "website/admin");
@@ -52,17 +59,49 @@ function readWranglerTomlNamespaceId() {
 function credGet(key) {
   const r = spawnSync("cred", ["get", "cursor", key], {
     encoding: "utf8",
-    stdio: ["inherit", "pipe", "inherit"],
+    stdio: ["ignore", "pipe", "ignore"],
   });
   if (r.status !== 0) return "";
-  return r.stdout.trim();
+  return (r.stdout ?? "").trim();
 }
 
-function resolveWebhook(envName, vaultKey) {
+/**
+ * Decrypt vault for CI (CRED_STORE_GPG_BASE64) or local path.
+ * @returns {Record<string, unknown> | null}
+ */
+function loadVaultForSync() {
+  const b64 = (process.env.CRED_STORE_GPG_BASE64 ?? "").trim();
+  if (b64) {
+    const dir = mkdtempSync(join(tmpdir(), "discord-vault-"));
+    const vaultPath = join(dir, "credentials.json.gpg");
+    try {
+      writeFileSync(vaultPath, Buffer.from(b64, "base64"));
+      process.env.CRED_STORE_FILE = vaultPath;
+      return decryptCredentialVault(vaultPath);
+    } finally {
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  return decryptCredentialVault();
+}
+
+/**
+ * @param {string} envName
+ * @param {keyof ReturnType<typeof resolveDiscordWebhooksFromVault>} vaultSlot
+ * @param {string} vaultKey
+ * @param {ReturnType<typeof resolveDiscordWebhooksFromVault> | null} fromVault
+ */
+function resolveWebhook(envName, vaultSlot, vaultKey, fromVault) {
   const fromEnv = (process.env[envName] ?? "").trim();
-  if (fromEnv) return fromEnv;
+  if (fromEnv && isValidDiscordWebhookUrl(fromEnv)) return fromEnv;
+  const vaultUrl = fromVault?.[vaultSlot] ? String(fromVault[vaultSlot]).trim() : "";
+  if (vaultUrl && isValidDiscordWebhookUrl(vaultUrl)) return vaultUrl;
   const fromCred = credGet(vaultKey);
-  if (fromCred) return fromCred;
+  if (fromCred && isValidDiscordWebhookUrl(fromCred)) return fromCred;
   return "";
 }
 
@@ -121,7 +160,7 @@ function wranglerKvPut(namespaceId, deployToken, accountId, value) {
  * @param {DiscordKvConfig} current
  * @param {{ community?: string; feedback?: string; deployment?: string; githubLog?: string }} incoming
  */
-function mergeDiscordConfig(current, incoming) {
+export function mergeDiscordConfig(current, incoming) {
   /** @type {DiscordKvConfig} */
   const next = {
     deploymentWebhookUrl: String(current.deploymentWebhookUrl ?? current.webhookUrl ?? ""),
@@ -162,18 +201,58 @@ function mergeDiscordConfig(current, incoming) {
 
 async function main() {
   log("1/3", "Resolving webhook URLs from env / cred vault (secrets never logged)…");
-  const community = resolveWebhook("DISCORD_COMMUNITY_WEBHOOK_URL", "discord_community_webhook_url");
-  const feedback = resolveWebhook("DISCORD_FEEDBACK_WEBHOOK_URL", "discord_feedback_webhook_url");
-  const deployment = resolveWebhook("DISCORD_DEPLOYMENT_WEBHOOK_URL", "discord_deployment_webhook_url");
-  const githubLog = resolveWebhook("DISCORD_GITHUB_LOG_WEBHOOK_URL", "discord_github_log_webhook_url");
+
+  const vault = loadVaultForSync();
+  const fromVault = vault ? resolveDiscordWebhooksFromVault(vault) : null;
+  if (vault) {
+    console.log("  vault: decrypted");
+  } else if ((process.env.CRED_STORE_GPG_BASE64 ?? "").trim()) {
+    console.log("  vault: decrypt failed (check CRED_VAULT_PASSPHRASE)");
+  } else {
+    console.log("  vault: not available (using env / cred CLI)");
+  }
+
+  const community = resolveWebhook(
+    "DISCORD_COMMUNITY_WEBHOOK_URL",
+    "community",
+    "discord_community_webhook_url",
+    fromVault
+  );
+  const feedback = resolveWebhook(
+    "DISCORD_FEEDBACK_WEBHOOK_URL",
+    "feedback",
+    "discord_feedback_webhook_url",
+    fromVault
+  );
+  const deployment =
+    resolveWebhook(
+      "DISCORD_DEPLOYMENT_WEBHOOK_URL",
+      "deployment",
+      "discord_deployment_webhook_url",
+      fromVault
+    ) ||
+    resolveWebhook(
+      "DISCORD_DEPLOYMENT_WEBHOOK",
+      "deployment",
+      "discord_deployment_webhook_url",
+      fromVault
+    );
+  const githubLog = resolveWebhook(
+    "DISCORD_GITHUB_LOG_WEBHOOK_URL",
+    "githubLog",
+    "discord_github_log_webhook_url",
+    fromVault
+  );
 
   if (!community && !feedback && !deployment && !githubLog) {
-    console.error(
-      "\nNo Discord webhook URLs found.\n" +
-        "  cred set cursor discord_github_log_webhook_url\n" +
-        "  — or —\n" +
-        '  export DISCORD_GITHUB_LOG_WEBHOOK_URL="https://discord.com/api/webhooks/…"'
-    );
+    const msg =
+      "No Discord webhook URLs found (env / vault / cred). " +
+      "Ensure load-cred-vault-env-ci ran or CRED_STORE_GPG_BASE64 is set.";
+    if (process.env.GITHUB_ACTIONS === "true") {
+      console.log(`::warning::${msg}`);
+      process.exit(0);
+    }
+    console.error(`\n${msg}\n  cred set cursor discord_community_webhook_url`);
     process.exit(1);
   }
 

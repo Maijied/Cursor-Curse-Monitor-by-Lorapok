@@ -332,6 +332,49 @@ function resolveDiscordDeploymentWebhookFromVault(vault) {
 
 /**
  * @param {Record<string, unknown>} vault
+ * @param {string[]} keys
+ */
+function resolveDiscordWebhookKeyFromVault(vault, keys) {
+  const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
+  for (const key of keys) {
+    const url = String(cursor[key] ?? "").trim();
+    if (
+      url.startsWith("https://discord.com/api/webhooks/") ||
+      url.startsWith("https://discordapp.com/api/webhooks/")
+    ) {
+      return url;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * All Discord webhook URLs stored under vault.cursor (never log values).
+ * @param {Record<string, unknown>} vault
+ */
+export function resolveDiscordWebhooksFromVault(vault) {
+  return {
+    deployment: resolveDiscordDeploymentWebhookFromVault(vault),
+    community: resolveDiscordWebhookKeyFromVault(vault, [
+      "discord_community_webhook_url",
+      "discord_community_webhook",
+      "DISCORD_COMMUNITY_WEBHOOK_URL",
+    ]),
+    feedback: resolveDiscordWebhookKeyFromVault(vault, [
+      "discord_feedback_webhook_url",
+      "discord_feedback_webhook",
+      "DISCORD_FEEDBACK_WEBHOOK_URL",
+    ]),
+    githubLog: resolveDiscordWebhookKeyFromVault(vault, [
+      "discord_github_log_webhook_url",
+      "discord_github_log_webhook",
+      "DISCORD_GITHUB_LOG_WEBHOOK_URL",
+    ]),
+  };
+}
+
+/**
+ * @param {Record<string, unknown>} vault
  */
 function resolveCloudflareAccountEmailFromVault(vault) {
   const cursor = /** @type {Record<string, unknown>} */ (vault?.cursor ?? {});
@@ -428,6 +471,7 @@ export function loadCursorCloudflareSecretsFromVault() {
   const accountId = resolveCloudflareAccountIdFromVault(vault);
   const globalApiKey = resolveCloudflareGlobalApiKeyFromVault(vault);
   const globalApiEmail = resolveCloudflareAccountEmailFromVault(vault);
+  const discordHooks = resolveDiscordWebhooksFromVault(vault);
   if (!apiToken && !emailToken && !accountId && !githubToken && !globalApiKey) {
     return null;
   }
@@ -445,7 +489,10 @@ export function loadCursorCloudflareSecretsFromVault() {
     mailProbeTo: String(cursor.mail_probe_to ?? "").trim() || undefined,
     mailRedirectTo: String(cursor.mail_redirect_to ?? "").trim() || undefined,
     adminMasterEmail: resolveAdminMasterEmailFromVault(vault),
-    discordDeploymentWebhook: resolveDiscordDeploymentWebhookFromVault(vault),
+    discordDeploymentWebhook: discordHooks.deployment,
+    discordCommunityWebhook: discordHooks.community,
+    discordFeedbackWebhook: discordHooks.feedback,
+    discordGithubLogWebhook: discordHooks.githubLog,
     testmailApiKey: String(cursor.testmail_api_key ?? "").trim() || undefined,
     testmailNamespace: String(cursor.testmail_namespace ?? "").trim() || undefined,
   };
