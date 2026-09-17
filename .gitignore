@@ -20,6 +20,8 @@ website/admin/_worker.bundle
 website/admin/.wrangler/
 .firecrawl/
 .dev-smoke/
+.dev-smoke/
+.release-assets/
 dev-smoke/
 skills-lock.json
 .codex/
