@@ -101,8 +101,9 @@ For a manual local publish:
 npm run package
 npm run publish:ovsx
 
-# VS Code Marketplace (uses LorapokLabs from package.json)
-npx vsce publish -p $VSCE_PAT
+# VS Code Marketplace (uses LorapokLabs from package.json; retries Azure 503)
+npm run publish:vscode
+# or: node scripts/publish-vsce.mjs   # requires VSCE_PAT; newest *.vsix in repo root
 
 # Verify all channels match package.json version
 npm run verify:marketplace
@@ -113,9 +114,9 @@ npm run verify:marketplace
 | Namespace | Purpose | How it is published |
 |-----------|---------|---------------------|
 | **`lorapok-labs`** | Canonical Open VSX listing (verified) | `npm run publish:ovsx` repacks VSIX with this publisher |
-| **`LorapokLabs`** | VS Code Marketplace publisher only | `vsce publish` — **never** bare `ovsx publish` |
+| **`LorapokLabs`** | VS Code Marketplace publisher only | `npm run publish:vscode` (`scripts/publish-vsce.mjs`, retries Azure 503) — **never** bare `ovsx publish` |
 
-`package.json` keeps `"publisher": "LorapokLabs"` for VS Code Marketplace. The `ovsx` CLI reads the publisher from the VSIX manifest, so CI uses `scripts/publish-ovsx.mjs` to repack before publishing to `lorapok-labs`.
+`package.json` keeps `"publisher": "LorapokLabs"` for VS Code Marketplace. CI publishes with `scripts/publish-vsce.mjs` (retries HTML 503 / Service Unavailable). The `ovsx` CLI reads the publisher from the VSIX manifest, so Open VSX uses `scripts/publish-ovsx.mjs` to repack before publishing to `lorapok-labs`.
 
 If search shows two Open VSX listings, the duplicate `LorapokLabs/...` entry was created by earlier bare `ovsx publish` runs. After syncing `lorapok-labs` to the latest version, request deprecation of the duplicate via [Open VSX](https://open-vsx.org).
 
