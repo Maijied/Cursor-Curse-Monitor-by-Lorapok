@@ -1196,22 +1196,11 @@ jobs:
             echo "::error::VSCE_PAT secret missing."
             exit 1
           fi
-          VSIX=$(ls -t *.vsix 2>/dev/null | head -n 1)
           FLAGS=()
           if [ "${{ steps.config.outputs.pre_release }}" = "true" ]; then
             FLAGS+=(--pre-release)
           fi
-          set +e
-          OUTPUT=$(vsce publish --packagePath "$VSIX" -p "$VSCE_PAT" "${FLAGS[@]}" 2>&1)
-          STATUS=$?
-          set -e
-          echo "$OUTPUT"
-          if [ "$STATUS" -ne 0 ] && ! echo "$OUTPUT" | grep -qiE 'already exists|already published'; then
-            exit "$STATUS"
-          fi
-          if echo "$OUTPUT" | grep -qiE 'already exists|already published'; then
-            echo "::warning::VS Code Marketplace already has this version — OK"
-          fi
+          node scripts/publish-vsce.mjs "${FLAGS[@]}"
 
       # ── Open VSX ──────────────────────────────────────────────────────────
       - name: Publish to Open VSX (canonical lorapok-labs)

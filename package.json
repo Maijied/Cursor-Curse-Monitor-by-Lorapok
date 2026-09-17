@@ -328,7 +328,7 @@
     "sync:download-totals:check": "node scripts/sync-download-totals.mjs --check",
     "prepackage": "npm run validate:assets && npm run sync:icons && node scripts/generate-readme-stats.mjs && npm run version:sync",
     "publish:ovsx": "node scripts/publish-ovsx.mjs",
-    "publish:vscode": "vsce publish",
+    "publish:vscode": "node scripts/publish-vsce.mjs",
     "verify:marketplace": "node scripts/verify-marketplace-sync.mjs --strict",
     "site:data": "node scripts/generate-site-data.mjs",
     "stats:sync-all": "npm run site:data",
@@ -372,7 +372,7 @@
     "dev:vscode:quick": "node scripts/vscode-dev-env.mjs all --quick",
     "diagnostic:extension": "node scripts/generate-extension-diagnostic.mjs",
     "release:notes": "node scripts/generate-github-release-notes.mjs",
-    "test:release-notes": "node tests/test_github_release_notes.mjs && node tests/test_create_github_release.mjs",
+    "test:release-notes": "node tests/test_github_release_notes.mjs && node tests/test_create_github_release.mjs && node tests/test_publish_vsce.mjs",
     "check:isolation": "node scripts/check-dev-isolation.mjs",
     "prepare": "husky"
   },
