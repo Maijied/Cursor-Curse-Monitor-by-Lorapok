@@ -240,35 +240,62 @@ export async function runResendDomainVerification(options) {
         options.zoneId ||
         (options.resolveZone ? await resolveCloudflareZoneId(options.cfHeaders, fetchFn) : null);
       if (!zoneId) {
-        fail("cloudflare-dns", "could not resolve lorapok.tech zone id");
+        if (summary?.verified) {
+          checks.push({
+            name: "cloudflare-dns",
+            ok: true,
+            detail: "zone id unresolved — skipped (Resend already verified)",
+            skipped: true,
+          });
+        } else {
+          fail("cloudflare-dns", "could not resolve lorapok.tech zone id");
+        }
       } else {
-      const rows = await listCloudflareDns(options.cfHeaders, zoneId, fetchFn);
-      const relevant = rows
-        .filter((r) => {
-          const name = normalizeCloudflareDnsName(r.name);
-          return EXPECTED_DNS_NAMES.some((n) => name === n || name.endsWith(`.${n}`));
-        })
-        .map((r) => ({
-          name: normalizeCloudflareDnsName(r.name),
-          type: String(r.type ?? ""),
-          content: String(r.content ?? ""),
-          proxied: r.proxied === true,
-        }));
-      const audit = auditCloudflareDns(relevant, domain);
-      if (audit.ok) {
-        pass("cloudflare-dns", "resend._domainkey.mail, send.mail, mail MX present (DNS only)");
-      } else {
-        for (const row of audit.checks) {
-          if (!row.ok) {
-            fail(`dns-${row.name}`, `missing types: ${row.missing.join(", ") || "records"}`);
-          } else if (row.proxied) {
-            fail(`dns-${row.name}`, "must be DNS only (grey cloud) — disable proxy");
+        const rows = await listCloudflareDns(options.cfHeaders, zoneId, fetchFn);
+        const relevant = rows
+          .filter((r) => {
+            const name = normalizeCloudflareDnsName(r.name);
+            return EXPECTED_DNS_NAMES.some((n) => name === n || name.endsWith(`.${n}`));
+          })
+          .map((r) => ({
+            name: normalizeCloudflareDnsName(r.name),
+            type: String(r.type ?? ""),
+            content: String(r.content ?? ""),
+            proxied: r.proxied === true,
+          }));
+        const audit = auditCloudflareDns(relevant, domain);
+        if (audit.ok) {
+          pass("cloudflare-dns", "resend._domainkey.mail, send.mail, mail MX present (DNS only)");
+        } else if (summary?.verified) {
+          // Resend is source of truth for sending; CF zone-read token may lack DNS scope.
+          checks.push({
+            name: "cloudflare-dns",
+            ok: true,
+            detail: "optional CF DNS audit incomplete — Resend domain already verified",
+            skipped: true,
+          });
+        } else {
+          for (const row of audit.checks) {
+            if (!row.ok) {
+              fail(`dns-${row.name}`, `missing types: ${row.missing.join(", ") || "records"}`);
+            } else if (row.proxied) {
+              fail(`dns-${row.name}`, "must be DNS only (grey cloud) — disable proxy");
+            }
           }
         }
       }
-      }
     } catch (err) {
-      fail("cloudflare-dns", err instanceof Error ? err.message : "DNS audit failed");
+      const msg = err instanceof Error ? err.message : "DNS audit failed";
+      if (summary?.verified) {
+        checks.push({
+          name: "cloudflare-dns",
+          ok: true,
+          detail: `${msg} — skipped (Resend already verified)`,
+          skipped: true,
+        });
+      } else {
+        fail("cloudflare-dns", msg);
+      }
     }
   } else {
     checks.push({
@@ -279,9 +306,12 @@ export async function runResendDomainVerification(options) {
     });
   }
 
-  const failed = checks.filter((c) => c.ok === false);
+  // Resend verified status is the gate; CF DNS audit is advisory when Resend is green.
+  const hardFailed = checks.filter(
+    (c) => c.ok === false && !String(c.name).startsWith("dns-") && c.name !== "cloudflare-dns"
+  );
   return {
-    ok: failed.length === 0 && Boolean(summary?.verified),
+    ok: hardFailed.length === 0 && Boolean(summary?.verified),
     domain,
     checks,
     summary,

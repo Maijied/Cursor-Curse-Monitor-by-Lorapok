@@ -175,7 +175,8 @@ node website/admin/scripts/repair-mail.mjs
 | `verify-inbound-routing.mjs` | Audit/fix Cloudflare forward rules per identity |
 | `enable-mail.mjs` | Relay worker + Pages `CLOUDFLARE_EMAIL_API_TOKEN` secret |
 | `verify-mail-transport.mjs` | CI gate: relay and/or REST must work |
-| `repair-mail.mjs` | Full local repair (enable + build + deploy + verify) |
+| `verify-mail-all.mjs` | Local MAIL-06 suite: setup + transport + inbound + Resend domain + production probe |
+| `repair-mail.mjs` | Full local repair (enable + build + deploy + verify-all gates) |
 | `deploy-pages-fast.mjs` | Fast Pages deploy without mail setup |
 | `deploy-pages-ci.mjs` | CI Pages deploy with rate-limit retries |
 | `sync-mail-on-main.mjs` | Local vault → secrets + enable + verify |

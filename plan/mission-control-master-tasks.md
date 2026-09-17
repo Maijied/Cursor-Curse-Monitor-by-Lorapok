@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-17 (INT-01 hub finish on `feat/int-01-integrations-hub-finish`)
-**Branch:** `feat/int-01-integrations-hub-finish`
-**Main:** `9784c7d0` (MAIL-16 live testmail probes + #265/#266 GH-06)
-**CI:** branch pending PR checks; hub vitest + ConnectedServices OK
+**Last updated:** 2026-09-17 (MAIL-06 verify-all green on `feat/mail-06-repair-verify-green`)
+**Branch:** `feat/mail-06-repair-verify-green`
+**Main:** `6a3a92fb` (INT-01 hub finish + procedure verified)
+**CI:** branch pending PR; local `mail:verify-all` OK
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -207,7 +207,7 @@
 | MAIL-03 | FieldHelp on sending domain | **done** | Phase 2 |
 | MAIL-04 | Refresh Cloudflare deploy + email credentials | **done** | Global API Key deploy via `CLOUDFLARE_API_KEY`+`CLOUDFLARE_EMAIL`; CI decrypts gpg vault (`CRED_STORE_GPG_BASE64`+pin); Settings → Cloudflare rotates GH secrets |
 | MAIL-05 | Resend secret via `setup-resend-secret.mjs` | **done** | Pages + GH `RESEND_API_KEY` synced |
-| MAIL-06 | Resend quota + transport fallback + broadcast capacity | **done** | `service-usage.js`, cron `service-usage-sync`, Settings Resend limits |
+| MAIL-15 | Resend quota + transport fallback + broadcast capacity | **done** | `service-usage.js`, cron `service-usage-sync`, Settings Resend limits |
 | MAIL-07 | Resend domain `mail.lorapok.tech` DNS + verify | **done** | `npm run mail:verify-resend-domain`; KV `resendDomainVerified=true` synced |
 | MAIL-09 | Design: Email identities Settings API + KV schema | **done** | `email-identities-config.js`, GET/PUT config |
 | MAIL-10 | Settings **Email identities** tab — list/create `@lorapok.tech` | **done** | `EmailIdentitiesCard`; provision via CF Email Routing |
@@ -215,7 +215,7 @@
 | MAIL-12 | Identity provision tests + FieldHelp + api-catalog | **partial** | tests + catalog; FieldHelp deferred |
 | QUOTA-01 | Service used/limit in `/api/sync/status` | **done** | Resend, Cloudflare Email, mail relay |
 | QUOTA-02 | `service-usage-sync` cron (ccm-stats-cron) | **done** | probes + KV snapshot every 15m tick |
-| MAIL-06 | `repair-mail.mjs` + verify scripts green | **next** | ops |
+| MAIL-06 | `repair-mail.mjs` + verify scripts green | **done** | `npm run mail:verify-all` / `mail:repair`; Resend-verified soft-skips CF DNS 403; prod probe OK (relay + Resend) |
 | MAIL-08 | `mailLastVerifiedAt` on health API | **done** | `/api/health` exposes `mailLastVerifiedAt` + `mailDeliverabilityOk` |
 | MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **done** | `mail-template-engine.js`, `MailTemplateGallery.tsx`, `GET /api/integrations/mail/preview` |
 | MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **done** | `subscriber-mail-context.js`, subscribe API + broadcast merge tags; KV overrides `integrations:mail-templates` |
@@ -382,10 +382,10 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **MAIL-06** (ops) — `repair-mail.mjs` + verify scripts green ([#143](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/143)) — note: duplicate ID with completed Resend-quota MAIL-06 row
-2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
-3. **WEB-07** / **ADMIN-01** — P1 website topology + command palette
-4. **CHRYS-01**, **WEB-08–11**, **LEGAL-01**, remaining queue
+1. **ADMIN-01** — Mission Control ⌘K command palette ([#191](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/191), P1)
+2. **WEB-07** — Expanded system topology ([#194](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/194), P1)
+3. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
+4. **CHRYS-01**, **WEB-08–09**, **LEGAL-01**, remaining queue
 
 ---
 

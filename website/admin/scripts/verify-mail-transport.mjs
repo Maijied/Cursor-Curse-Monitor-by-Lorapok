@@ -50,6 +50,11 @@ if (emailToken) {
   restOk = probe.ok;
   if (restOk) {
     console.log("✓ CLOUDFLARE_EMAIL_API_TOKEN can access Email Sending API");
+  } else if (probe.status === 404) {
+    // Workers Free / some account tokens: domains list endpoint may 404 while REST send still works.
+    console.warn(
+      "ℹ️  Email Sending domains probe returned 404 — token present; rely on relay/Resend for transport gate"
+    );
   } else {
     console.warn(`✗ Email token probe failed (HTTP ${probe.status})`);
   }
