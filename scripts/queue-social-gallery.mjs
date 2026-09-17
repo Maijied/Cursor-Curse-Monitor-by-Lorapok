@@ -114,7 +114,10 @@ async function main() {
 
   if (result.skipped) {
     if (result.reason === "no_cron_secret") {
-      console.log("::warning::CRON_SECRET not set — skipping social gallery queue");
+      console.log(
+        "::warning::CRON_SECRET not set — skipping social gallery queue " +
+          "(load admin-production / cred vault before this step)"
+      );
     } else {
       console.log(`::notice::Social gallery queue skipped (${result.reason})`);
     }

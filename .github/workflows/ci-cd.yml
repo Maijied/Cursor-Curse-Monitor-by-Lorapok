@@ -1317,11 +1317,62 @@ jobs:
           fi
           node scripts/create-github-release.mjs "${ARGS[@]}"
 
-      - name: Queue social gallery job (DEPLOY-03)
-        if: success()
+  # Social gallery queue moved to `queue-social-gallery` job (needs admin-production CRON_SECRET).
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 7b. QUEUE SOCIAL GALLERY (DEPLOY-03) — needs admin-production for CRON_SECRET
+  # ───────────────────────────────────────────────────────────────────────────
+  queue-social-gallery:
+    name: Queue Social Gallery (DEPLOY-03)
+    needs: [deploy, release-prep]
+    if: >-
+      always()
+      && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    environment:
+      name: admin-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-prep.outputs.tag || inputs.target_tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install GPG (cred vault decrypt)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnupg
+
+      - name: Load credentials from cred vault
         continue-on-error: true
         env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          CRED_VAULT_PASSPHRASE: ${{ secrets.CRED_VAULT_PASSPHRASE }}
+          CRED_STORE_GPG_BASE64: ${{ secrets.CRED_STORE_GPG_BASE64 }}
+        run: node scripts/load-cred-vault-env-ci.mjs
+        working-directory: website/admin
+
+      - name: Fallback admin-production CRON_SECRET
+        env:
+          FB_CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET:-}" ] && [ -n "${FB_CRON_SECRET:-}" ]; then
+            echo "CRON_SECRET=${FB_CRON_SECRET}" >> "$GITHUB_ENV"
+            echo "::notice::CRON_SECRET loaded from admin-production environment secret"
+          elif [ -n "${CRON_SECRET:-}" ]; then
+            echo "::notice::CRON_SECRET loaded from cred vault"
+          else
+            echo "::warning::CRON_SECRET still unset after vault + admin-production fallback"
+          fi
+
+      - name: Queue social gallery job
+        env:
           ADMIN_URL: https://cursor-dev.lorapok.tech
           ACTION_TYPE: ${{ inputs.action_type }}
           TARGET_TAG: ${{ needs.release-prep.outputs.tag || inputs.target_tag }}
