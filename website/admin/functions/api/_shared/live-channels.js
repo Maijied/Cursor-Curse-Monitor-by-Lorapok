@@ -79,6 +79,15 @@ export async function fetchLiveChannels(siteData, options = {}) {
       id: "github-release",
       label: "GitHub Release",
       version: githubReleaseVersion,
+      downloadCount: (() => {
+        const assets = githubRelease?.assets ?? [];
+        return assets.reduce((sum, a) => sum + (Number(a.download_count) || 0), 0);
+      })(),
+      latestReleaseVsix: (() => {
+        const assets = githubRelease?.assets ?? [];
+        const vsix = assets.find((a) => String(a?.name ?? "").endsWith(".vsix"));
+        return vsix?.download_count ?? null;
+      })(),
     },
     {
       id: "git-tag",
@@ -109,11 +118,21 @@ export async function fetchLiveChannels(siteData, options = {}) {
       label: "Firefox AMO",
       version: amoVersion,
       published: amoData?.status === "public",
+      url: amoData?.url ?? "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
+      weeklyDownloads: amoData?.weekly_downloads ?? siteData.browserExtension?.firefox?.weeklyDownloads ?? 0,
+      averageDailyUsers:
+        amoData?.average_daily_users ?? siteData.browserExtension?.firefox?.averageDailyUsers ?? 0,
+      downloadCount: amoData?.total_downloads ?? siteData.browserExtension?.firefox?.downloadCount ?? null,
     },
     {
       id: "chrome-zip",
       label: "Chrome zip (GitHub)",
       version: chromeVersion,
+      downloadCount: (() => {
+        const assets = githubRelease?.assets ?? [];
+        const zip = assets.find((a) => /chrome.*\.zip$/i.test(a?.name ?? ""));
+        return zip?.download_count ?? siteData.github?.chromeZipDownloadCount ?? null;
+      })(),
     },
     {
       id: "package",

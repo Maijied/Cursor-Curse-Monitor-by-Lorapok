@@ -36,6 +36,9 @@ vi.mock("../ui/DiscordCardGallery", () => ({
 vi.mock("../ui/DiscordCommunityCard", () => ({
   default: () => <div data-testid="discord-community">DiscordCommunityCard</div>,
 }));
+vi.mock("../ui/DiscordGithubLogCard", () => ({
+  default: () => <div data-testid="discord-github-log">DiscordGithubLogCard</div>,
+}));
 vi.mock("../ui/DiscordFeedbackCard", () => ({
   default: () => <div data-testid="discord-feedback">DiscordFeedbackCard</div>,
 }));

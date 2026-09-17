@@ -86,7 +86,7 @@ async function generatePollinationsImage(provider, prompt, dimensions) {
  * @param {string} prompt
  * @param {{ width: number; height: number }} dimensions
  */
-async function generateHuggingFaceImage(provider, prompt, dimensions) {
+async function generateHuggingFaceImage(provider, prompt, _dimensions) {
   const model = String(provider.model ?? "stabilityai/stable-diffusion-xl-base-1.0").trim();
   const apiKey = String(provider.apiKey ?? "").trim();
   if (!apiKey) throw new Error("Hugging Face API key is required");

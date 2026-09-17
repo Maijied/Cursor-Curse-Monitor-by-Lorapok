@@ -200,6 +200,7 @@ const devStore = {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
+    githubLogWebhookUrl: "",
     communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: null,
     updatedBy: null,
@@ -438,6 +439,7 @@ export async function resetDevStore() {
     deploymentWebhookUrl: "",
     feedbackWebhookUrl: "",
     communityWebhookUrl: "",
+    githubLogWebhookUrl: "",
     communityInviteUrl: DEFAULT_COMMUNITY_INVITE_URL,
     updatedAt: null,
     updatedBy: null,
@@ -1277,6 +1279,7 @@ export function createDevApiMiddleware() {
           let deploymentWebhookUrl = current.deploymentWebhookUrl ?? current.webhookUrl ?? "";
           let feedbackWebhookUrl = current.feedbackWebhookUrl ?? "";
           let communityWebhookUrl = current.communityWebhookUrl ?? "";
+          let githubLogWebhookUrl = current.githubLogWebhookUrl ?? "";
           let communityInviteUrl = current.communityInviteUrl ?? DEFAULT_COMMUNITY_INVITE_URL;
 
           if (parsed.deploymentWebhookUrl !== undefined || parsed.webhookUrl !== undefined) {
@@ -1303,6 +1306,14 @@ export function createDevApiMiddleware() {
               return;
             }
           }
+          if (parsed.githubLogWebhookUrl !== undefined) {
+            githubLogWebhookUrl = String(parsed.githubLogWebhookUrl ?? "").trim();
+            if (githubLogWebhookUrl && !isValidDiscordWebhookUrl(githubLogWebhookUrl)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Invalid github-log Discord webhook URL" }));
+              return;
+            }
+          }
 
           if (parsed.communityInviteUrl !== undefined) {
             communityInviteUrl = String(parsed.communityInviteUrl ?? "").trim();
@@ -1315,10 +1326,29 @@ export function createDevApiMiddleware() {
             }
           }
 
+          if (
+            parsed.deploymentWebhookUrl === undefined &&
+            parsed.webhookUrl === undefined &&
+            parsed.feedbackWebhookUrl === undefined &&
+            parsed.communityWebhookUrl === undefined &&
+            parsed.githubLogWebhookUrl === undefined &&
+            parsed.communityInviteUrl === undefined
+          ) {
+            res.statusCode = 400;
+            res.end(
+              JSON.stringify({
+                error:
+                  "deploymentWebhookUrl, feedbackWebhookUrl, communityWebhookUrl, githubLogWebhookUrl, or communityInviteUrl is required",
+              })
+            );
+            return;
+          }
+
           devStore.discordConfig = {
             deploymentWebhookUrl,
             feedbackWebhookUrl,
             communityWebhookUrl,
+            githubLogWebhookUrl,
             communityInviteUrl,
             updatedAt: new Date().toISOString(),
             updatedBy: "dev@local",

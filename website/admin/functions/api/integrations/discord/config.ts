@@ -25,11 +25,7 @@ export async function onRequestGet(context) {
 }
 
 /**
- * Updates deployment and/or feedback Discord webhook URLs for master administrators.
- *
- * The deployment webhook accepts `deploymentWebhookUrl` or the legacy `webhookUrl` field.
- *
- * @returns An HTTP response containing the updated configuration or an error.
+ * Updates Discord webhook URLs (deployment / feedback / community / github-log).
  */
 export async function onRequestPut(context) {
   const { request, env } = context;
@@ -49,6 +45,7 @@ export async function onRequestPut(context) {
   let deploymentWebhookUrl = current.deploymentWebhookUrl;
   let feedbackWebhookUrl = current.feedbackWebhookUrl;
   let communityWebhookUrl = current.communityWebhookUrl;
+  let githubLogWebhookUrl = current.githubLogWebhookUrl;
 
   if (body.deploymentWebhookUrl !== undefined || body.webhookUrl !== undefined) {
     deploymentWebhookUrl = String(body.deploymentWebhookUrl ?? body.webhookUrl ?? "").trim();
@@ -71,6 +68,13 @@ export async function onRequestPut(context) {
     }
   }
 
+  if (body.githubLogWebhookUrl !== undefined) {
+    githubLogWebhookUrl = String(body.githubLogWebhookUrl ?? "").trim();
+    if (githubLogWebhookUrl && !isValidDiscordWebhookUrl(githubLogWebhookUrl)) {
+      return jsonResponse({ error: "Invalid github-log Discord webhook URL" }, 400);
+    }
+  }
+
   let communityInviteUrl = current.communityInviteUrl;
   if (body.communityInviteUrl !== undefined) {
     communityInviteUrl = String(body.communityInviteUrl ?? "").trim();
@@ -86,10 +90,14 @@ export async function onRequestPut(context) {
     body.webhookUrl === undefined &&
     body.feedbackWebhookUrl === undefined &&
     body.communityWebhookUrl === undefined &&
+    body.githubLogWebhookUrl === undefined &&
     body.communityInviteUrl === undefined
   ) {
     return jsonResponse(
-      { error: "deploymentWebhookUrl, feedbackWebhookUrl, communityWebhookUrl, or communityInviteUrl is required" },
+      {
+        error:
+          "deploymentWebhookUrl, feedbackWebhookUrl, communityWebhookUrl, githubLogWebhookUrl, or communityInviteUrl is required",
+      },
       400
     );
   }
@@ -98,6 +106,7 @@ export async function onRequestPut(context) {
     deploymentWebhookUrl,
     feedbackWebhookUrl,
     communityWebhookUrl,
+    githubLogWebhookUrl,
     communityInviteUrl,
     updatedAt: new Date().toISOString(),
     updatedBy: auth.email,

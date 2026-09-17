@@ -41,7 +41,12 @@ describe("discord deploy context formatters", () => {
           openVsxDuplicate: 3813,
           vscodeMarketplace: 356,
           githubAllAssets: 8,
+          githubVsix: 5,
+          githubChrome: 3,
           latestReleaseVsix: 0,
+          latestReleaseChrome: 0,
+          firefoxAmoWeekly: 0,
+          firefoxAmoDailyUsers: 1,
         },
       },
     });
@@ -49,6 +54,37 @@ describe("discord deploy context formatters", () => {
     expect(text).toContain("Total ········· 9,975");
     expect(text).toContain("Open VSX ········ 9,611");
     expect(text).toContain("VS Code ········· 356");
+    expect(text).toContain("Firefox AMO");
+    expect(text).toContain("addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor");
+  });
+
+  it("labels Total as excluding duplicate when LorapokLabs is missing", () => {
+    const text = formatDownloadBreakdownText({
+      downloads: {
+        verified: true,
+        total: 18365,
+        displayTotal: 18365,
+        canonicalTotal: 18365,
+        openVsxCombined: 17299,
+        liveSources: {
+          openVsxCanonical: true,
+          openVsxDuplicate: false,
+          vscodeMarketplace: true,
+          githubReleases: true,
+        },
+        breakdown: {
+          openVsxCanonical: 17299,
+          openVsxDuplicate: null,
+          vscodeMarketplace: 1017,
+          githubAllAssets: 49,
+          latestReleaseVsix: 2,
+        },
+      },
+    });
+
+    expect(text).toContain("Total ········· 18,365");
+    expect(text).toContain("LorapokLabs ··· —");
+    expect(text).toContain("Total excludes LorapokLabs");
   });
 
   it("builds marketplace sync fields with emoji status", () => {

@@ -82,16 +82,30 @@ export function formatDownloadBreakdownText(siteData) {
   }
 
   const breakdown = downloads.breakdown ?? {};
+  const live = downloads.liveSources ?? {};
+  const duplicateMissing = live.openVsxDuplicate === false || breakdown.openVsxDuplicate == null;
+  const totalValue = duplicateMissing
+    ? (downloads.canonicalTotal ?? downloads.displayTotal ?? downloads.total)
+    : (downloads.displayTotal ?? downloads.total);
+
   const lines = [
     "Community reach (verified live)",
-    `Total ········· ${formatDiscordCount(downloads.displayTotal ?? downloads.total)}`,
+    `Total ········· ${formatDiscordCount(totalValue)}`,
     `Open VSX ········ ${formatDiscordCount(downloads.openVsxCombined)}`,
     `  canonical ····· ${formatDiscordCount(breakdown.openVsxCanonical)}`,
     `  LorapokLabs ··· ${formatDiscordCount(breakdown.openVsxDuplicate)}`,
     `VS Code ········· ${formatDiscordCount(breakdown.vscodeMarketplace)}`,
     `GitHub assets ··· ${formatDiscordCount(breakdown.githubAllAssets)}`,
+    `  all VSIX ······ ${formatDiscordCount(breakdown.githubVsix)}`,
+    `  Chrome zips ··· ${formatDiscordCount(breakdown.githubChrome)}`,
     `Latest VSIX ····· ${formatDiscordCount(breakdown.latestReleaseVsix)}`,
+    `Latest Chrome ··· ${formatDiscordCount(breakdown.latestReleaseChrome)}`,
+    `Firefox AMO ····· ${formatDiscordCount(breakdown.firefoxAmoWeekly)}/wk · ${formatDiscordCount(breakdown.firefoxAmoDailyUsers)} ADU`,
   ];
+  if (duplicateMissing) {
+    lines.push("Note ········· Open VSX duplicate missing — Total excludes LorapokLabs");
+  }
+  lines.push("AMO URL ······· https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/");
   return `\`\`\`\n${lines.join("\n")}\n\`\`\``;
 }
 
@@ -201,14 +215,25 @@ export function formatEngagementText(siteData) {
   const clickLines = Object.entries(clicks)
     .map(([key, value]) => `  ${key} · ${formatDiscordCount(value)}`)
     .join("\n");
+  const updatedAt = visitors.updatedAt ? Date.parse(String(visitors.updatedAt)) : NaN;
+  const staleMs = 7 * 24 * 60 * 60 * 1000;
+  const stale =
+    !Number.isNaN(updatedAt) && Date.now() - updatedAt > staleMs
+      ? `\nUpdated ····· ${String(visitors.updatedAt).slice(0, 10)} (stale — check analytics beacon)`
+      : visitors.updatedAt
+        ? `\nUpdated ····· ${String(visitors.updatedAt).slice(0, 10)}`
+        : "";
   return [
     "```",
     "Website engagement",
     `Visits ······· ${formatDiscordCount(visitors.websiteVisits)}`,
     `Engagement ··· ${formatDiscordCount(visitors.totalEngagement)}`,
     clickLines || "  (no package clicks yet)",
+    stale.trimEnd(),
     "```",
-  ].join("\n");
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
 }
 
 /**

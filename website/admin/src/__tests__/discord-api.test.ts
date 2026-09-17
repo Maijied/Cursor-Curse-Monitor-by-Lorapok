@@ -95,6 +95,20 @@ describe("discord integration APIs", () => {
     expect(saved.config.communityWebhookPreview).toContain("999888777");
   });
 
+  it("saves a github-log discord webhook URL", async () => {
+    const save = await fetch(`${base}/api/integrations/discord/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        githubLogWebhookUrl: "https://discord.com/api/webhooks/111222333/githubloghooktokenxx",
+      }),
+    });
+    const saved = await save.json();
+    expect(save.ok).toBe(true);
+    expect(saved.config.githubLogConfigured).toBe(true);
+    expect(saved.config.githubLogWebhookPreview).toContain("111222333");
+  });
+
   it("skips community post when no webhook is saved", async () => {
     const res = await fetch(`${base}/api/integrations/discord/community`, {
       method: "POST",

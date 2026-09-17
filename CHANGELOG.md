@@ -8,7 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Discord Community reach + visitor analytics** — `/api/analytics/visit` now writes ADMIN_KV (seeded from Firestore so counts don’t reset); `/api/analytics/stats` is public for stats-refresh/CI; marketing beacon points at admin Pages; Discord Total labels when Open VSX duplicate is missing; oxlint unused-import/control-char warnings cleared.
+- **Firefox AMO + dynamic GitHub asset stats** — Community reach lists [Firefox AMO](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/) (weekly downloads + ADU); GitHub breakdown is live (all assets / VSIX / Chrome / latest release). Preserves last Open VSX duplicate when that registry briefly fails so Total does not silently drop ~15k.
 - **GitHub Release upload retries** — marketplace deploy no longer fails the job on transient GitHub Unicorn/5xx mid-asset upload; `scripts/create-github-release.mjs` stages version-matched assets, retries uploads, then publishes (avoids stuck draft releases).
+- **Discord github-log fan-out** — GitHub ingest posts to a dedicated github-log webhook (not community or deployment); skips `in_progress` workflow runs; richer completed-run summaries.
 - **MAIL-06 mail verify suite** — `npm run mail:verify-all` gates transport/inbound/Resend domain/production probe; Resend-verified domains no longer fail on Cloudflare DNS 403; `repair-mail.mjs` runs transport + Resend verify after deploy.
 - **GH-06 webhook fan-out** — GitHub ingest now fans out to Discord (community/deployment webhook) for all enabled events and to social platforms on `release`; repo webhook setup documented in wiki + Settings → GitHub.
 

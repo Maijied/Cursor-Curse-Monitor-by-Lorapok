@@ -1,8 +1,13 @@
 import { jsonResponse } from "../_shared/auth.js";
+import { incrementVisitorStats } from "../_shared/visitor-stats.js";
 
-/** Marketing site analytics use Firestore directly; this beacon is a no-op on Cloudflare Pages. */
+/**
+ * Marketing site visit / package-click beacon.
+ * Persists to ADMIN_KV (`stats:visitors`) so stats-refresh + Discord digests stay live.
+ * Firestore client writes on the marketing site remain a secondary path.
+ */
 export async function onRequestPost(context) {
-  const { request } = context;
+  const { request, env } = context;
 
   let body;
   try {
@@ -12,12 +17,16 @@ export async function onRequestPost(context) {
   }
 
   const channel = typeof body.channel === "string" ? body.channel : "website";
+  const stats = await incrementVisitorStats(env, channel);
 
   return jsonResponse(
     {
       ok: true,
       channel,
-      message: "Analytics persisted via Firestore on the marketing site.",
+      websiteVisits: stats.websiteVisits,
+      totalEngagement: stats.totalEngagement,
+      updatedAt: stats.updatedAt,
+      source: "kv",
     },
     200,
     { "Access-Control-Allow-Origin": "*" }
