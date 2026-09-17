@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272  
 **Branch:** `fix/discord-stats-analytics`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273
 
 ---
 
@@ -22,7 +22,7 @@ Fix Discord Community reach / engagement cards sending wrong or stale stats, and
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (discord-deploy-context + discord-notify)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification (admin deploy + digest test + website deploy)
