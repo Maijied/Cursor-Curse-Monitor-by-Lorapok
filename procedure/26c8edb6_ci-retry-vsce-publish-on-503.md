@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/276  
 **Branch:** `fix/ci-vsce-publish-503-retries`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/277
 
 ---
 
@@ -22,7 +22,7 @@ Marketplace deploy fails when Azure returns HTML HTTP 503 during `vsce publish`.
 - [x] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (`node tests/test_publish_vsce.mjs`)
-- [ ] PR opened
+- [x] PR opened (#277)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
