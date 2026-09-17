@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **GitHub Release upload retries** — marketplace deploy no longer fails the job on transient GitHub Unicorn/5xx mid-asset upload; `scripts/create-github-release.mjs` stages version-matched assets, retries uploads, then publishes (avoids stuck draft releases).
 - **MAIL-06 mail verify suite** — `npm run mail:verify-all` gates transport/inbound/Resend domain/production probe; Resend-verified domains no longer fail on Cloudflare DNS 403; `repair-mail.mjs` runs transport + Resend verify after deploy.
 - **GH-06 webhook fan-out** — GitHub ingest now fans out to Discord (community/deployment webhook) for all enabled events and to social platforms on `release`; repo webhook setup documented in wiki + Settings → GitHub.
 
