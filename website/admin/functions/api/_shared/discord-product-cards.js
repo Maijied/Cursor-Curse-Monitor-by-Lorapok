@@ -83,10 +83,17 @@ export function buildDiscordDigestEmbed(payload, enrichment, catalogBrand) {
 
   const displayTotal =
     enrichment?.siteData?.downloads?.displayTotal ?? enrichment?.siteData?.downloads?.total ?? null;
-  if (displayTotal != null) {
+  const canonicalTotal = enrichment?.siteData?.downloads?.canonicalTotal ?? null;
+  const duplicateMissing =
+    enrichment?.siteData?.downloads?.liveSources?.openVsxDuplicate === false ||
+    enrichment?.siteData?.downloads?.breakdown?.openVsxDuplicate == null;
+  const reachTotal = duplicateMissing ? (canonicalTotal ?? displayTotal) : displayTotal;
+  if (reachTotal != null) {
     fields.push({
       name: "Community reach",
-      value: `**${formatDiscordCount(displayTotal)}** installs`,
+      value: duplicateMissing
+        ? `**${formatDiscordCount(reachTotal)}** installs (excl. Open VSX duplicate)`
+        : `**${formatDiscordCount(reachTotal)}** installs`,
       inline: true,
     });
   }

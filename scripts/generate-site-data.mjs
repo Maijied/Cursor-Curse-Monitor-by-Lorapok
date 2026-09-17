@@ -588,7 +588,7 @@ const siteData = {
     repositoryUrl: `https://github.com/${REPO}`,
   },
   analytics: {
-    beaconPath: "/api/analytics/visit",
+    beaconPath: "https://cursor-dev.lorapok.tech/api/analytics/visit",
   },
   ovsx: {
     ...ovsx,

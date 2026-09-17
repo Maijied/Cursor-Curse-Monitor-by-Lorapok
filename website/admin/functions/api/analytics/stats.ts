@@ -1,17 +1,38 @@
-import { verifyAdminRequest, jsonResponse } from "../_shared/auth.js";
+import { jsonResponse } from "../_shared/auth.js";
+import { readVisitorStatsMerged } from "../_shared/visitor-stats.js";
 
-/** Visitor stats are stored in Firestore (stats/visitors). This endpoint is deprecated on Pages. */
+/**
+ * Public visitor stats for stats-refresh / CI (`ANALYTICS_STATS_URL`).
+ * Auth is not required — counters are non-sensitive aggregates.
+ * Prefers ADMIN_KV, seeded/merged with public Firestore `stats/visitors`.
+ */
 export async function onRequestGet(context) {
-  const { request, env } = context;
-  const auth = await verifyAdminRequest(request, env);
-  if (auth.error) return auth.error;
+  const { env } = context;
+  const stats = await readVisitorStatsMerged(env);
 
-  return jsonResponse({
-    websiteVisits: 0,
-    packageClicks: { ovsx: 0, vscode: 0, github: 0, vsix: 0, openvsxDuplicate: 0 },
-    totalEngagement: 0,
-    updatedAt: null,
-    source: "firestore",
-    message: "Live visitor stats are read from Firestore in the admin UI.",
+  return jsonResponse(
+    {
+      websiteVisits: stats.websiteVisits ?? 0,
+      packageClicks: stats.packageClicks ?? {},
+      totalEngagement: stats.totalEngagement ?? 0,
+      updatedAt: stats.updatedAt ?? null,
+      source: stats.source ?? "unknown",
+    },
+    200,
+    {
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "public, max-age=60",
+    }
+  );
+}
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
   });
 }

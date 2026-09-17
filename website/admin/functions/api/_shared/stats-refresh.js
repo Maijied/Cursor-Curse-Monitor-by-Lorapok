@@ -17,6 +17,7 @@ import { isKvQuotaError, isKvWritesPaused, nextUtcQuotaResetIso } from "./kv-quo
 import { shouldBlockKvWrites } from "./mail-storage.js";
 import { isFirestoreFallbackAvailable } from "./firebase-store.js";
 import { logSystemEvent } from "./system-log.js";
+import { readVisitorStatsMerged } from "./visitor-stats.js";
 import {
   buildReadmeStatsFromSiteData,
   renderReadmeStatsSvg,
@@ -62,15 +63,42 @@ function githubReleaseFallback(base) {
 }
 
 async function fetchVisitorStats(env) {
+  /** @type {Record<string, unknown>|null} */
+  let remote = null;
   const url = typeof env.ANALYTICS_STATS_URL === "string" ? env.ANALYTICS_STATS_URL.trim() : "";
-  if (!url) return null;
-  try {
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
+  if (url) {
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (res.ok) remote = await res.json();
+    } catch {
+      /* fall through to KV */
+    }
   }
+
+  let kv = null;
+  try {
+    kv = await readVisitorStatsMerged(env);
+  } catch {
+    kv = null;
+  }
+
+  const kvFresh = kv?.updatedAt ? Date.parse(String(kv.updatedAt)) : NaN;
+  const remoteFresh = remote?.updatedAt ? Date.parse(String(remote.updatedAt)) : NaN;
+  const kvHasData = Number(kv?.websiteVisits ?? 0) > 0 || Number(kv?.totalEngagement ?? 0) > 0;
+  const remoteHasData =
+    Number(remote?.websiteVisits ?? 0) > 0 || Number(remote?.totalEngagement ?? 0) > 0;
+
+  if (kvHasData && remoteHasData) {
+    if (!Number.isNaN(kvFresh) && !Number.isNaN(remoteFresh)) {
+      return kvFresh >= remoteFresh ? { ...kv, source: "kv" } : { ...remote, source: remote.source ?? "remote" };
+    }
+    return !Number.isNaN(kvFresh) ? { ...kv, source: "kv" } : { ...remote, source: remote.source ?? "remote" };
+  }
+  if (kvHasData) return { ...kv, source: "kv" };
+  if (remoteHasData) return { ...remote, source: remote.source ?? "remote" };
+  if (kv?.updatedAt) return { ...kv, source: "kv" };
+  if (remote) return { ...remote, source: remote.source ?? "remote" };
+  return null;
 }
 
 function channelById(channels, id) {

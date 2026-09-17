@@ -13,7 +13,7 @@ assert.equal(
 
 assert.equal(
   formatDeployFailure(infoLine, ""),
-  infoLine.replace(/\u001b\[[0-9;]*m/g, "").trim(),
+  infoLine.replace(new RegExp(`${String.fromCharCode(0x1b)}\\[[0-9;]*m`, "g"), "").trim(),
   "falls back to stripped output when no explicit error line exists"
 );
 

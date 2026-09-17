@@ -1,6 +1,5 @@
 import { normalizeTag } from "./discord-deploy-context.js";
 import { putKvJsonSafe } from "./kv-put.js";
-import { putStatsR2Text } from "./r2-stats.js";
 
 export const SOCIAL_GALLERY_R2_PREFIX = "social-gallery/";
 export const SOCIAL_GALLERY_SVG_KV_PREFIX = "social-gallery:svg:";

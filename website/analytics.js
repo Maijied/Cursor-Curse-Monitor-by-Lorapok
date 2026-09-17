@@ -35,8 +35,10 @@
   }
 
   function getBeaconUrl(data) {
-    const path = data?.analytics?.beaconPath || "/api/analytics/visit";
+    const path = data?.analytics?.beaconPath || "https://cursor-dev.lorapok.tech/api/analytics/visit";
     try {
+      // Absolute URLs (admin Pages) — required when marketing site is on GitHub Pages.
+      if (/^https?:\/\//i.test(path)) return path;
       return new URL(path, window.location.origin).href;
     } catch {
       return path;

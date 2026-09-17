@@ -265,7 +265,7 @@ export async function buildCredSyncHealth(env, options = {}) {
     ciSecretsReady,
     credVaultCiConfigured: ciSecretsReady,
     lastSyncAt: state.lastSuccessAt ?? state.lastAttemptAt,
-    lastSyncOk: !recentFailure && Boolean(state.lastSuccessAt),
+    lastSyncOk,
     lastError: recentFailure ? state.lastError : null,
     lastIntegration: state.lastIntegration,
     driftMissing: drift.missing,

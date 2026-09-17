@@ -51,6 +51,35 @@ describe("discord deploy context formatters", () => {
     expect(text).toContain("VS Code ········· 356");
   });
 
+  it("labels Total as excluding duplicate when LorapokLabs is missing", () => {
+    const text = formatDownloadBreakdownText({
+      downloads: {
+        verified: true,
+        total: 18365,
+        displayTotal: 18365,
+        canonicalTotal: 18365,
+        openVsxCombined: 17299,
+        liveSources: {
+          openVsxCanonical: true,
+          openVsxDuplicate: false,
+          vscodeMarketplace: true,
+          githubReleases: true,
+        },
+        breakdown: {
+          openVsxCanonical: 17299,
+          openVsxDuplicate: null,
+          vscodeMarketplace: 1017,
+          githubAllAssets: 49,
+          latestReleaseVsix: 2,
+        },
+      },
+    });
+
+    expect(text).toContain("Total ········· 18,365");
+    expect(text).toContain("LorapokLabs ··· —");
+    expect(text).toContain("Total excludes LorapokLabs");
+  });
+
   it("builds marketplace sync fields with emoji status", () => {
     const fields = buildMarketplaceFields(
       {
