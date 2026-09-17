@@ -9,12 +9,21 @@ describe("computeDownloadTotals", () => {
       openVsxDuplicate: { version: "1.0.0", downloadCount: 50 },
       vscode: { downloadCount: 20 },
       githubAllAssets: 3,
+      githubVsix: 2,
+      githubChrome: 1,
+      latestReleaseVsix: 2,
+      latestReleaseChrome: 0,
+      firefoxAmo: { weeklyDownloads: 4, averageDailyUsers: 1, downloadCount: null },
       packageVersion: "1.0.1",
     });
     assert.equal(result.verified, true);
     assert.equal(result.displayTotal, 173);
     assert.equal(result.openVsxCombined, 150);
     assert.equal(result.breakdown.openVsxDuplicate, 50);
+    assert.equal(result.breakdown.githubVsix, 2);
+    assert.equal(result.breakdown.latestReleaseVsix, 2);
+    assert.equal(result.breakdown.firefoxAmoWeekly, 4);
+    assert.equal(result.liveSources.firefoxAmo, true);
     assert.equal(result.source, "canonical");
   });
 
@@ -62,6 +71,39 @@ describe("computeDownloadTotals", () => {
     assert.equal(preserved.verified, true);
     assert.equal(preserved.total, 13356);
     assert.equal(preserved.displayTotal, 13356);
+  });
+
+  it("preserves previous Open VSX duplicate when live duplicate fetch fails", () => {
+    const previous = {
+      verified: true,
+      total: 33877,
+      displayTotal: 33877,
+      openVsxCombined: 32808,
+      liveSources: {
+        openVsxCanonical: true,
+        openVsxDuplicate: true,
+        vscodeMarketplace: true,
+        githubReleases: true,
+      },
+      breakdown: {
+        openVsxCanonical: 17369,
+        openVsxDuplicate: 15439,
+        vscodeMarketplace: 1020,
+        githubAllAssets: 49,
+      },
+    };
+    const next = computeDownloadTotals({
+      openVsxCanonical: { version: "1.0.172", downloadCount: 17369 },
+      openVsxDuplicate: null,
+      vscode: { downloadCount: 1020 },
+      githubAllAssets: 49,
+      packageVersion: "1.0.172",
+    });
+    assert.equal(next.displayTotal, 18438);
+    const preserved = preserveVerifiedDownloads(previous, next);
+    assert.equal(preserved.displayTotal, 33877);
+    assert.equal(preserved.breakdown.openVsxDuplicate, 15439);
+    assert.equal(preserved.liveSources.openVsxDuplicate, true);
   });
 
   it("uses duplicate fallback display when canonical lags package version", () => {

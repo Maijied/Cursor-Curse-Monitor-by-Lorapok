@@ -1,13 +1,19 @@
 export const COMMUNITY_DOWNLOADS_SITE_DATA_URL = "https://cursor.lorapok.tech/site-data.json";
 
 export const COMMUNITY_DOWNLOADS_NOTE =
-  "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets).";
+  "Grand total sums Open VSX (canonical + LorapokLabs) + VS Code downloadCount + GitHub release assets (+ Firefox AMO lifetime when exposed). AMO weekly downloads and average daily users are listed separately — https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/";
 
 export interface CommunityDownloadBreakdown {
   openVsxCanonical: number | null;
   openVsxDuplicate: number | null;
   vscodeMarketplace: number | null;
   githubAllAssets: number | null;
+  githubVsix?: number | null;
+  githubChrome?: number | null;
+  latestReleaseVsix?: number | null;
+  latestReleaseChrome?: number | null;
+  firefoxAmoWeekly?: number | null;
+  firefoxAmoDailyUsers?: number | null;
 }
 
 export interface CommunityDownloadStats {
@@ -39,6 +45,12 @@ export function parseCommunityDownloadsFromSiteData(data: unknown): CommunityDow
   const duplicate = parseCount(breakdown.openVsxDuplicate ?? ovsxDuplicate?.downloadCount);
   const vscodeMarketplace = parseCount(breakdown.vscodeMarketplace ?? vscode?.downloadCount);
   const githubAllAssets = parseCount(breakdown.githubAllAssets ?? github?.totalReleaseDownloads);
+  const githubVsix = parseCount(breakdown.githubVsix);
+  const githubChrome = parseCount(breakdown.githubChrome);
+  const latestReleaseVsix = parseCount(breakdown.latestReleaseVsix);
+  const latestReleaseChrome = parseCount(breakdown.latestReleaseChrome);
+  const firefoxAmoWeekly = parseCount(breakdown.firefoxAmoWeekly);
+  const firefoxAmoDailyUsers = parseCount(breakdown.firefoxAmoDailyUsers);
 
   const openVsxCombined = verified
     ? parseCount(downloads?.openVsxCombined) ??
@@ -56,6 +68,12 @@ export function parseCommunityDownloadsFromSiteData(data: unknown): CommunityDow
       openVsxDuplicate: duplicate,
       vscodeMarketplace,
       githubAllAssets,
+      githubVsix,
+      githubChrome,
+      latestReleaseVsix,
+      latestReleaseChrome,
+      firefoxAmoWeekly,
+      firefoxAmoDailyUsers,
     },
     note: String(downloads?.note ?? COMMUNITY_DOWNLOADS_NOTE),
   };
@@ -80,6 +98,9 @@ export function formatCommunityDownloadsBreakdown(stats: CommunityDownloadStats)
       : null,
     stats.breakdown.githubAllAssets != null
       ? `GitHub ${formatCommunityCount(stats.breakdown.githubAllAssets)}`
+      : null,
+    stats.breakdown.firefoxAmoWeekly != null || stats.breakdown.firefoxAmoDailyUsers != null
+      ? `Firefox ${formatCommunityCount(stats.breakdown.firefoxAmoWeekly)}/wk`
       : null,
   ].filter(Boolean);
   return parts.join(" · ");

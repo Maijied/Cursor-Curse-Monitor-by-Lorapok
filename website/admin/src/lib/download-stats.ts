@@ -20,7 +20,8 @@ export type DownloadChannelKey =
   | "openVsxCanonical"
   | "openVsxDuplicate"
   | "vscodeMarketplace"
-  | "githubAllAssets";
+  | "githubAllAssets"
+  | "firefoxAmoWeekly";
 
 /** True only when every download channel was read live from its registry. */
 export function isDownloadStatsVerified(data: SiteData): boolean {
@@ -59,6 +60,12 @@ function channelCountFromData(data: SiteData, channel: DownloadChannelKey): numb
       return (
         data.github?.totalReleaseDownloads ??
         data.github?.allAssetsDownloadCount ??
+        null
+      );
+    case "firefoxAmoWeekly":
+      return (
+        breakdown?.firefoxAmoWeekly ??
+        data.browserExtension?.firefox?.weeklyDownloads ??
         null
       );
     default:
@@ -100,7 +107,7 @@ export function getVerifiedChannelCount(data: SiteData, channel: DownloadChannel
 /** User-facing hint when downloads are partial vs fully verified. */
 export function downloadStatsAvailabilityLabel(data: SiteData): string {
   if (isDownloadStatsVerified(data)) {
-    return "Open VSX (both namespaces) + VS Code + GitHub";
+    return "Open VSX + VS Code + GitHub (+ Firefox AMO metrics)";
   }
   if (isDownloadStatsDisplayable(data)) {
     return "Marketplace channels live · GitHub may be pending";
@@ -115,16 +122,23 @@ export function buildDownloadChannelSlices(data: SiteData): DownloadChannelSlice
   }
 
   return [
-    { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", key: "openVsxCanonical" as const },
-    { id: "ovsx-duplicate", label: "Open VSX (LorapokLabs)", key: "openVsxDuplicate" as const },
-    { id: "vscode", label: "VS Code Marketplace", key: "vscodeMarketplace" as const },
-    { id: "github", label: "GitHub releases", key: "githubAllAssets" as const },
+    { id: "ovsx-canonical", label: "Open VSX (lorapok-labs)", key: "openVsxCanonical" as const, inTotal: true },
+    { id: "ovsx-duplicate", label: "Open VSX (LorapokLabs)", key: "openVsxDuplicate" as const, inTotal: true },
+    { id: "vscode", label: "VS Code Marketplace", key: "vscodeMarketplace" as const, inTotal: true },
+    { id: "github", label: "GitHub releases", key: "githubAllAssets" as const, inTotal: true },
+    { id: "firefox-amo", label: "Firefox AMO (weekly)", key: "firefoxAmoWeekly" as const, inTotal: false },
   ]
-    .map(({ id, label, key }) => ({
+    .map(({ id, label, key, inTotal }) => ({
       id,
       label,
       count: getVerifiedChannelCount(data, key) ?? 0,
-      inTotal: true,
+      inTotal,
     }))
-    .filter((slice) => slice.count > 0 || slice.id === "vscode" || slice.id === "github");
+    .filter(
+      (slice) =>
+        slice.count > 0 ||
+        slice.id === "vscode" ||
+        slice.id === "github" ||
+        slice.id === "firefox-amo",
+    );
 }

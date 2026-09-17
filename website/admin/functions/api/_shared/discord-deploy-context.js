@@ -96,11 +96,16 @@ export function formatDownloadBreakdownText(siteData) {
     `  LorapokLabs ··· ${formatDiscordCount(breakdown.openVsxDuplicate)}`,
     `VS Code ········· ${formatDiscordCount(breakdown.vscodeMarketplace)}`,
     `GitHub assets ··· ${formatDiscordCount(breakdown.githubAllAssets)}`,
+    `  all VSIX ······ ${formatDiscordCount(breakdown.githubVsix)}`,
+    `  Chrome zips ··· ${formatDiscordCount(breakdown.githubChrome)}`,
     `Latest VSIX ····· ${formatDiscordCount(breakdown.latestReleaseVsix)}`,
+    `Latest Chrome ··· ${formatDiscordCount(breakdown.latestReleaseChrome)}`,
+    `Firefox AMO ····· ${formatDiscordCount(breakdown.firefoxAmoWeekly)}/wk · ${formatDiscordCount(breakdown.firefoxAmoDailyUsers)} ADU`,
   ];
   if (duplicateMissing) {
     lines.push("Note ········· Open VSX duplicate missing — Total excludes LorapokLabs");
   }
+  lines.push("AMO URL ······· https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/");
   return `\`\`\`\n${lines.join("\n")}\n\`\`\``;
 }
 

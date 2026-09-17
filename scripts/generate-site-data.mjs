@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { fetchVsceExtension } from "../website/admin/functions/api/_shared/vsce-stats.js";
-import { computeDownloadTotals, preserveVerifiedDownloads } from "./download-totals.mjs";
+import { computeDownloadTotals, preserveVerifiedDownloads, summarizeGithubReleaseAssets } from "./download-totals.mjs";
 import { buildProductContext } from "./lib-product-context.mjs";
 import { buildGeneratedCatalogNotice, buildNoticeTemplates } from "./notice-templates.mjs";
 import { buildMailTemplates } from "./mail-templates.mjs";
@@ -265,7 +265,10 @@ async function fetchFirefoxAmo() {
     published,
     reviewStatus,
     version: data.current_version?.version ?? fallbackVersion,
-    averageDailyUsers: data.average_daily_users ?? undefined,
+    averageDailyUsers: data.average_daily_users ?? 0,
+    weeklyDownloads: data.weekly_downloads ?? 0,
+    // Public AMO API does not expose lifetime download totals.
+    downloadCount: data.total_downloads ?? null,
   };
 }
 
@@ -300,23 +303,27 @@ async function githubLatestRelease() {
 async function githubReleaseDownloadTotal() {
   const releases = await fetchJson(`https://api.github.com/repos/${REPO}/releases?per_page=100`);
   if (!Array.isArray(releases)) return null;
-  return releases.reduce((sum, rel) => {
-    const assets = rel.assets ?? [];
-    return sum + assets.reduce((a, asset) => a + (asset.download_count ?? 0), 0);
-  }, 0);
+  return summarizeGithubReleaseAssets(releases);
 }
 
-async function ovsxLatest(namespace) {
-  const data = await fetchJson(`https://open-vsx.org/api/${namespace}/${NAME}`);
-  if (!data?.version) return null;
-  return {
-    namespace,
-    version: data.version,
-    url: `https://open-vsx.org/extension/${namespace}/${NAME}`,
-    downloadable: data.downloadable !== false,
-    downloadCount: data.downloadCount ?? 0,
-    installQuery: `${namespace}.${NAME}`,
-  };
+async function ovsxLatest(namespace, { attempts = 3 } = {}) {
+  for (let i = 1; i <= attempts; i++) {
+    const data = await fetchJson(`https://open-vsx.org/api/${namespace}/${NAME}`);
+    if (data?.version) {
+      return {
+        namespace,
+        version: data.version,
+        url: `https://open-vsx.org/extension/${namespace}/${NAME}`,
+        downloadable: data.downloadable !== false,
+        downloadCount: data.downloadCount ?? 0,
+        installQuery: `${namespace}.${NAME}`,
+      };
+    }
+    if (i < attempts) {
+      await new Promise((r) => setTimeout(r, 500 * i));
+    }
+  }
+  return null;
 }
 
 async function vsceLatest() {
@@ -452,13 +459,27 @@ const ovsx = ovsxCanonical ?? {
   installQuery: OVSX_EXT_ID,
 };
 
-const githubAllAssets = githubDownloads;
+const githubAssetStats = githubDownloads;
+const githubAllAssets = githubAssetStats?.githubAllAssets ?? null;
 
 const downloadTotalsRaw = computeDownloadTotals({
   openVsxCanonical: ovsxCanonical,
   openVsxDuplicate: ovsxDuplicate,
   vscode,
   githubAllAssets,
+  githubVsix: githubAssetStats?.githubVsix ?? null,
+  githubChrome: githubAssetStats?.githubChrome ?? null,
+  latestReleaseVsix: githubAssetStats?.latestReleaseVsix ?? github?.vsixDownloadCount ?? 0,
+  latestReleaseChrome: githubAssetStats?.latestReleaseChrome ?? 0,
+  firefoxAmo: firefoxAmo
+    ? {
+        weeklyDownloads: firefoxAmo.weeklyDownloads ?? 0,
+        averageDailyUsers: firefoxAmo.averageDailyUsers ?? 0,
+        downloadCount: firefoxAmo.downloadCount ?? null,
+        url: firefoxAmo.url ?? AMO_PUBLIC_URL,
+        published: Boolean(firefoxAmo.published),
+      }
+    : null,
   packageVersion: version,
 });
 
@@ -475,7 +496,9 @@ if (downloadTotals.verified && !downloadTotalsRaw.verified) {
 
 const downloadBreakdown = {
   ...downloadTotals.breakdown,
-  latestReleaseVsix: github?.vsixDownloadCount ?? 0,
+  latestReleaseVsix:
+    downloadTotals.breakdown?.latestReleaseVsix ?? github?.vsixDownloadCount ?? 0,
+  latestReleaseChrome: downloadTotals.breakdown?.latestReleaseChrome ?? 0,
 };
 
 const productContext = buildProductContext(pkg, { publishedReleaseVersion });
@@ -552,7 +575,7 @@ const siteData = {
     source: downloadTotals.source,
     breakdown: downloadBreakdown,
     openVsxCombined: downloadTotals.openVsxCombined,
-    note: "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets).",
+    note: "Grand total sums Open VSX (canonical + LorapokLabs) + VS Code downloadCount + GitHub release assets (+ AMO lifetime when the public API exposes it). Firefox AMO weekly downloads and average daily users are listed separately.",
   },
   visitors: {
     ...visitors,
@@ -618,10 +641,13 @@ const siteData = {
     version,
     firefox: {
       ...firefoxAmo,
+      url: firefoxAmo.url ?? AMO_PUBLIC_URL,
       version:
         firefoxAmo.version && firefoxAmo.version !== "0.0.0"
           ? firefoxAmo.version
-          : version,
+          : readBrowserExtensionVersion(),
+      weeklyDownloads: firefoxAmo.weeklyDownloads ?? 0,
+      averageDailyUsers: firefoxAmo.averageDailyUsers ?? 0,
       xpiUrl: github?.firefoxXpiUrl ?? null,
       xpiName: github?.firefoxXpiName ?? null,
     },

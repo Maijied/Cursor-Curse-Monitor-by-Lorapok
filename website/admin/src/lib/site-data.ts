@@ -5,7 +5,12 @@ export interface DownloadBreakdown {
   vscodeMarketplace: number | null;
   githubAllAssets: number | null;
   githubVsix: number | null;
+  githubChrome?: number | null;
   latestReleaseVsix: number | null;
+  latestReleaseChrome?: number | null;
+  firefoxAmoWeekly?: number | null;
+  firefoxAmoDailyUsers?: number | null;
+  firefoxAmoLifetime?: number | null;
 }
 
 export interface VisitorStats {
@@ -171,7 +176,9 @@ export interface SiteData {
       published: boolean;
       reviewStatus?: string;
       version?: string | null;
-      downloadCount?: number;
+      downloadCount?: number | null;
+      weeklyDownloads?: number;
+      averageDailyUsers?: number;
     };
     chrome?: { zipUrl: string | null; zipName?: string | null; webStorePublished: boolean };
   };

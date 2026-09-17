@@ -25,6 +25,7 @@ const CHANNEL_COLORS: Record<string, string> = {
   "ovsx-duplicate": "#94a3b8",
   vscode: "var(--color-accent-2)",
   github: "var(--color-accent)",
+  "firefox-amo": "#ff7139",
 };
 
 export default function MarketplaceDistributionChart({ data }: MarketplaceDistributionChartProps) {
@@ -47,7 +48,9 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
               ? data.ovsxDuplicate?.version ?? null
               : slice.id === "vscode"
                 ? data.vscode.version
-                : data.github.releaseTag.replace(/^v/, ""),
+                : slice.id === "firefox-amo"
+                  ? data.browserExtension?.firefox?.version ?? null
+                  : data.github.releaseTag.replace(/^v/, ""),
         synced:
           slice.id === "ovsx-canonical"
             ? data.ovsx.version === data.packageVersion
@@ -55,7 +58,9 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
               ? false
               : slice.id === "vscode"
                 ? data.vscode.version === data.packageVersion
-                : data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
+                : slice.id === "firefox-amo"
+                  ? data.browserExtension?.firefox?.version === data.packageVersion
+                  : data.github.releaseTag.replace(/^v/, "") === data.packageVersion,
       })),
     [channelSlices, data],
   );
@@ -66,7 +71,8 @@ export default function MarketplaceDistributionChart({ data }: MarketplaceDistri
 
   const donutSlices = useMemo(() => {
     if (totalDownloads == null) return [];
-    const geometry = buildDonutStrokeSlices(channels, totalDownloads, circumference);
+    const totalChannels = channels.filter((channel) => channel.inTotal !== false);
+    const geometry = buildDonutStrokeSlices(totalChannels, totalDownloads, circumference);
     return geometry.map((slice) => {
       const channel = channels.find((c) => c.id === slice.id);
       return { ...channel!, ...slice };

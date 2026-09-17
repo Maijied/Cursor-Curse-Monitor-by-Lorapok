@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-17T19:15:42.729Z",
+  "generatedAt": "2026-09-17T19:31:37.750Z",
   "assets": {
-    "buildId": "126ef52a4d6f",
+    "buildId": "aa7dde2e1ce6",
     "cachePolicy": "static-assets-query-bust"
   },
   "displayName": "Cursor Curse Monitor by Lorapok",
@@ -73,7 +73,7 @@
     "feedbackUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues",
     "collaborateUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/discussions",
     "dismissible": true,
-    "updatedAt": "2026-09-17T19:15:42.729Z"
+    "updatedAt": "2026-09-17T19:31:37.750Z"
   },
   "noticeTemplates": [
     {
@@ -263,28 +263,34 @@
     }
   ],
   "downloads": {
-    "total": 33823,
-    "displayTotal": 33823,
+    "total": 33877,
+    "displayTotal": 33877,
     "verified": true,
     "liveSources": {
       "openVsxCanonical": true,
       "openVsxDuplicate": true,
       "vscodeMarketplace": true,
-      "githubReleases": true
+      "githubReleases": true,
+      "firefoxAmo": true
     },
     "canonicalTotal": 18438,
     "source": "canonical",
     "breakdown": {
       "openVsxCanonical": 17369,
-      "openVsxDuplicate": 15385,
+      "openVsxDuplicate": 15439,
       "openVsxDisplay": 17369,
       "vscodeMarketplace": 1020,
       "githubAllAssets": 49,
-      "githubVsix": 49,
-      "latestReleaseVsix": 0
+      "githubVsix": 28,
+      "githubChrome": 21,
+      "latestReleaseVsix": 0,
+      "latestReleaseChrome": 0,
+      "firefoxAmoWeekly": 0,
+      "firefoxAmoDailyUsers": 1,
+      "firefoxAmoLifetime": null
     },
-    "openVsxCombined": 32754,
-    "note": "Grand total sums all live marketplace channels (Open VSX canonical + LorapokLabs duplicate + VS Code downloadCount + GitHub release assets)."
+    "openVsxCombined": 32808,
+    "note": "Grand total sums Open VSX (canonical + LorapokLabs) + VS Code downloadCount + GitHub release assets (+ AMO lifetime when the public API exposes it). Firefox AMO weekly downloads and average daily users are listed separately."
   },
   "visitors": {
     "websiteVisits": 276,
@@ -355,7 +361,7 @@
       },
       {
         "topic": "epic",
-        "count": 10,
+        "count": 9,
         "items": [
           {
             "title": "Epic: Mission Control — open backlog",
@@ -429,7 +435,7 @@
     "stars": 0,
     "forks": 1,
     "openIssues": 43,
-    "openIssuesGitHub": 70,
+    "openIssuesGitHub": 71,
     "traffic": {
       "periodDays": 14,
       "clones": {
@@ -497,7 +503,7 @@
     "version": "1.0.172",
     "url": "https://open-vsx.org/extension/LorapokLabs/cursor-curse-monitor-by-lorapok",
     "downloadable": true,
-    "downloadCount": 15385,
+    "downloadCount": 15439,
     "installQuery": "LorapokLabs.cursor-curse-monitor-by-lorapok"
   },
   "vscode": {
@@ -618,7 +624,15 @@
     "vsixName": "cursor-curse-monitor-by-lorapok-1.0.172.vsix",
     "vsixUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.172/cursor-curse-monitor-by-lorapok-1.0.172.vsix",
     "vsixDownloadCount": 0,
-    "totalReleaseDownloads": 49,
+    "totalReleaseDownloads": {
+      "githubAllAssets": 49,
+      "githubVsix": 28,
+      "githubChrome": 21,
+      "githubXpi": 0,
+      "latestReleaseVsix": 0,
+      "latestReleaseChrome": 0,
+      "latestReleaseXpi": 0
+    },
     "publishedAt": "2026-09-17T18:40:05Z",
     "chromeZipUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.172/cursor-curse-monitor-chrome-1.0.172.zip",
     "chromeZipName": "cursor-curse-monitor-chrome-1.0.172.zip",
@@ -633,6 +647,8 @@
       "reviewStatus": "public",
       "version": "1.0.172",
       "averageDailyUsers": 1,
+      "weeklyDownloads": 0,
+      "downloadCount": null,
       "xpiUrl": null,
       "xpiName": null
     },

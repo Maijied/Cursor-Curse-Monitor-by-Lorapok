@@ -1,5 +1,5 @@
 import { GITHUB_REPO } from "./repo-constants.js";
-import { computeDownloadTotals, preserveVerifiedDownloads } from "./download-totals.js";
+import { computeDownloadTotals, preserveVerifiedDownloads, summarizeGithubReleaseAssets } from "./download-totals.js";
 import { fetchLiveChannels } from "./live-channels.js";
 import { fetchSiteData } from "./site-data.js";
 import {
@@ -30,7 +30,7 @@ function stableSnapshotBody(snapshot) {
   return rest;
 }
 
-async function fetchGithubReleaseDownloadTotal(env, base = null) {
+async function fetchGithubReleaseAssetStats(env, base = null) {
   const headers = env.GITHUB_TOKEN
     ? { Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: "application/vnd.github+json" }
     : { Accept: "application/json" };
@@ -38,28 +38,40 @@ async function fetchGithubReleaseDownloadTotal(env, base = null) {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`, {
       headers,
     });
-    if (!res.ok) return githubReleaseFallback(base);
+    if (!res.ok) return githubReleaseStatsFallback(base);
     const releases = await res.json();
-    if (!Array.isArray(releases)) return githubReleaseFallback(base);
-    const total = releases.reduce((sum, rel) => {
-      const assets = rel.assets ?? [];
-      return sum + assets.reduce((a, asset) => a + (asset.download_count ?? 0), 0);
-    }, 0);
-    return total > 0 ? total : githubReleaseFallback(base);
+    if (!Array.isArray(releases)) return githubReleaseStatsFallback(base);
+    const stats = summarizeGithubReleaseAssets(releases);
+    if (stats.githubAllAssets == null) return githubReleaseStatsFallback(base);
+    return stats;
   } catch {
-    return githubReleaseFallback(base);
+    return githubReleaseStatsFallback(base);
   }
 }
 
 /** @param {Record<string, unknown>|null|undefined} base */
-function githubReleaseFallback(base) {
-  const breakdown = base?.downloads?.breakdown;
-  if (breakdown != null && "githubAllAssets" in breakdown) {
-    return breakdown.githubAllAssets != null ? Number(breakdown.githubAllAssets) : null;
-  }
-  const fromGithub = base?.github?.totalReleaseDownloads ?? base?.github?.allAssetsDownloadCount;
-  if (fromGithub != null) return Number(fromGithub);
-  return null;
+function githubReleaseStatsFallback(base) {
+  const breakdown = base?.downloads?.breakdown ?? {};
+  const all =
+    breakdown.githubAllAssets != null
+      ? Number(breakdown.githubAllAssets)
+      : base?.github?.totalReleaseDownloads != null
+        ? Number(base.github.totalReleaseDownloads)
+        : base?.github?.allAssetsDownloadCount != null
+          ? Number(base.github.allAssetsDownloadCount)
+          : null;
+  return {
+    githubAllAssets: all,
+    githubVsix: breakdown.githubVsix != null ? Number(breakdown.githubVsix) : null,
+    githubChrome: breakdown.githubChrome != null ? Number(breakdown.githubChrome) : null,
+    githubXpi: breakdown.githubXpi != null ? Number(breakdown.githubXpi) : null,
+    latestReleaseVsix:
+      breakdown.latestReleaseVsix != null ? Number(breakdown.latestReleaseVsix) : null,
+    latestReleaseChrome:
+      breakdown.latestReleaseChrome != null ? Number(breakdown.latestReleaseChrome) : null,
+    latestReleaseXpi:
+      breakdown.latestReleaseXpi != null ? Number(breakdown.latestReleaseXpi) : null,
+  };
 }
 
 async function fetchVisitorStats(env) {
@@ -288,9 +300,9 @@ export async function runStatsRefresh(env, options = {}) {
 
   try {
   const base = await fetchSiteData(env);
-  const [channels, githubAllAssets, visitors] = await Promise.all([
+  const [channels, githubAssetStats, visitors] = await Promise.all([
     fetchLiveChannels(base, { githubToken: env.GITHUB_TOKEN }),
-    fetchGithubReleaseDownloadTotal(env, base),
+    fetchGithubReleaseAssetStats(env, base),
     fetchVisitorStats(env),
   ]);
 
@@ -299,6 +311,7 @@ export async function runStatsRefresh(env, options = {}) {
   const vscodeChannel = channelById(channels, "vscode");
   const firefox = channelById(channels, "firefox-amo");
   const packageVersion = String(base.packageVersion ?? base.version ?? "").replace(/^v/i, "");
+  const githubAllAssets = githubAssetStats?.githubAllAssets ?? null;
 
   const downloads = preserveVerifiedDownloads(
     base.downloads,
@@ -311,6 +324,28 @@ export async function runStatsRefresh(env, options = {}) {
         : null,
       vscode: vscodeChannel ? { downloadCount: vscodeChannel.downloadCount ?? 0 } : null,
       githubAllAssets,
+      githubVsix: githubAssetStats?.githubVsix ?? null,
+      githubChrome: githubAssetStats?.githubChrome ?? null,
+      latestReleaseVsix: githubAssetStats?.latestReleaseVsix ?? null,
+      latestReleaseChrome: githubAssetStats?.latestReleaseChrome ?? null,
+      firefoxAmo: firefox
+        ? {
+            weeklyDownloads: firefox.weeklyDownloads ?? base.browserExtension?.firefox?.weeklyDownloads ?? 0,
+            averageDailyUsers:
+              firefox.averageDailyUsers ?? base.browserExtension?.firefox?.averageDailyUsers ?? 0,
+            downloadCount: firefox.downloadCount ?? base.browserExtension?.firefox?.downloadCount ?? null,
+            url: firefox.url ?? base.browserExtension?.firefox?.url ?? null,
+            published: Boolean(firefox.published),
+          }
+        : base.browserExtension?.firefox
+          ? {
+              weeklyDownloads: base.browserExtension.firefox.weeklyDownloads ?? 0,
+              averageDailyUsers: base.browserExtension.firefox.averageDailyUsers ?? 0,
+              downloadCount: base.browserExtension.firefox.downloadCount ?? null,
+              url: base.browserExtension.firefox.url ?? null,
+              published: Boolean(base.browserExtension.firefox.published),
+            }
+          : null,
       packageVersion,
     }),
   );
@@ -355,6 +390,9 @@ export async function runStatsRefresh(env, options = {}) {
         ? `v${channelById(channels, "github-release").version}`
         : base.github?.releaseTag ?? null,
       allAssetsDownloadCount: githubAllAssets,
+      vsixDownloadCount: githubAssetStats?.githubVsix ?? base.github?.vsixDownloadCount ?? null,
+      chromeZipDownloadCount:
+        githubAssetStats?.githubChrome ?? base.github?.chromeZipDownloadCount ?? null,
     },
     browserExtension: {
       ...(base.browserExtension ?? {}),
@@ -362,6 +400,11 @@ export async function runStatsRefresh(env, options = {}) {
         ...(base.browserExtension?.firefox ?? {}),
         published: firefox?.published ?? base.browserExtension?.firefox?.published ?? false,
         version: firefox?.version ?? base.browserExtension?.firefox?.version ?? null,
+        url: firefox?.url ?? base.browserExtension?.firefox?.url ?? null,
+        weeklyDownloads:
+          firefox?.weeklyDownloads ?? base.browserExtension?.firefox?.weeklyDownloads ?? 0,
+        averageDailyUsers:
+          firefox?.averageDailyUsers ?? base.browserExtension?.firefox?.averageDailyUsers ?? 0,
       },
     },
   };
