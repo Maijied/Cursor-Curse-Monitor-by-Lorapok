@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -59,18 +60,28 @@ const ALL_TABS: { id: SettingsTabId; label: string }[] = [
   { id: "services", label: "Services" },
 ];
 
+const ALLOWED_TAB_IDS = new Set(ALL_TABS.map((t) => t.id));
+
+function tabFromSearch(raw: string | null): SettingsTabId | null {
+  if (!raw || !ALLOWED_TAB_IDS.has(raw as SettingsTabId)) return null;
+  return raw as SettingsTabId;
+}
+
 /**
  * Renders the application settings page with tabbed service sections.
  */
 export default function Settings() {
   const { hasPermission } = useAuthSession();
   const { data: siteData } = useSiteData();
+  const [searchParams, setSearchParams] = useSearchParams();
   const allowedTabIds = useMemo(() => visibleSettingsTabs(hasPermission), [hasPermission]);
   const tabs = useMemo(
     () => ALL_TABS.filter((t) => allowedTabIds.includes(t.id)),
     [allowedTabIds]
   );
-  const [tab, setTab] = useState<SettingsTabId>(() => readSettingsTab());
+  const [tab, setTab] = useState<SettingsTabId>(() => {
+    return tabFromSearch(new URLSearchParams(window.location.search).get("tab")) ?? readSettingsTab();
+  });
   const [health, setHealth] = useState<
     (Awaited<ReturnType<typeof fetchHealth>> & {
       githubTokenConfigured?: boolean;
@@ -80,6 +91,14 @@ export default function Settings() {
     }) | null
   >(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("admin-theme") as "dark" | "light") || "dark");
+
+  useEffect(() => {
+    const fromUrl = tabFromSearch(searchParams.get("tab"));
+    if (fromUrl && canAccessFeature(hasPermission, SETTINGS_TAB_PERMISSIONS[fromUrl])) {
+      setTab(fromUrl);
+      persistSettingsTab(fromUrl);
+    }
+  }, [searchParams, hasPermission]);
 
   useEffect(() => {
     if (!tabs.length) return;
@@ -101,6 +120,11 @@ export default function Settings() {
   const onTabChange = (next: SettingsTabId) => {
     setTab(next);
     persistSettingsTab(next);
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      nextParams.set("tab", next);
+      return nextParams;
+    }, { replace: true });
   };
 
   const ext = siteData?.browserExtension;
