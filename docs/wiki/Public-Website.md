@@ -28,16 +28,17 @@ Admin-published **notices** and changelog drafts surface on `/community` and `/r
 
 ## System topology (WEB-07)
 
-Expand animated diagrams on `#architecture` to include **every** `ci-cd.yml` job:
+**Status:** done — Production Deployment tab lists every `ci-cd.yml` job (`resolve-version` → `ci-summary`, including `queue-social-gallery` + `website-discord-notify`), plus ADMIN_KV / STATS_R2 / Discord slots. Guarded by `tests/test_architecture_cicd_jobs.mjs` + Mermaid↔workflow sync.
 
-1. `resolve-version` / `release-prep`
-2. Extension compile, test, package
-3. Browser extension build + AMO/Chrome artifacts
-4. Admin CI + Pages deploy
-5. Marketplace publish (Open VSX, VS Code, AMO)
-6. `site:data` / SEO pipeline
-7. Stats cron + KV/R2 cache
-8. Discord deployment notifications
+Expand animated diagrams on `#architecture` / Mission Control → Architecture:
+
+1. `resolve-version` / `validate-dispatch` / `admin-deploy-gate`
+2. `ci` · `browser-extension-ci` · `admin-ci` · `ci-summary`
+3. `prepare-tag-on-push` · `release-prep`
+4. `deploy` (Open VSX, VS Code, AMO, Chrome) · `admin-deploy` · `website` · `seo-pipeline`
+5. `queue-social-gallery` · `website-discord-notify`
+6. Stats cron + KV/R2 cache
+7. Discord deployment / github-log / community webhooks
 
 Must match Mission Control **DEPLOY-01** deploy runtime steps for operator trust.
 
