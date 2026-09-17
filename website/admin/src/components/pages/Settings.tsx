@@ -360,25 +360,7 @@ export default function Settings() {
       {tab === "cloud-dev" && <CloudEnvironmentsCard />}
       {tab === "services" && (
         <>
-          <IntegrationsHubCard />
-          <Card>
-            <h3 className="font-semibold mb-2">Integration directory</h3>
-            <p className="text-sm text-[var(--color-muted)] mb-4">
-              Jump to a service tab to rotate secrets or review status.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {tabs.filter((t) => t.id !== "services" && t.id !== "general").map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => onTabChange(t.id)}
-                  className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-sm hover:bg-white/5"
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </Card>
+          <IntegrationsHubCard onOpenSettingsTab={onTabChange} />
           <ConnectedServicesCard />
         </>
       )}

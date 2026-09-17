@@ -1,6 +1,6 @@
 # Social media & SEO
 
-**Last updated:** 2026-09-05  
+**Last updated:** 2026-09-17  
 **Tasks:** DC-08/09, SOCIAL-01–05, SEO-01–03, DEPLOY-02/03, GH-06, INT-01
 
 ---
@@ -29,7 +29,7 @@ Same template pattern as Discord, configurable per platform:
 | Mastodon / Bluesky | Settings → Social |
 | Telegram | Settings → Social (bot token) |
 
-**INT-01** unifies integrations hub so nothing is orphaned outside Settings.
+**INT-01** (done) — Settings → Services **Integrations hub** panes configure Discord, social, image AI, GitHub webhooks, mail, and cred sync; dedicated tabs remain for deep links.
 
 ---
 

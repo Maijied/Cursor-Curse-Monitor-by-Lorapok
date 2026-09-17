@@ -36,7 +36,7 @@ Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all ma
 | Multi-platform social + deploy gallery | **planned** | SOCIAL-01–05 |
 | World-class SEO + admin hub | **planned** | SEO-01–03 |
 | Admin footer + dedupe + refer links | **planned** | ADMIN-03–05, DEPLOY-02 |
-| Cred sync never-miss + integrations hub | **planned** | CRED-02, INT-01, GH-06 |
+| Cred sync never-miss + integrations hub | **done** | CRED-02, INT-01, GH-06 |
 | Push notifications (browser + OS) | **planned** | ECO-07 |
 | Action validator (destructive ops) | **in progress** | ECO-08 |
 | Global loading animation (Larvae) | **partial** | ECO-09 |

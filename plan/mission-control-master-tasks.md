@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-11 (GH-06 done; MAIL-16 live probes in progress)
-**Branch:** `feat/mail-16-live-probes`
-**Main:** `fc89c7bc` (GH-06 bootstrap CLI + #266 merged)
-**CI:** main green; admin node tests + oxlint local
+**Last updated:** 2026-09-17 (INT-01 hub finish on `feat/int-01-integrations-hub-finish`)
+**Branch:** `feat/int-01-integrations-hub-finish`
+**Main:** `9784c7d0` (MAIL-16 live testmail probes + #265/#266 GH-06)
+**CI:** branch pending PR checks; hub vitest + ConnectedServices OK
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -366,7 +366,7 @@
 | SET-10 | Production smoke: password login + role-restricted UI | **done** | `npm run auth:tier-d` (vitest + `auth:probe-production`) |
 | CRED-01 | Cred vault CI + Settings maintenance | **done** | `load-cred-vault-env-ci.mjs`, `sync-cred-vault-github.mjs`, Settings Cloudflare card (global key + cred vault CI badge) |
 | CRED-02 | **Cred sync reliability** — idempotent save→GH/Pages/CF sync; miss detection + retry; health badge "sync never miss" | **done** | `cred-sync-audit.js`, `GET /integrations/cred-sync/status`, Settings → Cred vault badge |
-| INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **partial** | `IntegrationsHubCard` on Services tab; full tab consolidation deferred |
+| INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **done** | Services tab hub panes embed config cards; Integration directory removed; Connected Services slimmed to runtime/auth |
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
@@ -382,10 +382,10 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **INT-01** (finish) — consolidate duplicate integration cards into hub tabs
-3. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
-4. **WEB-11** — Engineering history timeline page
-5. **CHRYS-01**, **WEB-07–10**, **LEGAL-01**, remaining queue
+1. **MAIL-06** (ops) — `repair-mail.mjs` + verify scripts green ([#143](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/143)) — note: duplicate ID with completed Resend-quota MAIL-06 row
+2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
+3. **WEB-07** / **ADMIN-01** — P1 website topology + command palette
+4. **CHRYS-01**, **WEB-08–11**, **LEGAL-01**, remaining queue
 
 ---
 

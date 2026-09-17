@@ -7,12 +7,12 @@ vi.mock("../../lib/firebase", () => ({
   auth: { currentUser: { email: "admin@lorapok.test" } },
 }));
 
-describe("ConnectedServicesCard (ADMIN-05 dedupe)", () => {
+describe("ConnectedServicesCard (ADMIN-05 / INT-01 dedupe)", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("omits infrastructure rows owned by InfrastructureStatusCard", async () => {
+  it("keeps runtime rows and omits hub-owned mail/Discord integrations", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
@@ -56,6 +56,9 @@ describe("ConnectedServicesCard (ADMIN-05 dedupe)", () => {
       expect(screen.getByText("GitHub API")).toBeInTheDocument();
     });
 
+    expect(screen.getByText("Runtime & auth")).toBeInTheDocument();
+    expect(screen.queryByText("Outbound mail")).not.toBeInTheDocument();
+    expect(screen.queryByText("Discord deployment hook")).not.toBeInTheDocument();
     expect(screen.queryByText("Live stats cron")).not.toBeInTheDocument();
     expect(screen.queryByText("Admin D1")).not.toBeInTheDocument();
   });
