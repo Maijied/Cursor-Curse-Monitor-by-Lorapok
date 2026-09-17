@@ -43,58 +43,109 @@ export const ARCHITECTURE_VIEWS = {
   Operator --> MC["Mission Control SPA"]
   MC --> FN["Pages Functions /api/*"]
   FN --> KV[("ADMIN_KV")]
+  FN --> R2[("STATS_R2")]
   FN --> GHA["GitHub Actions dispatch"]`,
   },
 
   deployPipeline: {
     label: "Production Deployment",
     description:
-      "Single workflow (ci-cd.yml): CI on PR/push, tag prep on main, manual marketplace publish, infra deploy, and Discord notifications.",
+      "Every ci-cd.yml job: resolve-version through marketplace deploy, admin/website Pages, SEO, social gallery queue, and Discord notify.",
     diagram: `flowchart TB
   subgraph triggers["Triggers"]
     PushMain["Push to main"]
+    PR["Pull request"]
     MCDeploy["Mission Control Deploy"]
     MCRollback["Rollback"]
     MCInfra["deploy-infra"]
     MCTag["publish-tag / full-release"]
   end
 
-  subgraph gha["Production Deployment workflow"]
-    CI["CI: compile, test, VSIX, browser-ext, admin"]
-    TagPrep["prepare-tag: max live + patch"]
+  subgraph gates["Gates & version"]
+    ResolveVersion["resolve-version: live marketplaces"]
+    ValidateDispatch["validate-dispatch: tag policy"]
+    AdminGate["admin-deploy-gate"]
+  end
+
+  subgraph quality["Quality matrix"]
+    CI["ci: compile, test, VSIX"]
+    BrowserExtCI["browser-extension-ci"]
+    AdminCI["admin-ci"]
+    CISummary["ci-summary: Test Results Summary"]
+  end
+
+  subgraph release["Release prep"]
+    TagPrep["prepare-tag-on-push: max live + patch"]
     ReleasePrep["release-prep: version:sync"]
+  end
+
+  subgraph publish["Publish & host"]
     Market["deploy: OVSX, VS Code, AMO, Chrome zip"]
     AdminJob["admin-deploy: Cloudflare Pages"]
     WebJob["website: GitHub Pages"]
     SEOJob["seo-pipeline: site-data + SEO PR"]
-    SyncOVSX["sync-open-vsx: dual namespace"]
-    DiscordN["Discord webhook notify"]
+    SocialQueue["queue-social-gallery: DEPLOY-03"]
+    WebDiscord["website-discord-notify"]
   end
 
-  PushMain --> CI
+  subgraph artifacts["Marketplaces & edge"]
+    OVSX["Open VSX lorapok-labs"]
+    OVSXDup["Open VSX LorapokLabs dup"]
+    VSM["VS Code Marketplace"]
+    AMO["Firefox AMO web-ext sign"]
+    ChromeZip["Chrome zip artifact"]
+    GHRel["GitHub Release VSIX"]
+    CF["Cloudflare Pages + Functions"]
+    Mail["Cloudflare Email"]
+    KV[("ADMIN_KV")]
+    R2[("STATS_R2")]
+    DiscordN["Discord webhook notify"]
+    SyncOVSX["sync-open-vsx: dual namespace"]
+    OVSXLag["Canonical OVSX indexing lag"]
+  end
+
+  PushMain --> ResolveVersion
+  PR --> ResolveVersion
+  ResolveVersion --> CI
+  ResolveVersion --> BrowserExtCI
+  ResolveVersion --> AdminCI
+  CI --> CISummary
+  BrowserExtCI --> CISummary
+  AdminCI --> CISummary
+
   PushMain --> TagPrep
   TagPrep --> ReleasePrep
-  MCDeploy --> Market
-  MCRollback --> Market
-  MCTag --> Market
-  MCInfra --> AdminJob
+  MCTag --> ValidateDispatch
+  MCDeploy --> ValidateDispatch
+  MCRollback --> ValidateDispatch
+  ValidateDispatch --> ReleasePrep
+  ReleasePrep --> Market
+
+  MCInfra --> AdminGate
+  AdminGate --> AdminJob
   MCInfra --> WebJob
+  PushMain --> AdminJob
+  PushMain --> WebJob
 
-  Market --> OVSX["Open VSX lorapok-labs"]
-  Market --> OVSXDup["Open VSX LorapokLabs dup"]
-  Market --> VSM["VS Code Marketplace"]
-  Market --> AMO["Firefox AMO web-ext sign"]
-  Market --> ChromeZip["Chrome zip artifact"]
-  Market --> GHRel["GitHub Release VSIX"]
-
-  AdminJob --> CF["Cloudflare Pages + Functions"]
-  CF --> Mail["Cloudflare Email"]
-  CF --> KV[("ADMIN_KV")]
-
+  Market --> OVSX
+  Market --> OVSXDup
+  Market --> VSM
+  Market --> AMO
+  Market --> ChromeZip
+  Market --> GHRel
+  Market --> SocialQueue
   Market --> DiscordN
+
+  AdminJob --> CF
+  CF --> Mail
+  CF --> KV
+  CF --> R2
   AdminJob --> DiscordN
-  WebJob --> DiscordN
-  OVSXLag["Canonical OVSX indexing lag"] -.-> SyncOVSX
+
+  WebJob --> WebDiscord
+  WebDiscord --> DiscordN
+  SEOJob --> WebJob
+  OVSXLag -.-> SyncOVSX
   SyncOVSX --> OVSX`,
   },
 
@@ -145,7 +196,7 @@ export const ARCHITECTURE_VIEWS = {
     diagram: `flowchart TB
   subgraph settings["Mission Control Settings"]
     CronCfg["Cron schedules · stats refresh + Discord digest"]
-    DiscordCfg["Discord webhooks · deployment + feedback"]
+    DiscordCfg["Discord webhooks · deploy · github-log · community"]
   end
 
   subgraph gh["GitHub Actions — fixed schedule"]

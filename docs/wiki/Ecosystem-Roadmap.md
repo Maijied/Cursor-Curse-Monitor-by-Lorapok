@@ -29,7 +29,7 @@ Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all ma
 | Global deploy floating UX + CI step parity | **planned** | DEPLOY-01 |
 | Public multi-page site (wiki, releases, docs) | **planned** | WEB-09 |
 | Behind-the-scenes engineering section | **planned** | WEB-08 |
-| Expanded animated topology | **planned** | WEB-07 |
+| Expanded animated topology | **done** | WEB-07 — job-level `ci-cd.yml` on `#architecture` |
 | OSS contributor welcome | **planned** | WEB-10 |
 | Terms/consent + visitor analytics | **planned** | LEGAL-01, ANALYTICS-02 |
 | Discord CI success/failure cards | **planned** | DC-08, DC-09 |
