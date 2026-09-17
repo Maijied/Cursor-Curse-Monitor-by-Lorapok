@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (Discord slots live: community / github-log / deployment-notice; github-log fanout + AMO stats on branch)
-**Branch:** `fix/discord-stats-analytics`
-**Main:** `75ae9791`
-**CI:** PR [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) CI **green** (local uncommitted: github-log hook + fanout filter — fast-deployed, not yet on remote PR)
+**Last updated:** 2026-09-18 (ADMIN-01 command palette in progress on `feat/admin-01-command-palette`)
+**Branch:** `feat/admin-01-command-palette`
+**Main:** `2d59530f`
+**CI:** VSCE 503 retries merged (#277); ADMIN-01 local vitest green
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -372,7 +372,7 @@
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
-| ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **next** | ACL-aware; fuzzy match; keyboard-first |
+| ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **in progress** | ACL-aware; fuzzy match; keyboard-first; branch `feat/admin-01-command-palette` |
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
 | ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **done** | `GlobalFooter.tsx` in `AppShell`; `/api/health` + `fetchSyncStatus` + `useSiteData` |
@@ -382,7 +382,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **ADMIN-01** — Mission Control ⌘K command palette ([#191](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/191), P1)
+1. **ADMIN-01** — Mission Control ⌘K command palette ([#191](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/191), P1) — **in progress**
 2. **WEB-07** — Expanded system topology ([#194](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/194), P1)
 3. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
 4. **CHRYS-01**, **WEB-08–09**, **LEGAL-01**, remaining queue
@@ -391,7 +391,7 @@
 
 ## Blockers (need you)
 
-_None operational._ Optional: rotate Discord webhooks (pasted in chat); commit/push github-log fanout into PR #273.
+_None operational._
 
 ---
 

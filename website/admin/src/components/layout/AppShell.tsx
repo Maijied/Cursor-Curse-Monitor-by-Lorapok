@@ -1,6 +1,6 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import Sidebar from "./Sidebar";
 import GlobalFooter from "./GlobalFooter";
@@ -9,6 +9,7 @@ import { APP_ROUTES } from "../../routes";
 import { DeployRuntimeProvider } from "../../context/DeployRuntimeContext";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import { LarvaeLoaderPanel } from "../ui/LorapokLarvaeLoader";
+import CommandPalette, { useCommandPaletteHotkey } from "../ui/CommandPalette";
 import Overview from "../pages/Overview";
 const MarketplaceHealth = lazy(() => import("../pages/MarketplaceHealth"));
 const Releases = lazy(() => import("../pages/Releases"));
@@ -59,6 +60,9 @@ export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const togglePalette = useCallback(() => setPaletteOpen((o) => !o), []);
+  useCommandPaletteHotkey(togglePalette);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((user) => {
@@ -85,7 +89,11 @@ export default function AppShell() {
         />
       )}
 
-      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        onOpenCommandPalette={() => setPaletteOpen(true)}
+      />
 
       <div className="flex-1 relative min-w-0 min-h-0 flex flex-col">
         <header className="md:hidden flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] shrink-0 z-30">
@@ -100,7 +108,17 @@ export default function AppShell() {
           <span className="font-semibold text-sm bg-gradient-to-r from-[var(--color-accent-2)] to-[var(--color-accent)] bg-clip-text text-transparent">
             Mission Control
           </span>
-          <ActiveUsersLive compact />
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="p-2.5 min-h-11 min-w-11 flex items-center justify-center rounded-lg border border-[var(--color-border)] hover:bg-white/5"
+              aria-label="Open command palette"
+            >
+              <Search size={18} />
+            </button>
+            <ActiveUsersLive compact />
+          </div>
         </header>
 
         <div className="flex-1 relative min-w-0 min-h-0 flex flex-col">
@@ -137,6 +155,7 @@ export default function AppShell() {
           <GlobalFooter />
         </div>
       </div>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
     </DeployRuntimeProvider>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { ChevronDown, ChevronUp, LogOut, X } from "lucide-react";
+import { ChevronDown, ChevronUp, LogOut, Search, X } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../routes";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
@@ -13,9 +13,11 @@ import { ROLE_LABELS } from "../../lib/rbac";
 export default function Sidebar({
   mobileOpen = false,
   onClose,
+  onOpenCommandPalette,
 }: {
   mobileOpen?: boolean;
   onClose?: () => void;
+  onOpenCommandPalette?: () => void;
 }) {
   const user = auth.currentUser;
   const { hasPermission, session } = useAuthSession();
@@ -63,8 +65,25 @@ export default function Sidebar({
               <X size={18} />
             </button>
           </div>
-          <div className="hidden md:flex px-5 pb-3">
-            <ActiveUsersLive compact />
+          <div className="px-5 pb-3 space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                onOpenCommandPalette?.();
+                onClose?.();
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--color-border)] text-left text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-white/5 transition-colors"
+              aria-label="Open command palette"
+            >
+              <Search size={14} aria-hidden="true" />
+              <span className="flex-1 truncate">Search…</span>
+              <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded border border-[var(--color-border)] font-[family-name:var(--font-mono)]">
+                ⌘K
+              </kbd>
+            </button>
+            <div className="hidden md:flex">
+              <ActiveUsersLive compact />
+            </div>
           </div>
         </div>
 

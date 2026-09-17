@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Play, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
@@ -33,6 +33,14 @@ export default function ApiExplorer() {
   const [results, setResults] = useState<Record<string, ProbeState>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [runningAll, setRunningAll] = useState(false);
+
+  useEffect(() => {
+    const id = window.location.hash.replace(/^#/, "");
+    if (!id) return;
+    setExpanded(id);
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const runProbe = useCallback(async (entry: ApiCatalogEntry) => {
     if (!canProbeApiRoute(entry.method, entry.path, hasPermission)) {
@@ -138,7 +146,8 @@ export default function ApiExplorer() {
                 const probeAllowed = canProbeApiRoute(entry.method, entry.path, hasPermission);
                 const requiredPerm = permissionForApiRoute(entry.method, entry.path);
                 return (
-                  <Card key={entry.id} className="h-full min-h-[11rem] flex flex-col">
+                  <div key={entry.id} id={entry.id} className="scroll-mt-8">
+                  <Card className="h-full min-h-[11rem] flex flex-col">
                     <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -207,6 +216,7 @@ export default function ApiExplorer() {
                       </pre>
                     )}
                   </Card>
+                  </div>
                 );
               })}
             </div>

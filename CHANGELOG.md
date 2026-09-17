@@ -20,6 +20,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **ADMIN-01 command palette** — ⌘K / Ctrl+K global search across nav, settings tabs, API catalog, docs, and tasks (ACL-aware); Settings deep-links via `?tab=`
 - **INT-01 integrations hub finish** — Settings → Services hub panes configure mail, Discord, social, image AI, GitHub, and cred sync in-place; removed duplicate Integration directory; Connected Services slimmed to runtime/auth.
 - **MAIL-16 live deliverability probes** — product/support addresses get testmail live-send checks during audit; Discord alert on failure; `npm run mail:probe-deliverability`.
 - **GH-06 webhook bootstrap CLI** — `npm run github:webhook:bootstrap` (cred vault auth; no manual GitHub webhook form).
