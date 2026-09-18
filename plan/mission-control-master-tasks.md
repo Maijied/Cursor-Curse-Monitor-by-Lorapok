@@ -2,10 +2,11 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (WEB-11 [#296](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/296); WEB-10 [#294](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/294) merged)
-**Branch:** `feat/web-11-engineering-history`
-**Main:** `03cfb203`
-**CI:** DEPLOY-04 on main (#283). WEB-08–10 + CHRYS-01 + SOCIAL-05 + LEGAL-01 merged.
+**Last updated:** 2026-09-18 (synced labels/issues/Project #4; WEB-11 [#296](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/296) merged; ECO-08 in progress)
+**Branch:** `feat/eco-08-action-validator`
+**Main:** `36b1d11e`
+**CI:** DEPLOY-04 on main (#283). WEB-08–11 + CHRYS-01 + SOCIAL-05 + LEGAL-01 merged.
+**P1 queue:** ECO-08 → ANALYTICS-01 → LOGS-01 → EXT-01 (`procedure/github-milestones.json`)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -338,7 +339,7 @@
 | ECO-05 | **Cursor native plugin** — first-party Cursor extension / plugin slot (not just VS Code host) | **next** | Cursor plugin API research + packaging |
 | ECO-06 | **Chrysalis everywhere** — admin SPA, IDE popup, browser options, tray shell | **next** | share Chrysalis module; CHRYS-01–05 |
 | ECO-07 | **Push notifications** — Web Push + native OS alerts for limits, Mission Control notices | **next** | permission UX + KV notice hooks |
-| ECO-08 | **Action validator** — confirm before deploy, delete, broadcast, cred vault write | **partial** | `packages/shared/src/confirmAction.ts`; wire admin + extensions |
+| ECO-08 | **Action validator** — confirm before deploy, delete, broadcast, cred vault write | **done** | [#180](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/180); shared `confirmAction` + Mission Control modal + IDE handler; PR pending |
 | ECO-09 | **Global loading animation** — Larvae shimmer on long operations (admin, site, extensions) | **next** | extend `ShimmerSkeleton` + shared loader |
 | ECO-10 | **AI conversation hygiene** — no secrets/junk in agent chat; procedure-only tracking | **next** | `.cursor/rules/ai-agent-commands.mdc` + agent docs |
 | ECO-11 | **Wiki + taskboard assets** — professional wiki pages; optional generated diagrams for Project #4 | **partial** | `docs/wiki/Ecosystem-Roadmap.md`, `GitHub-Project.md`, `AI-Agent-Commands.md` |
@@ -383,9 +384,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. Remaining ecosystem queue (**ECO-***, **EXT-01**) and observability (**ANALYTICS-01** / **LOGS-01** / **ANALYTICS-02**)
+1. **ANALYTICS-01** / **LOGS-01** / **EXT-01** (P1)
 2. **CHRYS-02** (AI provider) when operator vault key path is ready
-3. **WEB-04** hero polish only if marketing priority returns
+3. Remaining **ECO-*** / **ANALYTICS-02** backlog
 
 ---
 

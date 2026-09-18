@@ -3,12 +3,14 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import AuthGuard from "./lib/auth-guard";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ConfirmActionHost from "./components/ui/ConfirmActionHost";
 
 function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <div className="min-h-screen w-full flex flex-col">
+          <ConfirmActionHost />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard/api-activity" element={<Navigate to="/dashboard/logs" replace />} />

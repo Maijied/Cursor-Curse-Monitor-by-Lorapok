@@ -27,6 +27,7 @@ import { SECTION_REFERS } from "../../lib/section-refer";
 import LorapokLarvaeLoader from "../ui/LorapokLarvaeLoader";
 import LoadableButton from "../ui/LoadableButton";
 import { useAuthSession } from "../../lib/use-auth-session";
+import { confirmAction } from "@lorapok/cursor-monitor-shared";
 
 function fallbackTagsFromSite(siteData: ReturnType<typeof useSiteData>["data"]) {
   if (!siteData) return { tags: [] as string[], liveTag: null as string | null };
@@ -263,6 +264,13 @@ export default function Deployments() {
     }
 
     if (mode === "infra") {
+      const ok = await confirmAction({
+        title: "Confirm infrastructure deploy",
+        message: `Redeploy Mission Control / marketing website without a marketplace bump?\n\nAdmin: ${deployAdmin ? "yes" : "no"}\nWebsite: ${deployWebsite ? "yes" : "no"}`,
+        severity: "warning",
+        confirmLabel: "Deploy infra",
+      });
+      if (!ok) return;
       setDeploying(true);
       const dispatchedAfter = Date.now();
       try {
@@ -294,6 +302,15 @@ export default function Deployments() {
       setMessage({ type: "error", text: deployPolicyError });
       return;
     }
+
+    const actionLabel = mode === "rollback" ? "Rollback" : "Deploy";
+    const ok = await confirmAction({
+      title: `Confirm ${actionLabel.toLowerCase()}`,
+      message: `${actionLabel} tag ${selectedTag} (${market})?\n\nAdmin: ${deployAdmin ? "yes" : "no"}\nWebsite: ${deployWebsite ? "yes" : "no"}\nMarketplaces: ${deployExtension ? "yes" : "no"}`,
+      severity: mode === "rollback" ? "destructive" : "warning",
+      confirmLabel: actionLabel,
+    });
+    if (!ok) return;
 
     setDeploying(true);
     const dispatchedAfter = Date.now();

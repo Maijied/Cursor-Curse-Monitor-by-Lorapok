@@ -11,6 +11,7 @@ import { createNotice, deleteNotice, fetchChangelogNoticeDraft, fetchNotices, fe
 import type { DevNotice } from "../../lib/site-data";
 import { useAuthSession } from "../../lib/use-auth-session";
 import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
+import { confirmAction } from "@lorapok/cursor-monitor-shared";
 
 const SEVERITIES = ["info", "warning", "critical"] as const;
 
@@ -149,7 +150,13 @@ export default function Notices() {
       setMessage({ type: "error", text: "Add a title and full message before emailing subscribers." });
       return;
     }
-    if (!window.confirm(`Email "${form.title}" to all subscribers from cursor.monitor@lorapok.tech?`)) return;
+    const ok = await confirmAction({
+      title: "Email all subscribers",
+      message: `Email "${form.title}" to all subscribers from cursor.monitor@lorapok.tech?`,
+      severity: "warning",
+      confirmLabel: "Send broadcast",
+    });
+    if (!ok) return;
     setSaving(true);
     setMessage(null);
     try {
@@ -207,7 +214,13 @@ export default function Notices() {
 
   const handleDelete = async (row: DevNotice) => {
     if (!row.id) return;
-    if (!window.confirm(`Delete “${row.title || "this notice"}”? This cannot be undone.`)) return;
+    const ok = await confirmAction({
+      title: "Delete notice",
+      message: `Delete “${row.title || "this notice"}”? This cannot be undone.`,
+      severity: "destructive",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     setSaving(true);
     setMessage(null);
     try {

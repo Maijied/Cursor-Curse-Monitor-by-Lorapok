@@ -1,4 +1,4 @@
-import { SYSTEM_ACCOUNT_ID } from "@lorapok/cursor-monitor-shared";
+import { SYSTEM_ACCOUNT_ID, confirmAction } from "@lorapok/cursor-monitor-shared";
 import * as vscode from "vscode";
 import {
   addSavedAccount,
@@ -193,12 +193,13 @@ export async function promptRemoveCursorAccount(
   }
 
   const target = accounts.find((account) => account.id === id);
-  const confirm = await vscode.window.showWarningMessage(
-    `Remove saved login${target?.email ? ` ${target.email}` : ""} from Cursor Curse Monitor?`,
-    { modal: true },
-    "Remove"
-  );
-  if (confirm !== "Remove") {
+  const ok = await confirmAction({
+    title: "Remove saved login",
+    message: `Remove saved login${target?.email ? ` ${target.email}` : ""} from Cursor Curse Monitor?`,
+    severity: "destructive",
+    confirmLabel: "Remove",
+  });
+  if (!ok) {
     return false;
   }
   await removeSavedAccount(context, id);

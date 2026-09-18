@@ -14,6 +14,7 @@ import {
 } from "../../lib/pin-unlock";
 import { fetchAuthMe, putAuthProfile } from "../../lib/api";
 import { ROLE_LABELS, type AdminRole } from "../../lib/rbac";
+import { confirmAction } from "@lorapok/cursor-monitor-shared";
 
 /**
  * Profile & quick-unlock PIN — synced with Mission Control glass aesthetic.
@@ -96,7 +97,13 @@ export default function ProfileSettingsCard() {
   };
 
   const handleRemovePin = async () => {
-    if (!window.confirm("Remove quick-unlock PIN on this device?")) return;
+    const ok = await confirmAction({
+      title: "Remove quick-unlock PIN",
+      message: "Remove quick-unlock PIN on this device?",
+      severity: "warning",
+      confirmLabel: "Remove PIN",
+    });
+    if (!ok) return;
     setLoading(true);
     setMessage(null);
     try {
