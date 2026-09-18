@@ -257,6 +257,32 @@ export async function fetchAnalyticsStatsApi() {
   }>("/analytics/stats", false);
 }
 
+export type ServiceAnalyticsCard = {
+  id: string;
+  label: string;
+  category: "cloudflare" | "google" | "github" | "mail" | "marketplace" | "traffic";
+  status: "ok" | "warn" | "danger" | "unknown";
+  summary: string;
+  metrics: Array<{ label: string; value: string | number | null }>;
+};
+
+export type ServiceAnalyticsHub = {
+  ok?: boolean;
+  generatedAt: string;
+  overall: string;
+  cards: ServiceAnalyticsCard[];
+  statsRefresh?: {
+    enabled: boolean;
+    lastRunAt: string | null;
+    lastRunOk: boolean | null;
+  };
+};
+
+/** ANALYTICS-01 — authenticated service analytics hub facade. */
+export async function fetchServiceAnalyticsApi() {
+  return apiGet<ServiceAnalyticsHub>("/analytics/services");
+}
+
 export async function fetchCommunityConfigApi() {
   return apiGet<CommunityConfig>("/community/config", false);
 }

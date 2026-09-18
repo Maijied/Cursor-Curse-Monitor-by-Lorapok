@@ -57,6 +57,7 @@ export const READ_ROUTE_PERMISSIONS = {
   "GET /activity": "logs.read",
   "GET /mailbox": "mail.read",
   "GET /sync/status": "settings.read",
+  "GET /analytics/services": "settings.read",
   "GET /integrations/email-identities/config": "settings.read",
   "GET /mail/aliases": "settings.read",
   "GET /integrations/social/gallery": "integrations.read",

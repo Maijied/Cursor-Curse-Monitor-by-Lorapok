@@ -25,7 +25,8 @@ Non-master admins can view deployment history and runtime logs but cannot submit
 
 | Module | Purpose |
 |--------|---------|
-| **Overview** | Health, marketplace sync, KPIs, download breakdown |
+| **Overview** | Health, marketplace sync, KPIs, download breakdown, **service analytics hub** (ANALYTICS-01) |
+| **Reports** | Printable status report + service analytics hub cards |
 | **Deployments** | Trigger publish or rollback workflows with live runtime log preview |
 | **Notices** | Enable/disable development notices on the marketing site |
 | **Mailbox** | Outbound mail log, branded HTML templates, compose & test |

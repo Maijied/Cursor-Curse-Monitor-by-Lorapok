@@ -12,8 +12,7 @@ import VisitorStatsPanel from "../ui/VisitorStatsPanel";
 import TrafficTrendGraph from "../ui/TrafficTrendGraph";
 import MarketplaceDistributionChart from "../ui/MarketplaceDistributionChart";
 import GitHubCommunityCard from "../ui/GitHubCommunityCard";
-import SectionReferLink from "../ui/SectionReferLink";
-import { SECTION_REFERS } from "../../lib/section-refer";
+import ServiceAnalyticsHubCard from "../ui/ServiceAnalyticsHubCard";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import { useUsageStats } from "../../hooks/useUsageStats";
@@ -175,17 +174,7 @@ export default function Overview() {
 
       <GitHubCommunityCard data={data} />
 
-      <Card>
-        <h3 className="font-semibold text-[var(--color-text)]">Service connectivity</h3>
-        <p className="text-sm text-[var(--color-muted)] mt-2">
-          Live API and integration status lives in Settings. System health, version, and marketplace sync appear in the
-          footer on every page.
-        </p>
-        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-          <SectionReferLink {...SECTION_REFERS.settingsServices} />
-          <SectionReferLink {...SECTION_REFERS.settingsGeneral} label="Settings → Infrastructure & KV" />
-        </p>
-      </Card>
+      <ServiceAnalyticsHubCard />
 
       <Card>
         <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Marketplace Sync Matrix</h3>
