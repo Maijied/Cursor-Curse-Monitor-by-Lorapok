@@ -44,7 +44,11 @@ On each successful deploy:
 
 **SOCIAL-03** — one-click publish to all active channels with correct dimensions (feed, story, square).
 
-**SOCIAL-05** — optional short video (Reels/Shorts/Stories) from template + changelog.
+**SOCIAL-05** — short video (Reels/Shorts/Stories) from carousel template + optional changelog voiceover.
+
+- **Encode path:** Cloudflare service binding `VIDEO_ENCODER` **or** Settings → Social AI → HTTPS encoder URL (+ API key).
+- **Contract:** POST frames (SVG) + voiceover script → `videoBase64` or `videoUrl` (MP4 stored in `STATS_R2`, served via gallery asset `?kind=video`).
+- **Fallback:** static carousel frames when no encoder is configured or encode fails.
 
 ---
 

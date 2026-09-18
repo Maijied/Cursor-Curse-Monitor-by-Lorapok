@@ -19,7 +19,7 @@ export async function onRequestGet(context) {
   if (readDenied) return readDenied;
 
   const config = await readSocialAiConfig(env);
-  return jsonResponse({ ok: true, config: sanitizeSocialAiConfigForClient(config) });
+  return jsonResponse({ ok: true, config: sanitizeSocialAiConfigForClient(config, env) });
 }
 
 /**
@@ -56,5 +56,5 @@ export async function onRequestPut(context) {
     return jsonResponse({ error: formatKvPutError(err) }, 503);
   }
 
-  return jsonConfigSaveResponse(env, { ok: true, config: sanitizeSocialAiConfigForClient(next) });
+  return jsonConfigSaveResponse(env, { ok: true, config: sanitizeSocialAiConfigForClient(next, env) });
 }

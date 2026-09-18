@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (DEPLOY-04 admin-only marketplace — [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282) in progress)
-**Branch:** `feat/deploy-04-admin-only-marketplace`
-**Main:** `5eed5feb`
-**CI:** ADMIN-02 merged (#281). DEPLOY-04 gating marketplace to Mission Control Deploy only.
+**Last updated:** 2026-09-18 (SOCIAL-05 MP4/voiceover encoder path — [#217](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217))
+**Branch:** `feat/social-05-mp4-voiceover`
+**Main:** `c31b9ce0`
+**CI:** DEPLOY-04 on main (#283). SOCIAL-05 finish in progress.
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -171,7 +171,7 @@
 | DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **done** | Session persists until Done; pipeline includes Validate Dispatch; FAB shows active job |
 | DEPLOY-02 | **Remove duplicate webhook UI** from Deployments page — canonical config in Settings → Discord / Social | **done** | `Deployments.tsx` links to Settings → Discord; webhook card removed |
 | DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **done** | Job `queue-social-gallery` (admin-production CRON_SECRET + vault); CI `queue-social-gallery.mjs` |
-| DEPLOY-04 | **Admin-only marketplace publish** — no continuous marketplace deploys on push/full-release; only Mission Control Deploy/Rollback with `deploy_extension=true` | **in progress** | PR [#283](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/283); closes [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282) |
+| DEPLOY-04 | **Admin-only marketplace publish** — no continuous marketplace deploys on push/full-release; only Mission Control Deploy/Rollback with `deploy_extension=true` | **done** | PR [#283](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/283) merged; closes [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282) |
 
 ---
 
@@ -314,7 +314,7 @@
 | SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **done** | SVG assets + R2/KV; Settings → Social gallery; DEPLOY-03 auto-generate |
 | SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **done** | Publish all channels + dry-run; Telegram photo; text+URL fallback |
 | SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **done** | Settings → Social → AI image & video; KV `integrations:social-ai`; gallery uses active provider |
-| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **partial** | Carousel manifest + aspect ratio; MP4/voiceover deferred — static frame fallback |
+| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **in progress** | Encoder client + voiceover script; PR TBD; closes [#217](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217) |
 
 ---
 
@@ -383,10 +383,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **DEPLOY-04** — Admin-only marketplace publish ([#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282)) — **in progress**
-2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
-3. **CHRYS-01**, **WEB-08–09**, **LEGAL-01**, remaining queue
-4. **ANALYTICS-01** / **LOGS-01** when operator metrics land
+1. **SOCIAL-05** (finish) — MP4 encode + voiceover ([#217](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217)) — **in progress**
+2. **CHRYS-01**, **WEB-08–09**, **LEGAL-01**, remaining queue
+3. **ANALYTICS-01** / **LOGS-01** when operator metrics land
 
 ---
 

@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **SOCIAL-05 MP4 encode + voiceover** — gallery video jobs call optional `VIDEO_ENCODER` binding or configured HTTPS encoder URL; changelog voiceover script included; R2/`?kind=video` asset serving; static carousel fallback when unbound.
 - **ADMIN-02 UX polish** — shared `EmptyState`, PageHeader contextual help (?), friendlier empty lists (Activity, Logs, Community, Subscribers, Social Gallery), mobile sidebar Escape + scroll lock
 - **WEB-07 expanded system topology** — Production Deployment diagrams list every `ci-cd.yml` job (resolve-version → social gallery + Discord notify) plus STATS_R2; coverage guarded by `test_architecture_cicd_jobs.mjs`
 - **ADMIN-01 command palette** — ⌘K / Ctrl+K global search across nav, settings tabs, API catalog, docs, and tasks (ACL-aware); Settings deep-links via `?tab=`

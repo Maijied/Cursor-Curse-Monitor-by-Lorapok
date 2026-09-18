@@ -1,6 +1,12 @@
 import { normalizeTag } from "./discord-deploy-context.js";
 import { buildSocialGallerySvg } from "./social-gallery-artifacts.js";
 import { readSocialAiConfig, resolveActiveProvider } from "./social-ai-config.js";
+import {
+  buildVoiceoverScript,
+  isVideoEncoderAvailable,
+  requestVideoEncode,
+  resolveVideoEncoder,
+} from "./social-video-encoder.js";
 
 /**
  * @param {string | null | undefined} tag
@@ -225,7 +231,9 @@ export async function generateSocialGalleryImage(env, input) {
 }
 
 /**
- * Build video carousel manifest (SOCIAL-05) — static frame sequence when no encoder is available.
+ * Build video carousel manifest (SOCIAL-05).
+ * When VIDEO_ENCODER binding or encoderUrl is configured, requests MP4 (+ optional voiceover).
+ * Otherwise returns static frame sequence for Stories/Reels publishing.
  *
  * @param {Record<string, unknown>} env
  * @param {{ tag: string; caption?: string | null }} input
@@ -235,18 +243,72 @@ export async function generateSocialVideoManifest(env, input) {
   const video = config.video ?? {};
   const aspectRatio = String(video.aspectRatio ?? "9:16");
   const frames = buildCarouselFrames(input.tag, input.caption, aspectRatio);
+  const voiceoverEnabled = Boolean(video.voiceoverEnabled);
+  const voiceoverScript = voiceoverEnabled ? buildVoiceoverScript(input.tag, input.caption) : null;
+  const encoderAvailable = isVideoEncoderAvailable(env, video);
+  const secondsPerFrame = Math.min(8, Math.max(1, Number(video.secondsPerFrame) || 3));
 
-  return {
+  const base = {
     enabled: Boolean(video.enabled),
     mode: video.enabled ? String(video.template ?? "carousel") : "disabled",
     fallbackMode: String(video.fallbackMode ?? "static-carousel"),
-    voiceoverEnabled: Boolean(video.voiceoverEnabled),
+    voiceoverEnabled,
+    voiceoverScript,
     aspectRatio,
+    secondsPerFrame,
     frameCount: frames.length,
     frames,
     videoUrl: null,
-    note: video.enabled
-      ? "Static carousel manifest — MP4 encoding deferred; publish uses frame sequence."
-      : "Video generator disabled — gallery uses single image only.",
+    videoContentType: null,
+    videoBytes: null,
+    encoded: false,
+    encoderAvailable,
   };
+
+  if (!video.enabled) {
+    return {
+      ...base,
+      note: "Video generator disabled — gallery uses single image only.",
+    };
+  }
+
+  if (!encoderAvailable) {
+    return {
+      ...base,
+      note:
+        "Static carousel manifest — configure VIDEO_ENCODER binding or encoder URL to encode MP4" +
+        (voiceoverEnabled ? " with changelog voiceover." : "."),
+    };
+  }
+
+  try {
+    const encoder = resolveVideoEncoder(env, video);
+    const encoded = await requestVideoEncode(encoder, {
+      tag: String(input.tag ?? ""),
+      aspectRatio,
+      secondsPerFrame,
+      template: String(video.template ?? "carousel"),
+      voiceoverEnabled,
+      voiceoverScript,
+      frames,
+    });
+    return {
+      ...base,
+      videoUrl: encoded.videoUrl,
+      videoContentType: encoded.contentType,
+      videoBytes: encoded.bytes,
+      encoded: true,
+      encoderKind: encoded.encoderKind,
+      note: voiceoverEnabled
+        ? "MP4 encoded with changelog voiceover via configured encoder."
+        : "MP4 encoded via configured encoder (voiceover off).",
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Video encode failed";
+    return {
+      ...base,
+      encodeError: message,
+      note: `Encoder available but encode failed (${message}) — falling back to static carousel.`,
+    };
+  }
 }

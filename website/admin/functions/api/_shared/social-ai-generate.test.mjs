@@ -35,5 +35,7 @@ const manifest = await generateSocialVideoManifest(env, {
 assert.equal(manifest.enabled, false);
 assert.equal(manifest.frameCount, frames.length);
 assert.ok(manifest.frames.length >= 2);
+assert.equal(manifest.encoded, false);
+assert.equal(manifest.encoderAvailable, false);
 
 console.log("social-ai-generate.test.mjs: OK");
