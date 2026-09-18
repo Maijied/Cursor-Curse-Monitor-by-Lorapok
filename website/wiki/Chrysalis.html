@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Chrysalis — floating AI assistant — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="The Larvae mascot animates the floating panel; the intelligence layer learns from public product context and user-provided API keys (never Lorapok-shipped secre" />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Chrysalis.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Chrysalis — floating AI assistant — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="The Larvae mascot animates the floating panel; the intelligence layer learns from public product context and user-provided API keys (never Lorapok-shipped secre" />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Chrysalis.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Chrysalis — floating AI assistant — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="The Larvae mascot animates the floating panel; the intelligence layer learns from public product context and user-provided API keys (never Lorapok-shipped secre" />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Chrysalis — floating AI assistant</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html" aria-current="page">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="chrysalis-floating-ai-assistant">Chrysalis — floating AI assistant</h1>
+<p><strong>Last updated:</strong> 2026-09-18 <strong>Status:</strong> brand + Larvae shell live (CHRYS-01); AI chat pending CHRYS-02+ <strong>Task IDs:</strong> CHRYS-01–05, WEB-06, ECO-03, ECO-06</p>
+<p>---</p>
+<h2 id="what-chrysalis-is">What Chrysalis is</h2>
+<p><strong>Chrysalis</strong> is the Lorapok animated floating AI assistant for the Cursor Curse Monitor ecosystem. It helps users and operators understand the product, usage limits, and Mission Control workflows — with <strong>strict privacy boundaries</strong> per surface.</p>
+<p>The Larvae mascot animates the floating panel; the intelligence layer learns from <strong>public product context</strong> and <strong>user-provided API keys</strong> (never Lorapok-shipped secrets on client surfaces).</p>
+<p>---</p>
+<h2 id="surfaces">Surfaces</h2>
+<table><thead><tr><th>Surface</th><th>Chrysalis role</th><th>API key source</th></tr></thead><tbody><tr><td><strong>Marketing website</strong></td><td>Product Q&amp;A, stats, roadmap links</td><td>Static <code>site-data.json</code> + optional user BYOK later</td></tr><tr><td><strong>Mission Control (admin)</strong></td><td>Operator guide, deploy/mail/settings help</td><td>Operator key in <strong>cred vault</strong> (Antigravity or other) via server proxy</td></tr><tr><td><strong>IDE extension</strong></td><td>Usage warnings, limit suggestions</td><td><strong>User's</strong> API key from settings (BYOK)</td></tr><tr><td><strong>Browser extension</strong></td><td>Budget alerts, paste-guard context</td><td><strong>User's</strong> API key from options (BYOK)</td></tr><tr><td><strong>OS tray app</strong> (planned)</td><td>Notifications + quick ask</td><td>User BYOK</td></tr></tbody></table>
+<p>---</p>
+<h2 id="privacy-tiers-chrys-03">Privacy tiers (CHRYS-03)</h2>
+<ol>
+<li><strong>Public</strong> — wiki, <code>site-data.json</code>, marketplace stats only. No admin KV, no subscriber PII, no vault material.</li>
+<li><strong>Operator (admin)</strong> — full system map under RBAC. Chrysalis never echoes secrets into chat logs or client bundles.</li>
+<li><strong>User (extensions/web BYOK)</strong> — learns from local usage state + public docs; key stays on device; passive sync with user consent only.</li>
+</ol>
+<p>Fail closed: if ACL or context bundle is ambiguous, Chrysalis refuses rather than over-share.</p>
+<p>---</p>
+<h2 id="ai-provider-chrys-02">AI provider (CHRYS-02)</h2>
+<ul>
+<li><strong>Admin:</strong> Antigravity or other model — API key stored in cred vault (<code>cred get cursor …</code>), proxied through Pages Functions.</li>
+<li><strong>User surfaces:</strong> User supplies their own provider key in extension options / website settings (CHRYS-04).</li>
+<li>Lorapok does <strong>not</strong> embed production API keys in git, <code>wrangler.toml</code>, or shipped VSIX/browser builds.</li>
+</ul>
+<p>---</p>
+<h2 id="system-learning-chrys-05">System learning (CHRYS-05)</h2>
+<p>Chrysalis builds suggestions from:</p>
+<ul>
+<li><code>docs/wiki/*</code>, <code>site-data.json</code>, <code>CHANGELOG.md</code></li>
+<li>Live usage / quota state (extension + browser)</li>
+<li>Mission Control notices and deploy status (admin only)</li>
+</ul>
+<p>Outputs: usage warnings, budget reminders, deploy checklist hints, links to relevant wiki pages.</p>
+<p>Pairs with <a href="AI-Agent-Commands.html">AI Agent Commands</a> (ECO-10) — no secrets or full chat logs in procedure files.</p>
+<p>---</p>
+<h2 id="implementation">Implementation</h2>
+<table><thead><tr><th>Artifact</th><th>Path</th></tr></thead><tbody><tr><td>Shared Chrysalis shell</td><td><code>packages/shared/src/chrysalis.ts</code></td></tr><tr><td>Website floating panel</td><td><code>website/ccm-floating-assistant.js</code> (+ CSS); mounts <code>#ccm-chrysalis</code></td></tr><tr><td>Mission Control FAB</td><td><code>website/admin/src/components/ui/ChrysalisFab.tsx</code> (AppShell)</td></tr><tr><td>Product context (admin mail templates)</td><td><code>website/admin/functions/api/_shared/product-context.embedded.json</code></td></tr><tr><td>Sync test</td><td><code>packages/shared/src/chrysalis.test.mjs</code></td></tr></tbody></table>
+<p><strong>CHRYS-01 (done):</strong> official Chrysalis name, Larvae toggle animation on marketing pages (home/privacy/terms) and Mission Control. Full AI chat: <strong>CHRYS-02</strong> onward.</p>
+<p>---</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a></li>
+<li><a href="Admin-Panel.html">Admin Panel</a></li>
+<li><a href="Architecture.html">Architecture</a></li>
+</ul>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

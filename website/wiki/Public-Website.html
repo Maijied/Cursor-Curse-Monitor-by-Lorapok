@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Public website roadmap — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="The marketing site becomes a professional public face for the whole Lorapok CCM ecosystem: live stats, expanded engineering transparency, multi-page docs, and a" />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Public-Website.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Public website roadmap — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="The marketing site becomes a professional public face for the whole Lorapok CCM ecosystem: live stats, expanded engineering transparency, multi-page docs, and a" />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Public-Website.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Public website roadmap — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="The marketing site becomes a professional public face for the whole Lorapok CCM ecosystem: live stats, expanded engineering transparency, multi-page docs, and a" />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Public website roadmap</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html" aria-current="page">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="public-website-roadmap">Public website roadmap</h1>
+<p><strong>Last updated:</strong> 2026-09-18 <strong>Tasks:</strong> WEB-07–WEB-10, LEGAL-01, ANALYTICS-02, DEPLOY-01 (admin parity)</p>
+<p>---</p>
+<h2 id="vision">Vision</h2>
+<p>The marketing site becomes a <strong>professional public face</strong> for the whole Lorapok CCM ecosystem: live stats, expanded engineering transparency, multi-page docs, and a clear welcome for open-source contributors — while Mission Control remains the operator CMS.</p>
+<p>---</p>
+<h2 id="planned-pages-web-09">Planned pages (WEB-09)</h2>
+<table><thead><tr><th>Route</th><th>Source</th><th>Content</th></tr></thead><tbody><tr><td><code>/</code></td><td><code>index.html</code></td><td>Hero, features, Chrysalis, topology</td></tr><tr><td><code>/wiki/</code> + <code>/wiki/*.html</code></td><td><code>docs/wiki/*.md</code> via <code>npm run site:pages</code></td><td>Mirrored GitHub Wiki (canonical in repo)</td></tr><tr><td><code>/releases.html</code></td><td><code>site-data.json</code> (client)</td><td>Version + download links</td></tr><tr><td><code>/community.html</code></td><td><code>site-data.json</code> <code>githubCommunity</code> + Project #4</td><td>Issues, traffic, contribute</td></tr><tr><td><code>/docs/</code></td><td>docs hub → wiki</td><td>Installation, architecture, agent commands</td></tr><tr><td><code>/#engineering</code></td><td>WEB-08 section</td><td>Behind the scenes — monorepo, CI/CD, Mission Control</td></tr></tbody></table>
+<p><strong>Status:</strong> shipped generator <code>scripts/generate-public-pages.mjs</code> + public shells. Regenerate with <code>npm run site:pages</code> (also runs before <code>site:seo</code>).</p>
+<p>---</p>
+<h2 id="system-topology-web-07">System topology (WEB-07)</h2>
+<p><strong>Status:</strong> done — Production Deployment tab lists every <code>ci-cd.yml</code> job (<code>resolve-version</code> → <code>ci-summary</code>, including <code>queue-social-gallery</code> + <code>website-discord-notify</code>), plus ADMIN_KV / STATS_R2 / Discord slots. Guarded by <code>tests/test_architecture_cicd_jobs.mjs</code> + Mermaid↔workflow sync.</p>
+<p>Expand animated diagrams on <code>#architecture</code> / Mission Control → Architecture:</p>
+<ol>
+<li><code>resolve-version</code> / <code>validate-dispatch</code> / <code>admin-deploy-gate</code></li>
+<li><code>ci</code> · <code>browser-extension-ci</code> · <code>admin-ci</code> · <code>ci-summary</code></li>
+<li><code>prepare-tag-on-push</code> · <code>release-prep</code></li>
+<li><code>deploy</code> (Open VSX, VS Code, AMO, Chrome) · <code>admin-deploy</code> · <code>website</code> · <code>seo-pipeline</code></li>
+<li><code>queue-social-gallery</code> · <code>website-discord-notify</code></li>
+<li>Stats cron + KV/R2 cache</li>
+<li>Discord deployment / github-log / community webhooks</li>
+</ol>
+<p>Must match Mission Control <strong>DEPLOY-01</strong> deploy runtime steps for operator trust.</p>
+<p>---</p>
+<h2 id="behind-the-scenes-web-08">Behind the scenes (WEB-08)</h2>
+<p><strong>Shipped:</strong> marketing <code>#engineering</code> section after Architecture.</p>
+<p>Covers:</p>
+<ul>
+<li>Four components (IDE, browser, website, Mission Control)</li>
+<li>Procedure + GitHub Project #4 workflow</li>
+<li>Cred vault and release integrity</li>
+<li>Agent commands (<code>Update?</code>, <code>next</code>)</li>
+<li>How to contribute (links WEB-10)</li>
+</ul>
+<p>---</p>
+<h2 id="open-source-welcome-web-10">Open-source welcome (WEB-10)</h2>
+<ul>
+<li>CONTRIBUTING.md + good-first issues on every surface footer</li>
+<li>Hero/subscribe contributor CTA</li>
+<li>Extension options “Join the community” link</li>
+<li>Chrysalis can answer “how do I contribute?”</li>
+</ul>
+<p>---</p>
+<h2 id="engineering-history-web-11">Engineering history (WEB-11)</h2>
+<p>Long-form <strong>behind-the-scenes timeline</strong> at <code>/engineering/history</code> — sectioned summary of the whole build: monorepo, CI/CD evolution, Mission Control, procedure workflow, releases, contributors. Extends WEB-08.</p>
+<h2 id="social-seo">Social &amp; SEO</h2>
+<p>See <strong><a href="Social-and-SEO.html">Social and SEO</a></strong> — Discord CI cards, multi-platform webhooks, deploy image gallery, video generator, world-class SEO hub.</p>
+<p>---</p>
+<table><thead><tr><th>Task</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>LEGAL-01</strong></td><td>Terms + privacy + consent for subscribe, analytics, Chrysalis BYOK</td></tr><tr><td><strong>ANALYTICS-02</strong></td><td>Professional visitor log (IP hash, referrer, new user events); admin dashboard</td></tr></tbody></table>
+<p>No secrets in logs. Retention and export documented in <code>privacy.html</code>.</p>
+<p>---</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="Architecture.html">Architecture</a></li>
+<li><a href="Deployment.html">Deployment</a></li>
+<li><a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a></li>
+<li><a href="Chrysalis.html">Chrysalis</a></li>
+</ul>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Architecture — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="```" />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Architecture.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Architecture — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="```" />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Architecture.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Architecture — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="```" />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Architecture</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html" aria-current="page">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="architecture">Architecture</h1>
+<h2 id="monorepo-layout">Monorepo layout</h2>
+<pre><code>cursor-usage-monitor/
+├── src/                 # VS Code / Cursor extension (TypeScript)
+├── packages/shared/     # Shared API types + budget math
+├── browser-extension/   # Firefox AMO + Chrome zip WebExtension
+├── website/             # Marketing static site (GitHub Pages)
+│   └── admin/           # Mission Control SPA + Cloudflare Pages Functions
+├── media/               # Extension &amp; repo assets
+└── docs/wiki/           # GitHub Wiki source (sync to wiki repo)</code></pre>
+<h2 id="data-flow">Data flow</h2>
+<pre><code class="language-mermaid">flowchart LR
+  IDE[Cursor / VS Code] --&gt;|auth token + local metadata| EXT[IDE Extension]
+  EXT --&gt;|usage-summary + profile| API[api2.cursor.sh]
+  EXT --&gt;|scan files / clipboard| SCAN[packages/shared scanSecrets]
+  Browser[Firefox / Chrome] --&gt;|token from cursor.com or manual| BEXT[Browser Extension]
+  BEXT --&gt;|usage-summary + profile| API
+  BEXT --&gt;|paste validation| SCAN
+  SCAN --&gt;|redacted findings| ALERT[Security Alert UI]
+  GitHook[pre-commit secretlint] --&gt; SCAN
+  Visitor[Website visitor] --&gt; SITE[GitHub Pages]
+  Admin[Admin operator] --&gt; MC[Mission Control]
+  MC --&gt;|Pages Functions| KV[(ADMIN_KV)]
+  MC --&gt;|dispatch| GHA[GitHub Actions]
+  MC --&gt;|send| MAIL[Cloudflare Email]
+  GHA --&gt; OVSX[Open VSX]
+  GHA --&gt; VSM[VS Code Marketplace]
+  GHA --&gt; AMO[Firefox AMO]
+  GHA --&gt; CHROME[Chrome zip]</code></pre>
+<h2 id="schedules-discord">Schedules &amp; Discord</h2>
+<p>Weekly GitHub Actions jobs regenerate marketing data; Cloudflare <code>ccm-stats-cron</code> calls Mission Control every minute and respects the <strong>Settings → Live stats refresh</strong> interval in <code>ADMIN_KV</code>. Discord cards fire on deploy events, CI website/admin deploy, and feedback tests.</p>
+<pre><code class="language-mermaid">flowchart TB
+  subgraph settings[&quot;Mission Control Settings&quot;]
+    CronCfg[&quot;Cron schedules · stats refresh + Discord digest&quot;]
+    DiscordCfg[&quot;Discord webhooks · deployment + feedback&quot;]
+  end
+
+  subgraph gh[&quot;GitHub Actions — fixed schedule&quot;]
+    SEO[&quot;seo-pipeline · Mon 06:00 UTC&quot;]
+    DepSec[&quot;dependency-security · Mon 07:30 UTC&quot;]
+    SEO --&gt; Artifacts[&quot;site-data.json · SEO · badges · sitemap&quot;]
+  end
+
+  subgraph cf[&quot;Cloudflare&quot;]
+    Worker[&quot;ccm-stats-cron worker · every minute&quot;]
+    CronStats[&quot;POST /api/cron/stats-refresh&quot;]
+    CronDigest[&quot;POST /api/cron/discord-digest&quot;]
+    KV[(&quot;ADMIN_KV&quot;)]
+    Pages[&quot;Pages Functions /api/*&quot;]
+  end
+
+  subgraph stats[&quot;Live download stats&quot;]
+    Refresh[&quot;runStatsRefresh&quot;]
+    Cache[&quot;stats:live-cache&quot;]
+    Public[&quot;GET /api/site-data · badge.json&quot;]
+  end
+
+  subgraph discord[&quot;Discord notifications&quot;]
+    Digest[&quot;runDiscordDigest · download breakdown&quot;]
+    DeployEvt[&quot;Deploy started / completed watch&quot;]
+    CINotify[&quot;CI discord-deployment-notify.mjs&quot;]
+    Feedback[&quot;Feedback webhook test&quot;]
+    Webhook[(&quot;deploymentWebhookUrl&quot;)]
+    FeedbackHook[(&quot;feedbackWebhookUrl&quot;)]
+  end
+
+  CronCfg -.-&gt;|interval gate| CronStats
+  CronCfg -.-&gt;|interval gate| CronDigest
+  DiscordCfg --&gt; Webhook
+  DiscordCfg --&gt; FeedbackHook
+  Worker --&gt;|X-Cron-Secret| CronStats
+  Worker --&gt;|X-Cron-Secret| CronDigest
+  CronStats --&gt;|when due| Refresh
+  CronDigest --&gt;|when due| Digest
+  Refresh --&gt; KV
+  Refresh --&gt; Cache
+  Cache --&gt; Public
+  Digest --&gt; Webhook
+  Pages --&gt; KV
+
+  DeployEvt --&gt; Webhook
+  CINotify --&gt; Webhook
+  Feedback --&gt; FeedbackHook
+
+  MC[&quot;Operator&quot;] --&gt; settings
+  MC --&gt;|manual refresh| Refresh
+  MC --&gt;|send digest now| Digest</code></pre>
+<h2 id="stats-storage-kv-r2-d1">Stats storage (KV, R2, D1)</h2>
+<p>Live download stats and Mission Control config today live in <strong>Cloudflare KV</strong> (<code>ADMIN_KV</code>). There is no in-app KV usage percentage — Cloudflare enforces <strong>daily read/write quotas</strong> on the Workers plan (Free tier: ~100k reads / ~1k writes per day). When writes are exhausted, <code>runStatsRefresh</code> fails or auto-pauses until UTC reset (<code>writesPausedUntil</code> in <code>integrations:stats-refresh</code>).</p>
+<h3 id="current-kv-keys-stats-path">Current KV keys (stats path)</h3>
+<table><thead><tr><th>Key</th><th>Content</th><th>Writes per refresh</th></tr></thead><tbody><tr><td><code>stats:live-cache</code></td><td>JSON totals + channel breakdown</td><td>1 when data changes</td></tr><tr><td><code>stats:badges-bundle</code></td><td>Shields.io JSON payloads</td><td>1 when <code>displayTotal</code> changes</td></tr><tr><td><code>stats:readme-svg</code></td><td>README chart SVG string</td><td>1 when <code>displayTotal</code> changes</td></tr><tr><td><code>integrations:stats-refresh</code></td><td>Cron metadata (<code>lastRunAt</code>, <code>lastError</code>, pause guard)</td><td>1 always</td></tr><tr><td><code>system:log:*</code></td><td>Scatter event log</td><td>skipped when stats unchanged</td></tr></tbody></table>
+<p><strong>Optimizations shipped (Phase B1):</strong> badge/readme writes only when verified totals change; scatter log skipped on unchanged refresh; KV quota errors set <code>writesPausedUntil</code> and skip automatic cron until UTC reset. Settings → <strong>General → Infrastructure</strong> shows estimated write budget, last run outcome, and a master-only pause shortcut.</p>
+<p><strong>System logs (D1-03):</strong> when <code>ADMIN_D1</code> is bound, new <code>logSystemEvent</code> writes go to <code>system_logs</code> (no KV scatter <code>put</code>). Reads merge D1 + remaining KV scatter/legacy during transition. One-time backfill: <code>node website/admin/scripts/migrate-system-logs-to-d1.mjs</code>.</p>
+<h3 id="storage-roadmap">Storage roadmap</h3>
+<table><thead><tr><th>Store</th><th>Best for</th><th>Status</th></tr></thead><tbody><tr><td><strong>KV</strong></td><td>Small JSON config blobs, hot stats cache</td><td><strong>Production</strong> — current path</td></tr><tr><td><strong>R2</strong></td><td>Large blobs (<code>stats:readme-svg</code>, badge assets)</td><td><strong>Phase 2</strong> — removes 2+ KV puts per refresh when totals change</td></tr><tr><td><strong>D1</strong></td><td>Append-heavy data (<code>system:log:*</code>, subscriber index)</td><td><strong>Phase 2</strong> — <code>ADMIN_D1</code> binding (<code>ccm-admin-d1</code>) provisioned; KV migration pending</td></tr><tr><td><strong>GitHub <code>site-data.json</code></strong></td><td>Marketing fallback when APIs unreachable</td><td><strong>Production</strong> — weekly GHA + manual regen; not real-time</td></tr><tr><td><strong>GCP / Azure</strong></td><td>Optional off-site backup of stats snapshots</td><td><strong>Deferred</strong> — export via GHA cron, not runtime dual-write</td></tr></tbody></table>
+<p><strong>Recommendation:</strong> keep optimizing KV first (done); migrate bulky SVG/JSON to <strong>R2</strong> next; move logs/subscribers to <strong>D1</strong> when bindings exist. See <code>plan/mission-control-master-tasks.md</code> (KV-08, R2-<em>, D1-</em>).</p>
+<h2 id="ide-extension">IDE extension</h2>
+<ul>
+<li>Quota and billing come from Cursor’s remote usage API after reading the local auth token in <code>state.vscdb</code></li>
+<li>Local insights (read-only) include daily line-accept stats, active models, and composer session titles — not chat transcripts</li>
+<li>Status bar + sidebar dashboard; native workbench toasts overlay the open editor</li>
+<li>Optional Composer 2.5 fallback when limits exceeded (quit-then-write)</li>
+<li><strong>Security monitor</strong> (<code>securityMonitor.ts</code>): pattern-based credential scan via shared <code>scanSecrets</code>; Manage Processes–style alert panel; commands for workspace and clipboard scan. Does not read live Composer chat.</li>
+</ul>
+<h2 id="browser-extension">Browser extension</h2>
+<ul>
+<li>Hybrid auth: content script on <code>cursor.com</code> captures Bearer token from <code>api2.cursor.sh</code> requests, or manual paste in Options</li>
+<li>Animated Budget Tracker popup; mandatory Lorapok Labs + Cursor footer</li>
+<li><strong>Security scanner</strong> on Options paste — warns when extra secrets appear alongside an intentional Cursor token</li>
+<li>Firefox: auto-published to AMO via <code>publish-amo.mjs</code> (<code>web-ext sign</code> + generated metadata)</li>
+<li>Chrome: direct-download zip (not Chrome Web Store)</li>
+</ul>
+<h2 id="versioning">Versioning</h2>
+<ul>
+<li>Root <code>package.json</code> holds the production base semver</li>
+<li>Workspace packages use <code>0.0.0</code> in git; <code>npm run version:sync</code> resolves versions at build time</li>
+<li>CI and Mission Control releases run <code>version:sync</code> before packaging</li>
+</ul>
+<h2 id="security-scanner-shared">Security scanner (shared)</h2>
+<ul>
+<li>Core engine: <code>packages/shared/src/scanSecrets.ts</code> — Bearer/JWT, API keys, private keys, password assignments, <code>.env</code> patterns</li>
+<li>Redaction: findings store <code>abcd…wxyz</code> snippets only; full matches are never logged or uploaded</li>
+<li>Repo: <code>.secretlintrc.json</code> + Husky pre-commit + CI <code>security:scan</code></li>
+<li><strong>Limitation:</strong> Composer chat secrets that never hit disk are not detectable</li>
+</ul>
+<h2 id="marketing-site">Marketing site</h2>
+<ul>
+<li>Static HTML + <code>site-data.json</code> / <code>seo.json</code> (generated by root scripts)</li>
+<li>OG image: <code>website/assets/marketing/og-social-card.png</code> (1200×630)</li>
+<li>GitHub social preview: <code>media/github-social-preview.png</code> (1280×640)</li>
+</ul>
+<h2 id="admin-api">Admin API</h2>
+<p>Authenticated <code>/api/*</code> routes on Cloudflare Pages Functions. Secrets in Pages environment / GitHub Actions.</p>
+<p><a href="index.html">← Home</a></p>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

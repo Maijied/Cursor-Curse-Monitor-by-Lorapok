@@ -118,7 +118,9 @@ Standard scripts are in `package.json` (`compile`, `test`, `validate:assets`,
 ### Marketing website (`website/`) — run / regenerate
 
 - Regenerate live data with the root scripts `npm run site:data` and
-  `npm run site:seo` (validate with `npm run site:seo:validate`). These fetch
+  `npm run site:seo` (validate with `npm run site:seo:validate`). `site:seo`
+  also runs `npm run site:pages` to rebuild `/wiki`, `/docs`, releases, and
+  community shells from `docs/wiki`. These fetch
   live data from the Open VSX / VS Code Marketplace / GitHub APIs, so numbers
   depend on network egress; they fall back to zeros/defaults when unreachable.
 - It is a static site — preview by serving the `website/` directory with any

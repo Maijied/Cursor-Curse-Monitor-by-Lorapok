@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **WEB-09 public multi-page site** — `/wiki/`, `/releases.html`, `/community.html`, `/docs/` generated from `docs/wiki` + `site-data.json` (`npm run site:pages`).
 - **WEB-08 Behind the scenes** — marketing `#engineering` section: monorepo surfaces, procedure/Project #4, cred vault, release integrity, contribute links.
 - **CHRYS-01 Chrysalis brand + Larvae** — official name for the floating assistant; shared `@lorapok/cursor-monitor-shared` shell; Larvae toggle on marketing pages (home/privacy/terms) and Mission Control FAB.
 - **SOCIAL-05 MP4 encode + voiceover** — gallery video jobs call optional `VIDEO_ENCODER` binding or configured HTTPS encoder URL; changelog voiceover script included; R2/`?kind=video` asset serving; static carousel fallback when unbound.

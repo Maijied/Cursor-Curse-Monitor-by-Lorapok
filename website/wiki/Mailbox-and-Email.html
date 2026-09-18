@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Mailbox and Email — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="Outbound mail uses branded HTML templates per category. Product mail sends from cursor.monitor@lorapok.tech; help and support replies use cursor.curse.help@lora" />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Mailbox-and-Email.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Mailbox and Email — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="Outbound mail uses branded HTML templates per category. Product mail sends from cursor.monitor@lorapok.tech; help and support replies use cursor.curse.help@lora" />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Mailbox-and-Email.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mailbox and Email — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="Outbound mail uses branded HTML templates per category. Product mail sends from cursor.monitor@lorapok.tech; help and support replies use cursor.curse.help@lora" />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Mailbox and Email</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html" aria-current="page">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="mailbox-and-email">Mailbox and Email</h1>
+<p>Outbound mail uses branded HTML templates per category. Product mail sends from <strong>cursor.monitor@lorapok.tech</strong>; help and support replies use <strong>cursor.curse.help@lorapok.tech</strong>. Transport is via Cloudflare Email Sending (Lorapok Labs domain).</p>
+<h2 id="transport-priority">Transport priority</h2>
+<ol>
+<li><strong><code>ccm-mail-relay</code> Worker</strong> (Pages service binding → <code>send_email</code>) — preferred; no REST API token</li>
+<li>Cloudflare <code>EMAIL</code> binding (Workers only)</li>
+<li>Cloudflare Email REST API (<code>CLOUDFLARE_EMAIL_API_TOKEN</code>)</li>
+<li>Resend fallback (<code>RESEND_API_KEY</code>)</li>
+</ol>
+<h2 id="production-setup">Production setup</h2>
+<ol>
+<li>Onboard <code>lorapok.tech</code> in Cloudflare <strong>Email → Email Sending</strong></li>
+<li><strong>One-time</strong> sync cred vault → GitHub <code>admin-production</code> environment secrets:</li>
+</ol>
+<pre><code class="language-bash">gh secret set CLOUDFLARE_EMAIL_API_TOKEN --env admin-production \
+  --body &quot;$(cred get cursor cloudflare_email_api_token)&quot;
+# CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID should already be set for admin-deploy</code></pre>
+<ol>
+<li><strong>One-time inbound routing</strong> (forward <code>@lorapok.tech</code> mail to ops inbox):</li>
+</ol>
+<pre><code class="language-bash">export CLOUDFLARE_API_TOKEN=&quot;$(cred get cursor cloudflare_api_token)&quot;
+export CLOUDFLARE_ACCOUNT_ID=&quot;$(cred get cursor cloudflare_account_id)&quot;
+node website/admin/scripts/setup-email-addresses.mjs</code></pre>
+<ol>
+<li><strong>CI/CD on push to <code>main</code></strong> — <code>admin-deploy</code> deploys Pages only when Mission Control paths change. It <strong>skips</strong> <code>enable-mail.mjs</code> and stats-cron deploy to avoid slow Cloudflare mail API calls. Full mail repair runs via <strong>workflow_dispatch → deploy-infra</strong> or locally.</li>
+</ol>
+<ol>
+<li>Manual repair when mail breaks or you need an immediate fix:</li>
+</ol>
+<pre><code class="language-bash">node website/admin/scripts/repair-mail.mjs   # same steps as CI, locally</code></pre>
+<ol>
+<li>Use <strong>Mailbox → Send branded test email</strong> to verify outbound delivery</li>
+</ol>
+<ol>
+<li>Verify <strong>inbound</strong> routing (external → <code>@lorapok.tech</code>):</li>
+</ol>
+<pre><code class="language-bash">node website/admin/scripts/verify-inbound-routing.mjs
+# Manual: send from Gmail to admin@lorapok.tech → should forward to opsForwardTo</code></pre>
+<p>For Mission Control <strong>Sync routing</strong>, sync Pages secret once: <code>node website/admin/scripts/setup-routing-secret.mjs</code></p>
+<p>Full blueprint (inbound + outbound + CI): <a href="../guides/CLOUDFLARE_EMAIL_AND_ROUTING.md">Cloudflare Email and Routing</a>.</p>
+<h2 id="message-categories">Message categories</h2>
+<table><thead><tr><th>Category</th><th>Template</th><th>Logo asset</th><th>Trigger</th></tr></thead><tbody><tr><td><code>subscribe</code></td><td>Branded welcome</td><td><code>logo-product.png</code></td><td>Website subscribe form</td></tr><tr><td><code>invite</code></td><td>Admin invitation</td><td><code>logo-product.png</code></td><td>Team invite</td></tr><tr><td><code>notice</code></td><td>Severity-styled notice</td><td><code>logo-notice.png</code></td><td>Dev notice broadcast</td></tr><tr><td><code>compose</code></td><td>Mission Control message</td><td><code>logo-product.png</code></td><td>Admin compose</td></tr><tr><td><code>test</code></td><td>Delivery confirmation</td><td><code>logo-help.png</code></td><td>Mailbox test button</td></tr></tbody></table>
+<h2 id="storage-d1-r2">Storage (D1 + R2)</h2>
+<p>Outbound mail metadata is migrating off hot KV paths:</p>
+<table><thead><tr><th>Store</th><th>Contents</th></tr></thead><tbody><tr><td><strong>ADMIN_D1</strong> <code>mail_messages</code></td><td>Per-send mailbox rows (replaces <code>mailbox:messages</code> KV blob)</td></tr><tr><td><strong>ADMIN_D1</strong> <code>mail_audit_resend</code></td><td>Masked Resend audit index</td></tr><tr><td><strong>ADMIN_D1</strong> <code>subscriber_index</code></td><td>Subscriber email hash index (Phase 2)</td></tr><tr><td><strong>STATS_R2</strong> <code>mail/audit/</code></td><td>Raw masked audit JSON</td></tr><tr><td><strong>KV scatter</strong></td><td><code>subscriber:email:*</code>, legacy <code>subscribers</code> array, mail aliases config</td></tr></tbody></table>
+<p>Apply D1 schema after deploy:</p>
+<pre><code class="language-bash">cd website/admin
+npx wrangler d1 execute ccm-admin-d1 --remote --file=./d1/schema.sql</code></pre>
+<p>Replay saved sends (vault redirect default):</p>
+<pre><code class="language-bash">node website/admin/scripts/resend-saved-mail.mjs              # dry-run
+node website/admin/scripts/resend-saved-mail.mjs --send       # deliver (redirected)
+node website/admin/scripts/resend-saved-mail.mjs --source=d1  # reconstruct from D1 logs</code></pre>
+<h2 id="subscribe-validation">Subscribe validation</h2>
+<p><code>POST /api/subscribe</code> rejects duplicate emails with <strong>409</strong> and <code>{ ok: false, error: &quot;already_subscribed&quot; }</code>. The marketing site shows a friendly “already subscribed” message instead of an error.</p>
+<p>All templates use the <strong>CCM / Lorapok Labs</strong> dark theme with animated gradient header bar, stat pills, and CTA buttons. Template logic lives in <code>website/admin/functions/api/_shared/mail-branding.js</code> and <code>mail.js</code>.</p>
+<h2 id="mission-control-mailbox-ui">Mission Control mailbox UI</h2>
+<ul>
+<li><strong>Mail hub</strong> (<code>/dashboard/mail</code>) — transport checklist, Cloudflare/Resend config, email identities (aliases), masked redirect target, link to Mailbox</li>
+<li><strong>Message log</strong> — filter by direction, category, status; search addresses and subjects</li>
+<li><strong>Read modal</strong> — click any row to preview HTML (iframe) and plain text</li>
+<li><strong>Compose</strong> — send branded HTML mail to any recipient</li>
+<li><strong>Test</strong> — verify transport with a delivery confirmation email</li>
+</ul>
+<h2 id="credential-split-required">Credential split (required)</h2>
+<table><thead><tr><th>Variable</th><th>Purpose</th></tr></thead><tbody><tr><td><code>CLOUDFLARE_API_TOKEN</code></td><td>Pages/Workers <strong>deploy</strong> only (wrangler)</td></tr><tr><td><code>CLOUDFLARE_EMAIL_API_TOKEN</code></td><td>Email Sending <strong>REST</strong> only (Pages secret)</td></tr></tbody></table>
+<p>Never sync the deploy token as <code>CLOUDFLARE_EMAIL_API_TOKEN</code>. Load from secure cred vault:</p>
+<pre><code class="language-bash">export CLOUDFLARE_API_TOKEN=&quot;$(cred get cursor cloudflare_api_token)&quot;
+export CLOUDFLARE_EMAIL_API_TOKEN=&quot;$(cred get cursor cloudflare_email_api_token)&quot;
+export CLOUDFLARE_ACCOUNT_ID=&quot;$(cred get cursor cloudflare_account_id)&quot;</code></pre>
+<h2 id="scripts">Scripts</h2>
+<pre><code class="language-bash">node website/admin/scripts/setup-email-addresses.mjs  # inbound routing (one-time)
+node website/admin/scripts/verify-mail-setup.mjs      # probe email token
+node website/admin/scripts/enable-mail.mjs            # relay worker + Pages secret
+node website/admin/scripts/repair-mail.mjs            # full fix: enable + build + deploy + verify
+node website/admin/scripts/deploy-pages-fast.mjs        # fast deploy without mail API calls
+node website/admin/scripts/probe-mail-token.mjs
+node website/admin/scripts/setup-mail-secrets.mjs
+node website/admin/scripts/resend-saved-mail.mjs       # replay KV/D1 saved mail (dry-run default)</code></pre>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>HTTP 401 on send</td><td><code>CLOUDFLARE_EMAIL_API_TOKEN</code> needs Email Sending → Edit; redeploy Pages after <code>wrangler pages secret put</code></td></tr><tr><td>Code 10203</td><td>Enable Email Sending on account; onboard <code>lorapok.tech</code> in dashboard</td></tr><tr><td><code>cloudflare-rest</code> in health, 401</td><td><code>MAIL_RELAY</code> missing — run <code>repair-mail.mjs</code></td></tr><tr><td>Mail works locally, fails in prod</td><td>Redeploy Pages after secret sync</td></tr></tbody></table>
+<p><a href="index.html">← Home</a> · <a href="Admin-Panel.html">Admin Panel</a></p>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

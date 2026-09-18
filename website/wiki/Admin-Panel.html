@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Admin Panel (Mission Control) — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="Mission Control is the Lorapok Labs operations dashboard at https://cursor-dev.lorapok.tech." />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Admin-Panel.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Admin Panel (Mission Control) — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="Mission Control is the Lorapok Labs operations dashboard at https://cursor-dev.lorapok.tech." />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Admin-Panel.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Admin Panel (Mission Control) — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="Mission Control is the Lorapok Labs operations dashboard at https://cursor-dev.lorapok.tech." />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Admin Panel (Mission Control)</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html" aria-current="page">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="admin-panel-mission-control">Admin Panel (Mission Control)</h1>
+<p>Mission Control is the Lorapok Labs operations dashboard at <strong>https://cursor-dev.lorapok.tech</strong>.</p>
+<h2 id="authentication">Authentication</h2>
+<ul>
+<li>Google sign-in, email magic link, or email/password (Firebase Auth)</li>
+<li>Only allowlisted admin emails can access <code>/dashboard/*</code> (invite-only; checked before sign-in)</li>
+<li>Master admin is configured via <code>ADMIN_MASTER_EMAIL</code></li>
+<li>Login page shows a read-only <strong>Sign-in &amp; infrastructure</strong> panel (<code>LoginInfraPanel</code>) with live <code>/api/health</code> indicators</li>
+</ul>
+<h2 id="master-admin-privileges">Master admin privileges</h2>
+<p>Only the <strong>master admin</strong> can trigger:</p>
+<ul>
+<li><strong>Deploy</strong> — publish an existing git tag to marketplaces (opt-in; the normal marketplace path)</li>
+<li><strong>Rollback</strong> — restore a prior tag as a new patch release (+ marketplaces when opted in)</li>
+<li><strong>Infra</strong> — redeploy Mission Control / marketing site without marketplace publish</li>
+</ul>
+<p>Push to <code>main</code> may prepare tags and redeploy Mission Control; it never publishes marketplaces (DEPLOY-04).</p>
+<p>Non-master admins can view deployment history and runtime logs but cannot submit dispatch forms.</p>
+<h2 id="modules">Modules</h2>
+<table><thead><tr><th>Module</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>Overview</strong></td><td>Health, marketplace sync, KPIs, download breakdown</td></tr><tr><td><strong>Deployments</strong></td><td>Trigger publish or rollback workflows with live runtime log preview</td></tr><tr><td><strong>Notices</strong></td><td>Enable/disable development notices on the marketing site</td></tr><tr><td><strong>Mailbox</strong></td><td>Outbound mail log, branded HTML templates, compose &amp; test</td></tr><tr><td><strong>Logs</strong></td><td>API activity, mail events, system events</td></tr><tr><td><strong>Team</strong></td><td>Admin allowlist management</td></tr><tr><td><strong>Docs</strong></td><td>In-app architecture reference</td></tr></tbody></table>
+<h2 id="publish-markets">Publish markets</h2>
+<p>When dispatching a release or deploy, choose the target marketplace:</p>
+<table><thead><tr><th>Market</th><th>Destination</th></tr></thead><tbody><tr><td><code>Both</code></td><td>Open VSX + VS Code Marketplace</td></tr><tr><td><code>Open VSX</code></td><td>Canonical <code>lorapok-labs</code> listing</td></tr><tr><td><code>VS Code Marketplace</code></td><td><code>LorapokLabs</code> publisher</td></tr><tr><td><code>Firefox AMO</code></td><td>Browser extension via <code>web-ext sign</code></td></tr></tbody></table>
+<h2 id="local-development">Local development</h2>
+<pre><code class="language-bash">cd website/admin
+cp .env.example .env
+npm run dev</code></pre>
+<p>Dev server: http://localhost:5173 — API routes are served by <code>vite-dev-api.mjs</code>.</p>
+<h2 id="pwa">PWA</h2>
+<p>Mission Control is installable as a PWA. After manifest updates, reinstall or clear site data to refresh the shell cache.</p>
+<p><a href="index.html">← Home</a> · <a href="Deployment.html">Deployment</a> · <a href="Mailbox-and-Email.html">Mailbox and Email</a></p>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>
