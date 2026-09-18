@@ -48,5 +48,6 @@ assert.match(seo, /\n  wiki:/);
 assert.match(seo, /\n  releases:/);
 assert.match(seo, /\n  community:/);
 assert.match(seo, /\n  docs:/);
+assert.match(seo, /\n  engineeringHistory:/);
 
 console.log("test_web_09_public_pages.mjs: OK");

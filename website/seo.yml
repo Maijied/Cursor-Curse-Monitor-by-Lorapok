@@ -115,6 +115,18 @@ pages:
     twitterTitle: Docs — {displayName}
     twitterDescription: Start with Installation, Architecture, and AI agent commands.
 
+  engineeringHistory:
+    file: engineering/history/index.html
+    path: /engineering/history/
+    title: Engineering history — {displayName}
+    description: Behind-the-scenes timeline — monorepo, CI/CD, Mission Control, procedure workflow, releases, and Lorapok Labs credits.
+    changefreq: monthly
+    priority: "0.7"
+    ogTitle: Engineering history — {displayName}
+    ogDescription: Long-form build story from IDE extension to public wiki and contributor welcome.
+    twitterTitle: Engineering history — {displayName}
+    twitterDescription: Sectioned milestones for Cursor Curse Monitor by Lorapok Labs.
+
 organization:
   name: Lorapok Labs
   url: https://lorapok.tech

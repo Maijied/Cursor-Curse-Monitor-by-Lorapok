@@ -85,13 +85,13 @@
         <a href="Support.html">Support</a>
       </nav>
 <h1 id="public-website-roadmap">Public website roadmap</h1>
-<p><strong>Last updated:</strong> 2026-09-18 <strong>Tasks:</strong> WEB-07–WEB-10, LEGAL-01, ANALYTICS-02, DEPLOY-01 (admin parity)</p>
+<p><strong>Last updated:</strong> 2026-09-18 <strong>Tasks:</strong> WEB-07–WEB-11, LEGAL-01, ANALYTICS-02, DEPLOY-01 (admin parity)</p>
 <p>---</p>
 <h2 id="vision">Vision</h2>
 <p>The marketing site becomes a <strong>professional public face</strong> for the whole Lorapok CCM ecosystem: live stats, expanded engineering transparency, multi-page docs, and a clear welcome for open-source contributors — while Mission Control remains the operator CMS.</p>
 <p>---</p>
 <h2 id="planned-pages-web-09">Planned pages (WEB-09)</h2>
-<table><thead><tr><th>Route</th><th>Source</th><th>Content</th></tr></thead><tbody><tr><td><code>/</code></td><td><code>index.html</code></td><td>Hero, features, Chrysalis, topology</td></tr><tr><td><code>/wiki/</code> + <code>/wiki/*.html</code></td><td><code>docs/wiki/*.md</code> via <code>npm run site:pages</code></td><td>Mirrored GitHub Wiki (canonical in repo)</td></tr><tr><td><code>/releases.html</code></td><td><code>site-data.json</code> (client)</td><td>Version + download links</td></tr><tr><td><code>/community.html</code></td><td><code>site-data.json</code> <code>githubCommunity</code> + Project #4</td><td>Issues, traffic, contribute</td></tr><tr><td><code>/docs/</code></td><td>docs hub → wiki</td><td>Installation, architecture, agent commands</td></tr><tr><td><code>/#engineering</code></td><td>WEB-08 section</td><td>Behind the scenes — monorepo, CI/CD, Mission Control</td></tr></tbody></table>
+<table><thead><tr><th>Route</th><th>Source</th><th>Content</th></tr></thead><tbody><tr><td><code>/</code></td><td><code>index.html</code></td><td>Hero, features, Chrysalis, topology</td></tr><tr><td><code>/wiki/</code> + <code>/wiki/*.html</code></td><td><code>docs/wiki/*.md</code> via <code>npm run site:pages</code></td><td>Mirrored GitHub Wiki (canonical in repo)</td></tr><tr><td><code>/releases.html</code></td><td><code>site-data.json</code> (client)</td><td>Version + download links</td></tr><tr><td><code>/community.html</code></td><td><code>site-data.json</code> <code>githubCommunity</code> + Project #4</td><td>Issues, traffic, contribute</td></tr><tr><td><code>/docs/</code></td><td>docs hub → wiki</td><td>Installation, architecture, agent commands</td></tr><tr><td><code>/#engineering</code></td><td>WEB-08 section</td><td>Behind the scenes — monorepo, CI/CD, Mission Control</td></tr><tr><td><code>/engineering/history/</code></td><td><code>generate-public-pages.mjs</code></td><td>Long-form engineering timeline (WEB-11)</td></tr></tbody></table>
 <p><strong>Status:</strong> shipped generator <code>scripts/generate-public-pages.mjs</code> + public shells. Regenerate with <code>npm run site:pages</code> (also runs before <code>site:seo</code>).</p>
 <p>---</p>
 <h2 id="system-topology-web-07">System topology (WEB-07)</h2>
@@ -130,7 +130,8 @@
 </ul>
 <p>---</p>
 <h2 id="engineering-history-web-11">Engineering history (WEB-11)</h2>
-<p>Long-form <strong>behind-the-scenes timeline</strong> at <code>/engineering/history</code> — sectioned summary of the whole build: monorepo, CI/CD evolution, Mission Control, procedure workflow, releases, contributors. Extends WEB-08.</p>
+<p><strong>Status: done</strong></p>
+<p>Long-form <strong>behind-the-scenes timeline</strong> at <a href="https://cursor.lorapok.tech/engineering/history/" target="_blank" rel="noopener"><code>/engineering/history/</code></a> — sectioned milestones: IDE origin, browser add-on, Mission Control, CI/CD, procedure/agents, public site + Chrysalis, contributor welcome, Lorapok Labs credits. Extends WEB-08. Linked from <code>#engineering</code> foot and Docs hub.</p>
 <h2 id="social-seo">Social &amp; SEO</h2>
 <p>See <strong><a href="Social-and-SEO.html">Social and SEO</a></strong> — Discord CI cards, multi-platform webhooks, deploy image gallery, video generator, world-class SEO hub.</p>
 <p>---</p>

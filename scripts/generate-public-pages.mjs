@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * WEB-09 — generate public multi-page marketing shells from docs/wiki + templates.
- * Writes website/wiki/*.html, website/docs/index.html, releases.html, community.html.
+ * WEB-09 / WEB-11 — generate public multi-page marketing shells from docs/wiki + templates.
+ * Writes website/wiki/*.html, website/docs/index.html, releases.html, community.html,
+ * and website/engineering/history/index.html.
  */
 import { mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
@@ -253,6 +254,7 @@ function generateDocsHub() {
           <li><a href="../releases.html">Releases</a> — live from <code>site-data.json</code></li>
           <li><a href="../community.html">Community</a> — Project #4, issues, traffic</li>
           <li><a href="../#engineering">Behind the scenes</a> — monorepo &amp; procedure (WEB-08)</li>
+          <li><a href="../engineering/history/">Engineering history</a> — long-form timeline (WEB-11)</li>
       </ul>`;
 
   const html = pageShell({
@@ -318,8 +320,149 @@ function generateCommunity() {
   console.log("Wrote website/community.html");
 }
 
+function generateEngineeringHistory() {
+  const eras = [
+    {
+      id: "origin",
+      era: "2026-08 · Origin",
+      title: "IDE extension first",
+      body: "Cursor Curse Monitor started as a VS Code / Cursor wrapper extension: local-first usage meters, budget caps, and Composer fallback — tokens never leave the machine. Early releases landed on Open VSX and the VS Code Marketplace under Lorapok Labs.",
+      links: [
+        { href: "../wiki/Installation.html", label: "Installation" },
+        { href: "../releases.html", label: "Releases" },
+      ],
+    },
+    {
+      id: "browser",
+      era: "Browser surface",
+      title: "Firefox + Chrome add-on",
+      body: "The browser extension reused shared quota logic from <code>@lorapok/cursor-monitor-shared</code>, shipping on Firefox AMO with a Chrome zip channel. Popup and options carry the same privacy-first model as the IDE host.",
+      links: [
+        { href: "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/", label: "Firefox AMO", external: true },
+        { href: "../wiki/Ecosystem-Roadmap.html", label: "Ecosystem roadmap" },
+      ],
+    },
+    {
+      id: "mission-control",
+      era: "Mission Control",
+      title: "Operator CMS on Cloudflare",
+      body: "Mission Control (admin SPA on Cloudflare Pages) became the ops surface: notices, mailbox, marketplace sync, settings hubs, and deploy controls. Firebase auth + RBAC gate the dashboard; Pages Functions own the API.",
+      links: [
+        { href: "../wiki/Admin-Panel.html", label: "Admin Panel wiki" },
+        { href: "https://cursor-dev.lorapok.tech/", label: "Mission Control", external: true },
+      ],
+    },
+    {
+      id: "cicd",
+      era: "CI / CD",
+      title: "One workflow, many jobs",
+      body: "A single <code>ci-cd.yml</code> pipeline covers resolve-version → tests → tag prep → marketplace publish → admin + marketing deploy → Discord notify and social gallery queue. Architecture wiki diagrams stay in sync with job names.",
+      links: [
+        { href: "../wiki/Architecture.html", label: "Architecture" },
+        { href: "../wiki/Deployment.html", label: "Deployment" },
+      ],
+    },
+    {
+      id: "procedure",
+      era: "Procedure + agents",
+      title: "Tracked work, not chat dumps",
+      body: "Non-trivial work opens a <code>procedure/</code> file and a GitHub issue on Project #4. Agents say <strong>Update?</strong> for status and <strong>next</strong> for the top queue item. Cred vault sync scripts keep secrets out of git and CI logs.",
+      links: [
+        { href: "../wiki/AI-Agent-Commands.html", label: "AI agent commands" },
+        { href: "../wiki/GitHub-Project.html", label: "GitHub Project" },
+        { href: "https://github.com/users/Maijied/projects/4", label: "Project #4", external: true },
+      ],
+    },
+    {
+      id: "public-site",
+      era: "Public face",
+      title: "Website, wiki, Chrysalis",
+      body: "Marketing home gained live stats, expanded topology (WEB-07), behind-the-scenes (WEB-08), and multi-page wiki/releases/community/docs (WEB-09). Chrysalis (Larvae) is the floating product assistant brand across site and Mission Control.",
+      links: [
+        { href: "../wiki/Public-Website.html", label: "Public Website" },
+        { href: "../wiki/Chrysalis.html", label: "Chrysalis" },
+        { href: "../#engineering", label: "Behind the scenes" },
+      ],
+    },
+    {
+      id: "welcome",
+      era: "Open source welcome",
+      title: "Contributor paths everywhere",
+      body: "WEB-10 put CONTRIBUTING, good-first issues, and Project #4 on marketing footers, hero/subscribe CTAs, IDE and browser footers, options, and Chrysalis — so newcomers can join without hunting.",
+      links: [
+        { href: "../community.html", label: "Community" },
+        {
+          href: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md",
+          label: "CONTRIBUTING.md",
+          external: true,
+        },
+      ],
+    },
+    {
+      id: "credits",
+      era: "Credits",
+      title: "Lorapok Labs",
+      body: "Founded and maintained by <strong>Mohammad Maizied Hasan Majumder</strong> (Lorapok Labs). GPL-3.0. Not affiliated with Cursor / Anysphere. Community help welcome via Discord and GitHub.",
+      links: [
+        { href: "https://lorapok.tech", label: "lorapok.tech", external: true },
+        { href: "https://discord.gg/bp42QAMC6", label: "Discord", external: true },
+        { href: "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok", label: "GitHub", external: true },
+      ],
+    },
+  ];
+
+  const toc = eras
+    .map((e) => `        <a href="#${e.id}">${escapeHtml(e.title)}</a>`)
+    .join("\n");
+
+  const items = eras
+    .map((e) => {
+      const links = e.links
+        .map((l) => {
+          const rel = l.external ? ' target="_blank" rel="noopener"' : "";
+          return `<a href="${l.href}"${rel}>${escapeHtml(l.label)}</a>`;
+        })
+        .join(" · ");
+      return `      <article class="eng-history-item" id="${e.id}">
+        <p class="eng-history-era">${escapeHtml(e.era)}</p>
+        <h2>${escapeHtml(e.title)}</h2>
+        <p>${e.body}</p>
+        <p class="eng-history-links">${links}</p>
+      </article>`;
+    })
+    .join("\n");
+
+  const body = `      <p>Long-form behind-the-scenes arc for Cursor Curse Monitor — how the monorepo, Mission Control, CI/CD, procedure workflow, and public surfaces grew together. The home <a href="../#engineering">#engineering</a> section is the short version; this page is the timeline.</p>
+      <nav class="wiki-toc eng-history-toc" aria-label="Timeline sections">
+${toc}
+      </nav>
+      <div class="eng-history-timeline" role="list">
+${items}
+      </div>
+      <p class="muted">Live deploy metadata: <a href="../releases.html">Releases</a> · operator docs: <a href="../docs/">Docs hub</a> · roadmap: <a href="../wiki/Ecosystem-Roadmap.html">Ecosystem Roadmap</a>.</p>`;
+
+  const outDir = join(website, "engineering", "history");
+  mkdirSync(outDir, { recursive: true });
+  const html = pageShell({
+    title: "Engineering history — Cursor Curse Monitor by Lorapok",
+    description:
+      "Behind-the-scenes timeline: monorepo, CI/CD, Mission Control, procedure workflow, releases, and Lorapok Labs credits.",
+    canonicalPath: "/engineering/history/",
+    active: "docs",
+    depth: 2,
+    eyebrow: "Behind the scenes",
+    heading: "Engineering history",
+    lead: "Sectioned milestones from IDE extension to Mission Control, public wiki, and contributor welcome.",
+    bodyHtml: body,
+    bodyClass: "eng-history-page",
+  });
+  writeFileSync(join(outDir, "index.html"), html);
+  console.log("Wrote website/engineering/history/index.html");
+}
+
 generateWiki();
 generateDocsHub();
 generateReleases();
 generateCommunity();
+generateEngineeringHistory();
 console.log("generate-public-pages.mjs: OK");

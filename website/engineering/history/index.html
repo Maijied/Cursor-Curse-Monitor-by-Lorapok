@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Engineering history — Cursor Curse Monitor by Lorapok</title>
+  <meta name="description" content="Behind-the-scenes timeline — monorepo, CI/CD, Mission Control, procedure workflow, releases, and Lorapok Labs credits." />
+  <meta name="keywords" content="ai, cursor, lorapok, usage, dashboard, billing, budget, monitor, composer, quota, curse, browser extension, firefox, security" />
+  <meta name="author" content="Mohammad Maizied Hasan Majumder" />
+  <link rel="canonical" href="https://cursor.lorapok.tech/engineering/history/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Engineering history — Cursor Curse Monitor by Lorapok" />
+  <meta property="og:description" content="Long-form build story from IDE extension to public wiki and contributor welcome." />
+  <meta property="og:url" content="https://cursor.lorapok.tech/engineering/history/" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Engineering history — Cursor Curse Monitor by Lorapok" />
+  <meta name="twitter:description" content="Sectioned milestones for Cursor Curse Monitor by Lorapok Labs." />
+  <meta name="twitter:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <!-- seo:end -->
+  <!-- seo:jsonld -->
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://cursor.lorapok.tech/#organization",
+      "name": "Lorapok Labs",
+      "url": "https://lorapok.tech",
+      "logo": "https://cursor.lorapok.tech/assets/logo.png",
+      "sameAs": [
+        "https://lorapok.tech",
+        "https://github.com/lorapok",
+        "https://www.linkedin.com/showcase/lorapok/",
+        "https://x.com/LorapokLabs",
+        "https://www.reddit.com/r/LorapokLabs/",
+        "https://www.instagram.com/lorapoklabs/",
+        "https://www.facebook.com/lorapoklabs",
+        "https://discord.gg/bp42QAMC6",
+        "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok",
+        "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/tag/v1.0.172"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://cursor.lorapok.tech/#website",
+      "name": "Cursor Curse Monitor by Lorapok",
+      "url": "https://cursor.lorapok.tech/",
+      "description": "Official marketing site for Cursor Curse Monitor by Lorapok Labs — live usage dashboard, browser extensions, and Mission Control admin.",
+      "publisher": {
+        "@id": "https://cursor.lorapok.tech/#organization"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://cursor.lorapok.tech/#ide_extension",
+      "name": "Cursor Curse Monitor by Lorapok",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows, macOS, Linux",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": "Usage dashboard, security scanner, local insights, budget tracking, multi-account switching",
+      "downloadUrl": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/download/v1.0.172/cursor-curse-monitor-by-lorapok-1.0.172.vsix",
+      "softwareVersion": "1.0.172",
+      "author": {
+        "@type": "Person",
+        "name": "Mohammad Maizied Hasan Majumder",
+        "url": "https://github.com/Maijied"
+      },
+      "publisher": {
+        "@id": "https://cursor.lorapok.tech/#organization"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://cursor.lorapok.tech/#browser_extension",
+      "name": "Cursor Curse Monitor by Lorapok Browser Extension",
+      "applicationCategory": "BrowserApplication",
+      "operatingSystem": "Firefox, Chrome",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": "Budget tracker popup, credential paste guard, cursor.com token capture",
+      "downloadUrl": "https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/",
+      "publisher": {
+        "@id": "https://cursor.lorapok.tech/#organization"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://cursor.lorapok.tech/engineering/history/",
+      "url": "https://cursor.lorapok.tech/engineering/history/",
+      "name": "Engineering history — Cursor Curse Monitor by Lorapok",
+      "description": "Behind-the-scenes timeline — monorepo, CI/CD, Mission Control, procedure workflow, releases, and Lorapok Labs credits.",
+      "isPartOf": {
+        "@id": "https://cursor.lorapok.tech/#website"
+      },
+      "publisher": {
+        "@id": "https://cursor.lorapok.tech/#organization"
+      }
+    }
+  ]
+}
+  </script>
+  <!-- /seo:jsonld -->
+  <link rel="icon" href="../../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../../ccm-floating-assistant.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../../consent.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page eng-history-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../../">
+        <span class="brand-logo">
+          <img src="../../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../">Home</a>
+        <a href="../../wiki/index.html">Wiki</a>
+        <a href="../../releases.html">Releases</a>
+        <a href="../../community.html">Community</a>
+        <a href="../../docs/index.html" aria-current="page">Docs</a>
+        <a href="../../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Behind the scenes</p>
+      <h1>Engineering history</h1>
+      <p class="lead">Sectioned milestones from IDE extension to Mission Control, public wiki, and contributor welcome.</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <p>Long-form behind-the-scenes arc for Cursor Curse Monitor — how the monorepo, Mission Control, CI/CD, procedure workflow, and public surfaces grew together. The home <a href="../#engineering">#engineering</a> section is the short version; this page is the timeline.</p>
+      <nav class="wiki-toc eng-history-toc" aria-label="Timeline sections">
+        <a href="#origin">IDE extension first</a>
+        <a href="#browser">Firefox + Chrome add-on</a>
+        <a href="#mission-control">Operator CMS on Cloudflare</a>
+        <a href="#cicd">One workflow, many jobs</a>
+        <a href="#procedure">Tracked work, not chat dumps</a>
+        <a href="#public-site">Website, wiki, Chrysalis</a>
+        <a href="#welcome">Contributor paths everywhere</a>
+        <a href="#credits">Lorapok Labs</a>
+      </nav>
+      <div class="eng-history-timeline" role="list">
+      <article class="eng-history-item" id="origin">
+        <p class="eng-history-era">2026-08 · Origin</p>
+        <h2>IDE extension first</h2>
+        <p>Cursor Curse Monitor started as a VS Code / Cursor wrapper extension: local-first usage meters, budget caps, and Composer fallback — tokens never leave the machine. Early releases landed on Open VSX and the VS Code Marketplace under Lorapok Labs.</p>
+        <p class="eng-history-links"><a href="../wiki/Installation.html">Installation</a> · <a href="../releases.html">Releases</a></p>
+      </article>
+      <article class="eng-history-item" id="browser">
+        <p class="eng-history-era">Browser surface</p>
+        <h2>Firefox + Chrome add-on</h2>
+        <p>The browser extension reused shared quota logic from <code>@lorapok/cursor-monitor-shared</code>, shipping on Firefox AMO with a Chrome zip channel. Popup and options carry the same privacy-first model as the IDE host.</p>
+        <p class="eng-history-links"><a href="https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/" target="_blank" rel="noopener">Firefox AMO</a> · <a href="../wiki/Ecosystem-Roadmap.html">Ecosystem roadmap</a></p>
+      </article>
+      <article class="eng-history-item" id="mission-control">
+        <p class="eng-history-era">Mission Control</p>
+        <h2>Operator CMS on Cloudflare</h2>
+        <p>Mission Control (admin SPA on Cloudflare Pages) became the ops surface: notices, mailbox, marketplace sync, settings hubs, and deploy controls. Firebase auth + RBAC gate the dashboard; Pages Functions own the API.</p>
+        <p class="eng-history-links"><a href="../wiki/Admin-Panel.html">Admin Panel wiki</a> · <a href="https://cursor-dev.lorapok.tech/" target="_blank" rel="noopener">Mission Control</a></p>
+      </article>
+      <article class="eng-history-item" id="cicd">
+        <p class="eng-history-era">CI / CD</p>
+        <h2>One workflow, many jobs</h2>
+        <p>A single <code>ci-cd.yml</code> pipeline covers resolve-version → tests → tag prep → marketplace publish → admin + marketing deploy → Discord notify and social gallery queue. Architecture wiki diagrams stay in sync with job names.</p>
+        <p class="eng-history-links"><a href="../wiki/Architecture.html">Architecture</a> · <a href="../wiki/Deployment.html">Deployment</a></p>
+      </article>
+      <article class="eng-history-item" id="procedure">
+        <p class="eng-history-era">Procedure + agents</p>
+        <h2>Tracked work, not chat dumps</h2>
+        <p>Non-trivial work opens a <code>procedure/</code> file and a GitHub issue on Project #4. Agents say <strong>Update?</strong> for status and <strong>next</strong> for the top queue item. Cred vault sync scripts keep secrets out of git and CI logs.</p>
+        <p class="eng-history-links"><a href="../wiki/AI-Agent-Commands.html">AI agent commands</a> · <a href="../wiki/GitHub-Project.html">GitHub Project</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a></p>
+      </article>
+      <article class="eng-history-item" id="public-site">
+        <p class="eng-history-era">Public face</p>
+        <h2>Website, wiki, Chrysalis</h2>
+        <p>Marketing home gained live stats, expanded topology (WEB-07), behind-the-scenes (WEB-08), and multi-page wiki/releases/community/docs (WEB-09). Chrysalis (Larvae) is the floating product assistant brand across site and Mission Control.</p>
+        <p class="eng-history-links"><a href="../wiki/Public-Website.html">Public Website</a> · <a href="../wiki/Chrysalis.html">Chrysalis</a> · <a href="../#engineering">Behind the scenes</a></p>
+      </article>
+      <article class="eng-history-item" id="welcome">
+        <p class="eng-history-era">Open source welcome</p>
+        <h2>Contributor paths everywhere</h2>
+        <p>WEB-10 put CONTRIBUTING, good-first issues, and Project #4 on marketing footers, hero/subscribe CTAs, IDE and browser footers, options, and Chrysalis — so newcomers can join without hunting.</p>
+        <p class="eng-history-links"><a href="../community.html">Community</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a></p>
+      </article>
+      <article class="eng-history-item" id="credits">
+        <p class="eng-history-era">Credits</p>
+        <h2>Lorapok Labs</h2>
+        <p>Founded and maintained by <strong>Mohammad Maizied Hasan Majumder</strong> (Lorapok Labs). GPL-3.0. Not affiliated with Cursor / Anysphere. Community help welcome via Discord and GitHub.</p>
+        <p class="eng-history-links"><a href="https://lorapok.tech" target="_blank" rel="noopener">lorapok.tech</a> · <a href="https://discord.gg/bp42QAMC6" target="_blank" rel="noopener">Discord</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a></p>
+      </article>
+      </div>
+      <p class="muted">Live deploy metadata: <a href="../releases.html">Releases</a> · operator docs: <a href="../docs/">Docs hub</a> · roadmap: <a href="../wiki/Ecosystem-Roadmap.html">Ecosystem Roadmap</a>.</p>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p data-footer-contribute class="footer-contribute">Open source · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a></p>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../../">Home</a> · <a href="../../wiki/">Wiki</a> · <a href="../../releases.html">Releases</a> · <a href="../../community.html">Community</a> · <a href="../../docs/">Docs</a> · <a href="../../privacy.html">Privacy</a> · <a href="../../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../../consent.js?v=105f5292a052" defer></script>
+  <script src="../../analytics.js?v=105f5292a052" defer></script>
+  <script src="../../site.js?v=105f5292a052" defer></script>
+  <script src="../../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>
