@@ -87,6 +87,79 @@
   margin-bottom: 1.5rem;
 }
 
+/* WEB-11 engineering history timeline */
+.eng-history-page .eng-history-toc {
+  margin-bottom: 2rem;
+}
+
+.eng-history-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  margin: 0 0 2rem;
+  padding-left: 1.15rem;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.eng-history-item {
+  position: relative;
+  margin: 0;
+  padding: 1.1rem 1.15rem 1.15rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+}
+
+.eng-history-item::before {
+  content: "";
+  position: absolute;
+  left: -1.42rem;
+  top: 1.35rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.eng-history-era {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eng-history-item h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1.2rem;
+}
+
+.eng-history-item p {
+  margin: 0 0 0.65rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.eng-history-item p:last-child {
+  margin-bottom: 0;
+}
+
+.eng-history-links {
+  font-size: 0.9rem;
+}
+
+.eng-history-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.eng-history-links a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
 @media (max-width: 640px) {
   .public-kv {
     grid-template-columns: 1fr;
@@ -94,5 +167,8 @@
   }
   .public-kv dt {
     margin-top: 0.55rem;
+  }
+  .eng-history-timeline {
+    padding-left: 0.95rem;
   }
 }

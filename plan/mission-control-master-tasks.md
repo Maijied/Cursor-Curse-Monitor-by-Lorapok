@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (WEB-10 [#294](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/294); LEGAL-01 [#292](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/292) merged)
-**Branch:** `feat/web-10-contributor-welcome`
-**Main:** _refresh on merge_
-**CI:** DEPLOY-04 on main (#283). WEB-08/09 + CHRYS-01 + SOCIAL-05 + LEGAL-01 merged.
+**Last updated:** 2026-09-18 (WEB-11 in progress on `feat/web-11-engineering-history`; WEB-10 [#294](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/294) merged)
+**Branch:** `feat/web-11-engineering-history`
+**Main:** `03cfb203`
+**CI:** DEPLOY-04 on main (#283). WEB-08–10 + CHRYS-01 + SOCIAL-05 + LEGAL-01 merged.
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -292,7 +292,7 @@
 | WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **done** | [#288](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/288); `#engineering` on marketing home |
 | WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **done** | [#290](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/290); `npm run site:pages` |
 | WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **done** | [#294](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/294); closes [#197](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/197) |
-| WEB-11 | **Engineering history timeline** — long behind-the-scenes page: sectioned milestones, procedure arc, deploy history, team credits | **next** | extends WEB-08; `/engineering/history` |
+| WEB-11 | **Engineering history timeline** — long behind-the-scenes page: sectioned milestones, procedure arc, deploy history, team credits | **done** | [#207](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/207); procedure `078fbec1_…`; PR pending |
 
 ---
 
@@ -383,9 +383,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **WEB-11** engineering history, then remaining ecosystem queue
+1. Remaining ecosystem queue (**ECO-***, **EXT-01**) and observability (**ANALYTICS-01** / **LOGS-01** / **ANALYTICS-02**)
 2. **CHRYS-02** (AI provider) when operator vault key path is ready
-3. **ANALYTICS-01** / **LOGS-01** / **ANALYTICS-02** when operator metrics land
+3. **WEB-04** hero polish only if marketing priority returns
 
 ---
 

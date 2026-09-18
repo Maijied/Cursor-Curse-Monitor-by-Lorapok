@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **WEB-11 engineering history** — long-form timeline at `/engineering/history/` (monorepo → Mission Control → CI/CD → procedure → public site → credits); linked from `#engineering` and Docs hub.
 - **WEB-10 contributor welcome** — CONTRIBUTING / good-first / Project #4 on marketing footers, hero + subscribe CTAs, IDE + browser extension footers, options “Join the community”, Mission Control footer + Chrysalis.
 - **LEGAL-01 process consent** — analytics gated behind explicit banner; privacy/terms cover subscribe, extensions, Chrysalis BYOK; aggregate `/api/consent` KV audit (v2026-09-18).
 - **WEB-09 public multi-page site** — `/wiki/`, `/releases.html`, `/community.html`, `/docs/` generated from `docs/wiki` + `site-data.json` (`npm run site:pages`).

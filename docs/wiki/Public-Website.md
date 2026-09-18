@@ -1,7 +1,7 @@
 # Public website roadmap
 
 **Last updated:** 2026-09-18  
-**Tasks:** WEB-07–WEB-10, LEGAL-01, ANALYTICS-02, DEPLOY-01 (admin parity)
+**Tasks:** WEB-07–WEB-11, LEGAL-01, ANALYTICS-02, DEPLOY-01 (admin parity)
 
 ---
 
@@ -21,6 +21,7 @@ The marketing site becomes a **professional public face** for the whole Lorapok 
 | `/community.html` | `site-data.json` `githubCommunity` + Project #4 | Issues, traffic, contribute |
 | `/docs/` | docs hub → wiki | Installation, architecture, agent commands |
 | `/#engineering` | WEB-08 section | Behind the scenes — monorepo, CI/CD, Mission Control |
+| `/engineering/history/` | `generate-public-pages.mjs` | Long-form engineering timeline (WEB-11) |
 
 **Status:** shipped generator `scripts/generate-public-pages.mjs` + public shells. Regenerate with `npm run site:pages` (also runs before `site:seo`).
 
@@ -72,7 +73,9 @@ Covers:
 
 ## Engineering history (WEB-11)
 
-Long-form **behind-the-scenes timeline** at `/engineering/history` — sectioned summary of the whole build: monorepo, CI/CD evolution, Mission Control, procedure workflow, releases, contributors. Extends WEB-08.
+**Status: done**
+
+Long-form **behind-the-scenes timeline** at [`/engineering/history/`](https://cursor.lorapok.tech/engineering/history/) — sectioned milestones: IDE origin, browser add-on, Mission Control, CI/CD, procedure/agents, public site + Chrysalis, contributor welcome, Lorapok Labs credits. Extends WEB-08. Linked from `#engineering` foot and Docs hub.
 
 ## Social & SEO
 
