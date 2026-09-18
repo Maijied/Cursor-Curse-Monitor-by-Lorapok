@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/186  
 **Branch:** `feat/chrys-01-brand-animation`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/286
 
 ---
 
@@ -21,8 +21,8 @@ Official **Chrysalis** name for the floating AI assistant; shared shell in `@lor
 - [x] Plan approved
 - [x] Procedure + GitHub issue created (#186; closed duplicate #285)
 - [x] Implementation started
-- [ ] Tests passing
-- [ ] PR opened
+- [x] Tests passing
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
@@ -50,9 +50,9 @@ _None._
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | Headless tests | pending (`chrysalis.test.mjs` + shared build) |
-| B | Component matrix | pending |
-| C | Production smoke | pending |
+| A | Headless tests | pass — shared build + `chrysalis.test.mjs` |
+| B | Component matrix | pass — admin `tsc -b` + oxlint ChrysalisFab/AppShell |
+| C | Production smoke | pending (post-merge) |
 
 ---
 
