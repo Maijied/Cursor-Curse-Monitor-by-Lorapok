@@ -9,12 +9,13 @@ All production deployment is managed by a **single smart workflow**: [`.github/w
 | Trigger | Jobs | What it does |
 |---------|------|-------------|
 | **PR to `main`** | `ci` | Compile, validate assets, package VSIX |
-| **Push to `main`** | `ci` → `admin-ci` → `website` | Extension CI, admin build, marketing site — **no marketplace publish** |
-| **Manual dispatch** | `release-bump` → `deploy` → `website` | Version bump, commit/tag, publish to selected marketplaces, deploy website |
-| **Deploy existing tag** | `deploy` | Re-publish a prior tag without rewriting `main` |
-| **Rollback** | `rollback` | Restore prior tag as new patch release |
+| **Push to `main`** | `ci` → `admin-ci` → prepare-tag → admin-deploy | Extension CI, optional tag prep, Mission Control — **no marketplace publish** |
+| **Mission Control Deploy** (`publish-tag`, `deploy_extension=true`) | `deploy` → optional website | Publish VSCE / Open VSX / AMO for an existing tag |
+| **full-release** | `release-prep` (+ optional admin) | Bump/tag + Mission Control only — **no marketplace publish** |
+| **Rollback** (`deploy_extension=true`) | `release-prep` → `deploy` | Restore prior tag as new patch + marketplaces |
+| **deploy-infra** | admin / website | Redeploy Pages / marketing — **no marketplace publish** |
 
-**Master admin only:** Mission Control deploy/release/rollback APIs require `ADMIN_MASTER_EMAIL`. Admin and website production deploy jobs are `workflow_dispatch`-only.
+**Master admin only:** Mission Control deploy/release/rollback APIs require `ADMIN_MASTER_EMAIL`. Marketplace publishes are **opt-in** from Deployments (DEPLOY-04); they never run continuously on push.
 
 **Manual QA:** see [`docs/ADMIN_MANUAL_TEST.md`](docs/ADMIN_MANUAL_TEST.md) before tagging a stable release.
 

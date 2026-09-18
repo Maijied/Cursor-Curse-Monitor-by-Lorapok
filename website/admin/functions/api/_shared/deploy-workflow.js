@@ -327,6 +327,8 @@ export async function dispatchReleaseWorkflow(env, body, successMessage, notifyC
 
   const deployAdmin = bodyFlag(body, "deploy_admin", true);
   const deployWebsite = bodyFlag(body, "deploy_website", true);
+  // DEPLOY-04: full-release never publishes marketplaces — use Deployments → Deploy (publish-tag).
+  const deployExtension = false;
 
   const response = await dispatchWorkflow(
     env,
@@ -339,6 +341,7 @@ export async function dispatchReleaseWorkflow(env, body, successMessage, notifyC
       release_channel: releaseChannel,
       deploy_admin: deployAdmin ? "true" : "false",
       deploy_website: deployWebsite ? "true" : "false",
+      deploy_extension: deployExtension ? "true" : "false",
     },
     successMessage,
     {

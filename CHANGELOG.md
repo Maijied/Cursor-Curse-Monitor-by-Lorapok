@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **DEPLOY-04 admin-only marketplace publish** — `Deploy to Marketplaces` no longer runs for `full-release` or with default-true `deploy_extension`; push/infra never publish. Mission Control Deploy/Rollback remain the opt-in path (`deploy_extension=true`). Standalone AMO workflow requires `allow_standalone_amo`.
 - **Discord Community reach + visitor analytics** — `/api/analytics/visit` now writes ADMIN_KV (seeded from Firestore so counts don’t reset); `/api/analytics/stats` is public for stats-refresh/CI; marketing beacon points at admin Pages; Discord Total labels when Open VSX duplicate is missing; oxlint unused-import/control-char warnings cleared.
 - **Firefox AMO + dynamic GitHub asset stats** — Community reach lists [Firefox AMO](https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/) (weekly downloads + ADU); GitHub breakdown is live (all assets / VSIX / Chrome / latest release). Preserves last Open VSX duplicate when that registry briefly fails so Total does not silently drop ~15k.
 - **GitHub Release upload retries** — marketplace deploy no longer fails the job on transient GitHub Unicorn/5xx mid-asset upload; `scripts/create-github-release.mjs` stages version-matched assets, retries uploads, then publishes (avoids stuck draft releases).

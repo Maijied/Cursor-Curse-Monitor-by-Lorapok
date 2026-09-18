@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (ADMIN-02 UX polish — PR [#281](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281))
-**Branch:** `feat/admin-02-ux-polish`
-**Main:** `980f822a`
-**CI:** WEB-07 merged (#280); ADMIN-02 PR #281 open; EmptyState/PageHeader vitest green
+**Last updated:** 2026-09-18 (DEPLOY-04 admin-only marketplace — [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282) in progress)
+**Branch:** `feat/deploy-04-admin-only-marketplace`
+**Main:** `5eed5feb`
+**CI:** ADMIN-02 merged (#281). DEPLOY-04 gating marketplace to Mission Control Deploy only.
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -171,6 +171,7 @@
 | DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **done** | Session persists until Done; pipeline includes Validate Dispatch; FAB shows active job |
 | DEPLOY-02 | **Remove duplicate webhook UI** from Deployments page — canonical config in Settings → Discord / Social | **done** | `Deployments.tsx` links to Settings → Discord; webhook card removed |
 | DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **done** | Job `queue-social-gallery` (admin-production CRON_SECRET + vault); CI `queue-social-gallery.mjs` |
+| DEPLOY-04 | **Admin-only marketplace publish** — no continuous marketplace deploys on push/full-release; only Mission Control Deploy/Rollback with `deploy_extension=true` | **in progress** | [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282); `test_marketplace_deploy_gate.mjs` |
 
 ---
 
@@ -373,7 +374,7 @@
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **done** | PR [#278](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/278) merged; ACL-aware fuzzy ⌘K |
-| ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **in progress** | PR [#281](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281); EmptyState + PageHeader hints |
+| ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **done** | PR [#281](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281) merged |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
 | ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **done** | `GlobalFooter.tsx` in `AppShell`; `/api/health` + `fetchSyncStatus` + `useSiteData` |
 | ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **done** | Footer owns status; Overview links to Settings; infra rows only in Infrastructure card |
@@ -382,7 +383,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **ADMIN-02** — Admin UX polish ([#192](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/192)) — **in progress**
+1. **DEPLOY-04** — Admin-only marketplace publish ([#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282)) — **in progress**
 2. **SOCIAL-05** (finish) — MP4 encode + voiceover when encoder binding available
 3. **CHRYS-01**, **WEB-08–09**, **LEGAL-01**, remaining queue
 4. **ANALYTICS-01** / **LOGS-01** when operator metrics land
