@@ -76,7 +76,7 @@
           <dt>GitHub issues</dt><dd>${gc?.openIssues ?? "—"}</dd>
           <dt>CI avg job</dt><dd>${gc?.ci?.avgJobRunSeconds != null ? gc.ci.avgJobRunSeconds + "s" : "—"}</dd>
         </dl>
-        <p style="margin-top:0.75rem"><a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">View public task board →</a></p>`;
+        <p style="margin-top:0.75rem">${BRAND.name === "Chrysalis" ? "Want to contribute? " : ""}<a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4 →</a></p>`;
     }
 
     if (window.__CCM_SITE_DATA__) render(window.__CCM_SITE_DATA__);

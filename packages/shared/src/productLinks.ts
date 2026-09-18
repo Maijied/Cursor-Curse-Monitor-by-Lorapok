@@ -16,6 +16,14 @@ export const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
 export const GITHUB_RELEASES_URL = PLATFORM_LINKS.github.url;
 export const GITHUB_ISSUES_URL = `${GITHUB_REPO_URL}/issues`;
 export const GITHUB_NEW_ISSUE_URL = `${GITHUB_REPO_URL}/issues/new/choose`;
+export const GITHUB_CONTRIBUTING_URL = `${GITHUB_REPO_URL}/blob/main/CONTRIBUTING.md`;
+export const GITHUB_GOOD_FIRST_ISSUES_URL = `${GITHUB_ISSUES_URL}?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22`;
+export const GITHUB_PROJECT_BOARD_URL = "https://github.com/users/Maijied/projects/4";
+
+/** Short contributor welcome line for footers and Chrysalis. */
+export const CONTRIBUTE_CTA_LABEL = "Join the community";
+export const CONTRIBUTE_CTA_HINT =
+  "Read CONTRIBUTING, pick a good-first issue, or follow Project #4.";
 
 export const VSCODE_MARKETPLACE_URL = PLATFORM_LINKS.vscode.url;
 export const OPEN_VSX_URL = PLATFORM_LINKS.openVsx.url;
