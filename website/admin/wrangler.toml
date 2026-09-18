@@ -40,6 +40,13 @@ service = "ccm-mail-relay"
 binding = "MAIL_AUDIT"
 service = "ccm-mail-audit"
 
+# Optional SOCIAL-05 MP4 encoder (Worker with ffmpeg / Stream). When absent, gallery
+# uses static carousel frames. Configure either:
+#   [[services]]
+#   binding = "VIDEO_ENCODER"
+#   service = "ccm-video-encoder"
+# or Settings → Social AI → encoder URL (+ API key).
+
 [vars]
 # ADMIN_MASTER_EMAIL — set as encrypted Pages secret / GitHub Actions secret (not in git)
 FIREBASE_PROJECT_ID = "cursor-curse-by-lorapok"

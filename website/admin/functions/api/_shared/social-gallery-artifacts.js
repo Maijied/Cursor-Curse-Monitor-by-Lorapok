@@ -127,10 +127,32 @@ export async function writeSocialGalleryArtifact(env, item, generated = {}) {
     r2Body = svg;
   }
 
-  const videoManifest = generated.videoManifest ?? null;
+  const rawVideoManifest = generated.videoManifest ?? null;
+  const videoBytes = rawVideoManifest?.videoBytes ?? null;
+  const videoContentType = String(rawVideoManifest?.videoContentType ?? "video/mp4");
+  /** Persistable manifest — never store raw MP4 bytes in KV JSON. */
+  const videoManifest = rawVideoManifest
+    ? (() => {
+        const { videoBytes: _omit, ...rest } = rawVideoManifest;
+        return rest;
+      })()
+    : null;
 
   const r2Key = `${SOCIAL_GALLERY_R2_PREFIX}${normalizeTag(item.tag)}/${item.id}.${extension}`;
   const r2Written = await putGalleryR2Asset(env, r2Key, r2Body, contentType);
+
+  let videoR2Key = null;
+  let videoUrl = videoManifest?.videoUrl ?? null;
+  if (videoBytes && videoManifest?.encoded) {
+    videoR2Key = `${SOCIAL_GALLERY_R2_PREFIX}${normalizeTag(item.tag)}/${item.id}.mp4`;
+    const videoWritten = await putGalleryR2Asset(env, videoR2Key, videoBytes, videoContentType);
+    if (videoWritten) {
+      videoUrl = socialGalleryAssetPublicUrl(env, item.id) + "&kind=video";
+      videoManifest.videoUrl = videoUrl;
+      videoManifest.videoR2Key = videoR2Key;
+      videoManifest.storage = "r2";
+    }
+  }
 
   if (!r2Written && env.ADMIN_KV?.put) {
     if (generated.bytes && r2Body) {
@@ -156,6 +178,8 @@ export async function writeSocialGalleryArtifact(env, item, generated = {}) {
     if (videoManifest?.enabled) {
       await putKvJsonSafe(env, `social-gallery:video:${item.id}`, videoManifest);
     }
+  } else if (r2Written && videoManifest?.enabled && env.ADMIN_KV?.put) {
+    await putKvJsonSafe(env, `social-gallery:video:${item.id}`, videoManifest);
   }
 
   return {
@@ -164,6 +188,8 @@ export async function writeSocialGalleryArtifact(env, item, generated = {}) {
     providerId: generated.providerId ?? "svg-fallback",
     imageFallback: Boolean(generated.imageFallback),
     videoManifest,
+    videoUrl,
+    videoR2Key,
     r2Key: r2Written ? r2Key : null,
     imageUrl: socialGalleryAssetPublicUrl(env, item.id),
     storage: r2Written ? "r2" : env.ADMIN_KV?.put ? "kv" : "inline",

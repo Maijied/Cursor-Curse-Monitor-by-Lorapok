@@ -38,6 +38,9 @@ function emptyVideoConfig() {
     aspectRatio: "9:16",
     voiceoverEnabled: false,
     fallbackMode: "static-carousel",
+    encoderUrl: "",
+    encoderApiKey: "",
+    secondsPerFrame: 3,
   };
 }
 
@@ -154,6 +157,9 @@ function normalizeStoredConfig(parsed) {
       aspectRatio: String(video.aspectRatio ?? base.video.aspectRatio),
       voiceoverEnabled: Boolean(video.voiceoverEnabled),
       fallbackMode: String(video.fallbackMode ?? base.video.fallbackMode),
+      encoderUrl: String(video.encoderUrl ?? ""),
+      encoderApiKey: String(video.encoderApiKey ?? ""),
+      secondsPerFrame: Math.min(8, Math.max(1, Number(video.secondsPerFrame) || 3)),
     };
   }
 
@@ -215,8 +221,9 @@ export function listAllProviders(config) {
 
 /**
  * @param {Record<string, unknown>} config
+ * @param {Record<string, unknown>} [env]
  */
-export function sanitizeSocialAiConfigForClient(config) {
+export function sanitizeSocialAiConfigForClient(config, env = {}) {
   const activeProviderId = String(config.activeProviderId ?? "svg-fallback");
   const providers = listAllProviders(config).map((provider) => {
     const validation = validateImageProvider(provider);
@@ -239,6 +246,8 @@ export function sanitizeSocialAiConfigForClient(config) {
 
   const video = config.video ?? emptyVideoConfig();
   const videoValidation = validateVideoConfig(video);
+  const serviceBound = Boolean(env?.VIDEO_ENCODER && typeof env.VIDEO_ENCODER.fetch === "function");
+  const httpConfigured = Boolean(String(video.encoderUrl ?? "").trim());
 
   return {
     activeProviderId,
@@ -249,6 +258,11 @@ export function sanitizeSocialAiConfigForClient(config) {
       aspectRatio: String(video.aspectRatio ?? "9:16"),
       voiceoverEnabled: Boolean(video.voiceoverEnabled),
       fallbackMode: String(video.fallbackMode ?? "static-carousel"),
+      encoderUrl: String(video.encoderUrl ?? ""),
+      encoderApiKeyPreview: video.encoderApiKey ? maskSocialAiSecret(video.encoderApiKey) : null,
+      secondsPerFrame: Math.min(8, Math.max(1, Number(video.secondsPerFrame) || 3)),
+      encoderAvailable: serviceBound || httpConfigured,
+      encoderSource: serviceBound ? "service-binding" : httpConfigured ? "http" : "none",
       configured: videoValidation.ok,
     },
     updatedAt: config.updatedAt ?? null,
@@ -334,7 +348,24 @@ export function mergeSocialAiVideoUpdate(current, body) {
       ? { voiceoverEnabled: Boolean(body.voiceoverEnabled) }
       : {}),
     ...(body.fallbackMode !== undefined ? { fallbackMode: String(body.fallbackMode) } : {}),
+    ...(body.encoderUrl !== undefined ? { encoderUrl: String(body.encoderUrl ?? "").trim() } : {}),
+    ...(body.encoderApiKey !== undefined && String(body.encoderApiKey).trim()
+      ? { encoderApiKey: String(body.encoderApiKey).trim() }
+      : {}),
+    ...(body.secondsPerFrame !== undefined
+      ? { secondsPerFrame: Math.min(8, Math.max(1, Number(body.secondsPerFrame) || 3)) }
+      : {}),
   };
+  if (body.encoderUrl !== undefined && nextVideo.encoderUrl) {
+    try {
+      const parsed = new URL(nextVideo.encoderUrl);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        throw new Error("Encoder URL must be http(s)");
+      }
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Invalid encoder URL");
+    }
+  }
   const validation = validateVideoConfig(nextVideo);
   if (!validation.ok) throw new Error(validation.error ?? "Invalid video configuration");
   return { ...current, video: nextVideo };

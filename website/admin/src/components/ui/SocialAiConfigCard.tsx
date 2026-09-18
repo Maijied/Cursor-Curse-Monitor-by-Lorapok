@@ -35,6 +35,9 @@ export default function SocialAiConfigCard() {
   const [videoTemplate, setVideoTemplate] = useState("carousel");
   const [videoAspect, setVideoAspect] = useState("9:16");
   const [voiceoverEnabled, setVoiceoverEnabled] = useState(false);
+  const [encoderUrl, setEncoderUrl] = useState("");
+  const [encoderApiKey, setEncoderApiKey] = useState("");
+  const [secondsPerFrame, setSecondsPerFrame] = useState(3);
 
   useEffect(() => {
     fetchSocialAiConfigApi()
@@ -45,6 +48,9 @@ export default function SocialAiConfigCard() {
         setVideoTemplate(data.config.video.template);
         setVideoAspect(data.config.video.aspectRatio);
         setVoiceoverEnabled(data.config.video.voiceoverEnabled);
+        setEncoderUrl(data.config.video.encoderUrl ?? "");
+        setEncoderApiKey("");
+        setSecondsPerFrame(data.config.video.secondsPerFrame ?? 3);
         const nextForms: Record<string, ProviderForm> = {};
         for (const provider of data.config.providers) {
           nextForms[provider.id] = {
@@ -100,13 +106,20 @@ export default function SocialAiConfigCard() {
         template: videoTemplate,
         aspectRatio: videoAspect,
         voiceoverEnabled,
+        encoderUrl,
+        encoderApiKey: encoderApiKey || undefined,
+        secondsPerFrame,
       });
       setConfig(result.config);
+      setEncoderApiKey("");
+      const encoderReady = result.config.video.encoderAvailable;
       setMessage({
         type: "success",
-        text: videoEnabled
-          ? "Video generator enabled — gallery builds static carousel frames."
-          : "Video generator disabled — single image only.",
+        text: !videoEnabled
+          ? "Video generator disabled — single image only."
+          : encoderReady
+            ? "Video settings saved — MP4 encode will run when gallery jobs process."
+            : "Video settings saved — static carousel until an encoder URL or VIDEO_ENCODER binding is set.",
       });
     } catch (err) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed" });
@@ -132,7 +145,8 @@ export default function SocialAiConfigCard() {
         </h3>
         <p className="text-sm text-[var(--color-muted)] mt-1">
           Register AI image providers (SOCIAL-04) — exactly one active at a time. Optional short-form video carousel
-          manifest for Reels/Stories (SOCIAL-05); falls back to static frames when MP4 encoding is unavailable.
+          manifest for Reels/Stories (SOCIAL-05). With an encoder binding or HTTPS URL, gallery jobs
+          request MP4 (+ optional changelog voiceover); otherwise frames stay as a static carousel.
         </p>
       </div>
 
@@ -286,8 +300,55 @@ export default function SocialAiConfigCard() {
               disabled={!canWrite || !videoEnabled}
               onChange={(e) => setVoiceoverEnabled(e.target.checked)}
             />
-            Voiceover from changelog (optional — not yet encoded to audio)
+            Changelog voiceover (sent to encoder when MP4 encode runs)
           </label>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted)]">
+            <Badge variant={config.video.encoderAvailable ? "synced" : "neutral"}>
+              Encoder: {config.video.encoderSource}
+            </Badge>
+            {config.video.encoderApiKeyPreview ? (
+              <span>API key {config.video.encoderApiKeyPreview}</span>
+            ) : null}
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 mt-3">
+            <label className="block text-sm md:col-span-2">
+              <span className="text-[var(--color-muted)]">Encoder URL (optional HTTPS)</span>
+              <input
+                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2 text-sm font-mono"
+                value={encoderUrl}
+                disabled={!canWrite || !videoEnabled}
+                onChange={(e) => setEncoderUrl(e.target.value)}
+                placeholder="https://encoder.example/encode"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-[var(--color-muted)]">Encoder API key</span>
+              <input
+                type="password"
+                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2 text-sm"
+                value={encoderApiKey}
+                disabled={!canWrite || !videoEnabled}
+                onChange={(e) => setEncoderApiKey(e.target.value)}
+                placeholder={
+                  config.video.encoderApiKeyPreview
+                    ? `configured ${config.video.encoderApiKeyPreview}`
+                    : "optional bearer token"
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-[var(--color-muted)]">Seconds per frame</span>
+              <input
+                type="number"
+                min={1}
+                max={8}
+                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2 text-sm"
+                value={secondsPerFrame}
+                disabled={!canWrite || !videoEnabled}
+                onChange={(e) => setSecondsPerFrame(Number(e.target.value) || 3)}
+              />
+            </label>
+          </div>
           <button
             type="button"
             disabled={!canWrite || saving}

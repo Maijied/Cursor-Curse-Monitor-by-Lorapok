@@ -51,6 +51,7 @@ export async function processSocialGalleryJob(env, id) {
       imageProviderId: artifact.providerId ?? null,
       imageFallback: Boolean(artifact.imageFallback),
       videoManifest: artifact.videoManifest ?? null,
+      videoUrl: artifact.videoUrl ?? artifact.videoManifest?.videoUrl ?? null,
       error: null,
     });
     return { ok: true, item: next };

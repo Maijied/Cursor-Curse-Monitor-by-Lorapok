@@ -777,6 +777,11 @@ export type SocialAiVideoClient = {
   aspectRatio: string;
   voiceoverEnabled: boolean;
   fallbackMode: string;
+  encoderUrl: string;
+  encoderApiKeyPreview: string | null;
+  secondsPerFrame: number;
+  encoderAvailable: boolean;
+  encoderSource: "service-binding" | "http" | "none" | string;
   configured: boolean;
 };
 
@@ -800,6 +805,9 @@ export async function putSocialAiConfigApi(payload: {
   template?: string;
   aspectRatio?: string;
   voiceoverEnabled?: boolean;
+  encoderUrl?: string;
+  encoderApiKey?: string;
+  secondsPerFrame?: number;
   activeProviderId?: SocialImageProviderId;
   model?: string;
   promptPrefix?: string;
