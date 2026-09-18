@@ -1,7 +1,7 @@
 # Chrysalis — floating AI assistant
 
-**Last updated:** 2026-09-05  
-**Status:** in progress (website scaffold)  
+**Last updated:** 2026-09-18  
+**Status:** brand + Larvae shell live (CHRYS-01); AI chat pending CHRYS-02+  
 **Task IDs:** CHRYS-01–05, WEB-06, ECO-03, ECO-06
 
 ---
@@ -62,11 +62,13 @@ Pairs with [AI Agent Commands](AI-Agent-Commands) (ECO-10) — no secrets or ful
 
 | Artifact | Path |
 |----------|------|
-| Website floating panel (scaffold) | `website/ccm-floating-assistant.js` |
-| Shared confirm helper | `packages/shared/src/confirmAction.ts` |
+| Shared Chrysalis shell | `packages/shared/src/chrysalis.ts` |
+| Website floating panel | `website/ccm-floating-assistant.js` (+ CSS); mounts `#ccm-chrysalis` |
+| Mission Control FAB | `website/admin/src/components/ui/ChrysalisFab.tsx` (AppShell) |
 | Product context (admin mail templates) | `website/admin/functions/api/_shared/product-context.embedded.json` |
+| Sync test | `packages/shared/src/chrysalis.test.mjs` |
 
-Rename and animation polish: **CHRYS-01**. Full AI chat: **CHRYS-02** onward.
+**CHRYS-01 (done):** official Chrysalis name, Larvae toggle animation on marketing pages (home/privacy/terms) and Mission Control. Full AI chat: **CHRYS-02** onward.
 
 ---
 

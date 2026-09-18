@@ -54,7 +54,7 @@
   ],
   "priorityQueue": {
     "P0": [],
-    "P1": ["ADMIN-01", "WEB-07", "WEB-08", "WEB-09", "CHRYS-01", "LEGAL-01", "ECO-08", "ANALYTICS-01", "LOGS-01", "EXT-01", "SOCIAL-01"],
+    "P1": ["WEB-08", "WEB-09", "LEGAL-01", "ECO-08", "ANALYTICS-01", "LOGS-01", "EXT-01", "SOCIAL-01"],
     "P2": ["ADMIN-02", "WEB-10", "WEB-11", "SOCIAL-04", "SOCIAL-05", "ANALYTICS-02", "CHRYS-02", "CHRYS-03", "CHRYS-04", "CHRYS-05", "ECO-01", "ECO-04", "ECO-05", "ECO-07", "ECO-09", "ECO-10", "CF-03", "CF-04", "OPS-03"]
   }
 }

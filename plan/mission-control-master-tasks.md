@@ -287,7 +287,7 @@
 | WEB-03 | Regenerate committed site-data (local drift) | **done** | `githubCommunity` block + features explorer |
 | WEB-04 | Hero / stats polish plan | **deferred** | `a8f3c2d1_website-final-polish-plan.md` |
 | WEB-05 | **Interactive features explorer** — post-hero cards + GitHub community stats panel | **done** | `features-explorer.js`, `site-data.json` |
-| WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | `ccm-floating-assistant.js`; rename → Chrysalis (CHRYS-01) |
+| WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | Chrysalis brand + Larvae (CHRYS-01); AI chat → CHRYS-02 |
 | WEB-07 | **Expanded system topology** — beautiful animated diagrams with **every** CI/CD step, cron, KV/R2, marketplaces, Discord (match `ci-cd.yml` + Architecture wiki) | **done** | PR [#280](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/280); job-level `ci-cd.yml` coverage |
 | WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **next** | new `#engineering` section; link to wiki + GitHub |
 | WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **next** | static pages or lightweight router; Mission Control as CMS source |
@@ -333,7 +333,7 @@
 |----|------|--------|----------------|
 | ECO-01 | **All browsers** — Safari, Edge, Opera, Brave MV3 builds + CI publish matrix | **next** | shared `@lorapok/cursor-monitor-shared`; AMO/Chrome patterns |
 | ECO-02 | **GitHub community stats** — traffic + CI snapshot on README, website, Mission Control | **done** | `procedure/github-community-stats.json`, `GitHubCommunityCard`, `npm run site:data` |
-| ECO-03 | **Chrysalis (website)** — animated floating assistant; reads latest `site-data.json` | **partial** | `ccm-floating-assistant.js` → Chrysalis brand (CHRYS-01) |
+| ECO-03 | **Chrysalis (website)** — animated floating assistant; reads latest `site-data.json` | **partial** | Chrysalis + Larvae on home/privacy/terms; AI → CHRYS-02 |
 | ECO-04 | **OS tray app** — Win/macOS/Linux system tray for limits, notices, quick actions | **next** | Electron or Tauri; shared product context |
 | ECO-05 | **Cursor native plugin** — first-party Cursor extension / plugin slot (not just VS Code host) | **next** | Cursor plugin API research + packaging |
 | ECO-06 | **Chrysalis everywhere** — admin SPA, IDE popup, browser options, tray shell | **next** | share Chrysalis module; CHRYS-01–05 |
@@ -343,7 +343,7 @@
 | ECO-10 | **AI conversation hygiene** — no secrets/junk in agent chat; procedure-only tracking | **next** | `.cursor/rules/ai-agent-commands.mdc` + agent docs |
 | ECO-11 | **Wiki + taskboard assets** — professional wiki pages; optional generated diagrams for Project #4 | **partial** | `docs/wiki/Ecosystem-Roadmap.md`, `GitHub-Project.md`, `AI-Agent-Commands.md` |
 | ECO-12 | **Repo hygiene** — gitignore local Wrangler/miniflare state; keep agent-accessible paths documented | **done** | `.gitignore` → `website/admin/.wrangler/` |
-| CHRYS-01 | **Chrysalis brand + animation** — official name for floating AI; Larvae mascot animation on all surfaces | **next** | rename UI copy; shared `@lorapok/cursor-monitor-shared` Chrysalis shell |
+| CHRYS-01 | **Chrysalis brand + animation** — official name for floating AI; Larvae mascot animation on all surfaces | **done** | shared `chrysalis.ts`; website + Mission Control FAB; `chrysalis.test.mjs` |
 | CHRYS-02 | **Chrysalis AI provider** — Antigravity + pluggable models; operator API key from cred vault (admin only) | **next** | user supplies Antigravity/other key; never commit; server-side proxy for admin |
 | CHRYS-03 | **Chrysalis privacy tiers** — admin learns full system under RBAC; website/extensions never see admin KV, secrets, or PII | **next** | separate context bundles; fail closed on ACL |
 | CHRYS-04 | **Chrysalis BYOK (user ecosystem)** — web + extensions use **user's** API key passively from options/vault; Lorapok does not ship keys to clients | **next** | encrypted local storage; opt-in; no telemetry of key material |
@@ -383,8 +383,8 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **SOCIAL-05** (finish) — MP4 encode + voiceover ([#217](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217)) — **in progress**
-2. **CHRYS-01**, **WEB-08–09**, **LEGAL-01**, remaining queue
+1. **WEB-08–09**, **LEGAL-01**, remaining ecosystem queue
+2. **CHRYS-02** (AI provider) when operator vault key path is ready
 3. **ANALYTICS-01** / **LOGS-01** when operator metrics land
 
 ---

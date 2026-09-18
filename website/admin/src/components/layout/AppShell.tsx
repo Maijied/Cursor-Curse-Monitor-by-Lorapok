@@ -9,6 +9,7 @@ import { APP_ROUTES } from "../../routes";
 import { DeployRuntimeProvider } from "../../context/DeployRuntimeContext";
 import ActiveUsersLive from "../ui/ActiveUsersLive";
 import { LarvaeLoaderPanel } from "../ui/LorapokLarvaeLoader";
+import ChrysalisFab from "../ui/ChrysalisFab";
 import CommandPalette, { useCommandPaletteHotkey } from "../ui/CommandPalette";
 import Overview from "../pages/Overview";
 const MarketplaceHealth = lazy(() => import("../pages/MarketplaceHealth"));
@@ -170,6 +171,7 @@ export default function AppShell() {
         </div>
       </div>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <ChrysalisFab />
     </div>
     </DeployRuntimeProvider>
   );
