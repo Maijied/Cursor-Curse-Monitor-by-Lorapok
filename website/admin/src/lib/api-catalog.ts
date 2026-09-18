@@ -40,6 +40,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "feedback", path: "/feedback", method: "POST", auth: "public", group: "Public", description: "User feedback → Discord + admin logs", safeProbe: true, sampleBody: { probe: true } },
   { id: "analytics-stats", path: "/analytics/stats", method: "GET", auth: "public", group: "Stats", description: "Website visits + package clicks", safeProbe: true },
   { id: "analytics-visit", path: "/analytics/visit", method: "POST", auth: "public", group: "Stats", description: "Record a website visit or package click" },
+  { id: "consent", path: "/consent", method: "POST", auth: "public", group: "Stats", description: "Aggregate process-consent audit (analytics accept/decline; no PII)" },
   { id: "stats-readme-svg", path: "/stats/readme.svg", method: "GET", auth: "public", group: "Stats", description: "Live README download chart (SVG)", safeProbe: true },
   { id: "stats-badge", path: "/stats/badge.json", method: "GET", auth: "public", group: "Stats", description: "Shields.io badge JSON for README downloads", safeProbe: true },
   { id: "stats-badge-shields-total", path: "/stats/shields/total.svg", method: "GET", auth: "public", group: "Stats", description: "Live Shields.io badge JSON (total downloads)", safeProbe: true },

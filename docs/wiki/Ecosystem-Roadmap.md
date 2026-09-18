@@ -31,7 +31,7 @@ Cursor Curse Monitor becomes a **full Lorapok ecosystem**: IDE extension, all ma
 | Behind-the-scenes engineering section | **done** | WEB-08 — `#engineering` on marketing home |
 | Expanded animated topology | **done** | WEB-07 — job-level `ci-cd.yml` on `#architecture` |
 | OSS contributor welcome | **planned** | WEB-10 |
-| Terms/consent + visitor analytics | **planned** | LEGAL-01, ANALYTICS-02 |
+| Terms/consent + visitor analytics | **partial** | LEGAL-01 done; ANALYTICS-02 planned |
 | Discord CI success/failure cards | **planned** | DC-08, DC-09 |
 | Multi-platform social + deploy gallery | **planned** | SOCIAL-01–05 |
 | World-class SEO + admin hub | **planned** | SEO-01–03 |

@@ -79,7 +79,7 @@ See **[Social and SEO](Social-and-SEO)** — Discord CI cards, multi-platform we
 
 | Task | Purpose |
 |------|---------|
-| **LEGAL-01** | Terms + privacy + consent for subscribe, analytics, Chrysalis BYOK |
+| **LEGAL-01** | **done** — process consent banner, privacy/terms v2026-09-18, `/api/consent` aggregate KV audit |
 | **ANALYTICS-02** | Professional visitor log (IP hash, referrer, new user events); admin dashboard |
 
 No secrets in logs. Retention and export documented in `privacy.html`.

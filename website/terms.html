@@ -122,6 +122,7 @@
   <link rel="stylesheet" href="styles.css?v=105f5292a052" />
   <link rel="stylesheet" href="larvae-loader.css?v=105f5292a052" />
   <link rel="stylesheet" href="ccm-floating-assistant.css?v=105f5292a052" />
+  <link rel="stylesheet" href="consent.css?v=105f5292a052" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -153,7 +154,7 @@
     <div class="container">
       <p class="eyebrow">Legal</p>
       <h1>Terms of Use</h1>
-      <p class="lead">Last updated: August 17, 2026</p>
+      <p class="lead">Last updated: September 18, 2026 · Consent version 2026-09-18</p>
     </div>
   </section>
 
@@ -164,7 +165,15 @@
         Cursor Curse Monitor is a VS Code / Cursor extension that runs on your machine.
         It reads your local Cursor session (auth material and privacy-safe metadata in <code>state.vscdb</code>)
         only to show <strong>your</strong> usage in the dashboard. We do not read chat transcripts,
-        message bodies, or project file contents.
+        message bodies, or project file contents. The browser extension provides budget UI and paste protection locally.
+      </p>
+
+      <h2>Process consent</h2>
+      <p>
+        Before anonymous website analytics run, we ask for explicit process consent (version <code>2026-09-18</code>).
+        You may choose <strong>Essential only</strong> (no visit beacons) or <strong>Allow analytics</strong>.
+        Email subscribe requires a separate checkbox acknowledging the Privacy Policy and these Terms.
+        Aggregate consent counts may be stored in Mission Control for audit — never your IP or email in that trail.
       </p>
 
       <h2>Optional anonymous heartbeat</h2>
@@ -181,9 +190,15 @@
 
       <h2>Marketplace downloads and website visits</h2>
       <p>
-        Public download counts and marketing-site visit/click totals are separate from the extension heartbeat.
-        They come from marketplace APIs and first-party site counters (and optional Google Analytics only if we configure a measurement ID).
-        These do not require any extension setting.
+        Public download counts come from marketplace APIs. Marketing-site visit/click totals are first-party counters
+        and run only after analytics consent. Optional third-party CMP scripts on the homepage are disclosed in the Privacy Policy.
+      </p>
+
+      <h2>Chrysalis BYOK</h2>
+      <p>
+        Chrysalis is the floating product guide. Public mode uses <code>site-data.json</code> only.
+        When AI chat ships, you may bring your own API key (BYOK). Lorapok does not embed provider secrets in client builds;
+        you remain responsible for provider terms and usage of your key.
       </p>
 
       <h2>Database safety</h2>
@@ -245,6 +260,7 @@
   </footer>
   <script src="cloudflare-beacon.js?v=105f5292a052" defer></script>
   <script src="social-footer.js?v=105f5292a052" defer></script>
+  <script src="consent.js?v=105f5292a052" defer></script>
   <script src="analytics.js?v=105f5292a052" defer></script>
   <script src="site.js?v=105f5292a052" defer></script>
   <script src="ccm-floating-assistant.js?v=105f5292a052" defer></script>
