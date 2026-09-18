@@ -14,7 +14,8 @@ export type AdminSectionId =
   | "team"
   | "seo"
   | "releases"
-  | "marketplace";
+  | "marketplace"
+  | "reports";
 
 export type SectionReferTarget = {
   section: AdminSectionId;
@@ -42,6 +43,7 @@ const SECTION_ROUTES: Record<AdminSectionId, SectionRoute> = {
   seo: { path: "/dashboard/seo", label: "SEO" },
   releases: { path: "/dashboard/releases", label: "Releases" },
   marketplace: { path: "/dashboard/marketplace", label: "Marketplace" },
+  reports: { path: "/dashboard/reports", label: "Reports" },
 };
 
 const SETTINGS_TAB_LABELS: Partial<Record<SettingsTabId, string>> = {
@@ -96,4 +98,5 @@ export const SECTION_REFERS = {
   apiExplorer: { section: "api-explorer" } satisfies SectionReferTarget,
   logs: { section: "logs" } satisfies SectionReferTarget,
   subscribers: { section: "subscribers" } satisfies SectionReferTarget,
+  reports: { section: "reports" } satisfies SectionReferTarget,
 } as const;

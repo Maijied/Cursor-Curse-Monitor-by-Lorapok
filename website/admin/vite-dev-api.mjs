@@ -982,6 +982,60 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/analytics/services" && req.method === "GET") {
+      void (async () => {
+        const { buildServiceAnalyticsHub } = await import("./functions/api/_shared/service-analytics.js");
+        let displayTotal = null;
+        let packageVersion = null;
+        let syncStatus = null;
+        let githubOpenIssues = null;
+        let githubStars = null;
+        try {
+          const site = JSON.parse(readFileSync(siteDataPath, "utf8"));
+          displayTotal = site.downloads?.displayTotal ?? site.downloads?.verifiedTotal ?? null;
+          packageVersion = site.packageVersion ?? null;
+          syncStatus = site.syncStatus ?? null;
+          githubOpenIssues = site.githubCommunity?.openIssues ?? null;
+          githubStars = site.githubCommunity?.stars ?? null;
+        } catch { /* ignore */ }
+        const stats = readStats();
+        const hub = buildServiceAnalyticsHub({
+          generatedAt: new Date().toISOString(),
+          adminKvConfigured: true,
+          statsR2: { configured: true, ok: true },
+          adminD1Configured: true,
+          adminD1Ok: true,
+          adminPublicUrl: "http://localhost:5173",
+          firebaseConfigured: true,
+          firebaseProject: "dev-local",
+          githubOk: true,
+          githubTokenConfigured: true,
+          githubOpenIssues,
+          githubStars,
+          mailConfigured: true,
+          mailTransport: "dev",
+          mailResendConfigured: false,
+          displayTotal,
+          syncStatus,
+          packageVersion,
+          websiteVisits: stats.websiteVisits ?? null,
+          totalEngagement: stats.totalEngagement ?? null,
+          visitorSource: "dev",
+        });
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({
+          ok: true,
+          ...hub,
+          statsRefresh: { enabled: false, lastRunAt: null, lastRunOk: null },
+        }));
+      })().catch((err) => {
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+      });
+      return;
+    }
+
     if (url === "/api/analytics/visit" && req.method === "POST") {
       let body = "";
       req.on("data", (chunk) => { body += chunk; });

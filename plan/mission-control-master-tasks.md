@@ -6,7 +6,7 @@
 **Branch:** `feat/eco-08-action-validator`
 **Main:** `36b1d11e`
 **CI:** DEPLOY-04 on main (#283). WEB-08–11 + CHRYS-01 + SOCIAL-05 + LEGAL-01 merged.
-**P1 queue:** ECO-08 → ANALYTICS-01 → LOGS-01 → EXT-01 (`procedure/github-milestones.json`)
+**P1 queue:** LOGS-01 → EXT-01 (`procedure/github-milestones.json`)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -371,7 +371,7 @@
 | INT-01 | **Unified integrations hub** — one Settings surface for Discord, social, GitHub webhooks, image AI, mail, cred sync status | **done** | Services tab hub panes embed config cards; Integration directory removed; Connected Services slimmed to runtime/auth |
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
-| ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **next** | new Overview / Reports cards; `/api/analytics/services` facade |
+| ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **done** | Overview + Reports `ServiceAnalyticsHubCard`; `GET /api/analytics/services` |
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **done** | PR [#278](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/278) merged; ACL-aware fuzzy ⌘K |
@@ -384,7 +384,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **ANALYTICS-01** / **LOGS-01** / **EXT-01** (P1)
+1. Observability (**LOGS-01** / **ANALYTICS-02**) and remaining ecosystem (**EXT-01**, **ECO-***)
 2. **CHRYS-02** (AI provider) when operator vault key path is ready
 3. Remaining **ECO-*** / **ANALYTICS-02** backlog
 

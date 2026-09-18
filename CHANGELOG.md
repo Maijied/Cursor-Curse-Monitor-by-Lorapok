@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **ANALYTICS-01 service analytics hub** — `GET /api/analytics/services` aggregates Cloudflare (KV/R2/D1/Pages), Firebase, GitHub, mail/Resend, marketplace downloads, and traffic into Overview + Reports cards (no new secrets).
 - **ECO-08 action validator** — shared `confirmAction` wired through Mission Control modal (deploy/rollback/infra, notice delete, subscriber broadcast, team remove, mail alias delete, PIN remove) and IDE account removal.
 - **WEB-11 engineering history** — long-form timeline at `/engineering/history/` (monorepo → Mission Control → CI/CD → procedure → public site → credits); linked from `#engineering` and Docs hub.
 - **WEB-10 contributor welcome** — CONTRIBUTING / good-first / Project #4 on marketing footers, hero + subscribe CTAs, IDE + browser extension footers, options “Join the community”, Mission Control footer + Chrysalis.

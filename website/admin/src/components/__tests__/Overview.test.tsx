@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import Overview from "../pages/Overview";
@@ -36,8 +36,29 @@ vi.mock("../../hooks/useUsageStats", () => ({
   }),
 }));
 
-describe("Overview (ADMIN-05 dedupe)", () => {
-  it("does not duplicate footer-owned sync badge or package version KPI", () => {
+vi.mock("../../lib/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/api")>();
+  return {
+    ...actual,
+    fetchServiceAnalyticsApi: vi.fn().mockResolvedValue({
+      generatedAt: "2026-09-18T00:00:00.000Z",
+      overall: "online",
+      cards: [
+        {
+          id: "cloudflare-kv",
+          label: "Cloudflare KV",
+          category: "cloudflare",
+          status: "ok",
+          summary: "ADMIN_KV bound",
+          metrics: [{ label: "Configured", value: "yes" }],
+        },
+      ],
+    }),
+  };
+});
+
+describe("Overview (ADMIN-05 dedupe + ANALYTICS-01 hub)", () => {
+  it("does not duplicate footer-owned sync badge or package version KPI", async () => {
     render(
       <MemoryRouter>
         <Overview />
@@ -46,7 +67,11 @@ describe("Overview (ADMIN-05 dedupe)", () => {
 
     expect(screen.queryByText("Package Version")).not.toBeInTheDocument();
     expect(screen.queryByText("Connected Services")).not.toBeInTheDocument();
-    expect(screen.getByText("Service connectivity")).toBeInTheDocument();
+    expect(screen.queryByText("Service connectivity")).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Service analytics hub")).toBeInTheDocument();
+    });
     expect(screen.getByRole("link", { name: /Go to Settings → Services/i })).toBeInTheDocument();
   });
 });

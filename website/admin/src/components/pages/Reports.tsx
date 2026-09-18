@@ -6,6 +6,7 @@ import Badge from "../ui/Badge";
 import StableFallbackPanel from "../ui/StableFallbackPanel";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
+import ServiceAnalyticsHubCard from "../ui/ServiceAnalyticsHubCard";
 import { useSiteData } from "../../hooks/useSiteData";
 import { useVisitorStats } from "../../hooks/useVisitorStats";
 import {
@@ -143,6 +144,10 @@ export default function Reports() {
           </div>
         }
       />
+
+      <div className="no-print">
+        <ServiceAnalyticsHubCard />
+      </div>
 
       <Card className="report-document print-area">
         <header className="report-header mb-8 pb-6 border-b border-[var(--color-border)]">
