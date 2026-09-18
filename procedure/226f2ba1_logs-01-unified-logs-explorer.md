@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/168  
 **Branch:** `feat/logs-01-unified-explorer`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/299
 
 ---
 
@@ -21,8 +21,8 @@ Unified Logs page v2: structured filters (severity, source, time range), full-te
 - [x] Plan approved
 - [x] Procedure + GitHub issue linked (#168)
 - [x] Implementation started
-- [ ] Tests passing
-- [ ] PR opened
+- [x] Tests passing
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
@@ -49,9 +49,9 @@ _None._
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | Headless tests | pending |
-| B | Component matrix | pending |
-| C | Production smoke | pending |
+| A | Headless tests | `logs-query.test.mjs` + `tsc -b` pass |
+| B | Component matrix | Logs filters + CSV + meta expand |
+| C | Production smoke | pending post-merge |
 
 ---
 
