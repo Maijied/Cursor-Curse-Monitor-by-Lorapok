@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **CHRYS-01 Chrysalis brand + Larvae** — official name for the floating assistant; shared `@lorapok/cursor-monitor-shared` shell; Larvae toggle on marketing pages (home/privacy/terms) and Mission Control FAB.
 - **SOCIAL-05 MP4 encode + voiceover** — gallery video jobs call optional `VIDEO_ENCODER` binding or configured HTTPS encoder URL; changelog voiceover script included; R2/`?kind=video` asset serving; static carousel fallback when unbound.
 - **ADMIN-02 UX polish** — shared `EmptyState`, PageHeader contextual help (?), friendlier empty lists (Activity, Logs, Community, Subscribers, Social Gallery), mobile sidebar Escape + scroll lock
 - **WEB-07 expanded system topology** — Production Deployment diagrams list every `ci-cd.yml` job (resolve-version → social gallery + Discord notify) plus STATS_R2; coverage guarded by `test_architecture_cicd_jobs.mjs`

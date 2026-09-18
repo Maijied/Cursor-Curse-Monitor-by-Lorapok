@@ -1,4 +1,4 @@
-/* Floating Lorapok AI assistant */
+/* Chrysalis floating shell (CHRYS-01) — Larvae mascot toggle */
 .ccm-floating-ai {
   position: fixed;
   right: 1.25rem;
@@ -7,13 +7,14 @@
   font-family: var(--font-sans, "DM Sans", system-ui, sans-serif);
 }
 
-.ccm-floating-ai-toggle {
+.ccm-floating-ai-toggle,
+.ccm-chrysalis-toggle {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 2px solid rgba(108, 92, 231, 0.6);
-  background: radial-gradient(circle at 30% 30%, #6c5ce7, #2d1b69);
-  box-shadow: 0 8px 32px rgba(108, 92, 231, 0.35);
+  border: 2px solid color-mix(in srgb, #39ff14 45%, #5b9dff);
+  background: radial-gradient(circle at 30% 30%, #1a2332, #0a0e14 70%);
+  box-shadow: 0 8px 28px rgba(57, 255, 20, 0.18), 0 4px 16px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   animation: ccm-float-bob 4s ease-in-out infinite;
   display: flex;
@@ -22,9 +23,17 @@
   padding: 0;
 }
 
-.ccm-floating-ai-toggle img {
+.ccm-floating-ai-toggle:hover,
+.ccm-chrysalis-toggle:hover {
+  border-color: #39ff14;
+  box-shadow: 0 10px 32px rgba(57, 255, 20, 0.28);
+}
+
+.ccm-floating-ai-toggle img,
+.ccm-chrysalis-larvae {
   width: 36px;
-  height: 36px;
+  height: auto;
+  display: block;
 }
 
 @keyframes ccm-float-bob {
@@ -39,7 +48,7 @@
   width: min(340px, calc(100vw - 2rem));
   max-height: 420px;
   border-radius: 16px;
-  border: 1px solid rgba(108, 92, 231, 0.35);
+  border: 1px solid color-mix(in srgb, #5b9dff 35%, transparent);
   background: rgba(8, 10, 18, 0.96);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -56,6 +65,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-weight: 600;
   font-size: 0.9rem;
+  color: #e8eef7;
 }
 
 .ccm-floating-ai-body {
@@ -83,6 +93,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.ccm-floating-ai-body a {
+  color: #5b9dff;
+}
+
 .ccm-floating-ai-footer {
   padding: 0.5rem 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -91,7 +105,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ccm-floating-ai-toggle {
+  .ccm-floating-ai-toggle,
+  .ccm-chrysalis-toggle {
+    animation: none;
+  }
+
+  .ccm-chrysalis-larvae.larvae-loader-root {
     animation: none;
   }
 }
