@@ -103,7 +103,7 @@
 <p>Push to <code>main</code> may prepare tags and redeploy Mission Control; it never publishes marketplaces (DEPLOY-04).</p>
 <p>Non-master admins can view deployment history and runtime logs but cannot submit dispatch forms.</p>
 <h2 id="modules">Modules</h2>
-<table><thead><tr><th>Module</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>Overview</strong></td><td>Health, marketplace sync, KPIs, download breakdown</td></tr><tr><td><strong>Deployments</strong></td><td>Trigger publish or rollback workflows with live runtime log preview</td></tr><tr><td><strong>Notices</strong></td><td>Enable/disable development notices on the marketing site</td></tr><tr><td><strong>Mailbox</strong></td><td>Outbound mail log, branded HTML templates, compose &amp; test</td></tr><tr><td><strong>Logs</strong></td><td>API activity, mail events, system events</td></tr><tr><td><strong>Team</strong></td><td>Admin allowlist management</td></tr><tr><td><strong>Docs</strong></td><td>In-app architecture reference</td></tr></tbody></table>
+<table><thead><tr><th>Module</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>Overview</strong></td><td>Health, marketplace sync, KPIs, download breakdown, <strong>service analytics hub</strong> (ANALYTICS-01)</td></tr><tr><td><strong>Reports</strong></td><td>Printable status report + service analytics hub cards</td></tr><tr><td><strong>Deployments</strong></td><td>Trigger publish or rollback workflows with live runtime log preview</td></tr><tr><td><strong>Notices</strong></td><td>Enable/disable development notices on the marketing site</td></tr><tr><td><strong>Mailbox</strong></td><td>Outbound mail log, branded HTML templates, compose &amp; test</td></tr><tr><td><strong>Logs</strong></td><td>Unified API/mail/system explorer (LOGS-01): severity, source, time range, search, CSV export; ACL audit tab</td></tr><tr><td><strong>Team</strong></td><td>Admin allowlist management</td></tr><tr><td><strong>Docs</strong></td><td>In-app architecture reference</td></tr></tbody></table>
 <h2 id="publish-markets">Publish markets</h2>
 <p>When dispatching a release or deploy, choose the target marketplace:</p>
 <table><thead><tr><th>Market</th><th>Destination</th></tr></thead><tbody><tr><td><code>Both</code></td><td>Open VSX + VS Code Marketplace</td></tr><tr><td><code>Open VSX</code></td><td>Canonical <code>lorapok-labs</code> listing</td></tr><tr><td><code>VS Code Marketplace</code></td><td><code>LorapokLabs</code> publisher</td></tr><tr><td><code>Firefox AMO</code></td><td>Browser extension via <code>web-ext sign</code></td></tr></tbody></table>
@@ -121,6 +121,17 @@ npm run dev</code></pre>
 
   <footer class="site-footer">
     <div class="container footer-inner">
+      <nav class="footer-platforms" aria-label="Platform availability">
+        <a data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener" title="Open VSX">Open VSX</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener" title="VS Code Marketplace">VS Code</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-firefox href="https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/" target="_blank" rel="noopener" title="Firefox Add-ons">Firefox</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-chrome-zip href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest" target="_blank" rel="noopener" title="Chrome direct zip">Chrome zip</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-release href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases" target="_blank" rel="noopener" title="GitHub Releases">GitHub</a>
+      </nav>
       <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
       <p data-footer-contribute class="footer-contribute">Open source · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a></p>
       <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>

@@ -11,6 +11,7 @@ import {
   SUPPORTED_IDE_WRAPPERS_SUBLINE,
   GITHUB_CONTRIBUTING_URL,
   CONTRIBUTE_CTA_LABEL,
+  formatPlatformStripHtml,
 } from "@lorapok/cursor-monitor-shared";
 import { fetchCommunityDownloadStats } from "./communityDownloads";
 import {
@@ -1127,6 +1128,22 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
     }
     .footer-dot { opacity: 0.35; }
     .footer-right { color: var(--muted); font-weight: 600; font-size: 11px; }
+    .platform-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0;
+      margin: 0 0 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .platform-strip-link {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .platform-strip-link:hover { text-decoration: underline; }
+    .platform-strip-sep { margin: 0 6px; opacity: 0.35; }
     .about-card {
       margin-top: 8px;
       padding: 14px;
@@ -1814,6 +1831,7 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   </div>
 
   <footer class="footer">
+    ${formatPlatformStripHtml("ide")}
     <div class="footer-left">
       <span>A product of</span>
       <a href="https://lorapok.tech" target="_blank">Lorapok Labs</a>

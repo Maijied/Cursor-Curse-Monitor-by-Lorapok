@@ -129,6 +129,13 @@
 <li>Chrysalis can point contributors at CONTRIBUTING / good-first / Project #4</li>
 </ul>
 <p>---</p>
+<h2 id="platform-availability-strip-ext-01">Platform availability strip (EXT-01)</h2>
+<p><strong>Status: done</strong> (shared <code>getPlatformAvailabilityStrip</code> / <code>formatPlatformStripHtml</code>)</p>
+<ul>
+<li>Compact Open VSX · VS Code · Firefox · Chrome zip · GitHub row in marketing footers (home, privacy/terms, generated wiki/docs), Mission Control GlobalFooter, IDE dashboard, browser popup/options</li>
+<li>Live <code>site-data</code> href hydration via existing <code>data-href-*</code> attributes on the public site</li>
+</ul>
+<p>---</p>
 <h2 id="engineering-history-web-11">Engineering history (WEB-11)</h2>
 <p><strong>Status: done</strong></p>
 <p>Long-form <strong>behind-the-scenes timeline</strong> at <a href="https://cursor.lorapok.tech/engineering/history/" target="_blank" rel="noopener"><code>/engineering/history/</code></a> — sectioned milestones: IDE origin, browser add-on, Mission Control, CI/CD, procedure/agents, public site + Chrysalis, contributor welcome, Lorapok Labs credits. Extends WEB-08. Linked from <code>#engineering</code> foot and Docs hub.</p>
@@ -151,6 +158,17 @@
 
   <footer class="site-footer">
     <div class="container footer-inner">
+      <nav class="footer-platforms" aria-label="Platform availability">
+        <a data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener" title="Open VSX">Open VSX</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-vscode href="https://marketplace.visualstudio.com/items?itemName=LorapokLabs.cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener" title="VS Code Marketplace">VS Code</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-firefox href="https://addons.mozilla.org/en-US/firefox/addon/cursor-curse-monitor/" target="_blank" rel="noopener" title="Firefox Add-ons">Firefox</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-chrome-zip href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases/latest" target="_blank" rel="noopener" title="Chrome direct zip">Chrome zip</a>
+        <span aria-hidden="true">·</span>
+        <a data-href-release href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/releases" target="_blank" rel="noopener" title="GitHub Releases">GitHub</a>
+      </nav>
       <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
       <p data-footer-contribute class="footer-contribute">Open source · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a></p>
       <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>

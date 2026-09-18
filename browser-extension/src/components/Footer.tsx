@@ -1,5 +1,10 @@
 import React from "react";
-import { DISCORD_INVITE_URL, formatAlsoAvailableOn, GITHUB_CONTRIBUTING_URL, CONTRIBUTE_CTA_LABEL } from "@lorapok/cursor-monitor-shared";
+import {
+  DISCORD_INVITE_URL,
+  GITHUB_CONTRIBUTING_URL,
+  CONTRIBUTE_CTA_LABEL,
+  getPlatformAvailabilityStrip,
+} from "@lorapok/cursor-monitor-shared";
 
 declare const __EXTENSION_VERSION__: string;
 
@@ -8,9 +13,20 @@ type Props = {
 };
 
 export function Footer({ onFeedbackClick }: Props) {
+  const platforms = getPlatformAvailabilityStrip("browser");
+
   return (
     <footer className="ext-footer">
-      <p className="ext-footer-crosslink">{formatAlsoAvailableOn("browser")}</p>
+      <nav className="ext-footer-platforms" aria-label="Platform availability">
+        {platforms.map((item, index) => (
+          <span key={item.id}>
+            {index > 0 ? <span className="sep" aria-hidden="true">·</span> : null}
+            <a href={item.url} target="_blank" rel="noopener noreferrer" title={item.label}>
+              {item.shortLabel}
+            </a>
+          </span>
+        ))}
+      </nav>
       <p className="ext-footer-meta">
         <span>It&apos;s a product of</span>{" "}
         <a href="https://lorapok.tech" target="_blank" rel="noopener noreferrer">

@@ -5,11 +5,25 @@
 
 export type ProductSurface = "ide" | "browser";
 
+export type PlatformStripSurface = "website" | "admin" | "ide" | "browser";
+
+export type PlatformStripId = "openVsx" | "vscode" | "firefox" | "chrome" | "github";
+
 export interface PlatformLink {
   id: string;
   label: string;
   shortLabel: string;
   url: string;
+}
+
+/** One row in the EXT-01 platform availability strip. */
+export interface PlatformStripItem {
+  id: PlatformStripId;
+  label: string;
+  shortLabel: string;
+  url: string;
+  /** Optional live override path from site-data (documentation only). */
+  siteDataHint?: string;
 }
 
 export const PRODUCT_HOMEPAGE = "https://cursor.lorapok.tech/";
@@ -55,6 +69,82 @@ export const PLATFORM_LINKS = {
     url: PRODUCT_HOMEPAGE,
   },
 } as const satisfies Record<string, PlatformLink>;
+
+const STRIP_ORDER: PlatformStripId[] = ["openVsx", "vscode", "firefox", "chrome", "github"];
+
+const STRIP_BY_SURFACE: Record<PlatformStripSurface, PlatformStripId[]> = {
+  website: STRIP_ORDER,
+  admin: STRIP_ORDER,
+  ide: STRIP_ORDER,
+  browser: STRIP_ORDER,
+};
+
+/**
+ * Live URL overrides from site-data / product context.
+ * Prefer chromeZipUrl for the Chrome row when present.
+ */
+export type PlatformStripOverrides = Partial<Record<PlatformStripId, string | null | undefined>>;
+
+function toStripItem(id: PlatformStripId, overrides?: PlatformStripOverrides): PlatformStripItem {
+  const base = PLATFORM_LINKS[id];
+  const override = overrides?.[id];
+  const url = typeof override === "string" && override.trim() ? override.trim() : base.url;
+  return {
+    id,
+    label: base.label,
+    shortLabel: base.shortLabel,
+    url,
+    siteDataHint:
+      id === "chrome"
+        ? "github.chromeZipUrl"
+        : id === "openVsx"
+          ? "ovsx.url"
+          : id === "vscode"
+            ? "vscode.url"
+            : id === "firefox"
+              ? "browserExtension.firefox.url"
+              : "github.releaseUrl",
+  };
+}
+
+/**
+ * EXT-01 — platform availability strip (logos/links rendered by each surface).
+ */
+export function getPlatformAvailabilityStrip(
+  surface: PlatformStripSurface = "website",
+  overrides?: PlatformStripOverrides
+): PlatformStripItem[] {
+  const ids = STRIP_BY_SURFACE[surface] ?? STRIP_ORDER;
+  return ids.map((id) => toStripItem(id, overrides));
+}
+
+/** Compact HTML for webviews / static footers (no framework). */
+export function formatPlatformStripHtml(
+  surface: PlatformStripSurface = "website",
+  overrides?: PlatformStripOverrides,
+  className = "platform-strip"
+): string {
+  const items = getPlatformAvailabilityStrip(surface, overrides);
+  const links = items
+    .map(
+      (item) =>
+        `<a class="${className}-link" href="${escapeHtmlAttr(item.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtmlAttr(item.label)}">${escapeHtmlText(item.shortLabel)}</a>`
+    )
+    .join(`<span class="${className}-sep" aria-hidden="true">·</span>`);
+  return `<nav class="${className}" aria-label="Platform availability">${links}</nav>`;
+}
+
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeHtmlText(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 /** Platforms to promote from each product surface (excludes self). */
 export function alsoAvailablePlatforms(surface: ProductSurface): PlatformLink[] {
