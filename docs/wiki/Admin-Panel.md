@@ -30,7 +30,7 @@ Non-master admins can view deployment history and runtime logs but cannot submit
 | **Deployments** | Trigger publish or rollback workflows with live runtime log preview |
 | **Notices** | Enable/disable development notices on the marketing site |
 | **Mailbox** | Outbound mail log, branded HTML templates, compose & test |
-| **Logs** | API activity, mail events, system events |
+| **Logs** | Unified API/mail/system explorer (LOGS-01): severity, source, time range, search, CSV export; ACL audit tab |
 | **Team** | Admin allowlist management |
 | **Docs** | In-app architecture reference |
 

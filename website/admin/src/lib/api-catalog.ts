@@ -132,7 +132,7 @@ export const API_CATALOG: ApiCatalogEntry[] = [
   { id: "workflows", path: "/workflows/runs", method: "GET", auth: "admin", group: "Admin", description: "Recent GitHub Actions runs", safeProbe: true },
   { id: "workflow-run-logs", path: "/workflows/run-logs?run_id=1", method: "GET", auth: "admin", group: "Admin", description: "GitHub Actions run logs (requires run_id)" },
   { id: "activity", path: "/activity?page=1&limit=5", method: "GET", auth: "admin", group: "Admin", description: "Authenticated API request log", safeProbe: true },
-  { id: "logs", path: "/logs?page=1&limit=5", method: "GET", auth: "admin", group: "Admin", description: "Merged API, mailbox, and system logs", safeProbe: true },
+  { id: "logs", path: "/logs?page=1&limit=5", method: "GET", auth: "admin", group: "Admin", description: "Merged API, mailbox, and system logs (filters + ?format=csv)", safeProbe: true },
   { id: "mailbox-get", path: "/mailbox?page=1&limit=5", method: "GET", auth: "admin", group: "Admin", description: "Outbound mailbox messages", safeProbe: true },
   { id: "mailbox-post", path: "/mailbox", method: "POST", auth: "admin", group: "Admin", description: "Send or compose mailbox mail" },
   { id: "admins-get", path: "/admins", method: "GET", auth: "admin", group: "Admin", description: "Allowed admin emails (master only)", safeProbe: true },

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, RefreshCw, ScrollText, Shield } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
+import { ChevronLeft, ChevronRight, Download, Filter, RefreshCw, ScrollText, Shield } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -7,7 +7,7 @@ import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
 import EmptyState from "../ui/EmptyState";
 import AclAuditPanel from "./AclAuditPanel";
-import { fetchLogs, type LogEntry } from "../../lib/api";
+import { downloadLogsCsv, fetchLogs, type LogEntry } from "../../lib/api";
 
 const PAGE_SIZE = 25;
 
@@ -16,6 +16,23 @@ const TYPE_OPTIONS = [
   { value: "api", label: "API" },
   { value: "mail", label: "Mail" },
   { value: "system", label: "System" },
+];
+
+const LEVEL_OPTIONS = [
+  { value: "", label: "Any level" },
+  { value: "info", label: "Info" },
+  { value: "warn", label: "Warn" },
+  { value: "error", label: "Error" },
+];
+
+const SOURCE_OPTIONS = [
+  { value: "", label: "Any source" },
+  { value: "api", label: "api" },
+  { value: "mailbox", label: "mailbox" },
+  { value: "acl", label: "acl" },
+  { value: "deploy", label: "deploy" },
+  { value: "mail", label: "mail" },
+  { value: "stats", label: "stats" },
 ];
 
 const METHOD_OPTIONS = ["", "GET", "POST", "PUT", "DELETE"];
@@ -43,6 +60,13 @@ function methodColor(method?: string) {
   return "text-[var(--color-muted)]";
 }
 
+function fromDatetimeLocalValue(local: string) {
+  if (!local) return "";
+  const d = new Date(local);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString();
+}
+
 export default function Logs() {
   const [view, setView] = useState<"unified" | "acl">("unified");
   const [page, setPage] = useState(1);
@@ -51,17 +75,32 @@ export default function Logs() {
   const [counts, setCounts] = useState({ api: 0, mail: 0, system: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [type, setType] = useState("all");
-  const source = "";
+  const [source, setSource] = useState("");
+  const [level, setLevel] = useState("");
   const [method, setMethod] = useState("");
   const [status, setStatus] = useState("");
   const [email, setEmail] = useState("");
   const [query, setQuery] = useState("");
+  const [sinceLocal, setSinceLocal] = useState("");
+  const [untilLocal, setUntilLocal] = useState("");
 
   const filters = useMemo(
-    () => ({ type, source, method, status, email, q: query }),
-    [type, source, method, status, email, query]
+    () => ({
+      type,
+      source,
+      level,
+      method,
+      status,
+      email,
+      q: query,
+      since: fromDatetimeLocalValue(sinceLocal),
+      until: fromDatetimeLocalValue(untilLocal),
+    }),
+    [type, source, level, method, status, email, query, sinceLocal, untilLocal]
   );
 
   const load = useCallback(() => {
@@ -87,21 +126,32 @@ export default function Logs() {
   const inputClass =
     "w-full px-3 py-2 text-sm bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-lg outline-none focus:ring-2 focus:ring-[var(--color-accent)]";
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadLogsCsv(filters);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (view === "unified" && loading && items.length === 0) return <ShimmerSkeleton className="h-64" />;
-  if (view === "unified" && error) return <ErrorState message={error} />;
+  if (view === "unified" && error && items.length === 0) return <ErrorState message={error} />;
 
   return (
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Logs"
-        description="Unified API, mail, and system events — plus a dedicated ACL audit timeline with export."
+        description="Unified API, mail, and system events — severity, source, time range, search, and CSV export."
         hint={
           <>
             <p>
-              Filters apply to the unified stream. Use the ACL audit tab for role and allowlist changes with
-              CSV export.
+              Filters apply to the merged stream (D1 system logs + KV scatter + mailbox + API activity). Use ACL
+              audit for role/allowlist history.
             </p>
-            <p>Empty results usually mean filters are too narrow — clear status/method or search.</p>
+            <p>Expand a system row to inspect structured JSON meta. Export downloads the full filtered set.</p>
           </>
         }
       />
@@ -137,6 +187,8 @@ export default function Logs() {
         <AclAuditPanel />
       ) : (
         <>
+          {error ? <p className="text-sm text-[var(--color-danger)]">{error}</p> : null}
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wider text-[var(--color-muted)]">API events</p>
@@ -159,17 +211,28 @@ export default function Logs() {
                   <Filter size={18} className="text-[var(--color-accent)]" />
                   Filters
                 </h3>
-                <button
-                  type="button"
-                  onClick={load}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-[var(--color-border)] hover:bg-white/5"
-                >
-                  <RefreshCw size={16} />
-                  Refresh
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleExport()}
+                    disabled={exporting}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-[var(--color-border)] hover:bg-white/5 disabled:opacity-50"
+                  >
+                    <Download size={16} />
+                    {exporting ? "Exporting…" : "Export CSV"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={load}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-[var(--color-border)] hover:bg-white/5"
+                  >
+                    <RefreshCw size={16} />
+                    Refresh
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <label className="text-sm">
                   <span className="block text-[var(--color-muted)] mb-1">Type</span>
                   <select
@@ -178,6 +241,30 @@ export default function Logs() {
                     className={inputClass}
                   >
                     {TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm">
+                  <span className="block text-[var(--color-muted)] mb-1">Level</span>
+                  <select
+                    value={level}
+                    onChange={(e) => { setLevel(e.target.value); setPage(1); }}
+                    className={inputClass}
+                  >
+                    {LEVEL_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm">
+                  <span className="block text-[var(--color-muted)] mb-1">Source</span>
+                  <select
+                    value={source}
+                    onChange={(e) => { setSource(e.target.value); setPage(1); }}
+                    className={inputClass}
+                  >
+                    {SOURCE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
@@ -217,13 +304,31 @@ export default function Logs() {
                     className={inputClass}
                   />
                 </label>
-                <label className="text-sm sm:col-span-2 lg:col-span-1">
+                <label className="text-sm">
+                  <span className="block text-[var(--color-muted)] mb-1">Since</span>
+                  <input
+                    type="datetime-local"
+                    value={sinceLocal}
+                    onChange={(e) => { setSinceLocal(e.target.value); setPage(1); }}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="block text-[var(--color-muted)] mb-1">Until</span>
+                  <input
+                    type="datetime-local"
+                    value={untilLocal}
+                    onChange={(e) => { setUntilLocal(e.target.value); setPage(1); }}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="text-sm sm:col-span-2 lg:col-span-4">
                   <span className="block text-[var(--color-muted)] mb-1">Search</span>
                   <input
                     type="search"
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-                    placeholder="path, subject, message…"
+                    placeholder="path, subject, message, meta JSON…"
                     className={inputClass}
                   />
                 </label>
@@ -256,46 +361,70 @@ export default function Logs() {
                       </td>
                     </tr>
                   ) : (
-                    items.map((row) => (
-                      <tr key={row.id} className="hover:bg-white/[0.02] align-top">
-                        <td className="py-3 pr-4 whitespace-nowrap text-[var(--color-muted)]">
-                          {new Date(row.ts).toLocaleString()}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <Badge variant="neutral">{row.type}</Badge>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <Badge variant={levelVariant(row.level)}>{row.level}</Badge>
-                        </td>
-                        <td className="py-3 pr-4 text-[var(--color-muted)]">{row.source}</td>
-                        <td className="py-3 pr-4 min-w-[12rem]">
-                          {row.type === "api" ? (
-                            <span className={`font-[family-name:var(--font-mono)] ${methodColor(row.method)}`}>
-                              {row.method} {row.path}
-                            </span>
-                          ) : (
-                            <span className="text-[var(--color-text)]">{row.message}</span>
-                          )}
-                          {row.type === "mail" && row.subject && (
-                            <p className="text-xs text-[var(--color-muted)] mt-1 truncate max-w-md">{row.subject}</p>
-                          )}
-                        </td>
-                        <td className="py-3 pr-4">
-                          {row.status != null ? (
-                            <Badge variant={typeof row.status === "number" ? (row.status >= 400 ? "warn" : "synced") : row.status === "failed" ? "danger" : "synced"}>
-                              {String(row.status)}
-                            </Badge>
-                          ) : row.latencyMs != null ? (
-                            <span className="font-[family-name:var(--font-mono)] text-xs">{row.latencyMs}ms</span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="py-3 text-[var(--color-muted)] truncate max-w-[10rem]">
-                          {row.email ?? "—"}
-                        </td>
-                      </tr>
-                    ))
+                    items.map((row) => {
+                      const hasMeta = Boolean(row.meta && Object.keys(row.meta).length > 0);
+                      const open = expandedId === row.id;
+                      return (
+                        <Fragment key={row.id}>
+                          <tr className="hover:bg-white/[0.02] align-top">
+                            <td className="py-3 pr-4 whitespace-nowrap text-[var(--color-muted)]">
+                              {new Date(row.ts).toLocaleString()}
+                            </td>
+                            <td className="py-3 pr-4">
+                              <Badge variant="neutral">{row.type}</Badge>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <Badge variant={levelVariant(row.level)}>{row.level}</Badge>
+                            </td>
+                            <td className="py-3 pr-4 text-[var(--color-muted)]">{row.source}</td>
+                            <td className="py-3 pr-4 min-w-[12rem]">
+                              {row.type === "api" ? (
+                                <span className={`font-[family-name:var(--font-mono)] ${methodColor(row.method)}`}>
+                                  {row.method} {row.path}
+                                </span>
+                              ) : (
+                                <span className="text-[var(--color-text)]">{row.message}</span>
+                              )}
+                              {row.type === "mail" && row.subject && (
+                                <p className="text-xs text-[var(--color-muted)] mt-1 truncate max-w-md">{row.subject}</p>
+                              )}
+                              {hasMeta ? (
+                                <button
+                                  type="button"
+                                  className="mt-1 text-xs text-[var(--color-accent)] hover:underline"
+                                  onClick={() => setExpandedId(open ? null : row.id)}
+                                >
+                                  {open ? "Hide JSON" : "Show JSON"}
+                                </button>
+                              ) : null}
+                            </td>
+                            <td className="py-3 pr-4">
+                              {row.status != null ? (
+                                <Badge variant={typeof row.status === "number" ? (row.status >= 400 ? "warn" : "synced") : row.status === "failed" ? "danger" : "synced"}>
+                                  {String(row.status)}
+                                </Badge>
+                              ) : row.latencyMs != null ? (
+                                <span className="font-[family-name:var(--font-mono)] text-xs">{row.latencyMs}ms</span>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td className="py-3 text-[var(--color-muted)] truncate max-w-[10rem]">
+                              {row.email ?? "—"}
+                            </td>
+                          </tr>
+                          {open && hasMeta ? (
+                            <tr>
+                              <td colSpan={7} className="pb-4 pr-4">
+                                <pre className="text-xs overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-base)] p-3 font-[family-name:var(--font-mono)]">
+                                  {JSON.stringify(row.meta, null, 2)}
+                                </pre>
+                              </td>
+                            </tr>
+                          ) : null}
+                        </Fragment>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
