@@ -343,7 +343,7 @@
 | ECO-10 | **AI conversation hygiene** — no secrets/junk in agent chat; procedure-only tracking | **next** | `.cursor/rules/ai-agent-commands.mdc` + agent docs |
 | ECO-11 | **Wiki + taskboard assets** — professional wiki pages; optional generated diagrams for Project #4 | **partial** | `docs/wiki/Ecosystem-Roadmap.md`, `GitHub-Project.md`, `AI-Agent-Commands.md` |
 | ECO-12 | **Repo hygiene** — gitignore local Wrangler/miniflare state; keep agent-accessible paths documented | **done** | `.gitignore` → `website/admin/.wrangler/` |
-| CHRYS-01 | **Chrysalis brand + animation** — official name for floating AI; Larvae mascot animation on all surfaces | **done** | shared `chrysalis.ts`; website + Mission Control FAB; `chrysalis.test.mjs` |
+| CHRYS-01 | **Chrysalis brand + animation** — official name for floating AI; Larvae mascot animation on all surfaces | **done** | [#286](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/286); shared `chrysalis.ts`; website + Mission Control FAB |
 | CHRYS-02 | **Chrysalis AI provider** — Antigravity + pluggable models; operator API key from cred vault (admin only) | **next** | user supplies Antigravity/other key; never commit; server-side proxy for admin |
 | CHRYS-03 | **Chrysalis privacy tiers** — admin learns full system under RBAC; website/extensions never see admin KV, secrets, or PII | **next** | separate context bundles; fail closed on ACL |
 | CHRYS-04 | **Chrysalis BYOK (user ecosystem)** — web + extensions use **user's** API key passively from options/vault; Lorapok does not ship keys to clients | **next** | encrypted local storage; opt-in; no telemetry of key material |
