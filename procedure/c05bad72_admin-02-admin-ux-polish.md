@@ -6,7 +6,7 @@
 **Plan:** `plan/mission-control-master-tasks.md`  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/192  
 **Branch:** `feat/admin-02-ux-polish`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281
 
 ---
 
@@ -21,8 +21,8 @@ Friendlier layouts, empty states, mobile sidebar polish, and contextual help on 
 - [x] Plan approved
 - [x] Procedure + GitHub issue linked (#192)
 - [x] Implementation started
-- [ ] Tests passing
-- [ ] PR opened
+- [x] Tests passing (`EmptyState-PageHeader.test.tsx`)
+- [x] PR opened ([#281](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281))
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
@@ -49,9 +49,9 @@ _None._
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | Headless tests | pending |
-| B | Component matrix | pending |
-| C | Production smoke | pending |
+| A | Headless tests | pass — `EmptyState-PageHeader.test.tsx` |
+| B | Component matrix | pending (manual mobile Escape / scroll-lock) |
+| C | Production smoke | pending (post-merge) |
 
 ---
 
