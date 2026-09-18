@@ -136,6 +136,16 @@ export default function SocialAiConfigCard() {
     );
   }
 
+  if (!config) {
+    return (
+      <Card>
+        <p className="text-sm text-[var(--color-muted)]">
+          {message?.text ?? "AI provider settings could not be loaded."}
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <div className="mb-4">
