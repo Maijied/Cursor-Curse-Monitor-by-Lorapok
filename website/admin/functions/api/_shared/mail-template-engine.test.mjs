@@ -19,7 +19,7 @@ test("formatSubscriberPlatform maps known sources", () => {
   assert.equal(formatSubscriberPlatform("browser-extension"), "Browser extension");
 });
 
-test("buildSubscriberMergeContext includes merge tags", () => {
+test("buildSubscriberMergeConkttext includes merge tags", () => {
   const ctx = buildSubscriberMergeContext(
     {
       email: "user@example.com",

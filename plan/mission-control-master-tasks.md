@@ -322,7 +322,7 @@
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| LEGAL-01 | **Terms, privacy & process consent** — unified ToS/Privacy for subscribe, extensions, analytics, Chrysalis BYOK; explicit consent before data collection | **done** | consent banner + `/api/consent` KV audit; privacy/terms v2026-09-18 |
+| LEGAL-01 | **Terms, privacy & process consent** — unified ToS/Privacy for subscribe, extensions, analytics, Chrysalis BYOK; explicit consent before data collection | **done** | [#292](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/292); consent banner + `/api/consent` KV audit |
 | ANALYTICS-02 | **Visitor & user event log** — new signup/visit events (IP hash, user-agent, referrer, page); admin analytics view; retention policy | **next** | D1/Firestore; no raw secrets; GDPR-style export/delete hooks |
 
 ---

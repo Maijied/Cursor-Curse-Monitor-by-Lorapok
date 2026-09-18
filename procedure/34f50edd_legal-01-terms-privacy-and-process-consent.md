@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/199  
 **Branch:** `feat/legal-01-consent`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/292
 
 ---
 
@@ -22,7 +22,7 @@ Unified Terms/Privacy for subscribe, extensions, analytics, Chrysalis BYOK; expl
 - [x] Procedure + GitHub issue created (#199; closed duplicate #291)
 - [x] Implementation started
 - [x] Tests passing
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
