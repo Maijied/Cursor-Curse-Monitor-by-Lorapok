@@ -6,7 +6,7 @@
 **Plan:** `plan/mission-control-master-tasks.md`  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282  
 **Branch:** `feat/deploy-04-admin-only-marketplace`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/283
 
 ---
 
@@ -22,7 +22,7 @@ Stop continuous / accidental marketplace publishes. VSCE / Open VSX / AMO only v
 - [x] Procedure + GitHub issue linked (#282)
 - [x] Implementation started
 - [x] Tests passing (`test_marketplace_deploy_gate.mjs`)
-- [ ] PR opened
+- [x] PR opened ([#283](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/283))
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification

@@ -171,7 +171,7 @@
 | DEPLOY-01 | **Global deploy runtime UX** — after dispatch, operator navigates any admin page; floating deploy button + pipeline panel stay live; every UI step maps 1:1 to `ci-cd.yml` jobs (resolve-version → compile → package → marketplaces → Pages → Discord) | **done** | Session persists until Done; pipeline includes Validate Dispatch; FAB shows active job |
 | DEPLOY-02 | **Remove duplicate webhook UI** from Deployments page — canonical config in Settings → Discord / Social | **done** | `Deployments.tsx` links to Settings → Discord; webhook card removed |
 | DEPLOY-03 | **Deploy → social gallery trigger** — on CI success, queue SOCIAL-02 image generation from changelog caption | **done** | Job `queue-social-gallery` (admin-production CRON_SECRET + vault); CI `queue-social-gallery.mjs` |
-| DEPLOY-04 | **Admin-only marketplace publish** — no continuous marketplace deploys on push/full-release; only Mission Control Deploy/Rollback with `deploy_extension=true` | **in progress** | [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282); `test_marketplace_deploy_gate.mjs` |
+| DEPLOY-04 | **Admin-only marketplace publish** — no continuous marketplace deploys on push/full-release; only Mission Control Deploy/Rollback with `deploy_extension=true` | **in progress** | PR [#283](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/283); closes [#282](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/282) |
 
 ---
 
