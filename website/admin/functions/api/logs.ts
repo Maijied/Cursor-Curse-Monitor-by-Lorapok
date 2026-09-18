@@ -2,6 +2,7 @@ import { jsonResponse, verifyAdminRequest, requirePermission } from "./_shared/a
 import { logAuthenticatedRequest, readApiActivity } from "./_shared/activity-log.js";
 import { listMailboxMessages } from "./_shared/mailbox.js";
 import { readSystemLogs } from "./_shared/system-log.js";
+import { applyUnifiedLogFilters, unifiedLogsToCsv } from "./_shared/logs-query.js";
 
 function normalizeApiRow(row) {
   return {
@@ -52,48 +53,6 @@ function normalizeSystemRow(row) {
   };
 }
 
-function applyFilters(items, params) {
-  let filtered = items;
-
-  const type = params.get("type");
-  if (type && type !== "all") filtered = filtered.filter((r) => r.type === type);
-
-  const level = params.get("level");
-  if (level) filtered = filtered.filter((r) => r.level === level);
-
-  const method = params.get("method")?.toUpperCase();
-  if (method) filtered = filtered.filter((r) => String(r.method ?? "").toUpperCase() === method);
-
-  const status = params.get("status");
-  if (status === "2xx") filtered = filtered.filter((r) => r.status >= 200 && r.status < 300);
-  else if (status === "4xx") filtered = filtered.filter((r) => r.status >= 400 && r.status < 500);
-  else if (status === "5xx") filtered = filtered.filter((r) => r.status >= 500);
-  else if (status === "failed") filtered = filtered.filter((r) => r.status === "failed");
-
-  const source = params.get("source");
-  if (source) filtered = filtered.filter((r) => r.source === source);
-
-  const email = params.get("email")?.trim().toLowerCase();
-  if (email) {
-    filtered = filtered.filter((r) => String(r.email ?? "").toLowerCase().includes(email));
-  }
-
-  const q = params.get("q")?.trim().toLowerCase();
-  if (q) {
-    filtered = filtered.filter(
-      (r) =>
-        String(r.message ?? "").toLowerCase().includes(q) ||
-        String(r.path ?? "").toLowerCase().includes(q) ||
-        String(r.subject ?? "").toLowerCase().includes(q) ||
-        String(r.to ?? "").toLowerCase().includes(q) ||
-        String(r.from ?? "").toLowerCase().includes(q) ||
-        String(r.method ?? "").toLowerCase().includes(q)
-    );
-  }
-
-  return filtered;
-}
-
 export async function onRequestGet(context) {
   const startedAt = Date.now();
   const { request, env } = context;
@@ -104,6 +63,7 @@ export async function onRequestGet(context) {
   if (denied) return denied;
 
   const url = new URL(request.url);
+  const format = (url.searchParams.get("format") ?? "json").toLowerCase();
   const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
   const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "25", 10) || 25));
 
@@ -119,8 +79,27 @@ export async function onRequestGet(context) {
     ...systemRows.map(normalizeSystemRow),
   ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
 
-  const filtered = applyFilters(merged, url.searchParams);
+  const filtered = applyUnifiedLogFilters(merged, url.searchParams);
   const total = filtered.length;
+  const counts = {
+    api: apiRows.length,
+    mail: mailRows.length,
+    system: systemRows.length,
+  };
+
+  if (format === "csv") {
+    const csv = unifiedLogsToCsv(filtered);
+    const response = new Response(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="mission-control-logs-${new Date().toISOString().slice(0, 10)}.csv"`,
+        "Cache-Control": "no-store",
+      },
+    });
+    return logAuthenticatedRequest(context, auth, response, startedAt);
+  }
+
   const start = (page - 1) * limit;
   const items = filtered.slice(start, start + limit);
 
@@ -130,11 +109,7 @@ export async function onRequestGet(context) {
     limit,
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
-    counts: {
-      api: apiRows.length,
-      mail: mailRows.length,
-      system: systemRows.length,
-    },
+    counts,
   });
 
   return logAuthenticatedRequest(context, auth, response, startedAt);

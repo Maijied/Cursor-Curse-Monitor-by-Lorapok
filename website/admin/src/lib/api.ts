@@ -1688,6 +1688,7 @@ export type LogEntry = {
   direction?: string;
   category?: string;
   error?: string | null;
+  meta?: Record<string, unknown>;
 };
 
 export type MailboxMessage = {
@@ -1733,6 +1734,8 @@ export async function fetchLogs(
     q?: string;
     source?: string;
     level?: string;
+    since?: string;
+    until?: string;
   } = {}
 ) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
@@ -1743,6 +1746,8 @@ export async function fetchLogs(
   if (filters.q) params.set("q", filters.q);
   if (filters.source) params.set("source", filters.source);
   if (filters.level) params.set("level", filters.level);
+  if (filters.since) params.set("since", filters.since);
+  if (filters.until) params.set("until", filters.until);
   return apiGet<{
     items: LogEntry[];
     page: number;
@@ -1751,6 +1756,46 @@ export async function fetchLogs(
     totalPages: number;
     counts?: { api: number; mail: number; system: number };
   }>(`/logs?${params.toString()}`);
+}
+
+export async function downloadLogsCsv(
+  filters: {
+    type?: string;
+    method?: string;
+    status?: string;
+    email?: string;
+    q?: string;
+    source?: string;
+    level?: string;
+    since?: string;
+    until?: string;
+  } = {}
+) {
+  const params = new URLSearchParams({ format: "csv" });
+  if (filters.type && filters.type !== "all") params.set("type", filters.type);
+  if (filters.method) params.set("method", filters.method);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.email) params.set("email", filters.email);
+  if (filters.q) params.set("q", filters.q);
+  if (filters.source) params.set("source", filters.source);
+  if (filters.level) params.set("level", filters.level);
+  if (filters.since) params.set("since", filters.since);
+  if (filters.until) params.set("until", filters.until);
+
+  const res = await fetch(`${API_BASE}/logs?${params.toString()}`, {
+    headers: await authHeaders(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Logs export failed");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `mission-control-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 export type AclAuditEntry = {

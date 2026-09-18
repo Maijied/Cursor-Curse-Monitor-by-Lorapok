@@ -3996,11 +3996,9 @@ export function createDevApiMiddleware() {
       const query = new URL(req.url ?? "", "http://localhost");
       const page = Math.max(1, Number.parseInt(query.searchParams.get("page") ?? "1", 10) || 1);
       const limit = Math.min(100, Math.max(1, Number.parseInt(query.searchParams.get("limit") ?? "25", 10) || 25));
-      const type = query.searchParams.get("type");
-      const source = query.searchParams.get("source");
-      const emailFilter = query.searchParams.get("email")?.trim().toLowerCase();
-      const q = query.searchParams.get("q")?.trim().toLowerCase();
+      const format = (query.searchParams.get("format") ?? "json").toLowerCase();
       void (async () => {
+        const { applyUnifiedLogFilters, unifiedLogsToCsv } = await import("./functions/api/_shared/logs-query.js");
         const scatterSystem = await readSystemLogs(devFunctionsEnv());
         const merged = [
           ...devStore.activity.map((row) => ({
@@ -4035,6 +4033,7 @@ export function createDevApiMiddleware() {
             source: row.source,
             email: row.email,
             message: row.message,
+            meta: row.meta ?? {},
           })),
           ...devStore.systemLogs.map((row) => ({
             id: `sys-${row.id}`,
@@ -4044,22 +4043,22 @@ export function createDevApiMiddleware() {
             source: row.source,
             email: row.email,
             message: row.message,
+            meta: row.meta ?? {},
           })),
         ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-        let filtered = merged;
-        if (type && type !== "all") filtered = filtered.filter((r) => r.type === type);
-        if (source) filtered = filtered.filter((r) => String(r.source ?? "") === source);
-        if (emailFilter) {
-          filtered = filtered.filter((r) => String(r.email ?? "").toLowerCase().includes(emailFilter));
+        const filtered = applyUnifiedLogFilters(merged, query.searchParams);
+        if (format === "csv") {
+          logDevActivity(req, 200);
+          res.setHeader("Content-Type", "text/csv; charset=utf-8");
+          res.setHeader("Content-Disposition", 'attachment; filename="mission-control-logs-dev.csv"');
+          res.end(unifiedLogsToCsv(filtered));
+          return;
         }
-        if (q) {
-          filtered = filtered.filter((r) => String(r.message ?? "").toLowerCase().includes(q));
-        }
-        const start = (page - 1) * limit;
+        const startIdx = (page - 1) * limit;
         logDevActivity(req, 200);
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({
-          items: filtered.slice(start, start + limit),
+          items: filtered.slice(startIdx, startIdx + limit),
           page,
           limit,
           total: filtered.length,
