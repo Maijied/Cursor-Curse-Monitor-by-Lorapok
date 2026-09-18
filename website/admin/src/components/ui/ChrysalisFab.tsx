@@ -2,6 +2,9 @@ import { useCallback, useEffect, useId, useState } from "react";
 import {
   CHRYSALIS_BRAND,
   CHRYSALIS_COPY,
+  GITHUB_CONTRIBUTING_URL,
+  GITHUB_GOOD_FIRST_ISSUES_URL,
+  GITHUB_PROJECT_BOARD_URL,
   larvaeSvgMarkup,
 } from "@lorapok/cursor-monitor-shared";
 import { useSiteData } from "../../hooks/useSiteData";
@@ -67,6 +70,20 @@ export default function ChrysalisFab() {
                     {data.vscode?.version ?? "—"}
                   </dd>
                 </dl>
+                <p className="mt-3 mb-0 text-[var(--color-text)]">{CHRYSALIS_COPY.contributeBlurb}</p>
+                <p className="mt-2 mb-0 text-xs">
+                  <a href={GITHUB_CONTRIBUTING_URL} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)]">
+                    CONTRIBUTING
+                  </a>
+                  {" · "}
+                  <a href={GITHUB_GOOD_FIRST_ISSUES_URL} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)]">
+                    Good first issues
+                  </a>
+                  {" · "}
+                  <a href={GITHUB_PROJECT_BOARD_URL} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)]">
+                    Project #4
+                  </a>
+                </p>
               </>
             )}
           </div>

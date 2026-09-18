@@ -9,6 +9,8 @@ import {
   SUPPORTED_IDE_WRAPPERS,
   SUPPORTED_IDE_WRAPPERS_HEADLINE,
   SUPPORTED_IDE_WRAPPERS_SUBLINE,
+  GITHUB_CONTRIBUTING_URL,
+  CONTRIBUTE_CTA_LABEL,
 } from "@lorapok/cursor-monitor-shared";
 import { fetchCommunityDownloadStats } from "./communityDownloads";
 import {
@@ -1819,6 +1821,8 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
       <a href="mailto:cursor.curse.help@lorapok.tech">Help</a>
       <span class="footer-dot">·</span>
       <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener">Discord</a>
+      <span class="footer-dot">·</span>
+      <a href="${GITHUB_CONTRIBUTING_URL}" target="_blank" rel="noopener">${CONTRIBUTE_CTA_LABEL}</a>
       <span class="footer-dot">·</span>
       <button type="button" class="footer-link" id="feedbackBtn">Feedback</button>
       <span class="footer-dot">·</span>

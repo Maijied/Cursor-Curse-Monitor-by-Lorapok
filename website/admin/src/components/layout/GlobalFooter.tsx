@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { LORAPOK_LABS_URL, GITHUB_CONTRIBUTING_URL, CONTRIBUTE_CTA_LABEL } from "@lorapok/cursor-monitor-shared";
 import { usePollingFetch } from "../../hooks/usePollingFetch";
 import { useSiteData } from "../../hooks/useSiteData";
 import { fetchHealth, fetchSyncStatus, type SyncStatusPayload } from "../../lib/api";
@@ -69,14 +70,25 @@ export default function GlobalFooter() {
           </>
         ) : null}
       </div>
-      <a
-        href="https://lorapok.tech"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="shrink-0 hover:text-[var(--color-accent)] transition-colors"
-      >
-        Lorapok Labs
-      </a>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 shrink-0">
+        <a
+          href={GITHUB_CONTRIBUTING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[var(--color-accent)] transition-colors"
+        >
+          {CONTRIBUTE_CTA_LABEL}
+        </a>
+        <span className="opacity-40 select-none" aria-hidden="true">·</span>
+        <a
+          href={LORAPOK_LABS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[var(--color-accent)] transition-colors"
+        >
+          Lorapok Labs
+        </a>
+      </div>
     </footer>
   );
 }

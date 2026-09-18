@@ -124,8 +124,30 @@
     });
   }
 
+  /** WEB-10 — CONTRIBUTING + good-first + Project #4 on every marketing footer. */
+  function applyContributeLinks() {
+    const contributing =
+      "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md";
+    const goodFirst =
+      "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22";
+    const project = "https://github.com/users/Maijied/projects/4";
+
+    document.querySelectorAll(".footer-inner").forEach((inner) => {
+      if (!(inner instanceof HTMLElement)) return;
+      if (inner.querySelector("[data-footer-contribute]")) return;
+      const p = document.createElement("p");
+      p.setAttribute("data-footer-contribute", "");
+      p.className = "footer-contribute";
+      p.innerHTML = `Open source · <a href="${contributing}" target="_blank" rel="noopener noreferrer">CONTRIBUTING</a> · <a href="${goodFirst}" target="_blank" rel="noopener noreferrer">Good first issues</a> · <a href="${project}" target="_blank" rel="noopener noreferrer">Project #4</a>`;
+      const nav = inner.querySelector("[data-footer-social]");
+      if (nav) nav.after(p);
+      else inner.prepend(p);
+    });
+  }
+
   async function init() {
     const navs = [...document.querySelectorAll("[data-footer-social]")];
+    applyContributeLinks();
     if (!navs.length) return;
 
     let social = null;

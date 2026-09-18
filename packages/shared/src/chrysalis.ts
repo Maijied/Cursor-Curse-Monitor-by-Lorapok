@@ -20,6 +20,8 @@ export const CHRYSALIS_COPY = {
     "Operator session — Chrysalis stays within your RBAC. Secrets never enter chat.",
   offline: "Product data unavailable offline.",
   loading: "Loading…",
+  contributeBlurb:
+    "Want to help? Read CONTRIBUTING, grab a good-first issue, or follow Project #4.",
 } as const;
 
 /** Root element id for the marketing-site floating shell. */

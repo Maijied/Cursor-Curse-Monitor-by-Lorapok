@@ -131,6 +131,7 @@ ${bodyHtml}
   <footer class="site-footer">
     <div class="container footer-inner">
       <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p data-footer-contribute class="footer-contribute">Open source · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a></p>
       <p>GPL-3.0 © Lorapok Labs · <a href="${prefix}">Home</a> · <a href="${prefix}wiki/">Wiki</a> · <a href="${prefix}releases.html">Releases</a> · <a href="${prefix}community.html">Community</a> · <a href="${prefix}docs/">Docs</a> · <a href="${prefix}privacy.html">Privacy</a> · <a href="${prefix}terms.html">Terms</a></p>
       <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
     </div>

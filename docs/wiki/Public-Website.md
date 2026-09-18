@@ -60,10 +60,13 @@ Covers:
 
 ## Open-source welcome (WEB-10)
 
-- CONTRIBUTING.md + good-first issues on every surface footer
-- Hero/subscribe contributor CTA
-- Extension options “Join the community” link
-- Chrysalis can answer “how do I contribute?”
+**Status: done**
+
+- CONTRIBUTING.md + good-first issues + Project #4 on every marketing footer (`social-footer.js` + generated pages)
+- Hero + subscribe contributor CTAs on the home page
+- IDE dashboard + browser popup/options “Join the community” links (shared `productLinks`)
+- Mission Control GlobalFooter + Chrysalis contribute blurb
+- Chrysalis can point contributors at CONTRIBUTING / good-first / Project #4
 
 ---
 

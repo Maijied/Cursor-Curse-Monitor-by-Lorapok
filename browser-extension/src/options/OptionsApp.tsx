@@ -23,6 +23,9 @@ import {
   formatCommunityDownloadsBreakdown,
   formatCommunityDownloadsHeadline,
   parseCommunityDownloadsFromSiteData,
+  GITHUB_CONTRIBUTING_URL,
+  CONTRIBUTE_CTA_LABEL,
+  LORAPOK_LABS_URL,
   type CommunityDownloadStats,
 } from "@lorapok/cursor-monitor-shared";
 import { snoozeSubscribePrompt, subscribeForProductUpdates } from "../lib/subscribe";
@@ -381,7 +384,11 @@ export function OptionsApp() {
         </p>
         <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
           More Lorapok Labs tools:{" "}
-          <a href="https://lorapok.tech" target="_blank" rel="noopener noreferrer">lorapok.tech</a>
+          <a href={LORAPOK_LABS_URL} target="_blank" rel="noopener noreferrer">lorapok.tech</a>
+          {" · "}
+          <a href={GITHUB_CONTRIBUTING_URL} target="_blank" rel="noopener noreferrer">
+            {CONTRIBUTE_CTA_LABEL}
+          </a>
         </p>
       </section>
 
