@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/207  
 **Branch:** `feat/web-11-engineering-history`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/296
 
 ---
 
@@ -22,7 +22,7 @@ Long-form behind-the-scenes timeline at `/engineering/history/`: sectioned miles
 - [x] Procedure + GitHub issue created (#207; dup #295 closed)
 - [x] Implementation started
 - [x] Tests passing (`test_web_11_engineering_history.mjs`)
-- [ ] PR opened
+- [x] PR opened (#296)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
