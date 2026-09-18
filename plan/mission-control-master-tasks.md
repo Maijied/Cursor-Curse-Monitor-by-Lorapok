@@ -314,7 +314,7 @@
 | SOCIAL-02 | **Deploy social gallery** — AI-generated Lorapok-themed image per release; changelog caption; R2/KV; gallery in admin | **done** | SVG assets + R2/KV; Settings → Social gallery; DEPLOY-03 auto-generate |
 | SOCIAL-03 | **One-click multi-channel publish** — share to all configured channels: captions, hashtags, platform dimensions, stories; optional video | **done** | Publish all channels + dry-run; Telegram photo; text+URL fallback |
 | SOCIAL-04 | **AI image provider registry** — free providers default + optional paid; admin adds many, **activate one** at a time | **done** | Settings → Social → AI image & video; KV `integrations:social-ai`; gallery uses active provider |
-| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **in progress** | Encoder client + voiceover script; PR TBD; closes [#217](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217) |
+| SOCIAL-05 | **Video generator** — short deploy/feature clips for Reels/Stories/Shorts; template + changelog voiceover optional | **in progress** | PR [#284](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/284); closes [#217](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217) |
 
 ---
 
