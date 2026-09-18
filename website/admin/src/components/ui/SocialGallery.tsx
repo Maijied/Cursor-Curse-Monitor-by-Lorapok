@@ -5,6 +5,9 @@ import Card from "./Card";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Badge from "./Badge";
 import Notification from "./Notification";
+import EmptyState from "./EmptyState";
+import SectionReferLink from "./SectionReferLink";
+import { SECTION_REFERS } from "../../lib/section-refer";
 import {
   fetchSocialGalleryApi,
   generateSocialGalleryItemApi,
@@ -155,9 +158,12 @@ export default function SocialGallery() {
       {loading ? (
         <LorapokLarvaeLoader label="Loading social gallery…" />
       ) : items.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted)]">
-          No gallery jobs yet. Successful marketplace deploys queue items automatically via DEPLOY-03.
-        </p>
+        <EmptyState
+          icon={ImageIcon}
+          title="No gallery jobs yet"
+          description="Successful marketplace deploys queue items automatically via DEPLOY-03. You can also generate a draft after configuring social + image AI."
+          action={<SectionReferLink {...SECTION_REFERS.deployments} />}
+        />
       ) : (
         <div className="space-y-3">
           {items.map((item) => {

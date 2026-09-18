@@ -344,6 +344,20 @@ export default function Deployments() {
       <PageHeader
         title="Deploy & Release"
         description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces. Configure deploy Discord notifications in Settings."
+        hint={
+          <>
+            <p>
+              <strong className="text-[var(--color-text)]">Deploy</strong> publishes marketplaces;{" "}
+              <strong className="text-[var(--color-text)]">Rollback</strong> restores an older tag;{" "}
+              <strong className="text-[var(--color-text)]">Infra</strong> redeploys admin/website without a
+              marketplace bump.
+            </p>
+            <p>
+              Live pipeline status stays in the floating larvae control while a run is active. Expand “How it
+              works” below for the full job map.
+            </p>
+          </>
+        }
       />
 
       <div className="glass-panel px-4 py-3 text-sm text-[var(--color-muted)] flex flex-wrap items-center justify-between gap-3">

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import EmptyState from "./EmptyState";
 
 export type DataTableColumn<T> = {
   key: string;
@@ -20,6 +21,7 @@ export default function DataTable<T>({
   onFilterChange,
   filterLabel = "Filter",
   emptyMessage = "No rows to display.",
+  emptyTitle = "Nothing here yet",
   getRowKey,
 }: {
   columns: DataTableColumn<T>[];
@@ -29,6 +31,7 @@ export default function DataTable<T>({
   onFilterChange?: (value: string) => void;
   filterLabel?: string;
   emptyMessage?: string;
+  emptyTitle?: string;
   getRowKey: (row: T, index: number) => string;
 }) {
   const [query, setQuery] = useState("");
@@ -106,8 +109,12 @@ export default function DataTable<T>({
           <tbody className="divide-y divide-[var(--color-border)]">
             {pageRows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-8 text-center text-[var(--color-muted)]">
-                  {emptyMessage}
+                <td colSpan={columns.length} className="p-0">
+                  <EmptyState
+                    className="border-0 rounded-none bg-transparent"
+                    title={emptyTitle}
+                    description={emptyMessage}
+                  />
                 </td>
               </tr>
             ) : (

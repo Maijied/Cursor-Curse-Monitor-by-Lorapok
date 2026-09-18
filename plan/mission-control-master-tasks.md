@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (WEB-07 system topology in progress on `feat/web-07-system-topology`)
-**Branch:** `feat/web-07-system-topology`
-**Main:** `2b92c9f5`
-**CI:** ADMIN-01 merged (#278); WEB-07 local architecture tests green
+**Last updated:** 2026-09-18 (ADMIN-02 UX polish in progress on `feat/admin-02-ux-polish`)
+**Branch:** `feat/admin-02-ux-polish`
+**Main:** `980f822a`
+**CI:** WEB-07 merged (#280); ADMIN-02 local EmptyState/PageHeader vitest green
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -287,7 +287,7 @@
 | WEB-04 | Hero / stats polish plan | **deferred** | `a8f3c2d1_website-final-polish-plan.md` |
 | WEB-05 | **Interactive features explorer** — post-hero cards + GitHub community stats panel | **done** | `features-explorer.js`, `site-data.json` |
 | WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | `ccm-floating-assistant.js`; rename → Chrysalis (CHRYS-01) |
-| WEB-07 | **Expanded system topology** — beautiful animated diagrams with **every** CI/CD step, cron, KV/R2, marketplaces, Discord (match `ci-cd.yml` + Architecture wiki) | **in progress** | Job-level nodes + `test_architecture_cicd_jobs.mjs`; branch `feat/web-07-system-topology` |
+| WEB-07 | **Expanded system topology** — beautiful animated diagrams with **every** CI/CD step, cron, KV/R2, marketplaces, Discord (match `ci-cd.yml` + Architecture wiki) | **done** | PR [#280](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/280); job-level `ci-cd.yml` coverage |
 | WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **next** | new `#engineering` section; link to wiki + GitHub |
 | WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **next** | static pages or lightweight router; Mission Control as CMS source |
 | WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **next** | all surfaces; pairs with ECO-11 |
@@ -373,7 +373,7 @@
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **next** | Logs page v2; normalize `logSystemEvent` schema |
 | EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **done** | PR [#278](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/278) merged; ACL-aware fuzzy ⌘K |
-| ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **next** | user-friendly pass; pairs with ADMIN-01 |
+| ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **in progress** | EmptyState + PageHeader hints; branch `feat/admin-02-ux-polish` |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
 | ADMIN-04 | **Minimal global footer** — services online, system version, sync status, Lorapok Labs link; sticky bottom bar | **done** | `GlobalFooter.tsx` in `AppShell`; `/api/health` + `fetchSyncStatus` + `useSiteData` |
 | ADMIN-05 | **Dedupe dashboard data** — remove redundant KPIs between Overview, Connected Services, Infrastructure | **done** | Footer owns status; Overview links to Settings; infra rows only in Infrastructure card |
@@ -391,7 +391,7 @@
 
 ## Blockers (need you)
 
-_None operational._ Optional: checkout/reset local branch to `main` (`2b92c9f5`) after ADMIN-01 merge.
+_None operational._ Optional: merge [#280](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/280) to land WEB-07 on `main`.
 ---
 
 ## Related plans
