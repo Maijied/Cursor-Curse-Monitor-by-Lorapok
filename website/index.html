@@ -146,6 +146,7 @@
         <a href="#supported-ides">Supported IDEs</a>
         <a href="#ecosystem">Ecosystem</a>
         <a href="#architecture">Architecture</a>
+        <a href="#engineering">Engineering</a>
         <a href="#features">Features</a>
         <a href="#gallery">Gallery</a>
         <a href="#install">Install</a>
@@ -448,6 +449,85 @@
       </article>
     </div>
     <p class="architecture-foot muted">Canonical source: <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#architecture">README architecture</a> · <a href="https://cursor-dev.lorapok.tech/architecture" target="_blank" rel="noopener">Mission Control</a></p>
+  </section>
+
+  <section id="engineering" class="section engineering-section container">
+    <div class="engineering-ambient" aria-hidden="true">
+      <span class="engineering-ambient-glow engineering-ambient-glow--a"></span>
+      <span class="engineering-ambient-glow engineering-ambient-glow--b"></span>
+    </div>
+    <div class="section-head engineering-section-head">
+      <p class="eyebrow">Behind the scenes</p>
+      <h2>How the monorepo ships</h2>
+      <p class="section-lead">Four surfaces, one release train — Mission Control operators, procedure tracking, cred vault secrets, and agent commands that keep the public site honest.</p>
+    </div>
+
+    <div class="engineering-surfaces" aria-label="Product surfaces">
+      <a class="engineering-surface" href="#ecosystem">
+        <span class="engineering-surface-label">IDE extension</span>
+        <span class="engineering-surface-meta">VS Code wrappers · Open VSX</span>
+      </a>
+      <a class="engineering-surface" href="#ecosystem">
+        <span class="engineering-surface-label">Browser extension</span>
+        <span class="engineering-surface-meta">Firefox AMO · Chrome zip</span>
+      </a>
+      <a class="engineering-surface" href="./">
+        <span class="engineering-surface-label">Marketing site</span>
+        <span class="engineering-surface-meta">GitHub Pages · site-data</span>
+      </a>
+      <a class="engineering-surface" href="https://cursor-dev.lorapok.tech/" target="_blank" rel="noopener">
+        <span class="engineering-surface-label">Mission Control</span>
+        <span class="engineering-surface-meta">Cloudflare Pages · ops</span>
+      </a>
+    </div>
+
+    <div class="engineering-topics">
+      <article class="engineering-topic">
+        <h3>Procedure + Project #4</h3>
+        <p>Non-trivial work lands in <code>procedure/</code> with a GitHub issue on <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a>. Agents say <strong>Update?</strong> for status and <strong>next</strong> for the top queue item — progress stays in procedure files, not chat dumps.</p>
+        <p class="engineering-topic-links">
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/wiki/AI-Agent-Commands.md" target="_blank" rel="noopener">AI agent commands</a>
+          ·
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/TASK-TRACKING.md" target="_blank" rel="noopener">Task tracking</a>
+        </p>
+      </article>
+      <article class="engineering-topic">
+        <h3>Cred vault</h3>
+        <p>API tokens and webhooks live in the GPG cred vault — never in git, <code>wrangler.toml</code>, or client bundles. Sync scripts push to Cloudflare and GitHub Actions after rotation.</p>
+        <p class="engineering-topic-links">
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/wiki/Architecture.md" target="_blank" rel="noopener">Architecture wiki</a>
+          ·
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/AGENT_INIT.md" target="_blank" rel="noopener">Agent init</a>
+        </p>
+      </article>
+      <article class="engineering-topic">
+        <h3>Release integrity</h3>
+        <p>Dynamic versioning, marketplace gates, and release checks keep VSIX / AMO / Open VSX / Pages deploys aligned. Mission Control is the opt-in path for marketplace publish.</p>
+        <p class="engineering-topic-links">
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/wiki/Deployment.md" target="_blank" rel="noopener">Deployment</a>
+          ·
+          <a href="#architecture">System topology</a>
+        </p>
+      </article>
+      <article class="engineering-topic">
+        <h3>Contribute</h3>
+        <p>Good-first issues and CONTRIBUTING live on GitHub. Chrysalis (floating Larvae) can point you at the public board — full welcome polish is WEB-10.</p>
+        <p class="engineering-topic-links">
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a>
+          ·
+          <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a>
+        </p>
+      </article>
+    </div>
+
+    <p class="engineering-foot muted">
+      Deep dive:
+      <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/wiki/Public-Website.md" target="_blank" rel="noopener">Public Website wiki</a>
+      ·
+      <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/docs/wiki/Ecosystem-Roadmap.md" target="_blank" rel="noopener">Ecosystem roadmap</a>
+      ·
+      long-form history planned as WEB-11
+    </p>
   </section>
 
     <section id="features" class="section container">
