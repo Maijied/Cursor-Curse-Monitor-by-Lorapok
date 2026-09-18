@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/196  
 **Branch:** `feat/web-09-public-pages`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/290
 
 ---
 
@@ -22,7 +22,7 @@ Public multi-page marketing site: `/wiki`, `/releases`, `/community`, `/docs` fr
 - [x] Procedure + GitHub issue created (#196; closed duplicate #289)
 - [x] Implementation started
 - [x] Tests passing (`test_web_09_public_pages.mjs`)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
