@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/170  
 **Branch:** `feat/ext-01-platform-strip`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/300
 
 ---
 
