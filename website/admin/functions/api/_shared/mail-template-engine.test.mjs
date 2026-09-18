@@ -26,7 +26,7 @@ test("buildSubscriberMergeContext includes merge tags", () => {
       subscribedAt: new Date().toISOString(),
       source: "website",
       installId: null,
-      consentVersion: "2026-08-25",
+      consentVersion: "2026-09-18",
     },
     {
       displayName: "Cursor Curse Monitor",

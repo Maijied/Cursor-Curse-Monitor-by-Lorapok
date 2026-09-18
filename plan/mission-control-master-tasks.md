@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (WEB-08 [#288](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/288) merged; WEB-09 in progress)
-**Branch:** `feat/web-09-public-pages`
-**Main:** `e05e3fc6`
-**CI:** DEPLOY-04 on main (#283). SOCIAL-05 + CHRYS-01 + WEB-08 merged.
+**Last updated:** 2026-09-18 (WEB-09 [#290](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/290) merged; LEGAL-01 in progress)
+**Branch:** `feat/legal-01-consent`
+**Main:** `6f12c9db`
+**CI:** DEPLOY-04 on main (#283). WEB-08/09 + CHRYS-01 + SOCIAL-05 merged.
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -322,7 +322,7 @@
 
 | ID | Task | Status | Notes / verify |
 |----|------|--------|----------------|
-| LEGAL-01 | **Terms, privacy & process consent** — unified ToS/Privacy for subscribe, extensions, analytics, Chrysalis BYOK; explicit consent before data collection | **next** | update `terms.html` / `privacy.html`; consent banner + KV audit trail |
+| LEGAL-01 | **Terms, privacy & process consent** — unified ToS/Privacy for subscribe, extensions, analytics, Chrysalis BYOK; explicit consent before data collection | **done** | consent banner + `/api/consent` KV audit; privacy/terms v2026-09-18 |
 | ANALYTICS-02 | **Visitor & user event log** — new signup/visit events (IP hash, user-agent, referrer, page); admin analytics view; retention policy | **next** | D1/Firestore; no raw secrets; GDPR-style export/delete hooks |
 
 ---
@@ -383,9 +383,9 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **LEGAL-01**, **WEB-10**, remaining ecosystem queue
+1. **WEB-10**, remaining ecosystem queue
 2. **CHRYS-02** (AI provider) when operator vault key path is ready
-3. **ANALYTICS-01** / **LOGS-01** when operator metrics land
+3. **ANALYTICS-01** / **LOGS-01** / **ANALYTICS-02** when operator metrics land
 
 ---
 

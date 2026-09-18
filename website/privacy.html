@@ -120,6 +120,7 @@
   <link rel="stylesheet" href="styles.css?v=105f5292a052" />
   <link rel="stylesheet" href="larvae-loader.css?v=105f5292a052" />
   <link rel="stylesheet" href="ccm-floating-assistant.css?v=105f5292a052" />
+  <link rel="stylesheet" href="consent.css?v=105f5292a052" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -154,20 +155,21 @@
     <div class="container">
       <p class="eyebrow">Legal</p>
       <h1>Privacy Policy</h1>
-      <p class="lead">Last updated: August 11, 2026</p>
+      <p class="lead">Last updated: September 18, 2026 · Consent version 2026-09-18</p>
     </div>
   </section>
 
   <div class="prose-wrap container">
     <main class="prose" id="main-content" tabindex="-1">
       <h2>Summary</h2>
-      <p>Cursor Curse Monitor reads <strong>your</strong> Cursor session only. We do not operate a cloud service that stores or aggregates usage data.</p>
+      <p>Cursor Curse Monitor reads <strong>your</strong> Cursor session only. We do not operate a cloud service that stores or aggregates extension usage data. This policy covers the IDE extension, browser extension, marketing website, email subscribe, anonymous analytics, and Chrysalis (floating product guide).</p>
 
       <h2>What data is accessed</h2>
       <ul>
         <li>Your Cursor auth token from local <code>state.vscdb</code> (on your computer only)</li>
         <li>Usage summary and profile from <code>api2.cursor.sh</code> using that token</li>
         <li>Your extension settings (poll interval, budget cap) stored in VS Code/Cursor settings</li>
+        <li><strong>Browser extension:</strong> budget UI and paste-guard run locally; optional cursor.com session helpers stay in the browser profile</li>
       </ul>
 
       <h2>Who can see your usage</h2>
@@ -177,12 +179,20 @@
         <li><strong>Team limits</strong> — if your plan is team-based, you may see team limit <em>context</em> returned by Cursor's API for your session, not a full team usage breakdown.</li>
       </ul>
 
+      <h2>Email subscribe</h2>
+      <p>If you subscribe on the website, we store your email, source, and consent version in Mission Control (Cloudflare KV) to send product updates. Consent is required (version <code>2026-09-18</code>). Unsubscribe by replying to a message or contacting us.</p>
+
+      <h2>Website analytics (opt-in)</h2>
+      <p>Anonymous visit and marketplace-click counts run only after you choose <strong>Allow analytics</strong> on the process-consent banner. We do not sell personal data. Aggregate consent decisions may be counted in Mission Control KV for compliance auditing (no IP or email in that audit).</p>
+
+      <h2>Chrysalis (floating guide)</h2>
+      <p>Chrysalis shows public product context from <code>site-data.json</code>. Future AI chat (BYOK) will use an API key you supply — Lorapok does not ship provider keys to clients. Keys stay on your device; see the Chrysalis wiki for privacy tiers.</p>
+
       <h2>What we do not do</h2>
       <ul>
-        <li>No usage data sent to Lorapok Labs servers</li>
-        <li><strong>Anonymous website stats</strong> — the marketing site counts page visits and marketplace link clicks only (no personal data).</li>
-        <li><strong>No extension telemetry</strong> — the VS Code/Cursor extension does not phone home or use third-party trackers.</li>
+        <li>No extension usage telemetry by default (optional anonymous heartbeat is off unless you enable it in settings)</li>
         <li>No sale of personal data</li>
+        <li>No admin KV / subscriber PII in Chrysalis on public surfaces</li>
       </ul>
 
       <h2>Model fallback</h2>
@@ -194,6 +204,7 @@
         <a href="mailto:cursor.curse.help@lorapok.tech">cursor.curse.help@lorapok.tech</a>
         (fallback: <a href="mailto:lorapokdev@gmail.com">lorapokdev@gmail.com</a>)
       </p>
+      <p>See also <a href="terms.html">Terms of Use</a>.</p>
     </main>
   </div>
 
@@ -206,6 +217,7 @@
   </footer>
   <script src="cloudflare-beacon.js?v=105f5292a052" defer></script>
   <script src="social-footer.js?v=105f5292a052" defer></script>
+  <script src="consent.js?v=105f5292a052" defer></script>
   <script src="analytics.js?v=105f5292a052" defer></script>
   <script src="site.js?v=105f5292a052" defer></script>
   <script src="ccm-floating-assistant.js?v=105f5292a052" defer></script>

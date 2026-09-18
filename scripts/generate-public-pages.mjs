@@ -85,6 +85,7 @@ function pageShell({
   <link rel="stylesheet" href="${prefix}public-pages.css?v=${ASSET_V}" />
   <link rel="stylesheet" href="${prefix}larvae-loader.css?v=${ASSET_V}" />
   <link rel="stylesheet" href="${prefix}ccm-floating-assistant.css?v=${ASSET_V}" />
+  <link rel="stylesheet" href="${prefix}consent.css?v=${ASSET_V}" />
   ${extraHead}
 </head>
 <body class="public-page ${bodyClass}">
@@ -136,6 +137,7 @@ ${bodyHtml}
   </footer>
   <script src="${prefix}cloudflare-beacon.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}social-footer.js?v=${ASSET_V}" defer></script>
+  <script src="${prefix}consent.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}analytics.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}site.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}ccm-floating-assistant.js?v=${ASSET_V}" defer></script>

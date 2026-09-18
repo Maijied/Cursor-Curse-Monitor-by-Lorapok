@@ -109,8 +109,22 @@
       /* ignore */
     }
     window.__ccmBeaconUrl = getBeaconUrl(data);
-    trackPageView();
-    bindPackageClicks();
+
+    const start = () => {
+      trackPageView();
+      bindPackageClicks();
+    };
+
+    const stored = window.__CCM_PROCESS_CONSENT__ || window.CCM_PROCESS_CONSENT?.get?.();
+    if (stored?.analytics === true) {
+      start();
+      return;
+    }
+    if (stored?.analytics === false) {
+      return;
+    }
+    // LEGAL-01: fail closed until process consent banner allows analytics.
+    document.addEventListener("ccm:consent-analytics", start, { once: true });
   }
 
   if (document.readyState === "loading") {

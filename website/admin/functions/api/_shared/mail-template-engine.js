@@ -117,7 +117,7 @@ export async function buildSampleMergeContext(env) {
     subscribedAt: new Date().toISOString(),
     source: "website",
     installId: null,
-    consentVersion: "2026-08-25",
+    consentVersion: "2026-09-18",
   };
   const mergeCtx = buildSubscriberMergeContext(sampleSubscriber, productCtx, siteData, env);
   mergeCtx.changelogExcerpt =

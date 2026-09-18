@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **LEGAL-01 process consent** — analytics gated behind explicit banner; privacy/terms cover subscribe, extensions, Chrysalis BYOK; aggregate `/api/consent` KV audit (v2026-09-18).
 - **WEB-09 public multi-page site** — `/wiki/`, `/releases.html`, `/community.html`, `/docs/` generated from `docs/wiki` + `site-data.json` (`npm run site:pages`).
 - **WEB-08 Behind the scenes** — marketing `#engineering` section: monorepo surfaces, procedure/Project #4, cred vault, release integrity, contribute links.
 - **CHRYS-01 Chrysalis brand + Larvae** — official name for the floating assistant; shared `@lorapok/cursor-monitor-shared` shell; Larvae toggle on marketing pages (home/privacy/terms) and Mission Control FAB.

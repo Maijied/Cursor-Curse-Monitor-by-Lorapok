@@ -999,6 +999,58 @@ export function createDevApiMiddleware() {
       return;
     }
 
+    if (url === "/api/consent" && req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.end();
+      return;
+    }
+
+    if (url === "/api/consent" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", async () => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        try {
+          const { normalizeConsentChoice, recordConsentChoice, PROCESS_CONSENT_VERSION } =
+            await import("./functions/api/_shared/consent-audit.js");
+          const parsed = JSON.parse(body || "{}");
+          const choice = normalizeConsentChoice(parsed.choice ?? parsed.decision ?? parsed.consent);
+          if (!choice) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "choice must be analytics_accept or analytics_decline" }));
+            return;
+          }
+          const result = await recordConsentChoice({ ADMIN_KV: null }, choice);
+          // Dev: no real KV — still return ok with in-memory shape when KV missing
+          if (!result.ok && result.error === "ADMIN_KV unavailable") {
+            res.end(JSON.stringify({
+              ok: true,
+              choice,
+              version: PROCESS_CONSENT_VERSION,
+              totals: result.audit.totals,
+              source: "dev-memory",
+            }));
+            return;
+          }
+          res.end(JSON.stringify({
+            ok: result.ok,
+            choice,
+            version: PROCESS_CONSENT_VERSION,
+            totals: result.audit.totals,
+            updatedAt: result.audit.updatedAt,
+          }));
+        } catch (error) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: String(error instanceof Error ? error.message : error) }));
+        }
+      });
+      return;
+    }
+
     if (url === "/api/usage/ping" && req.method === "OPTIONS") {
       res.statusCode = 204;
       res.setHeader("Access-Control-Allow-Origin", "*");

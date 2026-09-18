@@ -6,7 +6,7 @@ import {
 
 export const SUBSCRIBERS_KEY = "subscribers";
 export const SUBSCRIBER_EMAIL_PREFIX = "subscriber:email";
-export const CONSENT_VERSION = "2026-08-25";
+export const CONSENT_VERSION = "2026-09-18";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

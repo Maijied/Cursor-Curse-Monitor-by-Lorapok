@@ -215,7 +215,7 @@ async function submitSubscribeRequest({ email, subscribeUrl, source }) {
   const response = await fetch(subscribeUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ email, source, consent: true }),
+    body: JSON.stringify({ email, source, consent: true, consentVersion: "2026-09-18" }),
   });
   const body = await response.json().catch(() => ({}));
   if (body.error === "already_subscribed" || (response.status === 409 && body.error === "already_subscribed")) {
