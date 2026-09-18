@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/180  
 **Branch:** `feat/eco-08-action-validator`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/297
 
 ---
 
@@ -22,7 +22,7 @@ Wire shared `confirmAction` before deploy, delete, broadcast, and other destruct
 - [x] Procedure + GitHub issue linked (#180)
 - [x] Implementation started
 - [x] Tests passing (`confirmAction.test.mjs`, `test_eco_08_confirm_action.mjs`)
-- [ ] PR opened
+- [x] PR opened (#297)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
