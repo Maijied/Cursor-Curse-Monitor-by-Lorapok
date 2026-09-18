@@ -46,7 +46,9 @@ Must match Mission Control **DEPLOY-01** deploy runtime steps for operator trust
 
 ## Behind the scenes (WEB-08)
 
-New section covering:
+**Shipped:** marketing `#engineering` section after Architecture.
+
+Covers:
 
 - Four components (IDE, browser, website, Mission Control)
 - Procedure + GitHub Project #4 workflow

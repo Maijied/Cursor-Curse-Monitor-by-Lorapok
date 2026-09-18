@@ -3818,3 +3818,193 @@ a.ide-card:focus-visible {
 .architecture-reduced-motion .arch-flow-pulse {
   animation: none !important;
 }
+
+/* ── Behind the scenes / engineering (WEB-08) ── */
+.engineering-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.engineering-section-head {
+  position: relative;
+  z-index: 1;
+  max-width: 42rem;
+}
+
+.engineering-ambient {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.engineering-ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.42;
+}
+
+.engineering-ambient-glow--a {
+  width: 280px;
+  height: 280px;
+  top: 12%;
+  left: -6%;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.engineering-ambient-glow--b {
+  width: 320px;
+  height: 320px;
+  bottom: 8%;
+  right: -8%;
+  background: color-mix(in srgb, var(--ok) 35%, transparent);
+}
+
+.engineering-surfaces {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.engineering-surface {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 8%, rgba(12, 16, 24, 0.92)), rgba(8, 11, 18, 0.9));
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: engineering-in 0.55s ease-out forwards;
+}
+
+.engineering-surface:nth-child(1) { animation-delay: 0.05s; }
+.engineering-surface:nth-child(2) { animation-delay: 0.12s; }
+.engineering-surface:nth-child(3) { animation-delay: 0.19s; }
+.engineering-surface:nth-child(4) { animation-delay: 0.26s; }
+
+.engineering-surface:hover,
+.engineering-surface:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  outline: none;
+}
+
+.engineering-surface-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.engineering-surface-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.engineering-topics {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 1.35rem;
+}
+
+.engineering-topic {
+  padding: 1.15rem 1.2rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: engineering-in 0.6s ease-out forwards;
+}
+
+.engineering-topic:nth-child(1) { animation-delay: 0.18s; }
+.engineering-topic:nth-child(2) { animation-delay: 0.26s; }
+.engineering-topic:nth-child(3) { animation-delay: 0.34s; }
+.engineering-topic:nth-child(4) { animation-delay: 0.42s; }
+
+.engineering-topic h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.engineering-topic p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.engineering-topic code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  color: color-mix(in srgb, var(--ok) 70%, var(--text));
+}
+
+.engineering-topic-links {
+  margin-top: 0.75rem !important;
+  font-size: 0.85rem !important;
+}
+
+.engineering-topic-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.engineering-topic-links a:hover,
+.engineering-topic-links a:focus-visible {
+  text-decoration: underline;
+}
+
+.engineering-foot {
+  position: relative;
+  z-index: 1;
+  margin: 1.75rem 0 0;
+  font-size: 0.88rem;
+}
+
+.engineering-foot a {
+  color: var(--accent);
+}
+
+@keyframes engineering-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .engineering-surfaces {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .engineering-surfaces,
+  .engineering-topics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engineering-surface,
+  .engineering-topic {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
