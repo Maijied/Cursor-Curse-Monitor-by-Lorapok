@@ -6,7 +6,7 @@
 **Plan:** `plan/mission-control-master-tasks.md`  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/217  
 **Branch:** `feat/social-05-mp4-voiceover`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/284
 
 ---
 
@@ -22,7 +22,7 @@ Finish SOCIAL-05: MP4 encode + changelog voiceover when an encoder binding/URL i
 - [x] Procedure + GitHub issue linked (#217)
 - [x] Implementation started
 - [x] Tests passing (`social-video-encoder.test.mjs`, social-ai generate/config, vitest social-ai-api)
-- [ ] PR opened
+- [x] PR opened ([#284](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/284))
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
