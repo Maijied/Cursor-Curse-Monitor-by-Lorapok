@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/195  
 **Branch:** `feat/web-08-behind-the-scenes`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/288
 
 ---
 
@@ -22,7 +22,7 @@ Add marketing `#engineering` behind-the-scenes section: monorepo surfaces, Missi
 - [x] Procedure + GitHub issue created (#195; closed duplicate #287)
 - [x] Implementation started
 - [x] Tests passing (`test_web_08_engineering.mjs`)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
