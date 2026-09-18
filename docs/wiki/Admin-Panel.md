@@ -13,9 +13,11 @@ Mission Control is the Lorapok Labs operations dashboard at **https://cursor-dev
 
 Only the **master admin** can trigger:
 
-- **Release** — bump version, tag, publish to marketplaces
-- **Deploy** — re-publish an existing git tag
-- **Rollback** — restore a prior tag as a new patch release
+- **Deploy** — publish an existing git tag to marketplaces (opt-in; the normal marketplace path)
+- **Rollback** — restore a prior tag as a new patch release (+ marketplaces when opted in)
+- **Infra** — redeploy Mission Control / marketing site without marketplace publish
+
+Push to `main` may prepare tags and redeploy Mission Control; it never publishes marketplaces (DEPLOY-04).
 
 Non-master admins can view deployment history and runtime logs but cannot submit dispatch forms.
 

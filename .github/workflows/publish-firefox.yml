@@ -1,3 +1,5 @@
+# Prefer Mission Control → Deployments → Deploy (ci-cd.yml publish-tag).
+# This workflow is an emergency standalone AMO path only (DEPLOY-04).
 name: Publish Firefox Extension (AMO)
 
 on:
@@ -7,6 +9,11 @@ on:
         description: "Release version (e.g. 1.0.1). Defaults to root package.json base."
         required: false
         type: string
+      allow_standalone_amo:
+        description: "Emergency only — set true to publish AMO outside Mission Control Deploy"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,6 +22,7 @@ jobs:
   amo:
     name: Sign & Submit to AMO
     runs-on: ubuntu-latest
+    if: inputs.allow_standalone_amo == true
     steps:
       - uses: actions/checkout@v4
 

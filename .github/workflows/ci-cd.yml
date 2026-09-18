@@ -12,9 +12,13 @@ name: Production Deployment
 #   6. Marketing Website Deployment (GitHub Pages)
 #   Release flow (Mission Control):
 #     • push to main     → CI prepares next git tag (max live + patch) + deploys Mission Control
-#     • publish-tag      → Admin picks tag → Deploy to Marketplaces (+ optional website)
+#                          (never publishes marketplaces)
+#     • publish-tag      → Admin Deployments → Deploy → marketplaces (+ optional website)
+#     • full-release     → bump/tag + Mission Control only (no marketplace publish)
 #     • deploy-infra     → Admin and/or website only
-#     • rollback         → Restore older tag as v{major}.{minor}.Rn
+#     • rollback         → Restore older tag as v{major}.{minor}.Rn (+ marketplaces when opted in)
+#   Marketplace publishes are opt-in (deploy_extension=true) and only for
+#   publish-tag / rollback / sync-open-vsx — never continuous on push.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -94,10 +98,10 @@ on:
         type: boolean
         default: false
       deploy_extension:
-        description: "Publish IDE extension to selected marketplaces"
+        description: "Publish IDE/browser extensions to marketplaces (opt-in; Mission Control Deploy sets this)"
         required: false
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: cicd-${{ github.ref }}
@@ -1029,7 +1033,13 @@ jobs:
 
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          # DEPLOY-04: full-release tags Mission Control only — marketplaces need publish-tag.
+          if [[ "$ACTION" == "full-release"* ]]; then
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::full-release prepared $TAG — marketplace publish skipped (use Mission Control Deploy)."
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
 
   # ───────────────────────────────────────────────────────────────────────────
   # 7. DEPLOY TO MARKETPLACES (VS Code Marketplace, Open VSX, Firefox AMO)
@@ -1040,6 +1050,8 @@ jobs:
     permissions:
       contents: write
     needs: [ci, browser-extension-ci, admin-ci, release-prep, validate-dispatch]
+    # Admin-only marketplace path: never on push/schedule/PR/full-release/deploy-infra.
+    # Opt-in via deploy_extension=true (Mission Control Deploy / Rollback checkboxes).
     if: >-
       always()
       && needs.ci.result == 'success'
@@ -1047,16 +1059,18 @@ jobs:
       && needs.admin-ci.result == 'success'
       && (needs.validate-dispatch.result == 'success' || needs.validate-dispatch.result == 'skipped')
       && github.event_name == 'workflow_dispatch'
-      && !startsWith(inputs.action_type, 'deploy-infra')
-      && inputs.deploy_extension != false
+      && inputs.deploy_extension == true
       && (
-        (needs.release-prep.result == 'success' && needs.release-prep.outputs.should_deploy == 'true') ||
         (
-          needs.release-prep.result == 'skipped'
-          && (
-            inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces' ||
-            inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'
-          )
+          inputs.action_type == 'publish-tag - Publish existing git tag to marketplaces'
+          && needs.release-prep.result == 'skipped'
+        ) || (
+          inputs.action_type == 'sync-open-vsx - Fast sync to Open VSX canonical namespace'
+          && needs.release-prep.result == 'skipped'
+        ) || (
+          inputs.action_type == 'rollback - Restore previous tag as a new version'
+          && needs.release-prep.result == 'success'
+          && needs.release-prep.outputs.should_deploy == 'true'
         )
       )
     steps:

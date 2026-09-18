@@ -343,11 +343,12 @@ export default function Deployments() {
     <div className="space-y-8 animate-fade-slide-up">
       <PageHeader
         title="Deploy & Release"
-        description="Push to main prepares the next git tag automatically. Pick a tag here to publish to marketplaces. Configure deploy Discord notifications in Settings."
+        description="Push to main prepares the next git tag and may redeploy Mission Control — it never publishes marketplaces. Use Deploy here to publish VSCE / Open VSX / AMO. Configure deploy Discord notifications in Settings."
         hint={
           <>
             <p>
-              <strong className="text-[var(--color-text)]">Deploy</strong> publishes marketplaces;{" "}
+              <strong className="text-[var(--color-text)]">Deploy</strong> is the only normal path to
+              marketplaces (opt-in IDE checkbox);{" "}
               <strong className="text-[var(--color-text)]">Rollback</strong> restores an older tag;{" "}
               <strong className="text-[var(--color-text)]">Infra</strong> redeploys admin/website without a
               marketplace bump.
