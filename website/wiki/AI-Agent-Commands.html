@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>AI agent commands — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="Canonical vocabulary for any AI agent (Cursor, Codex, Claude, Copilot, Windsurf, …)." />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/AI-Agent-Commands.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AI agent commands — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="Canonical vocabulary for any AI agent (Cursor, Codex, Claude, Copilot, Windsurf, …)." />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/AI-Agent-Commands.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AI agent commands — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="Canonical vocabulary for any AI agent (Cursor, Codex, Claude, Copilot, Windsurf, …)." />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>AI agent commands</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html" aria-current="page">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="ai-agent-commands">AI agent commands</h1>
+<p>Canonical vocabulary for <strong>any</strong> AI agent (Cursor, Codex, Claude, Copilot, Windsurf, …).</p>
+<p><strong>Init (read first):</strong> <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/AGENT_INIT.md" target="_blank" rel="noopener"><code>AGENT_INIT.md</code></a></p>
+<p><strong>Rule file:</strong> <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/.cursor/rules/ai-agent-commands.mdc" target="_blank" rel="noopener"><code>.cursor/rules/ai-agent-commands.mdc</code></a></p>
+<p>---</p>
+<h2 id="commands">Commands</h2>
+<table><thead><tr><th>You say</th><th>Agent does</th></tr></thead><tbody><tr><td><strong>Update?</strong></td><td>Snapshot only — refresh master tasks + CI; <strong>no coding</strong></td></tr><tr><td><strong>next</strong></td><td>Implement top P0/P1 open task from registry + GitHub issue</td></tr><tr><td><strong>sync issues</strong> / <strong>sync tasks</strong></td><td><code>npm run sync:issues</code> (labels + tasks + project board)</td></tr><tr><td><strong>autopilot</strong></td><td>Triage PR checks + review threads until merge-ready</td></tr></tbody></table>
+<p>---</p>
+<h2 id="onboarding-files">Onboarding files</h2>
+<ol>
+<li><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/AGENT_INIT.md" target="_blank" rel="noopener"><code>AGENT_INIT.md</code></a> — <strong>all AI tools, read first</strong></li>
+<li><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/MISSION-CONTROL-WALKTHROUGH.md" target="_blank" rel="noopener"><code>MISSION-CONTROL-WALKTHROUGH.md</code></a></li>
+<li><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/TASK-TRACKING.md" target="_blank" rel="noopener"><code>TASK-TRACKING.md</code></a></li>
+<li><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/plan/mission-control-master-tasks.md" target="_blank" rel="noopener"><code>plan/mission-control-master-tasks.md</code></a></li>
+</ol>
+<p>---</p>
+<h2 id="data-hygiene">Data hygiene</h2>
+<ul>
+<li>Never commit or paste secrets</li>
+<li>Use cred vault for tokens</li>
+<li>Confirm before destructive actions (<code>confirmAction</code> shared helper)</li>
+<li>Procedure files track progress — not full chat transcripts</li>
+</ul>
+<p>See <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a> for floating AI and notification plans.</p>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

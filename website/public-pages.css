@@ -1,0 +1,98 @@
+/* WEB-09 public multi-page shells */
+.public-page .wiki-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+  font-size: 0.85rem;
+}
+
+.public-page .wiki-toc a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.public-page .wiki-toc a[aria-current="page"] {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.public-page .prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+}
+
+.public-page .prose th,
+.public-page .prose td {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.public-page .prose th {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+
+.public-page .prose pre {
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #0a0e14;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.public-kv {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: 0.45rem 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.public-kv dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.public-kv dd {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.88rem;
+}
+
+.public-download-list {
+  margin: 0 0 1.25rem;
+  padding-left: 1.2rem;
+}
+
+.public-changelog {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.public-live-panel {
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .public-kv {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+  .public-kv dt {
+    margin-top: 0.55rem;
+  }
+}

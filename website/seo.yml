@@ -67,6 +67,54 @@ pages:
     twitterTitle: Terms of Use — {displayName}
     twitterDescription: Terms of use for Cursor Curse Monitor by Lorapok Labs.
 
+  wiki:
+    file: wiki/index.html
+    path: /wiki/
+    title: Wiki — {displayName}
+    description: Public knowledge base for Cursor Curse Monitor — installation, architecture, Mission Control, and ecosystem docs.
+    changefreq: weekly
+    priority: "0.8"
+    ogTitle: Wiki — {displayName}
+    ogDescription: Canonical docs/wiki mirrored to the marketing site.
+    twitterTitle: Wiki — {displayName}
+    twitterDescription: Installation, architecture, and Mission Control docs.
+
+  releases:
+    file: releases.html
+    path: /releases.html
+    title: Releases — {displayName}
+    description: Current version, marketplace channels, and download links for Cursor Curse Monitor.
+    changefreq: weekly
+    priority: "0.8"
+    ogTitle: Releases — {displayName}
+    ogDescription: Live release metadata from site-data.json.
+    twitterTitle: Releases — {displayName}
+    twitterDescription: VSIX, Open VSX, Marketplace, Firefox, and Chrome downloads.
+
+  community:
+    file: community.html
+    path: /community.html
+    title: Community — {displayName}
+    description: GitHub Project #4, issues, discussions, and community stats for Cursor Curse Monitor.
+    changefreq: weekly
+    priority: "0.7"
+    ogTitle: Community — {displayName}
+    ogDescription: Contribute via Project #4 and good-first issues.
+    twitterTitle: Community — {displayName}
+    twitterDescription: Community pulse and contributor links.
+
+  docs:
+    file: docs/index.html
+    path: /docs/
+    title: Docs — {displayName}
+    description: Documentation hub for Cursor Curse Monitor — wiki index, installation, architecture, and agent commands.
+    changefreq: weekly
+    priority: "0.8"
+    ogTitle: Docs — {displayName}
+    ogDescription: Guides mirrored from docs/wiki with Mission Control as the operator CMS.
+    twitterTitle: Docs — {displayName}
+    twitterDescription: Start with Installation, Architecture, and AI agent commands.
+
 organization:
   name: Lorapok Labs
   url: https://lorapok.tech

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Social media &amp; SEO — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="All webhook URLs configured in Settings → Discord (not Deployments — DEPLOY-02 removes duplicate UI there)." />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Social-and-SEO.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Social media &amp; SEO — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="All webhook URLs configured in Settings → Discord (not Deployments — DEPLOY-02 removes duplicate UI there)." />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Social-and-SEO.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Social media &amp; SEO — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="All webhook URLs configured in Settings → Discord (not Deployments — DEPLOY-02 removes duplicate UI there)." />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Social media &amp; SEO</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html" aria-current="page">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="social-media-seo">Social media &amp; SEO</h1>
+<p><strong>Last updated:</strong> 2026-09-17 <strong>Tasks:</strong> DC-08/09, SOCIAL-01–05, SEO-01–03, DEPLOY-02/03, GH-06, INT-01</p>
+<p>---</p>
+<h2 id="notifications-discord-cicd">Notifications (Discord + CI/CD)</h2>
+<table><thead><tr><th>Task</th><th>What</th></tr></thead><tbody><tr><td><strong>DC-08</strong></td><td>Success card when <code>ci-cd.yml</code> completes — jobs, duration, markets published, <strong>changelog excerpt</strong>, release URL</td></tr><tr><td><strong>DC-09</strong></td><td>Failure card — failed job/step, Actions logs link, changelog context, rollback hint</td></tr><tr><td><strong>DC-06/07</strong></td><td>Lorapok-branded embed templates + Settings preview (prerequisite)</td></tr></tbody></table>
+<p>All webhook URLs configured in <strong>Settings → Discord</strong> (not Deployments — <strong>DEPLOY-02</strong> removes duplicate UI there).</p>
+<p>---</p>
+<h2 id="multi-platform-social-social-01">Multi-platform social (SOCIAL-01)</h2>
+<p>Same template pattern as Discord, configurable per platform:</p>
+<table><thead><tr><th>Platform</th><th>Config in admin</th></tr></thead><tbody><tr><td>Discord</td><td>Settings → Discord (existing)</td></tr><tr><td>X (Twitter)</td><td>Settings → Social</td></tr><tr><td>LinkedIn</td><td>Settings → Social</td></tr><tr><td>Mastodon / Bluesky</td><td>Settings → Social</td></tr><tr><td>Telegram</td><td>Settings → Social (bot token)</td></tr></tbody></table>
+<p><strong>INT-01</strong> (done) — Settings → Services <strong>Integrations hub</strong> panes configure Discord, social, image AI, GitHub webhooks, mail, and cred sync; dedicated tabs remain for deep links.</p>
+<p>---</p>
+<h2 id="deploy-social-gallery-social-02-deploy-03">Deploy social gallery (SOCIAL-02 / DEPLOY-03)</h2>
+<p>On each successful deploy:</p>
+<ol>
+<li>Parse <code>CHANGELOG.md</code> for release section → caption</li>
+<li>Generate Lorapok-themed image (SOCIAL-04 provider)</li>
+<li>Store in R2/KV gallery tagged by feature/version</li>
+<li>Admin <strong>Social Studio</strong> — preview, edit caption/hashtags, publish</li>
+</ol>
+<p><strong>SOCIAL-03</strong> — one-click publish to all active channels with correct dimensions (feed, story, square).</p>
+<p><strong>SOCIAL-05</strong> — short video (Reels/Shorts/Stories) from carousel template + optional changelog voiceover.</p>
+<ul>
+<li><strong>Encode path:</strong> Cloudflare service binding <code>VIDEO_ENCODER</code> <strong>or</strong> Settings → Social AI → HTTPS encoder URL (+ API key).</li>
+<li><strong>Contract:</strong> POST frames (SVG) + voiceover script → <code>videoBase64</code> or <code>videoUrl</code> (MP4 stored in <code>STATS_R2</code>, served via gallery asset <code>?kind=video</code>).</li>
+<li><strong>Fallback:</strong> static carousel frames when no encoder is configured or encode fails.</li>
+</ul>
+<p>---</p>
+<h2 id="ai-image-providers-social-04">AI image providers (SOCIAL-04)</h2>
+<ul>
+<li>Default: <strong>free-tier</strong> providers where possible</li>
+<li>Optional: paid APIs (admin adds key via cred vault)</li>
+<li>Admin registers multiple providers; <strong>exactly one active</strong> at a time</li>
+<li>Used by gallery, Chrysalis assets, and marketing hero variants</li>
+</ul>
+<p>---</p>
+<h2 id="seo-system-seo-0103">SEO system (SEO-01–03)</h2>
+<table><thead><tr><th>Layer</th><th>Implementation</th></tr></thead><tbody><tr><td>On-page</td><td>Title/description, canonical, Open Graph, Twitter cards</td></tr><tr><td>Structured data</td><td><code>Organization</code> (Lorapok Labs), <code>SoftwareApplication</code>, <code>WebSite</code></td></tr><tr><td>Ecosystem links</td><td>All Lorapok product URLs in footer, JSON-LD <code>sameAs</code>, semantic nav</td></tr><tr><td>Alt / accessibility</td><td>Product names in <code>alt</code>, <code>aria-label</code>; no keyword stuffing</td></tr><tr><td>Admin hub <strong>SEO-02</strong></td><td>Google Search Console, Cloudflare Web Analytics, Azure, Bing — tokens in Settings</td></tr><tr><td>Policies <strong>SEO-03</strong></td><td>robots.txt, sitemap, noindex admin, align <code>LEGAL-01</code></td></tr></tbody></table>
+<p>Pipeline: <code>npm run site:seo</code> + <code>site:seo:validate</code> in CI.</p>
+<p>---</p>
+<h2 id="github-webhook-gh-06">GitHub webhook (GH-06)</h2>
+<p>Repo events (<code>push</code>, <code>release</code>, <code>workflow_run</code>) → <code>POST /api/webhooks/github</code> (HMAC) → Mission Control ingest → fan-out:</p>
+<table><thead><tr><th>Destination</th><th>Events</th><th>Notes</th></tr></thead><tbody><tr><td><strong>Discord</strong></td><td>All enabled events</td><td>Community webhook first, deployment webhook fallback</td></tr><tr><td><strong>Social</strong></td><td><code>release</code> only</td><td>Enabled platforms in Settings → Social (avoids push/workflow spam)</td></tr></tbody></table>
+<p>Configurable event list in Settings → GitHub.</p>
+<h3 id="repo-webhook-setup-canonical-cli">Repo webhook setup (canonical — CLI)</h3>
+<p><strong>Preferred:</strong> headless bootstrap from repo root (cred vault + <code>gh</code>; no browser console, no manual GitHub form):</p>
+<pre><code class="language-bash">npm run github:webhook:bootstrap --prefix website/admin</code></pre>
+<p>This saves the Mission Control webhook secret, creates or updates the repo hook (<code>application/json</code>, push/release/workflow_run), and runs a signed probe. Auth uses cred vault (<code>firebase_service_account_json</code> + <code>admin_master_email</code>) unless <code>ADMIN_ID_TOKEN</code> or <code>ADMIN_EMAIL</code>/<code>ADMIN_PASSWORD</code> is set.</p>
+<p>Re-probe only: <code>npm run github:webhook:probe --prefix website/admin</code>.</p>
+<p>Agent policy: <a href="../../.cursor/rules/github-webhook-bootstrap.mdc"><code>.cursor/rules/github-webhook-bootstrap.mdc</code></a>.</p>
+<h3 id="manual-fallback-ui-only-when-cli-unavailable">Manual fallback (UI only when CLI unavailable)</h3>
+<ol>
+<li>Mission Control → <strong>Settings → GitHub</strong> → <strong>Save</strong> (generates webhook secret + ingest URL).</li>
+<li>GitHub repo → <strong>Settings → Webhooks → Add webhook</strong> — URL, secret, <code>application/json</code>.</li>
+<li>Events: <code>Pushes</code>, <code>Releases</code>, <code>Workflow runs</code>.</li>
+<li>Confirm <strong>Recent webhook events</strong> in Mission Control and Discord community card.</li>
+</ol>
+<p>---</p>
+<h2 id="cred-sync-cred-02">Cred sync (CRED-02)</h2>
+<p>Every Settings save that touches secrets must:</p>
+<ol>
+<li>Write cred vault (if applicable)</li>
+<li>Sync GitHub Actions secrets + Pages secrets</li>
+<li>Confirm via health badge — <strong>never silent miss</strong></li>
+</ol>
+<p>---</p>
+<h2 id="live-email-audit-mail-16">Live email audit (MAIL-16)</h2>
+<p>Mission Control audits product, support, and identity addresses (format, transport, domain routing). When <code>TESTMAIL_API_KEY</code> + <code>TESTMAIL_NAMESPACE</code> are on Pages, <strong>product</strong> and <strong>support</strong> addresses also get a live outbound send + testmail inbox poll.</p>
+<pre><code class="language-bash">npm run mail:probe-deliverability --prefix website/admin</code></pre>
+<p>Failures log to system events and post a Discord deployment/community alert embed.</p>
+<p>Addresses covered:</p>
+<ul>
+<li><code>cursor.monitor@mail.lorapok.tech</code></li>
+<li><code>cursor.curse.help@lorapok.tech</code></li>
+<li>Provisioned <code>@lorapok.tech</code> identities</li>
+</ul>
+<p>---</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="Public-Website.html">Public Website</a></li>
+<li><a href="Deployment.html">Deployment</a></li>
+<li><a href="Mailbox-and-Email.html">Mailbox and Email</a></li>
+<li><a href="Admin-Panel.html">Admin Panel</a></li>
+</ul>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

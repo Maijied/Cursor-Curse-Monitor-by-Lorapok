@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="ccm-build-id" content="105f5292a052" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <!-- seo:begin -->
+  <title>Deployment — Wiki · Cursor Curse Monitor</title>
+  <meta name="description" content="CCM releases are automated via GitHub Actions and dispatched from Mission Control (master admin only)." />
+  <link rel="canonical" href="https://cursor.lorapok.tech/wiki/Deployment.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Deployment — Wiki · Cursor Curse Monitor" />
+  <meta property="og:description" content="CCM releases are automated via GitHub Actions and dispatched from Mission Control (master admin only)." />
+  <meta property="og:url" content="https://cursor.lorapok.tech/wiki/Deployment.html" />
+  <meta property="og:image" content="https://cursor.lorapok.tech/assets/marketing/og-social-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Deployment — Wiki · Cursor Curse Monitor" />
+  <meta name="twitter:description" content="CCM releases are automated via GitHub Actions and dispatched from Mission Control (master admin only)." />
+  <!-- seo:end -->
+  <link rel="icon" href="../assets/logo.svg?v=105f5292a052" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../public-pages.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../larvae-loader.css?v=105f5292a052" />
+  <link rel="stylesheet" href="../ccm-floating-assistant.css?v=105f5292a052" />
+  
+</head>
+<body class="public-page ">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="site-ambient-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="../">
+        <span class="brand-logo">
+          <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Cursor Curse Monitor</span>
+          <span class="brand-by">by Lorapok Labs</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="../">Home</a>
+        <a href="../wiki/index.html" aria-current="page">Wiki</a>
+        <a href="../releases.html">Releases</a>
+        <a href="../community.html">Community</a>
+        <a href="../docs/index.html">Docs</a>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Public wiki</p>
+      <h1>Deployment</h1>
+      <p class="lead">Canonical source: docs/wiki in the repository (mirrored to GitHub Wiki).</p>
+    </div>
+  </section>
+
+  <div class="prose-wrap container public-page-body">
+    <main class="prose" id="main-content" tabindex="-1">
+      <nav class="wiki-toc" aria-label="Wiki pages">
+        <a href="./">Home</a>
+        <a href="AI-Agent-Commands.html">AI Agent Commands</a>
+        <a href="Admin-Panel.html">Admin Panel</a>
+        <a href="Architecture.html">Architecture</a>
+        <a href="Chrysalis.html">Chrysalis</a>
+        <a href="Deployment.html" aria-current="page">Deployment</a>
+        <a href="Ecosystem-Roadmap.html">Ecosystem Roadmap</a>
+        <a href="GitHub-Project.html">GitHub Project</a>
+        <a href="Installation.html">Installation</a>
+        <a href="Mailbox-and-Email.html">Mailbox and Email</a>
+        <a href="Public-Website.html">Public Website</a>
+        <a href="Social-and-SEO.html">Social and SEO</a>
+        <a href="Support.html">Support</a>
+      </nav>
+<h1 id="deployment">Deployment</h1>
+<p>CCM releases are automated via GitHub Actions and dispatched from <strong>Mission Control</strong> (master admin only).</p>
+<h2 id="golden-rule-deploy-04">Golden rule (DEPLOY-04)</h2>
+<p><strong>Marketplace publish (VS Code Marketplace / Open VSX / Firefox AMO) only happens from Mission Control → Deployments → Deploy</strong> (or Rollback), with the IDE extension checkbox on. Push to <code>main</code>, <code>full-release</code>, <code>deploy-infra</code>, schedule, and PRs never publish marketplaces.</p>
+<h2 id="prepare-tag-automatic">Prepare tag (automatic)</h2>
+<p>Push to <code>main</code> runs CI and may <strong>prepare the next git tag</strong> (max live marketplace version + patch) and redeploy Mission Control. That does <strong>not</strong> publish to marketplaces.</p>
+<h2 id="forward-deploy-publish-existing-tag">Forward deploy (publish existing tag)</h2>
+<p>Use Mission Control <strong>Deployments → Deploy</strong> or dispatch <code>ci-cd.yml</code> with <code>action_type</code> = <code>publish-tag</code> and <code>deploy_extension</code> = <code>true</code>:</p>
+<table><thead><tr><th>Input</th><th>Description</th></tr></thead><tbody><tr><td><code>target_tag</code></td><td>Existing git tag (e.g. <code>v1.0.1</code>)</td></tr><tr><td><code>publish_market</code></td><td><code>Both</code>, <code>Open VSX</code>, <code>VS Code Marketplace</code>, <code>Firefox AMO</code>, or <code>Open VSX + Firefox AMO</code></td></tr><tr><td><code>release_channel</code></td><td><code>Production</code> or <code>Beta (Pre-release)</code></td></tr><tr><td><code>deploy_extension</code></td><td>Must be <code>true</code> to publish marketplaces (default <code>false</code>)</td></tr></tbody></table>
+<p>This publishes the tagged extension without rewriting <code>main</code>.</p>
+<h2 id="full-release-tag-mission-control-only">Full release (tag + Mission Control only)</h2>
+<p><code>full-release</code> bumps/tags and can update Mission Control. It does <strong>not</strong> publish marketplaces — follow with <strong>Deploy</strong> on the new tag when ready.</p>
+<h2 id="rollback">Rollback</h2>
+<p>Use <strong>Deployments → Rollback</strong> to dispatch <code>ci-cd.yml</code> with <code>action_type</code> = <code>rollback</code> and <code>deploy_extension</code> = <code>true</code>. This restores a prior tag on <code>main</code> and publishes a bumped patch release. Verify the tag before triggering.</p>
+<h2 id="master-admin-lockdown">Master admin lockdown</h2>
+<p>Deploy, release, and rollback API routes require the <strong>master admin</strong> email (<code>ADMIN_MASTER_EMAIL</code>). Non-master admins see a disabled form with an explanatory banner in Mission Control.</p>
+<h2 id="runtime-preview">Runtime preview</h2>
+<p>After dispatch, Mission Control shows a <strong>Runtime preview</strong> panel that polls GitHub Actions job status and streams workflow logs.</p>
+<h2 id="cicd-workflows">CI/CD workflows</h2>
+<table><thead><tr><th>Workflow</th><th>Trigger</th></tr></thead><tbody><tr><td><code>ci-cd.yml</code></td><td>PR to <code>main</code>, push to <code>main</code> (CI + optional tag prep + MC), <code>workflow_dispatch</code> (publish-tag / rollback / full-release / deploy-infra / seo-refresh)</td></tr><tr><td><code>publish-firefox.yml</code></td><td>Emergency AMO only — requires <code>allow_standalone_amo=true</code>; prefer Mission Control Deploy</td></tr><tr><td><code>admin-ci</code> / <code>admin-deploy</code></td><td>Admin SPA build; deploy is <code>workflow_dispatch</code>-only</td></tr></tbody></table>
+<h2 id="dynamic-versioning">Dynamic versioning</h2>
+<p>Root and workspace versions stay at <code>0.0.0</code> in git. CI resolves the live semver via <code>npm run version:sync</code> before package/publish.</p>
+    </main>
+  </div>
+  
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
+      <p>GPL-3.0 © Lorapok Labs · <a href="../">Home</a> · <a href="../wiki/">Wiki</a> · <a href="../releases.html">Releases</a> · <a href="../community.html">Community</a> · <a href="../docs/">Docs</a> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></p>
+      <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
+    </div>
+  </footer>
+  <script src="../cloudflare-beacon.js?v=105f5292a052" defer></script>
+  <script src="../social-footer.js?v=105f5292a052" defer></script>
+  <script src="../analytics.js?v=105f5292a052" defer></script>
+  <script src="../site.js?v=105f5292a052" defer></script>
+  <script src="../ccm-floating-assistant.js?v=105f5292a052" defer></script>
+  
+</body>
+</html>

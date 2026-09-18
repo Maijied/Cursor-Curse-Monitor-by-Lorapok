@@ -2,10 +2,10 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (CHRYS-01 [#286](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/286); SOCIAL-05 [#284](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/284); WEB-08 in progress)
-**Branch:** `feat/web-08-behind-the-scenes`
-**Main:** `6b8a5b4f`
-**CI:** DEPLOY-04 on main (#283). SOCIAL-05 + CHRYS-01 merged.
+**Last updated:** 2026-09-18 (WEB-08 [#288](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/288) merged; WEB-09 in progress)
+**Branch:** `feat/web-09-public-pages`
+**Main:** `e05e3fc6`
+**CI:** DEPLOY-04 on main (#283). SOCIAL-05 + CHRYS-01 + WEB-08 merged.
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -290,7 +290,7 @@
 | WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | Chrysalis brand + Larvae (CHRYS-01); AI chat → CHRYS-02 |
 | WEB-07 | **Expanded system topology** — beautiful animated diagrams with **every** CI/CD step, cron, KV/R2, marketplaces, Discord (match `ci-cd.yml` + Architecture wiki) | **done** | PR [#280](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/280); job-level `ci-cd.yml` coverage |
 | WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **done** | [#288](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/288); `#engineering` on marketing home |
-| WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **next** | static pages or lightweight router; Mission Control as CMS source |
+| WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **done** | `site:pages` generator; releases/community hydrate from site-data |
 | WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **next** | all surfaces; pairs with ECO-11 |
 | WEB-11 | **Engineering history timeline** — long behind-the-scenes page: sectioned milestones, procedure arc, deploy history, team credits | **next** | extends WEB-08; `/engineering/history` |
 
@@ -383,7 +383,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. **WEB-09**, **LEGAL-01**, remaining ecosystem queue
+1. **LEGAL-01**, **WEB-10**, remaining ecosystem queue
 2. **CHRYS-02** (AI provider) when operator vault key path is ready
 3. **ANALYTICS-01** / **LOGS-01** when operator metrics land
 

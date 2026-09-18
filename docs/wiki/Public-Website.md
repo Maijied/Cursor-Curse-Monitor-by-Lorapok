@@ -1,6 +1,6 @@
 # Public website roadmap
 
-**Last updated:** 2026-09-05  
+**Last updated:** 2026-09-18  
 **Tasks:** WEB-07–WEB-10, LEGAL-01, ANALYTICS-02, DEPLOY-01 (admin parity)
 
 ---
@@ -16,13 +16,13 @@ The marketing site becomes a **professional public face** for the whole Lorapok 
 | Route | Source | Content |
 |-------|--------|---------|
 | `/` | `index.html` | Hero, features, Chrysalis, topology |
-| `/wiki` or `/docs/wiki/*` | `docs/wiki/*.md` | Mirrored GitHub Wiki (canonical in repo) |
-| `/releases` | `site-data.json` + GitHub Releases API | Version history, download links |
-| `/community` | `site-data.json` `community` + Project #4 | Issues, discussions, contributor guide |
-| `/docs` | `docs/` guides + wiki index | Installation, architecture, agent commands |
-| `/engineering` | WEB-08 section | Behind the scenes — monorepo, CI/CD, Mission Control |
+| `/wiki/` + `/wiki/*.html` | `docs/wiki/*.md` via `npm run site:pages` | Mirrored GitHub Wiki (canonical in repo) |
+| `/releases.html` | `site-data.json` (client) | Version + download links |
+| `/community.html` | `site-data.json` `githubCommunity` + Project #4 | Issues, traffic, contribute |
+| `/docs/` | docs hub → wiki | Installation, architecture, agent commands |
+| `/#engineering` | WEB-08 section | Behind the scenes — monorepo, CI/CD, Mission Control |
 
-Admin-published **notices** and changelog drafts surface on `/community` and `/releases` when approved.
+**Status:** shipped generator `scripts/generate-public-pages.mjs` + public shells. Regenerate with `npm run site:pages` (also runs before `site:seo`).
 
 ---
 
