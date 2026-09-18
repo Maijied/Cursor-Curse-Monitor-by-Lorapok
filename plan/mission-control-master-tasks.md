@@ -290,7 +290,7 @@
 | WEB-06 | **Chrysalis (floating AI)** — live product Q&A from `site-data.json` | **partial** | Chrysalis brand + Larvae (CHRYS-01); AI chat → CHRYS-02 |
 | WEB-07 | **Expanded system topology** — beautiful animated diagrams with **every** CI/CD step, cron, KV/R2, marketplaces, Discord (match `ci-cd.yml` + Architecture wiki) | **done** | PR [#280](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/280); job-level `ci-cd.yml` coverage |
 | WEB-08 | **Behind the scenes** — engineering section: monorepo layout, Mission Control, procedure/agents, cred vault, release integrity | **done** | [#288](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/288); `#engineering` on marketing home |
-| WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **done** | `site:pages` generator; releases/community hydrate from site-data |
+| WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **done** | [#290](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/290); `npm run site:pages` |
 | WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **next** | all surfaces; pairs with ECO-11 |
 | WEB-11 | **Engineering history timeline** — long behind-the-scenes page: sectioned milestones, procedure arc, deploy history, team credits | **next** | extends WEB-08; `/engineering/history` |
 
