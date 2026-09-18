@@ -108,7 +108,7 @@ Synced from [`procedure/github-milestones.json`](procedure/github-milestones.jso
 **Priority queue** (also sets Project Priority + `priority:*` labels):
 
 - **P0:** _(none — AUTH-13 shipped)_
-- **P1:** ADMIN-03, ADMIN-04, ADMIN-05, MAIL-13, MAIL-14, DC-06, LOGS-01, EXT-01
+- **P1:** ADMIN-03, ADMIN-04, ADMIN-05, MAIL-13, MAIL-14, DC-06 (LOGS-01 + EXT-01 shipped)
 - **P2:** all other open `next` / `partial` tasks
 
 ---

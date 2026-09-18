@@ -71,6 +71,15 @@ Covers:
 
 ---
 
+## Platform availability strip (EXT-01)
+
+**Status: done** (shared `getPlatformAvailabilityStrip` / `formatPlatformStripHtml`)
+
+- Compact Open VSX · VS Code · Firefox · Chrome zip · GitHub row in marketing footers (home, privacy/terms, generated wiki/docs), Mission Control GlobalFooter, IDE dashboard, browser popup/options
+- Live `site-data` href hydration via existing `data-href-*` attributes on the public site
+
+---
+
 ## Engineering history (WEB-11)
 
 **Status: done**

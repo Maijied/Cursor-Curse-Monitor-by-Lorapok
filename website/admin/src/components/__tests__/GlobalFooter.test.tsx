@@ -55,6 +55,10 @@ describe("GlobalFooter", () => {
       expect(screen.getByText("Synced")).toBeInTheDocument();
     });
 
+    expect(screen.getByRole("navigation", { name: "Platform availability" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open VSX" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "VS Code" })).toBeInTheDocument();
+
     const link = screen.getByRole("link", { name: "Lorapok Labs" });
     expect(link).toHaveAttribute("href", "https://lorapok.tech");
   });

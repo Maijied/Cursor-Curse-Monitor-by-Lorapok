@@ -2,11 +2,11 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (ANALYTICS-01 [#298](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/298) merged; LOGS-01 in progress)
-**Branch:** `feat/logs-01-unified-explorer`
-**Main:** `184110ac`
-**CI:** ANALYTICS-01 on main. LOGS-01 branch open.
-**P1 queue:** LOGS-01 → EXT-01 (`procedure/github-milestones.json`)
+**Last updated:** 2026-09-18 (LOGS-01 [#299](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/299) merged; EXT-01 in progress)
+**Branch:** `feat/ext-01-platform-strip`
+**Main:** `70afb396`
+**CI:** LOGS-01 on main. EXT-01 branch open.
+**P1 queue:** EXT-01 (`procedure/github-milestones.json`)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -263,7 +263,7 @@
 | IDE-02 | Analytics chart fixes | **done** | PR #118/#119 |
 | IDE-03 | Cloud IDE link list in settings modal | **next** | Reliability D5 |
 | IDE-04 | `state.vscdb` watcher | **deferred** | out of scope |
-| IDE-05 | **Platform logos + download links** in status bar / about (EXT-01) | **next** | shared footer component |
+| IDE-05 | **Platform logos + download links** in status bar / about (EXT-01) | **done** | IDE dashboard platform strip via `formatPlatformStripHtml` |
 
 ---
 
@@ -275,7 +275,7 @@
 | BR-02 | 60s connect poll + probeAuth | **done** | PR #119 |
 | BR-03 | Options cloud environments section | **next** | Reliability D5 |
 | BR-04 | Align Options connect with popup | **next** | Reliability A |
-| BR-05 | **Platform logos + AMO/Chrome links** in popup/options footer (EXT-01) | **next** | Lorapok + Cursor attribution + marketplace row |
+| BR-05 | **Platform logos + AMO/Chrome links** in popup/options footer (EXT-01) | **done** | `Footer.tsx` platform strip from shared |
 
 ---
 
@@ -372,8 +372,8 @@
 | LOGIN-01 | **Login page infra notes** — read-only panel: auth methods, invite-only, Firebase project, live service chips, docs links | **done** | `LoginInfraPanel.tsx` + `/api/health`; vitest `LoginInfraPanel.test.tsx` |
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **done** | [#298](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/298); closes [#166](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/166) |
-| LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **PR** | [#299](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/299); closes [#168](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/168) |
-| EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **next** | shared `@lorapok/cursor-monitor-shared` component; footer on all surfaces · [#170](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/170) |
+| LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **done** | [#299](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/299); closes [#168](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/168) |
+| EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **PR** | Shared strip + four surfaces; closes [#170](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/170) |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **done** | PR [#278](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/278) merged; ACL-aware fuzzy ⌘K |
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **done** | PR [#281](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281) merged |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
@@ -384,8 +384,8 @@
 
 ## Recommended **next** queue (priority order)
 
-1. Finish **LOGS-01** PR → merge when green
-2. **EXT-01** [#170](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/170)
+1. Merge **EXT-01** when green
+2. Remaining **ECO-*** / **ANALYTICS-02** backlog
 3. **CHRYS-02** (AI provider) when operator vault key path is ready
 
 ---

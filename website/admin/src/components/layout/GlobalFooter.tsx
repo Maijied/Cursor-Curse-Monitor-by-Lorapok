@@ -5,6 +5,7 @@ import { useSiteData } from "../../hooks/useSiteData";
 import { fetchHealth, fetchSyncStatus, type SyncStatusPayload } from "../../lib/api";
 import { resolvePackageVersion, syncStatusLabel } from "../../lib/site-data";
 import StatusDot from "../ui/StatusDot";
+import PlatformAvailabilityStrip from "../ui/PlatformAvailabilityStrip";
 
 function serviceDotStatus(
   overall: SyncStatusPayload["overall"] | undefined,
@@ -31,7 +32,7 @@ function serviceLabel(
 }
 
 /**
- * Sticky bottom status bar — services health, release version, marketplace sync, Lorapok Labs.
+ * Sticky bottom status bar — services health, release version, marketplace sync, platforms, Lorapok Labs.
  */
 export default function GlobalFooter() {
   const healthFetcher = useCallback(() => fetchHealth(), []);
@@ -71,6 +72,8 @@ export default function GlobalFooter() {
         ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 shrink-0">
+        <PlatformAvailabilityStrip siteData={siteData} />
+        <span className="opacity-40 select-none" aria-hidden="true">·</span>
         <a
           href={GITHUB_CONTRIBUTING_URL}
           target="_blank"
