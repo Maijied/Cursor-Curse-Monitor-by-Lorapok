@@ -4,6 +4,7 @@ import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
+import EmptyState from "../ui/EmptyState";
 import { useDiscussions } from "../../hooks/useDiscussions";
 import { useSiteData } from "../../hooks/useSiteData";
 
@@ -41,6 +42,12 @@ export default function Discussions() {
       <PageHeader
         title="Community"
         description="GitHub Discussions and issue topics for support, feedback, and roadmap."
+        hint={
+          <p>
+            Topics are grouped from labeled GitHub issues. Enable Discussions on the repo to show Q&amp;A
+            categories here.
+          </p>
+        }
         action={
           data.enabled ? (
             <Badge variant="synced" pulse>Discussions enabled</Badge>
@@ -98,12 +105,22 @@ export default function Discussions() {
           Topics from issues
         </h3>
         {data.topics.length === 0 ? (
-          <p className="text-sm text-[var(--color-muted)]">
-            No labeled issues yet.{" "}
-            <a href={data.repoIssuesUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent-2)] hover:underline">
-              View issues on GitHub
-            </a>
-          </p>
+          <EmptyState
+            icon={MessageSquare}
+            title="No labeled issues yet"
+            description="Label issues on GitHub to surface topics here for operators."
+            action={
+              <a
+                href={data.repoIssuesUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent-2)] hover:underline"
+              >
+                View issues on GitHub
+                <ExternalLink size={14} aria-hidden="true" />
+              </a>
+            }
+          />
         ) : (
           <div className="space-y-6">
             {data.topics.map((topic) => (

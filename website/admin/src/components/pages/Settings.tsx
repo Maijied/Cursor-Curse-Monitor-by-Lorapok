@@ -134,6 +134,18 @@ export default function Settings() {
       <PageHeader
         title="Settings"
         description="Configure every integration — mail, Resend, testmail, Discord, Firebase, GitHub, Cloudflare, cred vault, marketplaces, and automation."
+        hint={
+          <>
+            <p>
+              Tabs are ACL-aware — some sections hide if your role lacks permission. Use ⌘K to jump to a tab
+              or API quickly.
+            </p>
+            <p>
+              Prefer the Services hub for mail, Discord, social, and GitHub in one place — open the Services
+              tab.
+            </p>
+          </>
+        }
       />
 
       <SettingsTabNav tabs={tabs} active={tab} onChange={onTabChange} />

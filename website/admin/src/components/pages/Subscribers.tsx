@@ -131,6 +131,12 @@ export default function Subscribers() {
       <PageHeader
         title="Subscribers"
         description="Opt-in release update emails from the website, extension, and browser add-on. Marketplace installs do not expose emails — only consented addresses appear here."
+        hint={
+          <p>
+            Broadcast uses a notice template via Mailbox. Export CSV for external tools. Empty lists mean no
+            one has opted in yet — check the public subscribe form and Discord fallback.
+          </p>
+        }
         action={
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -206,7 +212,8 @@ export default function Subscribers() {
           columns={columns}
           rows={items}
           getRowKey={(row, index) => `${row.email}-${index}`}
-          emptyMessage="No subscribers yet."
+          emptyTitle="No subscribers yet"
+          emptyMessage="Opt-in addresses from the website and extensions will show up here."
         />
       </Card>
     </div>

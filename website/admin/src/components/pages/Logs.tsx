@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, RefreshCw, Shield } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, RefreshCw, ScrollText, Shield } from "lucide-react";
 import PageHeader from "../layout/PageHeader";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import ShimmerSkeleton from "../ui/ShimmerSkeleton";
 import ErrorState from "../ui/ErrorState";
+import EmptyState from "../ui/EmptyState";
 import AclAuditPanel from "./AclAuditPanel";
 import { fetchLogs, type LogEntry } from "../../lib/api";
 
@@ -94,6 +95,15 @@ export default function Logs() {
       <PageHeader
         title="Logs"
         description="Unified API, mail, and system events — plus a dedicated ACL audit timeline with export."
+        hint={
+          <>
+            <p>
+              Filters apply to the unified stream. Use the ACL audit tab for role and allowlist changes with
+              CSV export.
+            </p>
+            <p>Empty results usually mean filters are too narrow — clear status/method or search.</p>
+          </>
+        }
       />
 
       <div className="flex flex-wrap gap-2">
@@ -236,8 +246,13 @@ export default function Logs() {
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {items.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-10 text-center text-[var(--color-muted)]">
-                        No log entries match your filters.
+                      <td colSpan={7} className="p-0">
+                        <EmptyState
+                          icon={ScrollText}
+                          className="border-0 rounded-none bg-transparent"
+                          title="No matching log entries"
+                          description="Try clearing filters, or wait for API / mail / system events to appear."
+                        />
                       </td>
                     </tr>
                   ) : (

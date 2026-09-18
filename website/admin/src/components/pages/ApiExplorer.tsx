@@ -94,6 +94,12 @@ export default function ApiExplorer() {
       <PageHeader
         title="API Explorer"
         description="Probe Mission Control and public API routes. Nothing runs until you choose — use Test all safe or run an endpoint individually."
+        hint={
+          <p>
+            Safe probes are read-only GETs. Mutating routes need matching ACL permissions. Jump here from ⌘K
+            with an endpoint path to scroll to that card.
+          </p>
+        }
         action={
           <div className="flex flex-wrap gap-2">
             <LoadableButton

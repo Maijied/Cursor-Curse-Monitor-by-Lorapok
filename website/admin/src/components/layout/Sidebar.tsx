@@ -33,6 +33,10 @@ export default function Sidebar({
         pb-[env(safe-area-inset-bottom)]
         ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}
+      aria-label="Mission Control navigation"
+      {...(mobileOpen
+        ? { role: "dialog" as const, "aria-modal": true as const, "aria-label": "Navigation menu" }
+        : {})}
     >
       <div className="min-h-0 flex-1 flex flex-col">
         <div className="shrink-0 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-base)_55%,transparent)]">
@@ -87,8 +91,13 @@ export default function Sidebar({
           </div>
         </div>
 
-        <nav className="p-4 space-y-1 overflow-y-auto flex-1" aria-label="Main navigation">
-          {navRoutes.map(({ path, label, icon: Icon, end }, index) => (
+            <nav className="p-4 space-y-1 overflow-y-auto flex-1 overscroll-contain" aria-label="Main navigation">
+              {navRoutes.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-[var(--color-muted)]">
+                  No pages available for your role. Ask a master admin to update Team Access.
+                </p>
+              ) : (
+                navRoutes.map(({ path, label, icon: Icon, end }, index) => (
             <NavLink
               key={path}
               to={path}
@@ -96,7 +105,7 @@ export default function Sidebar({
               onClick={onClose}
               style={{ animationDelay: `${index * 0.04}s` }}
               className={({ isActive }) =>
-                `animate-fade-slide-up flex items-center gap-3 px-4 py-3 rounded-xl transition-all border relative ${
+                `animate-fade-slide-up flex items-center gap-3 px-4 py-3 min-h-11 rounded-xl transition-all border relative ${
                   isActive
                     ? "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)] font-medium shadow-[inset_3px_0_0_var(--color-neon),0_0_20px_color-mix(in_srgb,var(--color-accent)_15%,transparent)]"
                     : "border-transparent text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
@@ -106,8 +115,9 @@ export default function Sidebar({
               <Icon size={20} aria-hidden="true" />
               {label}
             </NavLink>
-          ))}
-        </nav>
+                ))
+              )}
+            </nav>
       </div>
 
       <div className="shrink-0 border-t border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-bg-base)_40%,transparent)]">
