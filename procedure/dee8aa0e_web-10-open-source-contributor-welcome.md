@@ -6,7 +6,7 @@
 **Plan:** plan/mission-control-master-tasks.md  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/197  
 **Branch:** `feat/web-10-contributor-welcome`  
-**PR:** _TBD_
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/294
 
 ---
 
@@ -22,7 +22,7 @@ Surface CONTRIBUTING.md, good-first issues, and Project #4 across the marketing 
 - [x] Procedure + GitHub issue created (#197; dup #293 closed)
 - [x] Implementation started
 - [x] Tests passing (`productLinks.test.mjs` + shared suite)
-- [ ] PR opened
+- [x] PR opened (#294)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
