@@ -6,6 +6,7 @@ import Badge from "./Badge";
 import Modal from "./Modal";
 import LorapokLarvaeLoader from "./LorapokLarvaeLoader";
 import Notification from "./Notification";
+import { confirmAction } from "@lorapok/cursor-monitor-shared";
 import {
   createMailAliasApi,
   deleteMailAliasApi,
@@ -329,7 +330,13 @@ export default function EmailIdentitiesCard() {
 
   const handleDelete = async (row: EmailIdentityRow) => {
     if (!isMaster || row.builtin) return;
-    if (!window.confirm(`Delete alias ${identityAddress(row)}? Cloudflare routing rule is not auto-removed.`)) return;
+    const ok = await confirmAction({
+      title: "Delete mail alias",
+      message: `Delete alias ${identityAddress(row)}? Cloudflare routing rule is not auto-removed.`,
+      severity: "destructive",
+      confirmLabel: "Delete alias",
+    });
+    if (!ok) return;
     try {
       const result = await deleteMailAliasApi(row.localPart);
       setConfig(result.config);

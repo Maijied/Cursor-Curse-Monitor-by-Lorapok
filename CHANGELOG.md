@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **ECO-08 action validator** — shared `confirmAction` wired through Mission Control modal (deploy/rollback/infra, notice delete, subscriber broadcast, team remove, mail alias delete, PIN remove) and IDE account removal.
 - **WEB-11 engineering history** — long-form timeline at `/engineering/history/` (monorepo → Mission Control → CI/CD → procedure → public site → credits); linked from `#engineering` and Docs hub.
 - **WEB-10 contributor welcome** — CONTRIBUTING / good-first / Project #4 on marketing footers, hero + subscribe CTAs, IDE + browser extension footers, options “Join the community”, Mission Control footer + Chrysalis.
 - **LEGAL-01 process consent** — analytics gated behind explicit banner; privacy/terms cover subscribe, extensions, Chrysalis BYOK; aggregate `/api/consent` KV audit (v2026-09-18).

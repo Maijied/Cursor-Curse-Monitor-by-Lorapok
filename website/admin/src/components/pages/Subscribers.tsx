@@ -12,6 +12,7 @@ import { useAuthSession } from "../../lib/use-auth-session";
 import ReadOnlyAclBanner from "../ui/ReadOnlyAclBanner";
 import SectionReferLink from "../ui/SectionReferLink";
 import { SECTION_REFERS } from "../../lib/section-refer";
+import { confirmAction } from "@lorapok/cursor-monitor-shared";
 
 function exportCsv(rows: SubscriberRecord[]) {
   const header = ["email", "source", "subscribedAt", "installId", "consentVersion"];
@@ -67,7 +68,13 @@ export default function Subscribers() {
     if (!title?.trim()) return;
     const message = window.prompt("Full message body for subscribers");
     if (!message?.trim()) return;
-    if (!window.confirm(`Send "${title}" to ${items.length} subscriber(s)?`)) return;
+    const ok = await confirmAction({
+      title: "Broadcast to subscribers",
+      message: `Send "${title}" to ${items.length} subscriber(s)?`,
+      severity: "warning",
+      confirmLabel: "Send email",
+    });
+    if (!ok) return;
 
     setBroadcasting(true);
     setNotice(null);

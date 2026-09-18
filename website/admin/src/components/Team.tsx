@@ -10,6 +10,7 @@ import Card from "./ui/Card";
 import LoadableButton from "./ui/LoadableButton";
 import Notification, { type NotificationTone } from "./ui/Notification";
 import ReadOnlyAclBanner from "./ui/ReadOnlyAclBanner";
+import { confirmAction } from "@lorapok/cursor-monitor-shared";
 
 type AdminRecord = { id: string; email: string };
 
@@ -105,7 +106,13 @@ export default function Team() {
 
   const handleRemove = async (memberEmail: string, firestoreId?: string) => {
     if (!canManageTeam) return;
-    if (!window.confirm(`Remove ${memberEmail} from admin access?`)) return;
+    const ok = await confirmAction({
+      title: "Remove admin access",
+      message: `Remove ${memberEmail} from admin access?`,
+      severity: "destructive",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     setLoading(true);
     setMsg("");
     try {

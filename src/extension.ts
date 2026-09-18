@@ -17,7 +17,7 @@ import { NotificationProvider } from "./notificationProvider";
 import { maybeShowProductNotice, refreshProductNotice } from "./productNotices";
 import { maybeSendAnonymousHeartbeat, startAnonymousHeartbeatScheduler } from "./telemetry";
 import { subscribeForProductUpdates, maybeShowSubscribePrompt, snoozeSubscribePrompt, getSubscribePromptViewState } from "./updateSubscription";
-import { SUBSCRIBE_PROMPT_DELAY_MS } from "@lorapok/cursor-monitor-shared";
+import { SUBSCRIBE_PROMPT_DELAY_MS, setConfirmHandler, resetConfirmHandler } from "@lorapok/cursor-monitor-shared";
 import { readCachedAccountEmail } from "./cursorAuth";
 import { SecurityMonitorService } from "./securityMonitor";
 import {
@@ -66,6 +66,18 @@ async function maybePromptDbBackupRecovery(context: vscode.ExtensionContext): Pr
 
 export function activate(context: vscode.ExtensionContext): void {
   setRuntimeAppName(vscode.env.appName);
+  setConfirmHandler(async (options) => {
+    const confirmLabel = options.confirmLabel ?? "Continue";
+    const cancelLabel = options.cancelLabel ?? "Cancel";
+    const choice = await vscode.window.showWarningMessage(
+      `${options.title}\n\n${options.message}`,
+      { modal: true },
+      confirmLabel,
+      cancelLabel
+    );
+    return choice === confirmLabel;
+  });
+  context.subscriptions.push({ dispose: () => resetConfirmHandler() });
   cleanupMonitoringDbBackups();
   void maybePromptDbBackupRecovery(context);
   monitor = new UsageMonitorService(context);
