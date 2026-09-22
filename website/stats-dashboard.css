@@ -78,6 +78,9 @@
 /* Orbit zone — separate from stats card (no overlap) */
 .hero-orbit-zone {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: clamp(168px, 22vw, 200px);
   margin: 0 auto;
@@ -132,11 +135,12 @@
 }
 
 .hero-orbit-zone .hero-orbit {
-  width: 100%;
-  height: 100%;
+  position: relative;
+  width: min(100%, 280px);
+  height: min(100%, 280px);
+  aspect-ratio: 1;
   margin: 0;
-  max-width: 320px;
-  margin-inline: auto;
+  flex-shrink: 0;
 }
 
 .hero-orbit-zone .hero-orbit-mascot {
