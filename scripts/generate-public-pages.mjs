@@ -96,7 +96,7 @@ function pageShell({
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="site-ambient-mesh" aria-hidden="true"></div>
   <header class="site-header">
-    <nav class="nav container">
+    <div class="header-bar container">
       <a class="brand" href="${prefix}">
         <span class="brand-logo">
           <img src="${prefix}assets/logo.svg?v=${ASSET_V}" alt="Cursor Curse Monitor" width="48" height="48" />
@@ -106,15 +106,19 @@ function pageShell({
           <span class="brand-by">by Lorapok Labs</span>
         </span>
       </a>
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
-      <div class="nav-links" id="nav-links">
-${renderNav(active, depth)}
+      <div class="header-actions">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
       </div>
-    </nav>
+    </div>
+    <div class="header-nav-shell">
+      <nav class="header-nav container nav-links" id="nav-links" aria-label="Primary">
+${renderNav(active, depth)}
+      </nav>
+    </div>
   </header>
 
   <section class="page-hero">

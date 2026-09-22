@@ -94,9 +94,8 @@
     bar.innerHTML = `
       <div class="ccm-consent-banner-inner">
         <p class="ccm-consent-copy">
-          We use <strong>anonymous</strong> visit and download-click counts to improve Cursor Curse Monitor,
-          and may show Google AdSense ads after you opt in. Extension usage stays on your machine.
-          Chrysalis (floating guide) uses public site-data only until you add your own API key (BYOK).
+          We use <strong>anonymous</strong> visit and download-click counts to improve Cursor Curse Monitor.
+          Extension usage stays on your machine. Chrysalis (floating guide) uses public site-data only until you add your own API key (BYOK).
           See <a href="${relativeLegal("privacy.html")}">Privacy</a> and <a href="${relativeLegal("terms.html")}">Terms</a>.
         </p>
         <div class="ccm-consent-actions">
