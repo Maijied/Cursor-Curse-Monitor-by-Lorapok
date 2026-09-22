@@ -126,7 +126,7 @@
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="site-header">
-    <nav class="nav container">
+    <div class="header-bar container">
       <a class="brand" href="./">
         <span class="brand-logo">
           <img src="assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="56" height="56" />
@@ -136,17 +136,21 @@
           <span class="brand-by">by Lorapok Labs</span>
         </span>
       </a>
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
-      <div class="nav-links" id="nav-links">
+      <div class="header-actions">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+      </div>
+    </div>
+    <div class="header-nav-shell">
+      <nav class="header-nav container nav-links" id="nav-links" aria-label="Primary">
         <a href="./">Home</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html" aria-current="page">Terms</a>
-      </div>
-    </nav>
+      </nav>
+    </div>
   </header>
 
   <section class="page-hero">

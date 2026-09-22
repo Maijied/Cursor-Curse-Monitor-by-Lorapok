@@ -36,7 +36,7 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="site-ambient-mesh" aria-hidden="true"></div>
   <header class="site-header">
-    <nav class="nav container">
+    <div class="header-bar container">
       <a class="brand" href="../">
         <span class="brand-logo">
           <img src="../assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="48" height="48" />
@@ -46,20 +46,24 @@
           <span class="brand-by">by Lorapok Labs</span>
         </span>
       </a>
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
-      <div class="nav-links" id="nav-links">
+      <div class="header-actions">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+      </div>
+    </div>
+    <div class="header-nav-shell">
+      <nav class="header-nav container nav-links" id="nav-links" aria-label="Primary">
         <a href="../">Home</a>
         <a href="../wiki/index.html">Wiki</a>
         <a href="../releases.html">Releases</a>
         <a href="../community.html">Community</a>
         <a href="../docs/index.html" aria-current="page">Docs</a>
         <a href="../privacy.html">Privacy</a>
-      </div>
-    </nav>
+      </nav>
+    </div>
   </header>
 
   <section class="page-hero">

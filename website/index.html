@@ -131,7 +131,7 @@
     </div>
   </div>
   <header class="site-header">
-    <nav class="nav container">
+    <div class="header-bar container">
       <a class="brand" href="./">
         <span class="brand-logo">
           <img src="assets/logo.svg?v=105f5292a052" alt="Cursor Curse Monitor" width="56" height="56" />
@@ -141,12 +141,17 @@
           <span class="brand-by">by Lorapok Labs</span>
         </span>
       </a>
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
-      <div class="nav-links" id="nav-links">
+      <div class="header-actions">
+        <a class="nav-cta header-cta" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">Get extension</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+      </div>
+    </div>
+    <div class="header-nav-shell">
+      <nav class="header-nav container nav-links" id="nav-links" aria-label="Primary">
         <a href="#supported-ides">Supported IDEs</a>
         <a href="#ecosystem">Ecosystem</a>
         <a href="#architecture">Architecture</a>
@@ -161,9 +166,8 @@
         <a href="#release">Release</a>
         <a href="privacy.html">Privacy</a>
         <a data-href-repo href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a>
-        <a class="nav-cta" data-href-ovsx href="https://open-vsx.org/extension/lorapok-labs/cursor-curse-monitor-by-lorapok" target="_blank" rel="noopener">Get extension</a>
-      </div>
-    </nav>
+      </nav>
+    </div>
   </header>
 
   <main id="main-content" tabindex="-1">
