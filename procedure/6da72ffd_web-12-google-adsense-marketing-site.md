@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** _GitHub issue pending (offline during init)_  
 **Branch:** _local session_  
-**PR:** _TBD_
+**PR:** [#301](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/301)
 
 ---
 
@@ -23,7 +23,7 @@ Add Google AdSense Auto ads to the public marketing site (`cursor.lorapok.tech`)
 - [x] Implementation — `website/adsense.js`, consent copy, page generator + homepage wiring
 - [x] Privacy/terms disclosure updated
 - [x] Registry updated (`WEB-12` in `plan/mission-control-master-tasks.md`)
-- [ ] PR opened
+- [x] PR opened ([#301](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/301))
 - [ ] Post-deploy: verify AdSense site approval for `cursor.lorapok.tech` in Google AdSense console
 
 ---
