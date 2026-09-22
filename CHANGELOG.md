@@ -22,6 +22,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **EXT-01 platform availability strip** — Open VSX / VS Code / Firefox / Chrome zip / GitHub links in shared `getPlatformAvailabilityStrip`, Mission Control footer, IDE dashboard, browser footer, and marketing site footers (live `site-data` hrefs where available).
+- **WEB-12 Google AdSense** — consent-gated Auto ads loader (`website/adsense.js`) on marketing pages with Google Consent Mode v2; privacy/terms disclosure updated.
 - **LOGS-01 unified logs explorer** — level/source/time-range filters, meta JSON expand, CSV export on merged API/mail/system stream (`GET /api/logs?format=csv`); D1 + KV scatter unchanged.
 - **ANALYTICS-01 service analytics hub** — `GET /api/analytics/services` aggregates Cloudflare (KV/R2/D1/Pages), Firebase, GitHub, mail/Resend, marketplace downloads, and traffic into Overview + Reports cards (no new secrets).
 - **ECO-08 action validator** — shared `confirmAction` wired through Mission Control modal (deploy/rollback/infra, notice delete, subscriber broadcast, team remove, mail alias delete, PIN remove) and IDE account removal.

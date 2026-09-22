@@ -294,6 +294,7 @@
 | WEB-09 | **Public multi-page site** — `/wiki`, `/releases`, `/community`, `/docs` rendered from `docs/wiki` + admin notices + `site-data.json` | **done** | [#290](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/290); `npm run site:pages` |
 | WEB-10 | **Open-source contributor welcome** — CONTRIBUTING CTA on website, extension footers, hero/subscribe; link Project #4 + good-first issues | **done** | [#294](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/294); closes [#197](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/197) |
 | WEB-11 | **Engineering history timeline** — long behind-the-scenes page: sectioned milestones, procedure arc, deploy history, team credits | **done** | [#296](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/296); closes [#207](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/207) |
+| WEB-12 | **Google AdSense** — consent-gated Auto ads loader on marketing pages (`adsense.js`, Google Consent Mode v2) | **done** | `ca-pub-3756651399602872`; `procedure/6da72ffd_web-12-google-adsense-marketing-site.md` |
 
 ---
 

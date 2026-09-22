@@ -81,6 +81,7 @@ function pageShell({
   <link rel="icon" href="${prefix}assets/logo.svg?v=${ASSET_V}" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="${prefix}styles.css?v=${ASSET_V}" />
   <link rel="stylesheet" href="${prefix}public-pages.css?v=${ASSET_V}" />
@@ -151,6 +152,7 @@ ${bodyHtml}
   <script src="${prefix}cloudflare-beacon.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}social-footer.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}consent.js?v=${ASSET_V}" defer></script>
+  <script src="${prefix}adsense.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}analytics.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}site.js?v=${ASSET_V}" defer></script>
   <script src="${prefix}ccm-floating-assistant.js?v=${ASSET_V}" defer></script>
