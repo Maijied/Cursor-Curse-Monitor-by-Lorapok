@@ -82,6 +82,8 @@ function pageShell({
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+  <meta name="google-adsense-account" content="ca-pub-3756651399602872" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3756651399602872" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="${prefix}styles.css?v=${ASSET_V}" />
   <link rel="stylesheet" href="${prefix}public-pages.css?v=${ASSET_V}" />

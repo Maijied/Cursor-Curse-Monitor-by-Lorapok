@@ -1,10 +1,10 @@
 /**
- * Google AdSense Auto ads — consent-gated loader (WEB-12).
- * Loads only after LEGAL-01 process consent grants analytics/marketing.
+ * Google AdSense — Consent Mode for cursor.lorapok.tech (WEB-12).
+ * The verification snippet lives in each page <head> (static, crawler-readable).
+ * This file grants ad_storage only after LEGAL-01 analytics consent.
  */
 (function () {
-  const CLIENT = "ca-pub-3756651399602872";
-  const LOADED_KEY = "__ccmAdsenseLoaded";
+  const LOADED_KEY = "__ccmAdsenseConsentReady";
 
   function gtag() {
     window.dataLayer = window.dataLayer || [];
@@ -23,6 +23,8 @@
   }
 
   function grantConsentMode() {
+    if (window[LOADED_KEY]) return;
+    window[LOADED_KEY] = true;
     gtag("consent", "update", {
       ad_storage: "granted",
       ad_user_data: "granted",
@@ -31,30 +33,19 @@
     });
   }
 
-  function loadAdSense() {
-    if (window[LOADED_KEY]) return;
-    window[LOADED_KEY] = true;
-    grantConsentMode();
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT}`;
-    script.crossOrigin = "anonymous";
-    document.head.appendChild(script);
-  }
-
-  function maybeLoad() {
+  function maybeGrant() {
     const stored = window.__CCM_PROCESS_CONSENT__ || window.CCM_PROCESS_CONSENT?.get?.();
     if (stored?.analytics === true) {
-      loadAdSense();
+      grantConsentMode();
       return;
     }
-    document.addEventListener("ccm:consent-analytics", () => loadAdSense(), { once: true });
+    document.addEventListener("ccm:consent-analytics", () => grantConsentMode(), { once: true });
   }
 
   setConsentDefaults();
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", maybeLoad);
+    document.addEventListener("DOMContentLoaded", maybeGrant);
   } else {
-    maybeLoad();
+    maybeGrant();
   }
 })();
