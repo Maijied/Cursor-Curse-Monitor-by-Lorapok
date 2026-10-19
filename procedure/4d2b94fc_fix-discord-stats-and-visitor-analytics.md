@@ -1,7 +1,7 @@
 # Fix Discord stats and visitor analytics
 
 **Procedure ID:** `4d2b94fc`  
-**Status:** in_progress  
+**Status:** done  
 **Created:** 2026-09-18  
 **Plan:** _none_  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272  
@@ -23,9 +23,9 @@ Fix Discord Community reach / engagement cards sending wrong or stale stats, and
 - [x] Implementation started
 - [x] Tests passing (discord-deploy-context + discord-notify)
 - [x] PR opened
-- [ ] Review triaged
-- [ ] Merged
-- [ ] Post-merge verification (admin deploy + digest test + website deploy)
+- [x] Review triaged
+- [x] Merged ([#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) 2026-09-17)
+- [x] Follow-up beacon reliability ([#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305)) — production visits stale since 2026-09-26
 
 ---
 

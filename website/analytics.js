@@ -4,6 +4,8 @@
  */
 (function () {
   const SESSION_KEY = "ccm-analytics-session";
+  const DEFAULT_BEACON_URL = "https://cursor-dev.lorapok.tech/api/analytics/visit";
+
   const CHANNELS = {
     "[data-href-ovsx]": "ovsx",
     "[data-href-vscode]": "vscode",
@@ -45,18 +47,31 @@
     }
   }
 
+  function resolveBeaconUrl() {
+    return window.__ccmBeaconUrl || DEFAULT_BEACON_URL;
+  }
+
   function sendBeacon(channel) {
     const payload = JSON.stringify({
       channel,
       path: window.location.pathname,
       referrer: document.referrer || null,
     });
-    const url = window.__ccmBeaconUrl || "/api/analytics/visit";
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
-    } else {
-      fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => {});
-    }
+    const url = resolveBeaconUrl();
+    // Cross-origin (GitHub Pages → admin Pages): fetch+keepalive is more reliable than
+    // sendBeacon with application/json (CORS/preflight quirks across browsers).
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true,
+      mode: "cors",
+      credentials: "omit",
+    }).catch(() => {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
+      }
+    });
   }
 
   async function trackEvent(channel) {

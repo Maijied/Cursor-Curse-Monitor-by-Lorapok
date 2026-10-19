@@ -2,11 +2,11 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-09-18 (EXT-01 [#300](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/300) open)
-**Branch:** `feat/ext-01-platform-strip`
-**Main:** `70afb396`
-**CI:** LOGS-01 on main. EXT-01 PR open.
-**P1 queue:** EXT-01 (`procedure/github-milestones.json`)
+**Last updated:** 2026-10-19 (STATS-DISCORD beacon follow-up in PR)
+**Branch:** `fix/stats-discord-beacon-reliability`
+**Main:** `d944afc9`
+**CI:** main scheduled deploy red on npm advisory gate (2026-10-19); extension/admin jobs green on last merge runs.
+**P1 queue:** STATS-DISCORD ([#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) + [#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305))
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -252,6 +252,7 @@
 | STAT-05 | Overview staleness badges (>2× interval) | **next** | Reliability C |
 | STAT-06 | Pause stats refresh until KV reset | **done** | Auto-pause cleared after UTC reset; `statsRefreshLastRunAt` fresh in `/api/health` |
 | STAT-07 | Live stats recover after quota reset | **next** | verify post-reset |
+| STATS-DISCORD | Discord Community reach + live visitor counters | **PR** | [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) merged; beacon reliability [#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305) |
 
 ---
 
@@ -374,7 +375,7 @@
 | NOTICE-01 | **Changelog → Notice automation** — on release/deploy, parse `CHANGELOG.md` / release tag → draft Mission Control notice (full detail) for master review + one-click publish | **done** | `changelog-to-notice.mjs`, `GET /api/notices?changelogDraft=1`, Notices UI import |
 | ANALYTICS-01 | **Service analytics hub** — aggregate operator-facing metrics: Cloudflare (KV/R2/Pages), Google (Analytics/Firebase if configured), GitHub, Resend, marketplace downloads | **done** | [#298](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/298); closes [#166](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/166) |
 | LOGS-01 | **Unified logs explorer** — structured JSON logs, severity, source, ACL filter, full-text search, time range, export; D1 + KV scatter | **done** | [#299](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/299); closes [#168](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/168) |
-| EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **PR** | [#300](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/300); closes [#170](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/170) |
+| EXT-01 | **Platform availability strip** — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub Releases logos + live links in admin, website, IDE popup, browser options | **done** | [#300](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/300) merged |
 | ADMIN-01 | **Mission Control global search** — command palette (⌘K) across nav, settings tabs, API catalog, docs, and tasks | **done** | PR [#278](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/278) merged; ACL-aware fuzzy ⌘K |
 | ADMIN-02 | **Admin UX polish** — friendlier layouts, empty states, mobile sidebar, contextual help on dense pages | **done** | PR [#281](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/281) merged |
 | ADMIN-03 | **Cross-section refer buttons** — when copy mentions another area, show minimal "Go to →" link (Settings, Deployments, Mail, …) | **done** | `SectionReferLink` + `section-refer.ts`; wired in Deployments, Connected Services, Docs, Subscribers, Discord/testmail cards, Infrastructure |
@@ -385,9 +386,10 @@
 
 ## Recommended **next** queue (priority order)
 
-1. Merge **EXT-01** when green
-2. Remaining **ECO-*** / **ANALYTICS-02** backlog
-3. **CHRYS-02** (AI provider) when operator vault key path is ready
+1. Merge **STATS-DISCORD** beacon follow-up ([#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305)); close [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) after admin + site deploy smoke
+2. **main CI** — dependency-security bot / npm advisories on scheduled Production Deployment
+3. **CF-03** / **CF-04** mail relay + `deploy-infra`
+4. **ANALYTICS-02** / **ECO-*** / **CHRYS-02**
 
 ---
 
