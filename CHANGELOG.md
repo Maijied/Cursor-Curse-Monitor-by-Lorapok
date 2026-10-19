@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **CI dependency security (admin production)** — npm `overrides` for `@grpc/grpc-js` and `source-map-js` so `npm run security:deps` passes (unblocks Production Deployment / PR #306).
 - **DEPLOY-04 admin-only marketplace publish** — `Deploy to Marketplaces` no longer runs for `full-release` or with default-true `deploy_extension`; push/infra never publish. Mission Control Deploy/Rollback remain the opt-in path (`deploy_extension=true`). Standalone AMO workflow requires `allow_standalone_amo`.
 - **Discord Community reach + visitor analytics** — `/api/analytics/visit` now writes ADMIN_KV (seeded from Firestore so counts don’t reset); `/api/analytics/stats` is public for stats-refresh/CI; marketing beacon points at admin Pages; Discord Total labels when Open VSX duplicate is missing; oxlint unused-import/control-char warnings cleared.
 - **STATS-DISCORD visitor beacon reliability** — marketing `analytics.js` uses CORS `fetch` + absolute admin beacon fallback (no GitHub Pages 404); visit API accepts text/plain JSON bodies; KV/Firestore merge prefers freshest `updatedAt` and max per-channel clicks.
