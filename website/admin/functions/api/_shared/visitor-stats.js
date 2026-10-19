@@ -106,22 +106,50 @@ export async function readVisitorStats(env) {
  * Prefer the richer of KV vs Firestore so empty KV does not wipe historical totals.
  * @param {Record<string, unknown>|null|undefined} env
  */
+export function mergePackageClicks(a, b) {
+  const keys = new Set([...Object.keys(DEFAULT_STATS.packageClicks), ...Object.keys(a ?? {}), ...Object.keys(b ?? {})]);
+  /** @type {Record<string, number>} */
+  const out = { ...DEFAULT_STATS.packageClicks };
+  for (const key of keys) {
+    out[key] = Math.max(Number(a?.[key] ?? 0), Number(b?.[key] ?? 0));
+  }
+  return out;
+}
+
+export function pickFresherSource(kv, firestore) {
+  const kvTime = kv.updatedAt ? Date.parse(String(kv.updatedAt)) : NaN;
+  const fsTime = firestore.updatedAt ? Date.parse(String(firestore.updatedAt)) : NaN;
+  if (!Number.isNaN(kvTime) && !Number.isNaN(fsTime)) {
+    if (kvTime > fsTime) return "kv";
+    if (fsTime > kvTime) return "firestore";
+  }
+  if (!Number.isNaN(kvTime) && Number.isNaN(fsTime)) return "kv";
+  if (Number.isNaN(kvTime) && !Number.isNaN(fsTime)) return "firestore";
+  const kvVisits = Number(kv.websiteVisits ?? 0);
+  const fsVisits = Number(firestore.websiteVisits ?? 0);
+  if (kvVisits !== fsVisits) return kvVisits > fsVisits ? "kv" : "firestore";
+  return kv.updatedAt ? "kv" : "firestore";
+}
+
 export async function readVisitorStatsMerged(env) {
   const kv = await readVisitorStats(env);
   const firestore = await fetchFirestoreVisitorStats(env);
   if (!firestore) return { ...kv, source: kv.updatedAt ? "kv" : "kv-empty" };
 
-  const kvVisits = Number(kv.websiteVisits ?? 0);
-  const fsVisits = Number(firestore.websiteVisits ?? 0);
-  if (kvVisits >= fsVisits && kv.updatedAt) {
-    return { ...kv, source: "kv" };
-  }
-  if (fsVisits > kvVisits) {
-    return { ...firestore, source: "firestore" };
-  }
+  const packageClicks = mergePackageClicks(kv.packageClicks, firestore.packageClicks);
+  const websiteVisits = Math.max(Number(kv.websiteVisits ?? 0), Number(firestore.websiteVisits ?? 0));
+  const totalEngagement =
+    websiteVisits + Object.values(packageClicks).reduce((s, n) => s + (Number(n) || 0), 0);
+  const primary = pickFresherSource(kv, firestore) === "kv" ? kv : firestore;
+  const updatedAt = primary.updatedAt ?? kv.updatedAt ?? firestore.updatedAt ?? null;
+  const source = pickFresherSource(kv, firestore);
+
   return {
-    ...kv,
-    source: kv.updatedAt ? "kv" : firestore.updatedAt ? "firestore" : "kv-empty",
+    websiteVisits,
+    packageClicks,
+    totalEngagement,
+    updatedAt,
+    source,
   };
 }
 

@@ -9,10 +9,14 @@ import { incrementVisitorStats } from "../_shared/visitor-stats.js";
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  let body;
+  let body: Record<string, unknown> | null = null;
   try {
-    body = await request.json();
+    const text = await request.text();
+    body = text ? JSON.parse(text) : null;
   } catch {
+    return jsonResponse({ error: "Invalid JSON" }, 400);
+  }
+  if (!body || typeof body !== "object") {
     return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
