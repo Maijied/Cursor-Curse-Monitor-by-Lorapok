@@ -6,7 +6,7 @@
 **Plan:** _none_  
 **Issue:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305  
 **Branch:** `fix/stats-discord-beacon-reliability`  
-**PR:** _TBD_  
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306  
 **Related:** [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) (parent STATS-DISCORD)
 
 ---
@@ -23,7 +23,7 @@ STATS-DISCORD visitor beacon reliability
 - [x] Procedure + GitHub issue created ([#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305))
 - [x] Implementation started — beacon CORS fetch, visit body parse, merge by freshness
 - [x] Tests passing (`visitor-stats.test.mjs`, discord vitest)
-- [ ] PR opened
+- [x] PR opened
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
