@@ -269,6 +269,12 @@ function buildJsonLd(pageKey = "index", pageMetaForPage = null) {
           url: pkg.author?.url ?? pkg.repository?.url,
         };
       }
+      if (item.id === "browser_extension") {
+        const fxVersion = siteData?.browserExtension?.firefox?.version;
+        if (fxVersion && fxVersion !== "0.0.0") {
+          node.softwareVersion = fxVersion;
+        }
+      }
       if (item.publisher === "organization") {
         node.publisher = { "@id": `${SITE_BASE}/#organization` };
       } else {

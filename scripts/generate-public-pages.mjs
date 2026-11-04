@@ -8,6 +8,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync, existsSync
 import { dirname, join, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { wikiMarkdownToHtml, mapWikiHref } from "./lib/wiki-markdown.mjs";
+import { licenseFooterLineHtml } from "./lib/marketing-license-copy.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const website = join(root, "website");
@@ -151,7 +152,7 @@ ${bodyHtml}
       </nav>
       <nav class="footer-social" data-footer-social="minimal" aria-label="Lorapok Labs social links"></nav>
       <p data-footer-contribute class="footer-contribute">Open source · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a> · <a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener">Good first issues</a> · <a href="https://github.com/users/Maijied/projects/4" target="_blank" rel="noopener">Project #4</a></p>
-      <p>GPL-3.0 © Lorapok Labs · <a href="${prefix}">Home</a> · <a href="${prefix}wiki/">Wiki</a> · <a href="${prefix}releases.html">Releases</a> · <a href="${prefix}community.html">Community</a> · <a href="${prefix}docs/">Docs</a> · <a href="${prefix}privacy.html">Privacy</a> · <a href="${prefix}terms.html">Terms</a></p>
+      <p>${licenseFooterLineHtml(prefix)} © Lorapok Labs · <a href="${prefix}">Home</a> · <a href="${prefix}wiki/">Wiki</a> · <a href="${prefix}releases.html">Releases</a> · <a href="${prefix}community.html">Community</a> · <a href="${prefix}docs/">Docs</a> · <a href="${prefix}privacy.html">Privacy</a></p>
       <p><a href="https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok" target="_blank" rel="noopener">GitHub</a> · Not affiliated with Cursor / Anysphere</p>
     </div>
   </footer>
@@ -421,7 +422,7 @@ function generateEngineeringHistory() {
       id: "credits",
       era: "Credits",
       title: "Lorapok Labs",
-      body: "Founded and maintained by <strong>Mohammad Maizied Hasan Majumder</strong> (Lorapok Labs). GPL-3.0. Not affiliated with Cursor / Anysphere. Community help welcome via Discord and GitHub.",
+      body: "Founded and maintained by <strong>Mohammad Maizied Hasan Majumder</strong> (Lorapok Labs). IDE extension: GPL-3.0-or-later; Firefox browser extension: MPL-2.0. Not affiliated with Cursor / Anysphere. Community help welcome via Discord and GitHub.",
       links: [
         { href: "https://lorapok.tech", label: "lorapok.tech", external: true },
         { href: "https://discord.gg/bp42QAMC6", label: "Discord", external: true },

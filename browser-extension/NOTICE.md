@@ -15,7 +15,7 @@ This file is included in Firefox and Chrome extension packages built from `brows
 | React DOM | MIT | https://github.com/facebook/react |
 | webextension-polyfill | MPL-2.0 | https://github.com/mozilla/webextension-polyfill |
 
-MIT licensed components retain their copyright notices in upstream source. MPL-2.0 components are compatible with this add-on’s MPL-2.0 distribution.
+MIT licensed components include full permission texts in \`THIRD_PARTY_NOTICES.md\` (shipped in this package). MPL-2.0 \`webextension-polyfill\` includes full license text there as well.
 
 ## IDE extension (not in this package)
 

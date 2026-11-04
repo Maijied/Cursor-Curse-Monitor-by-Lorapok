@@ -47,6 +47,7 @@ if (!existsSync(mplText)) {
 for (const rel of [
   "browser-extension/NOTICE.md",
   "browser-extension/SOURCE_CODE_NOTICE.txt",
+  "browser-extension/THIRD_PARTY_NOTICES.md",
   "packages/shared/LICENSE.md",
 ]) {
   if (!existsSync(join(root, rel))) fail(`Missing ${rel}`);
