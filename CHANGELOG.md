@@ -6,6 +6,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Changed
+
+- **Marketing site (private repo)** — Live download totals regenerated from marketplaces (`syncStatus: synced`, ~46.5k grand total); deploy via `npm run website:deploy:pages` to Cloudflare Pages (`cursor-curse-monitor-website`).
+
 ### Fixed
 
 - **CI dependency security (admin production)** — npm `overrides` for `@grpc/grpc-js` and `source-map-js` so `npm run security:deps` passes (unblocks Production Deployment / PR #306).

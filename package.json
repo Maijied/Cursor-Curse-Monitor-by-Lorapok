@@ -352,6 +352,7 @@
     "admin:deploy:fast": "node website/admin/scripts/deploy-pages-fast.mjs",
     "push:main": "node scripts/direct-main-push.mjs",
     "push:main:website": "node scripts/direct-main-push.mjs --component website --deploy-website",
+    "website:deploy:pages": "node scripts/deploy-marketing-pages.mjs",
     "sync:tasks": "node scripts/sync-mission-control-issues.mjs --add-to-project",
     "sync:issues": "npm run sync:labels && npm run sync:tasks && npm run setup:github-project",
     "sync:tasks:dry": "node scripts/sync-mission-control-issues.mjs --dry-run",
