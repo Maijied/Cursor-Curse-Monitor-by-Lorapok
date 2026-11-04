@@ -5,8 +5,8 @@
 **Created:** 2026-11-04  
 **Plan:** _none_  
 **Issue:** __ISSUE_PENDING__  
-**Branch:** _TBD_  
-**PR:** _TBD_
+**Branch:** fix/firefox-mpl-licensing-split  
+**PR:** https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/314
 
 ---
 
@@ -22,7 +22,7 @@ Firefox MPL vs IDE GPL licensing split
 - [ ] Procedure + GitHub issue created
 - [x] Implementation started
 - [x] Tests passing (`npm run validate:licenses`, `browser-ext:test`, zip includes LICENSE/NOTICE)
-- [ ] PR opened
+- [x] PR opened (#314)
 - [ ] Review triaged
 - [ ] Merged
 - [ ] Post-merge verification
