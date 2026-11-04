@@ -33,7 +33,7 @@ npm run version:sync    # write resolved versions
 Every push to `main` automatically:
 1. Builds and validates the extension and admin panel.
 2. Regenerates `site-data.json` / `seo.json`.
-3. Deploys the marketing website to GitHub Pages.
+3. Deploys the marketing website to **Cloudflare Pages** (`cursor-curse-monitor-website` → [cursor.lorapok.tech](https://cursor.lorapok.tech)) when the website deploy job runs — not GitHub Pages (private repo).
 
 > **Note:** Pushes to `main` do **NOT** automatically publish to public marketplaces.
 
@@ -78,12 +78,16 @@ In **Settings → Secrets and variables → Actions**, add:
 npx ovsx create-namespace lorapok-labs -p <OVSX_PAT>
 ```
 
-### 4. GitHub Pages
+### 4. Marketing site (Cloudflare Pages)
 
-Enable GitHub Pages in repo settings:
-- Source: **GitHub Actions**
+CI and local deploy use direct upload (private repo — GitHub Pages is not used):
 
----
+```bash
+npm run site:data && npm run site:seo   # regenerate website/site-data.json, seo.json, wiki shells
+npm run website:deploy:pages            # wrangler pages deploy → cursor-curse-monitor-website
+```
+
+Requires Cloudflare credentials (cred vault locally, or `admin-production` secrets / cred vault blob in CI). Custom domain: **cursor.lorapok.tech**.
 
 ## Local Development Release
 
@@ -303,7 +307,7 @@ npm run browser-ext:build
 | "Already published" warning | Normal — CI treats this as success. Bump version if you need to re-publish |
 | Extension not in Cursor search | Lower `engines.vscode` if too high; reload window; wait for Open VSX sync |
 | Workflow push rejected | Run `gh auth refresh -h github.com -s workflow` |
-| Website not updating | Check GitHub Pages is enabled with source: GitHub Actions |
+| Website not updating | Re-run **deploy-infra** with website enabled, or `npm run website:deploy:pages` (Cloudflare project `cursor-curse-monitor-website`) |
 | AMO sign fails | Verify `AMO_JWT_ISSUER` / `AMO_JWT_SECRET`; extension ID in manifest `browser_specific_settings.gecko.id` |
 | Chrome zip won't install | Use Load unpacked (not .crx); extract zip first |
 | DB backup files accumulating | Stale backups (>1 hour old) are cleaned up automatically |
