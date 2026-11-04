@@ -594,10 +594,23 @@ function updateStructuredDataVersion(data) {
     setHref("[data-href-github-release]", data.github.releaseUrl ?? data.repository);
     setHref("[data-href-vsix]", data.github.vsixUrl);
     setHref("[data-href-repo]", data.repository);
-    setHref(
-      "[data-href-firefox-xpi]",
-      data.browserExtension?.firefox?.xpiUrl ?? data.github?.firefoxXpiUrl ?? data.github?.releaseUrl ?? "#"
-    );
+    const xpiUrl =
+      data.browserExtension?.firefox?.xpiUrl ?? data.github?.firefoxXpiUrl ?? null;
+    const firefoxAmoUrl =
+      data.browserExtension?.firefox?.url ?? data.productContext?.firefoxUrl ?? "#";
+    setHref("[data-href-firefox-xpi]", xpiUrl ?? firefoxAmoUrl);
+    $$("[data-href-firefox-xpi]").forEach((el) => {
+      if (!xpiUrl) {
+        el.setAttribute("aria-disabled", "true");
+        el.classList.add("disabled");
+        el.title =
+          "No signed .xpi on GitHub Releases for this version — install from Firefox Add-ons (AMO) instead.";
+      } else {
+        el.removeAttribute("aria-disabled");
+        el.classList.remove("disabled");
+        el.removeAttribute("title");
+      }
+    });
     setText(
       "[data-firefox-xpi-name]",
       data.browserExtension?.firefox?.xpiName ?? data.github?.firefoxXpiName ?? "cursor-curse-monitor.xpi"
