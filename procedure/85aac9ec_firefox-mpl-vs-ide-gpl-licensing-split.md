@@ -47,7 +47,7 @@ _None._
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | Headless tests | pending |
+| A | Headless tests | pass (CI Build & Validate + Browser Extension CI) |
 | B | Component matrix | pending |
 | C | Production smoke | pending |
 
