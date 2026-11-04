@@ -217,7 +217,8 @@ export function shouldRequireDiscordWebhook(opts = {}) {
 }
 
 export async function notifyDiscordDeploymentFromCi(opts) {
-  const { webhookUrl, source } = await resolveDiscordDeploymentWebhookUrl();
+  const allowAdminKv = process.env.DISCORD_NOTIFY_ENV_ONLY !== "1";
+  const { webhookUrl, source } = await resolveDiscordDeploymentWebhookUrl({ allowAdminKv });
   if (!webhookUrl) {
     const requireWebhook = shouldRequireDiscordWebhook(opts);
     if (requireWebhook) {
@@ -226,7 +227,7 @@ export async function notifyDiscordDeploymentFromCi(opts) {
         skipped: true,
         reason: "no_webhook",
         error:
-          "DISCORD_DEPLOYMENT_WEBHOOK not set — add discord_deployment_webhook_url to cred vault, configure Mission Control Settings, or add the admin-production / github-pages secret.",
+          "DISCORD_DEPLOYMENT_WEBHOOK not set — add discord_deployment_webhook_url to cred vault, configure Mission Control Settings, or add the admin-production secret.",
       };
     }
     return { ok: false, skipped: true, reason: "no_webhook" };
