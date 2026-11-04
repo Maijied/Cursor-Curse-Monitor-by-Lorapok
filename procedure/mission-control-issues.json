@@ -527,7 +527,43 @@
       "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/222",
       "status": "done",
       "section": "Settings UX (cross-cutting)"
+    },
+    "MAIL-17": {
+      "number": 307,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-18": {
+      "number": 308,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/308",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-19": {
+      "number": 309,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/309",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-20": {
+      "number": 310,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/310",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-21": {
+      "number": 311,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/311",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
+    },
+    "MAIL-22": {
+      "number": 312,
+      "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/312",
+      "status": "next",
+      "section": "Mail (Resend + Cloudflare Email)"
     }
   },
-  "updatedAt": "2026-09-18T06:11:53.784Z"
+  "updatedAt": "2026-10-19T15:38:35.990Z"
 }

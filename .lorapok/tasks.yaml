@@ -1,0 +1,188 @@
+meta:
+  product: Cursor Curse Monitor
+  repo: Maijied/Cursor-Curse-Monitor-by-Lorapok
+  version: 1.0.0
+tasks:
+  - { id: KV-01, priority: p2, status: done, title: Shared `kv-quota.js` (read + write limit detection), depends_on: [] }
+  - { id: KV-02, priority: p2, status: done, title: `kv-put.js` uses quota formatter, depends_on: [] }
+  - { id: KV-03, priority: p2, status: done, title: `/api/sync/status` exposes `kvQuotaLimitKind`, depends_on: [] }
+  - { id: KV-04, priority: p2, status: done, title: Infrastructure card + Cron KV banner, depends_on: [] }
+  - { id: KV-05, priority: p2, status: done, title: Reduce stats refresh writes (skip unchanged badge/log), depends_on: [] }
+  - { id: KV-06, priority: p2, status: done, title: `writesPausedUntil` guard in stats refresh, depends_on: [] }
+  - { id: KV-07, priority: p2, status: done, title: KV quota meter copy + CF limits link in UI, depends_on: [] }
+  - { id: KV-08, priority: p2, status: done, title: Architecture.md § stats storage (KV vs R2 vs D1), depends_on: [] }
+  - { id: KV-09, priority: p2, status: done, title: Wait for daily quota reset (UTC), depends_on: [] }
+  - { id: D1-01, priority: p2, status: todo, title: "Design: move scatter logs / subscriber index off KV", depends_on: [] }
+  - { id: D1-02, priority: p2, status: done, title: Add D1 binding in `wrangler.toml`, depends_on: [] }
+  - { id: D1-03, priority: p2, status: done, title: "Migration script KV → D1 for `system:log:*`", depends_on: [] }
+  - { id: D1-04, priority: p2, status: done, title: Admin queries / health for D1 connectivity, depends_on: [] }
+  - { id: R2-01, priority: p2, status: todo, title: "Design: `stats:readme-svg` + badge blobs to R2", depends_on: [] }
+  - { id: R2-02, priority: p2, status: done, title: R2 bucket + binding, depends_on: [] }
+  - { id: R2-04, priority: p2, status: done, title: R2 free-tier guardrails + KV fallback surfacing, depends_on: [] }
+  - { id: R2-03, priority: p2, status: done, title: Read path in stats refresh + shields API, depends_on: [] }
+  - { id: CF-01, priority: p2, status: done, title: Tabbed Settings + integration APIs, depends_on: [] }
+  - { id: CF-02, priority: p2, status: done, title: Public `GET /api/firebase-config`, depends_on: [] }
+  - { id: CF-03, priority: p2, status: todo, title: `ccm-mail-relay` worker deploy, depends_on: [] }
+  - { id: CF-04, priority: p2, status: todo, title: `deploy-infra` workflow_dispatch for full mail, depends_on: [] }
+  - { id: CF-05, priority: p2, status: done, title: Production deploy after settings phases, depends_on: [] }
+  - { id: CF-06, priority: p2, status: done, title: Fix `firebase-config.ts` import paths (Pages bundle), depends_on: [] }
+  - { id: OPS-01, priority: p2, status: done, title: Bump `wrangler` to latest 4.x, depends_on: [] }
+  - { id: OPS-02, priority: p2, status: done, title: CI Node 24 (replace deprecated Node 22 pin), depends_on: [] }
+  - { id: OPS-03, priority: p2, status: todo, title: Periodic wrangler + Node LTS audit, depends_on: [] }
+  - { id: FB-01, priority: p2, status: done, title: Remove hardcoded keys; runtime bootstrap, depends_on: [] }
+  - { id: FB-02, priority: p2, status: done, title: "KV `integrations:firebase` + seed script", depends_on: [] }
+  - { id: FB-03, priority: p2, status: done, title: GH `admin-production` `VITE_FIREBASE_*` sync on save, depends_on: [] }
+  - { id: FB-04, priority: p2, status: done, title: CI build from GH secrets, depends_on: [] }
+  - { id: FB-05, priority: p2, status: done, title: Vitest `firebase-config.test.ts`, depends_on: [] }
+  - { id: FB-06, priority: p2, status: done, title: Connected Services Firebase row health, depends_on: [] }
+  - { id: FB-07, priority: p2, status: done, title: Pages `VITE_FIREBASE_*` runtime secrets (KV read fallback), depends_on: [] }
+  - { id: FB-08, priority: p2, status: done, title: "KV `integrations:firebase` re-seeded production", depends_on: [] }
+  - { id: FB-09, priority: p2, status: done, title: Firestore KV fallback tier + `FIREBASE_SERVICE_ACCOUNT_JSON` sync, depends_on: [] }
+  - { id: AUTH-01, priority: p2, status: done, title: RBAC + email-identities architecture sign-off, depends_on: [] }
+  - { id: AUTH-02, priority: p2, status: done, title: Enable Firebase Email/Password + invite-only gate, depends_on: [] }
+  - { id: AUTH-03, priority: p2, status: done, title: "Login UI: email/password fields + validation (zxcvbn)", depends_on: [] }
+  - { id: AUTH-04, priority: p2, status: done, title: Password reset + lockout messaging for allowlisted admins, depends_on: [] }
+  - { id: AUTH-05, priority: p2, status: done, title: `GET /api/auth/me` — role + permissions for SPA, depends_on: [] }
+  - { id: AUTH-06, priority: p2, status: done, title: KV `admin-rbac` store + role assignment API, depends_on: [] }
+  - { id: AUTH-07, priority: p2, status: done, title: `requirePermission()` on all mutating API routes, depends_on: [] }
+  - { id: AUTH-08, priority: p2, status: done, title: "Team page: assign roles (master/admin/operator/viewer)", depends_on: [] }
+  - { id: AUTH-09, priority: p2, status: done, title: ACL audit log (role/email changes), depends_on: [] }
+  - { id: AUTH-10, priority: p2, status: done, title: ACL vitest matrix + production smoke (non-master paths), depends_on: [] }
+  - { id: AUTH-11, priority: p2, status: done, title: Profile tab + quick-unlock PIN (Settings), depends_on: [] }
+  - { id: AUTH-12, priority: p2, status: done, title: "Feature ACL v2 — per-card / per-action permissions beyond nav (deploy buttons, m", depends_on: [] }
+  - { id: AUTH-13, priority: p2, status: done, title: ACL audit UI — filterable timeline of role/email changes with export, depends_on: [] }
+  - { id: GH-01, priority: p2, status: done, title: Integration tab + non-secret metadata, depends_on: [] }
+  - { id: GH-02, priority: p2, status: done, title: Env secret encryption (`github-secrets.js`), depends_on: [] }
+  - { id: GH-03, priority: p2, status: done, title: `/api/sync/status` GitHub zen check, depends_on: [] }
+  - { id: GH-04, priority: p2, status: done, title: Mail sync GHA workflow polling (like deploy), depends_on: [] }
+  - { id: MAIL-07, priority: p2, status: done, title: Mail sync workflow polling in UI, depends_on: [] }
+  - { id: GH-05, priority: p2, status: todo, title: Procedure on-merge finalize for settings PR, depends_on: [] }
+  - { id: GH-06, priority: p2, status: done, title: "GitHub webhooks — repo push, release, workflow_run → Mission Control ingest + fa", depends_on: [] }
+  - { id: REL-01, priority: p2, status: done, title: "Beta release pipeline fix — `-beta` tag/channel, `release-prep`, marketplace ski", depends_on: [] }
+  - { id: DEPLOY-01, priority: p2, status: done, title: "Global deploy runtime UX — after dispatch, operator navigates any admin page; fl", depends_on: [] }
+  - { id: DEPLOY-02, priority: p2, status: done, title: Remove duplicate webhook UI from Deployments page — canonical config in Settings, depends_on: [] }
+  - { id: DEPLOY-03, priority: p2, status: done, title: "Deploy → social gallery trigger — on CI success, queue SOCIAL-02 image generatio", depends_on: [] }
+  - { id: DEPLOY-04, priority: p2, status: done, title: Admin-only marketplace publish — no continuous marketplace deploys on push/full-, depends_on: [] }
+  - { id: AZ-01, priority: p2, status: done, title: `cloudDevEnvironments` Azure Dev Box entry, depends_on: [] }
+  - { id: AZ-02, priority: p2, status: done, title: `CloudEnvironmentsCard` (themed), depends_on: [] }
+  - { id: AZ-03, priority: p2, status: todo, title: Per-env online/degraded pill from sync status, depends_on: [] }
+  - { id: AZ-04, priority: p2, status: todo, title: "Field guide: Azure consoles + env vars", depends_on: [] }
+  - { id: AZ-05, priority: p2, status: todo, title: Optional Cosmos/Table export cron (backup only), depends_on: [] }
+  - { id: GCP-01, priority: p2, status: done, title: Workstations + Cloud Shell in catalog, depends_on: [] }
+  - { id: GCP-02, priority: p2, status: done, title: "Cloud dev card links (docs, console, install)", depends_on: [] }
+  - { id: GCP-03, priority: p2, status: todo, title: Per-env status pill, depends_on: [] }
+  - { id: GCP-04, priority: p2, status: todo, title: "Operator field guide (gcloud, Workstations)", depends_on: [] }
+  - { id: GCP-05, priority: p2, status: todo, title: GCS/Firestore backup export (optional), depends_on: [] }
+  - { id: MAIL-01, priority: p2, status: done, title: Mail transport card + Settings tab, depends_on: [] }
+  - { id: MAIL-02, priority: p2, status: done, title: 60s polling on mail card, depends_on: [] }
+  - { id: MAIL-03, priority: p2, status: done, title: FieldHelp on sending domain, depends_on: [] }
+  - { id: MAIL-04, priority: p2, status: done, title: Refresh Cloudflare deploy + email credentials, depends_on: [] }
+  - { id: MAIL-05, priority: p2, status: done, title: Resend secret via `setup-resend-secret.mjs`, depends_on: [] }
+  - { id: MAIL-15, priority: p1, status: done, title: Resend quota + transport fallback + broadcast capacity, depends_on: [] }
+  - { id: MAIL-06b, priority: p2, status: done, title: "Resend domain `mail.lorapok.tech` DNS + verify", depends_on: [] }
+  - { id: MAIL-09, priority: p2, status: done, title: "Design: Email identities Settings API + KV schema", depends_on: [] }
+  - { id: MAIL-10, priority: p1, status: done, title: Settings Email identities tab — list/create `@lorapok.tech`, depends_on: [] }
+  - { id: MAIL-11, priority: p1, status: done, title: Forward rules + display names sync (`setup-email-addresses` parity), depends_on: [] }
+  - { id: MAIL-12, priority: p1, status: todo, title: Identity provision tests + FieldHelp + api-catalog, depends_on: [] }
+  - { id: QUOTA-01, priority: p2, status: done, title: Service used/limit in `/api/sync/status`, depends_on: [] }
+  - { id: QUOTA-02, priority: p2, status: done, title: `service-usage-sync` cron (ccm-stats-cron), depends_on: [] }
+  - { id: MAIL-06, priority: p2, status: done, title: `repair-mail.mjs` + verify scripts green, depends_on: [] }
+  - { id: MAIL-08, priority: p2, status: done, title: `mailLastVerifiedAt` on health API, depends_on: [] }
+  - { id: MAIL-13, priority: p1, status: done, title: Professional mail templates — branded HTML/text for transactional + marketing (R, depends_on: [] }
+  - { id: MAIL-14, priority: p1, status: done, title: "Dynamic subscriber emails — merge tags (name, platform, stats, unsubscribe); wel", depends_on: [] }
+  - { id: MAIL-16, priority: p1, status: done, title: Live email deliverability audit — verify every project address works in producti, depends_on: [] }
+  - { id: MAIL-17, priority: p1, status: todo, title: SendGrid domain authentication — add SendGrid DNS records for `lorapok.tech` in , depends_on: [] }
+  - { id: MAIL-18, priority: p1, status: todo, title: SendGrid link branding — enable branded links on dedicated subdomain; auto-provi, depends_on: [] }
+  - { id: MAIL-19, priority: p1, status: todo, title: SendGrid / Twilio credentials — store SendGrid API key (+ Twilio Auth Token if n, depends_on: [] }
+  - { id: MAIL-20, priority: p2, status: todo, title: SendGrid transport in Mission Control — optional outbound provider in `mail.js` , depends_on: [] }
+  - { id: MAIL-21, priority: p2, status: todo, title: "Twilio SendGrid account readiness — finish onboarding (DNS validated, sender ide", depends_on: [] }
+  - { id: MAIL-22, priority: p2, status: todo, title: "SendGrid deliverability probes — extend `mail:verify-all` / `mail:probe-delivera", depends_on: [] }
+  - { id: DC-01, priority: p2, status: done, title: Discord tab + integrations card, depends_on: [] }
+  - { id: DC-02, priority: p2, status: done, title: Webhook FieldHelp + 60s poll, depends_on: [] }
+  - { id: DC-03, priority: p2, status: done, title: Configure production webhooks in KV, depends_on: [] }
+  - { id: DC-04, priority: p2, status: todo, title: Community + Feedback cards polling, depends_on: [] }
+  - { id: DC-05, priority: p2, status: todo, title: Subscribe fallback Discord URL in prod, depends_on: [] }
+  - { id: DC-06, priority: p2, status: done, title: "Product-designed Discord cards — branded embed layouts for deploy, digest, commu", depends_on: [] }
+  - { id: DC-07, priority: p2, status: done, title: Discord card gallery / test-send matrix in Settings, depends_on: [] }
+  - { id: DC-08, priority: p2, status: done, title: "CI/CD success cards — Discord embed on workflow success: jobs, duration, markets", depends_on: [] }
+  - { id: DC-09, priority: p2, status: done, title: "CI/CD failure cards — Discord embed on failure: failed job, step, logs URL, part", depends_on: [] }
+  - { id: STAT-01, priority: p1, status: done, title: `GET /api/sync/status`, depends_on: [] }
+  - { id: STAT-02, priority: p1, status: done, title: SyncStatusChip + Connected Services stats row, depends_on: [] }
+  - { id: STAT-03, priority: p1, status: done, title: Cron card KV banner + FieldHelp, depends_on: [] }
+  - { id: STAT-04, priority: p1, status: done, title: `useSiteData` interval refresh, depends_on: [] }
+  - { id: STAT-05, priority: p1, status: todo, title: Overview staleness badges (>2× interval), depends_on: [] }
+  - { id: STAT-06, priority: p1, status: done, title: Pause stats refresh until KV reset, depends_on: [] }
+  - { id: STAT-07, priority: p1, status: todo, title: Live stats recover after quota reset, depends_on: [] }
+  - { id: STATS-DISCORD, priority: p1, status: done, title: Discord Community reach + live visitor counters, depends_on: [] }
+  - { id: IDE-01, priority: p2, status: done, title: Login refresh without poll wait, depends_on: [] }
+  - { id: IDE-02, priority: p2, status: done, title: Analytics chart fixes, depends_on: [] }
+  - { id: IDE-03, priority: p2, status: todo, title: Cloud IDE link list in settings modal, depends_on: [] }
+  - { id: IDE-04, priority: p2, status: todo, title: `state.vscdb` watcher, depends_on: [] }
+  - { id: IDE-05, priority: p2, status: done, title: Platform logos + download links in status bar / about (EXT-01), depends_on: [] }
+  - { id: BR-01, priority: p2, status: done, title: Token activation on first connect, depends_on: [] }
+  - { id: BR-02, priority: p2, status: done, title: 60s connect poll + probeAuth, depends_on: [] }
+  - { id: BR-03, priority: p2, status: todo, title: Options cloud environments section, depends_on: [] }
+  - { id: BR-04, priority: p2, status: todo, title: Align Options connect with popup, depends_on: [] }
+  - { id: BR-05, priority: p2, status: done, title: Platform logos + AMO/Chrome links in popup/options footer (EXT-01), depends_on: [] }
+  - { id: WEB-01, priority: p2, status: done, title: `site-data.json` / shields API fallback, depends_on: [] }
+  - { id: WEB-02, priority: p2, status: done, title: Subscribe prompt respects admin KV, depends_on: [] }
+  - { id: WEB-03, priority: p2, status: done, title: Regenerate committed site-data (local drift), depends_on: [] }
+  - { id: WEB-04, priority: p2, status: todo, title: Hero / stats polish plan, depends_on: [] }
+  - { id: WEB-05, priority: p2, status: done, title: Interactive features explorer — post-hero cards + GitHub community stats panel, depends_on: [] }
+  - { id: WEB-06, priority: p2, status: todo, title: Chrysalis (floating AI) — live product Q&A from `site-data.json`, depends_on: [] }
+  - { id: WEB-07, priority: p2, status: done, title: "Expanded system topology — beautiful animated diagrams with every CI/CD step, cr", depends_on: [] }
+  - { id: WEB-08, priority: p2, status: done, title: "Behind the scenes — engineering section: monorepo layout, Mission Control, proce", depends_on: [] }
+  - { id: WEB-09, priority: p2, status: done, title: "Public multi-page site — `/wiki`, `/releases`, `/community`, `/docs` rendered fr", depends_on: [] }
+  - { id: WEB-10, priority: p2, status: done, title: "Open-source contributor welcome — CONTRIBUTING CTA on website, extension footers", depends_on: [] }
+  - { id: WEB-11, priority: p2, status: done, title: "Engineering history timeline — long behind-the-scenes page: sectioned milestones", depends_on: [] }
+  - { id: WEB-12, priority: p2, status: done, title: "Google AdSense — consent-gated Auto ads loader on marketing pages (`adsense.js`,", depends_on: [] }
+  - { id: SEO-01, priority: p2, status: done, title: "World-class SEO core — JSON-LD, canonical URLs, Lorapok Labs + all product links", depends_on: [] }
+  - { id: SEO-02, priority: p2, status: done, title: "SEO admin hub — Google Search Console, Cloudflare, Azure Webmaster, Bing; sitema", depends_on: [] }
+  - { id: SEO-03, priority: p2, status: done, title: "SEO policy & compliance — privacy-aligned indexing rules, noindex admin, structu", depends_on: [] }
+  - { id: SOCIAL-01, priority: p2, status: done, title: Multi-platform webhooks — Discord + X/LinkedIn/Mastodon/Bluesky/Telegram (where , depends_on: [] }
+  - { id: SOCIAL-02, priority: p2, status: done, title: Deploy social gallery — AI-generated Lorapok-themed image per release; changelog, depends_on: [] }
+  - { id: SOCIAL-03, priority: p2, status: done, title: "One-click multi-channel publish — share to all configured channels: captions, ha", depends_on: [] }
+  - { id: SOCIAL-04, priority: p2, status: done, title: AI image provider registry — free providers default + optional paid; admin adds , depends_on: [] }
+  - { id: SOCIAL-05, priority: p2, status: done, title: Video generator — short deploy/feature clips for Reels/Stories/Shorts; template , depends_on: [] }
+  - { id: LEGAL-01, priority: p2, status: done, title: "Terms, privacy & process consent — unified ToS/Privacy for subscribe, extensions", depends_on: [] }
+  - { id: ANALYTICS-02, priority: p2, status: todo, title: "Visitor & user event log — new signup/visit events (IP hash, user-agent, referre", depends_on: [] }
+  - { id: ECO-01, priority: p2, status: todo, title: "All browsers — Safari, Edge, Opera, Brave MV3 builds + CI publish matrix", depends_on: [] }
+  - { id: ECO-02, priority: p2, status: done, title: "GitHub community stats — traffic + CI snapshot on README, website, Mission Contr", depends_on: [] }
+  - { id: ECO-03, priority: p2, status: todo, title: Chrysalis (website) — animated floating assistant; reads latest `site-data.json`, depends_on: [] }
+  - { id: ECO-04, priority: p2, status: todo, title: "OS tray app — Win/macOS/Linux system tray for limits, notices, quick actions", depends_on: [] }
+  - { id: ECO-05, priority: p2, status: todo, title: Cursor native plugin — first-party Cursor extension / plugin slot (not just VS C, depends_on: [] }
+  - { id: ECO-06, priority: p2, status: todo, title: "Chrysalis everywhere — admin SPA, IDE popup, browser options, tray shell", depends_on: [] }
+  - { id: ECO-07, priority: p2, status: todo, title: "Push notifications — Web Push + native OS alerts for limits, Mission Control not", depends_on: [] }
+  - { id: ECO-08, priority: p2, status: done, title: "Action validator — confirm before deploy, delete, broadcast, cred vault write", depends_on: [] }
+  - { id: ECO-09, priority: p2, status: todo, title: "Global loading animation — Larvae shimmer on long operations (admin, site, exten", depends_on: [] }
+  - { id: ECO-10, priority: p2, status: todo, title: AI conversation hygiene — no secrets/junk in agent chat; procedure-only tracking, depends_on: [] }
+  - { id: ECO-11, priority: p2, status: todo, title: Wiki + taskboard assets — professional wiki pages; optional generated diagrams f, depends_on: [] }
+  - { id: ECO-12, priority: p2, status: done, title: Repo hygiene — gitignore local Wrangler/miniflare state; keep agent-accessible p, depends_on: [] }
+  - { id: CHRYS-01, priority: p2, status: done, title: Chrysalis brand + animation — official name for floating AI; Larvae mascot anima, depends_on: [] }
+  - { id: CHRYS-02, priority: p2, status: todo, title: Chrysalis AI provider — Antigravity + pluggable models; operator API key from cr, depends_on: [] }
+  - { id: CHRYS-03, priority: p2, status: todo, title: Chrysalis privacy tiers — admin learns full system under RBAC; website/extension, depends_on: [] }
+  - { id: CHRYS-04, priority: p2, status: todo, title: "Chrysalis BYOK (user ecosystem) — web + extensions use user's API key passively ", depends_on: [] }
+  - { id: CHRYS-05, priority: p2, status: todo, title: "Chrysalis system learning — ingest wiki, site-data, usage state; suggest actions", depends_on: [] }
+  - { id: SET-01, priority: p2, status: done, title: Tabbed Settings (14 tabs), depends_on: [] }
+  - { id: SET-02, priority: p2, status: done, title: Phased completion `settings-phases-complete.md`, depends_on: [] }
+  - { id: SET-03, priority: p2, status: done, title: FieldHelp on all integration inputs, depends_on: [] }
+  - { id: SET-04, priority: p2, status: done, title: 60s polling all integration cards, depends_on: [] }
+  - { id: SET-05, priority: p2, status: todo, title: Production smoke (login + tabs), depends_on: [] }
+  - { id: SET-06, priority: p2, status: done, title: Open PR or track on main-only flow, depends_on: [] }
+  - { id: SET-07, priority: p2, status: done, title: "Per-service Settings tabs (Resend, testmail, cred vault, marketplace)", depends_on: [] }
+  - { id: SET-08, priority: p2, status: done, title: "Settings tab: Email identities (`@lorapok.tech` provision)", depends_on: [] }
+  - { id: SET-09, priority: p2, status: done, title: Settings + nav gated by RBAC permissions, depends_on: [] }
+  - { id: SET-10, priority: p2, status: done, title: "Production smoke: password login + role-restricted UI", depends_on: [] }
+  - { id: CRED-01, priority: p2, status: done, title: Cred vault CI + Settings maintenance, depends_on: [] }
+  - { id: CRED-02, priority: p2, status: done, title: Cred sync reliability — idempotent save→GH/Pages/CF sync; miss detection + retry, depends_on: [] }
+  - { id: INT-01, priority: p2, status: done, title: "Unified integrations hub — one Settings surface for Discord, social, GitHub webh", depends_on: [] }
+  - { id: LOGIN-01, priority: p2, status: done, title: "Login page infra notes — read-only panel: auth methods, invite-only, Firebase pr", depends_on: [] }
+  - { id: NOTICE-01, priority: p2, status: done, title: "Changelog → Notice automation — on release/deploy, parse `CHANGELOG.md` / releas", depends_on: [] }
+  - { id: ANALYTICS-01, priority: p2, status: done, title: "Service analytics hub — aggregate operator-facing metrics: Cloudflare (KV/R2/Pag", depends_on: [] }
+  - { id: LOGS-01, priority: p2, status: done, title: "Unified logs explorer — structured JSON logs, severity, source, ACL filter, full", depends_on: [] }
+  - { id: EXT-01, priority: p2, status: done, title: "Platform availability strip — VS Code, Open VSX, Firefox AMO, Chrome zip, GitHub", depends_on: [] }
+  - { id: ADMIN-01, priority: p2, status: done, title: "Mission Control global search — command palette (⌘K) across nav, settings tabs, ", depends_on: [] }
+  - { id: ADMIN-02, priority: p2, status: done, title: "Admin UX polish — friendlier layouts, empty states, mobile sidebar, contextual h", depends_on: [] }
+  - { id: ADMIN-03, priority: p2, status: done, title: "Cross-section refer buttons — when copy mentions another area, show minimal \"Go ", depends_on: [] }
+  - { id: ADMIN-04, priority: p2, status: done, title: "Minimal global footer — services online, system version, sync status, Lorapok La", depends_on: [] }
+  - { id: ADMIN-05, priority: p2, status: done, title: "Dedupe dashboard data — remove redundant KPIs between Overview, Connected Servic", depends_on: [] }

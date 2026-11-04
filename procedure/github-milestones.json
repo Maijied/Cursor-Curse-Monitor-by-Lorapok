@@ -84,9 +84,7 @@
   ],
   "priorityQueue": {
     "P0": [],
-    "P1": [
-      "STATS-DISCORD"
-    ],
+    "P1": [],
     "P2": [
       "ANALYTICS-02",
       "CHRYS-02",
@@ -101,7 +99,13 @@
       "ECO-10",
       "CF-03",
       "CF-04",
-      "OPS-03"
+      "OPS-03",
+      "MAIL-17",
+      "MAIL-18",
+      "MAIL-19",
+      "MAIL-20",
+      "MAIL-21",
+      "MAIL-22"
     ]
   }
 }

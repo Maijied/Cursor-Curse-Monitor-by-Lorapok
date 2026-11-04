@@ -2,11 +2,14 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-10-19 (STATS-DISCORD beacon follow-up in PR)
-**Branch:** `fix/stats-discord-beacon-reliability`
-**Main:** `d944afc9`
-**CI:** main scheduled deploy red on npm advisory gate (2026-10-19); extension/admin jobs green on last merge runs.
-**P1 queue:** STATS-DISCORD ([#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) + [#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305))
+**Last updated:** 2026-10-19 22:03 UTC+6
+**Branch:** `fix/stats-discord-beacon-reliability` (local; **main** is canonical after #306 merge)
+**Main:** `95b0f2f5` — includes [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306) STATS-DISCORD + admin dep overrides
+**CI:** [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306) merged with green checks; `main` Production Deployment run in progress (2026-10-19). Local `npm run security:deps` → **exit 0**.
+**Open PRs:** none
+**P1 queue:** [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) STATS-DISCORD (parent — **open**; close after digest/site-data smoke). [#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305) **closed**.
+**SendGrid (P2):** [#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)–[#312](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/312) (MAIL-17–22) on Project #4 — **uncommitted** registry rows locally until you commit `plan/` + `procedure/`.
+**Prod visitors:** **278** visits, `updatedAt` **2026-10-19** (source **kv** — beacon path live post-deploy)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
 ---
@@ -53,7 +56,7 @@
 | Release & deploy | 0 | 3 | 0 |
 | Microsoft Azure | 2 | 3 | 0 |
 | Google Cloud (GCP) | 2 | 3 | 0 |
-| Mail (Resend + CF Email) | 3 | 8 | 1 |
+| Mail (Resend + CF Email) | 3 | 14 | 1 |
 | Discord | 3 | 11 | 0 |
 | SEO & growth | 2 | 1 | 0 |
 | Social & media | 1 | 3 | 0 |
@@ -222,6 +225,12 @@
 | MAIL-13 | **Professional mail templates** — branded HTML/text for transactional + marketing (Resend + CF relay); align with `messageCatalog` | **done** | `mail-template-engine.js`, `MailTemplateGallery.tsx`, `GET /api/integrations/mail/preview` |
 | MAIL-14 | **Dynamic subscriber emails** — merge tags (name, platform, stats, unsubscribe); welcome + digest variants from `CHANGELOG` / site-data | **done** | `subscriber-mail-context.js`, subscribe API + broadcast merge tags; KV overrides `integrations:mail-templates` |
 | MAIL-16 | **Live email deliverability audit** — verify every project address works in production (`cursor.monitor@`, `cursor.curse.help@`, identities, noreply) | **done** | Static matrix + testmail live send for product/support; Discord alert on failure; `npm run mail:probe-deliverability` |
+| MAIL-17 | **SendGrid domain authentication** — add SendGrid DNS records for `lorapok.tech` in Cloudflare (domain CNAME, DKIM `s1`/`s2`, mail CNAME `em*`, link-branding host, ACME + `_cf-custom-hostname` TXT); verify in SendGrid onboarding | **next** | [Twilio: set up domain authentication](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/how-to-set-up-domain-authentication) |
+| MAIL-18 | **SendGrid link branding** — enable branded links on dedicated subdomain; auto-provision SSL + automated DKIM rotation per wizard; confirm tracking URLs use `lorapok.tech` not `sendgrid.net` | **next** | SendGrid onboarding “Set up Sending” → brand links **Yes** |
+| MAIL-19 | **SendGrid / Twilio credentials** — store SendGrid API key (+ Twilio Auth Token if needed) in cred vault; sync to GitHub `admin-production` / Pages secrets; Settings masked status only | **next** | No tokens in repo or procedure files |
+| MAIL-20 | **SendGrid transport in Mission Control** — optional outbound provider in `mail.js` + Settings (alongside Resend + Cloudflare Email); KV config + transport order documented | **next** | Fail closed if key missing |
+| MAIL-21 | **Twilio SendGrid account readiness** — finish onboarding (DNS validated, sender identity, plan/trial upgrade for production volume); document primary vs Resend in wiki/guides | **next** | Lorapok Labs Twilio trial → paid when sending at scale |
+| MAIL-22 | **SendGrid deliverability probes** — extend `mail:verify-all` / `mail:probe-deliverability` for SendGrid domain-verified + test send; surface in `/api/health` + Infrastructure card | **next** | After MAIL-17–19 |
 
 ---
 
@@ -252,7 +261,7 @@
 | STAT-05 | Overview staleness badges (>2× interval) | **next** | Reliability C |
 | STAT-06 | Pause stats refresh until KV reset | **done** | Auto-pause cleared after UTC reset; `statsRefreshLastRunAt` fresh in `/api/health` |
 | STAT-07 | Live stats recover after quota reset | **next** | verify post-reset |
-| STATS-DISCORD | Discord Community reach + live visitor counters | **PR** | [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) merged; beacon reliability [#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305) |
+| STATS-DISCORD | Discord Community reach + live visitor counters | **done** | [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) + [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306) merged; close [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) after smoke |
 
 ---
 
@@ -386,8 +395,8 @@
 
 ## Recommended **next** queue (priority order)
 
-1. Merge **STATS-DISCORD** beacon follow-up ([#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305)); close [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) after admin + site deploy smoke
-2. **main CI** — dependency-security bot / npm advisories on scheduled Production Deployment
+1. Close [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) + run stats refresh / `site:data` so marketing `site-data.json` visitors match KV
+2. **MAIL-17** ([#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)) — SendGrid domain DNS in Cloudflare (Twilio onboarding)
 3. **CF-03** / **CF-04** mail relay + `deploy-infra`
 4. **ANALYTICS-02** / **ECO-*** / **CHRYS-02**
 

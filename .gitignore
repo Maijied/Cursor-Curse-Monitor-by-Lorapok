@@ -32,3 +32,6 @@ tests/*.vscdb.backup-*
 tests/*-wal.backup-*
 tests/*-shm.backup-*
 tests/reindex-*/
+.lorapok/identity
+.lorapok/agent-profile.yaml
+.worktrees/
