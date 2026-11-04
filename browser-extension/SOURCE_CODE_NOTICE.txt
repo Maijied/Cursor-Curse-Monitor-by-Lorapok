@@ -1,0 +1,19 @@
+Cursor Curse Monitor by Lorapok — Firefox / Chrome browser extension
+Mozilla Public License 2.0 — source code offer
+
+Version: {{VERSION}}
+
+Corresponding source for this add-on version:
+
+  https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/tree/v{{VERSION}}
+
+MPL-covered directories in that tag:
+
+  browser-extension/
+  packages/shared/   (as used by the browser build)
+
+The repository root LICENSE file (GPL-3.0-or-later) applies to the IDE extension
+under src/ and is not the license for this browser package.
+
+For component boundaries and dual licensing of shared code, see LICENSING.md in
+the repository root.

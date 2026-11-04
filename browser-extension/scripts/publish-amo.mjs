@@ -81,6 +81,7 @@ function runCapture(cmd, args, extraEnv = {}) {
 console.log(`Publishing Firefox AMO build for version ${version}`);
 run("node", ["browser-extension/scripts/generate-amo-metadata.mjs", `--version=${version}`]);
 run("node", ["browser-extension/scripts/validate-amo-metadata.mjs"]);
+run("node", ["browser-extension/scripts/validate-package-licenses.mjs"]);
 
 mkdirSync(join(root, "artifacts/firefox"), { recursive: true });
 

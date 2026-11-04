@@ -375,9 +375,15 @@ See also [AUTHORS.md](AUTHORS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) if you 
 
 ## License
 
-GPL-3.0 © [Mohammad Maizied Hasan Majumder](https://github.com/Maijied) / [Lorapok Labs](https://lorapok.tech)
+| Component | License |
+|-----------|---------|
+| **IDE extension** (`src/`, Open VSX, VS Code, `.vsix`) | [GPL-3.0-or-later](LICENSE) |
+| **Firefox / Chrome browser add-on** (`browser-extension/`) | **MPL-2.0** (AMO listing + shipped XPI/zip) |
+| **Shared library** (`packages/shared/`) | Dual-licensed by Lorapok — GPL in IDE builds, MPL in browser builds |
 
-See [LICENSE](LICENSE) for details. Community standards are in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Full boundaries, store labels, dependencies, and release checks: **[LICENSING.md](LICENSING.md)**.
+
+GPL-3.0 © [Mohammad Maizied Hasan Majumder](https://github.com/Maijied) / [Lorapok Labs](https://lorapok.tech) — applies to the IDE extension and root `LICENSE` text. Community standards are in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Code of Conduct
 
