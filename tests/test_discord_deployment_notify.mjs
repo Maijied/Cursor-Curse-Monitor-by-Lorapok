@@ -24,13 +24,13 @@ const payload = buildDiscordNotifyPayload({
   summary: "Marketing website deploy failed",
   runUrl: "https://github.com/example/actions/runs/1",
   deployUrl: "https://cursor.lorapok.tech/",
-  failedStep: "Deploy Marketing Website / GitHub Pages",
+  failedStep: "Deploy Marketing Website / Cloudflare Pages",
 });
 
 assert.equal(payload.conclusion, "failure");
 assert.equal(payload.jobs[0].name, "Deploy Marketing Website");
 assert.equal(payload.tag, "v1.0.56");
-assert.equal(payload.failedStep, "Deploy Marketing Website / GitHub Pages");
+assert.equal(payload.failedStep, "Deploy Marketing Website / Cloudflare Pages");
 assert.match(String(payload.summary), /failed/);
 
 const parsed = parseDiscordNotifyArgs([

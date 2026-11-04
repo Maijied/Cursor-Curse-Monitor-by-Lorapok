@@ -25,8 +25,8 @@ Firefox MPL vs IDE GPL licensing split
 - [x] PR opened (#314)
 - [x] Review triaged (PR #314)
 - [x] Merged (#314)
-- [ ] Follow-up PR: marketing license copy, site-data 1.0.196, THIRD_PARTY_NOTICES in XPI
-- [ ] Post-merge verification (live site deploy)
+- [x] Follow-up PR: marketing license copy, site-data 1.0.196, THIRD_PARTY_NOTICES in XPI (#316)
+- [ ] Post-merge verification (live site deploy after #316 merge)
 
 ---
 
