@@ -32,6 +32,7 @@ export function readFirefoxLicenseText(browserExtRoot) {
 export function syncFirefoxLicenseArtifactsToDist(distDir, browserExtRoot, version) {
   writeFileSync(join(distDir, "LICENSE"), readFirefoxLicenseText(browserExtRoot), "utf8");
   copyFileSync(join(browserExtRoot, "NOTICE.md"), join(distDir, "NOTICE.md"));
+  copyFileSync(join(browserExtRoot, "THIRD_PARTY_NOTICES.md"), join(distDir, "THIRD_PARTY_NOTICES.md"));
 
   const sourceTemplate = readFileSync(
     join(browserExtRoot, "SOURCE_CODE_NOTICE.txt"),
@@ -46,7 +47,7 @@ export function syncFirefoxLicenseArtifactsToDist(distDir, browserExtRoot, versi
 
 /** @param {string} distDir */
 export function requiredFirefoxDistLicensePaths(distDir) {
-  return ["LICENSE", "NOTICE.md", "SOURCE_CODE_NOTICE.txt"];
+  return ["LICENSE", "NOTICE.md", "SOURCE_CODE_NOTICE.txt", "THIRD_PARTY_NOTICES.md"];
 }
 
 /** @param {string} distDir */

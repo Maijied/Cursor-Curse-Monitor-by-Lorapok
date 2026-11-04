@@ -46,7 +46,7 @@ Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) — contributions may be di
 
 ## Third-party dependencies
 
-- **Browser add-on runtime deps:** React and React DOM (MIT), `webextension-polyfill` (MPL-2.0). Bundled notices are in `browser-extension/NOTICE.md` and copied into `browser-extension/dist/` on build.
+- Bundled dependencies in browser builds retain their own licenses (listed in `browser-extension/NOTICE.md`; full texts in `browser-extension/THIRD_PARTY_NOTICES.md`, copied into `dist/` on build).
 - **IDE extension:** Node/runtime deps are dev-time only for packaging; marketplace `.vsix` contains compiled extension output plus GPL `LICENSE`.
 - Do **not** change dependency licenses in metadata without verifying upstream terms and updating `NOTICE.md`.
 

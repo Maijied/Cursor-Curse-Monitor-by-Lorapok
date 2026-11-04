@@ -23,9 +23,10 @@ Firefox MPL vs IDE GPL licensing split
 - [x] Implementation started
 - [x] Tests passing (`npm run validate:licenses`, `browser-ext:test`, zip includes LICENSE/NOTICE)
 - [x] PR opened (#314)
-- [ ] Review triaged
-- [ ] Merged
-- [ ] Post-merge verification
+- [x] Review triaged (PR #314)
+- [x] Merged (#314)
+- [ ] Follow-up PR: marketing license copy, site-data 1.0.196, THIRD_PARTY_NOTICES in XPI
+- [ ] Post-merge verification (live site deploy)
 
 ---
 
