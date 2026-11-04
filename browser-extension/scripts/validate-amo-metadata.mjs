@@ -23,6 +23,10 @@ if (!meta.version?.license) {
   console.error("Missing version.license");
   process.exit(1);
 }
+if (meta.version.license !== "MPL-2.0") {
+  console.error('version.license must be "MPL-2.0" for Firefox AMO listing');
+  process.exit(1);
+}
 if (!meta.summary["en-US"]?.length) {
   console.error("summary.en-US required");
   process.exit(1);

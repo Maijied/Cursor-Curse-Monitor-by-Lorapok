@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Licensing split (IDE GPL / Firefox MPL)** — [LICENSING.md](LICENSING.md) documents component boundaries; browser builds ship MPL `LICENSE`, `NOTICE.md`, and `SOURCE_CODE_NOTICE.txt`; AMO metadata stays MPL-2.0; `npm run validate:licenses` gates IDE `.vsix` packaging.
 - **Marketing site (private repo)** — Live download totals regenerated from marketplaces (`syncStatus: synced`, ~46.5k grand total); deploy via `npm run website:deploy:pages` to Cloudflare Pages (`cursor-curse-monitor-website`).
 
 ### Fixed

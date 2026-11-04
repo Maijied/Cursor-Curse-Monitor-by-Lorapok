@@ -1,0 +1,9 @@
+Cursor Curse Monitor by Lorapok — browser extension component
+
+This directory is licensed under **Mozilla Public License 2.0** for Firefox AMO and
+Chrome zip releases. The full license text is in `LICENSE.mpl-2.0.txt`. Built packages
+also include `NOTICE.md` and `SOURCE_CODE_NOTICE.txt` (see `scripts/postbuild.mjs`).
+
+The IDE extension in repository `src/` uses **GPL-3.0-or-later** (root `LICENSE`).
+
+See [LICENSING.md](../LICENSING.md).

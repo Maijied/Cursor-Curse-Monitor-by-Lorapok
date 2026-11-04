@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveExtensionVersion } from "./lib-version.mjs";
 import { applyFirefoxManifestOverrides } from "./lib-firefox-manifest.mjs";
+import { syncFirefoxLicenseArtifactsToDist } from "./lib-licensing-artifacts.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -91,4 +92,5 @@ if (chromeManifest.background.scripts) delete chromeManifest.background.scripts;
 
 writeFileSync(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
 writeFileSync(join(dist, "manifest.chrome.json"), JSON.stringify(chromeManifest, null, 2));
-console.log(`postbuild: manifest.json v${version} + popup.html written`);
+syncFirefoxLicenseArtifactsToDist(dist, root, version);
+console.log(`postbuild: manifest.json v${version} + popup.html + MPL license artifacts written`);

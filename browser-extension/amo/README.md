@@ -13,10 +13,11 @@ Place screenshots here for automated Firefox Add-ons submission:
 
 AMO publishing is orchestrated by `browser-extension/scripts/publish-amo.mjs`:
 
-1. `generate-amo-metadata.mjs` — fills listing fields from `amo-metadata.base.json` + `CHANGELOG.md`
-2. `validate-amo-metadata.mjs` — schema checks
-3. `web-ext sign --amo-metadata …` — signs and submits (requires `AMO_JWT_ISSUER` / `AMO_JWT_SECRET`)
-4. `verify-amo-status.mjs` — polls AMO API for approval status
+1. `generate-amo-metadata.mjs` — fills listing fields from `amo-metadata.base.json` + `CHANGELOG.md` (`version.license`: **MPL-2.0**)
+2. `validate-amo-metadata.mjs` — schema + MPL license checks
+3. `validate-package-licenses.mjs` — ensures `dist/` includes MPL `LICENSE`, `NOTICE.md`, source offer
+4. `web-ext sign --amo-metadata …` — signs and submits (requires `AMO_JWT_ISSUER` / `AMO_JWT_SECRET`)
+5. `verify-amo-status.mjs` — polls AMO API for approval status
 
 Standalone workflow: `.github/workflows/publish-firefox.yml`
 

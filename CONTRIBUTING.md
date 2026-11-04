@@ -37,6 +37,10 @@ Use [GitHub Issues](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/i
 - Match existing naming and file structure
 - Keep changes minimal and scoped
 
+## Licensing
+
+This repo ships **two open products** with different licenses: the **IDE extension** (GPL-3.0-or-later) and the **browser add-on** (MPL-2.0 on AMO). Shared code in `packages/shared/` is dual-licensed by Lorapok for those distributions. Read [LICENSING.md](LICENSING.md) before changing license files or store metadata. By contributing, you agree your work may be distributed under the applicable license for each product surface.
+
 ## Contact
 
 **Mohammad Maizied Hasan Majumder** — [mdshuvo40@gmail.com](mailto:mdshuvo40@gmail.com) · [admin@lorapok.tech](mailto:admin@lorapok.tech)

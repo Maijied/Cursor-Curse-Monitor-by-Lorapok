@@ -26,8 +26,11 @@ npm run build -w @lorapok/cursor-monitor-shared
 npm run browser-ext:test
 npm run browser-ext:build
 npm run build:chrome -w browser-extension   # zip artifact
+node browser-extension/scripts/validate-package-licenses.mjs   # MPL artifacts in dist/
 node browser-extension/scripts/publish-amo.mjs   # AMO sign (needs AMO_JWT_* env)
 ```
+
+- **Licenses:** IDE `src/` → GPL-3.0-or-later (root `LICENSE`); Firefox/Chrome `browser-extension/` → MPL-2.0 in shipped packages. See [LICENSING.md](LICENSING.md). Root `npm run validate:licenses` before `npm run package`.
 
 - Popup/options UI must include footer: Lorapok Labs (`https://lorapok.tech`) +
   Cursor (`https://cursor.com`) on every page.

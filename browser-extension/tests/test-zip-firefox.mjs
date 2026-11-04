@@ -25,5 +25,8 @@ const zipListing = execSync(`unzip -Z1 artifacts/firefox/cursor-curse-monitor-fi
 });
 assert.ok(zipListing.split("\n").includes("manifest.json"), "firefox zip must include manifest.json at root");
 assert.ok(!zipListing.split("\n").some((line) => line.endsWith("/manifest.json") && line.includes("/")), "manifest.json must not be nested");
+for (const required of ["LICENSE", "NOTICE.md", "SOURCE_CODE_NOTICE.txt"]) {
+  assert.ok(zipListing.split("\n").includes(required), `firefox zip must include ${required}`);
+}
 
 console.log("test-zip-firefox.mjs: OK");
