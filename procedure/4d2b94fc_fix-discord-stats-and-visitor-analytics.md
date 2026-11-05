@@ -25,7 +25,7 @@ Fix Discord Community reach / engagement cards sending wrong or stale stats, and
 - [x] PR opened
 - [x] Review triaged
 - [x] Merged ([#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) 2026-09-17)
-- [x] Follow-up beacon reliability ([#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305)) — production visits stale since 2026-09-26
+- [x] Follow-up beacon reliability ([#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305)) — merged [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306); parent [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) closed after site-data regen
 
 ---
 
@@ -51,8 +51,8 @@ _None._
 | Tier | Check | Result |
 |------|-------|--------|
 | A | Headless tests | discord-deploy-context + discord-notify OK; oxlint clean on touched files |
-| B | Component matrix | pending admin deploy |
-| C | Production smoke | pending digest test + site visit increments |
+| B | Component matrix | admin deploy paths merged (#273, #306) |
+| C | Production smoke | `site:data` synced (visitors in overlay); live increment — operator spot-check on marketing beacon |
 
 ---
 
