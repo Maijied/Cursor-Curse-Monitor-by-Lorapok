@@ -5,12 +5,24 @@ import { appendFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
 /**
+ * Scalar GITHUB_ENV encoding (GitHub Actions file format).
+ * @param {string} value
+ */
+export function encodeGithubEnvScalar(value) {
+  return String(value).replace(/%/g, "%25");
+}
+
+/**
  * @param {string} value
  */
 export function maskSecretForGithubActions(value) {
   if (!value || process.env.GITHUB_ACTIONS !== "true") return;
   const str = String(value);
   process.stdout.write(`::add-mask::${str}\n`);
+  const encoded = encodeGithubEnvScalar(str);
+  if (encoded !== str) {
+    process.stdout.write(`::add-mask::${encoded}\n`);
+  }
   for (const line of str.split(/\r?\n/)) {
     if (line.length > 0) {
       process.stdout.write(`::add-mask::${line}\n`);
@@ -41,11 +53,12 @@ export function exportEnvToGithub(name, value, opts = {}) {
     return;
   }
 
-  if (str.includes("\n") || str.includes("\r")) {
+  // Sensitive values always use delimiter syntax — avoids %25 scalar writes that bypass masking.
+  if (sensitive || str.includes("\n") || str.includes("\r")) {
     const delimiter = `gha_env_${randomUUID()}`;
     appendFileSync(file, `${name}<<${delimiter}\n${str}\n${delimiter}\n`);
     return;
   }
 
-  appendFileSync(file, `${name}=${str.replace(/%/g, "%25")}\n`);
+  appendFileSync(file, `${name}=${encodeGithubEnvScalar(str)}\n`);
 }

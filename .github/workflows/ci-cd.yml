@@ -583,7 +583,7 @@ jobs:
             node website/admin/scripts/promote-secret-to-github-env.mjs CLOUDFLARE_EMAIL
           fi
           if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] && [ -n "${FB_ACCOUNT_ID:-}" ]; then
-            echo "CLOUDFLARE_ACCOUNT_ID=${FB_ACCOUNT_ID}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-plain-to-github-env.mjs CLOUDFLARE_ACCOUNT_ID
           fi
           if [ -z "${CLOUDFLARE_EMAIL_API_TOKEN:-}" ] && [ -n "${FB_EMAIL_API_TOKEN:-}" ]; then
             node website/admin/scripts/promote-secret-to-github-env.mjs CLOUDFLARE_EMAIL_API_TOKEN
@@ -595,8 +595,7 @@ jobs:
             node website/admin/scripts/promote-secret-to-github-env.mjs RESEND_API_KEY
           fi
           if [ -z "${ADMIN_MASTER_EMAIL:-}" ] && [ -n "${FB_ADMIN_MASTER_EMAIL:-}" ]; then
-            echo "ADMIN_MASTER_EMAIL=${FB_ADMIN_MASTER_EMAIL}" >> "$GITHUB_ENV"
-            echo "VITE_ADMIN_MASTER_EMAIL=${FB_ADMIN_MASTER_EMAIL}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-plain-to-github-env.mjs ADMIN_MASTER_EMAIL
           fi
           if [ -z "${DISCORD_DEPLOYMENT_WEBHOOK:-}" ] && [ -n "${FB_DISCORD_DEPLOYMENT_WEBHOOK:-}" ]; then
             node website/admin/scripts/promote-secret-to-github-env.mjs DISCORD_DEPLOYMENT_WEBHOOK
@@ -1363,7 +1362,7 @@ jobs:
           FB_CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           if [ -z "${CRON_SECRET:-}" ] && [ -n "${FB_CRON_SECRET:-}" ]; then
-            echo "CRON_SECRET=${FB_CRON_SECRET}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-secret-to-github-env.mjs CRON_SECRET
             echo "::notice::CRON_SECRET loaded from admin-production environment secret"
           elif [ -n "${CRON_SECRET:-}" ]; then
             echo "::notice::CRON_SECRET loaded from cred vault"
@@ -1449,16 +1448,16 @@ jobs:
           FB_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${FB_API_TOKEN:-}" ]; then
-            echo "CLOUDFLARE_API_TOKEN=${FB_API_TOKEN}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-secret-to-github-env.mjs CLOUDFLARE_API_TOKEN
           fi
           if [ -z "${CLOUDFLARE_API_KEY:-}" ] && [ -n "${FB_API_KEY:-}" ]; then
-            echo "CLOUDFLARE_API_KEY=${FB_API_KEY}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-secret-to-github-env.mjs CLOUDFLARE_API_KEY
           fi
           if [ -z "${CLOUDFLARE_EMAIL:-}" ] && [ -n "${FB_EMAIL:-}" ]; then
-            echo "CLOUDFLARE_EMAIL=${FB_EMAIL}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-secret-to-github-env.mjs CLOUDFLARE_EMAIL
           fi
           if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] && [ -n "${FB_ACCOUNT_ID:-}" ]; then
-            echo "CLOUDFLARE_ACCOUNT_ID=${FB_ACCOUNT_ID}" >> "$GITHUB_ENV"
+            node website/admin/scripts/promote-plain-to-github-env.mjs CLOUDFLARE_ACCOUNT_ID
           fi
 
       - name: Assert Cloudflare deploy credentials
