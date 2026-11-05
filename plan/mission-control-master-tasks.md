@@ -5,7 +5,7 @@
 **Last updated:** 2026-11-05 (STATS-DISCORD #272 closed; cred-vault incident tracking in procedure/a8f3c1e2)
 **Main:** latest — includes #318–#319 CI/masking fixes
 **P1 queue:** SendGrid MAIL-17 ([#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)) after cred rotation
-**SendGrid (P2):** [#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)–[#312](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/312) (MAIL-17–22) on Project #4 — **uncommitted** registry rows locally until you commit `plan/` + `procedure/`.
+**SendGrid (P2):** [#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)–[#312](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/312) (MAIL-17–22) on Project #4
 **Prod visitors:** **278** visits, `updatedAt` **2026-10-19** (source **kv** — beacon path live post-deploy)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
 
@@ -258,7 +258,7 @@
 | STAT-05 | Overview staleness badges (>2× interval) | **next** | Reliability C |
 | STAT-06 | Pause stats refresh until KV reset | **done** | Auto-pause cleared after UTC reset; `statsRefreshLastRunAt` fresh in `/api/health` |
 | STAT-07 | Live stats recover after quota reset | **next** | verify post-reset |
-| STATS-DISCORD | Discord Community reach + live visitor counters | **done** | [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) + [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306) merged; close [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) after smoke |
+| STATS-DISCORD | Discord Community reach + live visitor counters | **done** | [#273](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/273) + [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306); [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) closed; site-data refresh [#320](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/320) |
 
 ---
 
