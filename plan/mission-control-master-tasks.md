@@ -2,12 +2,9 @@
 
 **Purpose:** Single checklist for “Update?” / “next” status. Say **Update?** for a snapshot; say **next** to work the highest-priority open item.
 
-**Last updated:** 2026-10-19 22:03 UTC+6
-**Branch:** `fix/stats-discord-beacon-reliability` (local; **main** is canonical after #306 merge)
-**Main:** `95b0f2f5` — includes [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306) STATS-DISCORD + admin dep overrides
-**CI:** [#306](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/pull/306) merged with green checks; `main` Production Deployment run in progress (2026-10-19). Local `npm run security:deps` → **exit 0**.
-**Open PRs:** none
-**P1 queue:** [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) STATS-DISCORD (parent — **open**; close after digest/site-data smoke). [#305](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/305) **closed**.
+**Last updated:** 2026-11-05 (STATS-DISCORD #272 closed; cred-vault incident tracking in procedure/a8f3c1e2)
+**Main:** latest — includes #318–#319 CI/masking fixes
+**P1 queue:** SendGrid MAIL-17 ([#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)) after cred rotation
 **SendGrid (P2):** [#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)–[#312](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/312) (MAIL-17–22) on Project #4 — **uncommitted** registry rows locally until you commit `plan/` + `procedure/`.
 **Prod visitors:** **278** visits, `updatedAt` **2026-10-19** (source **kv** — beacon path live post-deploy)
 **Agent onboarding:** [`MISSION-CONTROL-WALKTHROUGH.md`](../MISSION-CONTROL-WALKTHROUGH.md) · root symlink [`mission-control-master-tasks.md`](../mission-control-master-tasks.md) · **GitHub issues:** [`TASK-TRACKING.md`](../TASK-TRACKING.md) · [Project #4](https://github.com/users/Maijied/projects/4)
@@ -395,7 +392,7 @@
 
 ## Recommended **next** queue (priority order)
 
-1. Close [#272](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/272) + run stats refresh / `site:data` so marketing `site-data.json` visitors match KV
+1. **Cred vault incident** — rotate exposed keys/webhooks; sync vault + CI; verify deploy-infra without log leaks (`procedure/a8f3c1e2_ci-cred-vault-log-exposure-incident.md`)
 2. **MAIL-17** ([#307](https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/issues/307)) — SendGrid domain DNS in Cloudflare (Twilio onboarding)
 3. **CF-03** / **CF-04** mail relay + `deploy-infra`
 4. **ANALYTICS-02** / **ECO-*** / **CHRYS-02**
