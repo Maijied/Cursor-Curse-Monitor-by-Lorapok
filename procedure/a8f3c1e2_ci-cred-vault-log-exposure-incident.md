@@ -53,7 +53,7 @@ Not confirmed exposed in inspected job: Cloudflare deploy tokens, `GITHUB_TOKEN`
 
 | Tier | Check | Result |
 |------|-------|--------|
-| A | `node --test website/admin/scripts/load-cred-vault-env-ci.test.mjs` | pending CI |
+| A | `node --test website/admin/scripts/load-cred-vault-env-ci.test.mjs` | pass (local 2026-11-05) |
 | B | workflow_dispatch deploy-infra (website) with debug off | pending post-merge |
 
 ---
