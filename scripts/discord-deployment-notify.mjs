@@ -211,9 +211,10 @@ export function buildDiscordNotifyPayload(opts) {
  * @param {Record<string, string>} opts
  */
 export function shouldRequireDiscordWebhook(opts = {}) {
+  if (opts.target === "Deploy Marketing Website") return false;
   if (opts.requireWebhook === "1" || opts.requireWebhook === "true") return true;
   if (process.env.REQUIRE_DISCORD_WEBHOOK === "1") return true;
-  return process.env.GITHUB_ACTIONS === "true";
+  return false;
 }
 
 export async function notifyDiscordDeploymentFromCi(opts) {

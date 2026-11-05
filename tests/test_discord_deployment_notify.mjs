@@ -59,7 +59,11 @@ assert.equal(
   "v9.9.9",
 );
 assert.equal(shouldRequireDiscordWebhook({ requireWebhook: "1" }), true);
-assert.equal(shouldRequireDiscordWebhook({}), process.env.GITHUB_ACTIONS === "true");
+assert.equal(shouldRequireDiscordWebhook({}), false);
+assert.equal(
+  shouldRequireDiscordWebhook({ requireWebhook: "true", target: "Deploy Marketing Website" }),
+  false,
+);
 
 assert.equal(
   readDeploymentWebhookFromDiscordConfig({
