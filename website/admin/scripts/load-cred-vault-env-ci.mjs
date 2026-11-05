@@ -4,6 +4,7 @@
  *
  * All sensitive values are registered with ::add-mask:: before writing GITHUB_ENV.
  * Multiline values (Firebase service account JSON) use delimiter syntax.
+ * Minified single-line secrets also use delimiter syntax so scalar %25 encoding cannot bypass ::add-mask::.
  *
  * Scopes (limits blast radius on jobs that do not need full vault):
  *   --scope=full              default — Cloudflare, mail, Discord, Firebase, cron, GitHub token

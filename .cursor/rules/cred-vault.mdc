@@ -44,6 +44,6 @@ All API keys, tokens, passwords, and webhook URLs must come from the **cred vaul
 
 Skip vault load only when explicitly testing without secrets: `CCM_SKIP_CRED_VAULT=1`.
 
-**CI:** `CRED_VAULT_PASSPHRASE` + `CRED_STORE_GPG_BASE64` in `admin-production` decrypt at deploy time (`load-cred-vault-env-ci.mjs`). The loader registers `::add-mask::` before writing sensitive values to `GITHUB_ENV` (including multiline Firebase JSON). Marketing deploy uses `--scope=cloudflare-deploy` only. Sync once locally: `node website/admin/scripts/sync-cred-vault-github.mjs`.
+**CI:** `CRED_VAULT_PASSPHRASE` + `CRED_STORE_GPG_BASE64` in `admin-production` decrypt at deploy time (`load-cred-vault-env-ci.mjs`). The loader registers `::add-mask::` before writing sensitive values to `GITHUB_ENV` using **delimiter syntax for all secrets** (including minified Firebase JSON). Marketing deploy uses `--scope=cloudflare-deploy` only. Workflow fallbacks use `promote-secret-to-github-env.mjs` / `promote-plain-to-github-env.mjs` (not raw `echo` for secrets). Sync once locally: `node website/admin/scripts/sync-cred-vault-github.mjs`.
 
 **Cloud Agent:** local GPG path is not mounted. Use the same `CRED_VAULT_PASSPHRASE` + `CRED_STORE_GPG_BASE64` pair as Cursor Secrets (or CI), then `node website/admin/scripts/load-cred-vault-env-ci.mjs` — see [`.cursor/CLOUD-AGENT.md`](../CLOUD-AGENT.md). Do not commit vault blobs or passphrases.

@@ -88,7 +88,7 @@ function deployFirestoreRules(serviceAccountJson) {
     projectId,
     "--non-interactive",
   ];
-  if (process.env.CI === "true") {
+  if (process.env.CI === "true" && process.env.FIREBASE_DEPLOY_DEBUG === "1") {
     args.push("--debug");
   }
   try {
