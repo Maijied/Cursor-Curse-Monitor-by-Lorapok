@@ -1,0 +1,26 @@
+{
+  "loadingUsage": {
+    "message": "ব্যবহারের তথ্য লোড হচ্ছে…"
+  },
+  "settings": {
+    "message": "সেটিংস"
+  },
+  "refresh": {
+    "message": "রিফ্রেশ করুন"
+  },
+  "usageMeters": {
+    "message": "ব্যবহারের পরিমাপ"
+  },
+  "usageHelp": {
+    "message": "ব্যবহার সংক্রান্ত সহায়তা"
+  },
+  "connectToCursor": {
+    "message": "প্রথমে Cursor-এর সঙ্গে সংযোগ করুন"
+  },
+  "signInWithBrowser": {
+    "message": "ব্রাউজার দিয়ে সাইন ইন করুন"
+  },
+  "waitingForSignIn": {
+    "message": "সাইন ইনের জন্য অপেক্ষা করা হচ্ছে…"
+  }
+}
