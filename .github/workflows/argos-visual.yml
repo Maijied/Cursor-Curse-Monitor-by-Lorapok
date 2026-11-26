@@ -1,0 +1,96 @@
+name: Argos browser popup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/argos-visual.yml"
+      - "browser-extension/**"
+      - "packages/shared/**"
+      - "package*.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/argos-visual.yml"
+      - "browser-extension/**"
+      - "packages/shared/**"
+      - "package*.json"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: argos-popup-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    name: Render the synthetic popup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Build the browser extension without publishing
+        run: |
+          npm ci --ignore-scripts
+          npm run browser-ext:build
+      - name: Install pinned Chromium test tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/argos-capture" --no-save --ignore-scripts playwright@1.65.1
+          node "$RUNNER_TEMP/argos-capture/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Capture English and Bangla from the built popup
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/argos-capture/node_modules/playwright/index.mjs
+        run: node browser-extension/tests/visual-popup.mjs
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: argos-popup-screenshots
+          path: visual-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 3
+
+  upload:
+    name: Upload the synthetic snapshots to Argos
+    needs: capture
+    if: >-
+      github.repository == 'Maijied/Cursor-Curse-Monitor-by-Lorapok' &&
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository ||
+      github.event_name != 'pull_request' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    permissions:
+      id-token: write
+      pull-requests: read
+    steps:
+      # No checkout or project build runs in the job allowed to request an OIDC token.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: argos-popup-screenshots
+          path: visual-screenshots
+      - name: Upload the four allowlisted PNGs using short-lived GitHub OIDC
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir argos-upload
+          for language in en bn; do
+            for width in 360 480; do
+              name="popup-disconnected-${language}-${width}.png"
+              test "$(file --brief --mime-type "visual-screenshots/$name")" = image/png
+              install -m 644 "visual-screenshots/$name" "argos-upload/$name"
+            done
+          done
+          npm exec --yes --package=@argos-ci/cli@6.16.0 -- argos upload ./argos-upload
