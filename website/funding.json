@@ -8,19 +8,20 @@
     "email": "cursor.curse.help@lorapok.tech",
     "description": "I am the maintainer of Cursor Curse Monitor and founder of Lorapok Labs. I am seeking support to keep the existing open-source IDE and Firefox extensions compatible, make releases easier to verify, and reduce the work needed to onboard new contributors.",
     "webpageUrl": {
-      "url": "https://github.com/Maijied"
+      "url": "https://cursor.lorapok.tech/#about"
     }
   },
   "projects": [
     {
       "guid": "cursor-curse-monitor",
       "name": "Cursor Curse Monitor by Lorapok",
-      "description": "An independent open-source developer tool for Cursor usage, billing-cycle resets, and budget limits. It includes an IDE dashboard and status bar, local SQLite safety checks, and a Firefox companion. Mission Control unifies CI/CD release validation, publishing and rollback controls in its Deployments tab, and compares package versions and download totals across registries. The project site reported 49,800 cumulative download events on November 26, 2026 across Open VSX, VS Code Marketplace, and GitHub release assets; these are not unique users. The IDE extension is GPL-3.0-or-later and the Firefox extension is MPL-2.0. Project dashboard: https://cursor.lorapok.tech/",
+      "description": "An independent open-source developer tool for Cursor usage, billing-cycle resets, and budget limits. It includes an IDE dashboard and status bar, local SQLite safety checks, and a Firefox companion. Mission Control unifies CI/CD release validation, publishing and rollback controls in its Deployments tab, and compares package versions and download totals across registries. The project site reported 49,800 cumulative download events on November 26, 2026 across Open VSX, VS Code Marketplace, and GitHub release assets; these are not unique users. The IDE extension is GPL-3.0-or-later and the Firefox extension is MPL-2.0.",
       "webpageUrl": {
-        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#readme"
+        "url": "https://cursor.lorapok.tech/"
       },
       "repositoryUrl": {
-        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok"
+        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok",
+        "wellKnown": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok/blob/main/.well-known/funding-manifest-urls"
       },
       "licenses": [
         "spdx:GPL-3.0-or-later",
