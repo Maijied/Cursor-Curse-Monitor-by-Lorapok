@@ -1,0 +1,59 @@
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "maintainer",
+    "name": "Mohammad Maizied Hasan Majumder",
+    "email": "cursor.curse.help@lorapok.tech",
+    "description": "I am the maintainer of Cursor Curse Monitor and founder of Lorapok Labs. I am seeking support to keep the existing open-source IDE and Firefox extensions compatible, make releases easier to verify, and reduce the work needed to onboard new contributors.",
+    "webpageUrl": {
+      "url": "https://github.com/Maijied"
+    }
+  },
+  "projects": [
+    {
+      "guid": "cursor-curse-monitor",
+      "name": "Cursor Curse Monitor by Lorapok",
+      "description": "An independent open-source developer tool for Cursor usage, billing-cycle resets, and budget limits. It includes an IDE dashboard and status bar, local SQLite safety checks, and a Firefox companion. Mission Control unifies CI/CD release validation, publishing and rollback controls in its Deployments tab, and compares package versions and download totals across registries. The project site reported 49,800 cumulative download events on November 26, 2026 across Open VSX, VS Code Marketplace, and GitHub release assets; these are not unique users. The IDE extension is GPL-3.0-or-later and the Firefox extension is MPL-2.0. Project dashboard: https://cursor.lorapok.tech/",
+      "webpageUrl": {
+        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok#readme"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/Maijied/Cursor-Curse-Monitor-by-Lorapok"
+      },
+      "licenses": [
+        "spdx:GPL-3.0-or-later",
+        "spdx:MPL-2.0"
+      ],
+      "tags": [
+        "developer-tools",
+        "editor-extension",
+        "browser-extension"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "private-bank-transfer",
+        "type": "bank",
+        "description": "Arrange any approved disbursement and required verification privately with the maintainer via the project contact. No banking details are public."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "six-month-maintenance",
+        "status": "active",
+        "name": "Six months of open-source maintenance",
+        "description": "One-time request for IDE and Firefox compatibility tests and fixes ($4,500); release automation and packaged-artifact checks ($2,500); contributor documentation, issue triage and public reporting ($2,000); and incremental test runners and environments ($1,000). Work will be tracked in the public repository and summarized in a final report.",
+        "amount": 10000,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": [
+          "private-bank-transfer"
+        ]
+      }
+    ]
+  }
+}
