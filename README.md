@@ -319,6 +319,15 @@ npm run watch   # optional, during development
 
 Press **F5** in Cursor/VS Code to launch the Extension Development Host.
 
+### Browser popup translations
+
+The browser popup has a starter English and Bangla message catalog. English is
+the fallback. Both catalogs live in [the browser extension source](browser-extension/public/_locales)
+and are covered by the browser extension's MPL-2.0 license.
+
+We plan to use [Weblate](https://weblate.org/) to coordinate translations and
+review changes in pull requests. Hosted Weblate access is not active yet.
+
 ## Publishing
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) and [MARKETPLACE_PUBLISHING.md](MARKETPLACE_PUBLISHING.md) for full CI/CD setup.

@@ -1,0 +1,26 @@
+{
+  "loadingUsage": {
+    "message": "Loading usage…"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "refresh": {
+    "message": "Refresh"
+  },
+  "usageMeters": {
+    "message": "Usage meters"
+  },
+  "usageHelp": {
+    "message": "Usage help"
+  },
+  "connectToCursor": {
+    "message": "Connect to Cursor first"
+  },
+  "signInWithBrowser": {
+    "message": "Sign in with browser"
+  },
+  "waitingForSignIn": {
+    "message": "Waiting for sign-in…"
+  }
+}

@@ -15,6 +15,10 @@ import { WhatsNewCard } from "../components/WhatsNewCard";
 import { fetchSnapshot, onSnapshot, requestRefresh } from "../lib/messaging";
 import { getSettings, setActiveAccount, updateSettings } from "../lib/storage";
 import browser from "webextension-polyfill";
+import { resolvePopupMessage } from "./messages";
+
+const popupText = (key: Parameters<typeof resolvePopupMessage>[0]) =>
+  resolvePopupMessage(key, (name) => browser.i18n.getMessage(name));
 
 function money(n: number): string {
   return new Intl.NumberFormat(undefined, {
@@ -158,14 +162,14 @@ export function App() {
       {loading && (
         <div className="popup-loading" role="status" aria-live="polite">
           <div className="popup-loading-spinner" aria-hidden="true" />
-          <p>Loading usage…</p>
+          <p>{popupText("loadingUsage")}</p>
         </div>
       )}
       {blocked && (
         <div className="cursor-missing-overlay" role="alertdialog" aria-labelledby="cursor-missing-title">
           <div className="cursor-missing-card">
             <p className="cursor-missing-eyebrow">No Cursor AI found</p>
-            <h2 id="cursor-missing-title">Connect to Cursor first</h2>
+            <h2 id="cursor-missing-title">{popupText("connectToCursor")}</h2>
             <p className="muted">
               Open <strong>cursor.com/dashboard</strong> while signed in, or add another Cursor
               account by pasting a token in Options.
@@ -195,7 +199,7 @@ export function App() {
             )}
             <div className="connect-actions">
               <button type="button" className="btn primary" onClick={openCursor} disabled={connecting}>
-                {connecting ? "Waiting for sign-in…" : "Sign in with browser"}
+                {connecting ? popupText("waitingForSignIn") : popupText("signInWithBrowser")}
               </button>
               <button type="button" className="btn ghost" onClick={openOptions}>
                 Paste access token
@@ -211,10 +215,10 @@ export function App() {
           <h1>Cursor Curse Monitor</h1>
         </div>
         <div className="header-actions">
-          <button type="button" className="icon-btn" onClick={openOptions} aria-label="Settings">
+          <button type="button" className="icon-btn" onClick={openOptions} aria-label={popupText("settings")}>
             ⚙
           </button>
-          <button type="button" className="icon-btn" onClick={refresh} aria-label="Refresh">
+          <button type="button" className="icon-btn" onClick={refresh} aria-label={popupText("refresh")}>
             ↻
           </button>
         </div>
@@ -332,13 +336,13 @@ export function App() {
           <section className="card">
             <div className="section-head-row">
               <p className="section-label" style={{ margin: 0 }}>
-                Usage meters
+                {popupText("usageMeters")}
               </p>
               <button
                 type="button"
                 className="usage-help-btn"
                 onClick={() => setShowUsageHelp(true)}
-                aria-label="Usage help"
+                aria-label={popupText("usageHelp")}
               >
                 ?
               </button>
